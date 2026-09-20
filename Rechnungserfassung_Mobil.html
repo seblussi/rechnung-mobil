@@ -1050,12 +1050,25 @@ function exportDatenBauen(){
   return {faelle: [...ladeFaelle('ls').map(f=>({...f,art:'ls'})), ...ladeFaelle('pt').map(f=>({...f,art:'pt'}))],
           bestatterAenderungen: ladeKatalog().filter(b=>b.herkunft==='handy')};
 }
-function jsonExport(){
+async function jsonExport(){
   const daten = exportDatenBauen();
+  const dateiname = 'rechnungserfassung_export_'+new Date().toISOString().slice(0,10)+'.json';
   const blob = new Blob([JSON.stringify(daten,null,2)], {type:'application/json'});
+  // Bevorzugt: natives Android-Teilen-Menü (Web Share API mit Datei) --
+  // darüber kann direkt "In Dateien speichern" -> verknüpftes OneDrive
+  // als Ziel gewählt werden, statt in den Standard-Downloads-Ordner.
+  const datei = new File([blob], dateiname, {type:'application/json'});
+  if(navigator.canShare && navigator.canShare({files:[datei]})){
+    try{
+      await navigator.share({files:[datei], title:'Rechnungserfassung Export'});
+      return;
+    }catch(e){
+      // Abgebrochen oder fehlgeschlagen -- auf normalen Download zurückfallen.
+    }
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'rechnungserfassung_export_'+new Date().toISOString().slice(0,10)+'.json';
+  a.download = dateiname;
   a.click();
 }
 
