@@ -36,7 +36,10 @@
     --text:#dde2e8;
     --text-schwach:#9aa4ad;
     --rand:#333b42;
-    --titelfarbe:#dde2e8;
+    /* --titelfarbe bewusst NICHT umdefiniert -- die Kopfzeile/Abschnitts-
+       leisten sollen im Dunkelmodus dieselbe (dunkle) Farbe wie im
+       Hellmodus behalten statt auf ein helles Grau umzuschalten, das mit
+       weißer Schrift viel zu hell/blass wirkte. */
     --warnung-bg:#3a2c10;
     --warnung-rand:#c78a2e;
     --warnung-text:#f0c98a;
@@ -167,6 +170,11 @@
      Hier bewusst gleicher Abstand (14px) ober- und unterhalb. */
   .trennlinie + .btn-primaer.blass{margin-top:0; margin-bottom:14px;}
   .streckeninfo{font-size:12.5px; color:var(--text-schwach); margin-top:4px; min-height:16px;}
+  /* Solange noch keine Strecke berechnet wurde, ist streckeninfo leer -- die
+     feste Mindesthoehe sorgte dann trotzdem fuer einen spuerbar zu grossen
+     Abstand zwischen dem km-Feld und dem Alternativrouten-Button darunter.
+     Im leeren Zustand daher keinen Platz reservieren. */
+  .streckeninfo:empty{margin-top:0; min-height:0;}
   /* Analog zur PC-Maske (KmBerechnen/RoutenAnzeigen: eine "Fahrstrecke i"-
      Schaltflaeche je Routenalternative + separate "Google Maps"-Schaltflaeche
      zum Pruefen/Oeffnen der Route). In der Mobil-Maske dafuer 2 feste
@@ -200,8 +208,28 @@
   .app-toast.aktiv{opacity:.95; transform:translateY(0);}
   .fall-zeile{
     background:var(--karte); border:1px solid var(--rand); border-left:4px solid var(--rand); border-radius:10px; padding:12px 14px;
-    margin-bottom:8px; cursor:pointer;
+    margin-bottom:8px; cursor:pointer; display:flex; align-items:flex-start; gap:10px;
   }
+  .fall-zeile .chk{width:20px; height:20px; flex-shrink:0; margin-top:2px;}
+  .fall-zeile .inhalt{flex:1; min-width:0;}
+  /* Auswahlleiste oben in der Rechnungsübersicht: sticky direkt unter der
+     Kopfzeile, damit "Löschen"/"Kopieren" auch bei langen Listen immer
+     erreichbar sind, ohne erst hochscrollen zu müssen. */
+  .auswahlleiste{
+    position:sticky; top:0; z-index:5; background:var(--bg); padding:10px 0 12px;
+    margin:-14px -14px 14px; padding-left:14px; padding-right:14px;
+    border-bottom:1px solid var(--rand);
+  }
+  .auswahlleiste .zeile1{display:flex; align-items:center; gap:8px; font-size:13.5px; margin-bottom:8px;}
+  .auswahlleiste .zeile1 label{display:flex; align-items:center; gap:6px; cursor:pointer;}
+  .auswahlleiste .aktionen-reihe{display:flex; gap:8px; flex-wrap:wrap;}
+  .auswahlleiste .aktionen-reihe button{
+    flex:1; min-width:110px; padding:9px 8px; font-size:12.5px; font-weight:600; border-radius:8px;
+    background:var(--karte); cursor:pointer; border:1.5px solid var(--rand); color:var(--text);
+  }
+  .auswahlleiste .aktionen-reihe button:disabled{opacity:.45; cursor:default;}
+  .auswahlleiste .aktionen-reihe button.gefahr{border-color:var(--fehler); color:var(--fehler);}
+  .auswahlleiste .aktionen-reihe button.betont{border-color:var(--ls-farbe); color:var(--ls-farbe);}
   /* Farbcode wie in der Maske selbst: LS/PT-Fälle in "Rechnung korrigieren"
      bekommen denselben Rand-/Badge-Farbton wie ihre Bearbeitungsmaske
      (ls-farbe/pt-farbe), statt alle Fälle mit derselben neutralen Farbe
@@ -905,7 +933,7 @@ function ansichtStart(){
       <button class="karte ls" id="kLS"><span class="icon">&#9760;</span>Leichenschau</button>
       <button class="karte pt" id="kPT"><span class="icon">&#9877;</span>Privatrechnung</button>
     </div>
-    <button class="btn-sekundaer" id="btnKorrigieren">Rechnung korrigieren
+    <button class="btn-sekundaer" id="btnKorrigieren">Rechnungsübersicht
       <span class="unter">${gesamtOffen} noch nicht am PC übernommen</span>
     </button>`;
   if(!autoSyncVerfuegbar() && gesamtOffen>0){
@@ -933,20 +961,158 @@ function ansichtStart(){
   };
 }
 
+// Baut aus einem Fall EINE tab-getrennte Zeile im Format der Excel-
+// Rechnungsübersicht (vom Nutzer bestätigte Spaltenreihenfolge A..Y),
+// damit sie sich direkt in Excel einfügen laesst (Excel/Sheets trennen
+// beim Einfuegen automatisch an Tabs in eigene Zellen).
+// Spalten P (Betrag) sowie Q..Y (Rechnungsnummer, Brief/Zahlung/Mahnwesen)
+// werden am PC beim eigentlichen Rechnungserstellen vergeben/gepflegt und
+// bleiben daher bewusst leer -- ebenso alle Sterbeort-/Bestatter-Spalten
+// bei einer Privatrechnung (PT), da es dort begrifflich keinen Sterbeort/
+// Bestatter gibt.
+function faelleAlsUebersichtsZeilen(faelle){
+  return faelle.map(f=>{
+    const w = f.werte;
+    const spalten = new Array(25).fill(''); // A..Y
+    const teile = (w.txtName||'').split(',');
+    const nachname = (teile[0]||'').trim();
+    const vorname = (teile[1]||'').trim();
+    spalten[0] = f.art==='ls' ? 'L' : 'P';                          // A: L/P
+    spalten[1] = w.txtDatumExcel || '';                              // B: Datum LS/HB
+    spalten[2] = w.txtZeitLS || '';                                  // C: Uhrzeit LS/HB
+    spalten[5] = nachname;                                           // F: Name
+    spalten[6] = vorname;                                            // G: Vorname
+    spalten[7] = w.txtGeda || '';                                    // H: Geburtsdatum
+    spalten[8] = w.txtPAdresse1 || '';                                // I: Adresse1 Patient
+    spalten[9] = w.txtPAdresse2 || '';                                // J: Adresse2 Patient
+    if(f.art==='ls'){
+      spalten[3] = w.txtSterbedatum || '';                           // D: Datum Tod
+      spalten[4] = w.txtTodeszeit || '';                             // E: Uhrzeit Tod
+      // Sterbeort: wie am PC (AktiverAdressBlock) gilt bei ausgefuelltem
+      // "Sterbeort abweichend"-Block DIESER als Sterbeort, sonst die
+      // Patientenadresse.
+      spalten[10] = w.txtSterbeAdr1 || w.txtPAdresse1 || '';          // K: Adresse1 Sterbeort
+      spalten[11] = w.txtSterbeAdr2 || w.txtPAdresse2 || '';          // L: Adresse2 Sterbeort
+      spalten[12] = w.txtBName || '';                                 // M: Bestatter
+      spalten[13] = w.txtAdresse1 || '';                              // N: Adresse1 Bestatter
+      spalten[14] = w.txtAdresse2 || '';                              // O: Adresse2 Bestatter
+    }
+    spalten[15] = w.txtBetrag || '';                                  // P: Betrag
+    // Q (Rech.-Nr.) und alles danach: bewusst leer, siehe Kommentar oben.
+    return spalten.join('\t');
+  }).join('\n');
+}
+
 function ansichtKorrigieren(){
   einstellungenOffen = false;
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtKorrigieren(); };
-  setzeTitel('Rechnung korrigieren', ansichtStart);
+  setzeTitel('Rechnungsübersicht', ansichtStart);
   const alle = [...ladeFaelle('ls').map((f,i)=>({...f, art:'ls', idx:i})), ...ladeFaelle('pt').map((f,i)=>({...f, art:'pt', idx:i}))];
   if(!alle.length){ app.innerHTML = '<div class="leer-hinweis">Keine lokal gespeicherten Fälle vorhanden.</div>'; return; }
-  app.innerHTML = alle.map(f => `
-    <div class="fall-zeile ${f.art}" data-art="${f.art}" data-idx="${f.idx}">
-      <div class="name">${f.werte.txtName || '(ohne Namen)'} <span class="badge-neu ${f.art}">${f.art.toUpperCase()}</span></div>
-      <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}</div>
-    </div>`).join('');
+
+  const ausgewaehlt = new Set(); // Schlüssel "art:idx"
+  const schluessel = f => f.art+':'+f.idx;
+
+  app.innerHTML = `
+    <div class="auswahlleiste">
+      <div class="zeile1">
+        <label><input type="checkbox" id="chkAlle"> Alle auswählen</label>
+        <span id="auswahlAnzahl" style="color:var(--text-schwach);"></span>
+      </div>
+      <div class="aktionen-reihe">
+        <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
+        <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
+        <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
+      </div>
+    </div>
+    <div id="korrigierenListe">
+      ${alle.map(f => `
+        <div class="fall-zeile ${f.art}" data-art="${f.art}" data-idx="${f.idx}">
+          <input type="checkbox" class="chk" data-art="${f.art}" data-idx="${f.idx}">
+          <div class="inhalt">
+            <div class="name">${f.werte.txtName || '(ohne Namen)'} <span class="badge-neu ${f.art}">${f.art.toUpperCase()}</span></div>
+            <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="warnhinweis" id="korrigierenHinweis"></div>`;
+
+  const zeigeHinweis = (txt)=>{
+    const el = document.getElementById('korrigierenHinweis');
+    if(!txt){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
+    el.innerHTML = txt; el.classList.add('aktiv');
+  };
+
+  function auswahlAktualisieren(){
+    const n = ausgewaehlt.size;
+    document.getElementById('auswahlAnzahl').textContent = n ? `${n} ausgewählt` : '';
+    document.getElementById('btnAuswLoeschen').disabled = n===0;
+    document.getElementById('btnAuswKopieren').disabled = n===0;
+    document.getElementById('chkAlle').checked = n===alle.length;
+  }
+
   app.querySelectorAll('.fall-zeile').forEach(el=>{
-    el.onclick = ()=> ansichtMaske(el.dataset.art, parseInt(el.dataset.idx,10));
+    const f = {art:el.dataset.art, idx:parseInt(el.dataset.idx,10)};
+    const chk = el.querySelector('.chk');
+    chk.onclick = (ev)=>{
+      ev.stopPropagation();
+      if(chk.checked) ausgewaehlt.add(schluessel(f)); else ausgewaehlt.delete(schluessel(f));
+      auswahlAktualisieren();
+    };
+    // Klick auf die Zeile selbst (ausserhalb der Checkbox) oeffnet die
+    // Rechnung weiterhin wie gewohnt zum Bearbeiten.
+    el.querySelector('.inhalt').onclick = ()=> ansichtMaske(f.art, f.idx);
   });
+
+  document.getElementById('chkAlle').onclick = (ev)=>{
+    ausgewaehlt.clear();
+    if(ev.target.checked) alle.forEach(f=> ausgewaehlt.add(schluessel(f)));
+    app.querySelectorAll('.fall-zeile .chk').forEach(c=> c.checked = ev.target.checked);
+    auswahlAktualisieren();
+  };
+
+  document.getElementById('btnAuswUebersichtOeffnen').onclick = ()=>{
+    window.open('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQBlNAjRs2lHR7r8Kh_-9DMhAZB7Me6rXGprd8Lu4NthUZg?e=UKgicT', '_blank');
+  };
+
+  document.getElementById('btnAuswKopieren').onclick = async ()=>{
+    const faelleAusw = alle.filter(f=> ausgewaehlt.has(schluessel(f)));
+    const text = faelleAlsUebersichtsZeilen(faelleAusw);
+    try{
+      await navigator.clipboard.writeText(text);
+      zeigeHinweis(`${faelleAusw.length} Rechnung(en) in die Zwischenablage kopiert (Spalten A-P). Jetzt in der Rechnungsübersicht in Spalte A der ersten leeren Zeile einfügen -- Rechnungsnummer und die Spalten rechts von Betrag bitte wie gewohnt selbst ergänzen.`);
+    }catch(e){
+      zeigeHinweis('Zwischenablage konnte nicht beschrieben werden. Bitte Berechtigung erteilen und erneut versuchen.');
+    }
+  };
+
+  document.getElementById('btnAuswLoeschen').onclick = ()=>{
+    const faelleAusw = alle.filter(f=> ausgewaehlt.has(schluessel(f)));
+    if(!faelleAusw.length) return;
+    zeigeHinweis(`${faelleAusw.length} Rechnung(en) wirklich unwiderruflich löschen? Dies betrifft nur die lokal auf dem Handy gespeicherten Daten, nicht bereits am PC übernommene Rechnungen.
+      <div class="aktionen">
+        <button data-akt="loeschenJa">Ja, löschen</button>
+        <button data-akt="loeschenNein">Abbrechen</button>
+      </div>`);
+    const el = document.getElementById('korrigierenHinweis');
+    el.querySelector('[data-akt="loeschenNein"]').onclick = ()=> zeigeHinweis('');
+    el.querySelector('[data-akt="loeschenJa"]').onclick = ()=>{
+      // Je Art absteigend nach idx loeschen, damit sich beim Loeschen
+      // mehrerer Eintraege einer Art die Indizes der noch zu loeschenden
+      // nicht verschieben (analog BriefeZeilenLoeschen am PC).
+      ['ls','pt'].forEach(art=>{
+        const idxListe = faelleAusw.filter(f=>f.art===art).map(f=>f.idx).sort((a,b)=>b-a);
+        if(!idxListe.length) return;
+        const arr = ladeFaelle(art);
+        idxListe.forEach(i=> arr.splice(i,1));
+        speichereFaelle(art, arr);
+      });
+      appToastAnzeigen(`${faelleAusw.length} Rechnung(en) gelöscht.`, 2000);
+      ansichtKorrigieren();
+    };
+  };
+
+  auswahlAktualisieren();
 }
 
 function ansichtEinstellungen(){
@@ -1369,7 +1535,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     getValue(name){ const el=document.getElementById(name); return el? el.value : ''; },
     hinweis(text){ alertBanner(text); },
     async adresseVerlassen(){ await plzOrtPruefen('txtPAdresse1','txtPAdresse2'); await kmAutomatikAusloesen(); },
-    allePruefungenAusfuehren(){ alleChecksAusfuehren(true); }
+    allePruefungenAusfuehren(){ alleChecksAusfuehren(); }
   };
 
   function feldHtml(labelText, name, opts={}){
@@ -2078,12 +2244,14 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     feldWarnung('txtBName', `Kein Bestattungsunternehmen angegeben -- die Rechnung wird an die Patientenadresse adressiert.`);
   }
 
-  // ohneBestatter: wie am PC (bestatterKomplettLeer wird dort erst BEIM
-  // SPEICHERN abgefragt, nicht laufend) soll der "Kein Bestattungsunternehmen"-
-  // Hinweis nicht aufblitzen, wenn gerade Werte gesetzt wurden, die mit dem
-  // Bestatter-Abschnitt gar nichts zu tun haben (z.B. Zwischenablage-Einlesen
-  // der Patientendaten) -- der Nutzer ist dort ja noch gar nicht angekommen.
-  function alleChecksAusfuehren(ohneBestatter){
+  // Wie am PC (bestatterKomplettLeer wird dort erst BEIM SPEICHERN
+  // abgefragt, nicht laufend) soll der "Kein Bestattungsunternehmen"-
+  // Hinweis NIE zwischendurch aufblitzen -- weder beim Öffnen der Maske
+  // noch beim Verlassen eines völlig anderen Feldes (Datum, Uhrzeit, ...),
+  // sondern ausschließlich beim Klick auf "Speichern". Der Parameter ist
+  // daher nicht mehr nötig; pruefeBestatterLeer() wird gezielt nur noch im
+  // btnSpeichern-Handler aufgerufen.
+  function alleChecksAusfuehren(){
     pruefeJahrFeld('txtDatumExcel', art==='ls' ? 'Datum Todesbescheinigung' : 'Datum Hausbesuch');
     pruefeJahrFeld('txtDatum', 'Rechnungsdatum');
     pruefeZeitFeld('txtZeitLS', art==='ls' ? 'Zeitpunkt Leichenschau' : 'Uhrzeit Hausbesuch');
@@ -2091,7 +2259,6 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       pruefeJahrFeld('txtSterbedatum', 'Sterbedatum');
       pruefeZeitenLS();
       pruefeSterbedatum();
-      if(!ohneBestatter) pruefeBestatterLeer();
     }
   }
   // Beim Öffnen einmal ausführen -- deckt auch die Werte ab, die beim Laden
@@ -2146,7 +2313,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 
   document.getElementById('btnSpeichern').onclick = ()=>{
     alleChecksAusfuehren();
-    const offeneWarnung = app.querySelector('.warnhinweis.aktiv');
+    if(art==='ls') pruefeBestatterLeer();
+    // txtBName_warn bewusst ausgenommen: das ist nur eine Information
+    // ("wird an Patientenadresse adressiert"), kein Fehler, der behoben
+    // werden muss -- sonst blockiert dieser Hinweis das Speichern komplett,
+    // sobald kein Bestatter eingetragen ist (ohne jede Möglichkeit, ihn
+    // "bewusst so [zu] belassen", wie es der Hinweistext selbst anbietet).
+    const offeneWarnung = app.querySelector('.warnhinweis.aktiv:not(#txtBName_warn)');
     if(offeneWarnung){
       offeneWarnung.scrollIntoView({behavior:'smooth', block:'center'});
       alertBanner('Bitte zuerst die markierten Hinweise oben prüfen (korrigieren oder bewusst so belassen).');
@@ -2174,16 +2347,6 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 }
 
 /* ==========================================================
-   Start
-   ========================================================== */
-themaAnwenden();
-ansichtStart();
-// Ohne await -- die Startansicht soll nicht auf die (async) Prüfung des
-// evtl. schon zuvor gewählten Sync-Ordners warten. Ist der Ordner noch
-// gültig verbunden, wird der aktuelle Stand direkt nachgeholt.
-autoSyncInitialisieren();
-
-/* ==========================================================
    Handy-"Zurück"-Taste / Zurück-Wischgeste
    ==========================================================
    Ohne Eingriff wuerde die Hardware-/Gesten-"Zurück"-Taste eines Android-
@@ -2198,6 +2361,21 @@ autoSyncInitialisieren();
    Technik: bei jedem Ansichtswechsel bleibt IMMER ein "Wächter"-Eintrag ganz
    oben im Browser-Verlauf (history.pushState) -- das Zurückgehen darüber
    hinaus loest dann popstate aus, statt die Seite/App wirklich zu verlassen.
+
+   WICHTIG (Fix): dieser Block wird jetzt bewusst GANZ ZU BEGINN des
+   Skripts eingerichtet -- noch VOR themaAnwenden()/ansichtStart()/
+   autoSyncInitialisieren(). Vorher stand er ganz am Ende; wenn dort
+   VORHER (in ansichtStart() o.ä.) unbemerkt ein Laufzeitfehler auftrat,
+   wurde dieser Block nie mehr erreicht -- die Zurück-Taste hatte dann
+   GAR KEINE Absicherung und schloss die App direkt, ohne jeden Hinweis.
+   Jetzt ist die Absicherung aktiv, auch wenn spaeterer Code scheitert.
+
+   Zusaetzlicher Fix: beim ERSTEN "Zurück" auf der Startseite wird der
+   Wächter bewusst NICHT erneut gesetzt (vorher doch -- dadurch waren
+   tatsaechlich 3 Tastendruecke noetig, bis die App wirklich zu war, der
+   zweite Tastendruck schien wirkungslos zu sein). Jetzt reicht -- wie
+   angekuendigt -- ein zweiter Tastendruck, um die App tatsaechlich zu
+   schliessen.
    ========================================================== */
 // Kurzer Einblend-Hinweis (siehe #appToast) -- liegt AUSSERHALB von #app,
 // wird also von einem Ansichtswechsel nicht mit weggerissen. Allgemein
@@ -2205,6 +2383,7 @@ autoSyncInitialisieren();
 let appToastTimer = null;
 function appToastAnzeigen(text, dauerMs){
   const toast = document.getElementById('appToast');
+  if(!toast) return;
   toast.textContent = text;
   toast.classList.add('aktiv');
   clearTimeout(appToastTimer);
@@ -2228,18 +2407,34 @@ function appToastAnzeigen(text, dauerMs){
       aktuellerZurueckHandler();
       return;
     }
-    // Startseite: erstes "Zurück" nur als Hinweis, zweites (innerhalb von
-    // 2,5 s) laesst die Taste tatsaechlich wirken (kein erneuter Wächter).
+    // Startseite, zweites "Zurück" (innerhalb von 2,5 s nach dem Hinweis):
+    // diesmal wirklich NICHTS abfangen/erneut bewachen -- die Taste soll
+    // jetzt tatsaechlich wirken und die App verlassen.
     if(appBeendenBestaetigt){
       appBeendenBestaetigt = false;
       return;
     }
-    waechterSetzen();
+    // Startseite, erstes "Zurück": nur Hinweis anzeigen, Wächter bewusst
+    // NICHT erneut setzen, damit der naechste Tastendruck direkt wirkt.
     appBeendenBestaetigt = true;
     appToastAnzeigen('Nochmal zurück drücken, um die App zu beenden.', 2500);
     setTimeout(()=>{ appBeendenBestaetigt = false; }, 2500);
   });
 })();
+
+/* ==========================================================
+   Start
+   ========================================================== */
+// Jeder Schritt einzeln try/catch-abgesichert: ein Fehler in einem Teil
+// (z.B. Auto-Sync-Initialisierung) soll die anderen Teile (allen voran die
+// Zurück-Tasten-Absicherung oben, aber auch die eigentliche Bildschirm-
+// anzeige) nicht mit lahmlegen.
+try{ themaAnwenden(); }catch(e){}
+try{ ansichtStart(); }catch(e){}
+// Ohne await -- die Startansicht soll nicht auf die (async) Prüfung des
+// evtl. schon zuvor gewählten Sync-Ordners warten. Ist der Ordner noch
+// gültig verbunden, wird der aktuelle Stand direkt nachgeholt.
+try{ autoSyncInitialisieren(); }catch(e){}
 
 if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
   navigator.serviceWorker.register('./sw.js').catch(()=>{});
