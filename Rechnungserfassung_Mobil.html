@@ -148,11 +148,67 @@
      in der Privatrechnung-Maske: grüne Schrift auf grünem statt weißem
      Hintergrund. Hintergrund hier deshalb explizit erneut setzen. */
   .maske.pt .btn-primaer.blass{background:var(--karte); color:var(--pt-farbe); border-color:var(--pt-farbe);}
+  .btn-primaer.blass .unter{display:block; font-size:12px; margin-top:2px; font-weight:400; opacity:.85;}
+  /* "Sterbeort abweichend?" sitzt wie am PC (btnSterbeAbw: gleiche Zeile wie
+     "PLZ + Stadt", rechtsbuendig, kompakte Schaltflaeche) rechts NEBEN dem
+     PLZ/Ort-Feld statt als eigene volle Zeile darunter. */
+  .feld-zeile-mit-btn{display:flex; gap:8px; align-items:flex-end;}
+  .feld-zeile-mit-btn .feld{flex:1; margin-bottom:12px;}
+  .btn-inline-blass{
+    flex:0 0 auto; margin-bottom:12px; padding:10px 12px; font-size:12.5px; font-weight:600;
+    border-radius:8px; background:var(--karte); border:1.5px solid var(--ls-farbe); color:var(--ls-farbe);
+    cursor:pointer; white-space:nowrap;
+  }
+  /* "Aus Zwischenablage einlesen" steht direkt unter der Abschnitt-Titelzeile
+     (trennlinie) -- deren eigener unterer Rand liefert bereits 14px Abstand
+     nach oben; der Button-Standard-Rand (margin-top:6px) addierte sich
+     bisher noch obendrauf, waehrend nach unten gar kein Rand gesetzt war --
+     dadurch wirkte der Button spuerbar zu tief/asymmetrisch platziert.
+     Hier bewusst gleicher Abstand (14px) ober- und unterhalb. */
+  .trennlinie + .btn-primaer.blass{margin-top:0; margin-bottom:14px;}
   .streckeninfo{font-size:12.5px; color:var(--text-schwach); margin-top:4px; min-height:16px;}
+  /* Analog zur PC-Maske (KmBerechnen/RoutenAnzeigen: eine "Fahrstrecke i"-
+     Schaltflaeche je Routenalternative + separate "Google Maps"-Schaltflaeche
+     zum Pruefen/Oeffnen der Route). In der Mobil-Maske dafuer 2 feste
+     Buttons statt dynamisch erzeugter PC-Buttons: "Alternativrouten" oeffnet
+     eine Auswahlliste (routenoptionen), "Google Maps Route" oeffnet direkt
+     die Google-Maps-App/-Webseite mit der Strecke. */
+  .route-btn-reihe{display:flex; gap:8px; margin-top:10px;}
+  .route-btn-reihe button{
+    flex:1; padding:10px 6px; font-size:12.5px; font-weight:600; border-radius:8px;
+    background:var(--karte); cursor:pointer; border:1.5px solid var(--ls-farbe); color:var(--ls-farbe);
+  }
+  .maske.pt .route-btn-reihe button{border-color:var(--pt-farbe); color:var(--pt-farbe);}
+  .routenoptionen{margin-top:8px; display:none;}
+  .routenoptionen.aktiv{display:block;}
+  .routenoptionen button{
+    display:block; width:100%; text-align:left; padding:10px 11px; margin-bottom:6px;
+    border:1px solid var(--rand); border-radius:8px; background:var(--grau-feld); color:var(--text);
+    font-size:13px; cursor:pointer;
+  }
+  .routenoptionen .routenoptionen-hinweis{font-size:12.5px; color:var(--text-schwach); padding:2px 2px 6px;}
+  /* Kurzer Einblend-Hinweis fuer die Handy-"Zurück"-Taste (z.B. "nochmal
+     zurück zum Beenden") -- liegt AUSSERHALB von #app, damit er einen
+     Ansichtswechsel (app.innerHTML wird komplett neu geschrieben) übersteht. */
+  .app-toast{
+    position:fixed; left:16px; right:16px; bottom:18px; z-index:50;
+    background:var(--text); color:var(--karte); font-size:13.5px; text-align:center;
+    padding:11px 16px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.25);
+    opacity:0; pointer-events:none; transform:translateY(6px);
+    transition:opacity .18s, transform .18s;
+  }
+  .app-toast.aktiv{opacity:.95; transform:translateY(0);}
   .fall-zeile{
-    background:var(--karte); border:1px solid var(--rand); border-radius:10px; padding:12px 14px;
+    background:var(--karte); border:1px solid var(--rand); border-left:4px solid var(--rand); border-radius:10px; padding:12px 14px;
     margin-bottom:8px; cursor:pointer;
   }
+  /* Farbcode wie in der Maske selbst: LS/PT-Fälle in "Rechnung korrigieren"
+     bekommen denselben Rand-/Badge-Farbton wie ihre Bearbeitungsmaske
+     (ls-farbe/pt-farbe), statt alle Fälle mit derselben neutralen Farbe
+     anzuzeigen -- so ist auf einen Blick erkennbar, um welche Art Rechnung
+     es sich handelt, bevor man zum Bearbeiten hineintippt. */
+  .fall-zeile.ls{border-left-color:var(--ls-farbe);}
+  .fall-zeile.pt{border-left-color:var(--pt-farbe);}
   .fall-zeile .name{font-weight:600;}
   .fall-zeile .info{font-size:12.5px; color:var(--text-schwach); margin-top:2px;}
   .einstellung-zeile{
@@ -163,20 +219,26 @@
   .einstellung-zeile .txt .hinweis{display:block; font-size:12px; color:var(--text-schwach);}
   .leer-hinweis{text-align:center; color:var(--text-schwach); font-size:14px; padding:30px 10px;}
   .badge-neu{background:var(--titelfarbe); color:#fff; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:6px;}
+  .badge-neu.ls{background:var(--ls-farbe);}
+  .badge-neu.pt{background:var(--pt-farbe);}
 
-  .position-zeile{display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--rand);}
-  .position-zeile input{width:20px; height:20px; margin-top:2px; flex-shrink:0;}
-  .position-zeile .haupt{flex:1; font-size:14px;}
+  .position-zeile{display:flex; align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px solid var(--rand);}
+  .position-zeile input{width:20px; height:20px; margin-top:1px; flex-shrink:0;}
+  .position-zeile .haupt{flex:1; font-size:13.5px; line-height:1.25;}
   .position-zeile .ziffer{font-weight:600; color:var(--text-schwach); font-size:12px;}
   .position-zeile .betrag{font-weight:600; min-width:60px; text-align:right; font-size:14px;}
-  .positionen-gruppe-titel{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--text-schwach); margin:18px 0 4px;}
+  /* Kompakter als vorher (18px/4px), damit die komplette Positionsliste
+     eher auf einen Bildschirm passt -- v.a. bei mehreren Zwischenüberschriften
+     summierte sich der alte Abstand deutlich auf. */
+  .positionen-gruppe-titel{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--text-schwach); margin:10px 0 2px;}
+  .positionen-gruppe-titel:first-child{margin-top:0;}
   .auto-hinweis{font-weight:400; text-transform:none; letter-spacing:0; font-style:italic;}
   /* Automatik-Kategorien (Zeitzuschlag/Wegegeld/Reise) sind nicht manuell
      anwählbar -- optisch klar als gesperrt/ausgegraut erkennbar, analog zu
      einer durch Ausschluss gesperrten Position. */
   .position-zeile.auto-gesperrt{opacity:.55;}
   .position-zeile input:disabled{cursor:default;}
-  .summenzeile{display:flex; justify-content:space-between; font-size:17px; font-weight:700; padding:16px 0; border-top:2px solid var(--rand); margin-top:8px;}
+  .summenzeile{display:flex; justify-content:space-between; font-size:17px; font-weight:700; padding:10px 0; border-top:2px solid var(--rand); margin-top:6px;}
 
   .diag-chip{
     display:flex; align-items:flex-start; gap:8px; background:var(--grau-feld); border-radius:8px;
@@ -199,6 +261,7 @@
 </header>
 
 <main id="app"></main>
+<div id="appToast" class="app-toast"></div>
 
 <script>
 /* ==========================================================
@@ -209,7 +272,7 @@ const LS = {
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 function ladeFaelle(art){ return LS.get('faelle_'+art, []); }
-function speichereFaelle(art, arr){ LS.set('faelle_'+art, arr); }
+function speichereFaelle(art, arr){ LS.set('faelle_'+art, arr); autoSyncSchreiben(); }
 
 // Startbestückung des Bestatter-Katalogs (Stand PC-Liste). Wird nur EINMAL
 // beim allerersten Aufruf eingespielt (Flag 'bestatter_katalog_seed_v1'),
@@ -254,12 +317,19 @@ function ladeKatalog(){
   }
   return LS.get('bestatter_katalog', []);
 }
-function speichereKatalog(k){ LS.set('bestatter_katalog', k); }
+function speichereKatalog(k){ LS.set('bestatter_katalog', k); autoSyncSchreiben(); }
 function ladeEinstellungen(){
   return LS.get('einstellungen', {dunkel:false, praxisadresse:'Im Drachenacker 25, 77656 Offenburg', reiseBasisLuftlinie:false});
 }
 function speichereEinstellungen(e){ LS.set('einstellungen', e); }
-function autoSyncVerfuegbar(){ return false; } // OneDrive-Auto-Sync noch nicht angebunden
+// "Weg A": lokaler Auto-Sync über die File System Access API (Ordner einmal
+// auswählen, danach wird bei jeder Änderung automatisch dieselbe Datei
+// überschrieben -- keine Duplikate, kein manuelles Exportieren mehr nötig,
+// solange das Gerät/der Browser das unterstützt). "Weg B" (direkte
+// OneDrive/Azure-Anbindung) folgt separat, sobald die Azure-App-Registrierung
+// steht. Der Button "Fälle für den PC exportieren" bleibt als Rückfallebene
+// bestehen, solange kein Auto-Sync aktiv verbunden ist.
+function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
 
 function bestatterEintragen(name, adr1, adr2){
   if(!name || !name.trim()) return;
@@ -278,6 +348,11 @@ function bestatterEintragen(name, adr1, adr2){
 function normalisiereDatum(eingabe){
   if(!eingabe) return '';
   let e = eingabe.trim().replace(/\//g,'.').replace(/-/g,'.').replace(/,/g,'.');
+  // "12.12" o.ä. (nur Tag.Monat, kein Jahr angegeben) -> aktuelles Jahr
+  // annehmen, statt die Eingabe komplett abzulehnen.
+  if(/^\d{1,2}\.\d{1,2}\.?$/.test(e)){
+    e = e.replace(/\.$/,'') + '.' + new Date().getFullYear();
+  }
   const teile = e.split('.');
   if(teile.length !== 3) return '';
   let tag=parseInt(teile[0],10), monat=parseInt(teile[1],10), jahrStr=teile[2].trim();
@@ -331,6 +406,17 @@ function istWochenende(normDatum){
   const d = alsDatum(normDatum);
   return d.getDay()===0 || d.getDay()===6;
 }
+// Wie am PC (NaechsterWerktag): liefert den naechsten Werktag NACH dem
+// uebergebenen (normalisierten) Datum als Text -- Werktag = Montag bis
+// Freitag, Feiertage bewusst NICHT beruecksichtigt (haengen vom Bundesland
+// ab, ggf. manuell im Feld korrigieren). Ohne Basisdatum wird von heute aus
+// gerechnet.
+function naechsterWerktagText(basisNormDatum){
+  const d = basisNormDatum ? alsDatum(basisNormDatum) : new Date();
+  d.setDate(d.getDate()+1);
+  while(d.getDay()===0 || d.getDay()===6){ d.setDate(d.getDate()+1); }
+  return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+}
 
 // Datums-Kurzeingabe wie am PC gewünscht: eine reine Zahlenfolge ohne
 // Punkte wird automatisch zu einem vollen Datum ergänzt.
@@ -338,19 +424,32 @@ function istWochenende(normDatum){
 //   Kurzeingabe i.d.R. eine aktuelle Korrektur ist, z.B. am Rechnungs-
 //   /Todesbescheinigungsdatum) -- Tag/Monat bleiben vom bisherigen Feldwert
 //   bzw. von heute übernommen.
-// - 4 Ziffern ("2026")      -> ebenso nur das Jahr, Tag/Monat wie oben.
+// - 4 Ziffern ("1212")      -> zuerst als TTMM (Tag+Monat, OHNE Jahr) mit
+//   dem AKTUELLEN Jahr versucht ("1212" -> 12.12.<aktuelles Jahr>); ergibt
+//   das kein gültiges Datum (z.B. "2026": Monat 26 wäre ungültig), wird wie
+//   bisher nur das Jahr gesetzt (Tag/Monat vom bisherigen Feldwert/von
+//   heute) -- so bleibt "2026" weiterhin eine reine Jahres-Korrektur.
 // - 6 Ziffern ("010111")    -> TTMMJJ, wie eine normale Kurzeingabe mit
 //   2-stelligem Jahr (1900+n, siehe normalisiereDatum -- typisch für
 //   Geburtsdaten: "1.1.11" -> 01.01.1911).
-// - 8 Ziffern ("01011911")  -> TTMMJJJJ.
-// Eingaben MIT Punkten (auch unvollständige wie "1.1") laufen unverändert
-// durch die normale normalisiereDatum()-Logik.
+// - 8 Ziffern ("01011911" bzw. "12122026") -> TTMMJJJJ.
+// Eingaben MIT Punkten, aber ohne Jahr ("12.12"), bekommen ebenfalls das
+// aktuelle Jahr (siehe normalisiereDatum). Eingaben MIT vollständigem Jahr
+// laufen unverändert durch die normale normalisiereDatum()-Logik.
 function datumKurzeingabeErgaenzen(eingabe, bisherigerWert){
   const roh = (eingabe||'').trim();
   if(!roh) return '';
   if(/^\d+$/.test(roh)){
-    if(roh.length===1 || roh.length===2 || roh.length===4){
-      const jahr = roh.length===4 ? parseInt(roh,10) : 2000+parseInt(roh,10);
+    if(roh.length===1 || roh.length===2){
+      const jahr = 2000+parseInt(roh,10);
+      const basisNorm = normalisiereDatum(bisherigerWert) || heuteAlsText();
+      const teile = basisNorm.split('.');
+      return normalisiereDatum(teile[0]+'.'+teile[1]+'.'+jahr);
+    }
+    if(roh.length===4){
+      const alsTagMonat = normalisiereDatum(roh.slice(0,2)+'.'+roh.slice(2,4));
+      if(alsTagMonat) return alsTagMonat;
+      const jahr = parseInt(roh,10);
       const basisNorm = normalisiereDatum(bisherigerWert) || heuteAlsText();
       const teile = basisNorm.split('.');
       return normalisiereDatum(teile[0]+'.'+teile[1]+'.'+jahr);
@@ -464,11 +563,37 @@ function grossKleinNormalisieren(s){
   ).join('-');
   return s.split(' ').map(w => grossNachTrenner(w)).join(' ');
 }
+// Zerlegt eine als EINE Zeile kopierte Adresse (z.B. aus Google Maps: "Musterstraße 12, 77656 Offenburg"
+// oder mit angehängtem Land "Musterstraße 12, 77656 Offenburg, Deutschland") in Straße+Hausnummer und
+// PLZ+Ort -- fürs direkte Einlesen ins Bestatter-Adressfeldpaar, ohne die Zeile von Hand aufzutrennen.
+function adressZeileTrennen(text){
+  if(!text) return null;
+  const teile = text.trim().replace(/\n/g,', ').split(',').map(s=>s.trim()).filter(Boolean);
+  if(teile.length<2) return null;
+  // Ein evtl. angehängtes Land (kein Bestandteil, der Ziffern enthält -- eine
+  // PLZ hat immer Ziffern) am Ende verwerfen.
+  if(teile.length>=3 && !/\d/.test(teile[teile.length-1])) teile.pop();
+  if(teile.length<2) return null;
+  return {strasse: teile[0], plzOrt: teile.slice(1).join(', ')};
+}
+// Eigener Hinweis-Platz direkt unter dem "Aus Zwischenablage einlesen"-Button
+// statt des allgemeinen Hinweisbanners ganz unten in der Maske -- eine
+// Meldung wie "Zwischenablage ist leer" bezieht sich ja unmittelbar auf den
+// gerade angeklickten Button und soll auch genau dort sichtbar sein, ohne
+// dass die Maske dafuer nach unten scrollt.
+function zwischenablageHinweisAnzeigen(text){
+  const el = document.getElementById('zwischenablageHinweis');
+  if(!el) return;
+  if(!text){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
+  el.innerHTML = text;
+  el.classList.add('aktiv');
+}
 async function ausZwischenablageEinlesen(art, ctx){
+  zwischenablageHinweisAnzeigen('');
   let text = '';
   try{ text = await navigator.clipboard.readText(); }
-  catch(e){ ctx.hinweis('Zwischenablage konnte nicht gelesen werden. Bitte Berechtigung erteilen oder Text manuell einfügen.'); return; }
-  if(!text || !text.trim()){ ctx.hinweis('Die Zwischenablage ist leer.'); return; }
+  catch(e){ zwischenablageHinweisAnzeigen('Zwischenablage konnte nicht gelesen werden. Bitte Berechtigung erteilen oder Text manuell einfügen.'); return; }
+  if(!text || !text.trim()){ zwischenablageHinweisAnzeigen('Die Zwischenablage ist leer.'); return; }
 
   const zeilen = text.split(/\r?\n/);
   const patient = feldAusNachrichtLesen(zeilen, 'Patient:');
@@ -485,9 +610,9 @@ async function ausZwischenablageEinlesen(art, ctx){
     const erg = sterbezeitAusFreitextErmitteln(text);
     if(erg.zeit){
       ctx.setValue('txtTodeszeit', erg.zeit);
-      ctx.hinweis('Sterbezeitpunkt '+erg.zeit+' automatisch erkannt (Quelle: '+erg.quelle+'). Bitte prüfen.');
+      zwischenablageHinweisAnzeigen('Sterbezeitpunkt '+erg.zeit+' automatisch erkannt (Quelle: '+erg.quelle+'). Bitte prüfen.');
     } else {
-      ctx.hinweis('Kein Sterbezeitpunkt im Text erkannt -- bitte manuell eintragen.');
+      zwischenablageHinweisAnzeigen('Kein Sterbezeitpunkt im Text erkannt -- bitte manuell eintragen.');
     }
   }
   // Wichtig: nach dem Einlesen läuft die VOLLSTÄNDIGE Plausibilitätsprüfung,
@@ -543,6 +668,16 @@ async function routeKm(start, ziel){
   if(!data.routes || !data.routes.length) return null;
   return data.routes[0].distance/1000;
 }
+// Analog zur PC-Funktion RoutenErmitteln: liefert mehrere Routenalternativen
+// (falls der Routendienst welche findet) statt nur der einen besten Route,
+// jeweils als Einfachstrecke in km + Fahrzeit in Minuten.
+async function routeAlternativen(start, ziel){
+  const url = `https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${ziel.lon},${ziel.lat}?overview=false&alternatives=true`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if(!data.routes || !data.routes.length) return [];
+  return data.routes.map(r=>({km:r.distance/1000, minuten:r.duration/60}));
+}
 // Luftlinie (Haversine) -- EINFACHE Strecke, bewusst nicht verdoppelt
 // (analog zur PC-Logik: kmFahrstrecke wird fuer Hin+Rueck verdoppelt,
 // kmLuftlinieEinfach bleibt die reine Einfachstrecke).
@@ -583,6 +718,19 @@ const ZUSCHLAEGE_ZEIT = [
   {ziffer:'H', bez:'Zuschlag für am Wochenende erbrachte Leistungen', faktor:1, betrag:19.82}
 ];
 const REISEENTSCHAEDIGUNG = {ziffer:'', bez:'Abwesenheitsgebühr (Reiseentschädigung)', betrag:51.13};
+// Wie am PC (AutoZeileEinfuegen "##KM##"/FormelnNeuSchreiben: Formel
+// "=C<Zeile>*0,26"): zur Reiseentschaedigung gehoert IMMER zusaetzlich eine
+// zweite, km-abhaengige Zeile -- 0,26 EUR je (aufgerundetem) km der
+// Fahrstrecke (Hin+Rueck). Liefert Basisbetrag, km-Zeile und Gesamtbetrag,
+// wird sowohl fuer die Anzeige in den Rechnungspositionen als auch fuer die
+// automatische Betragssumme benutzt.
+function reiseGesamtBetrag(kmFahrstreckeText){
+  const km = parseFloat((kmFahrstreckeText||'').toString().replace(',','.'));
+  if(isNaN(km) || km<=0) return {basis:REISEENTSCHAEDIGUNG.betrag, kmGerundet:0, kmZeile:0, gesamt:REISEENTSCHAEDIGUNG.betrag};
+  const kmGerundet = Math.ceil(km);
+  const kmZeile = Math.round(kmGerundet*0.26*100)/100;
+  return {basis:REISEENTSCHAEDIGUNG.betrag, kmGerundet, kmZeile, gesamt:Math.round((REISEENTSCHAEDIGUNG.betrag+kmZeile)*100)/100};
+}
 
 const POSITIONEN_LS = {
   grundleistung: [
@@ -709,8 +857,18 @@ const app = document.getElementById('app');
 const titel = document.getElementById('titel');
 const btnZurueck = document.getElementById('btnZurueck');
 
+// Was die Handy-"Zurück"-Taste (bzw. eine Zurück-Wischgeste) auf der
+// jeweils aktuellen Ansicht auslösen soll -- unabhängig davon, ob der
+// sichtbare Pfeil oben gerade angezeigt wird oder nicht (z.B. auf der
+// Rechnungspositionen-Seite ist der Pfeil bewusst ausgeblendet, die
+// Hardware-Taste soll dort aber trotzdem sinnvoll zurückspringen). null
+// bedeutet: wir sind auf der Startseite -- dort löst die Taste stattdessen
+// den "App beenden?"-Hinweis aus (siehe hardwareZurueckEinrichten unten).
+let aktuellerZurueckHandler = null;
+
 function setzeTitel(t, zurueckZiel){
   titel.textContent = t;
+  aktuellerZurueckHandler = zurueckZiel || null;
   if(zurueckZiel){ btnZurueck.style.visibility='visible'; btnZurueck.onclick = zurueckZiel; }
   else { btnZurueck.style.visibility='hidden'; btnZurueck.onclick=null; }
 }
@@ -755,12 +913,24 @@ function ansichtStart(){
       <span class="unter">Kein Auto-Sync verfügbar -- Datei in den OneDrive-Ordner "KVBW Onedrive" legen</span>
     </button>`;
   }
+  html += `
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Excel-Dateien öffnen</div>
+      <button class="btn-sekundaer" id="btnOeffneUebersicht">Rechnungsübersicht öffnen</button>
+      <button class="btn-sekundaer" id="btnOeffneFahrtenbuch">Fahrtenbuch öffnen</button>
+    </div>`;
   app.innerHTML = html;
   document.getElementById('kLS').onclick = ()=>ansichtMaske('ls');
   document.getElementById('kPT').onclick = ()=>ansichtMaske('pt');
   document.getElementById('btnKorrigieren').onclick = ansichtKorrigieren;
   const btnExp = document.getElementById('btnJsonExport');
   if(btnExp) btnExp.onclick = jsonExport;
+  document.getElementById('btnOeffneUebersicht').onclick = ()=>{
+    window.open('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQBlNAjRs2lHR7r8Kh_-9DMhAZB7Me6rXGprd8Lu4NthUZg?e=UKgicT', '_blank');
+  };
+  document.getElementById('btnOeffneFahrtenbuch').onclick = ()=>{
+    window.open('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=CI5OMm', '_blank');
+  };
 }
 
 function ansichtKorrigieren(){
@@ -770,8 +940,8 @@ function ansichtKorrigieren(){
   const alle = [...ladeFaelle('ls').map((f,i)=>({...f, art:'ls', idx:i})), ...ladeFaelle('pt').map((f,i)=>({...f, art:'pt', idx:i}))];
   if(!alle.length){ app.innerHTML = '<div class="leer-hinweis">Keine lokal gespeicherten Fälle vorhanden.</div>'; return; }
   app.innerHTML = alle.map(f => `
-    <div class="fall-zeile" data-art="${f.art}" data-idx="${f.idx}">
-      <div class="name">${f.werte.txtName || '(ohne Namen)'} <span class="badge-neu">${f.art.toUpperCase()}</span></div>
+    <div class="fall-zeile ${f.art}" data-art="${f.art}" data-idx="${f.idx}">
+      <div class="name">${f.werte.txtName || '(ohne Namen)'} <span class="badge-neu ${f.art}">${f.art.toUpperCase()}</span></div>
       <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}</div>
     </div>`).join('');
   app.querySelectorAll('.fall-zeile').forEach(el=>{
@@ -789,19 +959,28 @@ function ansichtEinstellungen(){
       <div class="txt">Dunkelmodus<span class="hinweis">Dunkles Farbschema für schlechte Lichtverhältnisse</span></div>
     </div>
     <div class="einstellung-zeile" id="zReise">
-      <input type="checkbox" id="chkReiseBasisLuftlinie" ${e.reiseBasisLuftlinie?'checked':''}>
-      <div class="txt">Reiseentschädigung nach Luftlinie priorisieren<span class="hinweis">Aus: Reiseentschädigung ab &gt;50 km Fahrstrecke (Standard). An: bereits ab &gt;25 km Luftlinie statt Wegegeld</span></div>
+      <input type="checkbox" id="chkReiseBasisLuftlinie" ${!e.reiseBasisLuftlinie?'checked':''}>
+      <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br><br>Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></div>
     </div>
     <div class="feld" style="margin-top:20px;">
       <label for="txtPraxisadresse">Adresse Wache/Praxis (Startpunkt für km-Berechnung)</label>
       <input type="text" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}" placeholder="Straße Hausnummer, PLZ Ort">
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Automatischer Sync (PC-Übernahme)</div>
+      ${autoSyncAbschnittHtml()}
     </div>
   `;
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
   // "Speichern"-Schritt.
   const anwenden = ()=>{
     e.dunkel = document.getElementById('chkDunkel').checked;
-    e.reiseBasisLuftlinie = document.getElementById('chkReiseBasisLuftlinie').checked;
+    // Checkbox-Beschriftung/-Haken wie am PC ("Im Grenzbereich
+    // Reiseentschaedigung priorisieren", angehakt = Standard) -- invertiert
+    // zum intern gespeicherten Flag reiseBasisLuftlinie (True = Luftlinie
+    // priorisiert, wie EinstellungSchreiben("REISE_BASIS_LUFTLINIE", Not
+    // chkReiseBasisLuftlinie.checked) am PC).
+    e.reiseBasisLuftlinie = !document.getElementById('chkReiseBasisLuftlinie').checked;
     e.praxisadresse = document.getElementById('txtPraxisadresse').value.trim();
     speichereEinstellungen(e); themaAnwenden();
   };
@@ -810,16 +989,218 @@ function ansichtEinstellungen(){
   document.getElementById('txtPraxisadresse').addEventListener('blur', anwenden);
   document.getElementById('zDunkel').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkDunkel').click(); } };
   document.getElementById('zReise').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkReiseBasisLuftlinie').click(); } };
+  autoSyncAbschnittWiring();
 }
 
+// Baut den Inhalt des "Automatischer Sync"-Abschnitts passend zum aktuellen
+// autoSyncStatus -- eigene Funktion, weil dieselbe Logik nach jeder Aktion
+// (verbinden/trennen/erneut bestätigen) erneut aufgebaut werden muss, um den
+// neuen Status anzuzeigen.
+function autoSyncAbschnittHtml(){
+  if(autoSyncStatus==='nicht_unterstuetzt'){
+    return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach);">
+      Dieses Gerät/dieser Browser unterstützt den automatischen Ordner-Sync nicht.
+      Bitte weiterhin über "Fälle für den PC exportieren" auf der Startseite manuell exportieren.
+    </div>`;
+  }
+  if(autoSyncStatus==='verbunden'){
+    return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
+      ✓ Verbunden -- jede Änderung wird automatisch in "rechnungserfassung_sync.json" im gewählten Ordner gespeichert.
+    </div>
+    <button type="button" class="btn-sekundaer" id="btnAutoSyncTrennen">Verbindung trennen</button>`;
+  }
+  if(autoSyncStatus==='berechtigung_fehlt'){
+    return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
+      Die Berechtigung für den zuvor gewählten Ordner ist abgelaufen bzw. wurde nicht erteilt -- bitte erneut bestätigen.
+    </div>
+    <button type="button" class="btn-primaer blass" id="btnAutoSyncErneuern">Erneut verbinden</button>`;
+  }
+  // 'nicht_verbunden' (Standard) oder 'unbekannt' (kurz nach dem Start)
+  return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
+    Einmal den OneDrive-Sync-Ordner auswählen -- danach wird bei jeder Änderung automatisch die aktuelle Datei
+    "rechnungserfassung_sync.json" dort aktualisiert, ohne dass manuell exportiert werden muss.
+  </div>
+  <button type="button" class="btn-primaer blass" id="btnAutoSyncWaehlen">Sync-Ordner auswählen</button>`;
+}
+
+function autoSyncAbschnittWiring(){
+  const btnWaehlen = document.getElementById('btnAutoSyncWaehlen');
+  if(btnWaehlen) btnWaehlen.onclick = async ()=>{
+    const ok = await autoSyncOrdnerWaehlen();
+    if(!ok) appToastAnzeigen('Ordnerauswahl abgebrochen oder Berechtigung nicht erteilt.');
+    ansichtEinstellungen();
+  };
+  const btnTrennen = document.getElementById('btnAutoSyncTrennen');
+  if(btnTrennen) btnTrennen.onclick = async ()=>{
+    await autoSyncOrdnerTrennen();
+    ansichtEinstellungen();
+  };
+  const btnErneuern = document.getElementById('btnAutoSyncErneuern');
+  if(btnErneuern) btnErneuern.onclick = async ()=>{
+    const ok = await autoSyncBerechtigungErneuern();
+    if(!ok) appToastAnzeigen('Berechtigung wurde nicht erteilt.');
+    ansichtEinstellungen();
+  };
+}
+
+// Baut die Export-Daten (Fälle + vom Handy neu angelegte Bestatter) --
+// gemeinsame Grundlage sowohl für den manuellen Export-Button als auch für
+// den automatischen Ordner-Sync unten.
+function exportDatenBauen(){
+  return {faelle: [...ladeFaelle('ls').map(f=>({...f,art:'ls'})), ...ladeFaelle('pt').map(f=>({...f,art:'pt'}))],
+          bestatterAenderungen: ladeKatalog().filter(b=>b.herkunft==='handy')};
+}
 function jsonExport(){
-  const daten = {faelle: [...ladeFaelle('ls').map(f=>({...f,art:'ls'})), ...ladeFaelle('pt').map(f=>({...f,art:'pt'}))],
-                 bestatterAenderungen: ladeKatalog().filter(b=>b.herkunft==='handy')};
+  const daten = exportDatenBauen();
   const blob = new Blob([JSON.stringify(daten,null,2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'rechnungserfassung_export_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
+}
+
+/* ==========================================================
+   Automatischer Ordner-Sync ("Weg A", siehe Besprechung) -- File System
+   Access API: einmalig den OneDrive-Sync-Ordner auswählen, danach wird bei
+   JEDER Änderung (jedes Speichern eines Falls, jeder neue Bestatter)
+   automatisch dieselbe Datei "rechnungserfassung_sync.json" überschrieben.
+   Dadurch: kein manueller Klick mehr nötig, keine mehrfachen Export-
+   Dateien/Duplikate, und selbst bei leerem Akku geht höchstens der letzte,
+   noch nicht geschriebene Vorgang verloren (nicht der ganze Tag).
+   Nicht auf jedem Gerät/Browser unterstützt (v.a. auf manchen Android-
+   Chrome-Versionen) -- dann bleibt der manuelle Export-Button die
+   Rückfallebene (siehe autoSyncVerfuegbar()).
+   ========================================================== */
+let autoSyncOrdnerHandle = null;
+// 'unbekannt' (direkt nach Laden, bevor autoSyncInitialisieren fertig ist),
+// 'nicht_unterstuetzt', 'nicht_verbunden', 'verbunden', 'berechtigung_fehlt'
+let autoSyncStatus = 'unbekannt';
+let autoSyncSchreibtGerade = false;
+let autoSyncErneutNoetig = false;
+
+function fileSystemAccessVerfuegbar(){
+  return typeof window.showDirectoryPicker === 'function';
+}
+
+const AUTOSYNC_DB_NAME = 'rechnungserfassung_sync_db';
+const AUTOSYNC_STORE = 'handles';
+function autoSyncDbOeffnen(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(AUTOSYNC_DB_NAME, 1);
+    req.onupgradeneeded = ()=> req.result.createObjectStore(AUTOSYNC_STORE);
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+}
+async function autoSyncHandleSpeichern(handle){
+  const db = await autoSyncDbOeffnen();
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(AUTOSYNC_STORE, 'readwrite');
+    tx.objectStore(AUTOSYNC_STORE).put(handle, 'ordner');
+    tx.oncomplete = ()=> resolve();
+    tx.onerror = ()=> reject(tx.error);
+  });
+}
+async function autoSyncHandleLaden(){
+  try{
+    const db = await autoSyncDbOeffnen();
+    return await new Promise((resolve, reject)=>{
+      const tx = db.transaction(AUTOSYNC_STORE, 'readonly');
+      const req = tx.objectStore(AUTOSYNC_STORE).get('ordner');
+      req.onsuccess = ()=> resolve(req.result || null);
+      req.onerror = ()=> reject(req.error);
+    });
+  }catch(e){ return null; }
+}
+async function autoSyncHandleLoeschen(){
+  try{
+    const db = await autoSyncDbOeffnen();
+    const tx = db.transaction(AUTOSYNC_STORE, 'readwrite');
+    tx.objectStore(AUTOSYNC_STORE).delete('ordner');
+  }catch(e){}
+}
+
+// Schreibt die IMMER GLEICHE Datei mit dem aktuellen Gesamtstand -- läuft
+// eine Schreibaktion noch, wird die naechste nur vorgemerkt (statt parallel
+// zu schreiben) und läuft danach automatisch noch einmal, damit der
+// allerletzte Stand nie verloren geht.
+async function autoSyncSchreiben(){
+  if(autoSyncStatus!=='verbunden' || !autoSyncOrdnerHandle) return;
+  if(autoSyncSchreibtGerade){ autoSyncErneutNoetig = true; return; }
+  autoSyncSchreibtGerade = true;
+  try{
+    const dateiHandle = await autoSyncOrdnerHandle.getFileHandle('rechnungserfassung_sync.json', {create:true});
+    const schreibbar = await dateiHandle.createWritable();
+    await schreibbar.write(JSON.stringify(exportDatenBauen(), null, 2));
+    await schreibbar.close();
+  }catch(e){
+    // z.B. Berechtigung zwischenzeitlich entzogen -- der Status zeigt das
+    // beim naechsten Aufruf der Einstellungen an, der manuelle Export-Button
+    // erscheint automatisch wieder (siehe autoSyncVerfuegbar()).
+    autoSyncStatus = 'berechtigung_fehlt';
+  } finally {
+    autoSyncSchreibtGerade = false;
+    if(autoSyncErneutNoetig){ autoSyncErneutNoetig = false; autoSyncSchreiben(); }
+  }
+}
+
+// Nutzer wählt (per Tap in den Einstellungen, also mit Nutzer-Geste -- nur
+// dann erlauben Browser den Berechtigungsdialog) einmalig den Sync-Ordner.
+async function autoSyncOrdnerWaehlen(){
+  if(!fileSystemAccessVerfuegbar()) return false;
+  try{
+    const handle = await window.showDirectoryPicker({id:'rechnungserfassung-sync', mode:'readwrite'});
+    const berechtigt = await handle.requestPermission({mode:'readwrite'});
+    if(berechtigt!=='granted') return false;
+    await autoSyncHandleSpeichern(handle);
+    autoSyncOrdnerHandle = handle;
+    autoSyncStatus = 'verbunden';
+    await autoSyncSchreiben();
+    return true;
+  }catch(e){ return false; } // z.B. Nutzer hat den Auswahldialog abgebrochen
+}
+
+async function autoSyncOrdnerTrennen(){
+  await autoSyncHandleLoeschen();
+  autoSyncOrdnerHandle = null;
+  autoSyncStatus = 'nicht_verbunden';
+}
+
+// Nach erneutem Öffnen der App die zuvor gewählte Ordner-Berechtigung ohne
+// weiteren Dialog PRÜFEN (requestPermission bräuchte eine Nutzer-Geste,
+// queryPermission nicht). Ist sie noch gültig, sofort den aktuellen Stand
+// schreiben, damit ein evtl. seit dem letzten Mal geänderter Stand (z.B.
+// falls ein Schreibvorgang durch geschlossene App/leeren Akku nicht mehr
+// zum Zug kam) nachgeholt wird.
+async function autoSyncInitialisieren(){
+  if(!fileSystemAccessVerfuegbar()){ autoSyncStatus = 'nicht_unterstuetzt'; return; }
+  const handle = await autoSyncHandleLaden();
+  if(!handle){ autoSyncStatus = 'nicht_verbunden'; return; }
+  autoSyncOrdnerHandle = handle;
+  try{
+    const berechtigung = await handle.queryPermission({mode:'readwrite'});
+    if(berechtigung==='granted'){
+      autoSyncStatus = 'verbunden';
+      await autoSyncSchreiben();
+    } else {
+      autoSyncStatus = 'berechtigung_fehlt';
+    }
+  }catch(e){ autoSyncStatus = 'nicht_verbunden'; }
+}
+
+// Erneutes Bestätigen (Nutzer-Geste vorhanden -- z.B. Tap auf "Erneut
+// verbinden" in den Einstellungen), falls die Berechtigung abgelaufen ist.
+async function autoSyncBerechtigungErneuern(){
+  if(!autoSyncOrdnerHandle) return false;
+  try{
+    const berechtigt = await autoSyncOrdnerHandle.requestPermission({mode:'readwrite'});
+    if(berechtigt==='granted'){
+      autoSyncStatus = 'verbunden';
+      await autoSyncSchreiben();
+      return true;
+    }
+  }catch(e){}
+  return false;
 }
 
 function themaAnwenden(){
@@ -834,30 +1215,53 @@ document.getElementById('btnEinstellungen').onclick = ()=>{
 /* ==========================================================
    Rechnungspositionen-Auswahl (gemeinsame Ansicht für LS/PT)
    ========================================================== */
-function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter){
+function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, kmFahrstreckeGesamt){
   setzeTitel('Rechnungspositionen', null);
+  // Der Pfeil oben ist hier bewusst ausgeblendet (siehe setzeTitel-Aufruf
+  // oben) -- die Handy-"Zurück"-Taste soll aber trotzdem sinnvoll zur Maske
+  // zurückspringen, statt die App zu verlassen. vorbereiteRuecksprung/
+  // ruecksprungAusEinstellungen wurden vom Aufrufer (btnPunkte.onclick)
+  // bereits passend gesetzt, bevor diese Ansicht aufgebaut wurde.
+  aktuellerZurueckHandler = ()=>{ vorbereiteRuecksprung(); ruecksprungAusEinstellungen(); };
   const katalog = art==='ls' ? POSITIONEN_LS : POSITIONEN_PT;
   // Zeitzuschläge (F/G/H) und Wegegeld/Reiseentschädigung sind wie am PC
   // rein automatisch bestimmte Kategorien ("ZuschlagAuto"/"WegegeldAuto") --
   // sie werden von automatischeAuswahl() anhand Datum/Uhrzeit/km bestimmt
   // und sind bewusst NICHT manuell anwählbar (ausgegraut/gesperrt), damit
   // hier nichts abweichend vom errechneten Ergebnis angehakt werden kann.
+  // Reiseentschädigung wie am PC (AutoZeileEinfuegen "##KM##"): Beschriftung
+  // und Betrag zeigen zusätzlich die km-abhängige 26-ct-Zeile mit an.
+  const reise = reiseGesamtBetrag(kmFahrstreckeGesamt);
+  const reiseBez = reise.kmGerundet>0
+    ? `${REISEENTSCHAEDIGUNG.bez} (${reise.basis.toFixed(2).replace('.',',')} &euro;) + Wegstrecke ${reise.kmGerundet} km &times; 0,26 &euro;/km (${reise.kmZeile.toFixed(2).replace('.',',')} &euro;)`
+    : `${REISEENTSCHAEDIGUNG.bez} (zzgl. 0,26 &euro;/km Wegstrecke, sobald km bekannt)`;
+  // Gruppierung/Beschriftung wie am PC (SektionVonPunkt): "Grundpauschalen"
+  // statt "Grundleistung"; "E" ist inhaltlich kein Zeitzuschlag, wird aber
+  // zusammen mit F/G/H unter "Zeitzuschläge" geführt (bleibt aber -- anders
+  // als F/G/H -- manuell anhakbar); Wegegeld-Staffeln (Tag/Nacht) UND
+  // Reiseentschädigung fallen am PC unter EINE gemeinsame Überschrift
+  // "Wegegeld" statt mehrerer separater Abschnitte.
+  const eEintrag = (katalog.grundleistung||[]).find(p=>p.ziffer==='E');
+  const grundOhneE = (katalog.grundleistung||[]).filter(p=>p.ziffer!=='E');
   const gruppen = [
-    {titel:'Grundleistung', liste: katalog.grundleistung, automatisch:false},
-    {titel:'Zeitzuschläge', liste: ZUSCHLAEGE_ZEIT, automatisch:true},
-    {titel:'Wegegeld (Tag)', liste: WEGEGELD_TAG, automatisch:true},
-    {titel:'Wegegeld (Nacht)', liste: WEGEGELD_NACHT, automatisch:true},
-    {titel:'Sonstiges', liste: [{ziffer:'REISE', bez:REISEENTSCHAEDIGUNG.bez, betrag:REISEENTSCHAEDIGUNG.betrag}], automatisch:true}
+    {titel:'Grundpauschalen', liste: grundOhneE, automatisch:false},
+    {titel:'Zeitzuschläge', liste: eEintrag ? [...ZUSCHLAEGE_ZEIT, {...eEintrag, automatisch:false}] : ZUSCHLAEGE_ZEIT, automatisch:true},
+    {titel:'Wegegeld', liste: [...WEGEGELD_TAG, ...WEGEGELD_NACHT, {ziffer:'REISE', bez:reiseBez, betrag:reise.gesamt}], automatisch:true}
   ];
   let html = `<div class="maske ${art}">`;
   gruppen.forEach(g=>{
-    html += `<div class="positionen-gruppe-titel">${g.titel}${g.automatisch?' <span class="auto-hinweis">automatisch</span>':''}</div>`;
+    // Enthaelt eine Gruppe manuell UND automatisch bestimmte Positionen
+    // (z.B. "E" innerhalb "Zeitzuschläge"), wird "automatisch" nicht mehr
+    // pauschal in der Zwischenüberschrift, sondern je Position angezeigt.
+    const gemischt = g.liste.some(p => typeof p.automatisch==='boolean' && p.automatisch!==g.automatisch);
+    html += `<div class="positionen-gruppe-titel">${g.titel}${(g.automatisch && !gemischt)?' <span class="auto-hinweis">automatisch</span>':''}</div>`;
     g.liste.forEach(p=>{
+      const istAuto = (typeof p.automatisch==='boolean') ? p.automatisch : g.automatisch;
       const checked = ausgewaehlteZiffern.has(p.ziffer) ? 'checked' : '';
-      const gesperrt = g.automatisch ? 'disabled' : '';
-      html += `<label class="position-zeile${g.automatisch?' auto-gesperrt':''}">
-        <input type="checkbox" data-ziffer="${p.ziffer}" data-betrag="${p.betrag}" data-auto="${g.automatisch?'1':'0'}" ${checked} ${gesperrt}>
-        <div class="haupt"><span class="ziffer">${p.ziffer||''}</span> ${p.bez}</div>
+      const gesperrt = istAuto ? 'disabled' : '';
+      html += `<label class="position-zeile${istAuto?' auto-gesperrt':''}">
+        <input type="checkbox" data-ziffer="${p.ziffer}" data-betrag="${p.betrag}" data-auto="${istAuto?'1':'0'}" ${checked} ${gesperrt}>
+        <div class="haupt"><span class="ziffer">${p.ziffer||''}</span> ${p.bez}${gemischt&&istAuto?' <span class="auto-hinweis">automatisch</span>':''}</div>
         <div class="betrag">${p.betrag.toFixed(2).replace('.',',')} &euro;</div>
       </label>`;
     });
@@ -924,7 +1328,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const snap = werteEinsammeln();
     ruecksprungAusEinstellungen = ()=>ansichtMaske(art, korrekturIdx, {werte: snap, positionen: positionenAuswahl});
   };
-  setzeTitel(art==='ls' ? 'Leichenschau' : 'Privatrechnung', ansichtStart);
+  setzeTitel(art==='ls' ? 'Leichenschau' : 'Privatrechnung', zurueckAusMaske);
   let werte = {};
   let positionenAuswahl = null;
   if(vorbelegt){
@@ -935,7 +1339,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     werte = {...gespeichert.werte};
     positionenAuswahl = gespeichert.positionen ? new Set(gespeichert.positionen) : null;
   } else {
-    werte = {txtDatum: heuteAlsText(), txtDatumExcel: heuteAlsText()};
+    // Vorbelegung wie am PC (RechnungsdatumVorbelegen: Rechnungsdatum =
+    // naechster Werktag nach dem Datum der Todesbescheinigung/des
+    // Hausbesuchs, das seinerseits mit dem heutigen Datum vorbelegt ist;
+    // UserForm_Initialize: Sterbedatum bei LS ebenfalls mit heute vorbelegt).
+    const heute = heuteAlsText();
+    werte = {txtDatum: naechsterWerktagText(heute), txtDatumExcel: heute};
+    if(art==='ls') werte.txtSterbedatum = heute;
   }
   // Mehrfach-Diagnosen (nur PT) -- analog zu gDiagnosen am PC: je Eintrag
   // {text:"Beschreibung [Code]", flags:"" / "G" / "V" / "GV"}.
@@ -946,7 +1356,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     getValue(name){ const el=document.getElementById(name); return el? el.value : ''; },
     hinweis(text){ alertBanner(text); },
     async adresseVerlassen(){ await plzOrtPruefen('txtPAdresse1','txtPAdresse2'); await kmAutomatikAusloesen(); },
-    allePruefungenAusfuehren(){ alleChecksAusfuehren(); }
+    allePruefungenAusfuehren(){ alleChecksAusfuehren(true); }
   };
 
   function feldHtml(labelText, name, opts={}){
@@ -987,18 +1397,24 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 
   html += abschnitt('Patient',
     `<button class="btn-primaer blass" id="btnZwischenablage">Aus Zwischenablage einlesen</button>` +
+    `<div class="warnhinweis" id="zwischenablageHinweis"></div>` +
     feldHtml('Nachname, Vorname', 'txtName') +
     feldHtml(art==='ls' ? 'Straße + Hausnummer (Sterbeort)' : 'Straße + Hausnummer', 'txtPAdresse1') +
-    feldHtml(art==='ls' ? 'PLZ + Stadt (Sterbeort)' : 'PLZ + Stadt', 'txtPAdresse2') +
     (art==='ls' ? `
-      <button type="button" class="btn-sekundaer" id="btnSterbeAbw" style="margin-top:-4px;">
-        <span id="btnSterbeAbwText">${sterbeAbwOffen ? 'Sterbeort abweichend ✕' : 'Sterbeort abweichend?'}</span>
-        <span class="unter">Falls der Sterbeort nicht der Anschrift oben entspricht</span>
-      </button>
+      <div class="feld-zeile-mit-btn">
+        <div class="feld">
+          <label for="txtPAdresse2">PLZ + Stadt (Sterbeort)</label>
+          <input type="text" id="txtPAdresse2" value="${(werte.txtPAdresse2||'').replace(/"/g,'&quot;')}">
+        </div>
+        <button type="button" class="btn-inline-blass" id="btnSterbeAbw">
+          <span id="btnSterbeAbwText">${sterbeAbwOffen ? 'Sterbeort abw. ✕' : 'Sterbeort abw.?'}</span>
+        </button>
+      </div>
+      <div class="warnhinweis" id="txtPAdresse2_warn"></div>
       <div id="sterbeAbwFelder" class="${sterbeAbwOffen ? '' : 'versteckt'}">
         ${feldHtml('Straße + Hausnummer (Sterbeort, abw.)', 'txtSterbeAdr1')}
         ${feldHtml('PLZ + Stadt (Sterbeort, abw.)', 'txtSterbeAdr2')}
-      </div>` : '') +
+      </div>` : feldHtml('PLZ + Stadt', 'txtPAdresse2')) +
     feldHtml('Geburtsdatum (TT.MM.JJJJ)', 'txtGeda'));
 
   if(art==='ls'){
@@ -1019,7 +1435,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     `<div class="feld"><label>Strecke (Hin- und Rückfahrt)</label>
       <input type="text" id="txtKm" value="${(werte.txtKm||'')}" placeholder="wird automatisch berechnet">
       <input type="hidden" id="txtKmLuftlinie" value="${(werte.txtKmLuftlinie||'')}">
-      <div class="streckeninfo" id="streckeninfo"></div></div>`);
+      <div class="streckeninfo" id="streckeninfo"></div>
+      <div class="route-btn-reihe">
+        <button type="button" id="btnAlternativrouten">Alternativrouten</button>
+        <button type="button" id="btnGoogleMapsRoute">Google Maps Route</button>
+      </div>
+      <div class="routenoptionen" id="routenoptionen"></div>
+    </div>`);
 
   if(art==='ls'){
     html += abschnitt('Bestattungsunternehmen',
@@ -1028,13 +1450,18 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         <input type="text" id="txtBName" value="${(werte.txtBName||'').replace(/"/g,'&quot;')}" autocomplete="off">
         <div class="autocomplete-liste" id="bestatterVorschlaege"></div>
         <div class="warnhinweis" id="txtBName_warn"></div>
-      </div>` +
+      </div>
+      <div class="route-btn-reihe">
+        <button type="button" id="btnBestatterMaps">Google Maps öffnen</button>
+        <button type="button" id="btnBestatterAdresseEinlesen">Adresse einlesen</button>
+      </div>
+      <div class="warnhinweis" id="bestatterAdresseHinweis"></div>` +
       feldHtml('Straße + Hausnummer', 'txtAdresse1') +
       feldHtml('PLZ + Stadt', 'txtAdresse2'));
   }
 
   html += abschnitt('Rechnungspositionen',
-    `<button class="btn-sekundaer" id="btnPunkte">Rechnungspositionen auswählen
+    `<button class="btn-primaer blass" id="btnPunkte">Rechnungspositionen auswählen
       <span class="unter" id="punkteStatus">${positionenAuswahl? positionenAuswahl.size+' Position(en) ausgewählt' : 'noch nicht geprüft'}</span></button>`);
 
   html += `<div id="allgemeinerHinweis"></div>`;
@@ -1046,6 +1473,34 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   const feldIds = art==='ls'
     ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2']
     : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmLuftlinie'];
+
+  // Schnappschuss der Feldwerte GENAU SO, wie die Maske gerade aufgebaut
+  // wurde (frisch angelegt mit den Vorbelegungen, oder aus einer Korrektur
+  // geladen) -- Grundlage fuer die "noch nicht gespeichert"-Warnung beim
+  // Zurückgehen (Pfeil oder Handy-Zurück-Taste), siehe zurueckAusMaske().
+  const anfangsWerteJSON = JSON.stringify(werteEinsammeln());
+  function hatUngespeicherteAenderungen(){
+    return JSON.stringify(werteEinsammeln()) !== anfangsWerteJSON;
+  }
+  // Wie vom Nutzer gewünscht: die Handy-"Zurück"-Taste soll sich genauso
+  // verhalten wie der Zurück-Pfeil oben -- nicht die App schließen. Wurden
+  // seit dem Öffnen der Maske Werte geändert, ohne dass gespeichert wurde,
+  // wird das vor dem Verlassen zur Startseite als Hinweis (mit Wahlmöglich-
+  // keit) angezeigt statt die Eingaben stillschweigend zu verwerfen.
+  function zurueckAusMaske(){
+    if(hatUngespeicherteAenderungen()){
+      alertBanner(`Diese Rechnung wurde noch nicht gespeichert. Beim Zurückgehen gehen die Änderungen verloren.
+        <div class="aktionen">
+          <button data-akt="speichern">Jetzt speichern</button>
+          <button data-akt="verwerfen">Ohne Speichern zurück</button>
+        </div>`);
+      const warnEl = document.getElementById('allgemeinerHinweis');
+      warnEl.querySelector('[data-akt="speichern"]').onclick = ()=> document.getElementById('btnSpeichern').click();
+      warnEl.querySelector('[data-akt="verwerfen"]').onclick = ()=>{ warnEl.innerHTML=''; ansichtStart(); };
+      return;
+    }
+    ansichtStart();
+  }
 
   // Straße-Feld-Verhalten (str->straße + Großschreibung) VOR der
   // Geocoding-Auslösung registrieren, damit die Routen-/PLZ-Suche bereits
@@ -1072,10 +1527,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       const offen = !sterbeAbwFelder.classList.contains('versteckt');
       if(offen){
         sterbeAbwFelder.classList.add('versteckt');
-        sterbeAbwText.textContent = 'Sterbeort abweichend?';
+        sterbeAbwText.textContent = 'Sterbeort abw.?';
       } else {
         sterbeAbwFelder.classList.remove('versteckt');
-        sterbeAbwText.textContent = 'Sterbeort abweichend ✕';
+        sterbeAbwText.textContent = 'Sterbeort abw. ✕';
         document.getElementById('txtSterbeAdr1').focus();
       }
       kmAutomatikAusloesen();
@@ -1103,9 +1558,41 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     document.getElementById('txtAdresse1').addEventListener('blur', ()=> kmAutomatikAusloesen());
     document.getElementById('txtAdresse2').addEventListener('blur', ()=> kmAutomatikAusloesen());
     document.getElementById('txtAdresse2').addEventListener('blur', ()=> plzOrtPruefen('txtAdresse1','txtAdresse2'));
+
+    // "Google Maps öffnen": Adresse des Bestatters dort nachschlagen (Suche
+    // nach dem bereits eingetragenen Namen, falls vorhanden).
+    document.getElementById('btnBestatterMaps').onclick = ()=>{
+      const name = document.getElementById('txtBName').value.trim();
+      const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(name || 'Bestattungsunternehmen');
+      window.open(url, '_blank');
+    };
+
+    // "Adresse einlesen": die in Google Maps als EINE Zeile kopierte Adresse
+    // direkt (ohne manuelles Aufteilen) in Straße+Hausnummer / PLZ+Stadt
+    // übernehmen.
+    document.getElementById('btnBestatterAdresseEinlesen').onclick = async ()=>{
+      const hinweisEl = document.getElementById('bestatterAdresseHinweis');
+      const zeigeHinweis = (txt)=>{ if(!txt){ hinweisEl.classList.remove('aktiv'); hinweisEl.innerHTML=''; return; } hinweisEl.innerHTML = txt; hinweisEl.classList.add('aktiv'); };
+      zeigeHinweis('');
+      let text = '';
+      try{ text = await navigator.clipboard.readText(); }
+      catch(e){ zeigeHinweis('Zwischenablage konnte nicht gelesen werden. Bitte Berechtigung erteilen oder Text manuell einfügen.'); return; }
+      if(!text || !text.trim()){ zeigeHinweis('Die Zwischenablage ist leer.'); return; }
+      const erg = adressZeileTrennen(text);
+      if(!erg){ zeigeHinweis('Die Zwischenablage enthält keine erkennbare Adresse (erwartet: "Straße Hausnummer, PLZ Ort").'); return; }
+      document.getElementById('txtAdresse1').value = grossKleinNormalisieren(erg.strasse);
+      document.getElementById('txtAdresse2').value = grossKleinNormalisieren(erg.plzOrt);
+      strasseFeldBlur('txtAdresse1');
+      await plzOrtPruefen('txtAdresse1','txtAdresse2');
+      await kmAutomatikAusloesen();
+      zeigeHinweis('Adresse übernommen -- bitte kurz prüfen.');
+    };
   }
 
   document.getElementById('btnZwischenablage').onclick = ()=>ausZwischenablageEinlesen(art, ctx);
+
+  document.getElementById('btnAlternativrouten').onclick = ()=> alternativroutenAnzeigen();
+  document.getElementById('btnGoogleMapsRoute').onclick = ()=> googleMapsRouteOeffnen();
 
   if(art==='ls'){
     const bnameEl = document.getElementById('txtBName');
@@ -1177,29 +1664,31 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     });
   }
 
-  async function kmAutomatikAusloesen(){
-    const e = ladeEinstellungen();
-    const info = document.getElementById('streckeninfo');
-    if(!e.praxisadresse){ info.textContent = 'Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).'; return; }
-    let zielAdresse = '';
+  // Wie am PC (AktiverAdressBlock): ermittelt die aktuell fuer die Route
+  // massgebliche Zieladresse. Bei LS geht ein bereits bekanntes
+  // Bestattungsunternehmen vor, danach ein abweichender Sterbeort, sonst die
+  // Patientenadresse; bei PT immer die Patientenadresse. Wird sowohl von der
+  // automatischen km-Berechnung als auch von den Routen-Buttons genutzt.
+  function ermittleZielAdresse(){
     if(art==='ls'){
       const bstr = document.getElementById('txtAdresse1').value.trim();
       const bort = document.getElementById('txtAdresse2').value.trim();
-      // Reihenfolge wie am PC ergänzt (AktiverAdressBlock): ist ein
-      // abweichender Sterbeort eingetragen, ZÄHLT DIESER als Sterbeort für
-      // die Route -- nicht mehr die Patientenadresse. Ein bereits bekanntes
-      // Bestattungsunternehmen (Körper evtl. schon dorthin verbracht) geht
-      // weiterhin vor.
       const sterbeAdr1El = document.getElementById('txtSterbeAdr1');
       const sterbeAdr2El = document.getElementById('txtSterbeAdr2');
       const sstr = sterbeAdr1El ? sterbeAdr1El.value.trim() : '';
       const sort = sterbeAdr2El ? sterbeAdr2El.value.trim() : '';
-      if(bstr) zielAdresse = bstr+', '+bort;
-      else if(sstr || sort) zielAdresse = sstr+', '+sort;
-      else zielAdresse = document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim();
-    } else {
-      zielAdresse = document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim();
+      if(bstr) return bstr+', '+bort;
+      if(sstr || sort) return sstr+', '+sort;
+      return document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim();
     }
+    return document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim();
+  }
+
+  async function kmAutomatikAusloesen(){
+    const e = ladeEinstellungen();
+    const info = document.getElementById('streckeninfo');
+    if(!e.praxisadresse){ info.textContent = 'Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).'; return; }
+    const zielAdresse = ermittleZielAdresse();
     if(!zielAdresse.trim() || zielAdresse.trim()===',') return;
     info.textContent = 'Route wird berechnet …';
     try{
@@ -1232,6 +1721,73 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     }
   }
 
+  // Analog zur PC-Funktion KmBerechnen/RoutenAnzeigen: zeigt bis zu mehrere
+  // Routenalternativen (falls der Routendienst welche liefert) plus die
+  // Luftlinie als eigene Kachel an -- Antippen uebernimmt die gewaehlte
+  // Strecke in "Strecke (Hin- und Rückfahrt)", genau wie am PC RouteWaehlen()
+  // (Luftlinie bleibt Einfachstrecke, echte Routen werden Hin+Rück verdoppelt).
+  async function alternativroutenAnzeigen(){
+    const e = ladeEinstellungen();
+    const box = document.getElementById('routenoptionen');
+    if(!e.praxisadresse){ box.innerHTML = '<div class="routenoptionen-hinweis">Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).</div>'; box.classList.add('aktiv'); return; }
+    const zielAdresse = ermittleZielAdresse();
+    if(!zielAdresse.trim() || zielAdresse.trim()===','){ box.innerHTML = '<div class="routenoptionen-hinweis">Bitte zuerst die Zieladresse eintragen.</div>'; box.classList.add('aktiv'); return; }
+    box.innerHTML = '<div class="routenoptionen-hinweis">Routenalternativen werden ermittelt …</div>';
+    box.classList.add('aktiv');
+    try{
+      const start = await geocode(e.praxisadresse);
+      if(!start){ box.innerHTML = '<div class="routenoptionen-hinweis">Praxisadresse nicht auffindbar -- bitte in den Einstellungen prüfen.</div>'; return; }
+      const ziel = await geocode(zielAdresse);
+      if(!ziel){ box.innerHTML = '<div class="routenoptionen-hinweis">Zieladresse nicht gefunden.</div>'; return; }
+      const kmLuft = kmLuftlinieEinfach(start, ziel);
+      let routen = await routeAlternativen(start, ziel);
+      if(!routen.length){ box.innerHTML = '<div class="routenoptionen-hinweis">Route konnte nicht berechnet werden -- km bitte manuell eintragen oder über \'Google Maps Route\' prüfen.</div>'; return; }
+      // Wie am PC: doppelte/fast identische Alternativen (gleiche km auf 1
+      // Nachkommastelle gerundet) werden nicht mehrfach angezeigt.
+      const gesehen = new Set();
+      routen = routen.filter(r=>{ const key=(r.km*2).toFixed(1); if(gesehen.has(key)) return false; gesehen.add(key); return true; });
+      let html = '';
+      routen.forEach((r,i)=>{
+        const kmGesamt = r.km*2;
+        html += `<button type="button" data-km="${kmGesamt.toFixed(1)}" data-luft="">Fahrstrecke ${i+1}: ${kmGesamt.toFixed(1).replace('.',',')} km hin&amp;zurück (${Math.round(r.minuten)} min)</button>`;
+      });
+      html += `<button type="button" data-km="" data-luft="${kmLuft.toFixed(1)}">Luftlinie (einfach): ${kmLuft.toFixed(1).replace('.',',')} km</button>`;
+      box.innerHTML = html;
+      box.querySelectorAll('button').forEach(btn=>{
+        btn.onclick = ()=>{
+          if(btn.dataset.km){
+            document.getElementById('txtKm').value = btn.dataset.km;
+            document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
+          } else {
+            // Luftlinie-Kachel: wie am PC (RouteWaehlen idx=0) wird die
+            // Luftlinie selbst als Basis fuer die Fahrstrecke-Schätzung
+            // benutzt (dort gilt gManuellModus="LUFTLINIE").
+            document.getElementById('txtKm').value = (kmLuft*2).toFixed(1);
+            document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
+          }
+          box.classList.remove('aktiv'); box.innerHTML='';
+          document.getElementById('streckeninfo').textContent = 'Strecke manuell aus Alternativrouten übernommen.';
+          automatikVorschauAktualisieren();
+        };
+      });
+    }catch(err){
+      box.innerHTML = '<div class="routenoptionen-hinweis">Keine Internetverbindung -- km bitte manuell eintragen.</div>';
+    }
+  }
+
+  // Analog zur PC-Funktion KarteOeffnen/RouteImBrowserOeffnen: oeffnet die
+  // Strecke Praxis -> Zieladresse direkt in Google Maps (auf dem Handy per
+  // Deep-Link in der Google-Maps-App, sonst im Browser).
+  function googleMapsRouteOeffnen(){
+    const e = ladeEinstellungen();
+    if(!e.praxisadresse){ document.getElementById('streckeninfo').textContent = 'Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).'; return; }
+    const zielAdresse = ermittleZielAdresse();
+    if(!zielAdresse.trim() || zielAdresse.trim()===','){ document.getElementById('streckeninfo').textContent = 'Bitte zuerst die Zieladresse eintragen.'; return; }
+    const url = 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(e.praxisadresse)
+      +'&destination='+encodeURIComponent(zielAdresse)+'&travelmode=driving';
+    window.open(url, '_blank');
+  }
+
   // Wie am PC (AutoAktualisierenLive/AutoPunkteAktualisieren): sobald km,
   // Uhrzeit oder Datum sich aendern -- auch durch manuelle km-Eingabe ohne
   // Routenberechnung --, werden die automatisch bestimmten Positionen
@@ -1259,7 +1815,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 
     const alle = allePositionenFlach(katalog);
     let summe=0;
-    positionenAuswahl.forEach(z=>{ const p = alle.find(x=>x.ziffer===z); if(p) summe += p.betrag; });
+    positionenAuswahl.forEach(z=>{
+      if(z==='REISE'){ summe += reiseGesamtBetrag(kmFahrstrecke).gesamt; return; }
+      const p = alle.find(x=>x.ziffer===z); if(p) summe += p.betrag;
+    });
     const betragEl = document.getElementById('txtBetrag');
     if(betragEl) betragEl.value = summe.toFixed(2).replace('.',',');
     const statusEl = document.getElementById('punkteStatus');
@@ -1506,7 +2065,12 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     feldWarnung('txtBName', `Kein Bestattungsunternehmen angegeben -- die Rechnung wird an die Patientenadresse adressiert.`);
   }
 
-  function alleChecksAusfuehren(){
+  // ohneBestatter: wie am PC (bestatterKomplettLeer wird dort erst BEIM
+  // SPEICHERN abgefragt, nicht laufend) soll der "Kein Bestattungsunternehmen"-
+  // Hinweis nicht aufblitzen, wenn gerade Werte gesetzt wurden, die mit dem
+  // Bestatter-Abschnitt gar nichts zu tun haben (z.B. Zwischenablage-Einlesen
+  // der Patientendaten) -- der Nutzer ist dort ja noch gar nicht angekommen.
+  function alleChecksAusfuehren(ohneBestatter){
     pruefeJahrFeld('txtDatumExcel', art==='ls' ? 'Datum Todesbescheinigung' : 'Datum Hausbesuch');
     pruefeJahrFeld('txtDatum', 'Rechnungsdatum');
     pruefeZeitFeld('txtZeitLS', art==='ls' ? 'Zeitpunkt Leichenschau' : 'Uhrzeit Hausbesuch');
@@ -1514,7 +2078,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       pruefeJahrFeld('txtSterbedatum', 'Sterbedatum');
       pruefeZeitenLS();
       pruefeSterbedatum();
-      pruefeBestatterLeer();
+      if(!ohneBestatter) pruefeBestatterLeer();
     }
   }
   // Beim Öffnen einmal ausführen -- deckt auch die Werte ab, die beim Laden
@@ -1555,7 +2119,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       positionenAuswahl = gewaehlt;
       const neueWerte = {...snapVorPositionen, txtBetrag: summe.toFixed(2).replace('.',',')};
       ansichtMaske(art, korrekturIdx, {werte: neueWerte, positionen: positionenAuswahl});
-    });
+    }, kmFahrstrecke);
   };
 
   function werteEinsammeln(){
@@ -1601,6 +2165,68 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
    ========================================================== */
 themaAnwenden();
 ansichtStart();
+// Ohne await -- die Startansicht soll nicht auf die (async) Prüfung des
+// evtl. schon zuvor gewählten Sync-Ordners warten. Ist der Ordner noch
+// gültig verbunden, wird der aktuelle Stand direkt nachgeholt.
+autoSyncInitialisieren();
+
+/* ==========================================================
+   Handy-"Zurück"-Taste / Zurück-Wischgeste
+   ==========================================================
+   Ohne Eingriff wuerde die Hardware-/Gesten-"Zurück"-Taste eines Android-
+   Handys eine installierte PWA direkt schliessen (es gibt ja keine eigene
+   Browser-Adresszeilen-Historie). Stattdessen soll sie sich -- wie
+   gewuenscht -- genauso verhalten wie der Zurück-Pfeil oben in der Kopfzeile:
+   IMMER erst versuchen, es an aktuellerZurueckHandler() zu delegieren.
+   Nur auf der Startseite (aktuellerZurueckHandler ist dort null) bedeutet
+   "Zurück" tatsaechlich "App verlassen" -- dafuer erst ein "nochmal drücken"-
+   Hinweis (analog dem auf Android ueblichen "Nochmal drücken, um die App zu
+   beenden"), damit man nicht aus Versehen rausfliegt.
+   Technik: bei jedem Ansichtswechsel bleibt IMMER ein "Wächter"-Eintrag ganz
+   oben im Browser-Verlauf (history.pushState) -- das Zurückgehen darüber
+   hinaus loest dann popstate aus, statt die Seite/App wirklich zu verlassen.
+   ========================================================== */
+// Kurzer Einblend-Hinweis (siehe #appToast) -- liegt AUSSERHALB von #app,
+// wird also von einem Ansichtswechsel nicht mit weggerissen. Allgemein
+// nutzbar (Zurück-Taste-Hinweis, Auto-Sync-Rückmeldungen, ...).
+let appToastTimer = null;
+function appToastAnzeigen(text, dauerMs){
+  const toast = document.getElementById('appToast');
+  toast.textContent = text;
+  toast.classList.add('aktiv');
+  clearTimeout(appToastTimer);
+  appToastTimer = setTimeout(()=> toast.classList.remove('aktiv'), dauerMs || 2500);
+}
+
+(function hardwareZurueckEinrichten(){
+  let appBeendenBestaetigt = false;
+
+  function waechterSetzen(){
+    try{ history.pushState({rechnungserfassungWaechter:true}, '', location.href); }catch(e){}
+  }
+  waechterSetzen();
+
+  window.addEventListener('popstate', ()=>{
+    if(aktuellerZurueckHandler){
+      // Wie ein Klick auf den Zurück-Pfeil oben -- danach sofort wieder
+      // einen Wächter setzen, damit die NÄCHSTE Zurück-Taste erneut hier
+      // ankommt, statt die App zu verlassen.
+      waechterSetzen();
+      aktuellerZurueckHandler();
+      return;
+    }
+    // Startseite: erstes "Zurück" nur als Hinweis, zweites (innerhalb von
+    // 2,5 s) laesst die Taste tatsaechlich wirken (kein erneuter Wächter).
+    if(appBeendenBestaetigt){
+      appBeendenBestaetigt = false;
+      return;
+    }
+    waechterSetzen();
+    appBeendenBestaetigt = true;
+    appToastAnzeigen('Nochmal zurück drücken, um die App zu beenden.', 2500);
+    setTimeout(()=>{ appBeendenBestaetigt = false; }, 2500);
+  });
+})();
 
 if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
   navigator.serviceWorker.register('./sw.js').catch(()=>{});
