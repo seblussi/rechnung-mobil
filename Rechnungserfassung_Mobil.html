@@ -116,10 +116,15 @@
   }
   .feld input.grau{background:var(--grau-feld);}
   .feld input:focus, .feld select:focus{outline:2px solid var(--ls-farbe); outline-offset:0;}
+  .maske.pt .feld input:focus, .maske.pt .feld select:focus{outline-color:var(--pt-farbe);}
   /* Beim Klick auf "Speichern" fehlende Pflichtfelder rot umranden --
      deutlicher als nur der Text im Hinweisbanner oben, besonders bei
      längeren Masken, wo das fehlende Feld weit unten stehen kann. */
   .feld input.pflichtfeld-fehlt{border:2px solid var(--fehler);}
+  /* Gleiche rote Markierung auch für Pflicht-"Felder", die kein <input> in
+     einem .feld-Wrapper sind -- z.B. der "Rechnungspositionen auswählen"-
+     Button, wenn noch keine Position gewählt wurde. */
+  .btn-primaer.pflichtfeld-fehlt{border:2px solid var(--fehler) !important;}
   .warnhinweis{
     background:var(--warnung-bg); border:1px solid var(--warnung-rand); color:var(--warnung-text);
     border-radius:8px; padding:9px 11px; font-size:13px; margin-top:6px; display:none;
@@ -143,6 +148,10 @@
   .autocomplete-liste.aktiv{display:block;}
   .autocomplete-liste div{padding:9px 11px; font-size:14px; border-bottom:1px solid var(--rand); cursor:pointer;}
   .autocomplete-liste div:last-child{border-bottom:none;}
+  /* Freitext-Diagnose-Option optisch von den echten Katalog-Treffern
+     absetzen (kursiv + Akzentfarbe), damit klar ist, dass das kein
+     ICD-Katalogeintrag ist, sondern der frei eingetippte Text. */
+  .autocomplete-liste div.diag-freitext{font-style:italic; color:var(--pt-farbe); font-weight:600;}
   .btn-primaer{
     background:var(--ls-farbe); color:#fff; border:none; border-radius:10px; padding:14px;
     font-size:15px; font-weight:600; width:100%; margin-top:6px; cursor:pointer;
@@ -182,8 +191,14 @@
      folgt direkt auf den Button oben -- dessen eigener unterer Rand (14px)
      reicht als Abstand bereits aus. Der normale warnhinweis-margin-top
      (6px) addierte sich bisher zusaetzlich dazu und wirkte im Vergleich zum
-     sonstigen 12px-Rhythmus zwischen den Feldern spuerbar zu groß. */
-  #zwischenablageHinweis{margin-top:0;}
+     sonstigen 12px-Rhythmus zwischen den Feldern spuerbar zu groß.
+     NACH UNTEN fehlte dagegen JEDER Abstand: anders als ein normaler
+     warnhinweis (der innerhalb eines .feld sitzt und dessen 12px
+     margin-bottom den Abstand zum naechsten Feld liefert) steht dieser
+     Hinweis freistehend direkt vor dem "Nachname, Vorname"-Feld -- ohne
+     eigenen unteren Rand stieß die Box direkt an das Feld/Label darunter.
+     Jetzt mit demselben 12px-Rhythmus wie zwischen den uebrigen Feldern. */
+  #zwischenablageHinweis{margin-top:0; margin-bottom:12px;}
   .streckeninfo{font-size:12.5px; color:var(--text-schwach); margin-top:4px; min-height:16px;}
   /* Solange noch keine Strecke berechnet wurde, ist streckeninfo leer -- die
      feste Mindesthoehe sorgte dann trotzdem fuer einen spuerbar zu grossen
@@ -684,6 +699,12 @@ function plzAusText(text){
   const m = (text||'').match(/\b(\d{5})\b/);
   return m ? m[1] : '';
 }
+// Rueckgabe bewusst dreiwertig: ein gefundener String, '' bei einer
+// erfolgreichen Anfrage OHNE Treffer (Adresse/Ort existiert laut
+// Kartendienst schlicht nicht), oder null, wenn die Anfrage selbst
+// fehlgeschlagen ist (Netzwerkfehler -- meist fehlendes Internet, z.B.
+// beim Hausbesuch ohne Empfang). plzOrtPruefen() unterscheidet danach im
+// Hinweistext zwischen "nicht gefunden" und "vermutlich kein Internet".
 async function ortErmitteln(plz){
   try{
     const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&country=Germany&postalcode='+encodeURIComponent(plz);
@@ -692,7 +713,7 @@ async function ortErmitteln(plz){
     if(!data || !data.length) return '';
     const a = data[0].address || {};
     return a.city || a.town || a.village || a.municipality || a.city_district || '';
-  }catch(e){ return ''; }
+  }catch(e){ return null; }
 }
 async function plzErmitteln(adresse){
   try{
@@ -702,7 +723,18 @@ async function plzErmitteln(adresse){
     if(!data || !data.length) return '';
     const a = data[0].address || {};
     return a.postcode || '';
-  }catch(e){ return ''; }
+  }catch(e){ return null; }
+}
+// Kurzer, gut lesbarer Zusatzsatz für die Hinweistexte unten -- kombiniert
+// den eigentlichen Fehlschlag (Netzwerkanfrage fehlgeschlagen) mit dem
+// zusätzlichen Signal von navigator.onLine, damit die Vermutung "kein
+// Internet" nicht bei jedem einzelnen fehlgeschlagenen Request pauschal
+// behauptet wird, sondern nur wenn beides dafür spricht bzw. der Browser
+// selbst meldet, offline zu sein.
+function keinInternetHinweisText(){
+  return (typeof navigator!=='undefined' && navigator.onLine===false)
+    ? ' Es scheint aktuell keine Internetverbindung zu bestehen.'
+    : ' Vermutlich ist gerade keine Internetverbindung vorhanden (oder der Kartendienst ist nicht erreichbar).';
 }
 async function routeKm(start, ziel){
   const url = `https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${ziel.lon},${ziel.lat}?overview=false`;
@@ -1268,18 +1300,39 @@ function exportDatenBauen(){
 }
 async function jsonExport(){
   const daten = exportDatenBauen();
-  // WICHTIG: bewusst OHNE Datum im Dateinamen -- vorher entstand bei jedem
-  // Export am selben Tag eine neue Datei mit fortlaufender Nummer
-  // ("...(1).json", "...(2).json", ...), weil ein Download mit bereits
-  // vorhandenem Namen von Android/Chrome automatisch umbenannt statt
-  // ersetzt wird. Mit IMMER demselben Namen fragt das Ziel (z.B. der
-  // OneDrive-Ordner in "Dateien") beim erneuten Speichern stattdessen, ob
-  // die vorhandene Datei ersetzt werden soll -- bzw. ersetzt sie direkt.
   const dateiname = 'rechnungserfassung_export.json';
   const blob = new Blob([JSON.stringify(daten,null,2)], {type:'application/json'});
-  // Bevorzugt: natives Android-Teilen-Menü (Web Share API mit Datei) --
-  // darüber kann direkt "In Dateien speichern" -> verknüpftes OneDrive
-  // als Ziel gewählt werden, statt in den Standard-Downloads-Ordner.
+  // FIX: der gleichbleibende Dateiname allein reicht NICHT -- weder der
+  // Downloads-Ordner von Android/Chrome noch die meisten Teilen-Ziele
+  // (Dateien-App/OneDrive) fragen beim Download-Anker (<a download>) oder
+  // beim Teilen tatsächlich "ersetzen?"; stattdessen wird praktisch immer
+  // automatisch eine neu nummerierte Kopie angelegt. Bevorzugt daher jetzt
+  // das native "Speichern unter"-Fenster (File System Access API): dort
+  // kann derselbe Ordner UND derselbe Dateiname wie beim letzten Mal erneut
+  // gewählt werden, und der Browser fragt dabei selbst nach, ob die
+  // vorhandene Datei ersetzt werden soll (bzw. ersetzt sie direkt) --
+  // echtes Überschreiben, keine Duplikate.
+  if(typeof window.showSaveFilePicker === 'function'){
+    try{
+      const handle = await window.showSaveFilePicker({
+        suggestedName: dateiname,
+        types: [{description:'JSON', accept:{'application/json':['.json']}}]
+      });
+      const schreibbar = await handle.createWritable();
+      await schreibbar.write(blob);
+      await schreibbar.close();
+      appToastAnzeigen('Export gespeichert.', 2000);
+      return;
+    }catch(e){
+      // Abgebrochen (z.B. Nutzer hat den Dialog verlassen) oder von diesem
+      // Browser nicht unterstützt -- auf die Rückfallebenen unten wechseln.
+    }
+  }
+  // Rückfallebene 1: natives Android-Teilen-Menü (Web Share API mit Datei)
+  // -- darüber kann "In Dateien speichern" -> verknüpftes OneDrive als Ziel
+  // gewählt werden, statt in den Standard-Downloads-Ordner. Legt bei
+  // erneutem Export ggf. trotzdem eine nummerierte Kopie an (siehe oben),
+  // greift daher nur, wenn "Speichern unter" oben nicht verfügbar ist.
   const datei = new File([blob], dateiname, {type:'application/json'});
   if(navigator.canShare && navigator.canShare({files:[datei]})){
     try{
@@ -1289,6 +1342,7 @@ async function jsonExport(){
       // Abgebrochen oder fehlgeschlagen -- auf normalen Download zurückfallen.
     }
   }
+  // Rückfallebene 2: klassischer Download.
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = dateiname;
@@ -1452,12 +1506,17 @@ document.getElementById('btnEinstellungen').onclick = ()=>{
    Rechnungspositionen-Auswahl (gemeinsame Ansicht für LS/PT)
    ========================================================== */
 function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, kmFahrstreckeGesamt){
-  setzeTitel('Rechnungspositionen', null);
-  // Der Pfeil oben ist hier bewusst ausgeblendet (siehe setzeTitel-Aufruf
-  // oben) -- die Handy-"Zurück"-Taste soll aber trotzdem sinnvoll zur Maske
-  // zurückspringen, statt die App zu verlassen. vorbereiteRuecksprung/
-  // ruecksprungAusEinstellungen wurden vom Aufrufer (btnPunkte.onclick)
-  // bereits passend gesetzt, bevor diese Ansicht aufgebaut wurde.
+  // FIX: vorher wurde hier "null" als zurueckZiel übergeben -- dadurch war
+  // weder der Pfeil oben sichtbar, noch sprang die Handy-"Zurück"-Taste
+  // sinnvoll zur Maske zurück; stattdessen griff die allgemeine "nicht auf
+  // dem Hauptbildschirm"-Absicherung und sprang OHNE Rückfrage direkt zum
+  // Startbildschirm (Gefahr von Datenverlust). ruecksprungAusEinstellungen
+  // wurde vom Aufrufer (btnPunkte.onclick) bereits passend auf die Maske
+  // (mit Schnappschuss der Maskenwerte) gesetzt, bevor diese Ansicht
+  // aufgebaut wurde -- genau diese Funktion jetzt tatsächlich als
+  // zurueckZiel verwenden (als Closure, damit ein späteres Neusetzen von
+  // ruecksprungAusEinstellungen -- z.B. über das Zahnrad -- respektiert wird).
+  setzeTitel('Rechnungspositionen', ()=>ruecksprungAusEinstellungen());
   aktuellerZurueckHandler = ()=>{ vorbereiteRuecksprung(); ruecksprungAusEinstellungen(); };
   const katalog = art==='ls' ? POSITIONEN_LS : POSITIONEN_PT;
   // Zeitzuschläge (F/G/H) und Wegegeld/Reiseentschädigung sind wie am PC
@@ -1717,13 +1776,52 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2']
     : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmLuftlinie'];
 
+  // Pflichtfelder je Maskentyp (siehe btnSpeichern.onclick unten) -- ALLE
+  // Felder, die tatsächlich ausgefüllt werden sollen, nicht nur die
+  // ursprünglichen 3 (Name/Adresse/Datum). Grund: es konnte z.B. eine PT
+  // ohne Uhrzeit Hausbesuch und ohne Geburtsdatum gespeichert werden, was
+  // nicht passieren darf. txtKmLuftlinie bleibt bewusst außen vor (verstecktes
+  // Begleitfeld zu txtKm, wird zusammen mit diesem automatisch gesetzt,
+  // kann nicht separat rot umrandet werden). "Abweichender Sterbeort"
+  // (txtSterbeAdr1/2, nur bei Bedarf aufgeklappt) und die Bestatter-Adresse
+  // bleiben ebenfalls bewusst NICHT hart Pflicht -- das entspricht der
+  // PC-Logik (bestatterKomplettLeer darf bewusst leer bleiben, siehe
+  // pruefeBestatterLeer).
+  const pflichtfelderKonfig = art==='ls'
+    ? [
+        {id:'txtDatumExcel', label:'Datum Todesbescheinigung'},
+        {id:'txtZeitLS', label:'Zeitpunkt Leichenschau'},
+        {id:'txtDatum', label:'Rechnungsdatum'},
+        {id:'txtName', label:'Name'},
+        {id:'txtPAdresse1', label:'Straße + Hausnummer (Sterbeort)'},
+        {id:'txtPAdresse2', label:'PLZ + Stadt (Sterbeort)'},
+        {id:'txtGeda', label:'Geburtsdatum'},
+        {id:'txtSterbedatum', label:'Sterbedatum'},
+        {id:'txtTodeszeit', label:'Sterbezeitpunkt'},
+        {id:'txtKm', label:'Strecke (Hin- und Rückfahrt)'}
+      ]
+    : [
+        {id:'txtDatumExcel', label:'Datum Hausbesuch'},
+        {id:'txtZeitLS', label:'Uhrzeit Hausbesuch'},
+        {id:'txtDatum', label:'Rechnungsdatum'},
+        {id:'txtName', label:'Name'},
+        {id:'txtPAdresse1', label:'Straße + Hausnummer'},
+        {id:'txtPAdresse2', label:'PLZ + Stadt'},
+        {id:'txtGeda', label:'Geburtsdatum'},
+        {id:'txtKm', label:'Strecke (Hin- und Rückfahrt)'}
+      ];
+
   // Rote "Pflichtfeld fehlt"-Umrandung (siehe btnSpeichern.onclick unten)
   // wieder entfernen, sobald der Nutzer anfängt, das Feld auszufüllen --
   // ohne erneuten Speichern-Klick abwarten zu müssen.
-  ['txtName','txtPAdresse1','txtDatumExcel'].forEach(id=>{
+  pflichtfelderKonfig.forEach(({id})=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', ()=>{ if(el.value.trim()) el.classList.remove('pflichtfeld-fehlt'); });
   });
+  if(art==='pt'){
+    const diagEl0 = document.getElementById('txtDiag');
+    if(diagEl0) diagEl0.addEventListener('input', ()=> diagEl0.classList.remove('pflichtfeld-fehlt'));
+  }
 
   // Schnappschuss der Feldwerte GENAU SO, wie die Maske gerade aufgebaut
   // wurde (frisch angelegt mit den Vorbelegungen, oder aus einer Korrektur
@@ -1885,6 +1983,11 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   if(art==='pt'){
     function diagnosenRendern(){
       const el = document.getElementById('diagChips');
+      // Sobald mindestens eine Diagnose gewählt ist, gilt das Pflichtfeld
+      // als erfüllt -- rote Umrandung (siehe btnSpeichern.onclick) direkt
+      // wieder entfernen, ohne erneuten Speichern-Klick abwarten zu müssen.
+      const diagFeld = document.getElementById('txtDiag');
+      if(diagnosen.length && diagFeld) diagFeld.classList.remove('pflichtfeld-fehlt');
       if(!diagnosen.length){ el.innerHTML=''; return; }
       el.innerHTML = diagnosen.map((d,i)=>`
         <div class="diag-chip" data-idx="${i}">
@@ -1912,21 +2015,39 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 
     const diagEl = document.getElementById('txtDiag');
     const diagListe = document.getElementById('diagVorschlaege');
+    // Freie Diagnosen: nicht jede Diagnose steht im ICD-Katalog (bzw. ist
+    // dort noch nicht erfasst) -- deshalb wird zusätzlich zu den
+    // Katalog-Treffern immer eine "als Freitext übernehmen"-Option
+    // angeboten, sobald mind. 2 Zeichen eingetippt sind und der Text nicht
+    // schon exakt einem Treffer entspricht. Enter (Bildschirmtastatur
+    // "Weiter"/"Fertig") übernimmt den eingetippten Text ebenfalls direkt.
+    function diagnoseUebernehmen(txt){
+      txt = (txt||'').trim();
+      if(!txt) return;
+      if(!diagnosen.some(dd=>dd.text.toLowerCase()===txt.toLowerCase())){
+        diagnosen.push({text:txt, flags:''});
+        diagnosenRendern();
+      }
+      diagEl.value=''; diagListe.classList.remove('aktiv'); diagListe.innerHTML='';
+    }
     diagEl.addEventListener('input', ()=>{
+      const q = diagEl.value.trim();
       const treffer = icdSuchen(diagEl.value);
-      if(!treffer.length){ diagListe.classList.remove('aktiv'); diagListe.innerHTML=''; return; }
-      diagListe.innerHTML = treffer.map(t=>`<div data-txt="${t.replace(/"/g,'&quot;')}">${t}</div>`).join('');
+      let html = treffer.map(t=>`<div data-txt="${t.replace(/"/g,'&quot;')}">${t}</div>`).join('');
+      if(q.length>=2 && !treffer.some(t=>t.toLowerCase()===q.toLowerCase())){
+        html += `<div class="diag-freitext" data-txt="${q.replace(/"/g,'&quot;')}">&#10133; "${q}" als Freitext übernehmen</div>`;
+      }
+      if(!html){ diagListe.classList.remove('aktiv'); diagListe.innerHTML=''; return; }
+      diagListe.innerHTML = html;
       diagListe.classList.add('aktiv');
       diagListe.querySelectorAll('div').forEach(d=>{
-        d.onclick = ()=>{
-          const txt = d.dataset.txt;
-          if(!diagnosen.some(dd=>dd.text.toLowerCase()===txt.toLowerCase())){
-            diagnosen.push({text:txt, flags:''});
-            diagnosenRendern();
-          }
-          diagEl.value=''; diagListe.classList.remove('aktiv'); diagListe.innerHTML='';
-        };
+        d.onclick = ()=> diagnoseUebernehmen(d.dataset.txt);
       });
+    });
+    diagEl.addEventListener('keydown', (ev)=>{
+      if(ev.key!=='Enter') return;
+      ev.preventDefault();
+      diagnoseUebernehmen(diagEl.value);
     });
   }
 
@@ -1983,7 +2104,12 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         kmFahrstreckeGesamt.toFixed(1), kmLuft.toFixed(1)
       );
     }catch(e){
-      info.textContent = 'Keine Internetverbindung -- km bitte manuell eintragen.';
+      // Gleiche Unterscheidung wie bei der Adress-/PLZ-Prüfung
+      // (keinInternetHinweisText()): hier landet man ausschließlich, wenn
+      // die Anfrage selbst fehlgeschlagen ist (Netzwerkfehler) -- ein
+      // simples "nicht gefunden" (Praxis-/Zieladresse) wird oben bereits
+      // separat und ohne diesen Zusatz gemeldet.
+      info.textContent = 'Route konnte nicht berechnet werden.'+keinInternetHinweisText()+' km bitte manuell eintragen.';
     }
   }
 
@@ -2037,7 +2163,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         };
       });
     }catch(err){
-      box.innerHTML = '<div class="routenoptionen-hinweis">Keine Internetverbindung -- km bitte manuell eintragen.</div>';
+      box.innerHTML = '<div class="routenoptionen-hinweis">Alternativrouten konnten nicht berechnet werden.'+keinInternetHinweisText()+' km bitte manuell eintragen.</div>';
     }
   }
 
@@ -2211,7 +2337,20 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         feldWarnung(plzOrtId, '');
         kmAutomatikAusloesen();
       } else {
-        feldWarnung(plzOrtId, `Der Ort "${eingabe}" konnte nicht gefunden werden. Bitte PLZ und Ort manuell eintragen.`);
+        // FIX: ohne "So belassen"-Option blockierte dieser Hinweis das
+        // Speichern (siehe offeneWarnung-Prüfung in btnSpeichern.onclick)
+        // KOMPLETT und ohne jeden Ausweg, sobald kein Internet verfügbar
+        // war oder der Kartendienst die Adresse schlicht nicht kannte --
+        // analog zum bereits gelösten "Kein Bestattungsunternehmen"-Fall.
+        // Zusatz: plzErmitteln() liefert null (statt '') bei einem
+        // Netzwerkfehler -- dann vermutlich fehlendes Internet statt eines
+        // echten "Ort existiert nicht"-Falls, das wird jetzt im Text
+        // unterschieden.
+        const zusatz = ermitteltePlz===null ? keinInternetHinweisText() : '';
+        feldWarnung(plzOrtId, `Der Ort "${eingabe}" konnte nicht gefunden werden.${zusatz} Bitte PLZ und Ort manuell eintragen.
+          <div class="aktionen"><button data-akt="behalten">So belassen</button></div>`);
+        const warnEl = document.getElementById(plzOrtId+'_warn');
+        warnEl.querySelector('[data-akt="behalten"]').onclick = ()=> feldWarnung(plzOrtId, '');
       }
       return;
     }
@@ -2227,7 +2366,15 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         feldWarnung(plzOrtId, '');
         kmAutomatikAusloesen();
       } else {
-        feldWarnung(plzOrtId, `Zur PLZ "${eingegebenePlz}" konnte kein Ort gefunden werden. Bitte manuell ergänzen.`);
+        // FIX: siehe Begründung beim gleichartigen Fall oben -- "So
+        // belassen" ergänzt, damit dieser Hinweis das Speichern nicht mehr
+        // ohne jeden Ausweg blockiert; plus Internet-Hinweis bei
+        // Netzwerkfehler (ortErmitteln()===null).
+        const zusatz = ermittelterOrt===null ? keinInternetHinweisText() : '';
+        feldWarnung(plzOrtId, `Zur PLZ "${eingegebenePlz}" konnte kein Ort gefunden werden.${zusatz} Bitte manuell ergänzen.
+          <div class="aktionen"><button data-akt="behalten">So belassen</button></div>`);
+        const warnEl = document.getElementById(plzOrtId+'_warn');
+        warnEl.querySelector('[data-akt="behalten"]').onclick = ()=> feldWarnung(plzOrtId, '');
       }
       return;
     }
@@ -2239,7 +2386,15 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const plzLautKarte = await plzErmitteln(adrVoll);
     if(feld.value.trim() !== eingabe) return;
     if(!plzLautKarte){
-      feldWarnung(plzOrtId, `Die Adresse "${adrVoll}" konnte laut Kartendienst nicht gefunden werden. Bitte prüfen.`);
+      // FIX: siehe Begründung oben -- ohne Kartendienst (z.B. kein Internet
+      // beim Hausbesuch) blockierte dieser Hinweis das Speichern zuvor
+      // vollständig; plus Internet-Hinweis bei Netzwerkfehler
+      // (plzErmitteln()===null statt '' bei nur leerem Ergebnis).
+      const zusatz = plzLautKarte===null ? keinInternetHinweisText() : '';
+      feldWarnung(plzOrtId, `Die Adresse "${adrVoll}" konnte laut Kartendienst nicht gefunden werden.${zusatz} Bitte prüfen.
+        <div class="aktionen"><button data-akt="behalten">So belassen</button></div>`);
+      const warnEl = document.getElementById(plzOrtId+'_warn');
+      warnEl.querySelector('[data-akt="behalten"]').onclick = ()=> feldWarnung(plzOrtId, '');
       return;
     }
     if(plzLautKarte !== eingegebenePlz){
@@ -2482,17 +2637,45 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     // oben oder unten stehen) deutlich schneller auf als nur der Text im
     // Banner. Wird bei jedem Speichern-Versuch neu berechnet, damit ein
     // inzwischen ausgefülltes Feld die rote Umrandung auch wieder verliert.
-    const pflichtfelder = ['txtName','txtPAdresse1','txtDatumExcel'];
+    // ALLE Pflichtfelder werden geprüft (nicht nur das erste gefundene) und
+    // alle fehlenden Bezeichnungen im Hinweistext genannt -- vorher wurden
+    // nur 3 fest verdrahtete Felder geprüft, wodurch z.B. eine PT ohne
+    // Uhrzeit Hausbesuch und ohne Geburtsdatum gespeichert werden konnte.
     let ersteFehlendeId = null;
-    pflichtfelder.forEach(id=>{
+    const fehlendeLabels = [];
+    pflichtfelderKonfig.forEach(({id, label})=>{
       const el = document.getElementById(id);
       if(!el) return;
       const fehlt = !el.value.trim();
       el.classList.toggle('pflichtfeld-fehlt', fehlt);
-      if(fehlt && !ersteFehlendeId) ersteFehlendeId = id;
+      if(fehlt){
+        fehlendeLabels.push(label);
+        if(!ersteFehlendeId) ersteFehlendeId = id;
+      }
     });
+    // Diagnose (nur PT): mindestens eine ausgewählte Diagnose nötig.
+    if(art==='pt'){
+      const diagFeld = document.getElementById('txtDiag');
+      const diagFehlt = !diagnosen.length;
+      if(diagFeld) diagFeld.classList.toggle('pflichtfeld-fehlt', diagFehlt);
+      if(diagFehlt){
+        fehlendeLabels.push('Diagnose (ICD-Suche)');
+        if(!ersteFehlendeId) ersteFehlendeId = 'txtDiag';
+      }
+    }
+    // Rechnungspositionen (beide Maskentypen): muss mindestens einmal
+    // geprüft/ausgewählt worden sein (auch die reine Automatik-Auswahl
+    // zählt -- entscheidend ist, dass btnPunkte tatsächlich einmal
+    // durchlaufen wurde, nicht nur die Grundleistung).
+    const positionenFehlen = !positionenAuswahl || positionenAuswahl.size===0;
+    const btnPunkteEl = document.getElementById('btnPunkte');
+    if(btnPunkteEl) btnPunkteEl.classList.toggle('pflichtfeld-fehlt', positionenFehlen);
+    if(positionenFehlen){
+      fehlendeLabels.push('Rechnungspositionen');
+      if(!ersteFehlendeId) ersteFehlendeId = 'btnPunkte';
+    }
     if(ersteFehlendeId){
-      alertBanner('Bitte mindestens Name, Adresse und Datum ausfüllen (rot umrandete Felder).');
+      alertBanner('Bitte noch ausfüllen: '+fehlendeLabels.join(', ')+' (rot umrandet).');
       document.getElementById(ersteFehlendeId).scrollIntoView({behavior:'smooth', block:'center'});
       return;
     }
