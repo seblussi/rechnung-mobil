@@ -178,6 +178,12 @@
      dadurch wirkte der Button spuerbar zu tief/asymmetrisch platziert.
      Hier bewusst gleicher Abstand (14px) ober- und unterhalb. */
   .trennlinie + .btn-primaer.blass{margin-top:0; margin-bottom:14px;}
+  /* Der Hinweis zum Zwischenablage-Import (erkannter Sterbezeitpunkt etc.)
+     folgt direkt auf den Button oben -- dessen eigener unterer Rand (14px)
+     reicht als Abstand bereits aus. Der normale warnhinweis-margin-top
+     (6px) addierte sich bisher zusaetzlich dazu und wirkte im Vergleich zum
+     sonstigen 12px-Rhythmus zwischen den Feldern spuerbar zu groß. */
+  #zwischenablageHinweis{margin-top:0;}
   .streckeninfo{font-size:12.5px; color:var(--text-schwach); margin-top:4px; min-height:16px;}
   /* Solange noch keine Strecke berechnet wurde, ist streckeninfo leer -- die
      feste Mindesthoehe sorgte dann trotzdem fuer einen spuerbar zu grossen
@@ -1475,7 +1481,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   const grundOhneE = (katalog.grundleistung||[]).filter(p=>p.ziffer!=='E');
   const gruppen = [
     {titel:'Grundpauschalen', liste: grundOhneE, automatisch:false},
-    {titel:'Zeitzuschläge', liste: eEintrag ? [...ZUSCHLAEGE_ZEIT, {...eEintrag, automatisch:false}] : ZUSCHLAEGE_ZEIT, automatisch:true},
+    {titel:'Zeitzuschläge', liste: eEintrag ? [{...eEintrag, automatisch:false}, ...ZUSCHLAEGE_ZEIT] : ZUSCHLAEGE_ZEIT, automatisch:true},
     {titel:'Wegegeld', liste: [...WEGEGELD_TAG, ...WEGEGELD_NACHT, {ziffer:'REISE', bez:reiseBez, betrag:reise.gesamt}], automatisch:true}
   ];
   let html = `<div class="maske ${art}">`;
@@ -2036,22 +2042,27 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   }
 
   // Analog zur PC-Funktion KarteOeffnen/RouteImBrowserOeffnen: oeffnet die
-  // Strecke Praxis -> Zieladresse -> zurück zur Praxis direkt in Google
-  // Maps (auf dem Handy per Deep-Link in der Google-Maps-App, sonst im
-  // Browser) -- wie am PC berechnet wird ja auch Hin- UND Rückfahrt
+  // Strecke Praxis -> Patientenadresse -> zurück zur Praxis direkt in
+  // Google Maps (auf dem Handy per Deep-Link in der Google-Maps-App, sonst
+  // im Browser) -- wie am PC berechnet wird ja auch Hin- UND Rückfahrt
   // (Rechnungspositionen "Strecke (Hin- und Rückfahrt)"), daher soll die
   // angezeigte Route in Google Maps das Gleiche zeigen statt nur der
-  // einfachen Strecke. Umgesetzt als Route mit Ziel=Praxis und der
-  // eigentlichen Zieladresse als Zwischenstopp (waypoints) -- Google Maps
-  // zeigt das als Rundfahrt Praxis -> Ziel -> Praxis.
+  // einfachen Strecke. Umgesetzt als Route mit Start UND Ziel=Praxis und
+  // der Patientenadresse als Zwischenstopp (waypoints) -- Google Maps zeigt
+  // das als Rundfahrt Praxis -> Patient -> Praxis.
+  // WICHTIG: bewusst immer die Patientenadresse (txtPAdresse1/2) als
+  // Zwischenstopp, NICHT ermittleZielAdresse() -- diese folgt bei LS der
+  // PC-Prioritaet Bestatter > abw. Sterbeort > Patient und bleibt dafuer
+  // (km-Berechnung/Wegegeld) unveraendert; die Navigation zum tatsaechlichen
+  // Einsatzort soll aber unabhaengig davon immer zum Patienten fuehren.
   function googleMapsRouteOeffnen(){
     const e = ladeEinstellungen();
     if(!e.praxisadresse){ document.getElementById('streckeninfo').textContent = 'Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).'; return; }
-    const zielAdresse = ermittleZielAdresse();
-    if(!zielAdresse.trim() || zielAdresse.trim()===','){ document.getElementById('streckeninfo').textContent = 'Bitte zuerst die Zieladresse eintragen.'; return; }
+    const patientAdresse = document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim();
+    if(!patientAdresse.trim() || patientAdresse.trim()===','){ document.getElementById('streckeninfo').textContent = 'Bitte zuerst die Patientenadresse eintragen.'; return; }
     const url = 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(e.praxisadresse)
       +'&destination='+encodeURIComponent(e.praxisadresse)
-      +'&waypoints='+encodeURIComponent(zielAdresse)
+      +'&waypoints='+encodeURIComponent(patientAdresse)
       +'&travelmode=driving';
     window.open(url, '_blank');
   }
@@ -2286,6 +2297,14 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     return true;
   }
 
+  // 1:1 wie am PC (ZeitenPlausibelKern): Dienstende 08:30 -- eine
+  // Leichenschau, deren Uhrzeit noch in dieses Fenster (00:00-08:30) fällt,
+  // gehört üblicherweise noch zur vorherigen Nachtschicht/zum Vortag, auch
+  // wenn ihre UHRZEIT dadurch rein numerisch vor dem Sterbezeitpunkt liegt
+  // -- das ist dann KEIN Vertauscher, sondern ein normaler
+  // Mitternachtsübergang.
+  const DIENSTENDE_MINUTEN = 8*60+30;
+
   function pruefeZeitenLS(){
     if(art!=='ls') return;
     // txtZeitLS wird bereits separat ueber pruefeZeitFeld() geprüft (s.u.
@@ -2302,7 +2321,46 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       return;
     }
     if(!zLS){ feldWarnung('txtTodeszeit', ''); return; }
-    if(zeitInMinuten(zLS) >= zeitInMinuten(zSterbe)){ feldWarnung('txtTodeszeit', ''); return; }
+
+    // Zeitpunkt LS liegt (rein von der Uhrzeit her) NACH dem
+    // Sterbezeitpunkt -- der Normalfall, keine Warnung.
+    if(zeitInMinuten(zLS) > zeitInMinuten(zSterbe)){ feldWarnung('txtTodeszeit', ''); return; }
+
+    // Zeitpunkt LS liegt zeitlich vor/gleich dem Sterbezeitpunkt: entweder
+    // ein Mitternachtsübergang (LS noch im Dienstzeitfenster der
+    // Nachtschicht) oder tatsächlich vertauscht -- wie am PC zuerst das
+    // Dienstzeitfenster prüfen.
+    if(zeitInMinuten(zLS) <= DIENSTENDE_MINUTEN){
+      const dSterbe = normalisiereDatum(document.getElementById('txtSterbedatum').value);
+      const dLS = normalisiereDatum(document.getElementById('txtDatumExcel').value);
+      if(dSterbe && dLS){
+        if(alsDatum(dSterbe) < alsDatum(dLS)){
+          // Sterbedatum liegt vor dem Datum der Todesbescheinigung --
+          // klassischer Nachtschicht-Übergang (z.B. Sterbezeitpunkt 23:50
+          // am Vortag, Leichenschau 00:20 am Folgetag noch bis Dienstende).
+          // Plausibel, keine Warnung.
+          feldWarnung('txtTodeszeit', '');
+          return;
+        }
+        if(alsDatum(dSterbe).getTime() === alsDatum(dLS).getTime()){
+          // Verdachtsfall wie am PC: Sterbedatum und Datum der
+          // Todesbescheinigung sind gleich, obwohl die Leichenschau im
+          // Dienstzeitfenster (bis 08:30) stattfand -- deutet auf ein
+          // möglicherweise falsches Datum auf dem Leichenschauschein hin.
+          // Wird NICHT automatisch korrigiert (das Datum wird vom
+          // amtlichen Schein abgeschrieben), nur gezielt gewarnt.
+          feldWarnung('txtTodeszeit', `Die Leichenschau fand um ${zLS} statt -- das liegt im Zeitfenster bis Dienstende (08:30) und gehört damit vermutlich noch zum VORHERIGEN Kalendertag. Sterbedatum und Datum der Todesbescheinigung sind aber auf denselben Tag (${dLS}) eingetragen -- möglicherweise wurde auf dem Leichenschauschein ein falsches Datum eingetragen. Bitte mit dem Original abgleichen.`);
+          return;
+        }
+        // dSterbe > dLS: ungültige Kombination, wird bereits separat von
+        // pruefeSterbedatum() gemeldet -- hier (wie am PC) ohne Exit
+        // weiter zur generischen Vertauscht-Prüfung unten.
+      }
+    }
+
+    // Ausserhalb des Dienstzeitfensters (oder obige Datumslogik hat nicht
+    // gegriffen): naheliegender Verdacht -- die beiden Uhrzeiten wurden
+    // schlicht vertauscht eingetragen.
     feldWarnung('txtTodeszeit', `Leichenschau (${zLS}) liegt vor dem Sterbezeitpunkt (${zSterbe}) -- eventuell vertauscht.
       <div class="aktionen">
         <button data-akt="tauschen">Uhrzeiten tauschen</button>
