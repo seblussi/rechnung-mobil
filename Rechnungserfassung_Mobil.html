@@ -116,6 +116,10 @@
   }
   .feld input.grau{background:var(--grau-feld);}
   .feld input:focus, .feld select:focus{outline:2px solid var(--ls-farbe); outline-offset:0;}
+  /* Beim Klick auf "Speichern" fehlende Pflichtfelder rot umranden --
+     deutlicher als nur der Text im Hinweisbanner oben, besonders bei
+     längeren Masken, wo das fehlende Feld weit unten stehen kann. */
+  .feld input.pflichtfeld-fehlt{border:2px solid var(--fehler);}
   .warnhinweis{
     background:var(--warnung-bg); border:1px solid var(--warnung-rand); color:var(--warnung-text);
     border-radius:8px; padding:9px 11px; font-size:13px; margin-top:6px; display:none;
@@ -898,9 +902,16 @@ const btnZurueck = document.getElementById('btnZurueck');
 // bedeutet: wir sind auf der Startseite -- dort löst die Taste stattdessen
 // den "App beenden?"-Hinweis aus (siehe hardwareZurueckEinrichten unten).
 let aktuellerZurueckHandler = null;
+// Explizites Flag (statt nur "aktuellerZurueckHandler ist null" als
+// Kriterium): NUR auf dem Hauptbildschirm (ansichtStart) darf die
+// Zurück-Taste ueberhaupt in Richtung "App beenden" zaehlen. Wird in
+// ansichtStart() auf true, hier (zentral bei JEDEM Ansichtswechsel) immer
+// zuerst auf false gesetzt.
+let aktuelleAnsichtIstHauptbildschirm = false;
 
 function setzeTitel(t, zurueckZiel){
   titel.textContent = t;
+  aktuelleAnsichtIstHauptbildschirm = false;
   aktuellerZurueckHandler = zurueckZiel || null;
   if(zurueckZiel){ btnZurueck.style.visibility='visible'; btnZurueck.onclick = zurueckZiel; }
   else { btnZurueck.style.visibility='hidden'; btnZurueck.onclick=null; }
@@ -938,6 +949,10 @@ function ansichtStart(){
   einstellungenOffen = false;
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtStart(); };
   setzeTitel('Rechnungserfassung', null);
+  // NACH setzeTitel() (das es zentral auf false setzt) -- markiert: wir
+  // sind jetzt wirklich auf dem Hauptbildschirm. Siehe
+  // aktuelleAnsichtIstHauptbildschirm-Deklaration weiter oben.
+  aktuelleAnsichtIstHauptbildschirm = true;
   const faelleLS = ladeFaelle('ls').length, faellePT = ladeFaelle('pt').length;
   const gesamtOffen = faelleLS+faellePT;
   let html = `
@@ -973,6 +988,25 @@ function ansichtStart(){
   };
 }
 
+// Teilt "txtName" in Nachname/Vorname auf -- 1:1 wie am PC
+// (RechnungErstellen_Click): ENTHÄLT der Name ein Komma, gilt das Format
+// "Nachname, Vorname" (Teil vor dem Komma = Nachname). Ohne Komma gilt am
+// PC stattdessen "Vorname Nachname" (natürliche Reihenfolge!) -- erstes
+// leerzeichengetrenntes Wort = Vorname, LETZTES Wort = Nachname (ein
+// mehrteiliger Nachname ohne Komma wie "Otto von Bismarck" würde am PC
+// genauso nur "Otto" als Vorname und "Bismarck" als Nachname erkennen).
+function nameAufteilen(cName){
+  const name = (cName||'').trim();
+  if(!name) return {nachname:'', vorname:''};
+  if(name.indexOf(',')>=0){
+    const teile = name.split(',');
+    return {nachname:(teile[0]||'').trim(), vorname:(teile[1]||'').trim()};
+  }
+  const teile = name.split(' ').filter(Boolean);
+  if(teile.length<2) return {nachname:'', vorname:''};
+  return {vorname:teile[0], nachname:teile[teile.length-1]};
+}
+
 // Baut aus einem Fall EINE tab-getrennte Zeile im Format der Excel-
 // Rechnungsübersicht (vom Nutzer bestätigte Spaltenreihenfolge A..Y),
 // damit sie sich direkt in Excel einfügen laesst (Excel/Sheets trennen
@@ -986,9 +1020,7 @@ function faelleAlsUebersichtsZeilen(faelle){
   return faelle.map(f=>{
     const w = f.werte;
     const spalten = new Array(25).fill(''); // A..Y
-    const teile = (w.txtName||'').split(',');
-    const nachname = (teile[0]||'').trim();
-    const vorname = (teile[1]||'').trim();
+    const {nachname, vorname} = nameAufteilen(w.txtName);
     spalten[0] = f.art==='ls' ? 'L' : 'P';                          // A: L/P
     spalten[1] = w.txtDatumExcel || '';                              // B: Datum LS/HB
     spalten[2] = w.txtZeitLS || '';                                  // C: Uhrzeit LS/HB
@@ -1526,6 +1558,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const snap = werteEinsammeln();
     ruecksprungAusEinstellungen = ()=>ansichtMaske(art, korrekturIdx, {werte: snap, positionen: positionenAuswahl});
   };
+  // Wurde die Maske aus der Rechnungsübersicht heraus geöffnet (Klick auf
+  // eine bestehende Rechnung -- erkennbar an gesetztem korrekturIdx), soll
+  // "Zurück" (Pfeil, Handy-Taste ODER nach dem Speichern) auch wieder dahin
+  // zurückführen statt immer auf die Startseite. Bei einer neu angelegten
+  // Rechnung (kein korrekturIdx, ueber die Kacheln Leichenschau/Privat-
+  // rechnung gestartet) bleibt es bei der Startseite.
+  const ruecksprungZiel = korrekturIdx!==undefined ? ansichtKorrigieren : ansichtStart;
   setzeTitel(art==='ls' ? 'Leichenschau' : 'Privatrechnung', zurueckAusMaske);
   let werte = {};
   let positionenAuswahl = null;
@@ -1672,6 +1711,14 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2']
     : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmLuftlinie'];
 
+  // Rote "Pflichtfeld fehlt"-Umrandung (siehe btnSpeichern.onclick unten)
+  // wieder entfernen, sobald der Nutzer anfängt, das Feld auszufüllen --
+  // ohne erneuten Speichern-Klick abwarten zu müssen.
+  ['txtName','txtPAdresse1','txtDatumExcel'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', ()=>{ if(el.value.trim()) el.classList.remove('pflichtfeld-fehlt'); });
+  });
+
   // Schnappschuss der Feldwerte GENAU SO, wie die Maske gerade aufgebaut
   // wurde (frisch angelegt mit den Vorbelegungen, oder aus einer Korrektur
   // geladen) -- Grundlage fuer die "noch nicht gespeichert"-Warnung beim
@@ -1694,10 +1741,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         </div>`);
       const warnEl = document.getElementById('allgemeinerHinweis');
       warnEl.querySelector('[data-akt="speichern"]').onclick = ()=> document.getElementById('btnSpeichern').click();
-      warnEl.querySelector('[data-akt="verwerfen"]').onclick = ()=>{ warnEl.innerHTML=''; ansichtStart(); };
+      warnEl.querySelector('[data-akt="verwerfen"]').onclick = ()=>{ warnEl.innerHTML=''; ruecksprungZiel(); };
       return;
     }
-    ansichtStart();
+    ruecksprungZiel();
   }
 
   // Straße-Feld-Verhalten (str->straße + Großschreibung) VOR der
@@ -2363,13 +2410,39 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     // "bewusst so [zu] belassen", wie es der Hinweistext selbst anbietet).
     const offeneWarnung = app.querySelector('.warnhinweis.aktiv:not(#txtBName_warn)');
     if(offeneWarnung){
-      offeneWarnung.scrollIntoView({behavior:'smooth', block:'center'});
+      // WICHTIG: alertBanner() scrollt selbst auch (zum Banner unten) --
+      // erst NACH alertBanner() zum eigentlichen Hinweis scrollen, sonst
+      // gewinnt dessen Scroll und man landet wieder unten am Banner statt
+      // beim eigentlich markierten Feld.
       alertBanner('Bitte zuerst die markierten Hinweise oben prüfen (korrigieren oder bewusst so belassen).');
+      offeneWarnung.scrollIntoView({behavior:'smooth', block:'center'});
       return;
     }
     const w = werteEinsammeln();
-    if(!w.txtName || !w.txtPAdresse1 || !w.txtDatumExcel){
-      alertBanner('Bitte mindestens Name, Adresse und Datum ausfüllen.');
+    // Pflichtfelder, die fehlen, zusätzlich zum Hinweistext auch rot
+    // umranden -- fällt bei längeren Masken (das fehlende Feld kann weit
+    // oben oder unten stehen) deutlich schneller auf als nur der Text im
+    // Banner. Wird bei jedem Speichern-Versuch neu berechnet, damit ein
+    // inzwischen ausgefülltes Feld die rote Umrandung auch wieder verliert.
+    const pflichtfelder = ['txtName','txtPAdresse1','txtDatumExcel'];
+    let ersteFehlendeId = null;
+    pflichtfelder.forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      const fehlt = !el.value.trim();
+      el.classList.toggle('pflichtfeld-fehlt', fehlt);
+      if(fehlt && !ersteFehlendeId) ersteFehlendeId = id;
+    });
+    if(ersteFehlendeId){
+      alertBanner('Bitte mindestens Name, Adresse und Datum ausfüllen (rot umrandete Felder).');
+      document.getElementById(ersteFehlendeId).scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    // Format-Pruefung wie am PC (RechnungErstellen_Click): mit Komma IMMER
+    // "Nachname, Vorname"; ohne Komma "Vorname Nachname" (mind. 2 Wörter).
+    if(!nameAufteilen(w.txtName).nachname){
+      document.getElementById('txtName').classList.add('pflichtfeld-fehlt');
+      alertBanner(`Name "${w.txtName}" nicht erkannt -- bitte im Format "Nachname, Vorname" oder "Vorname Nachname" eingeben.`);
       return;
     }
     if(art==='ls' && w.txtBName){
@@ -2384,7 +2457,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     if(korrekturIdx!==undefined) faelle[korrekturIdx]=eintrag; else faelle.push(eintrag);
     speichereFaelle(art, faelle);
     alertBanner('Gespeichert. Wird beim nächsten Sync automatisch an den PC übertragen.');
-    setTimeout(ansichtStart, 900);
+    setTimeout(ruecksprungZiel, 900);
   };
 }
 
@@ -2447,6 +2520,24 @@ function appToastAnzeigen(text, dauerMs){
       // ankommt, statt die App zu verlassen.
       waechterSetzen();
       aktuellerZurueckHandler();
+      return;
+    }
+    // WICHTIG (Fix): das "2x Zurück beendet die App"-Verhalten darf
+    // AUSSCHLIESSLICH auf dem Hauptbildschirm greifen -- geprüft über das
+    // explizite aktuelleAnsichtIstHauptbildschirm-Flag, nicht nur implizit
+    // darüber, dass aktuellerZurueckHandler zufällig null ist. Ohne diese
+    // Absicherung konnte auf manchen Geräten (Android-Zurück-Geste/-Taste
+    // feuert dort ggf. anders/schneller als im Test) ein zweiter, sehr
+    // schnell aufeinanderfolgender Zurück-Tastendruck aus einer Maske
+    // heraus die App direkt UND OHNE jeden Hinweis beenden. Sind wir NICHT
+    // auf dem Hauptbildschirm (z.B. weil aktuellerZurueckHandler aus
+    // irgendeinem Grund nicht gesetzt war), wird stattdessen IMMER
+    // sicherheitshalber zur Startseite gesprungen statt die App zu
+    // gefährden.
+    if(!aktuelleAnsichtIstHauptbildschirm){
+      waechterSetzen();
+      appBeendenBestaetigt = false;
+      ansichtStart();
       return;
     }
     // Startseite, zweites "Zurück" (innerhalb von 2,5 s nach dem Hinweis):
