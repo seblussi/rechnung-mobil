@@ -1385,42 +1385,57 @@ function exportDatenBauen(){
   return {faelle: [...ladeFaelle('ls').map(f=>({...f,art:'ls'})), ...ladeFaelle('pt').map(f=>({...f,art:'pt'}))],
           bestatterAenderungen: ladeKatalog().filter(b=>b.herkunft==='handy')};
 }
+// KORREKTUR (mehrfach durchprobiert, auf Nutzerwunsch zurückgebaut):
+// Sowohl das "Speichern unter"-Fenster bei JEDEM Export (showSaveFilePicker)
+// als auch ein einmalig gewählter, dauerhaft gespeicherter Export-Ordner
+// (showDirectoryPicker + getFileHandle(...,{create:true}) + createWritable())
+// wurden ausprobiert, um das "immer neue Datei mit fortlaufender Zahl statt
+// Überschreiben"-Problem zu lösen -- auf dem tatsächlich genutzten Gerät
+// überschreibt aber KEINE der beiden Varianten zuverlässig (vermutlich eine
+// Android/Storage-Access-Framework-Eigenheit). Beide brachten also nur einen
+// zusätzlichen Dialog ohne echten Nutzen. Der manuelle Export ist deshalb
+// wieder auf die einfache, direkte Rückfallebene zurückgebaut:
+//  1) Ist der Auto-Sync-Ordner bereits verbunden (Weg A, siehe unten -- DER
+//     funktioniert zuverlässig, weil er nicht bei jedem Export neu
+//     nachfragt), wird die Export-Datei einfach zusätzlich dort abgelegt.
+//  2) Sonst: natives Teilen-Menü, sonst klassischer Download -- dort kann
+//     das Duplikat-Verhalten (fortlaufende Zahl) je nach Gerät weiterhin
+//     auftreten, mangels besserer, tatsächlich funktionierender Alternative.
+//     Der zuverlässige Weg dagegen bleibt der Auto-Sync.
+const EXPORT_DATEINAME = 'rechnungserfassung_export.json';
 async function jsonExport(){
   const daten = exportDatenBauen();
-  const dateiname = 'rechnungserfassung_export.json';
-  const blob = new Blob([JSON.stringify(daten,null,2)], {type:'application/json'});
-  // FIX: der gleichbleibende Dateiname allein reicht NICHT -- weder der
-  // Downloads-Ordner von Android/Chrome noch die meisten Teilen-Ziele
-  // (Dateien-App/OneDrive) fragen beim Download-Anker (<a download>) oder
-  // beim Teilen tatsächlich "ersetzen?"; stattdessen wird praktisch immer
-  // automatisch eine neu nummerierte Kopie angelegt. Bevorzugt daher jetzt
-  // das native "Speichern unter"-Fenster (File System Access API): dort
-  // kann derselbe Ordner UND derselbe Dateiname wie beim letzten Mal erneut
-  // gewählt werden, und der Browser fragt dabei selbst nach, ob die
-  // vorhandene Datei ersetzt werden soll (bzw. ersetzt sie direkt) --
-  // echtes Überschreiben, keine Duplikate.
-  if(typeof window.showSaveFilePicker === 'function'){
+  const inhalt = JSON.stringify(daten,null,2);
+
+  if(autoSyncStatus==='verbunden' && autoSyncOrdnerHandle){
     try{
-      const handle = await window.showSaveFilePicker({
-        suggestedName: dateiname,
-        types: [{description:'JSON', accept:{'application/json':['.json']}}]
-      });
-      const schreibbar = await handle.createWritable();
-      await schreibbar.write(blob);
+      const dateiHandle = await autoSyncOrdnerHandle.getFileHandle(EXPORT_DATEINAME, {create:true});
+      const schreibbar = await dateiHandle.createWritable();
+      await schreibbar.write(inhalt);
       await schreibbar.close();
-      appToastAnzeigen('Export gespeichert.', 2000);
+      appToastAnzeigen('Export im Sync-Ordner gespeichert ("'+EXPORT_DATEINAME+'").', 2500);
       return;
     }catch(e){
-      // Abgebrochen (z.B. Nutzer hat den Dialog verlassen) oder von diesem
-      // Browser nicht unterstützt -- auf die Rückfallebenen unten wechseln.
+      // Berechtigung zwischenzeitlich entzogen o.ä. -- normal weiter unten
+      // versuchen (eigener Export-Ordner bzw. Rückfallebene).
     }
   }
-  // Rückfallebene 1: natives Android-Teilen-Menü (Web Share API mit Datei)
-  // -- darüber kann "In Dateien speichern" -> verknüpftes OneDrive als Ziel
-  // gewählt werden, statt in den Standard-Downloads-Ordner. Legt bei
-  // erneutem Export ggf. trotzdem eine nummerierte Kopie an (siehe oben),
-  // greift daher nur, wenn "Speichern unter" oben nicht verfügbar ist.
-  const datei = new File([blob], dateiname, {type:'application/json'});
+
+  // KORREKTUR (auf Nutzerwunsch zurückgebaut): der Ordner-Auswahl-Dialog
+  // (showDirectoryPicker) sollte das seit Anfang an bekannte
+  // "immer neue Datei mit fortlaufender Zahl statt Überschreiben"-Problem
+  // lösen -- tut es auf dem tatsächlich genutzten Gerät aber nachweislich
+  // NICHT (vermutlich eine Android/Storage-Access-Framework-Eigenheit, die
+  // auch einen "echten" Ordner-Handle beim Schreiben wie einen Download
+  // behandelt). Der zusätzliche Dialog brachte also nur eine weitere
+  // Bestätigung ohne jeden Nutzen -- daher wieder die einfache, direkte
+  // Rückfallebene ohne Ordnerauswahl: natives Teilen-Menü, sonst klassischer
+  // Download. Das bereits bekannte Duplikat-Verhalten (fortlaufende Zahl)
+  // kann dabei mangels besserer, tatsächlich funktionierender Alternative
+  // auf diesem Gerät weiterhin auftreten -- der zuverlässige Weg dagegen
+  // bleibt der oben bereits vorhandene Auto-Sync ("Weg A").
+  const blob = new Blob([inhalt], {type:'application/json'});
+  const datei = new File([blob], EXPORT_DATEINAME, {type:'application/json'});
   if(navigator.canShare && navigator.canShare({files:[datei]})){
     try{
       await navigator.share({files:[datei], title:'Rechnungserfassung Export'});
@@ -1429,10 +1444,9 @@ async function jsonExport(){
       // Abgebrochen oder fehlgeschlagen -- auf normalen Download zurückfallen.
     }
   }
-  // Rückfallebene 2: klassischer Download.
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = dateiname;
+  a.download = EXPORT_DATEINAME;
   a.click();
 }
 
@@ -2027,8 +2041,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   if(art==='ls'){
     document.getElementById('txtSterbedatum').addEventListener('blur', ()=> datumFeldBlur('txtSterbedatum'));
     document.getElementById('txtTodeszeit').addEventListener('blur', ()=> zeitFeldBlur('txtTodeszeit'));
-    document.getElementById('txtAdresse1').addEventListener('blur', ()=> kmAutomatikAusloesen());
-    document.getElementById('txtAdresse2').addEventListener('blur', ()=> kmAutomatikAusloesen());
+    // KORREKTUR: die Bestatter-Adresse loest -- wie am PC
+    // (BestatterAdresseVerlassen macht dort ausschliesslich PLZ/Ort-
+    // Ergaenzung, NIE eine km-Neuberechnung) -- bewusst KEINE automatische
+    // km-Berechnung mehr aus, siehe ermittleZielAdresse().
     document.getElementById('txtAdresse2').addEventListener('blur', ()=> plzOrtPruefen('txtAdresse1','txtAdresse2'));
 
     // "Google Maps öffnen": Adresse des Bestatters dort nachschlagen (Suche
@@ -2064,7 +2080,6 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       document.getElementById('txtAdresse2').value = grossKleinNormalisieren(erg.plzOrt);
       strasseFeldBlur('txtAdresse1');
       await plzOrtPruefen('txtAdresse1','txtAdresse2');
-      await kmAutomatikAusloesen();
       zeigeHinweis('Adresse übernommen -- bitte kurz prüfen.');
     };
   }
@@ -2090,7 +2105,6 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
           document.getElementById('txtAdresse1').value = d.dataset.a1;
           document.getElementById('txtAdresse2').value = d.dataset.a2;
           liste.classList.remove('aktiv'); liste.innerHTML='';
-          kmAutomatikAusloesen();
         };
       });
     });
@@ -2172,17 +2186,26 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // Bestattungsunternehmen vor, danach ein abweichender Sterbeort, sonst die
   // Patientenadresse; bei PT immer die Patientenadresse. Wird sowohl von der
   // automatischen km-Berechnung als auch von den Routen-Buttons genutzt.
+  // KORREKTUR: die Bestatter-Adresse (txtAdresse1/2) darf hier -- wie am PC
+  // (AktiverAdressBlock in KmBerechnen) -- NIE als Fahrtziel herangezogen
+  // werden. Der Arzt fährt zum Sterbeort, nicht zum Bestattungsunternehmen;
+  // Letzteres dient ausschließlich der Rechnungskorrespondenz. Am PC ist das
+  // Ziel entweder der geöffnete abweichende Sterbeort-Block ("sterbeort")
+  // oder sonst immer die Patientenadresse/Sterbeort-Standard ("patient") --
+  // eine bereits eingetragene Bestatter-Adresse spielt für die Route/km
+  // keinerlei Rolle. Vorher wurde sie hier fälschlich zuerst geprüft, was bei
+  // einem weiter entfernten Bestattungsunternehmen zu absurd hohen
+  // automatischen km-Werten führte (nur bei LS möglich, da PT keine
+  // Bestatter-Adresse kennt).
   function ermittleZielAdresse(){
     if(art==='ls'){
-      const bstr = document.getElementById('txtAdresse1').value.trim();
-      const bort = document.getElementById('txtAdresse2').value.trim();
-      const sterbeAdr1El = document.getElementById('txtSterbeAdr1');
-      const sterbeAdr2El = document.getElementById('txtSterbeAdr2');
-      const sstr = sterbeAdr1El ? sterbeAdr1El.value.trim() : '';
-      const sort = sterbeAdr2El ? sterbeAdr2El.value.trim() : '';
-      if(bstr) return bstr+', '+bort;
-      if(sstr || sort) return sstr+', '+sort;
-      return document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim();
+      const sterbeAbwFelder = document.getElementById('sterbeAbwFelder');
+      const abwOffen = sterbeAbwFelder && !sterbeAbwFelder.classList.contains('versteckt');
+      if(abwOffen){
+        const sstr = document.getElementById('txtSterbeAdr1').value.trim();
+        const sort = document.getElementById('txtSterbeAdr2').value.trim();
+        return sstr+', '+sort;
+      }
     }
     return document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim();
   }
