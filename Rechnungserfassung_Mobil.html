@@ -118,6 +118,7 @@
     border-radius:8px; padding:9px 11px; font-size:13px; margin-top:6px; display:none;
   }
   .warnhinweis.aktiv{display:block;}
+  .versteckt{display:none;}
   .warnhinweis .aktionen{margin-top:8px; display:flex; gap:8px;}
   .warnhinweis button{
     border:1px solid var(--warnung-rand); background:transparent; color:var(--warnung-text);
@@ -169,6 +170,12 @@
   .position-zeile .ziffer{font-weight:600; color:var(--text-schwach); font-size:12px;}
   .position-zeile .betrag{font-weight:600; min-width:60px; text-align:right; font-size:14px;}
   .positionen-gruppe-titel{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--text-schwach); margin:18px 0 4px;}
+  .auto-hinweis{font-weight:400; text-transform:none; letter-spacing:0; font-style:italic;}
+  /* Automatik-Kategorien (Zeitzuschlag/Wegegeld/Reise) sind nicht manuell
+     anwählbar -- optisch klar als gesperrt/ausgegraut erkennbar, analog zu
+     einer durch Ausschluss gesperrten Position. */
+  .position-zeile.auto-gesperrt{opacity:.55;}
+  .position-zeile input:disabled{cursor:default;}
   .summenzeile{display:flex; justify-content:space-between; font-size:17px; font-weight:700; padding:16px 0; border-top:2px solid var(--rand); margin-top:8px;}
 
   .diag-chip{
@@ -293,6 +300,22 @@ function normalisiereZeit(eingabe){
   let h=parseInt(teile[0],10), m=parseInt(teile[1],10);
   if(isNaN(h)||isNaN(m)||h<0||h>23||m<0||m>59) return '';
   return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+// Uhrzeit-Kurzeingabe ohne Doppelpunkt: "830" -> "8:30", "1430" -> "14:30",
+// "8" -> "8:00". Wird beim Verlassen eines Uhrzeitfeldes VOR der
+// Formatprüfung angewendet, damit normalisiereZeit() danach ganz normal
+// greifen kann. Eingaben mit Doppelpunkt oder die keine reine Zahl sind
+// bleiben unverändert (Prüfung/Fehlermeldung übernimmt normalisiereZeit()).
+function zeitDoppelpunktErgaenzen(eingabe){
+  if(!eingabe) return eingabe;
+  const w = eingabe.trim();
+  if(w.indexOf(':')!==-1) return w;
+  const ohneUhr = w.replace(/Uhr/gi,'').trim();
+  if(!/^\d+$/.test(ohneUhr)) return w;
+  if(ohneUhr.length<=2) return ohneUhr+':00';
+  if(ohneUhr.length===3) return ohneUhr.slice(0,1)+':'+ohneUhr.slice(1);
+  if(ohneUhr.length===4) return ohneUhr.slice(0,2)+':'+ohneUhr.slice(2);
+  return w;
 }
 function zeitInMinuten(hhmm){
   if(!hhmm) return -1;
@@ -814,20 +837,26 @@ document.getElementById('btnEinstellungen').onclick = ()=>{
 function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter){
   setzeTitel('Rechnungspositionen', null);
   const katalog = art==='ls' ? POSITIONEN_LS : POSITIONEN_PT;
+  // Zeitzuschläge (F/G/H) und Wegegeld/Reiseentschädigung sind wie am PC
+  // rein automatisch bestimmte Kategorien ("ZuschlagAuto"/"WegegeldAuto") --
+  // sie werden von automatischeAuswahl() anhand Datum/Uhrzeit/km bestimmt
+  // und sind bewusst NICHT manuell anwählbar (ausgegraut/gesperrt), damit
+  // hier nichts abweichend vom errechneten Ergebnis angehakt werden kann.
   const gruppen = [
-    {titel:'Grundleistung', liste: katalog.grundleistung},
-    {titel:'Zeitzuschläge', liste: ZUSCHLAEGE_ZEIT},
-    {titel:'Wegegeld (Tag)', liste: WEGEGELD_TAG},
-    {titel:'Wegegeld (Nacht)', liste: WEGEGELD_NACHT},
-    {titel:'Sonstiges', liste: [{ziffer:'REISE', bez:REISEENTSCHAEDIGUNG.bez, betrag:REISEENTSCHAEDIGUNG.betrag}]}
+    {titel:'Grundleistung', liste: katalog.grundleistung, automatisch:false},
+    {titel:'Zeitzuschläge', liste: ZUSCHLAEGE_ZEIT, automatisch:true},
+    {titel:'Wegegeld (Tag)', liste: WEGEGELD_TAG, automatisch:true},
+    {titel:'Wegegeld (Nacht)', liste: WEGEGELD_NACHT, automatisch:true},
+    {titel:'Sonstiges', liste: [{ziffer:'REISE', bez:REISEENTSCHAEDIGUNG.bez, betrag:REISEENTSCHAEDIGUNG.betrag}], automatisch:true}
   ];
   let html = `<div class="maske ${art}">`;
   gruppen.forEach(g=>{
-    html += `<div class="positionen-gruppe-titel">${g.titel}</div>`;
+    html += `<div class="positionen-gruppe-titel">${g.titel}${g.automatisch?' <span class="auto-hinweis">automatisch</span>':''}</div>`;
     g.liste.forEach(p=>{
       const checked = ausgewaehlteZiffern.has(p.ziffer) ? 'checked' : '';
-      html += `<label class="position-zeile">
-        <input type="checkbox" data-ziffer="${p.ziffer}" data-betrag="${p.betrag}" ${checked}>
+      const gesperrt = g.automatisch ? 'disabled' : '';
+      html += `<label class="position-zeile${g.automatisch?' auto-gesperrt':''}">
+        <input type="checkbox" data-ziffer="${p.ziffer}" data-betrag="${p.betrag}" data-auto="${g.automatisch?'1':'0'}" ${checked} ${gesperrt}>
         <div class="haupt"><span class="ziffer">${p.ziffer||''}</span> ${p.bez}</div>
         <div class="betrag">${p.betrag.toFixed(2).replace('.',',')} &euro;</div>
       </label>`;
@@ -854,6 +883,10 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter){
     const boxen = Array.from(app.querySelectorAll('.position-zeile input'));
     const aktive = new Set(boxen.filter(cb=>cb.checked).map(cb=>cb.dataset.ziffer));
     boxen.forEach(cb=>{
+      // Automatik-Kategorien (Zeitzuschlag/Wegegeld/Reise) bleiben immer
+      // gesperrt -- die Ausschluss-Logik betrifft nur die manuell wählbaren
+      // Grundleistungs-Positionen.
+      if(cb.dataset.auto==='1') return;
       const ausschluesse = ZIFFER_AUSSCHLUESSE[cb.dataset.ziffer];
       const zeile = cb.closest('.position-zeile');
       if(!ausschluesse){ cb.disabled=false; if(zeile) zeile.style.opacity=''; return; }
@@ -947,11 +980,25 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     `<div class="feld"><label>Rechnungsbetrag (&euro;)</label>
       <input type="text" id="txtBetrag" class="grau" value="${werte.txtBetrag||''}" readonly></div>`);
 
+  // Abweichender Sterbeort (nur LS): wie am PC standardmäßig eingeklappt,
+  // aber automatisch aufgeklappt, wenn schon Werte dafür gespeichert sind
+  // (z.B. beim erneuten Öffnen eines korrigierten Falls).
+  const sterbeAbwOffen = art==='ls' && !!((werte.txtSterbeAdr1||'').trim() || (werte.txtSterbeAdr2||'').trim());
+
   html += abschnitt('Patient',
     `<button class="btn-primaer blass" id="btnZwischenablage">Aus Zwischenablage einlesen</button>` +
     feldHtml('Nachname, Vorname', 'txtName') +
     feldHtml(art==='ls' ? 'Straße + Hausnummer (Sterbeort)' : 'Straße + Hausnummer', 'txtPAdresse1') +
     feldHtml(art==='ls' ? 'PLZ + Stadt (Sterbeort)' : 'PLZ + Stadt', 'txtPAdresse2') +
+    (art==='ls' ? `
+      <button type="button" class="btn-sekundaer" id="btnSterbeAbw" style="margin-top:-4px;">
+        <span id="btnSterbeAbwText">${sterbeAbwOffen ? 'Sterbeort abweichend ✕' : 'Sterbeort abweichend?'}</span>
+        <span class="unter">Falls der Sterbeort nicht der Anschrift oben entspricht</span>
+      </button>
+      <div id="sterbeAbwFelder" class="${sterbeAbwOffen ? '' : 'versteckt'}">
+        ${feldHtml('Straße + Hausnummer (Sterbeort, abw.)', 'txtSterbeAdr1')}
+        ${feldHtml('PLZ + Stadt (Sterbeort, abw.)', 'txtSterbeAdr2')}
+      </div>` : '') +
     feldHtml('Geburtsdatum (TT.MM.JJJJ)', 'txtGeda'));
 
   if(art==='ls'){
@@ -997,7 +1044,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   app.innerHTML = html;
 
   const feldIds = art==='ls'
-    ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2']
+    ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2']
     : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmLuftlinie'];
 
   // Straße-Feld-Verhalten (str->straße + Großschreibung) VOR der
@@ -1012,11 +1059,38 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // PLZ/Ort-Erkennung wie am PC: beim Verlassen des kombinierten
   // "PLZ + Ort"-Feldes ergänzen/prüfen.
   document.getElementById('txtPAdresse2').addEventListener('blur', ()=> plzOrtPruefen('txtPAdresse1','txtPAdresse2'));
+
+  // Abweichender Sterbeort (nur LS): Auf-/Zuklappen-Button plus dieselbe
+  // Straße-/PLZ-Ort-Behandlung wie bei den übrigen Adressfeldern. Ist dieser
+  // Block ausgefüllt, gilt ER (nicht die Patientenadresse) als Sterbeort für
+  // die Routenberechnung -- wie am PC (AktiverAdressBlock).
+  if(art==='ls'){
+    const btnSterbeAbw = document.getElementById('btnSterbeAbw');
+    const sterbeAbwFelder = document.getElementById('sterbeAbwFelder');
+    const sterbeAbwText = document.getElementById('btnSterbeAbwText');
+    btnSterbeAbw.onclick = ()=>{
+      const offen = !sterbeAbwFelder.classList.contains('versteckt');
+      if(offen){
+        sterbeAbwFelder.classList.add('versteckt');
+        sterbeAbwText.textContent = 'Sterbeort abweichend?';
+      } else {
+        sterbeAbwFelder.classList.remove('versteckt');
+        sterbeAbwText.textContent = 'Sterbeort abweichend ✕';
+        document.getElementById('txtSterbeAdr1').focus();
+      }
+      kmAutomatikAusloesen();
+    };
+    document.getElementById('txtSterbeAdr1').addEventListener('blur', ()=> strasseFeldBlur('txtSterbeAdr1'));
+    ['txtSterbeAdr1','txtSterbeAdr2'].forEach(id=>{
+      document.getElementById(id).addEventListener('blur', ()=> kmAutomatikAusloesen());
+    });
+    document.getElementById('txtSterbeAdr2').addEventListener('blur', ()=> plzOrtPruefen('txtSterbeAdr1','txtSterbeAdr2'));
+  }
   document.getElementById('txtDatumExcel').addEventListener('blur', ()=>{ datumFeldBlur('txtDatumExcel'); automatikVorschauAktualisieren(); });
   document.getElementById('txtDatum').addEventListener('blur', ()=> datumFeldBlur('txtDatum'));
   // txtZeitLS existiert in BEIDEN Masken (LS: "Zeitpunkt Leichenschau",
   // PT: "Uhrzeit Hausbesuch") -- Format-Pruefung gilt daher fuer beide.
-  document.getElementById('txtZeitLS').addEventListener('blur', ()=>{ alleChecksAusfuehren(); automatikVorschauAktualisieren(); });
+  document.getElementById('txtZeitLS').addEventListener('blur', ()=>{ zeitFeldBlur('txtZeitLS'); automatikVorschauAktualisieren(); });
   // km-Feld: wie am PC live neu berechnen, sobald sich der Wert ändert --
   // auch bei rein manueller Eingabe ohne Routenberechnung (siehe
   // automatikVorschauAktualisieren, behebt außerdem den Bug, dass dabei
@@ -1025,7 +1099,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   document.getElementById('txtKm').addEventListener('input', automatikVorschauAktualisieren);
   if(art==='ls'){
     document.getElementById('txtSterbedatum').addEventListener('blur', ()=> datumFeldBlur('txtSterbedatum'));
-    document.getElementById('txtTodeszeit').addEventListener('blur', alleChecksAusfuehren);
+    document.getElementById('txtTodeszeit').addEventListener('blur', ()=> zeitFeldBlur('txtTodeszeit'));
     document.getElementById('txtAdresse1').addEventListener('blur', ()=> kmAutomatikAusloesen());
     document.getElementById('txtAdresse2').addEventListener('blur', ()=> kmAutomatikAusloesen());
     document.getElementById('txtAdresse2').addEventListener('blur', ()=> plzOrtPruefen('txtAdresse1','txtAdresse2'));
@@ -1111,7 +1185,18 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     if(art==='ls'){
       const bstr = document.getElementById('txtAdresse1').value.trim();
       const bort = document.getElementById('txtAdresse2').value.trim();
-      zielAdresse = bstr ? (bstr+', '+bort) : (document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim());
+      // Reihenfolge wie am PC ergänzt (AktiverAdressBlock): ist ein
+      // abweichender Sterbeort eingetragen, ZÄHLT DIESER als Sterbeort für
+      // die Route -- nicht mehr die Patientenadresse. Ein bereits bekanntes
+      // Bestattungsunternehmen (Körper evtl. schon dorthin verbracht) geht
+      // weiterhin vor.
+      const sterbeAdr1El = document.getElementById('txtSterbeAdr1');
+      const sterbeAdr2El = document.getElementById('txtSterbeAdr2');
+      const sstr = sterbeAdr1El ? sterbeAdr1El.value.trim() : '';
+      const sort = sterbeAdr2El ? sterbeAdr2El.value.trim() : '';
+      if(bstr) zielAdresse = bstr+', '+bort;
+      else if(sstr || sort) zielAdresse = sstr+', '+sort;
+      else zielAdresse = document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim();
     } else {
       zielAdresse = document.getElementById('txtPAdresse1').value.trim()+', '+document.getElementById('txtPAdresse2').value.trim();
     }
@@ -1227,6 +1312,14 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       const ergaenzt = datumKurzeingabeErgaenzen(el.value, el.value);
       if(ergaenzt) el.value = ergaenzt;
     }
+    alleChecksAusfuehren();
+  }
+
+  // Uhrzeit ohne Doppelpunkt (z.B. "1430") beim Verlassen des Feldes
+  // automatisch mit Doppelpunkt formatieren, bevor die Formatprüfung läuft.
+  function zeitFeldBlur(id){
+    const el = document.getElementById(id);
+    if(el) el.value = zeitDoppelpunktErgaenzen(el.value);
     alleChecksAusfuehren();
   }
 
