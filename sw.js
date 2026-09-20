@@ -9,9 +9,9 @@
 // App auf dem Handy nach einem Update "haengen" bleibt) die CACHE_NAME-
 // Versionsnummer erhoehen -- nur so erkennt der Browser ueberhaupt, dass
 // sich der Service Worker geaendert hat und tauscht ihn aus.
-const CACHE_NAME = 'rechnungserfassung-v2';
+const CACHE_NAME = 'rechnungserfassung-v3';
 const NETZWERK_ZUERST = ['./Rechnungserfassung_Mobil.html', './manifest.json', './'];
-const CACHE_ZUERST = ['./icd_katalog.js'];
+const CACHE_ZUERST = ['./icd_katalog.js', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

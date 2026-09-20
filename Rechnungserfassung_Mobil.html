@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Rechnungserfassung</title>
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
 <meta name="theme-color" content="#2b3a55">
 <script src="icd_katalog.js"></script>
 <style>
@@ -987,7 +989,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   alleChecksAusfuehren();
 
   function alertBanner(text){
-    document.getElementById('allgemeinerHinweis').innerHTML = `<div class="warnhinweis aktiv">${text}</div>`;
+    const zielEl = document.getElementById('allgemeinerHinweis');
+    zielEl.innerHTML = `<div class="warnhinweis aktiv">${text}</div>`;
+    // Der Hinweis sitzt weit unten in der Maske (unterhalb der Rechnungs-
+    // positionen) -- ohne aktives Hinscrollen sieht man z.B. eine
+    // Zwischenablage-Fehlermeldung leicht gar nicht, wenn man gerade oben
+    // auf den Button geklickt hat.
+    zielEl.scrollIntoView({behavior:'smooth', block:'center'});
   }
 
   document.getElementById('btnPunkte').onclick = ()=>{
@@ -1004,19 +1012,18 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       ruecksprungAusEinstellungen = ()=>ansichtMaske(art, korrekturIdx, {werte: snapVorPositionen, positionen: positionenAuswahl});
     };
     ansichtPositionen(art, basis, null, (gewaehlt, summe)=>{
+      // WICHTIG: an dieser Stelle zeigt der Bildschirm noch die Rechnungs-
+      // positionen-Ansicht, nicht die Maske -- "punkteStatus"/"txtBetrag"
+      // existieren im DOM also (noch) gar nicht. Statt sie (fälschlich)
+      // direkt zu beschreiben, bauen wir die Maske mit den VORHER
+      // gesicherten Werten plus dem neuen Betrag/der neuen Auswahl frisch
+      // auf -- das hat vorher zu einem stillen Fehler geführt, der einen
+      // auf der Positionen-Seite "gefangen" hat.
       positionenAuswahl = gewaehlt;
-      document.getElementById('punkteStatus').textContent = gewaehlt.size+' Position(en) ausgewählt';
-      document.getElementById('txtBetrag').value = summe.toFixed(2).replace('.',',');
-      ansichtMaskeWiederherstellen();
+      const neueWerte = {...snapVorPositionen, txtBetrag: summe.toFixed(2).replace('.',',')};
+      ansichtMaske(art, korrekturIdx, {werte: neueWerte, positionen: positionenAuswahl});
     });
   };
-  function ansichtMaskeWiederherstellen(){
-    // Nach Rückkehr von der Positionen-Ansicht die Maske mit den zuvor
-    // eingegebenen Werten UND der getroffenen Positionen-Auswahl neu
-    // aufbauen (einfacher als ein echter Zurück-Stack).
-    const aktuelleWerte = werteEinsammeln();
-    ansichtMaske(art, korrekturIdx, {werte: aktuelleWerte, positionen: positionenAuswahl});
-  }
 
   function werteEinsammeln(){
     const w = {};
