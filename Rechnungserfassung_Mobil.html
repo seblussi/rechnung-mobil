@@ -128,9 +128,14 @@
     border-radius:6px; padding:6px 10px; font-size:12.5px; cursor:pointer;
   }
   .autocomplete-liste{
-    border:1px solid var(--rand); border-top:none; border-radius:0 0 8px 8px; background:var(--karte);
-    max-height:160px; overflow-y:auto; display:none; margin-top:-12px; margin-bottom:12px;
+    border:1px solid var(--rand); border-top:3px solid var(--ls-farbe); border-radius:8px; background:var(--karte);
+    max-height:160px; overflow-y:auto; display:none; margin-top:6px; margin-bottom:12px;
+    box-shadow:0 2px 6px rgba(0,0,0,.08);
   }
+  /* Die farbige Linie markiert deutlich den oberen Rand des scrollbaren
+     Vorschlagsbereichs (statt wie vorher unauffaellig in Randfarbe) --
+     Farbe je nach Maske (ls/pt), analog zu den Abschnitts-Trennlinien. */
+  .maske.pt .autocomplete-liste{border-top-color:var(--pt-farbe);}
   .autocomplete-liste.aktiv{display:block;}
   .autocomplete-liste div{padding:9px 11px; font-size:14px; border-bottom:1px solid var(--rand); cursor:pointer;}
   .autocomplete-liste div:last-child{border-bottom:none;}
@@ -181,7 +186,7 @@
      Buttons statt dynamisch erzeugter PC-Buttons: "Alternativrouten" oeffnet
      eine Auswahlliste (routenoptionen), "Google Maps Route" oeffnet direkt
      die Google-Maps-App/-Webseite mit der Strecke. */
-  .route-btn-reihe{display:flex; gap:8px; margin-top:10px;}
+  .route-btn-reihe{display:flex; gap:8px; margin-top:10px; margin-bottom:12px;}
   .route-btn-reihe button{
     flex:1; padding:10px 6px; font-size:12.5px; font-weight:600; border-radius:8px;
     background:var(--karte); cursor:pointer; border:1.5px solid var(--ls-farbe); color:var(--ls-farbe);
@@ -899,6 +904,13 @@ function setzeTitel(t, zurueckZiel){
   aktuellerZurueckHandler = zurueckZiel || null;
   if(zurueckZiel){ btnZurueck.style.visibility='visible'; btnZurueck.onclick = zurueckZiel; }
   else { btnZurueck.style.visibility='hidden'; btnZurueck.onclick=null; }
+  // Jede Ansicht (Start, Maske, Rechnungspositionen, ...) ruft setzeTitel()
+  // als ersten Schritt auf -- zentraler Ort, um beim Ansichtswechsel IMMER
+  // nach oben zu scrollen. Ohne das behielt die neue Ansicht die alte
+  // Scroll-Position bei (z.B. "Rechnungspositionen auswählen" ganz unten in
+  // der Maske angeklickt -> neue Ansicht erschien dadurch mitten/unten
+  // statt von oben beginnend).
+  window.scrollTo(0,0);
 }
 
 // Zahnrad-Symbol soll Einstellungen wie eine Klappe auf-/zuklappen: ein
@@ -1218,7 +1230,14 @@ function exportDatenBauen(){
 }
 async function jsonExport(){
   const daten = exportDatenBauen();
-  const dateiname = 'rechnungserfassung_export_'+new Date().toISOString().slice(0,10)+'.json';
+  // WICHTIG: bewusst OHNE Datum im Dateinamen -- vorher entstand bei jedem
+  // Export am selben Tag eine neue Datei mit fortlaufender Nummer
+  // ("...(1).json", "...(2).json", ...), weil ein Download mit bereits
+  // vorhandenem Namen von Android/Chrome automatisch umbenannt statt
+  // ersetzt wird. Mit IMMER demselben Namen fragt das Ziel (z.B. der
+  // OneDrive-Ordner in "Dateien") beim erneuten Speichern stattdessen, ob
+  // die vorhandene Datei ersetzt werden soll -- bzw. ersetzt sie direkt.
+  const dateiname = 'rechnungserfassung_export.json';
   const blob = new Blob([JSON.stringify(daten,null,2)], {type:'application/json'});
   // Bevorzugt: natives Android-Teilen-Menü (Web Share API mit Datei) --
   // darüber kann direkt "In Dateien speichern" -> verknüpftes OneDrive
@@ -1722,6 +1741,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   }
   document.getElementById('txtDatumExcel').addEventListener('blur', ()=>{ datumFeldBlur('txtDatumExcel'); automatikVorschauAktualisieren(); });
   document.getElementById('txtDatum').addEventListener('blur', ()=> datumFeldBlur('txtDatum'));
+  // Geburtsdatum hatte bisher KEINEN Blur-Handler -- die Kurzeingabe-
+  // Ergänzung/Normalisierung (z.B. "1.1.99" -> "01.01.1999") lief hier also
+  // nie, im Unterschied zu allen anderen Datumsfeldern. Bewusst weiterhin
+  // OHNE die Jahres-Plausibilitätsprüfung (pruefeJahrFeld) -- die gilt am
+  // PC (JahrDialog: "If istGeda Then ... Exit Function") ausdrücklich NICHT
+  // fürs Geburtsdatum, da es naturgemäß weit vom aktuellen Jahr abweicht.
+  document.getElementById('txtGeda').addEventListener('blur', ()=> datumFeldBlur('txtGeda'));
   // txtZeitLS existiert in BEIDEN Masken (LS: "Zeitpunkt Leichenschau",
   // PT: "Uhrzeit Hausbesuch") -- Format-Pruefung gilt daher fuer beide.
   document.getElementById('txtZeitLS').addEventListener('blur', ()=>{ zeitFeldBlur('txtZeitLS'); automatikVorschauAktualisieren(); });
@@ -1739,10 +1765,18 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     document.getElementById('txtAdresse2').addEventListener('blur', ()=> plzOrtPruefen('txtAdresse1','txtAdresse2'));
 
     // "Google Maps öffnen": Adresse des Bestatters dort nachschlagen (Suche
-    // nach dem bereits eingetragenen Namen, falls vorhanden).
+    // nach dem bereits eingetragenen Namen, falls vorhanden). "Bestatter"
+    // wird an den Suchbegriff angehängt -- verbessert die Trefferquote
+    // deutlich (viele Bestattungsunternehmen firmieren nicht wörtlich als
+    // "Bestattungsunternehmen X", tauchen bei Google aber unter "Bestatter"
+    // auf). Ist das Namensfeld leer, bleibt die Suche bewusst KOMPLETT leer
+    // (kein alleinstehendes "Bestatter" suchen) -- Google Maps öffnet dann
+    // einfach ohne vorausgefüllte Suche.
     document.getElementById('btnBestatterMaps').onclick = ()=>{
       const name = document.getElementById('txtBName').value.trim();
-      const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(name || 'Bestattungsunternehmen');
+      const url = name
+        ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(name + ' Bestatter')
+        : 'https://www.google.com/maps';
       window.open(url, '_blank');
     };
 
@@ -1955,15 +1989,23 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   }
 
   // Analog zur PC-Funktion KarteOeffnen/RouteImBrowserOeffnen: oeffnet die
-  // Strecke Praxis -> Zieladresse direkt in Google Maps (auf dem Handy per
-  // Deep-Link in der Google-Maps-App, sonst im Browser).
+  // Strecke Praxis -> Zieladresse -> zurück zur Praxis direkt in Google
+  // Maps (auf dem Handy per Deep-Link in der Google-Maps-App, sonst im
+  // Browser) -- wie am PC berechnet wird ja auch Hin- UND Rückfahrt
+  // (Rechnungspositionen "Strecke (Hin- und Rückfahrt)"), daher soll die
+  // angezeigte Route in Google Maps das Gleiche zeigen statt nur der
+  // einfachen Strecke. Umgesetzt als Route mit Ziel=Praxis und der
+  // eigentlichen Zieladresse als Zwischenstopp (waypoints) -- Google Maps
+  // zeigt das als Rundfahrt Praxis -> Ziel -> Praxis.
   function googleMapsRouteOeffnen(){
     const e = ladeEinstellungen();
     if(!e.praxisadresse){ document.getElementById('streckeninfo').textContent = 'Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).'; return; }
     const zielAdresse = ermittleZielAdresse();
     if(!zielAdresse.trim() || zielAdresse.trim()===','){ document.getElementById('streckeninfo').textContent = 'Bitte zuerst die Zieladresse eintragen.'; return; }
     const url = 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(e.praxisadresse)
-      +'&destination='+encodeURIComponent(zielAdresse)+'&travelmode=driving';
+      +'&destination='+encodeURIComponent(e.praxisadresse)
+      +'&waypoints='+encodeURIComponent(zielAdresse)
+      +'&travelmode=driving';
     window.open(url, '_blank');
   }
 
