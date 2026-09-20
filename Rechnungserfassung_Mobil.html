@@ -850,7 +850,17 @@ const ZIFFER_AUSSCHLUESSE = {
    Zeit-Zuschlag + Reiseentschädigung ODER passendes Wegegeld -- nie beides,
    siehe sollReiseGelten) -- der Rest bleibt manuelle Auswahl, genau wie am
    PC ("Rechnungspositionen prüfen"). */
-function automatischeAuswahl(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftlinie){
+// modus (optional, 1:1 wie am PC WegegeldZifferBestimmen):
+//   ''           -- automatisch, die 50-km-Regel (sollReiseGelten) entscheidet
+//   'REISE'      -- Nutzer hat bewusst eine Fahrstrecke-Kachel als
+//                    Reiseentschädigung gewählt (Alternativrouten) -- gilt
+//                    IMMER als Reiseentschädigung, unabhängig von den km
+//   'LUFTLINIE'  -- Nutzer hat bewusst die Luftlinie-Kachel gewählt -- die
+//                    50-km-Automatik wird dabei bewusst ÜBERSPRUNGEN, auch
+//                    bei einer Luftlinie >25 km greift dann NICHT automatisch
+//                    die Reiseentschädigung, sondern weiterhin die oberste
+//                    Wegegeld-Staffel (WT25/WN25) -- exakt wie am PC.
+function automatischeAuswahl(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftlinie, modus){
   const ausgewaehlt = new Set();
   (katalog.grundleistung||[]).forEach(p=>{ if(p.standard) ausgewaehlt.add(p.ziffer); });
 
@@ -868,6 +878,13 @@ function automatischeAuswahl(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftli
 
   const fahrVal = parseFloat((kmFahrstreckeGesamt||'').toString().replace(',','.'));
   const luftVal = parseFloat((kmLuftlinie||'').toString().replace(',','.'));
+
+  if(modus==='REISE'){
+    // Wie am PC: bewusst erzwungen, unabhängig von den km (solange > 0).
+    if(!isNaN(fahrVal) && fahrVal>0) ausgewaehlt.add('REISE');
+    return ausgewaehlt;
+  }
+
   if(!isNaN(fahrVal) && fahrVal>0){
     // Luftlinie (Einfachstrecke) fehlt evtl., wenn km manuell eingetragen
     // wurden statt per Routenberechnung -- als Schaetzung dann die HALBE
@@ -876,7 +893,7 @@ function automatischeAuswahl(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftli
     // gewählt wurde, da die volle (verdoppelte) Strecke fast immer über der
     // 25-km-Einfachstrecken-Schwelle lag.
     const luftEinfach = isNaN(luftVal) ? fahrVal/2 : luftVal;
-    if(sollReiseGelten(fahrVal, luftEinfach)){
+    if(modus!=='LUFTLINIE' && sollReiseGelten(fahrVal, luftEinfach)){
       ausgewaehlt.add('REISE');
     } else if(normZeit){
       // Tag/Nacht-Staffel wie am PC (WegegeldZifferBestimmen): Tag =
@@ -1011,6 +1028,12 @@ function ansichtStart(){
       <div class="trennlinie">Excel-Dateien öffnen</div>
       <button class="btn-sekundaer" id="btnOeffneUebersicht">Rechnungsübersicht öffnen</button>
       <button class="btn-sekundaer" id="btnOeffneFahrtenbuch">Fahrtenbuch öffnen</button>
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Werkzeuge</div>
+      <button class="btn-sekundaer" id="btnLuftlinienTool">Luftlinie berechnen
+        <span class="unter">Entfernung Praxis -- beliebige Adresse, ohne eine Rechnung anzulegen</span>
+      </button>
     </div>`;
   app.innerHTML = html;
   document.getElementById('kLS').onclick = ()=>ansichtMaske('ls');
@@ -1023,6 +1046,70 @@ function ansichtStart(){
   };
   document.getElementById('btnOeffneFahrtenbuch').onclick = ()=>{
     window.open('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=CI5OMm', '_blank');
+  };
+  document.getElementById('btnLuftlinienTool').onclick = ansichtLuftlinienTool;
+}
+
+// Eigenständiges Werkzeug (Start -> "Luftlinie berechnen"): unabhängig von
+// einer Leichenschau/Privatrechnung einfach die Luftlinien-Entfernung
+// zwischen der Praxisadresse und einer beliebigen, frei eingegebenen oder
+// aus der Zwischenablage eingelesenen Adresse ermitteln -- z.B. um vorab
+// grob abzuschätzen, ob ein Fall überhaupt lohnt/wie weit er ist, ohne
+// dafür extra eine Rechnung anzulegen.
+function ansichtLuftlinienTool(){
+  setzeTitel('Luftlinie berechnen', ansichtStart);
+  const e = ladeEinstellungen();
+  let html = `<div class="abschnitt">`;
+  if(!e.praxisadresse){
+    html += `<div class="warnhinweis aktiv">Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen). Ohne Praxisadresse kann keine Entfernung berechnet werden.</div>`;
+  }
+  html += `
+      <button class="btn-primaer blass" id="btnLuftZwischenablage">Aus Zwischenablage einfügen</button>
+      <div class="feld">
+        <label for="txtLuftAdresse">Adresse</label>
+        <input type="text" id="txtLuftAdresse" autocomplete="off" placeholder="Straße Hausnummer, PLZ Ort">
+      </div>
+      <button class="btn-primaer" id="btnLuftBerechnen">Luftlinie berechnen</button>
+      <div id="luftErgebnis" class="warnhinweis" style="margin-top:12px;"></div>
+    </div>`;
+  app.innerHTML = html;
+
+  const ergebnisEl = document.getElementById('luftErgebnis');
+  const zeigeErgebnis = (text, istFehler)=>{
+    if(!text){ ergebnisEl.classList.remove('aktiv'); ergebnisEl.innerHTML=''; return; }
+    ergebnisEl.innerHTML = text;
+    ergebnisEl.classList.add('aktiv');
+    ergebnisEl.style.background = istFehler ? '' : 'var(--karte)';
+    ergebnisEl.style.color = istFehler ? '' : 'var(--text)';
+    ergebnisEl.style.borderColor = istFehler ? '' : 'var(--ls-farbe)';
+  };
+
+  document.getElementById('btnLuftZwischenablage').onclick = async ()=>{
+    zeigeErgebnis('', true);
+    let text = '';
+    try{ text = await navigator.clipboard.readText(); }
+    catch(err){ zeigeErgebnis('Zwischenablage konnte nicht gelesen werden. Bitte Berechtigung erteilen oder Adresse manuell eintragen.', true); return; }
+    if(!text || !text.trim()){ zeigeErgebnis('Die Zwischenablage ist leer.', true); return; }
+    document.getElementById('txtLuftAdresse').value = text.trim().replace(/\n/g, ', ');
+  };
+
+  document.getElementById('btnLuftBerechnen').onclick = async ()=>{
+    const eCur = ladeEinstellungen();
+    if(!eCur.praxisadresse){ zeigeErgebnis('Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).', true); return; }
+    const adresse = document.getElementById('txtLuftAdresse').value.trim();
+    if(!adresse){ zeigeErgebnis('Bitte zuerst eine Adresse eintragen oder aus der Zwischenablage einfügen.', true); return; }
+    zeigeErgebnis('Wird berechnet …', true);
+    try{
+      const start = await geocode(eCur.praxisadresse);
+      if(!start){ zeigeErgebnis('Praxisadresse nicht auffindbar -- bitte in den Einstellungen prüfen.', true); return; }
+      const ziel = await geocode(adresse);
+      if(!ziel){ zeigeErgebnis('Die Adresse "'+adresse+'" konnte nicht gefunden werden. Bitte prüfen.', true); return; }
+      const luft = kmLuftlinieEinfach(start, ziel);
+      zeigeErgebnis(`<strong>Luftlinie (einfach):</strong> ${luft.toFixed(1).replace('.',',')} km<br>
+        <strong>Geschätzt Hin- und Rückfahrt:</strong> ${(luft*2).toFixed(1).replace('.',',')} km`, false);
+    }catch(err){
+      zeigeErgebnis('Berechnung fehlgeschlagen.'+keinInternetHinweisText(), true);
+    }
   };
 }
 
@@ -1633,6 +1720,20 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   setzeTitel(art==='ls' ? 'Leichenschau' : 'Privatrechnung', zurueckAusMaske);
   let werte = {};
   let positionenAuswahl = null;
+  // Wie am PC (gManuellModus): '' = automatisch (50-km-Regel entscheidet
+  // Wegegeld vs. Reiseentschädigung), 'REISE' = Nutzer hat bewusst eine
+  // Fahrstrecke-Kachel als Reiseentschädigung gewählt, 'LUFTLINIE' = Nutzer
+  // hat bewusst die Luftlinie-Kachel gewählt (überspringt die 50-km-Regel).
+  // Wird bei jeder automatischen Neuberechnung (kmAutomatikAusloesen) wieder
+  // auf '' zurückgesetzt, genau wie am PC (KmBerechnen setzt gManuellModus
+  // ebenfalls vor jeder Neuberechnung zurück).
+  let manuellerModus = '';
+  // Analog zu PC gKmGetippt: unterscheidet echtes Eintippen ins km-Feld
+  // (löst beim Verlassen des Feldes die 25/50-km-Interpretation aus) von
+  // einem programmatischen Setzen des Werts (Routenberechnung, Alternativ-
+  // routen-Kachel, Fallwiederherstellung) -- Letzteres feuert kein 'input'.
+  let kmManuellGetippt = false;
+  let kmVorFokus = '';
   if(vorbelegt){
     werte = {...vorbelegt.werte};
     positionenAuswahl = vorbelegt.positionen || null;
@@ -1738,6 +1839,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       <input type="text" id="txtKm" value="${(werte.txtKm||'')}" placeholder="wird automatisch berechnet">
       <input type="hidden" id="txtKmLuftlinie" value="${(werte.txtKmLuftlinie||'')}">
       <div class="streckeninfo" id="streckeninfo"></div>
+      <div class="warnhinweis" id="txtKm_warn"></div>
       <div class="route-btn-reihe">
         <button type="button" id="btnAlternativrouten">Alternativrouten</button>
         <button type="button" id="btnGoogleMapsRoute">Google Maps Route</button>
@@ -1907,7 +2009,21 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // automatikVorschauAktualisieren, behebt außerdem den Bug, dass dabei
   // bisher praktisch immer WT25/WN25 statt der passenden Staffel bzw.
   // der Reiseentschädigung gewählt wurde).
-  document.getElementById('txtKm').addEventListener('input', automatikVorschauAktualisieren);
+  // Zusätzlich (analog PC KmFeldManuellUebernehmen): beim Verlassen eines
+  // wirklich EINGETIPPTEN km-Werts wird dieser wie am PC gedeutet --
+  // <=25 km ist die Luftlinie (einfach), >50 km ist bereits die Fahrstrecke
+  // (Hin- und Rückfahrt); dazwischen ist der Wert nicht eindeutig zuordenbar
+  // und wird abgelehnt (Feld wird zurückgesetzt, Hinweistext statt Popup).
+  // "Eingetippt" wird über das 'input'-Ereignis erkannt, das bei einem
+  // programmatischen .value-Setzen (Routenberechnung, Alternativrouten-
+  // Kachel) nicht feuert -- so wird ein bereits korrekt gesetzter Wert beim
+  // Verlassen des Feldes nicht nochmal (falsch) neu interpretiert.
+  (function(){
+    const kmEl = document.getElementById('txtKm');
+    kmEl.addEventListener('focus', ()=>{ kmVorFokus = kmEl.value; });
+    kmEl.addEventListener('input', ()=>{ kmManuellGetippt = true; automatikVorschauAktualisieren(); });
+    kmEl.addEventListener('blur', ()=> kmFeldManuellUebernehmen());
+  })();
   if(art==='ls'){
     document.getElementById('txtSterbedatum').addEventListener('blur', ()=> datumFeldBlur('txtSterbedatum'));
     document.getElementById('txtTodeszeit').addEventListener('blur', ()=> zeitFeldBlur('txtTodeszeit'));
@@ -2077,6 +2193,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     if(!e.praxisadresse){ info.textContent = 'Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).'; return; }
     const zielAdresse = ermittleZielAdresse();
     if(!zielAdresse.trim() || zielAdresse.trim()===',') return;
+    // Wie am PC (KmBerechnen): jede automatische Neuberechnung setzt eine
+    // zuvor manuell gewählte Reiseentschädigung/Luftlinie wieder zurück --
+    // die Automatik entscheidet dann wieder frisch anhand der 50-km-Regel.
+    manuellerModus = '';
     info.textContent = 'Route wird berechnet …';
     try{
       const start = await geocode(e.praxisadresse);
@@ -2092,6 +2212,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       const kmLuft = kmLuftlinieEinfach(start, ziel);
       document.getElementById('txtKm').value = kmFahrstreckeGesamt.toFixed(1);
       document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
+      feldWarnung('txtKm', '');
       const reise = sollReiseGelten(kmFahrstreckeGesamt, kmLuft);
       info.textContent = 'Route: '+kmFahrstreckeGesamt.toFixed(1)+' km Hin+Rück, '+kmLuft.toFixed(1)+' km Luftlinie'
         + (reise ? ' -- Reiseentschädigung greift' : ' -- Wegegeld greift');
@@ -2148,16 +2269,37 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       box.querySelectorAll('button').forEach(btn=>{
         btn.onclick = ()=>{
           if(btn.dataset.km){
+            // Fahrstrecke-Kachel: wie am PC (RouteWaehlen idx<>0) ist das
+            // gleichbedeutend mit "bewusst als Reiseentschädigung wählen" --
+            // unter 50 km ist das nicht zulässig (dort: MsgBox-Ablehnung).
+            // Ohne native Popups hier stattdessen als kurzer Toast, die
+            // Auswahlliste bleibt offen, damit eine andere Kachel gewählt
+            // werden kann.
+            const kmGesamt = parseFloat(btn.dataset.km.replace(',','.'));
+            if(!(kmGesamt>50)){
+              appToastAnzeigen('Eine Reiseentschädigung ist erst ab über 50 km (Hin- und Rückfahrt) zulässig -- diese Route hat nur '+btn.dataset.km.replace('.',',')+' km. Bitte eine andere Route oder die Luftlinie wählen.', 3500);
+              return;
+            }
+            manuellerModus = 'REISE';
             document.getElementById('txtKm').value = btn.dataset.km;
             document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
           } else {
-            // Luftlinie-Kachel: wie am PC (RouteWaehlen idx=0) wird die
-            // Luftlinie selbst als Basis fuer die Fahrstrecke-Schätzung
-            // benutzt (dort gilt gManuellModus="LUFTLINIE").
+            // Luftlinie-Kachel: KORREKTUR -- die Wegegeld-Staffel (WT/WN)
+            // deckt nur bis 25 km einfach ab; darüber kommt ausschließlich
+            // eine Reiseentschädigung infrage. Eine Luftlinie >25 km wird
+            // deshalb NICHT mehr übernommen, sondern abgelehnt -- der
+            // 25-50-km-Graubereich soll (wie gewünscht) NUR über diesen Weg
+            // überhaupt entstehen können, und genau das wird hier verhindert.
+            if(kmLuft>25){
+              appToastAnzeigen('Luftlinie '+kmLuft.toFixed(1).replace('.',',')+' km liegt über 25 km -- dafür kommt nur eine Reiseentschädigung infrage. Bitte stattdessen eine Fahrstrecke-Kachel über 50 km wählen.', 4000);
+              return;
+            }
+            manuellerModus = 'LUFTLINIE';
             document.getElementById('txtKm').value = (kmLuft*2).toFixed(1);
             document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
           }
           box.classList.remove('aktiv'); box.innerHTML='';
+          feldWarnung('txtKm', '');
           document.getElementById('streckeninfo').textContent = 'Strecke manuell aus Alternativrouten übernommen.';
           automatikVorschauAktualisieren();
         };
@@ -2214,7 +2356,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       ...WEGEGELD_TAG.map(z=>z.ziffer), ...WEGEGELD_NACHT.map(z=>z.ziffer),
       'REISE'
     ]);
-    const neueAuto = automatischeAuswahl(katalog, datum, zeit, kmFahrstrecke, kmLuftlinie);
+    const neueAuto = automatischeAuswahl(katalog, datum, zeit, kmFahrstrecke, kmLuftlinie, manuellerModus);
     AUTO_ZIFFERN.forEach(z=> positionenAuswahl.delete(z));
     neueAuto.forEach(z=> { if(AUTO_ZIFFERN.has(z)) positionenAuswahl.add(z); });
 
@@ -2265,6 +2407,49 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     }
 
     positionenAutomatikNachziehen(datum, zeit, kmFahrstrecke, kmLuftlinie);
+  }
+
+  // Analog zur PC-Funktion KmFeldManuellUebernehmen (Feld-Verlassen-Handler
+  // des km-Feldes): ein wirklich EINGETIPPTER Wert (kmManuellGetippt, siehe
+  // 'input'-Listener oben) wird -- genau wie am PC -- danach unterschieden,
+  // ob er als Luftlinie (einfach) oder bereits als Fahrstrecke (Hin- und
+  // Rückfahrt gesamt) gemeint ist:
+  //   <=25 km  -> Luftlinie (einfach); Feld wird auf die verdoppelte
+  //               Fahrstrecke umgerechnet, Luftlinie-Feld übernimmt den
+  //               eingetippten Wert unverändert.
+  //   >50 km   -> bereits die Fahrstrecke (Hin- und Rückfahrt) selbst;
+  //               Luftlinie wird zur Vorschau/Wegegeld-Basis geschätzt
+  //               (halbiert), spielt bei REISE aber ohnehin keine Rolle.
+  //   25-50 km -> nicht eindeutig zuordenbar (dieser Graubereich soll wie
+  //               gewünscht NUR über die Alternativrouten entstehen können,
+  //               wo eine konkrete Fahrstrecke vorliegt) -- wird abgelehnt,
+  //               der zuletzt gültige Wert wird wiederhergestellt, Hinweis
+  //               statt nativem Popup.
+  // Ein rein programmatisch gesetzter Wert (Routenberechnung, Alternativ-
+  // routen-Kachel, Fallwiederherstellung) löst KEIN 'input' aus und wird
+  // hier deshalb nicht nochmal (falsch) neu interpretiert.
+  function kmFeldManuellUebernehmen(){
+    if(!kmManuellGetippt) return;
+    kmManuellGetippt = false;
+    const kmEl = document.getElementById('txtKm');
+    const eingabe = parseFloat(kmEl.value.trim().replace(',', '.'));
+    feldWarnung('txtKm', '');
+    if(isNaN(eingabe) || eingabe<=0) return;
+    if(eingabe<=25){
+      manuellerModus = 'LUFTLINIE';
+      document.getElementById('txtKmLuftlinie').value = eingabe.toFixed(1);
+      kmEl.value = (eingabe*2).toFixed(1);
+    } else if(eingabe>50){
+      manuellerModus = 'REISE';
+      document.getElementById('txtKmLuftlinie').value = (eingabe/2).toFixed(1);
+    } else {
+      kmEl.value = kmVorFokus;
+      feldWarnung('txtKm', 'Ein eingetippter Wert zwischen 25 und 50 km ist nicht eindeutig einer Luftlinie oder einer Fahrstrecke zuzuordnen und wurde nicht übernommen.'
+        + ' Bitte entweder eine Luftlinie bis 25 km oder eine Fahrstrecke (Hin- und Rückfahrt) über 50 km eintragen, oder über "Alternativrouten" eine konkrete Strecke wählen.');
+      automatikVorschauAktualisieren();
+      return;
+    }
+    automatikVorschauAktualisieren();
   }
 
   // Datums-Kurzeingabe (z.B. "26" -> Jahr 2026, "010111" -> 01.01.1911)
@@ -2582,7 +2767,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const zeit = document.getElementById('txtZeitLS').value;
     const kmFahrstrecke = document.getElementById('txtKm').value;
     const kmLuftlinie = document.getElementById('txtKmLuftlinie').value;
-    const basis = positionenAuswahl || automatischeAuswahl(art==='ls'?POSITIONEN_LS:POSITIONEN_PT, datum, zeit, kmFahrstrecke, kmLuftlinie);
+    const basis = positionenAuswahl || automatischeAuswahl(art==='ls'?POSITIONEN_LS:POSITIONEN_PT, datum, zeit, kmFahrstrecke, kmLuftlinie, manuellerModus);
     // Schnappschuss der Maskenwerte JETZT nehmen (Maske ist noch im DOM),
     // damit ein Zahnrad-Klick auf der Rechnungspositionen-Unteransicht
     // korrekt hierher zurückfindet, statt aus dem falschen DOM zu lesen.
