@@ -8,6 +8,11 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <meta name="theme-color" content="#2b3a55">
+<!-- Sagt Chrome/Android, dass die Seite Hell-/Dunkelmodus selbst
+     handhabt -- verhindert, dass Android Chromes "Force Dark"-Heuristik
+     einzelne (v.a. transparent/blass gestylte) Elemente eigenmaechtig
+     umfaerbt und dadurch z.B. Buttontext unsichtbar macht. -->
+<meta name="color-scheme" content="light dark">
 <script src="icd_katalog.js"></script>
 <style>
   :root{
@@ -75,7 +80,21 @@
   .btn-export{border-color:#e8a33d; color:#7a4a00; background:#fff4e5;}
   body.dunkel .btn-export{background:#3a2c10; color:#f0c98a; border-color:#c78a2e;}
 
-  .trennlinie{font-size:12px; font-weight:600; color:var(--text-schwach); margin:16px 0 8px; text-transform:uppercase; letter-spacing:.03em;}
+  /* Jeder Formularabschnitt bekommt eine eigene "Karte" mit Rand und
+     Hintergrund -- deutlich klarere optische Trennung als vorher nur mit
+     einer kleinen Textzeile. */
+  .abschnitt{
+    background:var(--karte); border:1px solid var(--rand); border-radius:12px;
+    padding:14px 14px 4px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.05);
+  }
+  .abschnitt .feld:last-child{margin-bottom:4px;}
+  .trennlinie{
+    font-size:12.5px; font-weight:700; color:#fff; margin:-14px -14px 14px;
+    text-transform:uppercase; letter-spacing:.04em; background:var(--titelfarbe);
+    padding:9px 14px; border-radius:11px 11px 0 0;
+  }
+  .maske.pt .abschnitt .trennlinie{background:var(--pt-farbe);}
+  .maske.ls .abschnitt .trennlinie{background:var(--ls-farbe);}
   .feld{margin-bottom:12px;}
   .feld label{display:block; font-size:12.5px; color:var(--text-schwach); margin-bottom:3px;}
   .feld input, .feld select, .feld textarea{
@@ -105,9 +124,19 @@
     background:var(--ls-farbe); color:#fff; border:none; border-radius:10px; padding:14px;
     font-size:15px; font-weight:600; width:100%; margin-top:6px; cursor:pointer;
   }
-  .btn-primaer.blass{background:transparent; color:var(--ls-farbe); font-weight:600; border:1px solid var(--ls-farbe);}
+  /* Bewusst UNDURCHSICHTIGER Hintergrund (statt transparent): ein
+     transparenter Hintergrund liess Android-Chrome (Force-Dark-Heuristik)
+     gelegentlich auch die Textfarbe umfaerben, wodurch der Button auf
+     manchen Geraeten wie unbeschriftet wirkte. */
+  .btn-primaer.blass{background:var(--karte); color:var(--ls-farbe); font-weight:600; border:2px solid var(--ls-farbe);}
   .maske.pt .btn-primaer{background:var(--pt-farbe);}
-  .maske.pt .btn-primaer.blass{color:var(--pt-farbe); border-color:var(--pt-farbe);}
+  /* WICHTIG: ".maske.pt .btn-primaer" (3 Klassen-Selektoren) ist
+     spezifischer als ".btn-primaer.blass" (2 Klassen-Selektoren) und hätte
+     sonst dessen Hintergrundfarbe überschrieben -- das war der tatsächliche
+     Grund für den "Aus Zwischenablage"-Button ohne sichtbare Beschriftung
+     in der Privatrechnung-Maske: grüne Schrift auf grünem statt weißem
+     Hintergrund. Hintergrund hier deshalb explizit erneut setzen. */
+  .maske.pt .btn-primaer.blass{background:var(--karte); color:var(--pt-farbe); border-color:var(--pt-farbe);}
   .streckeninfo{font-size:12.5px; color:var(--text-schwach); margin-top:4px; min-height:16px;}
   .fall-zeile{
     background:var(--karte); border:1px solid var(--rand); border-radius:10px; padding:12px 14px;
@@ -309,7 +338,13 @@ function feldAusNachrichtLesen(zeilen, praefix){
 }
 function grossKleinNormalisieren(s){
   if(!s) return '';
-  return s.split(' ').map(w => w.length? w[0].toUpperCase()+w.substring(1).toLowerCase() : w).join(' ');
+  // Grossschreibung nach jedem Leerzeichen UND nach jedem Bindestrich
+  // (z.B. "Baden-baden" -> "Baden-Baden", "Müller-schmidt" -> "Müller-Schmidt"),
+  // damit zusammengesetzte Orts-/Namensteile korrekt behandelt werden.
+  const grossNachTrenner = (wort) => wort.split('-').map(teil =>
+    teil.length ? teil[0].toUpperCase()+teil.substring(1).toLowerCase() : teil
+  ).join('-');
+  return s.split(' ').map(w => grossNachTrenner(w)).join(' ');
 }
 async function ausZwischenablageEinlesen(art, ctx){
   let text = '';
@@ -353,6 +388,35 @@ async function geocode(adresse){
   const data = await res.json();
   if(!data || !data.length) return null;
   return {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon)};
+}
+// PLZ/Ort-Erkennung analog zur PC-Funktion PlzErgaenzen() in
+// PT_UserFormRechnung.frm: extrahiert eine 5-stellige PLZ aus einem Text,
+// ermittelt fehlenden Ort zu einer PLZ bzw. fehlende PLZ zu einem Ort per
+// Geocoding, und prüft bei vorhandenen beiden Werten per Kreuzvalidierung,
+// ob PLZ und Ort tatsächlich zusammenpassen.
+function plzAusText(text){
+  const m = (text||'').match(/\b(\d{5})\b/);
+  return m ? m[1] : '';
+}
+async function ortErmitteln(plz){
+  try{
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&country=Germany&postalcode='+encodeURIComponent(plz);
+    const res = await fetch(url, {headers:{'Accept':'application/json'}});
+    const data = await res.json();
+    if(!data || !data.length) return '';
+    const a = data[0].address || {};
+    return a.city || a.town || a.village || a.municipality || a.city_district || '';
+  }catch(e){ return ''; }
+}
+async function plzErmitteln(adresse){
+  try{
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&q='+encodeURIComponent(adresse);
+    const res = await fetch(url, {headers:{'Accept':'application/json'}});
+    const data = await res.json();
+    if(!data || !data.length) return '';
+    const a = data[0].address || {};
+    return a.postcode || '';
+  }catch(e){ return ''; }
 }
 async function routeKm(start, ziel){
   const url = `https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${ziel.lon},${ziel.lat}?overview=false`;
@@ -706,7 +770,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     setValue(name, val){ const el=document.getElementById(name); if(el) el.value = val; },
     getValue(name){ const el=document.getElementById(name); return el? el.value : ''; },
     hinweis(text){ alertBanner(text); },
-    async adresseVerlassen(){ await kmAutomatikAusloesen(); },
+    async adresseVerlassen(){ await plzOrtPruefen('txtPAdresse1','txtPAdresse2'); await kmAutomatikAusloesen(); },
     allePruefungenAusfuehren(){ alleChecksAusfuehren(); }
   };
 
@@ -721,64 +785,68 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   }
 
   let html = `<div class="maske ${art}">`;
+  // Jeder Abschnitt wird in eine eigene "Karte" (.abschnitt) gepackt, damit
+  // die Bereiche der Maske optisch klar voneinander getrennt sind, statt
+  // nur durch eine kleine Textzeile.
+  const abschnitt = (titel, inhalt) => `<div class="abschnitt"><div class="trennlinie">${titel}</div>${inhalt}</div>`;
 
   if(art==='ls'){
-    html += `<div class="trennlinie">Todesfeststellung</div>`;
-    html += feldHtml('Datum Todesbescheinigung', 'txtDatumExcel', {typ:'datum'});
-    html += feldHtml('Zeitpunkt Leichenschau (HH:MM)', 'txtZeitLS');
+    html += abschnitt('Todesfeststellung',
+      feldHtml('Datum Todesbescheinigung', 'txtDatumExcel', {typ:'datum'}) +
+      feldHtml('Zeitpunkt Leichenschau (HH:MM)', 'txtZeitLS'));
   } else {
-    html += `<div class="trennlinie">Hausbesuch</div>`;
-    html += feldHtml('Datum Hausbesuch', 'txtDatumExcel', {typ:'datum'});
-    html += feldHtml('Uhrzeit Hausbesuch (HH:MM)', 'txtZeitLS');
+    html += abschnitt('Hausbesuch',
+      feldHtml('Datum Hausbesuch', 'txtDatumExcel', {typ:'datum'}) +
+      feldHtml('Uhrzeit Hausbesuch (HH:MM)', 'txtZeitLS'));
   }
 
-  html += `<div class="trennlinie">Rechnungsstellung</div>`;
-  html += feldHtml('Rechnungsdatum (Versanddatum)', 'txtDatum');
-  html += `<div class="feld"><label>Rechnungsbetrag (&euro;)</label>
-      <input type="text" id="txtBetrag" class="grau" value="${werte.txtBetrag||''}" readonly></div>`;
+  html += abschnitt('Rechnungsstellung',
+    feldHtml('Rechnungsdatum (Versanddatum)', 'txtDatum') +
+    `<div class="feld"><label>Rechnungsbetrag (&euro;)</label>
+      <input type="text" id="txtBetrag" class="grau" value="${werte.txtBetrag||''}" readonly></div>`);
 
-  html += `<div class="trennlinie">Patient</div>`;
-  html += `<button class="btn-primaer blass" id="btnZwischenablage">Aus Zwischenablage einlesen</button>`;
-  html += feldHtml('Nachname, Vorname', 'txtName');
-  html += feldHtml(art==='ls' ? 'Straße + Hausnummer (Sterbeort)' : 'Straße + Hausnummer', 'txtPAdresse1');
-  html += feldHtml(art==='ls' ? 'PLZ + Stadt (Sterbeort)' : 'PLZ + Stadt', 'txtPAdresse2');
-  html += feldHtml('Geburtsdatum (TT.MM.JJJJ)', 'txtGeda');
+  html += abschnitt('Patient',
+    `<button class="btn-primaer blass" id="btnZwischenablage">Aus Zwischenablage einlesen</button>` +
+    feldHtml('Nachname, Vorname', 'txtName') +
+    feldHtml(art==='ls' ? 'Straße + Hausnummer (Sterbeort)' : 'Straße + Hausnummer', 'txtPAdresse1') +
+    feldHtml(art==='ls' ? 'PLZ + Stadt (Sterbeort)' : 'PLZ + Stadt', 'txtPAdresse2') +
+    feldHtml('Geburtsdatum (TT.MM.JJJJ)', 'txtGeda'));
 
   if(art==='ls'){
-    html += `<div class="trennlinie">Sterbedaten</div>`;
-    html += feldHtml('Sterbedatum (TT.MM.JJJJ)', 'txtSterbedatum');
-    html += feldHtml('Sterbezeitpunkt (HH:MM)', 'txtTodeszeit');
+    html += abschnitt('Sterbedaten',
+      feldHtml('Sterbedatum (TT.MM.JJJJ)', 'txtSterbedatum') +
+      feldHtml('Sterbezeitpunkt (HH:MM)', 'txtTodeszeit'));
   } else {
-    html += `<div class="trennlinie">Diagnose (ICD-Suche)</div>`;
-    html += `<div id="diagChips"></div>`;
-    html += `<div class="feld" style="position:relative;">
+    html += abschnitt('Diagnose (ICD-Suche)',
+      `<div id="diagChips"></div>` +
+      `<div class="feld" style="position:relative;">
         <label for="txtDiag">Diagnose suchen</label>
         <input type="text" id="txtDiag" autocomplete="off" placeholder="ab 2 Zeichen tippen...">
         <div class="autocomplete-liste" id="diagVorschlaege"></div>
-      </div>`;
+      </div>`);
   }
 
-  html += `<div class="trennlinie">Routenberechnung</div>`;
-  html += `<div class="feld"><label>Strecke (Hin- und Rückfahrt)</label>
+  html += abschnitt('Routenberechnung',
+    `<div class="feld"><label>Strecke (Hin- und Rückfahrt)</label>
       <input type="text" id="txtKm" value="${(werte.txtKm||'')}" placeholder="wird automatisch berechnet">
       <input type="hidden" id="txtKmLuftlinie" value="${(werte.txtKmLuftlinie||'')}">
-      <div class="streckeninfo" id="streckeninfo"></div></div>`;
+      <div class="streckeninfo" id="streckeninfo"></div></div>`);
 
   if(art==='ls'){
-    html += `<div class="trennlinie">Bestattungsunternehmen</div>`;
-    html += `<div class="feld" style="position:relative;">
+    html += abschnitt('Bestattungsunternehmen',
+      `<div class="feld" style="position:relative;">
         <label for="txtBName">Name</label>
         <input type="text" id="txtBName" value="${(werte.txtBName||'').replace(/"/g,'&quot;')}" autocomplete="off">
         <div class="autocomplete-liste" id="bestatterVorschlaege"></div>
         <div class="warnhinweis" id="txtBName_warn"></div>
-      </div>`;
-    html += feldHtml('Straße + Hausnummer', 'txtAdresse1');
-    html += feldHtml('PLZ + Stadt', 'txtAdresse2');
+      </div>` +
+      feldHtml('Straße + Hausnummer', 'txtAdresse1') +
+      feldHtml('PLZ + Stadt', 'txtAdresse2'));
   }
 
-  html += `<div class="trennlinie">Rechnungspositionen</div>`;
-  html += `<button class="btn-sekundaer" id="btnPunkte">Rechnungspositionen auswählen
-      <span class="unter" id="punkteStatus">${positionenAuswahl? positionenAuswahl.size+' Position(en) ausgewählt' : 'noch nicht geprüft'}</span></button>`;
+  html += abschnitt('Rechnungspositionen',
+    `<button class="btn-sekundaer" id="btnPunkte">Rechnungspositionen auswählen
+      <span class="unter" id="punkteStatus">${positionenAuswahl? positionenAuswahl.size+' Position(en) ausgewählt' : 'noch nicht geprüft'}</span></button>`);
 
   html += `<div id="allgemeinerHinweis"></div>`;
   html += `<button class="btn-primaer" id="btnSpeichern">Speichern</button>`;
@@ -793,14 +861,20 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   ['txtPAdresse1','txtPAdresse2'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.addEventListener('blur', ()=> kmAutomatikAusloesen());
   });
+  // PLZ/Ort-Erkennung wie am PC: beim Verlassen des kombinierten
+  // "PLZ + Ort"-Feldes ergänzen/prüfen.
+  document.getElementById('txtPAdresse2').addEventListener('blur', ()=> plzOrtPruefen('txtPAdresse1','txtPAdresse2'));
   document.getElementById('txtDatumExcel').addEventListener('blur', alleChecksAusfuehren);
   document.getElementById('txtDatum').addEventListener('blur', alleChecksAusfuehren);
+  // txtZeitLS existiert in BEIDEN Masken (LS: "Zeitpunkt Leichenschau",
+  // PT: "Uhrzeit Hausbesuch") -- Format-Pruefung gilt daher fuer beide.
+  document.getElementById('txtZeitLS').addEventListener('blur', alleChecksAusfuehren);
   if(art==='ls'){
     document.getElementById('txtSterbedatum').addEventListener('blur', alleChecksAusfuehren);
     document.getElementById('txtTodeszeit').addEventListener('blur', alleChecksAusfuehren);
-    document.getElementById('txtZeitLS').addEventListener('blur', alleChecksAusfuehren);
     document.getElementById('txtAdresse1').addEventListener('blur', ()=> kmAutomatikAusloesen());
     document.getElementById('txtAdresse2').addEventListener('blur', ()=> kmAutomatikAusloesen());
+    document.getElementById('txtAdresse2').addEventListener('blur', ()=> plzOrtPruefen('txtAdresse1','txtAdresse2'));
   }
 
   document.getElementById('btnZwischenablage').onclick = ()=>ausZwischenablageEinlesen(art, ctx);
@@ -918,6 +992,80 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     warnEl.classList.add('aktiv'); warnEl.innerHTML = html;
   }
 
+  // PLZ/Ort-Erkennung wie am PC (PlzErgaenzen): wird beim Verlassen eines
+  // kombinierten "PLZ + Ort"-Feldes ausgelöst. MsgBox-Dialoge der PC-Version
+  // werden hier durch die inline warnhinweis-Anzeige ersetzt (keine
+  // nativen Popups, wie an anderer Stelle bereits festgelegt).
+  async function plzOrtPruefen(strasseId, plzOrtId){
+    const feld = document.getElementById(plzOrtId);
+    const strasseFeld = document.getElementById(strasseId);
+    if(!feld || !strasseFeld) return;
+    const eingabe = feld.value.trim();
+    if(!eingabe) { feldWarnung(plzOrtId, ''); return; }
+    const strasse = strasseFeld.value.trim();
+    const eingegebenePlz = plzAusText(eingabe);
+
+    if(!eingegebenePlz){
+      // Keine PLZ im Text -> per Geocoding aus Straße + Ort ermitteln
+      if(!strasse) return; // ohne Straße kann keine sinnvolle Suche erfolgen
+      feldWarnung(plzOrtId, 'PLZ wird ermittelt …');
+      const adrFuerPlz = strasse+', '+eingabe;
+      const ermitteltePlz = await plzErmitteln(adrFuerPlz);
+      if(feld.value.trim() !== eingabe) return; // Nutzer hat inzwischen weitergetippt
+      if(ermitteltePlz){
+        feld.value = ermitteltePlz+' '+eingabe;
+        feldWarnung(plzOrtId, '');
+        kmAutomatikAusloesen();
+      } else {
+        feldWarnung(plzOrtId, `Der Ort "${eingabe}" konnte nicht gefunden werden. Bitte PLZ und Ort manuell eintragen.`);
+      }
+      return;
+    }
+
+    const ort = eingabe.replace(eingegebenePlz, '').trim();
+    if(!ort){
+      // PLZ da, Ort fehlt -> Ort zur PLZ nachschlagen
+      feldWarnung(plzOrtId, 'Ort wird ermittelt …');
+      const ermittelterOrt = await ortErmitteln(eingegebenePlz);
+      if(feld.value.trim() !== eingabe) return;
+      if(ermittelterOrt){
+        feld.value = eingegebenePlz+' '+ermittelterOrt;
+        feldWarnung(plzOrtId, '');
+        kmAutomatikAusloesen();
+      } else {
+        feldWarnung(plzOrtId, `Zur PLZ "${eingegebenePlz}" konnte kein Ort gefunden werden. Bitte manuell ergänzen.`);
+      }
+      return;
+    }
+
+    // Beide da -> Kreuzvalidierung anhand der Straße
+    if(!strasse){ feldWarnung(plzOrtId, ''); return; }
+    feldWarnung(plzOrtId, 'Adresse wird geprüft …');
+    const adrVoll = strasse+', '+eingabe;
+    const plzLautKarte = await plzErmitteln(adrVoll);
+    if(feld.value.trim() !== eingabe) return;
+    if(!plzLautKarte){
+      feldWarnung(plzOrtId, `Die Adresse "${adrVoll}" konnte laut Kartendienst nicht gefunden werden. Bitte prüfen.`);
+      return;
+    }
+    if(plzLautKarte !== eingegebenePlz){
+      feldWarnung(plzOrtId, `Achtung: Die eingegebene PLZ (${eingegebenePlz}) passt möglicherweise nicht zur Adresse. Laut Kartendienst gehört zu "${strasse}" eher PLZ ${plzLautKarte}.
+        <div class="aktionen">
+          <button data-akt="korrigieren">Auf ${plzLautKarte} korrigieren</button>
+          <button data-akt="behalten">So belassen</button>
+        </div>`);
+      const warnEl = document.getElementById(plzOrtId+'_warn');
+      warnEl.querySelector('[data-akt="korrigieren"]').onclick = ()=>{
+        feld.value = plzLautKarte+' '+ort;
+        feldWarnung(plzOrtId, '');
+        kmAutomatikAusloesen();
+      };
+      warnEl.querySelector('[data-akt="behalten"]').onclick = ()=> feldWarnung(plzOrtId, '');
+      return;
+    }
+    feldWarnung(plzOrtId, '');
+  }
+
   function pruefeJahrFeld(id, bezeichnung){
     const input = document.getElementById(id); if(!input) return;
     const norm = normalisiereDatum(input.value);
@@ -938,11 +1086,39 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     warnEl.querySelector('[data-akt="behalten"]').onclick = ()=> feldWarnung(id, '');
   }
 
+  // Prueft, ob ein Uhrzeitfeld ueberhaupt ein gueltiges HH:MM-Format hat
+  // (z.B. "55:12h" oder "1h" wurden bisher kommentarlos akzeptiert, weil
+  // normalisiereZeit() zwar korrekt "" zurueckgab, aber nie eine sichtbare
+  // Warnung ausgeloest wurde). Gibt true zurueck, wenn das Feld leer ODER
+  // gueltig ist -- false bei einem erkennbar falschen, nicht-leeren Wert.
+  function pruefeZeitFeld(id, bezeichnung){
+    const input = document.getElementById(id); if(!input) return true;
+    const roh = input.value.trim();
+    if(!roh){ feldWarnung(id, ''); return true; }
+    if(!normalisiereZeit(roh)){
+      feldWarnung(id, `${bezeichnung}: "${roh}" ist kein gültiges Uhrzeitformat. Bitte als HH:MM eintragen (z.B. 14:30).`);
+      return false;
+    }
+    feldWarnung(id, '');
+    return true;
+  }
+
   function pruefeZeitenLS(){
     if(art!=='ls') return;
-    const zLS = normalisiereZeit(document.getElementById('txtZeitLS').value);
-    const zSterbe = normalisiereZeit(document.getElementById('txtTodeszeit').value);
-    if(!zLS || !zSterbe){ feldWarnung('txtTodeszeit', ''); return; }
+    // txtZeitLS wird bereits separat ueber pruefeZeitFeld() geprüft (s.u.
+    // in alleChecksAusfuehren) -- hier nur noch dessen Gueltigkeit abfragen.
+    const zLSRoh = document.getElementById('txtZeitLS').value.trim();
+    const zLS = zLSRoh ? normalisiereZeit(zLSRoh) : '';
+    const inputTod = document.getElementById('txtTodeszeit');
+    const rohTod = inputTod.value.trim();
+    if(!rohTod){ feldWarnung('txtTodeszeit', ''); return; }
+    const zSterbe = normalisiereZeit(rohTod);
+    if(!zSterbe){
+      // Format-Fehler hat Vorrang vor der Reihenfolge-Pruefung.
+      feldWarnung('txtTodeszeit', `Sterbezeitpunkt: "${rohTod}" ist kein gültiges Uhrzeitformat. Bitte als HH:MM eintragen (z.B. 03:15).`);
+      return;
+    }
+    if(!zLS){ feldWarnung('txtTodeszeit', ''); return; }
     if(zeitInMinuten(zLS) >= zeitInMinuten(zSterbe)){ feldWarnung('txtTodeszeit', ''); return; }
     feldWarnung('txtTodeszeit', `Leichenschau (${zLS}) liegt vor dem Sterbezeitpunkt (${zSterbe}) -- eventuell vertauscht.
       <div class="aktionen">
@@ -977,6 +1153,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   function alleChecksAusfuehren(){
     pruefeJahrFeld('txtDatumExcel', art==='ls' ? 'Datum Todesbescheinigung' : 'Datum Hausbesuch');
     pruefeJahrFeld('txtDatum', 'Rechnungsdatum');
+    pruefeZeitFeld('txtZeitLS', art==='ls' ? 'Zeitpunkt Leichenschau' : 'Uhrzeit Hausbesuch');
     if(art==='ls'){
       pruefeJahrFeld('txtSterbedatum', 'Sterbedatum');
       pruefeZeitenLS();
