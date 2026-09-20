@@ -47,7 +47,17 @@
   body{
     margin:0; font-family:"Segoe UI",-apple-system,Roboto,Arial,sans-serif;
     background:var(--bg); color:var(--text); padding-bottom:40px;
+    /* WICHTIG: das <meta name="color-scheme" content="light dark"> im <head>
+       erlaubt dem Browser, native Formularelemente (v.a. Checkboxen) nach dem
+       OS-Farbschema zu zeichnen -- das kann z.B. bei einem Handy im
+       System-Dunkelmodus dazu fuehren, dass Checkboxen dunkel wirken, OBWOHL
+       die App selbst gerade im hellen Design steht (App-Dunkelmodus ist ein
+       eigener, unabhaengiger Schalter, kein OS-Schalter). "color-scheme" hier
+       gezielt je nach App-Zustand setzen, damit native Checkboxen IMMER zum
+       tatsaechlich aktiven App-Design passen -- unabhaengig vom OS-Schalter. */
+    color-scheme: light;
   }
+  body.dunkel{ color-scheme: dark; }
   header{
     background:var(--titelfarbe); color:#fff; padding:14px 16px;
     display:flex; align-items:center; justify-content:space-between;
@@ -299,6 +309,91 @@ function istWochenende(normDatum){
   return d.getDay()===0 || d.getDay()===6;
 }
 
+// Datums-Kurzeingabe wie am PC gewünscht: eine reine Zahlenfolge ohne
+// Punkte wird automatisch zu einem vollen Datum ergänzt.
+// - 1-2 Ziffern ("26")      -> nur das Jahr wird gesetzt (2000+n, da eine
+//   Kurzeingabe i.d.R. eine aktuelle Korrektur ist, z.B. am Rechnungs-
+//   /Todesbescheinigungsdatum) -- Tag/Monat bleiben vom bisherigen Feldwert
+//   bzw. von heute übernommen.
+// - 4 Ziffern ("2026")      -> ebenso nur das Jahr, Tag/Monat wie oben.
+// - 6 Ziffern ("010111")    -> TTMMJJ, wie eine normale Kurzeingabe mit
+//   2-stelligem Jahr (1900+n, siehe normalisiereDatum -- typisch für
+//   Geburtsdaten: "1.1.11" -> 01.01.1911).
+// - 8 Ziffern ("01011911")  -> TTMMJJJJ.
+// Eingaben MIT Punkten (auch unvollständige wie "1.1") laufen unverändert
+// durch die normale normalisiereDatum()-Logik.
+function datumKurzeingabeErgaenzen(eingabe, bisherigerWert){
+  const roh = (eingabe||'').trim();
+  if(!roh) return '';
+  if(/^\d+$/.test(roh)){
+    if(roh.length===1 || roh.length===2 || roh.length===4){
+      const jahr = roh.length===4 ? parseInt(roh,10) : 2000+parseInt(roh,10);
+      const basisNorm = normalisiereDatum(bisherigerWert) || heuteAlsText();
+      const teile = basisNorm.split('.');
+      return normalisiereDatum(teile[0]+'.'+teile[1]+'.'+jahr);
+    }
+    if(roh.length===6){
+      return normalisiereDatum(roh.slice(0,2)+'.'+roh.slice(2,4)+'.'+roh.slice(4,6));
+    }
+    if(roh.length===8){
+      return normalisiereDatum(roh.slice(0,2)+'.'+roh.slice(2,4)+'.'+roh.slice(4,8));
+    }
+    return '';
+  }
+  return normalisiereDatum(roh);
+}
+
+/* ==========================================================
+   Feiertage Baden-Württemberg (für Zuschlag H, wie am PC:
+   IstZuschlagstag = Wochenende ODER gesetzlicher Feiertag)
+   ========================================================== */
+function ostersonntag(jahr){
+  // Gauss'sche Osterformel
+  const a=jahr%19, b=Math.floor(jahr/100), c=jahr%100, d=Math.floor(b/4), e=b%4,
+        f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3),
+        h=(19*a+b-d-g+15)%30, i=Math.floor(c/4), k=c%4,
+        l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451),
+        monat=Math.floor((h+l-7*m+114)/31), tag=((h+l-7*m+114)%31)+1;
+  return new Date(jahr, monat-1, tag);
+}
+function tagePlus(d, n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function selberTag(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+function istFeiertagBW(d){
+  const jahr = d.getFullYear();
+  const o = ostersonntag(jahr);
+  const feste = [
+    {d:new Date(jahr,0,1), n:'Neujahr'},
+    {d:new Date(jahr,0,6), n:'Heilige Drei Könige'},
+    {d:tagePlus(o,-2), n:'Karfreitag'},
+    {d:o, n:'Ostersonntag'},
+    {d:tagePlus(o,1), n:'Ostermontag'},
+    {d:new Date(jahr,4,1), n:'Tag der Arbeit'},
+    {d:tagePlus(o,39), n:'Christi Himmelfahrt'},
+    {d:tagePlus(o,49), n:'Pfingstsonntag'},
+    {d:tagePlus(o,50), n:'Pfingstmontag'},
+    {d:tagePlus(o,60), n:'Fronleichnam'},
+    {d:new Date(jahr,9,3), n:'Tag der Deutschen Einheit'},
+    {d:new Date(jahr,10,1), n:'Allerheiligen'},
+    {d:new Date(jahr,11,25), n:'1. Weihnachtstag'},
+    {d:new Date(jahr,11,26), n:'2. Weihnachtstag'}
+  ];
+  const treffer = feste.find(f=>selberTag(f.d, d));
+  return treffer ? treffer.n : '';
+}
+// Wie PC IstZuschlagstag(): Wochenende ODER Feiertag löst den H-Zuschlag
+// aus. Gibt den Grund ("Samstag"/"Sonntag"/Feiertagsname) zurück, oder ''
+// wenn kein Zuschlagstag.
+function zuschlagstagGrund(normDatum){
+  if(!normDatum) return '';
+  const d = alsDatum(normDatum);
+  const feiertag = istFeiertagBW(d);
+  if(feiertag) return feiertag;
+  const tag = d.getDay();
+  if(tag===6) return 'Samstag';
+  if(tag===0) return 'Sonntag';
+  return '';
+}
+
 /* ==========================================================
    Zwischenablage-Import
    ========================================================== */
@@ -491,6 +586,20 @@ const POSITIONEN_PT = {
   ]
 };
 
+// Gegenseitige GOÄ-Ausschlüsse für die Rechnungspositionen -- 1:1 wie am
+// PC (ZifferAusschlussListe), nur für die in dieser Praxis tatsächlich
+// verwendeten Ziffern. Ist eine Ziffer aktiv, werden alle mit ihr
+// unvereinbaren Positionen gesperrt (Checkbox deaktiviert + automatisch
+// abgehakt entfernt).
+const ZIFFER_AUSSCHLUESSE = {
+  '1':   ['34','50','849'],
+  '5':   ['7','50'],
+  '7':   ['5'],
+  '34':  ['1','849'],
+  '50':  ['1','5'],
+  '849': ['1','34']
+};
+
 /* Ermittelt die automatisch vorzuschlagenden Positionen (Grundleistung +
    Zeit-Zuschlag + Reiseentschädigung ODER passendes Wegegeld -- nie beides,
    siehe sollReiseGelten) -- der Rest bleibt manuelle Auswahl, genau wie am
@@ -499,26 +608,38 @@ function automatischeAuswahl(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftli
   const ausgewaehlt = new Set();
   (katalog.grundleistung||[]).forEach(p=>{ if(p.standard) ausgewaehlt.add(p.ziffer); });
 
+  const normDatum = normalisiereDatum(datum);
   const normZeit = normalisiereZeit(zeit);
-  const wochenende = istWochenende(datum);
+  // Wie am PC (ZeitZuschlagBestimmen + IstZuschlagstag): F/G aus der Uhrzeit
+  // UND H aus Wochenende/Feiertag koennen GLEICHZEITIG gelten -- H schliesst
+  // F/G also NICHT aus (anders als zuvor in dieser Datei).
   if(normZeit){
     const min = zeitInMinuten(normZeit);
-    if(wochenende) ausgewaehlt.add('H');
-    else if(min>=20*60 && min<22*60) ausgewaehlt.add('F');
-    else if(min>=6*60 && min<8*60) ausgewaehlt.add('F');
+    if((min>=20*60 && min<22*60) || (min>=6*60 && min<8*60)) ausgewaehlt.add('F');
     else if(min>=22*60 || min<6*60) ausgewaehlt.add('G');
   }
+  if(zuschlagstagGrund(normDatum)) ausgewaehlt.add('H');
 
   const fahrVal = parseFloat((kmFahrstreckeGesamt||'').toString().replace(',','.'));
   const luftVal = parseFloat((kmLuftlinie||'').toString().replace(',','.'));
   if(!isNaN(fahrVal) && fahrVal>0){
-    if(sollReiseGelten(fahrVal, isNaN(luftVal)?0:luftVal)){
+    // Luftlinie (Einfachstrecke) fehlt evtl., wenn km manuell eingetragen
+    // wurden statt per Routenberechnung -- als Schaetzung dann die HALBE
+    // Fahrstrecke (Hin+Rück) verwenden, NICHT die volle. Das war zuvor der
+    // Bug, der dazu führte, dass praktisch immer WT25/WN25 (letzte Staffel)
+    // gewählt wurde, da die volle (verdoppelte) Strecke fast immer über der
+    // 25-km-Einfachstrecken-Schwelle lag.
+    const luftEinfach = isNaN(luftVal) ? fahrVal/2 : luftVal;
+    if(sollReiseGelten(fahrVal, luftEinfach)){
       ausgewaehlt.add('REISE');
-    } else {
-      const nacht = normZeit ? (zeitInMinuten(normZeit)>=20*60 || zeitInMinuten(normZeit)<6*60) : false;
+    } else if(normZeit){
+      // Tag/Nacht-Staffel wie am PC (WegegeldZifferBestimmen): Tag =
+      // 07:00-18:59, Nacht = 19:00-06:59 -- eigenstaendige Grenze, NICHT
+      // identisch mit der F/G-Zeitzuschlag-Grenze (20/6 Uhr).
+      const min = zeitInMinuten(normZeit);
+      const nacht = !(min>=7*60 && min<19*60);
       const tabelle = nacht ? WEGEGELD_NACHT : WEGEGELD_TAG;
-      const bandBasis = isNaN(luftVal) ? fahrVal : luftVal;
-      const bucket = tabelle.find(w => bandBasis <= w.bisKm) || tabelle[tabelle.length-1];
+      const bucket = tabelle.find(w => luftEinfach <= w.bisKm) || tabelle[tabelle.length-1];
       ausgewaehlt.add(bucket.ziffer);
     }
   }
@@ -723,8 +844,29 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter){
     document.getElementById('posSumme').textContent = summe.toFixed(2).replace('.',',')+' €';
     return summe;
   }
-  app.querySelectorAll('.position-zeile input').forEach(cb=> cb.addEventListener('change', summeBerechnen));
-  summeBerechnen();
+
+  // Gegenseitige Ausschlüsse (nur PT, 1:1 wie am PC/AusschluesseAktualisieren):
+  // ist eine Ziffer aktiv -- egal ob manuell angehakt oder als Grundleistung
+  // fest -- werden alle mit ihr unvereinbaren Positionen gesperrt und
+  // automatisch abgehakt.
+  function ausschluesseAktualisieren(){
+    if(art!=='pt') return;
+    const boxen = Array.from(app.querySelectorAll('.position-zeile input'));
+    const aktive = new Set(boxen.filter(cb=>cb.checked).map(cb=>cb.dataset.ziffer));
+    boxen.forEach(cb=>{
+      const ausschluesse = ZIFFER_AUSSCHLUESSE[cb.dataset.ziffer];
+      const zeile = cb.closest('.position-zeile');
+      if(!ausschluesse){ cb.disabled=false; if(zeile) zeile.style.opacity=''; return; }
+      const gesperrt = ausschluesse.some(z=> aktive.has(z));
+      if(gesperrt && cb.checked) cb.checked = false;
+      cb.disabled = gesperrt;
+      if(zeile) zeile.style.opacity = gesperrt ? '0.45' : '';
+    });
+  }
+
+  function positionAktualisieren(){ ausschluesseAktualisieren(); summeBerechnen(); }
+  app.querySelectorAll('.position-zeile input').forEach(cb=> cb.addEventListener('change', positionAktualisieren));
+  positionAktualisieren();
 
   document.getElementById('btnPositionenFertig').onclick = ()=>{
     const gewaehlt = new Set();
@@ -858,19 +1000,31 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2']
     : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmLuftlinie'];
 
+  // Straße-Feld-Verhalten (str->straße + Großschreibung) VOR der
+  // Geocoding-Auslösung registrieren, damit die Routen-/PLZ-Suche bereits
+  // den korrigierten Straßennamen verwendet.
+  document.getElementById('txtPAdresse1').addEventListener('blur', ()=> strasseFeldBlur('txtPAdresse1'));
+  if(art==='ls') document.getElementById('txtAdresse1').addEventListener('blur', ()=> strasseFeldBlur('txtAdresse1'));
+
   ['txtPAdresse1','txtPAdresse2'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.addEventListener('blur', ()=> kmAutomatikAusloesen());
   });
   // PLZ/Ort-Erkennung wie am PC: beim Verlassen des kombinierten
   // "PLZ + Ort"-Feldes ergänzen/prüfen.
   document.getElementById('txtPAdresse2').addEventListener('blur', ()=> plzOrtPruefen('txtPAdresse1','txtPAdresse2'));
-  document.getElementById('txtDatumExcel').addEventListener('blur', alleChecksAusfuehren);
-  document.getElementById('txtDatum').addEventListener('blur', alleChecksAusfuehren);
+  document.getElementById('txtDatumExcel').addEventListener('blur', ()=>{ datumFeldBlur('txtDatumExcel'); automatikVorschauAktualisieren(); });
+  document.getElementById('txtDatum').addEventListener('blur', ()=> datumFeldBlur('txtDatum'));
   // txtZeitLS existiert in BEIDEN Masken (LS: "Zeitpunkt Leichenschau",
   // PT: "Uhrzeit Hausbesuch") -- Format-Pruefung gilt daher fuer beide.
-  document.getElementById('txtZeitLS').addEventListener('blur', alleChecksAusfuehren);
+  document.getElementById('txtZeitLS').addEventListener('blur', ()=>{ alleChecksAusfuehren(); automatikVorschauAktualisieren(); });
+  // km-Feld: wie am PC live neu berechnen, sobald sich der Wert ändert --
+  // auch bei rein manueller Eingabe ohne Routenberechnung (siehe
+  // automatikVorschauAktualisieren, behebt außerdem den Bug, dass dabei
+  // bisher praktisch immer WT25/WN25 statt der passenden Staffel bzw.
+  // der Reiseentschädigung gewählt wurde).
+  document.getElementById('txtKm').addEventListener('input', automatikVorschauAktualisieren);
   if(art==='ls'){
-    document.getElementById('txtSterbedatum').addEventListener('blur', alleChecksAusfuehren);
+    document.getElementById('txtSterbedatum').addEventListener('blur', ()=> datumFeldBlur('txtSterbedatum'));
     document.getElementById('txtTodeszeit').addEventListener('blur', alleChecksAusfuehren);
     document.getElementById('txtAdresse1').addEventListener('blur', ()=> kmAutomatikAusloesen());
     document.getElementById('txtAdresse2').addEventListener('blur', ()=> kmAutomatikAusloesen());
@@ -980,9 +1134,118 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       const reise = sollReiseGelten(kmFahrstreckeGesamt, kmLuft);
       info.textContent = 'Route: '+kmFahrstreckeGesamt.toFixed(1)+' km Hin+Rück, '+kmLuft.toFixed(1)+' km Luftlinie'
         + (reise ? ' -- Reiseentschädigung greift' : ' -- Wegegeld greift');
+      // Bereits ausgewaehlte Automatik-Positionen (falls Nutzer schon auf der
+      // Rechnungspositionen-Seite war) live nachziehen -- wie bei manueller
+      // km-Aenderung.
+      positionenAutomatikNachziehen(
+        document.getElementById('txtDatumExcel').value,
+        document.getElementById('txtZeitLS').value,
+        kmFahrstreckeGesamt.toFixed(1), kmLuft.toFixed(1)
+      );
     }catch(e){
       info.textContent = 'Keine Internetverbindung -- km bitte manuell eintragen.';
     }
+  }
+
+  // Wie am PC (AutoAktualisierenLive/AutoPunkteAktualisieren): sobald km,
+  // Uhrzeit oder Datum sich aendern -- auch durch manuelle km-Eingabe ohne
+  // Routenberechnung --, werden die automatisch bestimmten Positionen
+  // (Zeitzuschlag F/G, Wochenend-/Feiertagszuschlag H, Wegegeld-Staffel
+  // bzw. Reiseentschaedigung) SOFORT neu bestimmt, nicht erst beim naechsten
+  // Oeffnen der Rechnungspositionen-Seite. Manuell angehakte ("Manuell")
+  // Positionen bleiben davon unberuehrt.
+  // Falls bereits eine Positionsauswahl besteht (Nutzer war schon auf der
+  // Rechnungspositionen-Seite): die automatisch bestimmten Ziffern (Zeit-
+  // zuschlag F/G, Wochenend-/Feiertagszuschlag H, Wegegeld-Staffel bzw.
+  // Reiseentschaedigung) live nachziehen, Betrag/Status-Anzeige entsprechend
+  // aktualisieren. Manuell angehakte ("Manuell") Positionen bleiben davon
+  // unberuehrt -- wie am PC (AutoAktualisierenLive/AutoPunkteAktualisieren).
+  function positionenAutomatikNachziehen(datum, zeit, kmFahrstrecke, kmLuftlinie){
+    if(!positionenAuswahl) return;
+    const katalog = art==='ls' ? POSITIONEN_LS : POSITIONEN_PT;
+    const AUTO_ZIFFERN = new Set([
+      ...ZUSCHLAEGE_ZEIT.map(z=>z.ziffer),
+      ...WEGEGELD_TAG.map(z=>z.ziffer), ...WEGEGELD_NACHT.map(z=>z.ziffer),
+      'REISE'
+    ]);
+    const neueAuto = automatischeAuswahl(katalog, datum, zeit, kmFahrstrecke, kmLuftlinie);
+    AUTO_ZIFFERN.forEach(z=> positionenAuswahl.delete(z));
+    neueAuto.forEach(z=> { if(AUTO_ZIFFERN.has(z)) positionenAuswahl.add(z); });
+
+    const alle = allePositionenFlach(katalog);
+    let summe=0;
+    positionenAuswahl.forEach(z=>{ const p = alle.find(x=>x.ziffer===z); if(p) summe += p.betrag; });
+    const betragEl = document.getElementById('txtBetrag');
+    if(betragEl) betragEl.value = summe.toFixed(2).replace('.',',');
+    const statusEl = document.getElementById('punkteStatus');
+    if(statusEl) statusEl.textContent = positionenAuswahl.size+' Position(en) ausgewählt';
+  }
+
+  // Wie am PC (AutoAktualisierenLive): sobald km, Uhrzeit oder Datum sich
+  // aendern -- auch durch manuelle km-Eingabe ohne Routenberechnung --,
+  // werden Vorschau-Text und bereits ausgewaehlte Automatik-Positionen
+  // SOFORT neu bestimmt, nicht erst beim naechsten Oeffnen der
+  // Rechnungspositionen-Seite.
+  function automatikVorschauAktualisieren(){
+    const datum = document.getElementById('txtDatumExcel').value;
+    const zeit = document.getElementById('txtZeitLS').value;
+    const kmEl = document.getElementById('txtKm');
+    const luftEl = document.getElementById('txtKmLuftlinie');
+    const kmFahrstrecke = kmEl.value.trim();
+
+    // Fehlende Luftlinie (z.B. weil km manuell statt per Routenberechnung
+    // eingetragen wurden) mit der halben Fahrstrecke schaetzen -- wie am PC
+    // ist die Luftlinie sonst zwingend fuer die Wegegeld-Staffel/Reise-
+    // Entscheidung erforderlich. Ein per Routenberechnung bereits ermittelter
+    // (genauerer) Wert wird NICHT ueberschrieben.
+    if(!luftEl.value.trim() && kmFahrstrecke){
+      const fahrVal = parseFloat(kmFahrstrecke.replace(',','.'));
+      if(!isNaN(fahrVal) && fahrVal>0) luftEl.value = (fahrVal/2).toFixed(1);
+    }
+    const kmLuftlinie = luftEl.value.trim();
+
+    const info = document.getElementById('streckeninfo');
+    if(kmFahrstrecke && info){
+      const fahrVal = parseFloat(kmFahrstrecke.replace(',','.'));
+      const luftVal = parseFloat((kmLuftlinie||'').replace(',','.'));
+      if(!isNaN(fahrVal) && fahrVal>0){
+        const reise = sollReiseGelten(fahrVal, isNaN(luftVal)?fahrVal/2:luftVal);
+        info.textContent = (reise ? 'Reiseentschädigung greift' : 'Wegegeld greift')
+          + ' (manuelle km-Angabe' + (isNaN(luftVal) ? '' : ', Luftlinie geschätzt') + ')';
+      }
+    }
+
+    positionenAutomatikNachziehen(datum, zeit, kmFahrstrecke, kmLuftlinie);
+  }
+
+  // Datums-Kurzeingabe (z.B. "26" -> Jahr 2026, "010111" -> 01.01.1911)
+  // beim Verlassen eines Datumsfeldes ergänzen, bevor die übliche
+  // Plausibilitätsprüfung läuft.
+  function datumFeldBlur(id){
+    const el = document.getElementById(id);
+    if(el){
+      const ergaenzt = datumKurzeingabeErgaenzen(el.value, el.value);
+      if(ergaenzt) el.value = ergaenzt;
+    }
+    alleChecksAusfuehren();
+  }
+
+  // Straße-Feld-Verhalten wie am PC (StrasseAusschreiben/GrossKleinKorrigieren):
+  // "str"/"str." wird zu "straße" ausgeschrieben, und vergessene
+  // Großschreibung am Wort-/Bindestrich-Anfang wird ergänzt -- angewendet
+  // beim Verlassen des jeweiligen Straßenfeldes.
+  function strasseFeldBlur(id){
+    const el = document.getElementById(id);
+    if(!el) return;
+    const roh = el.value;
+    if(!roh) return;
+    const ausgeschrieben = roh.replace(/str\./gi, 'straße').replace(/str(?=[ 0-9])/gi, 'straße');
+    let ergebnis = '', vorherigesTrennz = true;
+    for(const c of ausgeschrieben){
+      ergebnis += (vorherigesTrennz && c!==' ' && c!=='-') ? c.toUpperCase() : c;
+      vorherigesTrennz = (c===' '||c==='-');
+    }
+    el.value = ergebnis;
   }
 
   function feldWarnung(id, html){
