@@ -184,6 +184,24 @@
      PLZ/Ort-Feld statt als eigene volle Zeile darunter. */
   .feld-zeile-mit-btn{display:flex; gap:8px; align-items:flex-end;}
   .feld-zeile-mit-btn .feld{flex:1; margin-bottom:12px;}
+  /* Ergebnis-Ausgabe "Luftlinie berechnen" (Startseite -> Werkzeuge) --
+     bewusst deutlich groesser/auffaelliger als eine normale .warnhinweis:
+     das Ergebnis IST der Zweck dieses Werkzeugs, und auf dem sonst recht
+     leeren Bildschirm ist genug Platz dafuer. */
+  .luft-ergebnis{
+    display:none; margin-top:18px; padding:16px 18px; border-radius:12px;
+    background:var(--karte); border:2px solid var(--ls-farbe);
+  }
+  .luft-ergebnis.aktiv{display:block;}
+  .luft-ergebnis-zeile{font-size:20px; font-weight:700; color:var(--text); margin-bottom:8px; line-height:1.35;}
+  .luft-ergebnis-zeile:last-child{margin-bottom:0;}
+  .luft-ergebnis-zeile strong{font-weight:700;}
+  .luft-ergebnis-hinweis{font-size:14px; font-weight:400; color:var(--text-schwach);}
+  .luft-ergebnis.fehler{
+    border-color:var(--warnung-rand); background:var(--warnung-bg);
+    font-size:14px; font-weight:400; color:var(--warnung-text);
+  }
+  .luft-ergebnis.fehler .luft-ergebnis-zeile{font-size:14px; font-weight:400; color:var(--warnung-text);}
   .btn-inline-blass{
     flex:0 0 auto; margin-bottom:12px; padding:10px 12px; font-size:12.5px; font-weight:600;
     border-radius:8px; background:var(--karte); border:1.5px solid var(--ls-farbe); color:var(--ls-farbe);
@@ -403,11 +421,14 @@ function speichereEinstellungen(e){ LS.set('einstellungen', e); }
 // lokal fortgeführt: einmalig aus der letzten Rechnungsnummer der
 // Übersicht abgeglichen (Einstellungen), danach bei jedem "In
 // Zwischenablage kopieren" pro neuem Fall automatisch weitergezählt.
-function rnZaehlerAusRenu(renu){
-  const r = (renu||'').trim();
-  const ziffern = r.slice(-3);
-  const z = parseInt(ziffern, 10);
-  if(!/^\d{3}$/.test(ziffern) || isNaN(z)) return null;
+function rnZaehlerAusEingabe(eingabe){
+  // Nur die dreistellige laufende Nummer selbst wird abgefragt (z.B. "003"
+  // statt der kompletten Rechnungsnummer "MS260115-003") -- alles andere
+  // (Initialen, Datum) kennt/erzeugt die App je Fall ohnehin selbst.
+  const bereinigt = (eingabe||'').trim().replace(/\D/g,'');
+  if(!bereinigt) return null;
+  const z = parseInt(bereinigt, 10);
+  if(isNaN(z) || z<0 || z>999) return null;
   return z + 1;
 }
 function rnYymmdd(datumNorm){
@@ -934,6 +955,23 @@ function automatischeAuswahl(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftli
     return ausgewaehlt;
   }
 
+  // BUGFIX (exakt wie am PC, WegegeldZifferBestimmen): im Luftlinie-Modus
+  // entscheidet AUSSCHLIESSLICH die Luftlinie (einfache Strecke) -- eine
+  // (noch) unbekannte Fahrstrecke wird dafuer nicht gebraucht. Vorher hing
+  // die GESAMTE Wegegeld-Ermittlung an "if(fahrVal>0)", wodurch eine manuell
+  // eingetippte ODER per Alternativrouten gewaehlte Luftlinie ganz ohne
+  // WT/WN blieb, sobald txtKmFahrstrecke (noch) leer war (z.B. bei manueller
+  // Eingabe ohne vorherige automatische Routenberechnung).
+  if(modus==='LUFTLINIE'){
+    if(isNaN(luftVal) || luftVal<=0 || !normZeit) return ausgewaehlt;
+    const min = zeitInMinuten(normZeit);
+    const nacht = !(min>=7*60 && min<19*60);
+    const tabelle = nacht ? WEGEGELD_NACHT : WEGEGELD_TAG;
+    const bucket = tabelle.find(w => luftVal <= w.bisKm) || tabelle[tabelle.length-1];
+    ausgewaehlt.add(bucket.ziffer);
+    return ausgewaehlt;
+  }
+
   if(!isNaN(fahrVal) && fahrVal>0){
     // Luftlinie (Einfachstrecke) fehlt evtl., wenn km manuell eingetragen
     // wurden statt per Routenberechnung -- als Schaetzung dann die HALBE
@@ -942,7 +980,7 @@ function automatischeAuswahl(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftli
     // gewählt wurde, da die volle (verdoppelte) Strecke fast immer über der
     // 25-km-Einfachstrecken-Schwelle lag.
     const luftEinfach = isNaN(luftVal) ? fahrVal/2 : luftVal;
-    if(modus!=='LUFTLINIE' && sollReiseGelten(fahrVal, luftEinfach)){
+    if(sollReiseGelten(fahrVal, luftEinfach)){
       ausgewaehlt.add('REISE');
     } else if(normZeit){
       // Tag/Nacht-Staffel wie am PC (WegegeldZifferBestimmen): Tag =
@@ -1143,24 +1181,26 @@ function ansichtLuftlinienTool(){
     html += `<div class="warnhinweis aktiv">Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen). Ohne Praxisadresse kann keine Entfernung berechnet werden.</div>`;
   }
   html += `
-      <button class="btn-primaer blass" id="btnLuftZwischenablage">Aus Zwischenablage einfügen</button>
+      <button class="btn-primaer blass" id="btnLuftZwischenablage" style="margin-bottom:16px;">Aus Zwischenablage einfügen</button>
       <div class="feld">
         <label for="txtLuftAdresse">Adresse</label>
         <input type="text" id="txtLuftAdresse" autocomplete="off" placeholder="Straße Hausnummer, PLZ Ort">
       </div>
-      <button class="btn-primaer" id="btnLuftBerechnen">Luftlinie berechnen</button>
-      <div id="luftErgebnis" class="warnhinweis" style="margin-top:12px;"></div>
+      <button class="btn-primaer" id="btnLuftBerechnen">Luftlinie &amp; Fahrstrecke berechnen</button>
+      <div id="luftErgebnis" class="luft-ergebnis"></div>
     </div>`;
   app.innerHTML = html;
 
   const ergebnisEl = document.getElementById('luftErgebnis');
-  const zeigeErgebnis = (text, istFehler)=>{
-    if(!text){ ergebnisEl.classList.remove('aktiv'); ergebnisEl.innerHTML=''; return; }
-    ergebnisEl.innerHTML = text;
+  // Eigene, deutlich groessere/auffaelligere Darstellung fuer das
+  // Berechnungsergebnis (statt der kleinen, fuer Warnungen gedachten
+  // .warnhinweis-Optik) -- ist ja bewusst DIE Ausgabe, auf die es bei diesem
+  // Werkzeug ankommt, und auf der Startseite ist genug Platz dafuer.
+  const zeigeErgebnis = (html, istFehler)=>{
+    if(!html){ ergebnisEl.classList.remove('aktiv'); ergebnisEl.innerHTML=''; return; }
     ergebnisEl.classList.add('aktiv');
-    ergebnisEl.style.background = istFehler ? '' : 'var(--karte)';
-    ergebnisEl.style.color = istFehler ? '' : 'var(--text)';
-    ergebnisEl.style.borderColor = istFehler ? '' : 'var(--ls-farbe)';
+    ergebnisEl.classList.toggle('fehler', !!istFehler);
+    ergebnisEl.innerHTML = html;
   };
 
   document.getElementById('btnLuftZwischenablage').onclick = async ()=>{
@@ -1184,8 +1224,25 @@ function ansichtLuftlinienTool(){
       const ziel = await geocode(adresse);
       if(!ziel){ zeigeErgebnis('Die Adresse "'+adresse+'" konnte nicht gefunden werden. Bitte prüfen.', true); return; }
       const luft = kmLuftlinieEinfach(start, ziel);
-      zeigeErgebnis(`<strong>Luftlinie (einfach):</strong> ${luft.toFixed(1).replace('.',',')} km<br>
-        <strong>Geschätzt Hin- und Rückfahrt:</strong> ${(luft*2).toFixed(1).replace('.',',')} km`, false);
+      let zeile2;
+      // Wie bei "Alternativrouten"/der automatischen km-Berechnung: die
+      // tatsaechliche Fahrstrecke (nicht nur die verdoppelte Luftlinie als
+      // grobe Schaetzung) ueber denselben Routendienst (OSRM) ermitteln --
+      // derselbe Code, der auch sonst fuer Hin- und Rueckfahrt verwendet
+      // wird (routeAlternativen liefert die Einfachstrecke je Route).
+      try{
+        const routen = await routeAlternativen(start, ziel);
+        if(routen && routen.length){
+          const kmGesamt = routen[0].km*2;
+          zeile2 = `<strong>Fahrstrecke (Hin- und Rückfahrt):</strong> ${kmGesamt.toFixed(1).replace('.',',')} km`;
+        } else {
+          zeile2 = `<span class="luft-ergebnis-hinweis">Fahrstrecke konnte nicht ermittelt werden -- nur die Luftlinie steht zur Verfügung.</span>`;
+        }
+      }catch(routenErr){
+        zeile2 = `<span class="luft-ergebnis-hinweis">Fahrstrecke konnte nicht berechnet werden.${keinInternetHinweisText()} Nur die Luftlinie steht zur Verfügung.</span>`;
+      }
+      zeigeErgebnis(`<div class="luft-ergebnis-zeile"><strong>Luftlinie (einfach):</strong> ${luft.toFixed(1).replace('.',',')} km</div>
+        <div class="luft-ergebnis-zeile">${zeile2}</div>`, false);
     }catch(err){
       zeigeErgebnis('Berechnung fehlgeschlagen.'+keinInternetHinweisText(), true);
     }
@@ -1427,16 +1484,18 @@ function ansichtEinstellungen(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Rechnungsnummern-Zähler</div>
       <div class="feld">
-        <label for="txtRnLetzte">Letzte in der Rechnungsübersicht vergebene Rechnungsnummer (Spalte Q)</label>
-        <input type="text" id="txtRnLetzte" value="${(e.rnLetzte||'').replace(/"/g,'&quot;')}" placeholder="z.B. MS260115-003">
+        <label for="txtRnLetzte">Laufende Nummer der letzten Rechnung in der Übersicht (nur die 3 Ziffern, Spalte Q)</label>
+        <input type="text" id="txtRnLetzte" inputmode="numeric" maxlength="3" value="${(e.rnLetzte||'').replace(/"/g,'&quot;')}" placeholder="z.B. 003">
         <div class="warnhinweis" id="txtRnLetzte_warn"></div>
       </div>
       <div class="hinweis" id="rnZaehlerStand" style="font-size:13px; color:var(--text-schwach); margin-top:4px;">${rnZaehlerStandText(e)}</div>
       <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-top:8px;">
         Damit "In Zwischenablage kopieren" die Rechnungsnummer (Spalte Q) gleich mit ausfüllen kann, hier einmalig die
-        zuletzt in der Übersicht vergebene Nummer eintragen -- danach zählt das Handy bei jedem neuen, kopierten Fall
-        selbstständig weiter. Falls zwischendurch auch direkt am PC eine Rechnung angelegt wurde (ohne über das Handy zu
-        laufen), bitte die aktuell letzte Nummer aus der Übersicht hier erneut eintragen, um den Zähler abzugleichen.
+        laufende Nummer (die letzten 3 Ziffern) der zuletzt in der Übersicht vergebenen Rechnungsnummer eintragen --
+        Initialen und Datum ermittelt die App für jeden Fall selbst. Danach zählt das Handy bei jedem neuen, kopierten
+        Fall selbstständig weiter. Falls zwischendurch auch direkt am PC eine Rechnung angelegt wurde (ohne über das
+        Handy zu laufen), bitte die aktuell letzte laufende Nummer aus der Übersicht hier erneut eintragen, um den
+        Zähler abzugleichen.
       </div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
@@ -1468,20 +1527,22 @@ function ansichtEinstellungen(){
     warnEl.classList.add('aktiv'); warnEl.innerHTML = html;
   };
   document.getElementById('txtRnLetzte').addEventListener('blur', ()=>{
-    const eingabe = document.getElementById('txtRnLetzte').value.trim().toUpperCase();
-    document.getElementById('txtRnLetzte').value = eingabe;
-    if(!eingabe){
+    const rohEingabe = document.getElementById('txtRnLetzte').value.trim();
+    if(!rohEingabe){
+      document.getElementById('txtRnLetzte').value = '';
       e.rnLetzte = ''; e.rnNaechsterZaehler = null;
       rnWarnung('');
       speichereEinstellungen(e);
       document.getElementById('rnZaehlerStand').textContent = rnZaehlerStandText(e);
       return;
     }
-    const naechster = rnZaehlerAusRenu(eingabe);
+    const naechster = rnZaehlerAusEingabe(rohEingabe);
     if(naechster===null){
-      rnWarnung('Konnte aus "'+eingabe+'" keine laufende Nummer (letzte 3 Ziffern) erkennen -- bitte die vollständige Rechnungsnummer aus Spalte Q eintragen, z.B. "MS260115-003".');
+      rnWarnung('Bitte nur die laufende Nummer der letzten Rechnung eintragen (die letzten 3 Ziffern aus Spalte Q, z.B. "003" bei "MS260115-003") -- keine Buchstaben, keine Datumsangabe.');
       return;
     }
+    const eingabe = String(naechster-1).padStart(3,'0');
+    document.getElementById('txtRnLetzte').value = eingabe;
     rnWarnung('');
     e.rnLetzte = eingabe;
     e.rnNaechsterZaehler = naechster;
@@ -2694,10 +2755,18 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const kmLuftlinie = document.getElementById('txtKmLuftlinie').value.trim();
 
     const info = document.getElementById('streckeninfo');
-    if(kmFahrstrecke && info){
-      const fahrVal = parseFloat(kmFahrstrecke.replace(',','.'));
+    if(info){
+      const fahrVal = parseFloat((kmFahrstrecke||'').replace(',','.'));
       const luftVal = parseFloat((kmLuftlinie||'').replace(',','.'));
-      if(!isNaN(fahrVal) && fahrVal>0){
+      // Wie bei der Ziffernwahl (automatischeAuswahl): im erzwungenen Modus
+      // entscheidet NICHT mehr sollReiseGelten, sondern der Modus selbst --
+      // sonst widersprach dieser Infotext zuvor der tatsächlich gesetzten
+      // Position (z.B. "Reiseentschädigung greift" trotz gewählter Luftlinie).
+      if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0){
+        info.textContent = 'Reiseentschädigung greift';
+      } else if(manuellerModus==='LUFTLINIE' && !isNaN(luftVal) && luftVal>0){
+        info.textContent = 'Wegegeld greift';
+      } else if(!isNaN(fahrVal) && fahrVal>0){
         const reise = sollReiseGelten(fahrVal, isNaN(luftVal)?fahrVal/2:luftVal);
         info.textContent = reise ? 'Reiseentschädigung greift' : 'Wegegeld greift';
       }
