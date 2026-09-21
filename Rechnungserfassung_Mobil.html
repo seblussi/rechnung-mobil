@@ -110,6 +110,14 @@
     padding:14px 14px 4px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.05);
   }
   .abschnitt .feld:last-child{margin-bottom:4px;}
+  /* Gleiche Kompensation wie oben (".feld:last-child"), aber fuer
+     Abschnitte, deren letztes Kind KEIN .feld ist -- z.B. der Button/
+     Hinweis im "Sync-Ordner"-Bereich der Einstellungen oder die
+     Ergebnis-Box im Luftlinien-Tool. Ohne diese Regel bleibt dort nur
+     das .abschnitt-eigene padding-bottom von 4px uebrig -- spuerbar
+     schmaler/knapper als der uebliche 12-14px-Rhythmus zwischen den
+     uebrigen Elementen. */
+  .abschnitt > :last-child:not(.feld){margin-bottom:10px;}
   .trennlinie{
     font-size:12.5px; font-weight:700; color:#fff; margin:-14px -14px 14px;
     text-transform:uppercase; letter-spacing:.04em; background:var(--titelfarbe);
