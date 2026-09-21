@@ -119,31 +119,27 @@
   body.dunkel .btn-sync.sync-rot{background:#3a1414; color:#f0a3a3; border-color:#b23a3a;}
   .btn-sync.sync-verbunden{border-color:#3ba55c; color:#1e6b37; background:#e6f7ea;}
   body.dunkel .btn-sync.sync-verbunden{background:#123a1f; color:#8fd9a8; border-color:#2e8a4c;}
-  /* Export/Import/Sync nebeneinander als gleich breite Buttons -- die
-     einzelnen .btn-sekundaer-Regeln (width:100% etc.) bleiben dabei
-     unveraendert, nur die Anordnung wird per Flex-Reihe ueberschrieben.
-     Feste Mindesthöhe, damit die Reihe nicht "kleiner" wirkt, sobald ein
-     kürzerer Text (z.B. "Sync verbunden" statt "Sync-Ordner auswählen")
-     angezeigt wird -- ohne das würde die Reihe je nach Zustand in der Höhe
-     springen. */
+  /* Export/Import/Sync nebeneinander als gleich breite, wieder near-quadra­
+     tische Buttons (wie ursprünglich) -- die einzelnen .btn-sekundaer-Regeln
+     (width:100% etc.) bleiben dabei unveraendert, nur die Anordnung wird per
+     Flex-Reihe ueberschrieben. Kompaktere Schrift/Abstände als der normale
+     .btn-sekundaer, damit die Buttons trotz Titel+Untertext nicht in die
+     Länge gezogen werden. */
   .datensicherung-reihe{display:flex; gap:8px; align-items:stretch;}
   .datensicherung-reihe .btn-sekundaer{
-    flex:1; margin-bottom:0; min-height:108px;
-    display:flex; flex-direction:column; justify-content:center;
+    flex:1; margin-bottom:0; padding:10px 8px;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    text-align:center; font-size:13.5px;
   }
-  .datensicherung-reihe .icon-pfeil{display:block; font-size:20px; margin-bottom:4px;}
-  /* Feste Mindesthöhe für den Untertext: der Sync-Button hat je nach Status
-     unterschiedlich langen Text ("Sync-Ordner auswählen" vs. "Sync
-     verbunden") -- ohne das reserviert der kürzeste aktuell angezeigte Text
-     weniger Platz, wodurch die GESAMTE Reihe (alle 3 Buttons haben gleiche
-     Höhe) nach dem Verbinden sichtbar kleiner wird. Reserviert dauerhaft so
-     viel Platz wie der längste vorkommende Untertext braucht. */
-  .datensicherung-reihe .btn-sekundaer .unter{min-height:70px;}
-  /* Gleiches Prinzip für den Titel-Text selbst: "Sync-Ordner auswählen"
-     (2 Zeilen) vs. "Sync verbunden" (1 Zeile) -- reserviert dauerhaft
-     Platz für 2 Zeilen, damit der Titel allein die Button-Höhe nicht
-     verändert. */
-  .datensicherung-reihe .btn-sekundaer .btn-titel{display:block; min-height:54px;}
+  .datensicherung-reihe .icon-pfeil{display:block; font-size:18px; margin-bottom:3px;}
+  /* Feste (aber knappe) Mindesthöhe für Titel und Untertext: die Texte
+     ändern sich je nach Sync-Status unterschiedlich lang ("Sync
+     einrichten" vs. "Verbunden") -- ohne das würde die ganze Reihe (alle
+     3 Buttons gleich hoch) beim Verbinden sichtbar "springen". Die Texte
+     wurden bewusst kurz gehalten, damit hier nur 1-2 Zeilen reserviert
+     werden müssen statt eines hohen, lang gezogenen Buttons. */
+  .datensicherung-reihe .btn-sekundaer .btn-titel{display:block; min-height:34px; font-weight:700;}
+  .datensicherung-reihe .btn-sekundaer .unter{min-height:30px; font-size:11px;}
   /* Die 3 Speicher-Buttons stecken jetzt in einer eigenen, klar abgetrennten
      Box mit Überschrift "Sync" (wie die Boxen "Excel-Dateien öffnen" /
      "Werkzeuge" weiter unten) -- vorher standen sie unbeschriftet direkt
@@ -155,7 +151,7 @@
      einer kleinen Textzeile. */
   .abschnitt{
     background:var(--karte); border:1px solid var(--rand); border-radius:12px;
-    padding:14px 14px 4px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.05);
+    padding:14px 14px 4px; margin-bottom:24px; box-shadow:0 1px 3px rgba(0,0,0,.05);
   }
   .abschnitt .feld:last-child{margin-bottom:4px;}
   /* WICHTIG (Korrektur): eine allgemeine ".abschnitt > :last-child"-Regel
@@ -603,15 +599,15 @@ function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
 function syncButtonInfo(){
   if(autoSyncStatus==='verbunden'){
     return {
-      klasse:'sync-verbunden', text:'Sync verbunden',
-      unter:'Automatische Sicherung ist aktiv',
+      klasse:'sync-verbunden', text:'Verbunden',
+      unter:'Auto-Sync aktiv',
       aktion: async ()=>{ appToastAnzeigen('Sync-Ordner ist bereits verbunden -- Änderungen werden automatisch gesichert.', 2200); }
     };
   }
   if(autoSyncStatus==='berechtigung_fehlt'){
     return {
-      klasse:'sync-rot', text:'Sync erneut verbinden',
-      unter:'Berechtigung abgelaufen -- kurz bestätigen',
+      klasse:'sync-rot', text:'Erneut verbinden',
+      unter:'Kurz bestätigen',
       aktion: async ()=>{
         const ok = await autoSyncBerechtigungErneuern();
         appToastAnzeigen(ok ? 'Sync-Ordner wieder verbunden -- Auto-Sync läuft.' : 'Berechtigung wurde nicht erteilt.', 2500);
@@ -621,15 +617,15 @@ function syncButtonInfo(){
   }
   if(autoSyncStatus==='nicht_unterstuetzt'){
     return {
-      klasse:'sync-rot', text:'Sync nicht verfügbar',
-      unter:'Browser unterstützt keinen Auto-Sync',
+      klasse:'sync-rot', text:'Nicht verfügbar',
+      unter:'Kein Auto-Sync',
       aktion: async ()=>{ appToastAnzeigen('Auto-Sync wird von diesem Browser nicht unterstützt. Bitte Export/Import verwenden.', 2800); }
     };
   }
   // 'nicht_verbunden' oder 'unbekannt' (siehe autoSyncInitialisieren)
   return {
-    klasse:'sync-rot', text:'Sync-Ordner auswählen',
-    unter:'Einmalig einrichten -- danach automatische Sicherung',
+    klasse:'sync-rot', text:'Sync einrichten',
+    unter:'Ordner auswählen',
     aktion: async ()=>{
       const ok = await autoSyncOrdnerWaehlen();
       appToastAnzeigen(ok ? 'Sync-Ordner verbunden -- Auto-Sync läuft.' : 'Kein Ordner ausgewählt.', 2200);
@@ -1325,11 +1321,11 @@ function ansichtStart(){
   html += `<div class="abschnitt sync-box" style="margin-top:22px;">
     <div class="trennlinie">Sync</div>
     <div class="datensicherung-reihe">
-      <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span><span class="btn-titel">Fälle importieren</span>
-        <span class="unter">Aus einer zuvor exportierten Datei wiederherstellen</span>
+      <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span><span class="btn-titel">Importieren</span>
+        <span class="unter">Datei laden</span>
       </button>
       <input type="file" id="jsonImportInput" accept="application/json,.json" style="display:none">
-      <button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span><span class="btn-titel">Fälle exportieren</span>
+      <button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span><span class="btn-titel">Exportieren</span>
         <span class="unter">Als Datei sichern</span>
       </button>
       <button class="btn-sekundaer btn-sync ${syncInfo.klasse}" id="btnSync"><span class="icon-pfeil">&#8644;</span><span class="btn-titel">${syncInfo.text}</span>
@@ -1495,17 +1491,38 @@ function nameAufteilen(cName){
   return {vorname:teile[0], nachname:teile[teile.length-1]};
 }
 
+// Liefert die Diagnosen einer Privatrechnung als ICD-Kuerzel mit G/V-
+// Kennzeichnung, EXAKT wie DiagnosenKuerzel() in PT_UserFormRechnung.frm am
+// PC, z.B. "[I50.9;G], [J44.9;V]" -- der volle Diagnosetext steht nur im
+// Word-Dokument, hier zaehlt nur das ICD-Kuerzel. Ein Diagnosetext aus dem
+// ICD-Katalog endet immer auf " [CODE]" (siehe icdEintragBauen) -- genau wie
+// am PC wird bei Freitext ohne eckige Klammern der gesamte Text als "Code"
+// uebernommen (dieselbe bewusste Rueckfalllogik wie in DiagnosenKuerzel).
+function diagnosenKuerzel(diagnosen){
+  return (diagnosen||[]).map(d=>{
+    const t = d.text||'';
+    const p2 = t.lastIndexOf(']');
+    const p1 = t.lastIndexOf('[');
+    let code = (p1>=0 && p2>p1) ? t.slice(p1+1, p2) : t;
+    const fl = d.flags||'';
+    if(fl.indexOf('G')>=0) code += ';G';
+    if(fl.indexOf('V')>=0) code += ';V';
+    return '['+code+']';
+  }).join(', ');
+}
+
 // Baut aus einem Fall EINE tab-getrennte Zeile im Format der Excel-
 // Rechnungsübersicht (vom Nutzer bestätigte Spaltenreihenfolge A..Y),
 // damit sie sich direkt in Excel einfügen laesst (Excel/Sheets trennen
 // beim Einfuegen automatisch an Tabs in eigene Zellen).
 // Spalte Q (Rechnungsnummer) wird -- sofern in den Einstellungen ein
 // Zaehler-Abgleich hinterlegt ist -- bereits hier exakt nach PC-Schema
-// vergeben (siehe rechnungsnummerBerechnen). Die Spalten R..Y (Brief/
-// Zahlung/Mahnwesen) werden am PC beim eigentlichen Rechnungserstellen
-// gepflegt und bleiben daher bewusst leer -- ebenso alle Sterbeort-/
-// Bestatter-Spalten bei einer Privatrechnung (PT), da es dort begrifflich
-// keinen Sterbeort/Bestatter gibt.
+// vergeben (siehe rechnungsnummerBerechnen). Spalte U (Rechnungspositionen +
+// km, siehe unten) wird ebenfalls schon hier befuellt. Die uebrigen Spalten
+// R,S,T,V..Y (Brief/Zahlung/Mahnwesen) werden am PC beim eigentlichen
+// Rechnungserstellen/-versenden gepflegt und bleiben daher bewusst leer --
+// ebenso alle Sterbeort-/Bestatter-Spalten bei einer Privatrechnung (PT), da
+// es dort begrifflich keinen Sterbeort/Bestatter gibt.
 function faelleAlsUebersichtsZeilen(faelle){
   return faelle.map(f=>{
     const w = f.werte;
@@ -1523,17 +1540,40 @@ function faelleAlsUebersichtsZeilen(faelle){
       spalten[3] = w.txtSterbedatum || '';                           // D: Datum Tod
       spalten[4] = w.txtTodeszeit || '';                             // E: Uhrzeit Tod
       // Sterbeort: wie am PC (AktiverAdressBlock) gilt bei ausgefuelltem
-      // "Sterbeort abweichend"-Block DIESER als Sterbeort, sonst die
-      // Patientenadresse.
-      spalten[10] = w.txtSterbeAdr1 || w.txtPAdresse1 || '';          // K: Adresse1 Sterbeort
-      spalten[11] = w.txtSterbeAdr2 || w.txtPAdresse2 || '';          // L: Adresse2 Sterbeort
+      // "Sterbeort abweichend"-Block DIESER als Sterbeort. Ist der Block
+      // NICHT ausgefuellt, ist der Sterbeort per Definition derselbe wie
+      // die Patientenadresse -- genau wie am PC steht dafuer aber NICHT
+      // die Adresse nochmal ausgeschrieben in der Spalte, sondern wörtlich
+      // "idem" (Adresse1 UND Adresse2), unabhängig davon, ob die
+      // Patientenadresse selbst ausgefuellt ist.
+      spalten[10] = w.txtSterbeAdr1 || 'idem';                        // K: Adresse1 Sterbeort
+      spalten[11] = w.txtSterbeAdr2 || 'idem';                        // L: Adresse2 Sterbeort
       spalten[12] = w.txtBName || '';                                 // M: Bestatter
       spalten[13] = w.txtAdresse1 || '';                              // N: Adresse1 Bestatter
       spalten[14] = w.txtAdresse2 || '';                              // O: Adresse2 Bestatter
     }
+    // Diagnosen (nur PT): wie am PC (werte(10) = diagKuerzel) landet in
+    // Spalte M -- bei einer Privatrechnung gibt es dort ja keinen Bestatter
+    // -- das ICD-Kuerzel mit G/V-Kennzeichnung, weiss formatiert.
+    const diagKuerzel = f.art==='pt' ? diagnosenKuerzel(w.diagnosen) : '';
+    if(f.art==='pt') spalten[12] = diagKuerzel;                       // M: ICD-Kuerzel (Diagnosen)
     spalten[15] = w.txtBetrag || '';                                  // P: Betrag
     spalten[16] = f.rechnungsnummer || '';                            // Q: Rechnungsnummer
-    // R..Y: bewusst leer, siehe Kommentar oben.
+    // Spalte U: Rechnungspositionen + km, EXAKT im Format von SpalteUBauen()
+    // am PC ("POS:<Ziffer1,Ziffer2,...> | KM:<kmWert>" [+ " | ICD:<Kuerzel>"
+    // bei PT], Modul1 LS/PT) -- wird dort normalerweise erst beim
+    // tatsaechlichen Rechnungserstellen aus dem Blattzustand gebaut, hier
+    // stattdessen direkt aus den am Handy gewaehlten Positionen
+    // (f.positionen), dem km-Feld und (bei PT) den Diagnosen. Dadurch kann
+    // die Excel-Rechnungserstellung (UserFormRechnung) beim Öffnen
+    // automatisch "Rechnungspositionen aus Spalte U wiederherstellen" (siehe
+    // dortiger Kommentar) -- am PC muss nichts davon nochmal manuell
+    // eingetragen werden. SpalteUZerlegen() sucht nur "POS:"/"KM:"/"ICD:"
+    // jeweils bis zum naechsten "|" -- ein spaeter von der HTA angehaengtes
+    // "| LXP:..."-Flag (LxpFlagSetzen, ebenfalls Spalte U) stoert das nicht.
+    spalten[20] = 'POS:'+(f.positionen||[]).join(',')+' | KM:'+(w.txtKm||'0')
+      + (diagKuerzel ? ' | ICD:'+diagKuerzel : '');                   // U: Rechnungspositionen + km (+ ICD bei PT)
+    // R,S,T,V..Y: bewusst leer, siehe Kommentar oben.
     return spalten.join('\t');
   }).join('\n');
 }
