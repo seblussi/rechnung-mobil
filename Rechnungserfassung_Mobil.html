@@ -112,20 +112,32 @@
   body.dunkel .btn-export{background:#3a2c10; color:#f0c98a; border-color:#c78a2e;}
   .btn-import{border-color:#3d8ee8; color:#00427a; background:#e5f1ff;}
   body.dunkel .btn-import{background:#10263a; color:#8ac2f0; border-color:#2e6ec7;}
-  .btn-sync.sync-neu{border-color:#3d8ee8; color:#00427a; background:#e5f1ff;}
-  body.dunkel .btn-sync.sync-neu{background:#10263a; color:#8ac2f0; border-color:#2e6ec7;}
-  .btn-sync.sync-fehlt{border-color:#e8a33d; color:#7a4a00; background:#fff4e5;}
-  body.dunkel .btn-sync.sync-fehlt{background:#3a2c10; color:#f0c98a; border-color:#c78a2e;}
+  /* Sync-Button: ROT (auffällig) in jedem Zustand, in dem gerade KEINE
+     aktive Verbindung besteht -- egal ob noch nie eingerichtet, Berechtigung
+     abgelaufen, oder gar nicht unterstützt; GRÜN nur wenn wirklich verbunden. */
+  .btn-sync.sync-rot{border-color:#d64545; color:#a01e1e; background:#fdeaea;}
+  body.dunkel .btn-sync.sync-rot{background:#3a1414; color:#f0a3a3; border-color:#b23a3a;}
   .btn-sync.sync-verbunden{border-color:#3ba55c; color:#1e6b37; background:#e6f7ea;}
   body.dunkel .btn-sync.sync-verbunden{background:#123a1f; color:#8fd9a8; border-color:#2e8a4c;}
-  .btn-sync.sync-deaktiviert{border-color:#b7bdc9; color:#6b7280; background:#eef0f3;}
-  body.dunkel .btn-sync.sync-deaktiviert{background:#2b313b; color:#9aa3ad; border-color:#4d5566;}
   /* Export/Import/Sync nebeneinander als gleich breite Buttons -- die
      einzelnen .btn-sekundaer-Regeln (width:100% etc.) bleiben dabei
-     unveraendert, nur die Anordnung wird per Flex-Reihe ueberschrieben. */
-  .datensicherung-reihe{display:flex; gap:8px;}
-  .datensicherung-reihe .btn-sekundaer{flex:1; margin-bottom:0;}
+     unveraendert, nur die Anordnung wird per Flex-Reihe ueberschrieben.
+     Feste Mindesthöhe, damit die Reihe nicht "kleiner" wirkt, sobald ein
+     kürzerer Text (z.B. "Sync verbunden" statt "Sync-Ordner auswählen")
+     angezeigt wird -- ohne das würde die Reihe je nach Zustand in der Höhe
+     springen. */
+  .datensicherung-reihe{display:flex; gap:8px; align-items:stretch;}
+  .datensicherung-reihe .btn-sekundaer{
+    flex:1; margin-bottom:0; min-height:108px;
+    display:flex; flex-direction:column; justify-content:center;
+  }
   .datensicherung-reihe .icon-pfeil{display:block; font-size:20px; margin-bottom:4px;}
+  /* Feste Mindesthöhe für den Untertext: der Sync-Button hat je nach Status
+     unterschiedlich langen Text ("Sync-Ordner auswählen" vs. "Sync
+     verbunden") -- ohne das reserviert der kürzeste aktuell angezeigte Text
+     weniger Platz, wodurch die GESAMTE Reihe (alle 3 Buttons haben gleiche
+     Höhe) nach dem Verbinden sichtbar kleiner wird. Reserviert dauerhaft so
+     viel Platz wie der längste vorkommende Untertext braucht.
 
   /* Jeder Formularabschnitt bekommt eine eigene "Karte" mit Rand und
      Hintergrund -- deutlich klarere optische Trennung als vorher nur mit
@@ -551,6 +563,26 @@ function rnLetzteFeldEinrichten(inputEl, opts={}){
 // OneDrive/Azure-Anbindung) folgt separat, sobald die Azure-App-Registrierung
 // steht. Der Button "Fälle für den PC exportieren" bleibt als Rückfallebene
 // bestehen, solange kein Auto-Sync aktiv verbunden ist.
+// Öffnet eine OneDrive-Excel-Datei bevorzugt DIREKT in der Excel-App (per
+// Office-URI-Schema "ms-excel:ofe|u|<url>") statt im Browser/der OneDrive-
+// App. Grund: ein einfacher window.open() auf einen 1drv.ms-Link wurde vom
+// Handy inzwischen offenbar standardmäßig der OneDrive-App statt der
+// Excel-App zugeordnet (App-Link-Zuordnung des Betriebssystems geändert).
+// Fällt automatisch auf den normalen Browser-/OneDrive-Weg zurück, falls
+// keine Excel-App installiert ist bzw. das Schema nicht greift -- erkannt
+// daran, dass die Seite nach kurzer Zeit noch sichtbar ist (kein App-
+// Wechsel stattgefunden hat).
+function excelDateiOeffnen(url){
+  let appGeoeffnet = false;
+  const aufSichtbarkeitswechsel = ()=>{ if(document.hidden) appGeoeffnet = true; };
+  document.addEventListener('visibilitychange', aufSichtbarkeitswechsel);
+  window.location.href = 'ms-excel:ofe|u|' + url;
+  setTimeout(()=>{
+    document.removeEventListener('visibilitychange', aufSichtbarkeitswechsel);
+    if(!appGeoeffnet){ window.open(url, '_blank'); }
+  }, 1200);
+}
+
 function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
 
 // Liefert Beschriftung/Symbolfarbe/Aktion für den EINEN festen Sync-Button
@@ -567,7 +599,7 @@ function syncButtonInfo(){
   }
   if(autoSyncStatus==='berechtigung_fehlt'){
     return {
-      klasse:'sync-fehlt', text:'Sync erneut verbinden',
+      klasse:'sync-rot', text:'Sync erneut verbinden',
       unter:'Berechtigung abgelaufen -- kurz bestätigen',
       aktion: async ()=>{
         const ok = await autoSyncBerechtigungErneuern();
@@ -578,14 +610,14 @@ function syncButtonInfo(){
   }
   if(autoSyncStatus==='nicht_unterstuetzt'){
     return {
-      klasse:'sync-deaktiviert', text:'Sync nicht verfügbar',
+      klasse:'sync-rot', text:'Sync nicht verfügbar',
       unter:'Dieser Browser unterstützt keinen Auto-Sync -- bitte Export/Import nutzen',
       aktion: async ()=>{ appToastAnzeigen('Auto-Sync wird von diesem Browser nicht unterstützt. Bitte Export/Import verwenden.', 2800); }
     };
   }
   // 'nicht_verbunden' oder 'unbekannt' (siehe autoSyncInitialisieren)
   return {
-    klasse:'sync-neu', text:'Sync-Ordner auswählen',
+    klasse:'sync-rot', text:'Sync-Ordner auswählen',
     unter:'Einmalig einrichten -- danach automatische Sicherung',
     aktion: async ()=>{
       const ok = await autoSyncOrdnerWaehlen();
@@ -1334,10 +1366,10 @@ function ansichtStart(){
     }
   };
   document.getElementById('btnOeffneUebersicht').onclick = ()=>{
-    window.open('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQBlNAjRs2lHR7r8Kh_-9DMhAZB7Me6rXGprd8Lu4NthUZg?e=UKgicT', '_blank');
+    excelDateiOeffnen('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQBlNAjRs2lHR7r8Kh_-9DMhAZB7Me6rXGprd8Lu4NthUZg?e=UKgicT');
   };
   document.getElementById('btnOeffneFahrtenbuch').onclick = ()=>{
-    window.open('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=CI5OMm', '_blank');
+    excelDateiOeffnen('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=CI5OMm');
   };
   document.getElementById('btnLuftlinienTool').onclick = ansichtLuftlinienTool;
 }
@@ -1603,7 +1635,7 @@ function ansichtKorrigieren(){
   };
 
   document.getElementById('btnAuswUebersichtOeffnen').onclick = ()=>{
-    window.open('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQBlNAjRs2lHR7r8Kh_-9DMhAZB7Me6rXGprd8Lu4NthUZg?e=UKgicT', '_blank');
+    excelDateiOeffnen('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQBlNAjRs2lHR7r8Kh_-9DMhAZB7Me6rXGprd8Lu4NthUZg?e=UKgicT');
   };
 
   document.getElementById('btnAuswKopieren').onclick = async ()=>{
