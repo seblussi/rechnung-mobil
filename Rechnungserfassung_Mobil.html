@@ -377,9 +377,49 @@ function ladeKatalog(){
 }
 function speichereKatalog(k){ LS.set('bestatter_katalog', k); autoSyncSchreiben(); }
 function ladeEinstellungen(){
-  return LS.get('einstellungen', {dunkel:false, praxisadresse:'Im Drachenacker 25, 77656 Offenburg', reiseBasisLuftlinie:false});
+  return LS.get('einstellungen', {dunkel:false, praxisadresse:'Im Drachenacker 25, 77656 Offenburg', reiseBasisLuftlinie:false, rnLetzte:'', rnNaechsterZaehler:null});
 }
 function speichereEinstellungen(e){ LS.set('einstellungen', e); }
+
+// ==========================================================
+// Rechnungsnummern-Zähler ("Option 1 fortführen", siehe Absprache)
+// ==========================================================
+// Format exakt wie am PC (Modul1, RenuBilden/Aehnliches):
+//   <Anfangsbuchstabe Nachname><Anfangsbuchstabe Vorname><yymmdd>-<Zaehler:000>
+// Der Zaehler selbst kommt am PC aus LeseZaehlerAusUebersicht(): letzte
+// Zeile der Spalte Q (Rech.-Nr.) in der Rechnungsübersicht, davon die
+// letzten 3 Ziffern +1 -- KEIN Tages- oder Namens-Reset, ein einziger
+// fortlaufender Zaehler über die gesamte Übersicht. Das Handy hat keinen
+// Lesezugriff auf die (OneDrive-)Excel-Datei, daher wird der Zaehler hier
+// lokal fortgeführt: einmalig aus der letzten Rechnungsnummer der
+// Übersicht abgeglichen (Einstellungen), danach bei jedem "In
+// Zwischenablage kopieren" pro neuem Fall automatisch weitergezählt.
+function rnZaehlerAusRenu(renu){
+  const r = (renu||'').trim();
+  const ziffern = r.slice(-3);
+  const z = parseInt(ziffern, 10);
+  if(!/^\d{3}$/.test(ziffern) || isNaN(z)) return null;
+  return z + 1;
+}
+function rnYymmdd(datumNorm){
+  // datumNorm: normalisiert als "TT.MM.JJJJ" (siehe normalisiereDatum)
+  const teile = (datumNorm||'').split('.');
+  if(teile.length!==3) return '';
+  const [tag, monat, jahr] = teile;
+  if(jahr.length!==4) return '';
+  return jahr.slice(-2) + monat.padStart(2,'0') + tag.padStart(2,'0');
+}
+function rechnungsnummerBerechnen(nachname, vorname, datumNorm, zaehler){
+  const yymmdd = rnYymmdd(datumNorm);
+  const initN = (nachname||'').trim().charAt(0).toUpperCase();
+  const initV = (vorname||'').trim().charAt(0).toUpperCase();
+  if(!yymmdd || !initN || !initV || !zaehler) return '';
+  return initN + initV + yymmdd + '-' + String(zaehler).padStart(3,'0');
+}
+function rnZaehlerStandText(e){
+  if(!e.rnNaechsterZaehler) return 'Noch kein Zähler-Abgleich hinterlegt -- die Rechnungsnummer (Spalte Q) wird beim Kopieren solange freigelassen wie bisher.';
+  return `Nächste vergebene laufende Nummer: ${String(e.rnNaechsterZaehler).padStart(3,'0')} (z.B. "...-${String(e.rnNaechsterZaehler).padStart(3,'0')}").`;
+}
 // "Weg A": lokaler Auto-Sync über die File System Access API (Ordner einmal
 // auswählen, danach wird bei jeder Änderung automatisch dieselbe Datei
 // überschrieben -- keine Duplikate, kein manuelles Exportieren mehr nötig,
@@ -1136,11 +1176,13 @@ function nameAufteilen(cName){
 // Rechnungsübersicht (vom Nutzer bestätigte Spaltenreihenfolge A..Y),
 // damit sie sich direkt in Excel einfügen laesst (Excel/Sheets trennen
 // beim Einfuegen automatisch an Tabs in eigene Zellen).
-// Spalten P (Betrag) sowie Q..Y (Rechnungsnummer, Brief/Zahlung/Mahnwesen)
-// werden am PC beim eigentlichen Rechnungserstellen vergeben/gepflegt und
-// bleiben daher bewusst leer -- ebenso alle Sterbeort-/Bestatter-Spalten
-// bei einer Privatrechnung (PT), da es dort begrifflich keinen Sterbeort/
-// Bestatter gibt.
+// Spalte Q (Rechnungsnummer) wird -- sofern in den Einstellungen ein
+// Zaehler-Abgleich hinterlegt ist -- bereits hier exakt nach PC-Schema
+// vergeben (siehe rechnungsnummerBerechnen). Die Spalten R..Y (Brief/
+// Zahlung/Mahnwesen) werden am PC beim eigentlichen Rechnungserstellen
+// gepflegt und bleiben daher bewusst leer -- ebenso alle Sterbeort-/
+// Bestatter-Spalten bei einer Privatrechnung (PT), da es dort begrifflich
+// keinen Sterbeort/Bestatter gibt.
 function faelleAlsUebersichtsZeilen(faelle){
   return faelle.map(f=>{
     const w = f.werte;
@@ -1167,9 +1209,46 @@ function faelleAlsUebersichtsZeilen(faelle){
       spalten[14] = w.txtAdresse2 || '';                              // O: Adresse2 Bestatter
     }
     spalten[15] = w.txtBetrag || '';                                  // P: Betrag
-    // Q (Rech.-Nr.) und alles danach: bewusst leer, siehe Kommentar oben.
+    spalten[16] = f.rechnungsnummer || '';                            // Q: Rechnungsnummer
+    // R..Y: bewusst leer, siehe Kommentar oben.
     return spalten.join('\t');
   }).join('\n');
+}
+
+// Vergibt für alle übergebenen Fälle, die noch keine Rechnungsnummer
+// besitzen, eine neue -- exakt nach PC-Schema und mit lokal fortgeführtem
+// Zaehler (siehe rechnungsnummerBerechnen/rnZaehlerAusRenu). Bereits
+// vergebene Nummern (z.B. bei erneutem Kopieren desselben Falls) werden
+// nie überschrieben, damit keine Dopplungen/Lücken in der Übersicht
+// entstehen. Persistiert die vergebenen Nummern zurück in den jeweiligen
+// Fall (ls/pt) sowie den erhöhten Zaehler in den Einstellungen.
+// Gibt zurück, wie viele Fälle KEINE Nummer erhalten konnten (weil noch
+// kein Zaehler-Abgleich in den Einstellungen hinterlegt ist).
+function rechnungsnummernVergeben(faelleAusw){
+  const e = ladeEinstellungen();
+  let zaehler = e.rnNaechsterZaehler;
+  let ohneNummer = 0;
+  const faelleNachArt = {ls: ladeFaelle('ls'), pt: ladeFaelle('pt')};
+  let geaendert = {ls:false, pt:false};
+  faelleAusw.forEach(f=>{
+    if(f.rechnungsnummer){ return; } // bereits vergeben, nicht erneut vergeben
+    if(!zaehler){ ohneNummer++; return; }
+    const {nachname, vorname} = nameAufteilen(f.werte.txtName);
+    const datumNorm = normalisiereDatum(f.werte.txtDatumExcel);
+    const nummer = rechnungsnummerBerechnen(nachname, vorname, datumNorm, zaehler);
+    if(!nummer){ ohneNummer++; return; }
+    f.rechnungsnummer = nummer;
+    faelleNachArt[f.art][f.idx].rechnungsnummer = nummer;
+    geaendert[f.art] = true;
+    zaehler++;
+  });
+  if(geaendert.ls) speichereFaelle('ls', faelleNachArt.ls);
+  if(geaendert.pt) speichereFaelle('pt', faelleNachArt.pt);
+  if(zaehler !== e.rnNaechsterZaehler){
+    e.rnNaechsterZaehler = zaehler;
+    speichereEinstellungen(e);
+  }
+  return ohneNummer;
 }
 
 function ansichtKorrigieren(){
@@ -1246,10 +1325,15 @@ function ansichtKorrigieren(){
 
   document.getElementById('btnAuswKopieren').onclick = async ()=>{
     const faelleAusw = alle.filter(f=> ausgewaehlt.has(schluessel(f)));
+    const ohneNummer = rechnungsnummernVergeben(faelleAusw);
     const text = faelleAlsUebersichtsZeilen(faelleAusw);
     try{
       await navigator.clipboard.writeText(text);
-      zeigeHinweis(`${faelleAusw.length} Rechnung(en) in die Zwischenablage kopiert (Spalten A-P). Jetzt in der Rechnungsübersicht in Spalte A der ersten leeren Zeile einfügen -- Rechnungsnummer und die Spalten rechts von Betrag bitte wie gewohnt selbst ergänzen.`);
+      if(ohneNummer>0){
+        zeigeHinweis(`${faelleAusw.length} Rechnung(en) in die Zwischenablage kopiert (Spalten A-Q, ${ohneNummer} davon ohne Rechnungsnummer). Jetzt in der Rechnungsübersicht in Spalte A der ersten leeren Zeile einfügen. Für eine automatisch mitausgefüllte Rechnungsnummer bitte einmalig in den Einstellungen unter "Rechnungsnummern-Zähler" die letzte vergebene Nummer eintragen. Spalten rechts von Q bitte wie gewohnt selbst ergänzen.`);
+      } else {
+        zeigeHinweis(`${faelleAusw.length} Rechnung(en) in die Zwischenablage kopiert (Spalten A-Q, inkl. Rechnungsnummer). Jetzt in der Rechnungsübersicht in Spalte A der ersten leeren Zeile einfügen -- die Spalten rechts von Q bitte wie gewohnt selbst ergänzen.`);
+      }
     }catch(e){
       zeigeHinweis('Zwischenablage konnte nicht beschrieben werden. Bitte Berechtigung erteilen und erneut versuchen.');
     }
@@ -1302,6 +1386,21 @@ function ansichtEinstellungen(){
       <input type="text" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}" placeholder="Straße Hausnummer, PLZ Ort">
     </div>
     <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Rechnungsnummern-Zähler</div>
+      <div class="feld">
+        <label for="txtRnLetzte">Letzte in der Rechnungsübersicht vergebene Rechnungsnummer (Spalte Q)</label>
+        <input type="text" id="txtRnLetzte" value="${(e.rnLetzte||'').replace(/"/g,'&quot;')}" placeholder="z.B. MS260115-003">
+        <div class="warnhinweis" id="txtRnLetzte_warn"></div>
+      </div>
+      <div class="hinweis" id="rnZaehlerStand" style="font-size:13px; color:var(--text-schwach); margin-top:4px;">${rnZaehlerStandText(e)}</div>
+      <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-top:8px;">
+        Damit "In Zwischenablage kopieren" die Rechnungsnummer (Spalte Q) gleich mit ausfüllen kann, hier einmalig die
+        zuletzt in der Übersicht vergebene Nummer eintragen -- danach zählt das Handy bei jedem neuen, kopierten Fall
+        selbstständig weiter. Falls zwischendurch auch direkt am PC eine Rechnung angelegt wurde (ohne über das Handy zu
+        laufen), bitte die aktuell letzte Nummer aus der Übersicht hier erneut eintragen, um den Zähler abzugleichen.
+      </div>
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Automatischer Sync (PC-Übernahme)</div>
       ${autoSyncAbschnittHtml()}
     </div>
@@ -1324,6 +1423,32 @@ function ansichtEinstellungen(){
   document.getElementById('txtPraxisadresse').addEventListener('blur', anwenden);
   document.getElementById('zDunkel').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkDunkel').click(); } };
   document.getElementById('zReise').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkReiseBasisLuftlinie').click(); } };
+  const rnWarnung = (html)=>{
+    const warnEl = document.getElementById('txtRnLetzte_warn');
+    if(!html){ warnEl.classList.remove('aktiv'); warnEl.innerHTML=''; return; }
+    warnEl.classList.add('aktiv'); warnEl.innerHTML = html;
+  };
+  document.getElementById('txtRnLetzte').addEventListener('blur', ()=>{
+    const eingabe = document.getElementById('txtRnLetzte').value.trim().toUpperCase();
+    document.getElementById('txtRnLetzte').value = eingabe;
+    if(!eingabe){
+      e.rnLetzte = ''; e.rnNaechsterZaehler = null;
+      rnWarnung('');
+      speichereEinstellungen(e);
+      document.getElementById('rnZaehlerStand').textContent = rnZaehlerStandText(e);
+      return;
+    }
+    const naechster = rnZaehlerAusRenu(eingabe);
+    if(naechster===null){
+      rnWarnung('Konnte aus "'+eingabe+'" keine laufende Nummer (letzte 3 Ziffern) erkennen -- bitte die vollständige Rechnungsnummer aus Spalte Q eintragen, z.B. "MS260115-003".');
+      return;
+    }
+    rnWarnung('');
+    e.rnLetzte = eingabe;
+    e.rnNaechsterZaehler = naechster;
+    speichereEinstellungen(e);
+    document.getElementById('rnZaehlerStand').textContent = rnZaehlerStandText(e);
+  });
   autoSyncAbschnittWiring();
 }
 
@@ -2941,6 +3066,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       positionen: positionenAuswahl ? Array.from(positionenAuswahl) : [],
       zeitstempel: korrekturIdx!==undefined ? faelle[korrekturIdx].zeitstempel : new Date().toISOString()
     };
+    // Eine bereits vergebene Rechnungsnummer (siehe rechnungsnummernVergeben)
+    // darf beim erneuten Speichern/Korrigieren desselben Falls NICHT verloren
+    // gehen -- sonst würde ein erneutes Kopieren eine zweite, abweichende
+    // Nummer vergeben und den Zaehler unnötig weiterzählen.
+    if(korrekturIdx!==undefined && faelle[korrekturIdx].rechnungsnummer){
+      eintrag.rechnungsnummer = faelle[korrekturIdx].rechnungsnummer;
+    }
     if(korrekturIdx!==undefined) faelle[korrekturIdx]=eintrag; else faelle.push(eintrag);
     speichereFaelle(art, faelle);
     alertBanner('Gespeichert. Wird beim nächsten Sync automatisch an den PC übertragen.');
