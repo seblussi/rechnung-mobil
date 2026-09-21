@@ -1849,8 +1849,9 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   }
 
   html += abschnitt('Routenberechnung',
-    `<div class="feld"><label>Strecke (Hin- und Rückfahrt)</label>
+    `<div class="feld"><label id="txtKm_label" for="txtKm">Strecke (Hin- und Rückfahrt)</label>
       <input type="text" id="txtKm" value="${(werte.txtKm||'')}" placeholder="wird automatisch berechnet">
+      <input type="hidden" id="txtKmFahrstrecke" value="${(werte.txtKmFahrstrecke||werte.txtKm||'')}">
       <input type="hidden" id="txtKmLuftlinie" value="${(werte.txtKmLuftlinie||'')}">
       <div class="streckeninfo" id="streckeninfo"></div>
       <div class="warnhinweis" id="txtKm_warn"></div>
@@ -1889,8 +1890,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   app.innerHTML = html;
 
   const feldIds = art==='ls'
-    ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2']
-    : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmLuftlinie'];
+    ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2']
+    : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmFahrstrecke','txtKmLuftlinie'];
 
   // Pflichtfelder je Maskentyp (siehe btnSpeichern.onclick unten) -- ALLE
   // Felder, die tatsächlich ausgefüllt werden sollen, nicht nur die
@@ -2018,16 +2019,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // txtZeitLS existiert in BEIDEN Masken (LS: "Zeitpunkt Leichenschau",
   // PT: "Uhrzeit Hausbesuch") -- Format-Pruefung gilt daher fuer beide.
   document.getElementById('txtZeitLS').addEventListener('blur', ()=>{ zeitFeldBlur('txtZeitLS'); automatikVorschauAktualisieren(); });
-  // km-Feld: wie am PC live neu berechnen, sobald sich der Wert ändert --
-  // auch bei rein manueller Eingabe ohne Routenberechnung (siehe
-  // automatikVorschauAktualisieren, behebt außerdem den Bug, dass dabei
-  // bisher praktisch immer WT25/WN25 statt der passenden Staffel bzw.
-  // der Reiseentschädigung gewählt wurde).
-  // Zusätzlich (analog PC KmFeldManuellUebernehmen): beim Verlassen eines
-  // wirklich EINGETIPPTEN km-Werts wird dieser wie am PC gedeutet --
-  // <=25 km ist die Luftlinie (einfach), >50 km ist bereits die Fahrstrecke
-  // (Hin- und Rückfahrt); dazwischen ist der Wert nicht eindeutig zuordenbar
-  // und wird abgelehnt (Feld wird zurückgesetzt, Hinweistext statt Popup).
+  // km-Feld: exakt wie am PC (Txt_Change setzt dort NUR gKmGetippt=True,
+  // die eigentliche Neuinterpretation + Live-Neuberechnung der Positionen
+  // passiert erst beim Verlassen des Feldes ueber KmFeldManuellUebernehmen/
+  // AutoAktualisierenLive -- siehe FeldFokus/AktualisiereAktivNachTab).
   // "Eingetippt" wird über das 'input'-Ereignis erkannt, das bei einem
   // programmatischen .value-Setzen (Routenberechnung, Alternativrouten-
   // Kachel) nicht feuert -- so wird ein bereits korrekt gesetzter Wert beim
@@ -2035,9 +2030,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   (function(){
     const kmEl = document.getElementById('txtKm');
     kmEl.addEventListener('focus', ()=>{ kmVorFokus = kmEl.value; });
-    kmEl.addEventListener('input', ()=>{ kmManuellGetippt = true; automatikVorschauAktualisieren(); });
+    kmEl.addEventListener('input', ()=>{ kmManuellGetippt = true; });
     kmEl.addEventListener('blur', ()=> kmFeldManuellUebernehmen());
   })();
+  // Beim (Wieder-)Aufbau der Maske (frischer Fall, Korrektur, Rücksprung von
+  // den Rechnungspositionen) sofort Beschriftung + Anzeigewert des km-Felds
+  // aus den geladenen/übernommenen versteckten Werten ableiten.
+  streckenAnzeigeAktualisieren();
   if(art==='ls'){
     document.getElementById('txtSterbedatum').addEventListener('blur', ()=> datumFeldBlur('txtSterbedatum'));
     document.getElementById('txtTodeszeit').addEventListener('blur', ()=> zeitFeldBlur('txtTodeszeit'));
@@ -2233,10 +2232,11 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // Wegegeld-Bänder und ggf. für die Reise-Entscheidung).
       const kmFahrstreckeGesamt = einweg * 2;
       const kmLuft = kmLuftlinieEinfach(start, ziel);
-      document.getElementById('txtKm').value = kmFahrstreckeGesamt.toFixed(1);
+      document.getElementById('txtKmFahrstrecke').value = kmFahrstreckeGesamt.toFixed(1);
       document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
       feldWarnung('txtKm', '');
       const reise = sollReiseGelten(kmFahrstreckeGesamt, kmLuft);
+      streckenAnzeigeAktualisieren();
       info.textContent = 'Route: '+kmFahrstreckeGesamt.toFixed(1)+' km Hin+Rück, '+kmLuft.toFixed(1)+' km Luftlinie'
         + (reise ? ' -- Reiseentschädigung greift' : ' -- Wegegeld greift');
       // Bereits ausgewaehlte Automatik-Positionen (falls Nutzer schon auf der
@@ -2278,6 +2278,16 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       const kmLuft = kmLuftlinieEinfach(start, ziel);
       let routen = await routeAlternativen(start, ziel);
       if(!routen.length){ box.innerHTML = '<div class="routenoptionen-hinweis">Route konnte nicht berechnet werden -- km bitte manuell eintragen oder über \'Google Maps Route\' prüfen.</div>'; return; }
+      // Wie am PC (RoutenErmitteln liefert Luftlinie als ByRef-Parameter,
+      // die erste/beste Route wird -- unabhaengig von einer spaeteren
+      // manuellen Kachel-Wahl -- bereits jetzt als Rechengrundlage
+      // hinterlegt): Fahrstrecke UND Luftlinie werden hier sofort auf die
+      // besten automatisch ermittelten Werte gesetzt, damit auch dann eine
+      // gueltige Fahrstrecke bekannt ist, wenn spaeter NUR die Luftlinie-
+      // Kachel gewaehlt wird (die PC-seitig gFahrstreckeGesamt unangetastet
+      // laesst, siehe RouteWaehlen(idx=0)).
+      document.getElementById('txtKmFahrstrecke').value = (routen[0].km*2).toFixed(1);
+      document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
       // Wie am PC: doppelte/fast identische Alternativen (gleiche km auf 1
       // Nachkommastelle gerundet) werden nicht mehrfach angezeigt.
       const gesehen = new Set();
@@ -2303,9 +2313,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
               appToastAnzeigen('Eine Reiseentschädigung ist erst ab über 50 km (Hin- und Rückfahrt) zulässig -- diese Route hat nur '+btn.dataset.km.replace('.',',')+' km. Bitte eine andere Route oder die Luftlinie wählen.', 3500);
               return;
             }
+            // Fahrstrecke-Kachel: wie am PC (RouteWaehlen idx<>0) wird
+            // gFahrstreckeGesamt auf GENAU diese gewählte Route gesetzt.
             manuellerModus = 'REISE';
-            document.getElementById('txtKm').value = btn.dataset.km;
-            document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
+            document.getElementById('txtKmFahrstrecke').value = btn.dataset.km;
           } else {
             // Luftlinie-Kachel: KORREKTUR -- die Wegegeld-Staffel (WT/WN)
             // deckt nur bis 25 km einfach ab; darüber kommt ausschließlich
@@ -2317,13 +2328,14 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
               appToastAnzeigen('Luftlinie '+kmLuft.toFixed(1).replace('.',',')+' km liegt über 25 km -- dafür kommt nur eine Reiseentschädigung infrage. Bitte stattdessen eine Fahrstrecke-Kachel über 50 km wählen.', 4000);
               return;
             }
+            // Wie am PC (RouteWaehlen idx=0): NUR der Modus wird gesetzt,
+            // gFahrstreckeGesamt/txtKmFahrstrecke bleibt unangetastet (wurde
+            // oben bereits auf die beste automatisch gefundene Route gesetzt).
             manuellerModus = 'LUFTLINIE';
-            document.getElementById('txtKm').value = (kmLuft*2).toFixed(1);
-            document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
           }
           box.classList.remove('aktiv'); box.innerHTML='';
           feldWarnung('txtKm', '');
-          document.getElementById('streckeninfo').textContent = 'Strecke manuell aus Alternativrouten übernommen.';
+          streckenAnzeigeAktualisieren();
           automatikVorschauAktualisieren();
         };
       });
@@ -2395,28 +2407,54 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     if(statusEl) statusEl.textContent = positionenAuswahl.size+' Position(en) ausgewählt';
   }
 
+  // Exakt wie am PC (StreckenAnzeigeAktualisieren): das SICHTBARE km-Feld
+  // zeigt zu jedem Zeitpunkt genau EINEN Wert -- entweder die Luftlinie
+  // (einfache Strecke) oder die Fahrstrecke (Hin- und Rückfahrt), je nachdem
+  // was gerade "massgeblich" ist. Die beiden tatsächlichen Werte werden
+  // DAUERHAFT und unabhängig vom Anzeigezustand in den beiden versteckten
+  // Feldern txtKmFahrstrecke/txtKmLuftlinie gehalten (analog PC
+  // gFahrstreckeGesamt/gLuftlinieKm) -- nur die Beschriftung und der
+  // angezeigte Wert wechseln:
+  //   Modus LUFTLINIE (manuell gewählt)  -> "Luftlinie (einfach), manuell gewählt", zeigt Luftlinie
+  //   Modus REISE (manuell gewählt)      -> "Fahrstrecke (Hin- und Rückfahrt), manuell gewählt", zeigt Fahrstrecke
+  //   automatisch, Reiseentschädigung    -> "Fahrstrecke (Hin- und Rückfahrt)", zeigt Fahrstrecke
+  //   automatisch, Wegegeld              -> "Luftlinie (einfach)", zeigt Luftlinie
+  //   noch nichts bekannt                -> "Strecke (Hin- und Rückfahrt)", leer
+  function streckenAnzeigeAktualisieren(){
+    const kmEl = document.getElementById('txtKm');
+    const labelEl = document.getElementById('txtKm_label');
+    const fahrVal = parseFloat((document.getElementById('txtKmFahrstrecke').value||'').replace(',','.'));
+    const luftVal = parseFloat((document.getElementById('txtKmLuftlinie').value||'').replace(',','.'));
+    let label, wert;
+    if(manuellerModus==='LUFTLINIE' && !isNaN(luftVal) && luftVal>0){
+      label = 'Luftlinie (einfach), manuell gewählt'; wert = luftVal;
+    } else if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0){
+      label = 'Fahrstrecke (Hin- und Rückfahrt), manuell gewählt'; wert = fahrVal;
+    } else if(!isNaN(fahrVal) && fahrVal>0 && sollReiseGelten(fahrVal, isNaN(luftVal)?fahrVal/2:luftVal)){
+      label = 'Fahrstrecke (Hin- und Rückfahrt)'; wert = fahrVal;
+    } else if(!isNaN(luftVal) && luftVal>0){
+      label = 'Luftlinie (einfach)'; wert = luftVal;
+    } else if(!isNaN(fahrVal) && fahrVal>0){
+      label = 'Fahrstrecke (Hin- und Rückfahrt)'; wert = fahrVal;
+    } else {
+      label = 'Strecke (Hin- und Rückfahrt)'; wert = null;
+    }
+    labelEl.textContent = label;
+    kmEl.value = (wert===null) ? '' : wert.toFixed(1);
+  }
+
   // Wie am PC (AutoAktualisierenLive): sobald km, Uhrzeit oder Datum sich
   // aendern -- auch durch manuelle km-Eingabe ohne Routenberechnung --,
   // werden Vorschau-Text und bereits ausgewaehlte Automatik-Positionen
   // SOFORT neu bestimmt, nicht erst beim naechsten Oeffnen der
-  // Rechnungspositionen-Seite.
+  // Rechnungspositionen-Seite. Rechengrundlage sind IMMER die beiden
+  // versteckten Felder (txtKmFahrstrecke/txtKmLuftlinie), NICHT das
+  // sichtbare txtKm, dessen Anzeige je nach Modus wechselt.
   function automatikVorschauAktualisieren(){
     const datum = document.getElementById('txtDatumExcel').value;
     const zeit = document.getElementById('txtZeitLS').value;
-    const kmEl = document.getElementById('txtKm');
-    const luftEl = document.getElementById('txtKmLuftlinie');
-    const kmFahrstrecke = kmEl.value.trim();
-
-    // Fehlende Luftlinie (z.B. weil km manuell statt per Routenberechnung
-    // eingetragen wurden) mit der halben Fahrstrecke schaetzen -- wie am PC
-    // ist die Luftlinie sonst zwingend fuer die Wegegeld-Staffel/Reise-
-    // Entscheidung erforderlich. Ein per Routenberechnung bereits ermittelter
-    // (genauerer) Wert wird NICHT ueberschrieben.
-    if(!luftEl.value.trim() && kmFahrstrecke){
-      const fahrVal = parseFloat(kmFahrstrecke.replace(',','.'));
-      if(!isNaN(fahrVal) && fahrVal>0) luftEl.value = (fahrVal/2).toFixed(1);
-    }
-    const kmLuftlinie = luftEl.value.trim();
+    const kmFahrstrecke = document.getElementById('txtKmFahrstrecke').value.trim();
+    const kmLuftlinie = document.getElementById('txtKmLuftlinie').value.trim();
 
     const info = document.getElementById('streckeninfo');
     if(kmFahrstrecke && info){
@@ -2424,8 +2462,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       const luftVal = parseFloat((kmLuftlinie||'').replace(',','.'));
       if(!isNaN(fahrVal) && fahrVal>0){
         const reise = sollReiseGelten(fahrVal, isNaN(luftVal)?fahrVal/2:luftVal);
-        info.textContent = (reise ? 'Reiseentschädigung greift' : 'Wegegeld greift')
-          + ' (manuelle km-Angabe' + (isNaN(luftVal) ? '' : ', Luftlinie geschätzt') + ')';
+        info.textContent = reise ? 'Reiseentschädigung greift' : 'Wegegeld greift';
       }
     }
 
@@ -2437,17 +2474,19 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // 'input'-Listener oben) wird -- genau wie am PC -- danach unterschieden,
   // ob er als Luftlinie (einfach) oder bereits als Fahrstrecke (Hin- und
   // Rückfahrt gesamt) gemeint ist:
-  //   <=25 km  -> Luftlinie (einfach); Feld wird auf die verdoppelte
-  //               Fahrstrecke umgerechnet, Luftlinie-Feld übernimmt den
-  //               eingetippten Wert unverändert.
-  //   >50 km   -> bereits die Fahrstrecke (Hin- und Rückfahrt) selbst;
-  //               Luftlinie wird zur Vorschau/Wegegeld-Basis geschätzt
-  //               (halbiert), spielt bei REISE aber ohnehin keine Rolle.
+  //   <=25 km  -> Luftlinie (einfach); NUR txtKmLuftlinie wird auf den
+  //               eingetippten Wert gesetzt (unverändert, NICHT verdoppelt!)
+  //               -- txtKmFahrstrecke bleibt unangetastet, exakt wie am PC
+  //               (KmFeldManuellUebernehmen setzt dort ebenfalls nur
+  //               gLuftlinieKm, nicht gFahrstreckeGesamt).
+  //   >50 km   -> bereits die Fahrstrecke (Hin- und Rückfahrt) selbst; NUR
+  //               txtKmFahrstrecke wird gesetzt, txtKmLuftlinie bleibt
+  //               unangetastet (ebenfalls PC-analog).
   //   25-50 km -> nicht eindeutig zuordenbar (dieser Graubereich soll wie
   //               gewünscht NUR über die Alternativrouten entstehen können,
   //               wo eine konkrete Fahrstrecke vorliegt) -- wird abgelehnt,
-  //               der zuletzt gültige Wert wird wiederhergestellt, Hinweis
-  //               statt nativem Popup.
+  //               der zuletzt gültige Anzeigewert wird wiederhergestellt,
+  //               Hinweis statt nativem Popup.
   // Ein rein programmatisch gesetzter Wert (Routenberechnung, Alternativ-
   // routen-Kachel, Fallwiederherstellung) löst KEIN 'input' aus und wird
   // hier deshalb nicht nochmal (falsch) neu interpretiert.
@@ -2457,21 +2496,20 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const kmEl = document.getElementById('txtKm');
     const eingabe = parseFloat(kmEl.value.trim().replace(',', '.'));
     feldWarnung('txtKm', '');
-    if(isNaN(eingabe) || eingabe<=0) return;
+    if(isNaN(eingabe) || eingabe<=0){ streckenAnzeigeAktualisieren(); return; }
     if(eingabe<=25){
       manuellerModus = 'LUFTLINIE';
       document.getElementById('txtKmLuftlinie').value = eingabe.toFixed(1);
-      kmEl.value = (eingabe*2).toFixed(1);
     } else if(eingabe>50){
       manuellerModus = 'REISE';
-      document.getElementById('txtKmLuftlinie').value = (eingabe/2).toFixed(1);
+      document.getElementById('txtKmFahrstrecke').value = eingabe.toFixed(1);
     } else {
       kmEl.value = kmVorFokus;
       feldWarnung('txtKm', 'Ein eingetippter Wert zwischen 25 und 50 km ist nicht eindeutig einer Luftlinie oder einer Fahrstrecke zuzuordnen und wurde nicht übernommen.'
         + ' Bitte entweder eine Luftlinie bis 25 km oder eine Fahrstrecke (Hin- und Rückfahrt) über 50 km eintragen, oder über "Alternativrouten" eine konkrete Strecke wählen.');
-      automatikVorschauAktualisieren();
       return;
     }
+    streckenAnzeigeAktualisieren();
     automatikVorschauAktualisieren();
   }
 
@@ -2788,7 +2826,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   document.getElementById('btnPunkte').onclick = ()=>{
     const datum = document.getElementById('txtDatumExcel').value;
     const zeit = document.getElementById('txtZeitLS').value;
-    const kmFahrstrecke = document.getElementById('txtKm').value;
+    const kmFahrstrecke = document.getElementById('txtKmFahrstrecke').value;
     const kmLuftlinie = document.getElementById('txtKmLuftlinie').value;
     const basis = positionenAuswahl || automatischeAuswahl(art==='ls'?POSITIONEN_LS:POSITIONEN_PT, datum, zeit, kmFahrstrecke, kmLuftlinie, manuellerModus);
     // Schnappschuss der Maskenwerte JETZT nehmen (Maske ist noch im DOM),
