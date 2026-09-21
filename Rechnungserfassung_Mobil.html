@@ -114,14 +114,16 @@
     padding:14px 14px 4px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,.05);
   }
   .abschnitt .feld:last-child{margin-bottom:4px;}
-  /* Gleiche Kompensation wie oben (".feld:last-child"), aber fuer
-     Abschnitte, deren letztes Kind KEIN .feld ist -- z.B. der Button/
-     Hinweis im "Sync-Ordner"-Bereich der Einstellungen oder die
-     Ergebnis-Box im Luftlinien-Tool. Ohne diese Regel bleibt dort nur
-     das .abschnitt-eigene padding-bottom von 4px uebrig -- spuerbar
-     schmaler/knapper als der uebliche 12-14px-Rhythmus zwischen den
-     uebrigen Elementen. */
-  .abschnitt > :last-child:not(.feld){margin-bottom:20px;}
+  /* WICHTIG (Korrektur): eine allgemeine ".abschnitt > :last-child"-Regel
+     traf hier ungewollt auch Abschnitte, die GAR KEIN Problem hatten (z.B.
+     "Excel-Dateien öffnen"/"Werkzeuge" auf der Startseite, deren Buttons
+     als .btn-sekundaer bereits eigenes margin-bottom mitbringen) -- die
+     wurden dadurch unnötig länger. Stattdessen jetzt gezielt nur dort, wo es
+     tatsächlich fehlt (kein eigenes margin-bottom vorhanden): der
+     .btn-primaer-Button im "Sync-Ordner"-Bereich der Einstellungen (siehe
+     autoSyncAbschnittHtml) sowie die Ergebnis-Box im Luftlinien-Tool
+     (siehe .luft-ergebnis unten). */
+  .abschnitt > .btn-primaer:last-child{margin-bottom:14px;}
   .trennlinie{
     font-size:12.5px; font-weight:700; color:#fff; margin:-14px -14px 14px;
     text-transform:uppercase; letter-spacing:.04em; background:var(--titelfarbe);
@@ -201,10 +203,6 @@
      das Ergebnis IST der Zweck dieses Werkzeugs, und auf dem sonst recht
      leeren Bildschirm ist genug Platz dafuer. */
   .luft-ergebnis{
-    /* margin-bottom hier NUR als Fallback -- die tatsaechlich wirksame
-       Regel ist ".abschnitt > :last-child:not(.feld)" weiter oben (hoehere
-       Spezifitaet dank Zusatz-Selektoren), daher hier auf denselben Wert
-       gehalten, damit beide Werte nicht auseinanderlaufen. */
     display:none; margin-top:18px; margin-bottom:20px; padding:16px 18px; border-radius:12px;
     background:var(--karte); border:2px solid var(--ls-farbe);
   }
@@ -583,30 +581,47 @@ function naechsterWerktagText(basisNormDatum){
 function datumKurzeingabeErgaenzen(eingabe, bisherigerWert){
   const roh = (eingabe||'').trim();
   if(!roh) return '';
-  if(/^\d+$/.test(roh)){
-    if(roh.length===1 || roh.length===2){
-      const jahr = 2000+parseInt(roh,10);
-      const basisNorm = normalisiereDatum(bisherigerWert) || heuteAlsText();
-      const teile = basisNorm.split('.');
-      return normalisiereDatum(teile[0]+'.'+teile[1]+'.'+jahr);
-    }
-    if(roh.length===4){
-      const alsTagMonat = normalisiereDatum(roh.slice(0,2)+'.'+roh.slice(2,4));
-      if(alsTagMonat) return alsTagMonat;
-      const jahr = parseInt(roh,10);
-      const basisNorm = normalisiereDatum(bisherigerWert) || heuteAlsText();
-      const teile = basisNorm.split('.');
-      return normalisiereDatum(teile[0]+'.'+teile[1]+'.'+jahr);
-    }
-    if(roh.length===6){
-      return normalisiereDatum(roh.slice(0,2)+'.'+roh.slice(2,4)+'.'+roh.slice(4,6));
-    }
-    if(roh.length===8){
-      return normalisiereDatum(roh.slice(0,2)+'.'+roh.slice(2,4)+'.'+roh.slice(4,8));
-    }
-    return '';
+  if(/^\d+$/.test(roh)) return ziffernfolgeAlsDatum(roh, bisherigerWert);
+  // Erst ganz normal versuchen (z.B. "12.12", "1.1.2026" -- bereits
+  // vollstaendig/korrekt mit Punkten eingegeben).
+  const direkt = normalisiereDatum(roh);
+  if(direkt) return direkt;
+  // KORREKTUR: ein versehentlich VERGESSENER Punkt beim schnellen Tippen
+  // (z.B. "0101.26" statt "01.01.26", oder "01.0126" statt "01.01.26")
+  // fuehrte bisher zu einer Fehlermeldung, obwohl die Absicht eindeutig
+  // war. Alle Punkte/Trennzeichen werden dafuer entfernt und die
+  // verbleibende reine Ziffernfolge genau wie eine ganz ohne Punkte
+  // eingegebene Kurzeingabe interpretiert (siehe ziffernfolgeAlsDatum).
+  const nurZiffern = roh.replace(/[.\-\/\s]/g, '');
+  if(/^\d+$/.test(nurZiffern) && nurZiffern.length>0) return ziffernfolgeAlsDatum(nurZiffern, bisherigerWert);
+  return '';
+}
+// Reine Ziffernfolge (ohne jedes Trennzeichen) je nach Laenge als Datum
+// interpretieren -- Kernlogik von datumKurzeingabeErgaenzen(), ausgelagert,
+// damit sie auch beim nachtraeglichen Entfernen eines nur TEILWEISE
+// vergessenen Punktes (s.o.) wiederverwendet werden kann.
+function ziffernfolgeAlsDatum(roh, bisherigerWert){
+  if(roh.length===1 || roh.length===2){
+    const jahr = 2000+parseInt(roh,10);
+    const basisNorm = normalisiereDatum(bisherigerWert) || heuteAlsText();
+    const teile = basisNorm.split('.');
+    return normalisiereDatum(teile[0]+'.'+teile[1]+'.'+jahr);
   }
-  return normalisiereDatum(roh);
+  if(roh.length===4){
+    const alsTagMonat = normalisiereDatum(roh.slice(0,2)+'.'+roh.slice(2,4));
+    if(alsTagMonat) return alsTagMonat;
+    const jahr = parseInt(roh,10);
+    const basisNorm = normalisiereDatum(bisherigerWert) || heuteAlsText();
+    const teile = basisNorm.split('.');
+    return normalisiereDatum(teile[0]+'.'+teile[1]+'.'+jahr);
+  }
+  if(roh.length===6){
+    return normalisiereDatum(roh.slice(0,2)+'.'+roh.slice(2,4)+'.'+roh.slice(4,6));
+  }
+  if(roh.length===8){
+    return normalisiereDatum(roh.slice(0,2)+'.'+roh.slice(2,4)+'.'+roh.slice(4,8));
+  }
+  return '';
 }
 
 /* ==========================================================
@@ -1202,6 +1217,12 @@ function ansichtStart(){
 // grob abzuschätzen, ob ein Fall überhaupt lohnt/wie weit er ist, ohne
 // dafür extra eine Rechnung anzulegen.
 function ansichtLuftlinienTool(){
+  // Wie bei der Maske (siehe vorbereiteRuecksprung oben): ohne diese Zeile
+  // bliebe vorbereiteRuecksprung auf dem zuletzt gesetzten Wert stehen (im
+  // einfachsten Fall noch der Start-Standard) -- ein Zahnrad-Klick VON
+  // DIESER Seite aus wuerde dann nach den Einstellungen faelschlich zur
+  // Startseite statt hierher zurueckfuehren.
+  vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtLuftlinienTool(); };
   setzeTitel('Luftlinie berechnen', ansichtStart);
   const e = ladeEinstellungen();
   let html = `<div class="abschnitt">`;
@@ -1214,7 +1235,7 @@ function ansichtLuftlinienTool(){
         <label for="txtLuftAdresse">Adresse</label>
         <input type="text" id="txtLuftAdresse" autocomplete="off" placeholder="Straße Hausnummer, PLZ Ort">
       </div>
-      <button class="btn-primaer" id="btnLuftBerechnen">Luftlinie &amp; Fahrstrecke berechnen</button>
+      <button class="btn-primaer" id="btnLuftBerechnen" style="margin-bottom:14px;">Luftlinie &amp; Fahrstrecke berechnen</button>
       <div id="luftErgebnis" class="luft-ergebnis"></div>
     </div>`;
   app.innerHTML = html;
@@ -1964,7 +1985,15 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   // Reiseentschädigung fallen am PC unter EINE gemeinsame Überschrift
   // "Wegegeld" statt mehrerer separater Abschnitte.
   const eEintrag = (katalog.grundleistung||[]).find(p=>p.ziffer==='E');
-  const grundOhneE = (katalog.grundleistung||[]).filter(p=>p.ziffer!=='E');
+  // KORREKTUR: die eigentliche Grundpauschale (101 bei LS, 50 bei PT --
+  // erkennbar an "standard:true", automatischeAuswahl() haengt sie ja auch
+  // immer von selbst an) ist genau wie am PC KEINE manuell abwaehlbare
+  // Position, sondern zwingend fester Bestandteil jeder Rechnung -- muss
+  // also genau wie Zeitzuschlaege/Wegegeld ausgegraut und angehakt bleiben.
+  // Nur die weiteren Grundpauschalen-Positionen (z.B. 102, Zuschlag bei
+  // unbekannter Identitaet) bleiben bewusst manuell an-/abwaehlbar.
+  const grundOhneE = (katalog.grundleistung||[]).filter(p=>p.ziffer!=='E')
+    .map(p=> p.standard ? {...p, automatisch:true} : p);
   const gruppen = [
     {titel:'Grundpauschalen', liste: grundOhneE, automatisch:false},
     {titel:'Zeitzuschläge', liste: eEintrag ? [{...eEintrag, automatisch:false}, ...ZUSCHLAEGE_ZEIT] : ZUSCHLAEGE_ZEIT, automatisch:true},
@@ -2355,6 +2384,17 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   }
   document.getElementById('txtDatumExcel').addEventListener('blur', ()=>{ datumFeldBlur('txtDatumExcel'); automatikVorschauAktualisieren(); });
   document.getElementById('txtDatum').addEventListener('blur', ()=> datumFeldBlur('txtDatum'));
+  // KORREKTUR: dieses Feld ist im DOM das letzte VOR einem schreibgeschuetzten
+  // (readonly) Betrag-Feld -- das Handy erkennt readonly-Felder nicht als
+  // "naechstes Feld" und zeigt deshalb von sich aus "Öffnen"/"Los" statt
+  // "Weiter" auf der Bildschirmtastatur. "enterkeyhint" erzwingt hier
+  // ausdruecklich "Weiter" (Beschriftung), der Enter-Handler uebernimmt
+  // zusaetzlich die eigentliche Sprungfunktion (springt zum naechsten
+  // ECHTEN Eingabefeld -- Name des Patienten -- statt ins readonly-Feld).
+  document.getElementById('txtDatum').setAttribute('enterkeyhint', 'next');
+  document.getElementById('txtDatum').addEventListener('keydown', (ev)=>{
+    if(ev.key==='Enter'){ ev.preventDefault(); document.getElementById('txtName')?.focus(); }
+  });
   // Geburtsdatum hatte bisher KEINEN Blur-Handler -- die Kurzeingabe-
   // Ergänzung/Normalisierung (z.B. "1.1.99" -> "01.01.1999") lief hier also
   // nie, im Unterschied zu allen anderen Datumsfeldern. Bewusst weiterhin
@@ -2391,6 +2431,16 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     // Ergaenzung, NIE eine km-Neuberechnung) -- bewusst KEINE automatische
     // km-Berechnung mehr aus, siehe ermittleZielAdresse().
     document.getElementById('txtAdresse2').addEventListener('blur', ()=> plzOrtPruefen('txtAdresse1','txtAdresse2'));
+    // Wie gewuenscht: dieses Feld ist das letzte vor den Rechnungspositionen
+    // (kein weiteres Textfeld folgt, daher zeigt die Tastatur ohnehin schon
+    // von sich aus "Öffnen"/"Los" statt "Weiter") -- die Bestaetigung wird
+    // hier bewusst NICHT auf "Weiter" umgebogen, sondern sinnvoll genutzt:
+    // "Öffnen" springt direkt zu den Rechnungspositionen, genau wie ein
+    // Antippen des Buttons "Rechnungspositionen auswählen".
+    document.getElementById('txtAdresse2').setAttribute('enterkeyhint', 'go');
+    document.getElementById('txtAdresse2').addEventListener('keydown', (ev)=>{
+      if(ev.key==='Enter'){ ev.preventDefault(); document.getElementById('txtAdresse2').blur(); document.getElementById('btnPunkte')?.click(); }
+    });
 
     // "Google Maps öffnen": Adresse des Bestatters dort nachschlagen (Suche
     // nach dem bereits eingetragenen Namen, falls vorhanden). "Bestatter"
