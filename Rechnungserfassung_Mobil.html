@@ -98,20 +98,31 @@
     color:var(--text); border-radius:10px; padding:14px; font-size:15px; margin-bottom:10px; cursor:pointer;
   }
   .btn-sekundaer .unter{display:block; font-size:12px; color:var(--text-schwach); margin-top:2px; font-weight:400;}
-  /* "Rechnungsübersicht" (Startseite): ging bisher optisch unter, da genau
-     wie die einfachen Excel-/Werkzeug-Buttons in reinem Karten-Weiß --
-     bekommt deshalb einen dezenten grauen Farbton, um sich als wichtige
-     Aktion (alle noch nicht am PC übernommenen Fälle) abzuheben. */
-  .btn-uebersicht{background:#e7e9ee; border-color:#b7bdc9; color:#333944;}
-  body.dunkel .btn-uebersicht{background:#333b47; color:#dfe3ea; border-color:#4d5566;}
+  /* "Rechnungsübersicht" (Startseite): war zunächst reines Karten-Weiß, dann
+     dezentes Grau -- beides ging optisch unter. Jetzt deutlich groesser,
+     dunkles Grau mit weisser, fetter Schrift (analog zu den LS/PT-Kacheln),
+     damit sich der wichtigste Button der Startseite klar abhebt. */
+  .btn-uebersicht{
+    background:#3f4753; border-color:#3f4753; color:#fff;
+    padding:26px 16px; font-size:19px; font-weight:700;
+  }
+  body.dunkel .btn-uebersicht{background:#1c212a; color:#fff; border-color:#1c212a;}
+  .btn-uebersicht .unter{color:#fff; opacity:.85; font-weight:400;}
   .btn-export{border-color:#e8a33d; color:#7a4a00; background:#fff4e5;}
   body.dunkel .btn-export{background:#3a2c10; color:#f0c98a; border-color:#c78a2e;}
   .btn-import{border-color:#3d8ee8; color:#00427a; background:#e5f1ff;}
   body.dunkel .btn-import{background:#10263a; color:#8ac2f0; border-color:#2e6ec7;}
-  /* Export/Import nebeneinander als gleich breite Buttons, wenn beide
-     angezeigt werden -- die einzelnen .btn-sekundaer-Regeln (width:100% etc.)
-     bleiben dabei unveraendert, nur die Anordnung wird per Flex-Reihe
-     ueberschrieben. */
+  .btn-sync.sync-neu{border-color:#3d8ee8; color:#00427a; background:#e5f1ff;}
+  body.dunkel .btn-sync.sync-neu{background:#10263a; color:#8ac2f0; border-color:#2e6ec7;}
+  .btn-sync.sync-fehlt{border-color:#e8a33d; color:#7a4a00; background:#fff4e5;}
+  body.dunkel .btn-sync.sync-fehlt{background:#3a2c10; color:#f0c98a; border-color:#c78a2e;}
+  .btn-sync.sync-verbunden{border-color:#3ba55c; color:#1e6b37; background:#e6f7ea;}
+  body.dunkel .btn-sync.sync-verbunden{background:#123a1f; color:#8fd9a8; border-color:#2e8a4c;}
+  .btn-sync.sync-deaktiviert{border-color:#b7bdc9; color:#6b7280; background:#eef0f3;}
+  body.dunkel .btn-sync.sync-deaktiviert{background:#2b313b; color:#9aa3ad; border-color:#4d5566;}
+  /* Export/Import/Sync nebeneinander als gleich breite Buttons -- die
+     einzelnen .btn-sekundaer-Regeln (width:100% etc.) bleiben dabei
+     unveraendert, nur die Anordnung wird per Flex-Reihe ueberschrieben. */
   .datensicherung-reihe{display:flex; gap:8px;}
   .datensicherung-reihe .btn-sekundaer{flex:1; margin-bottom:0;}
   .datensicherung-reihe .icon-pfeil{display:block; font-size:20px; margin-bottom:4px;}
@@ -541,6 +552,48 @@ function rnLetzteFeldEinrichten(inputEl, opts={}){
 // steht. Der Button "Fälle für den PC exportieren" bleibt als Rückfallebene
 // bestehen, solange kein Auto-Sync aktiv verbunden ist.
 function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
+
+// Liefert Beschriftung/Symbolfarbe/Aktion für den EINEN festen Sync-Button
+// auf der Startseite -- je nach aktuellem autoSyncStatus. Das Pfeil-Symbol
+// (zwei gegenläufige Pfeile, siehe HTML) bleibt dabei immer gleich, nur
+// Text/Farbe/Klick-Aktion wechseln.
+function syncButtonInfo(){
+  if(autoSyncStatus==='verbunden'){
+    return {
+      klasse:'sync-verbunden', text:'Sync verbunden',
+      unter:'Automatische Sicherung ist aktiv',
+      aktion: async ()=>{ appToastAnzeigen('Sync-Ordner ist bereits verbunden -- Änderungen werden automatisch gesichert.', 2200); }
+    };
+  }
+  if(autoSyncStatus==='berechtigung_fehlt'){
+    return {
+      klasse:'sync-fehlt', text:'Sync erneut verbinden',
+      unter:'Berechtigung abgelaufen -- kurz bestätigen',
+      aktion: async ()=>{
+        const ok = await autoSyncBerechtigungErneuern();
+        appToastAnzeigen(ok ? 'Sync-Ordner wieder verbunden -- Auto-Sync läuft.' : 'Berechtigung wurde nicht erteilt.', 2500);
+        ansichtStart();
+      }
+    };
+  }
+  if(autoSyncStatus==='nicht_unterstuetzt'){
+    return {
+      klasse:'sync-deaktiviert', text:'Sync nicht verfügbar',
+      unter:'Dieser Browser unterstützt keinen Auto-Sync -- bitte Export/Import nutzen',
+      aktion: async ()=>{ appToastAnzeigen('Auto-Sync wird von diesem Browser nicht unterstützt. Bitte Export/Import verwenden.', 2800); }
+    };
+  }
+  // 'nicht_verbunden' oder 'unbekannt' (siehe autoSyncInitialisieren)
+  return {
+    klasse:'sync-neu', text:'Sync-Ordner auswählen',
+    unter:'Einmalig einrichten -- danach automatische Sicherung',
+    aktion: async ()=>{
+      const ok = await autoSyncOrdnerWaehlen();
+      appToastAnzeigen(ok ? 'Sync-Ordner verbunden -- Auto-Sync läuft.' : 'Kein Ordner ausgewählt.', 2200);
+      ansichtStart();
+    }
+  };
+}
 
 function bestatterEintragen(name, adr1, adr2){
   if(!name || !name.trim()) return;
@@ -1217,27 +1270,26 @@ function ansichtStart(){
     <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Rechnungsübersicht
       <span class="unter">${gesamtOffen} noch nicht am PC übernommen</span>
     </button>`;
-  html += `<div class="datensicherung-reihe">`;
-  // KORREKTUR: war der Sync-Ordner bereits einmal verbunden und ist nur die
-  // Berechtigung zwischenzeitlich abgelaufen (siehe autoSyncSchreiben/
-  // autoSyncInitialisieren -- kommt bei diesem Gerät/OneDrive-Ordner öfter
-  // vor), ist ein einfacher manueller Export die falsche Handlungsempfehlung
-  // -- stattdessen direkt einen "Erneut verbinden"-Button anbieten, der den
-  // Auto-Sync mit EINEM Tap wiederherstellt (kein erneuter Ordnerauswahl-
-  // Dialog nötig, nur die Berechtigung wird erneut bestätigt).
-  if(autoSyncStatus==='berechtigung_fehlt'){
-    html += `<button class="btn-sekundaer btn-import" id="btnAutoSyncErneuernStart">&#8635; Sync-Ordner erneut verbinden
-      <span class="unter">Berechtigung abgelaufen -- kurz bestätigen, dann läuft der Auto-Sync wieder automatisch</span>
-    </button>`;
-  } else if(!autoSyncVerfuegbar() && gesamtOffen>0){
-    html += `<button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span>Fälle für den PC exportieren
-      <span class="unter">Kein Auto-Sync verfügbar -- Datei in den OneDrive-Ordner "KVBW Onedrive" legen</span>
-    </button>`;
-  }
-  html += `<button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span>Fälle importieren
-      <span class="unter">Aus einer zuvor exportierten Datei wiederherstellen, z.B. nach dem Löschen des Browser-/App-Caches</span>
+  // Immer 3 feste Buttons, Reihenfolge links->rechts: Import, Export, Sync.
+  // Vorher wechselte hier je nach Sync-Status ein einzelner Button
+  // ("erneut verbinden" ODER "exportieren") -- das führte dazu, dass der
+  // Reconnect-Button z.B. nach einem unbeachteten Berechtigungs-Status
+  // scheinbar "verschwand" (autoSyncStatus war beim ersten Rendern noch
+  // 'unbekannt', siehe autoSyncInitialisieren-Aufruf am Dateiende) und
+  // Export komplett fehlte, solange Auto-Sync lief. Jetzt immer alle drei
+  // sichtbar, nur Beschriftung/Symbol/Aktion des Sync-Buttons ändert sich.
+  const syncInfo = syncButtonInfo();
+  html += `<div class="datensicherung-reihe">
+    <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span>Fälle importieren
+      <span class="unter">Aus einer zuvor exportierten Datei wiederherstellen</span>
     </button>
     <input type="file" id="jsonImportInput" accept="application/json,.json" style="display:none">
+    <button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span>Fälle exportieren
+      <span class="unter">Als Datei sichern</span>
+    </button>
+    <button class="btn-sekundaer btn-sync ${syncInfo.klasse}" id="btnSync"><span class="icon-pfeil">&#8644;</span>${syncInfo.text}
+      <span class="unter">${syncInfo.unter}</span>
+    </button>
   </div>
   <div class="warnhinweis" id="startHinweis"></div>`;
   html += `
@@ -1256,14 +1308,8 @@ function ansichtStart(){
   document.getElementById('kLS').onclick = ()=>ansichtMaske('ls');
   document.getElementById('kPT').onclick = ()=>ansichtMaske('pt');
   document.getElementById('btnKorrigieren').onclick = ansichtKorrigieren;
-  const btnExp = document.getElementById('btnJsonExport');
-  if(btnExp) btnExp.onclick = jsonExport;
-  const btnErneuernStart = document.getElementById('btnAutoSyncErneuernStart');
-  if(btnErneuernStart) btnErneuernStart.onclick = async ()=>{
-    const ok = await autoSyncBerechtigungErneuern();
-    appToastAnzeigen(ok ? 'Sync-Ordner wieder verbunden -- Auto-Sync läuft.' : 'Berechtigung wurde nicht erteilt.', 2500);
-    ansichtStart();
-  };
+  document.getElementById('btnJsonExport').onclick = jsonExport;
+  document.getElementById('btnSync').onclick = syncInfo.aktion;
   const startHinweis = (txt)=>{
     const el = document.getElementById('startHinweis');
     if(!el) return;
@@ -1944,9 +1990,22 @@ async function autoSyncSchreiben(){
   if(autoSyncSchreibtGerade){ autoSyncErneutNoetig = true; return; }
   autoSyncSchreibtGerade = true;
   try{
+    const daten = exportDatenBauen();
+    const istLeer = daten.faelle.length===0 && (!daten.bestatterAenderungen || daten.bestatterAenderungen.length===0);
+    // SCHUTZ VOR DATENVERLUST: steht hier aktuell NICHTS Lokales an (z.B.
+    // weil der lokale Speicher unerwartet leer ist -- etwa nach Cache-
+    // Löschung oder einem App-/Browser-Wechsel), aber die Sync-Datei enthält
+    // noch Fälle, NICHT einfach leer drüberschreiben. Sonst geht beim
+    // naechsten "stillen" Aufruf (z.B. direkt beim App-Start ueber
+    // autoSyncInitialisieren) der komplette bisherige Stand verloren.
+    if(istLeer && await autoSyncDateiHatBereitsDaten()){
+      autoSyncStatus = 'verbunden';
+      appToastAnzeigen('WARNUNG: Lokal sind aktuell keine Fälle gespeichert, die Sync-Datei enthält aber noch welche -- zum Schutz vor Datenverlust wurde NICHT überschrieben. Falls die lokalen Daten unerwartet verschwunden sind, bitte zuerst über "Fälle importieren" die Sync-Datei wiederherstellen.', 7000);
+      return;
+    }
     const dateiHandle = await autoSyncOrdnerHandle.getFileHandle('rechnungserfassung_sync.json', {create:true});
     const schreibbar = await dateiHandle.createWritable();
-    await schreibbar.write(JSON.stringify(exportDatenBauen(), null, 2));
+    await schreibbar.write(JSON.stringify(daten, null, 2));
     await schreibbar.close();
   }catch(e){
     // z.B. Berechtigung zwischenzeitlich entzogen -- der Status zeigt das
@@ -1956,6 +2015,21 @@ async function autoSyncSchreiben(){
   } finally {
     autoSyncSchreibtGerade = false;
     if(autoSyncErneutNoetig){ autoSyncErneutNoetig = false; autoSyncSchreiben(); }
+  }
+}
+
+// Prüft (lesend, ohne etwas zu verändern), ob die Sync-Datei im gewählten
+// Ordner aktuell noch mindestens einen Fall enthält -- Grundlage für den
+// Datenverlust-Schutz oben.
+async function autoSyncDateiHatBereitsDaten(){
+  try{
+    const dateiHandle = await autoSyncOrdnerHandle.getFileHandle('rechnungserfassung_sync.json', {create:false});
+    const datei = await dateiHandle.getFile();
+    const inhalt = await datei.text();
+    const vorhandeneDaten = JSON.parse(inhalt);
+    return !!(vorhandeneDaten && Array.isArray(vorhandeneDaten.faelle) && vorhandeneDaten.faelle.length>0);
+  }catch(e){
+    return false; // z.B. Datei existiert noch gar nicht -- dann gibt es nichts zu schuetzen
   }
 }
 
@@ -3555,8 +3629,16 @@ try{ themaAnwenden(); }catch(e){}
 try{ ansichtStart(); }catch(e){}
 // Ohne await -- die Startansicht soll nicht auf die (async) Prüfung des
 // evtl. schon zuvor gewählten Sync-Ordners warten. Ist der Ordner noch
-// gültig verbunden, wird der aktuelle Stand direkt nachgeholt.
-try{ autoSyncInitialisieren(); }catch(e){}
+// gültig verbunden, wird der aktuelle Stand direkt nachgeholt. WICHTIG:
+// der Sync-Button auf der Startseite zeigt beim allerersten Rendern noch
+// autoSyncStatus 'unbekannt', weil diese Prüfung hier async läuft --
+// deshalb hier nach dem Auflösen die Startseite (falls man noch/wieder
+// dort ist) einmal neu rendern, damit der Button den echten Status zeigt.
+try{
+  autoSyncInitialisieren().then(()=>{
+    if(aktuelleAnsichtIstHauptbildschirm) ansichtStart();
+  }).catch(()=>{});
+}catch(e){}
 
 if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
   navigator.serviceWorker.register('./sw.js').catch(()=>{});
