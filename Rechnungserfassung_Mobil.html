@@ -49,7 +49,7 @@
   *{box-sizing:border-box;}
   body{
     margin:0; font-family:"Segoe UI",-apple-system,Roboto,Arial,sans-serif;
-    background:var(--bg); color:var(--text); padding-bottom:40px;
+    background:var(--bg); color:var(--text); padding-bottom:16px;
     /* WICHTIG: das <meta name="color-scheme" content="light dark"> im <head>
        erlaubt dem Browser, native Formularelemente (v.a. Checkboxen) nach dem
        OS-Farbschema zu zeichnen -- das kann z.B. bei einem Handy im
@@ -70,7 +70,11 @@
   header .zurueck, header .zahnrad{
     background:none; border:none; color:#fff; font-size:22px; cursor:pointer; padding:4px 8px;
   }
-  main{padding:14px 14px 60px;}
+  /* KORREKTUR: bisher 60px -- zusammen mit dem body-eigenen padding-bottom
+     ergab das ~100px leeren Scroll-Bereich am Ende jeder Seite (auf der
+     Startseite z.B. deutlich unterhalb "Werkzeuge" sichtbar/erreichbar,
+     ohne dass dort noch Inhalt kommt). Auf ein normales Mass reduziert. */
+  main{padding:14px 14px 24px;}
 
   /* Nebeneinander statt untereinander -- optisch schlanker, siehe
      Nutzerwunsch. Beide Kacheln teilen sich per flex:1 die verfuegbare
@@ -94,6 +98,12 @@
     color:var(--text); border-radius:10px; padding:14px; font-size:15px; margin-bottom:10px; cursor:pointer;
   }
   .btn-sekundaer .unter{display:block; font-size:12px; color:var(--text-schwach); margin-top:2px; font-weight:400;}
+  /* "Rechnungsübersicht" (Startseite): ging bisher optisch unter, da genau
+     wie die einfachen Excel-/Werkzeug-Buttons in reinem Karten-Weiß --
+     bekommt deshalb einen dezenten grauen Farbton, um sich als wichtige
+     Aktion (alle noch nicht am PC übernommenen Fälle) abzuheben. */
+  .btn-uebersicht{background:#e7e9ee; border-color:#b7bdc9; color:#333944;}
+  body.dunkel .btn-uebersicht{background:#333b47; color:#dfe3ea; border-color:#4d5566;}
   .btn-export{border-color:#e8a33d; color:#7a4a00; background:#fff4e5;}
   body.dunkel .btn-export{background:#3a2c10; color:#f0c98a; border-color:#c78a2e;}
   .btn-import{border-color:#3d8ee8; color:#00427a; background:#e5f1ff;}
@@ -291,9 +301,12 @@
     margin:-14px -14px 14px; padding-left:14px; padding-right:14px;
     border-bottom:1px solid var(--rand);
   }
-  .auswahlleiste .zeile1{display:flex; align-items:center; gap:8px; font-size:13.5px; margin-bottom:8px;}
+  /* Reihenfolge auf Nutzerwunsch getauscht: "Alle auswählen" steht jetzt
+     UNTER den Buttons statt darüber -- deshalb jetzt margin-TOP statt
+     -bottom, damit weiterhin ein Abstand zu den Buttons darüber besteht. */
+  .auswahlleiste .zeile1{display:flex; align-items:center; gap:8px; font-size:13.5px; margin-top:10px;}
   .auswahlleiste .zeile1 label{display:flex; align-items:center; gap:6px; cursor:pointer;}
-  .auswahlleiste .aktionen-reihe{display:flex; gap:8px; flex-wrap:wrap;}
+  .auswahlleiste .aktionen-reihe{display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;}
   .auswahlleiste .aktionen-reihe button{
     flex:1; min-width:110px; padding:9px 8px; font-size:12.5px; font-weight:600; border-radius:8px;
     background:var(--karte); cursor:pointer; border:1.5px solid var(--rand); color:var(--text);
@@ -301,6 +314,20 @@
   .auswahlleiste .aktionen-reihe button:disabled{opacity:.45; cursor:default;}
   .auswahlleiste .aktionen-reihe button.gefahr{border-color:var(--fehler); color:var(--fehler);}
   .auswahlleiste .aktionen-reihe button.betont{border-color:var(--ls-farbe); color:var(--ls-farbe);}
+  /* "Letzte Rechnungsnummer" -- auf Nutzerwunsch zusaetzlich ganz rechts bei
+     den Buttons der Rechnungsuebersicht anzeig- und bearbeitbar (bisher nur
+     in den Einstellungen). "margin-left:auto" schiebt es innerhalb der
+     Button-Reihe (bzw. bei Zeilenumbruch: innerhalb der eigenen Zeile) ganz
+     nach rechts. Dieselbe Wiring-Logik wie in den Einstellungen, siehe
+     rnLetzteFeldEinrichten(). */
+  .auswahlleiste .aktionen-reihe .rn-mini{
+    flex:0 0 auto; margin-left:auto; display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .auswahlleiste .aktionen-reihe .rn-mini label{font-size:10.5px; color:var(--text-schwach); white-space:nowrap;}
+  .auswahlleiste .aktionen-reihe .rn-mini input{
+    width:60px; padding:7px 4px; font-size:13px; text-align:center; border:1.5px solid var(--rand);
+    border-radius:8px; background:var(--karte); color:var(--text);
+  }
   /* Farbcode wie in der Maske selbst: LS/PT-Fälle in "Rechnung korrigieren"
      bekommen denselben Rand-/Badge-Farbton wie ihre Bearbeitungsmaske
      (ls-farbe/pt-farbe), statt alle Fälle mit derselben neutralen Farbe
@@ -463,6 +490,48 @@ function rechnungsnummerBerechnen(nachname, vorname, datumNorm, zaehler){
 function rnZaehlerStandText(e){
   if(!e.rnNaechsterZaehler) return 'Noch kein Zähler-Abgleich hinterlegt -- die Rechnungsnummer (Spalte Q) wird beim Kopieren solange freigelassen wie bisher.';
   return `Nächste vergebene laufende Nummer: ${String(e.rnNaechsterZaehler).padStart(3,'0')} (z.B. "...-${String(e.rnNaechsterZaehler).padStart(3,'0')}").`;
+}
+// Wiring fuer das "letzte Rechnungsnummer"-Feld -- auf Nutzerwunsch jetzt an
+// ZWEI Stellen vorhanden (Einstellungen UND ganz rechts bei den Buttons auf
+// der Rechnungsuebersicht), deshalb hier EINMAL ausgelagert statt an beiden
+// Stellen dupliziert (Gefahr, dass sie sonst bei einer spaeteren Aenderung
+// auseinanderlaufen). warnEl/standEl sind optional -- auf der
+// Rechnungsuebersicht ist aus Platzgruenden kein ausfuehrlicher Hinweistext
+// vorgesehen, dort erscheint eine Fehlermeldung stattdessen kurz als Toast.
+function rnLetzteFeldEinrichten(inputEl, opts={}){
+  if(!inputEl) return;
+  const eStart = ladeEinstellungen();
+  inputEl.value = eStart.rnLetzte || '';
+  const warnen = (html)=>{
+    if(!opts.warnEl){ if(html) appToastAnzeigen(html.replace(/<[^>]+>/g,''), 3600); return; }
+    if(!html){ opts.warnEl.classList.remove('aktiv'); opts.warnEl.innerHTML=''; return; }
+    opts.warnEl.classList.add('aktiv'); opts.warnEl.innerHTML = html;
+  };
+  const standAktualisieren = (eAktuell)=>{ if(opts.standEl) opts.standEl.textContent = rnZaehlerStandText(eAktuell); };
+  inputEl.addEventListener('blur', ()=>{
+    const eAktuell = ladeEinstellungen();
+    const rohEingabe = inputEl.value.trim();
+    if(!rohEingabe){
+      inputEl.value = '';
+      eAktuell.rnLetzte = ''; eAktuell.rnNaechsterZaehler = null;
+      warnen('');
+      speichereEinstellungen(eAktuell);
+      standAktualisieren(eAktuell);
+      return;
+    }
+    const naechster = rnZaehlerAusEingabe(rohEingabe);
+    if(naechster===null){
+      warnen('Bitte nur die laufende Nummer der letzten Rechnung eintragen (die letzten 3 Ziffern aus Spalte Q, z.B. "003" bei "MS260115-003") -- keine Buchstaben, keine Datumsangabe.');
+      return;
+    }
+    const eingabe = String(naechster-1).padStart(3,'0');
+    inputEl.value = eingabe;
+    warnen('');
+    eAktuell.rnLetzte = eingabe;
+    eAktuell.rnNaechsterZaehler = naechster;
+    speichereEinstellungen(eAktuell);
+    standAktualisieren(eAktuell);
+  });
 }
 // "Weg A": lokaler Auto-Sync über die File System Access API (Ordner einmal
 // auswählen, danach wird bei jeder Änderung automatisch dieselbe Datei
@@ -1145,11 +1214,22 @@ function ansichtStart(){
       <button class="karte ls" id="kLS"><span class="icon">&#9760;</span>Leichen-<br>schau</button>
       <button class="karte pt" id="kPT"><span class="icon">&#9877;</span>Privat-<br>rechnung</button>
     </div>
-    <button class="btn-sekundaer" id="btnKorrigieren">Rechnungsübersicht
+    <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Rechnungsübersicht
       <span class="unter">${gesamtOffen} noch nicht am PC übernommen</span>
     </button>`;
   html += `<div class="datensicherung-reihe">`;
-  if(!autoSyncVerfuegbar() && gesamtOffen>0){
+  // KORREKTUR: war der Sync-Ordner bereits einmal verbunden und ist nur die
+  // Berechtigung zwischenzeitlich abgelaufen (siehe autoSyncSchreiben/
+  // autoSyncInitialisieren -- kommt bei diesem Gerät/OneDrive-Ordner öfter
+  // vor), ist ein einfacher manueller Export die falsche Handlungsempfehlung
+  // -- stattdessen direkt einen "Erneut verbinden"-Button anbieten, der den
+  // Auto-Sync mit EINEM Tap wiederherstellt (kein erneuter Ordnerauswahl-
+  // Dialog nötig, nur die Berechtigung wird erneut bestätigt).
+  if(autoSyncStatus==='berechtigung_fehlt'){
+    html += `<button class="btn-sekundaer btn-import" id="btnAutoSyncErneuernStart">&#8635; Sync-Ordner erneut verbinden
+      <span class="unter">Berechtigung abgelaufen -- kurz bestätigen, dann läuft der Auto-Sync wieder automatisch</span>
+    </button>`;
+  } else if(!autoSyncVerfuegbar() && gesamtOffen>0){
     html += `<button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span>Fälle für den PC exportieren
       <span class="unter">Kein Auto-Sync verfügbar -- Datei in den OneDrive-Ordner "KVBW Onedrive" legen</span>
     </button>`;
@@ -1178,6 +1258,12 @@ function ansichtStart(){
   document.getElementById('btnKorrigieren').onclick = ansichtKorrigieren;
   const btnExp = document.getElementById('btnJsonExport');
   if(btnExp) btnExp.onclick = jsonExport;
+  const btnErneuernStart = document.getElementById('btnAutoSyncErneuernStart');
+  if(btnErneuernStart) btnErneuernStart.onclick = async ()=>{
+    const ok = await autoSyncBerechtigungErneuern();
+    appToastAnzeigen(ok ? 'Sync-Ordner wieder verbunden -- Auto-Sync läuft.' : 'Berechtigung wurde nicht erteilt.', 2500);
+    ansichtStart();
+  };
   const startHinweis = (txt)=>{
     const el = document.getElementById('startHinweis');
     if(!el) return;
@@ -1408,14 +1494,18 @@ function ansichtKorrigieren(){
 
   app.innerHTML = `
     <div class="auswahlleiste">
-      <div class="zeile1">
-        <label><input type="checkbox" id="chkAlle"> Alle auswählen</label>
-        <span id="auswahlAnzahl" style="color:var(--text-schwach);"></span>
-      </div>
       <div class="aktionen-reihe">
         <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
         <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
         <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
+        <div class="rn-mini">
+          <label for="rnLetzteMini">Letzte Nr.</label>
+          <input type="text" id="rnLetzteMini" inputmode="numeric" maxlength="3" placeholder="003">
+        </div>
+      </div>
+      <div class="zeile1">
+        <label><input type="checkbox" id="chkAlle"> Alle auswählen</label>
+        <span id="auswahlAnzahl" style="color:var(--text-schwach);"></span>
       </div>
     </div>
     <div id="korrigierenListe">
@@ -1435,6 +1525,8 @@ function ansichtKorrigieren(){
     if(!txt){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
     el.innerHTML = txt; el.classList.add('aktiv');
   };
+
+  rnLetzteFeldEinrichten(document.getElementById('rnLetzteMini'), {});
 
   function auswahlAktualisieren(){
     const n = ausgewaehlt.size;
@@ -1471,6 +1563,12 @@ function ansichtKorrigieren(){
   document.getElementById('btnAuswKopieren').onclick = async ()=>{
     const faelleAusw = alle.filter(f=> ausgewaehlt.has(schluessel(f)));
     const ohneNummer = rechnungsnummernVergeben(faelleAusw);
+    // "In Zwischenablage kopieren" vergibt hier ggf. neue Rechnungsnummern
+    // und zaehlt dabei einstellungen.rnNaechsterZaehler weiter -- das Feld
+    // "Letzte Nr." ganz rechts bei den Buttons soll das sofort widerspiegeln,
+    // nicht erst nach einem erneuten Aufruf dieser Seite.
+    const rnMiniEl = document.getElementById('rnLetzteMini');
+    if(rnMiniEl) rnMiniEl.value = ladeEinstellungen().rnLetzte || '';
     const text = faelleAlsUebersichtsZeilen(faelleAusw);
     try{
       await navigator.clipboard.writeText(text);
@@ -1570,33 +1668,12 @@ function ansichtEinstellungen(){
   document.getElementById('txtPraxisadresse').addEventListener('blur', anwenden);
   document.getElementById('zDunkel').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkDunkel').click(); } };
   document.getElementById('zReise').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkReiseBasisLuftlinie').click(); } };
-  const rnWarnung = (html)=>{
-    const warnEl = document.getElementById('txtRnLetzte_warn');
-    if(!html){ warnEl.classList.remove('aktiv'); warnEl.innerHTML=''; return; }
-    warnEl.classList.add('aktiv'); warnEl.innerHTML = html;
-  };
-  document.getElementById('txtRnLetzte').addEventListener('blur', ()=>{
-    const rohEingabe = document.getElementById('txtRnLetzte').value.trim();
-    if(!rohEingabe){
-      document.getElementById('txtRnLetzte').value = '';
-      e.rnLetzte = ''; e.rnNaechsterZaehler = null;
-      rnWarnung('');
-      speichereEinstellungen(e);
-      document.getElementById('rnZaehlerStand').textContent = rnZaehlerStandText(e);
-      return;
-    }
-    const naechster = rnZaehlerAusEingabe(rohEingabe);
-    if(naechster===null){
-      rnWarnung('Bitte nur die laufende Nummer der letzten Rechnung eintragen (die letzten 3 Ziffern aus Spalte Q, z.B. "003" bei "MS260115-003") -- keine Buchstaben, keine Datumsangabe.');
-      return;
-    }
-    const eingabe = String(naechster-1).padStart(3,'0');
-    document.getElementById('txtRnLetzte').value = eingabe;
-    rnWarnung('');
-    e.rnLetzte = eingabe;
-    e.rnNaechsterZaehler = naechster;
-    speichereEinstellungen(e);
-    document.getElementById('rnZaehlerStand').textContent = rnZaehlerStandText(e);
+  // Ausgelagert (siehe rnLetzteFeldEinrichten oben) -- dieselbe Logik wird
+  // jetzt auch fuer das gleichnamige Feld auf der Rechnungsuebersicht
+  // benutzt, damit beide Stellen garantiert gleich funktionieren.
+  rnLetzteFeldEinrichten(document.getElementById('txtRnLetzte'), {
+    warnEl: document.getElementById('txtRnLetzte_warn'),
+    standEl: document.getElementById('rnZaehlerStand')
   });
   autoSyncAbschnittWiring();
 }
