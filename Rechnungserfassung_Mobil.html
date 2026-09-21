@@ -72,17 +72,21 @@
   }
   main{padding:14px 14px 60px;}
 
-  .kachelreihe{display:flex; flex-direction:column; align-items:center; gap:18px; margin:10px 0 20px;}
+  /* Nebeneinander statt untereinander -- optisch schlanker, siehe
+     Nutzerwunsch. Beide Kacheln teilen sich per flex:1 die verfuegbare
+     Breite zu gleichen Teilen; "gap" haelt einen festen Abstand dazwischen. */
+  .kachelreihe{display:flex; flex-direction:row; align-items:stretch; gap:12px; margin:10px 0 20px;}
   .karte{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    width:min(78vw, 290px); height:min(62vw, 230px);
+    flex:1; min-width:0; aspect-ratio:1/1;
     border:none; border-radius:16px; color:#fff; font-family:inherit;
-    font-size:24px; font-weight:bold; cursor:pointer; box-shadow:0 5px 12px rgba(0,0,0,.18);
+    font-size:21px; font-weight:bold; cursor:pointer; box-shadow:0 5px 12px rgba(0,0,0,.18);
+    text-align:center; line-height:1.25;
   }
   .karte:active{filter:brightness(1.08);}
   .karte.ls{background:var(--ls-farbe);}
   .karte.pt{background:var(--pt-farbe);}
-  .karte .icon{font-size:52px; display:block; margin-bottom:14px;}
+  .karte .icon{font-size:46px; display:block; margin-bottom:12px;}
   .karte .unter{font-size:12.5px; font-weight:400; opacity:.9; margin-top:4px;}
 
   .btn-sekundaer{
@@ -1081,6 +1085,18 @@ function setzeTitel(t, zurueckZiel){
 // Startbildschirm zu springen.
 let einstellungenOffen = false;
 let ruecksprungAusEinstellungen = ()=>ansichtStart();
+// Nicht gespeicherter Entwurf einer NEU begonnenen (noch nicht gespeicherten)
+// LS-/PT-Rechnung -- bleibt nur im Arbeitsspeicher dieser App-Instanz
+// erhalten (bewusst KEIN localStorage), damit man zwischen Maske und
+// Startseite (oder den Einstellungen) hin- und herwechseln kann, ohne
+// bereits eingetippte, noch nicht gespeicherte Werte zu verlieren. Betrifft
+// bewusst NUR neu begonnene Rechnungen (korrekturIdx===undefined) -- beim
+// Korrigieren eines bereits gespeicherten Falls bleibt weiterhin die zuletzt
+// gespeicherte Version massgeblich. Wird beim erfolgreichen Speichern
+// geleert (siehe btnSpeichern.onclick) und setzt sich erst beim
+// tatsaechlichen Neustart der App-Instanz zurueck (ganz normale Variable,
+// kein Storage).
+let maskenEntwuerfe = {ls:null, pt:null};
 // vorbereiteRuecksprung wird IMMER aufgerufen, SOLANGE die jeweilige Ansicht
 // noch auf dem Bildschirm ist (also bevor auf Einstellungen umgeschaltet
 // wird) -- nur so kann er evtl. Formularwerte per werteEinsammeln() aus dem
@@ -1107,8 +1123,8 @@ function ansichtStart(){
   const gesamtOffen = faelleLS+faellePT;
   let html = `
     <div class="kachelreihe">
-      <button class="karte ls" id="kLS"><span class="icon">&#9760;</span>Leichenschau</button>
-      <button class="karte pt" id="kPT"><span class="icon">&#9877;</span>Privatrechnung</button>
+      <button class="karte ls" id="kLS"><span class="icon">&#9760;</span>Leichen-<br>schau</button>
+      <button class="karte pt" id="kPT"><span class="icon">&#9877;</span>Privat-<br>rechnung</button>
     </div>
     <button class="btn-sekundaer" id="btnKorrigieren">Rechnungsübersicht
       <span class="unter">${gesamtOffen} noch nicht am PC übernommen</span>
@@ -2061,6 +2077,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const gespeichert = ladeFaelle(art)[korrekturIdx];
     werte = {...gespeichert.werte};
     positionenAuswahl = gespeichert.positionen ? new Set(gespeichert.positionen) : null;
+  } else if(maskenEntwuerfe[art]){
+    // Neu begonnene Rechnung: vorhandenen, noch nicht gespeicherten Entwurf
+    // (siehe maskenEntwuerfe oben) wiederherstellen statt erneut die
+    // Standard-Vorbelegung (heutiges Datum etc.) zu setzen -- genau das
+    // ermoeglicht das gewuenschte Hin- und Herwechseln ohne Datenverlust.
+    werte = {...maskenEntwuerfe[art].werte};
+    positionenAuswahl = maskenEntwuerfe[art].positionen ? new Set(maskenEntwuerfe[art].positionen) : null;
   } else {
     // Vorbelegung wie am PC (RechnungsdatumVorbelegen: Rechnungsdatum =
     // naechster Werktag nach dem Datum der Todesbescheinigung/des
@@ -2260,8 +2283,21 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // wird das vor dem Verlassen zur Startseite als Hinweis (mit Wahlmöglich-
   // keit) angezeigt statt die Eingaben stillschweigend zu verwerfen.
   function zurueckAusMaske(){
+    // Neu begonnene (noch nicht gespeicherte) Rechnung: aktuellen Stand als
+    // Entwurf sichern, BEVOR tatsaechlich navigiert wird -- damit ein Hin-
+    // und Herwechseln zur Startseite/den Einstellungen die Eingaben nicht
+    // mehr loescht (siehe maskenEntwuerfe oben). Nur relevant, wenn es
+    // ueberhaupt etwas zu sichern gibt oder bereits ein Entwurf aktiv war --
+    // sonst wuerde sich sonst hier unnoetig ein "leerer" Entwurf mit dem
+    // eingefrorenen Default-Datum von heute festsetzen.
+    if(korrekturIdx===undefined && (hatUngespeicherteAenderungen() || maskenEntwuerfe[art])){
+      maskenEntwuerfe[art] = {werte: werteEinsammeln(), positionen: positionenAuswahl};
+    }
     if(hatUngespeicherteAenderungen()){
-      alertBanner(`Diese Rechnung wurde noch nicht gespeichert. Beim Zurückgehen gehen die Änderungen verloren.
+      const hinweisZusatz = korrekturIdx===undefined
+        ? 'Die Eingaben bleiben zwischengespeichert, bis die App neu gestartet wird -- beim nächsten Öffnen sind sie wieder da.'
+        : 'Beim Zurückgehen gehen die Änderungen verloren.';
+      alertBanner(`Diese Rechnung wurde noch nicht gespeichert. ${hinweisZusatz}
         <div class="aktionen">
           <button data-akt="speichern">Jetzt speichern</button>
           <button data-akt="verwerfen">Ohne Speichern zurück</button>
@@ -2731,22 +2767,30 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const labelEl = document.getElementById('txtKm_label');
     const fahrVal = parseFloat((document.getElementById('txtKmFahrstrecke').value||'').replace(',','.'));
     const luftVal = parseFloat((document.getElementById('txtKmLuftlinie').value||'').replace(',','.'));
-    let label, wert;
+    let label, wert, istFahrstrecke = false;
     if(manuellerModus==='LUFTLINIE' && !isNaN(luftVal) && luftVal>0){
       label = 'Luftlinie (einfach), manuell gewählt'; wert = luftVal;
     } else if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0){
-      label = 'Fahrstrecke (Hin- und Rückfahrt), manuell gewählt'; wert = fahrVal;
+      label = 'Fahrstrecke (Hin- und Rückfahrt), manuell gewählt'; wert = fahrVal; istFahrstrecke = true;
     } else if(!isNaN(fahrVal) && fahrVal>0 && sollReiseGelten(fahrVal, isNaN(luftVal)?fahrVal/2:luftVal)){
-      label = 'Fahrstrecke (Hin- und Rückfahrt)'; wert = fahrVal;
+      label = 'Fahrstrecke (Hin- und Rückfahrt)'; wert = fahrVal; istFahrstrecke = true;
     } else if(!isNaN(luftVal) && luftVal>0){
       label = 'Luftlinie (einfach)'; wert = luftVal;
     } else if(!isNaN(fahrVal) && fahrVal>0){
-      label = 'Fahrstrecke (Hin- und Rückfahrt)'; wert = fahrVal;
+      label = 'Fahrstrecke (Hin- und Rückfahrt)'; wert = fahrVal; istFahrstrecke = true;
     } else {
       label = 'Strecke (Hin- und Rückfahrt)'; wert = null;
     }
     labelEl.textContent = label;
-    kmEl.value = (wert===null) ? '' : wert.toFixed(1);
+    // Bei der Reiseentschaedigung wird fuer die 0,26-EUR/km-Zeile immer auf
+    // den naechsten vollen km aufgerundet (siehe reiseGesamtBetrag, analog
+    // PC) -- damit die Anzeige hier nicht von dem tatsaechlich abgerechneten
+    // Wert abweicht, wird sie in diesem Fall genauso gerundet dargestellt.
+    // Die eigentliche Rechengrundlage (txtKmFahrstrecke, ungerundet) bleibt
+    // dabei unveraendert -- es aendert sich nur diese Anzeige. Beim Wegegeld
+    // (Luftlinie-Fall) bleibt weiterhin die genaue Kommazahl stehen, da dort
+    // keine km-abhaengige EUR-Berechnung erfolgt.
+    kmEl.value = (wert===null) ? '' : (istFahrstrecke ? String(Math.ceil(wert)) : wert.toFixed(1));
   }
 
   // Wie am PC (AutoAktualisierenLive): sobald km, Uhrzeit oder Datum sich
@@ -3264,6 +3308,12 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     }
     if(korrekturIdx!==undefined) faelle[korrekturIdx]=eintrag; else faelle.push(eintrag);
     speichereFaelle(art, faelle);
+    // Erfolgreich gespeichert -- ein evtl. zwischengespeicherter Entwurf
+    // (siehe maskenEntwuerfe/zurueckAusMaske) ist jetzt ueberholt (die Werte
+    // stecken bereits als echter Fall in der Uebersicht) und wuerde sonst
+    // beim naechsten Anlegen einer neuen Rechnung faelschlich wieder
+    // auftauchen.
+    if(korrekturIdx===undefined) maskenEntwuerfe[art] = null;
     alertBanner('Gespeichert. Wird beim nächsten Sync automatisch an den PC übertragen.');
     setTimeout(ruecksprungZiel, 900);
   };
