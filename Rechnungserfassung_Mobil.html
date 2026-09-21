@@ -92,6 +92,15 @@
   .btn-sekundaer .unter{display:block; font-size:12px; color:var(--text-schwach); margin-top:2px; font-weight:400;}
   .btn-export{border-color:#e8a33d; color:#7a4a00; background:#fff4e5;}
   body.dunkel .btn-export{background:#3a2c10; color:#f0c98a; border-color:#c78a2e;}
+  .btn-import{border-color:#3d8ee8; color:#00427a; background:#e5f1ff;}
+  body.dunkel .btn-import{background:#10263a; color:#8ac2f0; border-color:#2e6ec7;}
+  /* Export/Import nebeneinander als gleich breite Buttons, wenn beide
+     angezeigt werden -- die einzelnen .btn-sekundaer-Regeln (width:100% etc.)
+     bleiben dabei unveraendert, nur die Anordnung wird per Flex-Reihe
+     ueberschrieben. */
+  .datensicherung-reihe{display:flex; gap:8px;}
+  .datensicherung-reihe .btn-sekundaer{flex:1; margin-bottom:0;}
+  .datensicherung-reihe .icon-pfeil{display:block; font-size:20px; margin-bottom:4px;}
 
   /* Jeder Formularabschnitt bekommt eine eigene "Karte" mit Rand und
      Hintergrund -- deutlich klarere optische Trennung als vorher nur mit
@@ -1058,11 +1067,18 @@ function ansichtStart(){
     <button class="btn-sekundaer" id="btnKorrigieren">Rechnungsübersicht
       <span class="unter">${gesamtOffen} noch nicht am PC übernommen</span>
     </button>`;
+  html += `<div class="datensicherung-reihe">`;
   if(!autoSyncVerfuegbar() && gesamtOffen>0){
-    html += `<button class="btn-sekundaer btn-export" id="btnJsonExport">Fälle für den PC exportieren
+    html += `<button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span>Fälle für den PC exportieren
       <span class="unter">Kein Auto-Sync verfügbar -- Datei in den OneDrive-Ordner "KVBW Onedrive" legen</span>
     </button>`;
   }
+  html += `<button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span>Fälle importieren
+      <span class="unter">Aus einer zuvor exportierten Datei wiederherstellen, z.B. nach dem Löschen des Browser-/App-Caches</span>
+    </button>
+    <input type="file" id="jsonImportInput" accept="application/json,.json" style="display:none">
+  </div>
+  <div class="warnhinweis" id="startHinweis"></div>`;
   html += `
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Excel-Dateien öffnen</div>
@@ -1072,7 +1088,7 @@ function ansichtStart(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Werkzeuge</div>
       <button class="btn-sekundaer" id="btnLuftlinienTool">Luftlinie berechnen
-        <span class="unter">Entfernung Praxis -- beliebige Adresse, ohne eine Rechnung anzulegen</span>
+        <span class="unter">Entfernung Wache/Praxis -- beliebige Adresse, ohne eine Rechnung anzulegen</span>
       </button>
     </div>`;
   app.innerHTML = html;
@@ -1081,6 +1097,29 @@ function ansichtStart(){
   document.getElementById('btnKorrigieren').onclick = ansichtKorrigieren;
   const btnExp = document.getElementById('btnJsonExport');
   if(btnExp) btnExp.onclick = jsonExport;
+  const startHinweis = (txt)=>{
+    const el = document.getElementById('startHinweis');
+    if(!el) return;
+    if(!txt){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
+    el.innerHTML = txt; el.classList.add('aktiv');
+  };
+  document.getElementById('btnJsonImport').onclick = ()=>{
+    startHinweis('');
+    document.getElementById('jsonImportInput').click();
+  };
+  document.getElementById('jsonImportInput').onchange = async (ev)=>{
+    const datei = ev.target.files && ev.target.files[0];
+    ev.target.value = ''; // erlaubt erneutes Auswaehlen derselben Datei
+    if(!datei) return;
+    try{
+      const text = await datei.text();
+      const ergebnis = jsonImportVerarbeiten(text);
+      startHinweis(ergebnis.html);
+      if(ergebnis.geaendert){ setTimeout(ansichtStart, 1600); }
+    }catch(e){
+      startHinweis('Die Datei "'+datei.name+'" konnte nicht gelesen werden. Bitte die zuvor exportierte JSON-Datei unverändert auswählen.');
+    }
+  };
   document.getElementById('btnOeffneUebersicht').onclick = ()=>{
     window.open('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQBlNAjRs2lHR7r8Kh_-9DMhAZB7Me6rXGprd8Lu4NthUZg?e=UKgicT', '_blank');
   };
@@ -1573,6 +1612,79 @@ async function jsonExport(){
   a.href = URL.createObjectURL(blob);
   a.download = EXPORT_DATEINAME;
   a.click();
+}
+
+// Gegenstück zu exportDatenBauen()/jsonExport(): liest eine zuvor mit
+// "Fälle für den PC exportieren" (oder dem Auto-Sync) erzeugte JSON-Datei
+// wieder ein -- z.B. wenn nach dem Löschen des Browser-/App-Caches die
+// lokal gespeicherten, noch nicht am PC übernommenen Fälle verloren gingen.
+// Bewusst als MERGE statt Überschreiben umgesetzt: bereits lokal
+// vorhandene Fälle (gleicher Inhalt UND gleicher Zeitstempel) werden nicht
+// doppelt angelegt, damit ein erneutes/versehentliches Einlesen derselben
+// Datei nichts kaputt macht. Vom Handy neu angelegte Bestatter werden über
+// die bereits vorhandene Dubletten-Prüfung (bestatterEintragen) ergänzt.
+// Gibt {geaendert, html} zurück -- html ist der inline anzuzeigende
+// Hinweistext (KEIN natives alert/confirm, wie an anderer Stelle bereits
+// festgelegt).
+function jsonImportVerarbeiten(text){
+  let daten;
+  try{ daten = JSON.parse(text); }
+  catch(e){ return {geaendert:false, html:'Die Datei enthält kein gültiges JSON und konnte nicht eingelesen werden.'}; }
+
+  if(!daten || !Array.isArray(daten.faelle)){
+    return {geaendert:false, html:'Die Datei enthält keine erkennbaren Fälle (erwartetes Format: Export aus "Fälle für den PC exportieren").'};
+  }
+
+  const bestand = {ls: ladeFaelle('ls'), pt: ladeFaelle('pt')};
+  const schluesselVorhanden = {
+    ls: new Set(bestand.ls.map(f=> JSON.stringify([f.werte, f.zeitstempel]))),
+    pt: new Set(bestand.pt.map(f=> JSON.stringify([f.werte, f.zeitstempel])))
+  };
+
+  let importiert = {ls:0, pt:0}, uebersprungen = 0, ungueltig = 0;
+  daten.faelle.forEach(eintrag=>{
+    const art = eintrag && (eintrag.art==='ls' || eintrag.art==='pt') ? eintrag.art : null;
+    if(!art || !eintrag.werte){ ungueltig++; return; }
+    const schluessel = JSON.stringify([eintrag.werte, eintrag.zeitstempel]);
+    if(schluesselVorhanden[art].has(schluessel)){ uebersprungen++; return; }
+    const neu = {
+      werte: eintrag.werte,
+      positionen: Array.isArray(eintrag.positionen) ? eintrag.positionen : [],
+      zeitstempel: eintrag.zeitstempel || new Date().toISOString()
+    };
+    if(eintrag.rechnungsnummer) neu.rechnungsnummer = eintrag.rechnungsnummer;
+    bestand[art].push(neu);
+    schluesselVorhanden[art].add(schluessel);
+    importiert[art]++;
+  });
+
+  let bestatterNeu = 0;
+  if(Array.isArray(daten.bestatterAenderungen)){
+    const vorherAnzahl = ladeKatalog().length;
+    daten.bestatterAenderungen.forEach(b=>{
+      if(b && b.name) bestatterEintragen(b.name, b.adr1, b.adr2);
+    });
+    bestatterNeu = ladeKatalog().length - vorherAnzahl;
+  }
+
+  const gesamtImportiert = importiert.ls + importiert.pt;
+  if(gesamtImportiert>0){
+    speichereFaelle('ls', bestand.ls);
+    speichereFaelle('pt', bestand.pt);
+  }
+
+  if(gesamtImportiert===0 && bestatterNeu===0){
+    return {geaendert:false, html: uebersprungen>0
+      ? `Alle ${uebersprungen} Fälle aus der Datei sind bereits lokal vorhanden -- nichts zu importieren.`
+      : (ungueltig>0 ? `Die Datei enthält ${ungueltig} nicht erkennbare Einträge und keine gültigen Fälle.` : 'Die Datei enthält keine Fälle.')};
+  }
+
+  let html = `${gesamtImportiert} Fall/Fälle importiert (LS: ${importiert.ls}, PT: ${importiert.pt})`;
+  if(uebersprungen>0) html += `, ${uebersprungen} bereits vorhanden (übersprungen)`;
+  if(bestatterNeu>0) html += `, ${bestatterNeu} Bestatter aus der Datei übernommen`;
+  if(ungueltig>0) html += `, ${ungueltig} Einträge ungültig/übersprungen`;
+  html += '.';
+  return {geaendert:true, html};
 }
 
 /* ==========================================================
