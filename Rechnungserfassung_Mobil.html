@@ -137,7 +137,18 @@
      verbunden") -- ohne das reserviert der kürzeste aktuell angezeigte Text
      weniger Platz, wodurch die GESAMTE Reihe (alle 3 Buttons haben gleiche
      Höhe) nach dem Verbinden sichtbar kleiner wird. Reserviert dauerhaft so
-     viel Platz wie der längste vorkommende Untertext braucht.
+     viel Platz wie der längste vorkommende Untertext braucht. */
+  .datensicherung-reihe .btn-sekundaer .unter{min-height:70px;}
+  /* Gleiches Prinzip für den Titel-Text selbst: "Sync-Ordner auswählen"
+     (2 Zeilen) vs. "Sync verbunden" (1 Zeile) -- reserviert dauerhaft
+     Platz für 2 Zeilen, damit der Titel allein die Button-Höhe nicht
+     verändert. */
+  .datensicherung-reihe .btn-sekundaer .btn-titel{display:block; min-height:54px;}
+  /* Die 3 Speicher-Buttons stecken jetzt in einer eigenen, klar abgetrennten
+     Box mit Überschrift "Sync" (wie die Boxen "Excel-Dateien öffnen" /
+     "Werkzeuge" weiter unten) -- vorher standen sie unbeschriftet direkt
+     unter der Rechnungsübersicht und wirkten optisch dazugehörig. */
+  .sync-box .datensicherung-reihe{margin-bottom:6px;}
 
   /* Jeder Formularabschnitt bekommt eine eigene "Karte" mit Rand und
      Hintergrund -- deutlich klarere optische Trennung als vorher nur mit
@@ -611,7 +622,7 @@ function syncButtonInfo(){
   if(autoSyncStatus==='nicht_unterstuetzt'){
     return {
       klasse:'sync-rot', text:'Sync nicht verfügbar',
-      unter:'Dieser Browser unterstützt keinen Auto-Sync -- bitte Export/Import nutzen',
+      unter:'Browser unterstützt keinen Auto-Sync',
       aktion: async ()=>{ appToastAnzeigen('Auto-Sync wird von diesem Browser nicht unterstützt. Bitte Export/Import verwenden.', 2800); }
     };
   }
@@ -1311,17 +1322,20 @@ function ansichtStart(){
   // Export komplett fehlte, solange Auto-Sync lief. Jetzt immer alle drei
   // sichtbar, nur Beschriftung/Symbol/Aktion des Sync-Buttons ändert sich.
   const syncInfo = syncButtonInfo();
-  html += `<div class="datensicherung-reihe">
-    <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span>Fälle importieren
-      <span class="unter">Aus einer zuvor exportierten Datei wiederherstellen</span>
-    </button>
-    <input type="file" id="jsonImportInput" accept="application/json,.json" style="display:none">
-    <button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span>Fälle exportieren
-      <span class="unter">Als Datei sichern</span>
-    </button>
-    <button class="btn-sekundaer btn-sync ${syncInfo.klasse}" id="btnSync"><span class="icon-pfeil">&#8644;</span>${syncInfo.text}
-      <span class="unter">${syncInfo.unter}</span>
-    </button>
+  html += `<div class="abschnitt sync-box" style="margin-top:22px;">
+    <div class="trennlinie">Sync</div>
+    <div class="datensicherung-reihe">
+      <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span><span class="btn-titel">Fälle importieren</span>
+        <span class="unter">Aus einer zuvor exportierten Datei wiederherstellen</span>
+      </button>
+      <input type="file" id="jsonImportInput" accept="application/json,.json" style="display:none">
+      <button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span><span class="btn-titel">Fälle exportieren</span>
+        <span class="unter">Als Datei sichern</span>
+      </button>
+      <button class="btn-sekundaer btn-sync ${syncInfo.klasse}" id="btnSync"><span class="icon-pfeil">&#8644;</span><span class="btn-titel">${syncInfo.text}</span>
+        <span class="unter">${syncInfo.unter}</span>
+      </button>
+    </div>
   </div>
   <div class="warnhinweis" id="startHinweis"></div>`;
   html += `
