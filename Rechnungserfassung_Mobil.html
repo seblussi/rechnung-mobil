@@ -432,7 +432,7 @@ const LS = {
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 function ladeFaelle(art){ return LS.get('faelle_'+art, []); }
-function speichereFaelle(art, arr){ LS.set('faelle_'+art, arr); autoSyncSchreiben(); }
+function speichereFaelle(art, arr){ LS.set('faelle_'+art, arr); synchronisiereAlle(); }
 
 // Startbestückung des Bestatter-Katalogs (Stand PC-Liste). Wird nur EINMAL
 // beim allerersten Aufruf eingespielt (Flag 'bestatter_katalog_seed_v1'),
@@ -477,7 +477,7 @@ function ladeKatalog(){
   }
   return LS.get('bestatter_katalog', []);
 }
-function speichereKatalog(k){ LS.set('bestatter_katalog', k); autoSyncSchreiben(); }
+function speichereKatalog(k){ LS.set('bestatter_katalog', k); synchronisiereAlle(); }
 function ladeEinstellungen(){
   return LS.get('einstellungen', {dunkel:false, praxisadresse:'Im Drachenacker 25, 77656 Offenburg', reiseBasisLuftlinie:false, rnLetzte:'', rnNaechsterZaehler:null});
 }
@@ -673,6 +673,76 @@ async function excelDateiUeberGraphOeffnen(pfadRelativZuOneDrive, statischerFall
   }catch(e){
     excelDateiOeffnen(statischerFallbackLink);
   }
+}
+
+// =====================================================================
+// Direkter OneDrive-Upload der Sync-Datei ueber Microsoft Graph -- Ersatz/
+// Ergaenzung zum bisherigen, ordnerbasierten Auto-Sync (autoSyncSchreiben,
+// File System Access API): DER brauchte einen lokal auf dem Handy per
+// Ordner-Dialog gewaehlten Ordner, der (meist ueber die OneDrive-App)
+// tatsaechlich mit OneDrive verbunden war -- fiel also z.B. aus, sobald die
+// OneDrive-App deinstalliert wurde. Der Graph-Upload dagegen schreibt die
+// Datei OHNE Umweg ueber einen lokalen Ordner direkt in dein OneDrive,
+// braucht dafuer nur die Microsoft-Anmeldung (siehe oben). Beide Wege
+// laufen unabhaengig voneinander und ergaenzen sich (siehe
+// synchronisiereAlle unten) -- ist einer nicht eingerichtet/gerade gestoert,
+// bleibt der andere als Rueckfallebene bestehen.
+// =====================================================================
+const MSGRAPH_PFAD_SYNC_JSON = 'KVBW Onedrive/rechnungserfassung_sync.json';
+let msGraphSyncSchreibtGerade = false;
+let msGraphSyncErneutNoetig = false;
+
+// Prueft (lesend, ohne etwas zu veraendern), ob die Sync-Datei in OneDrive
+// aktuell noch mindestens einen Fall enthaelt -- derselbe Datenverlust-
+// Schutz wie bei autoSyncDateiHatBereitsDaten weiter unten, nur eben gegen
+// die OneDrive-Datei statt die lokal gewaehlte Ordner-Datei geprueft.
+async function msGraphSyncDateiHatBereitsDaten(token){
+  try{
+    const antwort = await fetch(msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON) + '/content', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if(!antwort.ok) return false; // z.B. Datei existiert in OneDrive noch gar nicht
+    const daten = JSON.parse(await antwort.text());
+    return !!(daten && daten.faelle && daten.faelle.length > 0);
+  }catch(e){ return false; }
+}
+
+// Schreibt die IMMER GLEICHE Sync-Datei direkt nach OneDrive -- Aufbau/
+// Warteschlangen-Logik (schreibtGerade/erneutNoetig) 1:1 uebernommen von
+// autoSyncSchreiben, damit sich beide Wege gleich verhalten.
+async function msGraphSyncSchreiben(){
+  if(msGraphStatus !== 'angemeldet') return;
+  if(msGraphSyncSchreibtGerade){ msGraphSyncErneutNoetig = true; return; }
+  msGraphSyncSchreibtGerade = true;
+  try{
+    const token = await msGraphTokenHolen();
+    if(!token) return; // z.B. Zustimmung abgelaufen -- naechster Versuch bei der naechsten Aenderung
+    const daten = exportDatenBauen();
+    const istLeer = daten.faelle.length===0 && (!daten.bestatterAenderungen || daten.bestatterAenderungen.length===0);
+    if(istLeer && await msGraphSyncDateiHatBereitsDaten(token)){
+      return; // Schutz vor Datenverlust -- siehe Kommentar in autoSyncSchreiben
+    }
+    await fetch(msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON) + '/content', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify(daten, null, 2)
+    });
+  }catch(e){
+    // stiller Fehlschlag (z.B. kein Netz) -- der ordnerbasierte Auto-Sync
+    // (falls eingerichtet) bzw. der manuelle Export bleiben als
+    // Rueckfallebene bestehen; naechster Versuch bei der naechsten Aenderung.
+  } finally {
+    msGraphSyncSchreibtGerade = false;
+    if(msGraphSyncErneutNoetig){ msGraphSyncErneutNoetig = false; msGraphSyncSchreiben(); }
+  }
+}
+
+// Zentrale Stelle, die bei JEDER Datenaenderung (siehe speichereFaelle/
+// speichereKatalog) BEIDE Sync-Wege anstoesst -- fire-and-forget, keiner
+// blockiert den anderen oder die eigentliche Aktion des Anwenders.
+function synchronisiereAlle(){
+  autoSyncSchreiben();
+  msGraphSyncSchreiben();
 }
 
 function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
@@ -2186,7 +2256,8 @@ async function msGraphInitialisieren(){
     // Seitenaufruf aufgerufen werden, auch wenn gerade kein Redirect im
     // Gange ist (liefert dann einfach null zurueck).
     const ergebnis = await inst.handleRedirectPromise();
-    if(ergebnis && ergebnis.account){
+    const geradeFrischAngemeldet = !!(ergebnis && ergebnis.account);
+    if(geradeFrischAngemeldet){
       inst.setActiveAccount(ergebnis.account);
     }
     const konten = inst.getAllAccounts();
@@ -2194,6 +2265,12 @@ async function msGraphInitialisieren(){
       inst.setActiveAccount(konten[0]);
       msGraphKonto = { name: konten[0].name || '', username: konten[0].username || '' };
       msGraphStatus = 'angemeldet';
+      // Nur direkt nach einem FRISCHEN Login (Rueckkehr vom Redirect) sofort
+      // hochladen, statt bei jedem normalen App-Start (dort wuerde sonst bei
+      // jedem Oeffnen unnoetig ein Upload ausgeloest, obwohl sich meist
+      // nichts geaendert hat -- die naechste echte Aenderung stoesst
+      // synchronisiereAlle() ohnehin von selbst an).
+      if(geradeFrischAngemeldet){ msGraphSyncSchreiben(); }
     } else {
       msGraphKonto = null;
       msGraphStatus = 'abgemeldet';
@@ -2231,12 +2308,15 @@ function msGraphAbschnittHtml(){
   }
   if(msGraphStatus==='angemeldet'){
     return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-      Angemeldet als <b>${(msGraphKonto && (msGraphKonto.name || msGraphKonto.username)) || 'unbekannt'}</b>.
+      Angemeldet als <b>${(msGraphKonto && (msGraphKonto.name || msGraphKonto.username)) || 'unbekannt'}</b>.<br>
+      Neue/geänderte Fälle werden bei jeder Änderung automatisch direkt in dein OneDrive hochgeladen
+      (unabhängig vom Ordner-Sync oben) -- kein manuelles Verschieben/Kopieren der Sync-Datei mehr nötig.
     </div>
     <button type="button" id="btnMsGraphAbmelden" class="btn-sekundaer">Abmelden</button>`;
   }
   return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-    Noch nicht angemeldet.
+    Noch nicht angemeldet -- ohne Anmeldung bleibt der Ordner-Sync oben bzw. der manuelle Export die einzigen Wege,
+    Fälle auf den PC zu übertragen.
   </div>
   <button type="button" id="btnMsGraphAnmelden" class="btn-sekundaer">Mit Microsoft anmelden</button>`;
 }
