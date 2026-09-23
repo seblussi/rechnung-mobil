@@ -110,7 +110,11 @@
     background:#3f4753; border-color:#3f4753; color:#fff;
     padding:26px 16px; font-size:19px; font-weight:700;
   }
-  body.dunkel .btn-uebersicht{background:#1c212a; color:#fff; border-color:#1c212a;}
+  /* FIX: vorheriges Dunkelmodus-Hintergrund (#1c212a) war fast identisch mit
+     dem Seiten-Hintergrund (--bg:#1b2028 im Dunkelmodus) -- der Button
+     verschwand dadurch optisch fast vollständig. Deutlich hellerer Ton mit
+     sichtbarem Rand, damit er sich klar abhebt (wie im Hellmodus gewollt). */
+  body.dunkel .btn-uebersicht{background:#454e5c; color:#fff; border-color:#5a6472;}
   .btn-uebersicht .unter{color:#fff; opacity:.85; font-weight:400;}
   .btn-export{border-color:#e8a33d; color:#7a4a00; background:#fff4e5;}
   body.dunkel .btn-export{background:#3a2c10; color:#f0c98a; border-color:#c78a2e;}
@@ -378,7 +382,12 @@
   .einstellung-zeile .txt{font-size:14.5px;}
   .einstellung-zeile .txt .hinweis{display:block; font-size:12px; color:var(--text-schwach);}
   .leer-hinweis{text-align:center; color:var(--text-schwach); font-size:14px; padding:30px 10px;}
-  .badge-neu{background:var(--titelfarbe); color:#fff; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:6px;}
+  /* Wie am PC (Rechnungsverwaltung): farbiges L/P-Badge VOR dem Namen statt
+     ausgeschriebenem "LS"/"PT" dahinter -- gleiche Form/Groesse wie dort
+     (18x18px, abgerundetes Quadrat, ein Buchstabe). */
+  .badge-neu{display:inline-block; width:18px; height:18px; line-height:18px; text-align:center;
+    background:var(--titelfarbe); color:#fff; font-size:11px; font-weight:bold; border-radius:4px;
+    margin-right:8px; vertical-align:middle;}
   .badge-neu.ls{background:var(--ls-farbe);}
   .badge-neu.pt{background:var(--pt-farbe);}
 
@@ -764,11 +773,22 @@ function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
 // (zwei gegenläufige Pfeile, siehe HTML) bleibt dabei immer gleich, nur
 // Text/Farbe/Klick-Aktion wechseln.
 function syncButtonInfo(){
+  // Hoechste Prioritaet (siehe synchronisiereAlle): Microsoft/Graph-Sync --
+  // eigene, klar unterscheidbare Beschriftung "OneDrive", damit auf einen
+  // Blick klar ist, WELCHER der beiden automatischen Wege gerade aktiv ist,
+  // statt beide unter demselben "Verbunden" zu zeigen.
+  if(msGraphStatus==='angemeldet'){
+    return {
+      klasse:'sync-verbunden', text:'OneDrive',
+      unter:'Auto-Sync aktiv',
+      aktion: async ()=>{ appToastAnzeigen('Direkter OneDrive-Sync ist aktiv -- Änderungen werden automatisch hochgeladen.', 2200); }
+    };
+  }
   if(autoSyncStatus==='verbunden'){
     return {
-      klasse:'sync-verbunden', text:'Verbunden',
+      klasse:'sync-verbunden', text:'Ordner',
       unter:'Auto-Sync aktiv',
-      aktion: async ()=>{ appToastAnzeigen('Sync-Ordner ist bereits verbunden -- Änderungen werden automatisch gesichert.', 2200); }
+      aktion: async ()=>{ appToastAnzeigen('Sync-Ordner ist verbunden -- Änderungen werden automatisch gesichert. (Hinweis: mit Microsoft-Anmeldung gäbe es den robusteren direkten OneDrive-Sync, siehe Einstellungen.)', 3200); }
     };
   }
   if(autoSyncStatus==='berechtigung_fehlt'){
@@ -1799,10 +1819,11 @@ function ansichtKorrigieren(){
         <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
         <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
         <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
+        ${msGraphStatus==='angemeldet' ? '' : `
         <div class="rn-mini">
           <label for="rnLetzteMini">Letzte Nr.</label>
           <input type="text" id="rnLetzteMini" inputmode="numeric" maxlength="3" placeholder="003">
-        </div>
+        </div>`}
       </div>
       <div class="zeile1">
         <label><input type="checkbox" id="chkAlle"> Alle auswählen</label>
@@ -1814,7 +1835,7 @@ function ansichtKorrigieren(){
         <div class="fall-zeile ${f.art}" data-art="${f.art}" data-idx="${f.idx}">
           <input type="checkbox" class="chk" data-art="${f.art}" data-idx="${f.idx}">
           <div class="inhalt">
-            <div class="name">${f.werte.txtName || '(ohne Namen)'} <span class="badge-neu ${f.art}">${f.art.toUpperCase()}</span></div>
+            <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${f.werte.txtName || '(ohne Namen)'}</div>
             <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}</div>
           </div>
         </div>`).join('')}
@@ -1930,6 +1951,7 @@ function ansichtEinstellungen(){
       <label for="txtPraxisadresse">Adresse Wache/Praxis (Startpunkt für km-Berechnung)</label>
       <input type="text" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}" placeholder="Straße Hausnummer, PLZ Ort">
     </div>
+    ${msGraphStatus==='angemeldet' ? '' : `
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Rechnungsnummern-Zähler</div>
       <div class="feld">
@@ -1946,7 +1968,7 @@ function ansichtEinstellungen(){
         Handy zu laufen), bitte die aktuell letzte laufende Nummer aus der Übersicht hier erneut eintragen, um den
         Zähler abzugleichen.
       </div>
-    </div>
+    </div>`}
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Automatischer Sync (PC-Übernahme)</div>
       ${autoSyncAbschnittHtml()}
@@ -4052,6 +4074,10 @@ try{
 try{
   msGraphInitialisieren().then(()=>{
     if(einstellungenOffen) ansichtEinstellungen();
+    // Auch den Sync-Button auf der Startseite (falls gerade dort) sofort
+    // aktualisieren -- direkt nach einem frischen Login landet man dort,
+    // und der Button soll sofort "OneDrive" statt des alten Zustands zeigen.
+    else if(aktuelleAnsichtIstHauptbildschirm) ansichtStart();
   }).catch(()=>{});
 }catch(e){}
 
