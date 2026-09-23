@@ -738,11 +738,23 @@ async function msGraphSyncSchreiben(){
 }
 
 // Zentrale Stelle, die bei JEDER Datenaenderung (siehe speichereFaelle/
-// speichereKatalog) BEIDE Sync-Wege anstoesst -- fire-and-forget, keiner
-// blockiert den anderen oder die eigentliche Aktion des Anwenders.
+// speichereKatalog) GENAU EINEN der beiden automatischen Sync-Wege
+// anstoesst -- bewusst NICHT beide gleichzeitig (das waere redundant und
+// koennte im Grenzfall, falls der gewaehlte Ordner selbst ein OneDrive-
+// Sync-Ordner ist, zu einem Wettlauf zweier Schreibzugriffe auf dieselbe
+// Cloud-Datei fuehren). Priorisierung (robustester Weg zuerst):
+//   1. Microsoft-Anmeldung/Graph-Upload (kein lokaler Ordner noetig, damit
+//      unabhaengig von einer installierten OneDrive-App)
+//   2. Ordner-basierter Auto-Sync (File System Access API)
+//   3. Weder noch eingerichtet -> bleibt nur der manuelle Export/Copy-Paste
+//      (fehleranfälligster Weg, siehe rnLetzte-Zaehler) als Ruckfallebene,
+//      hier nichts zu tun.
 function synchronisiereAlle(){
-  autoSyncSchreiben();
-  msGraphSyncSchreiben();
+  if(msGraphStatus === 'angemeldet'){
+    msGraphSyncSchreiben();
+  } else if(autoSyncStatus === 'verbunden' && autoSyncOrdnerHandle){
+    autoSyncSchreiben();
+  }
 }
 
 function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
@@ -1985,8 +1997,10 @@ function autoSyncAbschnittHtml(){
     </div>`;
   }
   if(autoSyncStatus==='verbunden'){
+    const nachrangig = msGraphStatus==='angemeldet';
     return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-      ✓ Verbunden -- jede Änderung wird automatisch in "rechnungserfassung_sync.json" im gewählten Ordner gespeichert.
+      ✓ Verbunden${nachrangig ? ' (aktuell inaktiv -- siehe Hinweis unten)' : ''} -- ${nachrangig ? 'würde, falls keine Microsoft-Anmeldung besteht, ' : ''}jede Änderung automatisch in "rechnungserfassung_sync.json" im gewählten Ordner speichern.
+      ${nachrangig ? '<br><br>Da die Microsoft-Anmeldung (Abschnitt unten) aktiv ist, hat diese Vorrang -- der Ordner-Sync läuft dann nicht zusätzlich mit, bleibt aber als Rückfallebene eingerichtet, falls die Anmeldung mal wegfällt.' : ''}
     </div>
     <button type="button" class="btn-sekundaer" id="btnAutoSyncTrennen">Verbindung trennen</button>`;
   }
@@ -2309,8 +2323,9 @@ function msGraphAbschnittHtml(){
   if(msGraphStatus==='angemeldet'){
     return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
       Angemeldet als <b>${(msGraphKonto && (msGraphKonto.name || msGraphKonto.username)) || 'unbekannt'}</b>.<br>
-      Neue/geänderte Fälle werden bei jeder Änderung automatisch direkt in dein OneDrive hochgeladen
-      (unabhängig vom Ordner-Sync oben) -- kein manuelles Verschieben/Kopieren der Sync-Datei mehr nötig.
+      Neue/geänderte Fälle werden bei jeder Änderung automatisch direkt in dein OneDrive hochgeladen -- kein
+      manuelles Verschieben/Kopieren der Sync-Datei mehr nötig. Dieser Weg hat Vorrang vor dem Ordner-Sync oben
+      (der läuft dann nicht zusätzlich mit, bleibt aber als Rückfallebene bestehen).
     </div>
     <button type="button" id="btnMsGraphAbmelden" class="btn-sekundaer">Abmelden</button>`;
   }
