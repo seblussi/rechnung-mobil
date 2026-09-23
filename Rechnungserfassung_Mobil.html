@@ -574,20 +574,40 @@ function rnLetzteFeldEinrichten(inputEl, opts={}){
 // Office-URI-Schema "ms-excel:ofe|u|<url>") statt im Browser/der OneDrive-
 // App. Grund: ein einfacher window.open() auf einen 1drv.ms-Link wurde vom
 // Handy inzwischen offenbar standardmäßig der OneDrive-App statt der
-// Excel-App zugeordnet (App-Link-Zuordnung des Betriebssystems geändert).
-// Fällt automatisch auf den normalen Browser-/OneDrive-Weg zurück, falls
-// keine Excel-App installiert ist bzw. das Schema nicht greift -- erkannt
-// daran, dass die Seite nach kurzer Zeit noch sichtbar ist (kein App-
-// Wechsel stattgefunden hat).
+// Excel-App zugeordnet (App-Link-Zuordnung des Betriebssystems geändert) --
+// und die OneDrive-App zeigt Excel-Dateien nur lesend an (kein Bearbeiten
+// möglich).
+//
+// Die Fallback-Erkennung ("ist die Excel-App tatsächlich aufgegangen?")
+// muss dafür zuverlässig sein: feuert sie fälschlich, obwohl Excel längst
+// im Vordergrund ist, öffnet sich ZUSÄTZLICH der Browser-/OneDrive-
+// Fallback -- und genau DAS erklärt sowohl "alte Version der Datei" (die
+// OneDrive-Web-Vorschau cached serverseitig und zeigt dadurch teils einen
+// veralteten Stand, während die Excel-App selbst immer live synct) als
+// auch "öffnet in OneDrive statt Excel" (der Fallback-Link wird vom
+// Betriebssystem an die installierte OneDrive-App weitergereicht).
+// Deshalb hier bewusst robuster: mehrere Signale (visibilitychange, blur,
+// pagehide) zählen als "App-Wechsel erkannt", nicht nur eines, und das
+// Zeitfenster ist großzügiger bemessen (2000ms statt 1200ms), da ein
+// App-Wechsel auf manchen Geräten spürbar länger dauert, bis eines dieser
+// Events feuert. Als zusätzliches Sicherheitsnetz wird am Ende des
+// Zeitfensters zusätzlich direkt document.hidden/hasFocus() geprüft, falls
+// keines der Events ausgelöst wurde, obwohl der Wechsel stattfand.
 function excelDateiOeffnen(url){
   let appGeoeffnet = false;
-  const aufSichtbarkeitswechsel = ()=>{ if(document.hidden) appGeoeffnet = true; };
-  document.addEventListener('visibilitychange', aufSichtbarkeitswechsel);
+  const alsGeoeffnetMarkieren = ()=>{ appGeoeffnet = true; };
+  document.addEventListener('visibilitychange', alsGeoeffnetMarkieren);
+  window.addEventListener('blur', alsGeoeffnetMarkieren);
+  window.addEventListener('pagehide', alsGeoeffnetMarkieren);
   window.location.href = 'ms-excel:ofe|u|' + url;
   setTimeout(()=>{
-    document.removeEventListener('visibilitychange', aufSichtbarkeitswechsel);
-    if(!appGeoeffnet){ window.open(url, '_blank'); }
-  }, 1200);
+    document.removeEventListener('visibilitychange', alsGeoeffnetMarkieren);
+    window.removeEventListener('blur', alsGeoeffnetMarkieren);
+    window.removeEventListener('pagehide', alsGeoeffnetMarkieren);
+    if(!appGeoeffnet && !document.hidden && document.hasFocus()){
+      window.open(url, '_blank');
+    }
+  }, 2000);
 }
 
 function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
