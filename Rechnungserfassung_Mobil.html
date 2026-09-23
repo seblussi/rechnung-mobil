@@ -614,6 +614,67 @@ function excelDateiOeffnen(url){
   }, 2000);
 }
 
+// Pfade relativ zum OneDrive-Hauptordner (entspricht 1:1 den Pfaden, die
+// die HTA am PC benutzt -- UEBERSICHT_PFAD/FAHRDIENST_PFAD dort ohne den
+// lokalen "C:\Users\seblu\OneDrive\"-Teil davor).
+const MSGRAPH_PFAD_UEBERSICHT = 'KVBW Onedrive/\u00dcbersicht gestellter Rechnungen.xlsx';
+const MSGRAPH_PFAD_FAHRTENBUCH = 'KVBW Onedrive/Fahrdienst Dokumentation.xlsx';
+
+// Liefert die Graph-API-URL fuer eine pfadbasierte Adressierung (statt ueber
+// eine feste Datei-ID) -- loest also bei JEDEM Aufruf neu auf, was GERADE
+// unter diesem Pfad liegt, genau wie am PC ueber den lokalen Dateipfad.
+// Segmente werden einzeln kodiert, damit Leerzeichen/Umlaute/Sonderzeichen
+// im Dateinamen nicht die URL zerschiessen; der abschliessende ":" gehoert
+// zur Graph-Pfadsyntax und bleibt unkodiert.
+function msGraphPfadUrl(pfadRelativZuOneDrive){
+  const segmente = pfadRelativZuOneDrive.split('/').map(encodeURIComponent).join('/');
+  return 'https://graph.microsoft.com/v1.0/me/drive/root:/' + segmente + ':';
+}
+
+// Silent-Token-Holen -- OHNE Nutzer-Geste/Redirect. Schlaegt das fehl (z.B.
+// Zustimmung abgelaufen/widerrufen, oder man ist erst gar nicht angemeldet),
+// liefert die Funktion null; der Aufrufer faellt dann auf den statischen
+// Freigabelink zurueck, statt die App mitten in einer Aktion per Redirect
+// zur Microsoft-Anmeldung zu unterbrechen.
+async function msGraphTokenHolen(){
+  if(msGraphStatus !== 'angemeldet' || !msGraphMsal) return null;
+  const konto = msGraphMsal.getActiveAccount();
+  if(!konto) return null;
+  try{
+    const ergebnis = await msGraphMsal.acquireTokenSilent({ scopes: MSGRAPH_SCOPES, account: konto });
+    return ergebnis.accessToken;
+  }catch(e){
+    return null;
+  }
+}
+
+// Ersetzt/ergaenzt excelDateiOeffnen(url) um eine vorgeschaltete, LIVE ueber
+// die Microsoft-Graph-API ermittelte Adresse der aktuell unter dem
+// angegebenen OneDrive-Pfad liegenden Datei -- robust gegen genau das
+// Problem, das die fest hinterlegten Freigabelinks hatten (Link zeigt nach
+// einem Datei-Ersetzen/Verschieben weiter auf die ALTE Datei-ID). Klappt
+// die Graph-Anfrage aus irgendeinem Grund nicht (nicht angemeldet, kein
+// Netz, Fehler), wird transparent auf den bisherigen statischen
+// Freigabelink zurueckgefallen -- die Buttons funktionieren also so oder so.
+async function excelDateiUeberGraphOeffnen(pfadRelativZuOneDrive, statischerFallbackLink){
+  const token = await msGraphTokenHolen();
+  if(!token){ excelDateiOeffnen(statischerFallbackLink); return; }
+  try{
+    const antwort = await fetch(msGraphPfadUrl(pfadRelativZuOneDrive) + '?$select=webUrl', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if(!antwort.ok) throw new Error('Graph-Antwort ' + antwort.status);
+    const daten = await antwort.json();
+    if(daten && daten.webUrl){
+      excelDateiOeffnen(daten.webUrl);
+    } else {
+      throw new Error('Keine webUrl in der Graph-Antwort');
+    }
+  }catch(e){
+    excelDateiOeffnen(statischerFallbackLink);
+  }
+}
+
 function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
 
 // Liefert Beschriftung/Symbolfarbe/Aktion für den EINEN festen Sync-Button
@@ -1400,10 +1461,12 @@ function ansichtStart(){
     }
   };
   document.getElementById('btnOeffneUebersicht').onclick = ()=>{
-    excelDateiOeffnen('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
+    excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
+      'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
   };
   document.getElementById('btnOeffneFahrtenbuch').onclick = ()=>{
-    excelDateiOeffnen('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
+    excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_FAHRTENBUCH,
+      'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
   };
   document.getElementById('btnLuftlinienTool').onclick = ansichtLuftlinienTool;
 }
@@ -1713,7 +1776,8 @@ function ansichtKorrigieren(){
   };
 
   document.getElementById('btnAuswUebersichtOeffnen').onclick = ()=>{
-    excelDateiOeffnen('https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
+    excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
+      'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
   };
 
   document.getElementById('btnAuswKopieren').onclick = async ()=>{
