@@ -83,7 +83,13 @@
   /* Nebeneinander statt untereinander -- optisch schlanker, siehe
      Nutzerwunsch. Beide Kacheln teilen sich per flex:1 die verfuegbare
      Breite zu gleichen Teilen; "gap" haelt einen festen Abstand dazwischen. */
-  .kachelreihe{display:flex; flex-direction:row; align-items:stretch; gap:12px; margin:10px 0 20px;}
+  /* Abstand Kacheln->Kopfzeile ergibt sich allein aus dem main-Padding
+     (14px, siehe main{padding:14px...}) -- kein zusaetzliches margin-top
+     mehr, damit dieser Abstand exakt dem seitlichen Kacheln-Rand-Abstand
+     entspricht (Nutzerwunsch: alle Hauptseiten-Abstaende orientieren sich
+     am Abstand der Kacheln zum Rand). margin-bottom ebenfalls auf 14px
+     vereinheitlicht (siehe .start-abschnitt weiter unten). */
+  .kachelreihe{display:flex; flex-direction:row; align-items:stretch; gap:12px; margin:0 0 14px;}
   .karte{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     flex:1; min-width:0; aspect-ratio:1/1;
@@ -116,6 +122,9 @@
      sichtbarem Rand, damit er sich klar abhebt (wie im Hellmodus gewollt). */
   body.dunkel .btn-uebersicht{background:#454e5c; color:#fff; border-color:#5a6472;}
   .btn-uebersicht .unter{color:#fff; opacity:.85; font-weight:400;}
+  /* Abstand zum naechsten Element (Sync-Box) ebenfalls auf 14px vereinheit­
+     licht statt der allgemeinen .btn-sekundaer-Regel (10px). */
+  .btn-uebersicht{margin-bottom:14px;}
   .btn-export{border-color:#e8a33d; color:#7a4a00; background:#fff4e5;}
   body.dunkel .btn-export{background:#3a2c10; color:#f0c98a; border-color:#c78a2e;}
   .btn-import{border-color:#3d8ee8; color:#00427a; background:#e5f1ff;}
@@ -134,8 +143,10 @@
      .btn-sekundaer, damit die Buttons trotz Titel+Untertext nicht in die
      Länge gezogen werden. */
   .datensicherung-reihe{display:flex; gap:8px; align-items:stretch;}
+  /* Nutzerwunsch: die 3 Sync-Buttons schmaler -- weniger Innenabstand
+     links/rechts statt sie ueber die volle Breite auszufuellen. */
   .datensicherung-reihe .btn-sekundaer{
-    flex:1; margin-bottom:0; padding:10px 8px;
+    flex:1; margin-bottom:0; padding:10px 4px;
     display:flex; flex-direction:column; justify-content:center; align-items:center;
     text-align:center; font-size:13.5px;
   }
@@ -153,6 +164,12 @@
      "Werkzeuge" weiter unten) -- vorher standen sie unbeschriftet direkt
      unter der Rechnungsübersicht und wirkten optisch dazugehörig. */
   .sync-box .datensicherung-reihe{margin-bottom:6px;}
+  /* Startseite: einheitlicher vertikaler Abstand zwischen allen Boxen
+     ("Sync", "Excel-Dateien öffnen", "Werkzeuge") -- orientiert am Abstand
+     der Kacheln zum Rand (14px, main-Padding), statt bisher uneinheit­
+     licher 20/22/24px-Werte. Ersetzt fuer diese Boxen das allgemeine
+     .abschnitt-margin-bottom (24px). */
+  .abschnitt.start-abschnitt{margin-top:0; margin-bottom:14px;}
 
   /* Jeder Formularabschnitt bekommt eine eigene "Karte" mit Rand und
      Hintergrund -- deutlich klarere optische Trennung als vorher nur mit
@@ -344,25 +361,31 @@
      -bottom, damit weiterhin ein Abstand zu den Buttons darüber besteht. */
   .auswahlleiste .zeile1{display:flex; align-items:center; gap:8px; font-size:13.5px; margin-top:10px;}
   .auswahlleiste .zeile1 label{display:flex; align-items:center; gap:6px; cursor:pointer;}
-  .auswahlleiste .aktionen-reihe{display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;}
+  /* Die 3 Buttons stehen jetzt IMMER in einer eigenen Reihe fuer sich
+     (flex-basis 0 -- "flex:1" -- statt an Inhalt/min-width orientiert),
+     damit sie unabhaengig davon, ob "Letzte Nr." (rn-mini) daneben
+     angezeigt wird oder nicht, garantiert gleich breit bleiben. Vorher
+     stand rn-mini in DERSELBEN Zeile und konnte je nach verfuegbarer
+     Breite zu ungleichem Zeilenumbruch (und damit ungleich grossen
+     Buttons, v.a. "Loeschen") fuehren. */
+  .auswahlleiste .aktionen-reihe{display:flex; gap:8px;}
   .auswahlleiste .aktionen-reihe button{
-    flex:1; min-width:110px; padding:9px 8px; font-size:12.5px; font-weight:600; border-radius:8px;
+    flex:1 1 0; min-width:0; padding:9px 6px; font-size:12.5px; font-weight:600; border-radius:8px;
     background:var(--karte); cursor:pointer; border:1.5px solid var(--rand); color:var(--text);
   }
   .auswahlleiste .aktionen-reihe button:disabled{opacity:.45; cursor:default;}
   .auswahlleiste .aktionen-reihe button.gefahr{border-color:var(--fehler); color:var(--fehler);}
   .auswahlleiste .aktionen-reihe button.betont{border-color:var(--ls-farbe); color:var(--ls-farbe);}
-  /* "Letzte Rechnungsnummer" -- auf Nutzerwunsch zusaetzlich ganz rechts bei
-     den Buttons der Rechnungsuebersicht anzeig- und bearbeitbar (bisher nur
-     in den Einstellungen). "margin-left:auto" schiebt es innerhalb der
-     Button-Reihe (bzw. bei Zeilenumbruch: innerhalb der eigenen Zeile) ganz
-     nach rechts. Dieselbe Wiring-Logik wie in den Einstellungen, siehe
-     rnLetzteFeldEinrichten(). */
-  .auswahlleiste .aktionen-reihe .rn-mini{
-    flex:0 0 auto; margin-left:auto; display:flex; flex-direction:column; align-items:center; gap:3px;
-  }
-  .auswahlleiste .aktionen-reihe .rn-mini label{font-size:10.5px; color:var(--text-schwach); white-space:nowrap;}
-  .auswahlleiste .aktionen-reihe .rn-mini input{
+  /* "Letzte Rechnungsnummer" -- auf Nutzerwunsch zusaetzlich bei den
+     Buttons der Rechnungsuebersicht anzeig- und bearbeitbar (bisher nur in
+     den Einstellungen). Jetzt eine eigene Zeile UNTER den 3 Buttons statt
+     in derselben Flex-Reihe, damit die 3 Buttons davon unberuehrt immer
+     gleich breit bleiben. Dieselbe Wiring-Logik wie in den Einstellungen,
+     siehe rnLetzteFeldEinrichten(). */
+  .auswahlleiste .rn-mini-zeile{display:flex; justify-content:flex-end; margin-top:8px;}
+  .auswahlleiste .rn-mini{display:flex; flex-direction:column; align-items:center; gap:3px;}
+  .auswahlleiste .rn-mini label{font-size:10.5px; color:var(--text-schwach); white-space:nowrap;}
+  .auswahlleiste .rn-mini input{
     width:60px; padding:7px 4px; font-size:13px; text-align:center; border:1.5px solid var(--rand);
     border-radius:8px; background:var(--karte); color:var(--text);
   }
@@ -1505,7 +1528,7 @@ function ansichtStart(){
   // Export komplett fehlte, solange Auto-Sync lief. Jetzt immer alle drei
   // sichtbar, nur Beschriftung/Symbol/Aktion des Sync-Buttons ändert sich.
   const syncInfo = syncButtonInfo();
-  html += `<div class="abschnitt sync-box" style="margin-top:22px;">
+  html += `<div class="abschnitt start-abschnitt sync-box">
     <div class="trennlinie">Sync</div>
     <div class="datensicherung-reihe">
       <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span><span class="btn-titel">Importieren</span>
@@ -1522,12 +1545,12 @@ function ansichtStart(){
   </div>
   <div class="warnhinweis" id="startHinweis"></div>`;
   html += `
-    <div class="abschnitt" style="margin-top:20px;">
+    <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Excel-Dateien öffnen</div>
       <button class="btn-sekundaer" id="btnOeffneUebersicht">Rechnungsübersicht öffnen</button>
       <button class="btn-sekundaer" id="btnOeffneFahrtenbuch">Fahrtenbuch öffnen</button>
     </div>
-    <div class="abschnitt" style="margin-top:20px;">
+    <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Werkzeuge</div>
       <button class="btn-sekundaer" id="btnLuftlinienTool">Luftlinie berechnen
         <span class="unter">Entfernung Wache/Praxis -- beliebige Adresse, ohne eine Rechnung anzulegen</span>
@@ -1819,12 +1842,14 @@ function ansichtKorrigieren(){
         <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
         <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
         <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
-        ${msGraphStatus==='angemeldet' ? '' : `
+      </div>
+      ${msGraphStatus==='angemeldet' ? '' : `
+      <div class="rn-mini-zeile">
         <div class="rn-mini">
           <label for="rnLetzteMini">Letzte Nr.</label>
           <input type="text" id="rnLetzteMini" inputmode="numeric" maxlength="3" placeholder="003">
-        </div>`}
-      </div>
+        </div>
+      </div>`}
       <div class="zeile1">
         <label><input type="checkbox" id="chkAlle"> Alle auswählen</label>
         <span id="auswahlAnzahl" style="color:var(--text-schwach);"></span>
@@ -1939,17 +1964,20 @@ function ansichtEinstellungen(){
   setzeTitel('Einstellungen', schliesseEinstellungen);
   const e = ladeEinstellungen();
   app.innerHTML = `
-    <div class="einstellung-zeile" id="zDunkel">
-      <input type="checkbox" id="chkDunkel" ${e.dunkel?'checked':''}>
-      <div class="txt">Dunkelmodus<span class="hinweis">Dunkles Farbschema für schlechte Lichtverhältnisse</span></div>
-    </div>
-    <div class="einstellung-zeile" id="zReise">
-      <input type="checkbox" id="chkReiseBasisLuftlinie" ${!e.reiseBasisLuftlinie?'checked':''}>
-      <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br><br>Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></div>
-    </div>
-    <div class="feld" style="margin-top:20px;">
-      <label for="txtPraxisadresse">Adresse Wache/Praxis (Startpunkt für km-Berechnung)</label>
-      <input type="text" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}" placeholder="Straße Hausnummer, PLZ Ort">
+    <div class="abschnitt start-abschnitt">
+      <div class="trennlinie">Allgemein</div>
+      <div class="einstellung-zeile" id="zDunkel">
+        <input type="checkbox" id="chkDunkel" ${e.dunkel?'checked':''}>
+        <div class="txt">Dunkelmodus<span class="hinweis">Dunkles Farbschema für schlechte Lichtverhältnisse</span></div>
+      </div>
+      <div class="einstellung-zeile" id="zReise">
+        <input type="checkbox" id="chkReiseBasisLuftlinie" ${!e.reiseBasisLuftlinie?'checked':''}>
+        <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br>Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></div>
+      </div>
+      <div class="feld" style="margin-top:14px;">
+        <label for="txtPraxisadresse">Adresse Wache/Praxis (Startpunkt für km-Berechnung)</label>
+        <input type="text" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}" placeholder="Straße Hausnummer, PLZ Ort">
+      </div>
     </div>
     ${msGraphStatus==='angemeldet' ? '' : `
     <div class="abschnitt" style="margin-top:20px;">
