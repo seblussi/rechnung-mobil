@@ -14,6 +14,10 @@
      umfaerbt und dadurch z.B. Buttontext unsichtbar macht. -->
 <meta name="color-scheme" content="light dark">
 <script src="icd_katalog.js"></script>
+<!-- MSAL Browser (Microsoft Authentication Library) -- fuer die Microsoft-
+     Anmeldung (OneDrive-Zugriff via Graph API), siehe Abschnitt
+     "OneDrive-Anmeldung" weiter unten. -->
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
 <style>
   :root{
     --bg:#f4f6f9;
@@ -1801,6 +1805,10 @@ function ansichtEinstellungen(){
       <div class="trennlinie">Automatischer Sync (PC-Übernahme)</div>
       ${autoSyncAbschnittHtml()}
     </div>
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">OneDrive-Anmeldung (Microsoft)</div>
+      ${msGraphAbschnittHtml()}
+    </div>
   `;
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
   // "Speichern"-Schritt.
@@ -1828,6 +1836,7 @@ function ansichtEinstellungen(){
     standEl: document.getElementById('rnZaehlerStand')
   });
   autoSyncAbschnittWiring();
+  msGraphAbschnittWiring();
 }
 
 // Baut den Inhalt des "Automatischer Sync"-Abschnitts passend zum aktuellen
@@ -2047,6 +2056,134 @@ let autoSyncErneutNoetig = false;
 
 function fileSystemAccessVerfuegbar(){
   return typeof window.showDirectoryPicker === 'function';
+}
+
+/* ==========================================================
+   OneDrive-Anmeldung (Microsoft/MSAL) -- perspektivisch als robusterer
+   Ersatz/Ergaenzung zu den fest hinterlegten Freigabelinks in
+   excelDateiOeffnen(): mit einem gueltigen Zugriffstoken kann die App
+   ueber die Microsoft-Graph-API die AKTUELL im jeweiligen OneDrive-Pfad
+   liegende Datei auflösen, statt sich auf einen an eine feste Datei-ID
+   gebundenen Freigabelink zu verlassen (siehe die Besprechung zum
+   "falscher/veralteter Freigabelink"-Problem). Diese erste Ausbaustufe
+   kuemmert sich nur um die Anmeldung selbst (Login/Logout, Status-
+   Anzeige in den Einstellungen) -- die eigentliche Datei-Aufloesung ueber
+   Graph folgt als naechster Schritt, sobald die Anmeldung bestaetigt
+   nachweisbar funktioniert.
+   ========================================================== */
+// Nur PERSOENLICHE Microsoft-Konten (siehe Kontotyp-Auswahl bei der
+// Azure-App-Registrierung) -- deshalb "consumers" statt "common"/"organizations".
+const MSGRAPH_CLIENT_ID = '579a39e0-b7fd-4c46-8684-af22e1bc45a2';
+const MSGRAPH_AUTHORITY = 'https://login.microsoftonline.com/consumers';
+// Muss ZEICHENGENAU mit dem in Azure (Authentifizierung -> SPA-Plattform)
+// hinterlegten Redirect-URI uebereinstimmen.
+const MSGRAPH_REDIRECT_URI = 'https://seblussi.github.io/rechnung-mobil/Rechnungserfassung_Mobil.html';
+const MSGRAPH_SCOPES = ['Files.ReadWrite', 'offline_access', 'User.Read'];
+
+let msGraphMsal = null;
+// 'unbekannt' (direkt nach Laden, bevor msGraphInitialisieren fertig ist),
+// 'nicht_verfuegbar' (MSAL-Bibliothek konnte nicht geladen werden, z.B.
+// kein Netz), 'abgemeldet', 'angemeldet'
+let msGraphStatus = 'unbekannt';
+let msGraphKonto = null; // {name, username} des angemeldeten Kontos
+
+function msGraphVerfuegbar(){
+  return typeof msal !== 'undefined';
+}
+
+// Legt (einmalig) die MSAL-Instanz an. Getrennt von msGraphInitialisieren,
+// damit sowohl der normale Start als auch die Rueckkehr vom Microsoft-
+// Login-Redirect dieselbe, garantiert bereits initialisierte Instanz nutzen.
+async function msGraphInstanzSicherstellen(){
+  if(msGraphMsal) return msGraphMsal;
+  if(!msGraphVerfuegbar()) return null;
+  msGraphMsal = new msal.PublicClientApplication({
+    auth: {
+      clientId: MSGRAPH_CLIENT_ID,
+      authority: MSGRAPH_AUTHORITY,
+      redirectUri: MSGRAPH_REDIRECT_URI
+    },
+    cache: { cacheLocation: 'localStorage' }
+  });
+  await msGraphMsal.initialize();
+  return msGraphMsal;
+}
+
+// Beim Start (bzw. direkt nach Rueckkehr vom Microsoft-Login) pruefen, ob
+// bereits ein Konto im lokalen Cache steht (bzw. der Redirect gerade ein
+// neues eingetragen hat) -- KEIN automatischer Login-Versuch ohne
+// Nutzer-Geste, das entspricht dem Auto-Sync-Verhalten (autoSyncInitialisieren).
+async function msGraphInitialisieren(){
+  if(!msGraphVerfuegbar()){ msGraphStatus = 'nicht_verfuegbar'; return; }
+  try{
+    const inst = await msGraphInstanzSicherstellen();
+    if(!inst){ msGraphStatus = 'nicht_verfuegbar'; return; }
+    // Verarbeitet ggf. die Rueckkehr von loginRedirect() -- MUSS bei jedem
+    // Seitenaufruf aufgerufen werden, auch wenn gerade kein Redirect im
+    // Gange ist (liefert dann einfach null zurueck).
+    const ergebnis = await inst.handleRedirectPromise();
+    if(ergebnis && ergebnis.account){
+      inst.setActiveAccount(ergebnis.account);
+    }
+    const konten = inst.getAllAccounts();
+    if(konten.length > 0){
+      inst.setActiveAccount(konten[0]);
+      msGraphKonto = { name: konten[0].name || '', username: konten[0].username || '' };
+      msGraphStatus = 'angemeldet';
+    } else {
+      msGraphKonto = null;
+      msGraphStatus = 'abgemeldet';
+    }
+  }catch(e){
+    msGraphStatus = 'abgemeldet';
+  }
+}
+
+// Nutzer-Geste vorhanden (Klick auf "Mit Microsoft anmelden") -- Redirect-
+// Flow statt Popup, weil Popups in einer als App installierten PWA auf dem
+// Handy unzuverlaessig funktionieren. Die Seite laedt danach ueber den
+// Redirect-URI neu; msGraphInitialisieren() (siehe Start unten im Skript)
+// verarbeitet die Rueckkehr automatisch.
+async function msGraphAnmelden(){
+  const inst = await msGraphInstanzSicherstellen();
+  if(!inst) return;
+  await inst.loginRedirect({ scopes: MSGRAPH_SCOPES });
+}
+
+function msGraphAbmelden(){
+  if(!msGraphMsal) return;
+  const konto = msGraphMsal.getActiveAccount();
+  msGraphMsal.logoutRedirect({ account: konto, postLogoutRedirectUri: MSGRAPH_REDIRECT_URI });
+}
+
+// Baut den Inhalt des "OneDrive-Anmeldung"-Abschnitts passend zum
+// aktuellen msGraphStatus -- analog autoSyncAbschnittHtml().
+function msGraphAbschnittHtml(){
+  if(msGraphStatus==='nicht_verfuegbar'){
+    return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach);">
+      Die Microsoft-Anmeldung konnte nicht geladen werden (evtl. keine Internetverbindung gerade eben).
+      Bitte später erneut versuchen.
+    </div>`;
+  }
+  if(msGraphStatus==='angemeldet'){
+    return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
+      Angemeldet als <b>${(msGraphKonto && (msGraphKonto.name || msGraphKonto.username)) || 'unbekannt'}</b>.
+    </div>
+    <button type="button" id="btnMsGraphAbmelden" class="btn-sekundaer">Abmelden</button>`;
+  }
+  return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
+    Noch nicht angemeldet.
+  </div>
+  <button type="button" id="btnMsGraphAnmelden" class="btn-sekundaer">Mit Microsoft anmelden</button>`;
+}
+
+function msGraphAbschnittWiring(){
+  const btnAn = document.getElementById('btnMsGraphAnmelden');
+  if(btnAn) btnAn.onclick = ()=>{ msGraphAnmelden(); };
+  const btnAb = document.getElementById('btnMsGraphAbmelden');
+  if(btnAb) btnAb.onclick = ()=>{
+    msGraphAbmelden();
+  };
 }
 
 const AUTOSYNC_DB_NAME = 'rechnungserfassung_sync_db';
@@ -3743,6 +3880,19 @@ try{ ansichtStart(); }catch(e){}
 try{
   autoSyncInitialisieren().then(()=>{
     if(aktuelleAnsichtIstHauptbildschirm) ansichtStart();
+  }).catch(()=>{});
+}catch(e){}
+
+// Analog zu autoSyncInitialisieren oben: ohne await gestartet, damit der
+// erste Bildschirmaufbau nicht auf die (async) MSAL-Initialisierung warten
+// muss. WICHTIG: verarbeitet u.a. die Rueckkehr vom Microsoft-Login-Redirect
+// (handleRedirectPromise) -- deshalb bei JEDEM Seitenaufruf noetig, nicht
+// nur wenn man die Einstellungen gerade offen hat. War man vor dem Redirect
+// in den Einstellungen (einstellungenOffen), diese danach einmal neu
+// aufbauen, damit der aktualisierte Anmeldestatus sichtbar wird.
+try{
+  msGraphInitialisieren().then(()=>{
+    if(einstellungenOffen) ansichtEinstellungen();
   }).catch(()=>{});
 }catch(e){}
 
