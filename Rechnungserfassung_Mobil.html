@@ -143,22 +143,24 @@
      .btn-sekundaer, damit die Buttons trotz Titel+Untertext nicht in die
      Länge gezogen werden. */
   .datensicherung-reihe{display:flex; gap:8px; align-items:stretch;}
-  /* Nutzerwunsch: die 3 Sync-Buttons schmaler -- weniger Innenabstand
-     links/rechts statt sie ueber die volle Breite auszufuellen. */
+  /* KORREKTUR (Rueckmeldung): "schmaler" war als Hoehe gemeint, nicht
+     Breite -- Breite/Innenabstand links-rechts zurueckgesetzt, dafuer
+     Innenabstand oben/unten reduziert (10px -> 6px). */
   .datensicherung-reihe .btn-sekundaer{
-    flex:1; margin-bottom:0; padding:10px 4px;
+    flex:1; margin-bottom:0; padding:6px 8px;
     display:flex; flex-direction:column; justify-content:center; align-items:center;
     text-align:center; font-size:13.5px;
   }
-  .datensicherung-reihe .icon-pfeil{display:block; font-size:18px; margin-bottom:3px;}
+  .datensicherung-reihe .icon-pfeil{display:block; font-size:16px; margin-bottom:2px;}
   /* Feste (aber knappe) Mindesthöhe für Titel und Untertext: die Texte
      ändern sich je nach Sync-Status unterschiedlich lang ("Sync
      einrichten" vs. "Verbunden") -- ohne das würde die ganze Reihe (alle
      3 Buttons gleich hoch) beim Verbinden sichtbar "springen". Die Texte
      wurden bewusst kurz gehalten, damit hier nur 1-2 Zeilen reserviert
-     werden müssen statt eines hohen, lang gezogenen Buttons. */
-  .datensicherung-reihe .btn-sekundaer .btn-titel{display:block; min-height:34px; font-weight:700;}
-  .datensicherung-reihe .btn-sekundaer .unter{min-height:30px; font-size:11px;}
+     werden müssen statt eines hohen, lang gezogenen Buttons.
+     Mindesthöhen (Rueckmeldung "schmaler in der Höhe") reduziert. */
+  .datensicherung-reihe .btn-sekundaer .btn-titel{display:block; min-height:26px; font-weight:700;}
+  .datensicherung-reihe .btn-sekundaer .unter{min-height:22px; font-size:11px;}
   /* Die 3 Speicher-Buttons stecken jetzt in einer eigenen, klar abgetrennten
      Box mit Überschrift "Sync" (wie die Boxen "Excel-Dateien öffnen" /
      "Werkzeuge" weiter unten) -- vorher standen sie unbeschriftet direkt
@@ -189,6 +191,12 @@
      autoSyncAbschnittHtml) sowie die Ergebnis-Box im Luftlinien-Tool
      (siehe .luft-ergebnis unten). */
   .abschnitt > .btn-primaer:last-child{margin-bottom:14px;}
+  /* Die beiden Sync-Wege (Microsoft/OneDrive, Ordner-Sync) stecken auf
+     Nutzerwunsch in EINER gemeinsamen Box statt zwei getrennten -- eigene
+     Unter-Überschriften trennen sie optisch weiterhin voneinander. */
+  .sync-unter-titel{font-size:13px; font-weight:700; margin-bottom:6px;}
+  .sync-empfehlung{font-weight:400; color:var(--text-schwach); font-size:11.5px; text-transform:none;}
+  .sync-trenner{border-top:1px solid var(--rand); margin:16px 0 14px;}
   .trennlinie{
     font-size:12.5px; font-weight:700; color:#fff; margin:-14px -14px 14px;
     text-transform:uppercase; letter-spacing:.04em; background:var(--titelfarbe);
@@ -361,31 +369,32 @@
      -bottom, damit weiterhin ein Abstand zu den Buttons darüber besteht. */
   .auswahlleiste .zeile1{display:flex; align-items:center; gap:8px; font-size:13.5px; margin-top:10px;}
   .auswahlleiste .zeile1 label{display:flex; align-items:center; gap:6px; cursor:pointer;}
-  /* Die 3 Buttons stehen jetzt IMMER in einer eigenen Reihe fuer sich
-     (flex-basis 0 -- "flex:1" -- statt an Inhalt/min-width orientiert),
-     damit sie unabhaengig davon, ob "Letzte Nr." (rn-mini) daneben
-     angezeigt wird oder nicht, garantiert gleich breit bleiben. Vorher
-     stand rn-mini in DERSELBEN Zeile und konnte je nach verfuegbarer
-     Breite zu ungleichem Zeilenumbruch (und damit ungleich grossen
-     Buttons, v.a. "Loeschen") fuehren. */
-  .auswahlleiste .aktionen-reihe{display:flex; gap:8px;}
+  .auswahlleiste .aktionen-reihe{display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;}
+  /* KORREKTUR (Rueckmeldung): nicht die Breite war das Problem, sondern die
+     Hoehe -- "Ausgewaehlte loeschen" (rot) ist kuerzerer Text und blieb
+     dadurch je nach Zeilenumbruch einzeilig, waehrend die anderen Buttons
+     zweizeilig wurden -- ohne feste Mindesthoehe wirkte der rote Button
+     dadurch kleiner. min-height sorgt jetzt dafuer, dass alle 3 Buttons
+     immer gleich hoch sind, unabhaengig vom Zeilenumbruch. */
   .auswahlleiste .aktionen-reihe button{
-    flex:1 1 0; min-width:0; padding:9px 6px; font-size:12.5px; font-weight:600; border-radius:8px;
+    flex:1; min-width:110px; min-height:46px; padding:9px 8px; font-size:12.5px; font-weight:600;
+    border-radius:8px; line-height:1.25;
     background:var(--karte); cursor:pointer; border:1.5px solid var(--rand); color:var(--text);
   }
   .auswahlleiste .aktionen-reihe button:disabled{opacity:.45; cursor:default;}
   .auswahlleiste .aktionen-reihe button.gefahr{border-color:var(--fehler); color:var(--fehler);}
   .auswahlleiste .aktionen-reihe button.betont{border-color:var(--ls-farbe); color:var(--ls-farbe);}
-  /* "Letzte Rechnungsnummer" -- auf Nutzerwunsch zusaetzlich bei den
-     Buttons der Rechnungsuebersicht anzeig- und bearbeitbar (bisher nur in
-     den Einstellungen). Jetzt eine eigene Zeile UNTER den 3 Buttons statt
-     in derselben Flex-Reihe, damit die 3 Buttons davon unberuehrt immer
-     gleich breit bleiben. Dieselbe Wiring-Logik wie in den Einstellungen,
-     siehe rnLetzteFeldEinrichten(). */
-  .auswahlleiste .rn-mini-zeile{display:flex; justify-content:flex-end; margin-top:8px;}
-  .auswahlleiste .rn-mini{display:flex; flex-direction:column; align-items:center; gap:3px;}
-  .auswahlleiste .rn-mini label{font-size:10.5px; color:var(--text-schwach); white-space:nowrap;}
-  .auswahlleiste .rn-mini input{
+  /* "Letzte Rechnungsnummer" -- auf Nutzerwunsch zusaetzlich ganz rechts bei
+     den Buttons der Rechnungsuebersicht anzeig- und bearbeitbar (bisher nur
+     in den Einstellungen). "margin-left:auto" schiebt es innerhalb der
+     Button-Reihe (bzw. bei Zeilenumbruch: innerhalb der eigenen Zeile) ganz
+     nach rechts. Dieselbe Wiring-Logik wie in den Einstellungen, siehe
+     rnLetzteFeldEinrichten(). */
+  .auswahlleiste .aktionen-reihe .rn-mini{
+    flex:0 0 auto; margin-left:auto; display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .auswahlleiste .aktionen-reihe .rn-mini label{font-size:10.5px; color:var(--text-schwach); white-space:nowrap;}
+  .auswahlleiste .aktionen-reihe .rn-mini input{
     width:60px; padding:7px 4px; font-size:13px; text-align:center; border:1.5px solid var(--rand);
     border-radius:8px; background:var(--karte); color:var(--text);
   }
@@ -413,6 +422,17 @@
     margin-right:8px; vertical-align:middle;}
   .badge-neu.ls{background:var(--ls-farbe);}
   .badge-neu.pt{background:var(--pt-farbe);}
+  /* Sync-/Versand-/PDF-Status (Rechnungsübersicht) -- goldenes "S" =
+     bereits in der Übersicht vorhanden, Brief-Symbol = bereits versendet,
+     Dokument-Symbol = PDF vorhanden und antippbar. Wird erst nachträglich
+     per Graph-Abfrage befüllt, siehe rechnungsverwaltungStatusLaden(). */
+  .sync-status{margin-left:6px; white-space:nowrap;}
+  .badge-sync{display:inline-block; width:18px; height:18px; line-height:18px; text-align:center;
+    background:#d4af37; color:#3a2c00; font-size:11px; font-weight:bold; border-radius:4px;
+    vertical-align:middle;}
+  body.dunkel .badge-sync{background:#c7a233; color:#241b00;}
+  .badge-brief{display:inline-block; margin-left:4px; font-size:14px; vertical-align:middle; opacity:.85;}
+  .badge-pdf{display:inline-block; margin-left:4px; font-size:16px; vertical-align:middle; cursor:pointer;}
 
   .position-zeile{display:flex; align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px solid var(--rand);}
   .position-zeile input{width:20px; height:20px; margin-top:1px; flex-shrink:0;}
@@ -705,6 +725,103 @@ async function excelDateiUeberGraphOeffnen(pfadRelativZuOneDrive, statischerFall
   }catch(e){
     excelDateiOeffnen(statischerFallbackLink);
   }
+}
+
+// =====================================================================
+// Rechnungsverwaltung: Sync-/Versand-/PDF-Status LIVE per Graph-API ermitteln
+// (NICHT ueber die lokale Sync-JSON -- die kann veraltet sein) -- exakt
+// dieselbe Fingerabdruck-Logik wie am PC beim "Aus Handy einlesen" (siehe
+// HandyEinlesenKlick/dictFingerprint in der HTA): Spalten A,B,F,G,H
+// (Art|Datum|Nachname|Vorname|Geburtsdatum, gross geschrieben) identifizieren
+// denselben Fall eindeutig, unabhaengig von einer evtl. abweichenden lokalen
+// Rechnungsnummer. Spalte Q liefert dazu die tatsaechlich vergebene
+// Rechnungsnummer, Spalte R (falls gefuellt) das Datum des tatsaechlichen
+// Versands (RechnungVersandVermerken traegt es dort fett ein).
+// =====================================================================
+const MSGRAPH_PFAD_ZIEL_ORDNER = 'KVBW Onedrive/fertige Rechnungen';
+
+// Gegenstueck zu RenuFormatTauschen() in der HTA: vertauscht die beiden
+// bindestrichgetrennten Teile einer Rechnungsnummer ("XXjjmmdd-NNN" aus der
+// Uebersicht <-> "NNN-XXjjmmdd" als Datei-Basisname in "fertige
+// Rechnungen") -- exakt 1:1 dieselbe (reine Vertausch-)Logik wie am PC.
+function renuFormatTauschen(wert){
+  const teile = String(wert||'').split('-');
+  if(teile.length !== 2) return wert;
+  return teile[1] + '-' + teile[0];
+}
+
+// Baut denselben Fingerabdruck-Schluessel wie faelleAlsUebersichtsZeilen()
+// bzw. die HTA ihn aus der Uebersicht bildet (Spalten A,B,F,G,H) -- damit
+// laesst sich ein lokal gespeicherter Fall eindeutig einer Zeile in der
+// LIVE geladenen Uebersicht zuordnen.
+function fallFingerprintBauen(f){
+  const w = f.werte;
+  const {nachname, vorname} = nameAufteilen(w.txtName);
+  const art = f.art==='ls' ? 'L' : 'P';
+  return [art, w.txtDatumExcel, nachname, vorname, w.txtGeda]
+    .map(v=>String(v||'').toUpperCase().trim()).join('|');
+}
+
+// Laedt die komplette Uebersicht LIVE per Graph-Excel-API (workbook/
+// usedRange) und baut daraus eine Fingerabdruck->{renu,versandt}-Map --
+// eine einzige Anfrage fuer die komplette Tabelle statt pro Fall einzeln.
+// Liefert null bei jedem Fehler (kein Login, kein Netz, Datei nicht
+// erreichbar) -- der Aufrufer zeigt dann einfach keine Status-Badges an,
+// statt die Ansicht mit einer Fehlermeldung zu blockieren.
+async function msGraphUebersichtFingerprintsLaden(){
+  if(msGraphStatus!=='angemeldet') return null;
+  const token = await msGraphTokenHolen();
+  if(!token) return null;
+  try{
+    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
+    // Name des ersten Arbeitsblatts ermitteln (der Blattname selbst ist
+    // nicht fest bekannt/garantiert "Tabelle1").
+    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if(!wsRes.ok) return null;
+    const wsDaten = await wsRes.json();
+    const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
+    if(!blattName) return null;
+    const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
+      "')/usedRange(valuesOnly=true)?$select=values";
+    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
+    if(!rangeRes.ok) return null;
+    const rangeDaten = await rangeRes.json();
+    const zeilen = rangeDaten.values || [];
+    const map = new Map();
+    // Zeile 0 = Kopfzeile ueberspringen.
+    for(let i=1;i<zeilen.length;i++){
+      const r = zeilen[i];
+      const key = [r[0],r[1],r[5],r[6],r[7]].map(v=>String(v==null?'':v).toUpperCase().trim()).join('|');
+      if(key.replace(/\|/g,'')==='') continue; // komplett leere Zeile
+      if(map.has(key)) continue; // erste Fundstelle gewinnt, wie am PC
+      map.set(key, {
+        renu: String(r[16]==null?'':r[16]).trim(),          // Q: Rechnungsnummer
+        versandt: String(r[17]==null?'':r[17]).trim() !== '' // R: Versanddatum gefuellt?
+      });
+    }
+    return map;
+  }catch(e){ return null; }
+}
+
+// Prueft per Graph-Metadatenabfrage (kein Download), ob zu einer
+// Rechnungsnummer eine PDF-Datei im "fertige Rechnungen"-Ordner existiert,
+// und liefert deren webUrl (OneDrive-Web-Vorschau, im Handy-Browser
+// oeffenbar) -- oder null, wenn (noch) keine Datei existiert bzw. bei
+// jedem Fehler.
+async function msGraphPdfWebUrlLaden(renu){
+  if(!renu) return null;
+  const token = await msGraphTokenHolen();
+  if(!token) return null;
+  const dateiname = renuFormatTauschen(renu) + '.pdf';
+  try{
+    const url = msGraphPfadUrl(MSGRAPH_PFAD_ZIEL_ORDNER + '/' + dateiname) + '?$select=webUrl';
+    const antwort = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if(!antwort.ok) return null; // v.a. 404 -- Rechnung wurde am PC noch nicht erzeugt
+    const daten = await antwort.json();
+    return daten.webUrl || null;
+  }catch(e){ return null; }
 }
 
 // =====================================================================
@@ -1764,11 +1881,14 @@ function faelleAlsUebersichtsZeilen(faelle){
       spalten[13] = w.txtAdresse1 || '';                              // N: Adresse1 Bestatter
       spalten[14] = w.txtAdresse2 || '';                              // O: Adresse2 Bestatter
     }
-    // Diagnosen (nur PT): wie am PC (werte(10) = diagKuerzel) landet in
-    // Spalte M -- bei einer Privatrechnung gibt es dort ja keinen Bestatter
-    // -- das ICD-Kuerzel mit G/V-Kennzeichnung, weiss formatiert.
+    // KORREKTUR: Spalte M bleibt bei einer Privatrechnung LEER -- das echte
+    // PC-seitige Zurueckschreiben in die Uebersicht (SchreibeInUebersicht in
+    // Modul1, beim Absenden-Klick) schreibt dort NICHTS hinein, das ICD-
+    // Kuerzel steht bereits vollstaendig in Spalte U (siehe spalten[20]
+    // unten). Vorher stand hier zusaetzlich/faelschlich das ICD-Kuerzel,
+    // das von der echten Rechnungserstellung nie ueberschrieben wurde und
+    // so als falscher Eintrag in der Uebersicht stehen blieb.
     const diagKuerzel = f.art==='pt' ? diagnosenKuerzel(w.diagnosen) : '';
-    if(f.art==='pt') spalten[12] = diagKuerzel;                       // M: ICD-Kuerzel (Diagnosen)
     spalten[15] = w.txtBetrag || '';                                  // P: Betrag
     spalten[16] = f.rechnungsnummer || '';                            // Q: Rechnungsnummer
     // Spalte U: Rechnungspositionen + km, EXAKT im Format von SpalteUBauen()
@@ -1842,14 +1962,12 @@ function ansichtKorrigieren(){
         <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
         <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
         <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
-      </div>
-      ${msGraphStatus==='angemeldet' ? '' : `
-      <div class="rn-mini-zeile">
+        ${msGraphStatus==='angemeldet' ? '' : `
         <div class="rn-mini">
           <label for="rnLetzteMini">Letzte Nr.</label>
           <input type="text" id="rnLetzteMini" inputmode="numeric" maxlength="3" placeholder="003">
-        </div>
-      </div>`}
+        </div>`}
+      </div>
       <div class="zeile1">
         <label><input type="checkbox" id="chkAlle"> Alle auswählen</label>
         <span id="auswahlAnzahl" style="color:var(--text-schwach);"></span>
@@ -1860,7 +1978,7 @@ function ansichtKorrigieren(){
         <div class="fall-zeile ${f.art}" data-art="${f.art}" data-idx="${f.idx}">
           <input type="checkbox" class="chk" data-art="${f.art}" data-idx="${f.idx}">
           <div class="inhalt">
-            <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${f.werte.txtName || '(ohne Namen)'}</div>
+            <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${f.werte.txtName || '(ohne Namen)'}<span class="sync-status" data-art="${f.art}" data-idx="${f.idx}"></span></div>
             <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}</div>
           </div>
         </div>`).join('')}
@@ -1957,6 +2075,54 @@ function ansichtKorrigieren(){
   };
 
   auswahlAktualisieren();
+
+  // Sync-/Versand-/PDF-Status je Fall NACHTRAEGLICH per Graph-API laden
+  // (goldenes "S", Brief-Symbol, PDF-Symbol -- siehe rechnungsverwaltungStatusLaden)
+  // -- bewusst NICHT blockierend vor dem ersten Rendern, damit die Liste
+  // sofort da ist; die Badges "poppen" stattdessen nach, sobald die
+  // Graph-Antwort da ist. Nur wenn Microsoft/OneDrive-Sync aktiv ist --
+  // ohne Anmeldung gibt es keine Datenquelle dafuer.
+  if(msGraphStatus==='angemeldet') rechnungsverwaltungStatusLaden(alle);
+}
+
+// Holt fuer alle uebergebenen (lokalen) Faelle LIVE per Graph-API den
+// aktuellen Stand aus der Rechnungsuebersicht und ergaenzt je Fall-Zeile:
+//   - goldenes "S"   -- Fall steht bereits in der Uebersicht (Fingerabdruck-
+//                       Treffer, exakt dieselbe Logik wie beim Einlesen
+//                       "Aus Handy einlesen" am PC)
+//   - Brief-Symbol   -- Spalte R (Versanddatum) ist dort gefuellt, d.h. die
+//                       Rechnung wurde am PC bereits tatsaechlich versendet
+//   - PDF-Symbol     -- zur ermittelten Rechnungsnummer liegt im Ordner
+//                       "fertige Rechnungen" bereits eine PDF-Datei; antippen
+//                       oeffnet sie direkt im Handy-Browser (OneDrive-Vorschau)
+// Alles rein lesend, nichts davon veraendert etwas.
+async function rechnungsverwaltungStatusLaden(alle){
+  const map = await msGraphUebersichtFingerprintsLaden();
+  if(!map) return; // kein Login/kein Netz/Fehler -- einfach keine Badges anzeigen
+  alle.forEach(f=>{
+    const eintrag = map.get(fallFingerprintBauen(f));
+    if(!eintrag) return; // Fall steht noch nicht in der Uebersicht
+    const el = app.querySelector(`.sync-status[data-art="${f.art}"][data-idx="${f.idx}"]`);
+    if(!el) return;
+    let html = `<span class="badge-sync" title="Bereits in der Rechnungsübersicht vorhanden">S</span>`;
+    if(eintrag.versandt) html += `<span class="badge-brief" title="Rechnung wurde bereits versendet">&#9993;</span>`;
+    el.innerHTML = html;
+    if(eintrag.renu){
+      // PDF-Pruefung separat/verzoegert (eigene Graph-Anfrage je Fall) --
+      // erst NACHDEM S/Brief schon sichtbar sind, damit die Grundaussage
+      // ("steht in der Uebersicht") nicht auf die langsamere Einzelabfrage
+      // warten muss.
+      msGraphPdfWebUrlLaden(eintrag.renu).then(webUrl=>{
+        if(!webUrl) return;
+        const pdfBadge = document.createElement('span');
+        pdfBadge.className = 'badge-pdf';
+        pdfBadge.title = 'Rechnung als PDF ansehen';
+        pdfBadge.innerHTML = '&#128196;';
+        pdfBadge.onclick = (ev)=>{ ev.stopPropagation(); window.open(webUrl, '_blank'); };
+        el.appendChild(pdfBadge);
+      });
+    }
+  });
 }
 
 function ansichtEinstellungen(){
@@ -1972,7 +2138,7 @@ function ansichtEinstellungen(){
       </div>
       <div class="einstellung-zeile" id="zReise">
         <input type="checkbox" id="chkReiseBasisLuftlinie" ${!e.reiseBasisLuftlinie?'checked':''}>
-        <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br>Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></div>
+        <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br><span style="display:block; margin-top:5px;">Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></span></div>
       </div>
       <div class="feld" style="margin-top:14px;">
         <label for="txtPraxisadresse">Adresse Wache/Praxis (Startpunkt für km-Berechnung)</label>
@@ -1998,12 +2164,12 @@ function ansichtEinstellungen(){
       </div>
     </div>`}
     <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">Automatischer Sync (PC-Übernahme)</div>
-      ${autoSyncAbschnittHtml()}
-    </div>
-    <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">OneDrive-Anmeldung (Microsoft)</div>
+      <div class="trennlinie">Sync mit PC</div>
+      <div class="sync-unter-titel">Microsoft/OneDrive-Anmeldung <span class="sync-empfehlung">(empfohlen)</span></div>
       ${msGraphAbschnittHtml()}
+      <div class="sync-trenner"></div>
+      <div class="sync-unter-titel">Ordner-Sync <span class="sync-empfehlung">(Alternative)</span></div>
+      ${autoSyncAbschnittHtml()}
     </div>
   `;
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
@@ -2049,8 +2215,8 @@ function autoSyncAbschnittHtml(){
   if(autoSyncStatus==='verbunden'){
     const nachrangig = msGraphStatus==='angemeldet';
     return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-      ✓ Verbunden${nachrangig ? ' (aktuell inaktiv -- siehe Hinweis unten)' : ''} -- ${nachrangig ? 'würde, falls keine Microsoft-Anmeldung besteht, ' : ''}jede Änderung automatisch in "rechnungserfassung_sync.json" im gewählten Ordner speichern.
-      ${nachrangig ? '<br><br>Da die Microsoft-Anmeldung (Abschnitt unten) aktiv ist, hat diese Vorrang -- der Ordner-Sync läuft dann nicht zusätzlich mit, bleibt aber als Rückfallebene eingerichtet, falls die Anmeldung mal wegfällt.' : ''}
+      ✓ Verbunden${nachrangig ? ' (aktuell inaktiv -- siehe Hinweis oben)' : ''} -- ${nachrangig ? 'würde, falls keine Microsoft-Anmeldung besteht, ' : ''}jede Änderung automatisch in "rechnungserfassung_sync.json" im gewählten Ordner speichern.
+      ${nachrangig ? '<br><br>Da die Microsoft-Anmeldung (Abschnitt oben) aktiv ist, hat diese Vorrang -- der Ordner-Sync läuft dann nicht zusätzlich mit, bleibt aber als Rückfallebene eingerichtet, falls die Anmeldung mal wegfällt.' : ''}
     </div>
     <button type="button" class="btn-sekundaer" id="btnAutoSyncTrennen">Verbindung trennen</button>`;
   }
@@ -2374,13 +2540,13 @@ function msGraphAbschnittHtml(){
     return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
       Angemeldet als <b>${(msGraphKonto && (msGraphKonto.name || msGraphKonto.username)) || 'unbekannt'}</b>.<br>
       Neue/geänderte Fälle werden bei jeder Änderung automatisch direkt in dein OneDrive hochgeladen -- kein
-      manuelles Verschieben/Kopieren der Sync-Datei mehr nötig. Dieser Weg hat Vorrang vor dem Ordner-Sync oben
+      manuelles Verschieben/Kopieren der Sync-Datei mehr nötig. Dieser Weg hat Vorrang vor dem Ordner-Sync unten
       (der läuft dann nicht zusätzlich mit, bleibt aber als Rückfallebene bestehen).
     </div>
     <button type="button" id="btnMsGraphAbmelden" class="btn-sekundaer">Abmelden</button>`;
   }
   return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-    Noch nicht angemeldet -- ohne Anmeldung bleibt der Ordner-Sync oben bzw. der manuelle Export die einzigen Wege,
+    Noch nicht angemeldet -- ohne Anmeldung bleibt der Ordner-Sync unten bzw. der manuelle Export die einzigen Wege,
     Fälle auf den PC zu übertragen.
   </div>
   <button type="button" id="btnMsGraphAnmelden" class="btn-sekundaer">Mit Microsoft anmelden</button>`;
