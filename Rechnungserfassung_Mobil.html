@@ -433,6 +433,14 @@
   body.dunkel .badge-sync{background:#c7a233; color:#241b00;}
   .badge-brief{display:inline-block; margin-left:4px; font-size:14px; vertical-align:middle; opacity:.85;}
   .badge-pdf{display:inline-block; margin-left:4px; font-size:16px; vertical-align:middle; cursor:pointer;}
+  /* Fall steht zwar schon in der Uebersicht (goldenes "S"), aber die
+     stille Erzeugung am PC konnte noch kein PDF dazu erstellen (Feld fehlt/
+     Datum ungueltig/Betrag weicht ab/Jahr weicht ab/... -- siehe gStillModus
+     in Modul1.bas). Name wird rot hervorgehoben, damit der Fall auffaellt;
+     Korrektur wie gewohnt per Antippen der Zeile -> "Rechnung korrigieren". */
+  .fall-zeile.unvollstaendig .name{color:var(--fehler);}
+  .badge-unvollstaendig{display:inline-block; margin-left:4px; font-size:11px; font-weight:700;
+    color:var(--fehler); white-space:nowrap; vertical-align:middle;}
 
   .position-zeile{display:flex; align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px solid var(--rand);}
   .position-zeile input{width:20px; height:20px; margin-top:1px; flex-shrink:0;}
@@ -2104,24 +2112,50 @@ async function rechnungsverwaltungStatusLaden(alle){
     if(!eintrag) return; // Fall steht noch nicht in der Uebersicht
     const el = app.querySelector(`.sync-status[data-art="${f.art}"][data-idx="${f.idx}"]`);
     if(!el) return;
+    const zeile = app.querySelector(`.fall-zeile[data-art="${f.art}"][data-idx="${f.idx}"]`);
+
+    // "unvollstaendig markieren" (roter Name + Hinweis-Badge): der Fall
+    // wurde von der stillen Erzeugung am PC (gStillModus, Modul1.bas) noch
+    // NICHT zu einer fertigen Rechnung gemacht -- entweder weil noch keine
+    // Rechnungsnummer gezogen wurde (Spalte Q leer, ohne Renu ist keine
+    // Erzeugung moeglich), oder weil trotz Renu noch kein passendes PDF im
+    // Zielordner liegt (uebersprungener Fall: Pflichtfeld/Datum/Betrag/Jahr
+    // etc. -- siehe StillFallUebersprungen). Korrektur wie gewohnt per
+    // Antippen der Zeile -> "Rechnung korrigieren".
+    const alsUnvollstaendigMarkieren = ()=>{
+      if(zeile) zeile.classList.add('unvollstaendig');
+      const hinweis = document.createElement('span');
+      hinweis.className = 'badge-unvollstaendig';
+      hinweis.title = 'Noch nicht als Rechnung erzeugt -- bitte über "Rechnung korrigieren" prüfen und ergänzen.';
+      hinweis.textContent = '(unvollständig)';
+      el.appendChild(hinweis);
+    };
+
     let html = `<span class="badge-sync" title="Bereits in der Rechnungsübersicht vorhanden">S</span>`;
     if(eintrag.versandt) html += `<span class="badge-brief" title="Rechnung wurde bereits versendet">&#9993;</span>`;
     el.innerHTML = html;
-    if(eintrag.renu){
-      // PDF-Pruefung separat/verzoegert (eigene Graph-Anfrage je Fall) --
-      // erst NACHDEM S/Brief schon sichtbar sind, damit die Grundaussage
-      // ("steht in der Uebersicht") nicht auf die langsamere Einzelabfrage
-      // warten muss.
-      msGraphPdfWebUrlLaden(eintrag.renu).then(webUrl=>{
-        if(!webUrl) return;
-        const pdfBadge = document.createElement('span');
-        pdfBadge.className = 'badge-pdf';
-        pdfBadge.title = 'Rechnung als PDF ansehen';
-        pdfBadge.innerHTML = '&#128196;';
-        pdfBadge.onclick = (ev)=>{ ev.stopPropagation(); window.open(webUrl, '_blank'); };
-        el.appendChild(pdfBadge);
-      });
+
+    if(!eintrag.renu){
+      alsUnvollstaendigMarkieren();
+      return;
     }
+
+    // PDF-Pruefung separat/verzoegert (eigene Graph-Anfrage je Fall) --
+    // erst NACHDEM S/Brief schon sichtbar sind, damit die Grundaussage
+    // ("steht in der Uebersicht") nicht auf die langsamere Einzelabfrage
+    // warten muss.
+    msGraphPdfWebUrlLaden(eintrag.renu).then(webUrl=>{
+      if(!webUrl){
+        alsUnvollstaendigMarkieren();
+        return;
+      }
+      const pdfBadge = document.createElement('span');
+      pdfBadge.className = 'badge-pdf';
+      pdfBadge.title = 'Rechnung als PDF ansehen';
+      pdfBadge.innerHTML = '&#128196;';
+      pdfBadge.onclick = (ev)=>{ ev.stopPropagation(); window.open(webUrl, '_blank'); };
+      el.appendChild(pdfBadge);
+    });
   });
 }
 
