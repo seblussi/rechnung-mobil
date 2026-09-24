@@ -813,6 +813,55 @@ async function msGraphUebersichtFingerprintsLaden(){
   }catch(e){ return null; }
 }
 
+// Laedt ALLE Zeilen der Rechnungsuebersicht (nicht nur per Fingerabdruck
+// deduplizierte Treffer zu lokal gespeicherten Faellen wie oben) -- fuer
+// die "Alle Rechnungen"-Ansicht, die unabhaengig von lokal auf dem Handy
+// gespeicherten Faellen wirklich JEDE Zeile der Excel zeigt (auch reine
+// PC-Faelle). Neueste zuerst (Excel-Zeilenreihenfolge umgedreht). PDF-Links
+// werden hier bewusst NICHT vorab pro Zeile geladen (koennte bei einer
+// langen Uebersicht sehr viele Graph-Anfragen ausloesen) -- das passiert
+// erst bei Bedarf beim Antippen einer Zeile, siehe ansichtAlleRechnungen().
+async function msGraphAlleZeilenLaden(){
+  if(msGraphStatus!=='angemeldet') return null;
+  const token = await msGraphTokenHolen();
+  if(!token) return null;
+  try{
+    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
+    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if(!wsRes.ok) return null;
+    const wsDaten = await wsRes.json();
+    const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
+    if(!blattName) return null;
+    const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
+      "')/usedRange(valuesOnly=true)?$select=values";
+    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
+    if(!rangeRes.ok) return null;
+    const rangeDaten = await rangeRes.json();
+    const zeilen = rangeDaten.values || [];
+    const liste = [];
+    for(let i=1;i<zeilen.length;i++){
+      const r = zeilen[i];
+      const art = String(r[0]==null?'':r[0]).trim();
+      const nachname = String(r[5]==null?'':r[5]).trim();
+      const vorname = String(r[6]==null?'':r[6]).trim();
+      if(art==='' && nachname==='' && vorname==='') continue; // komplett leere Zeile
+      liste.push({
+        art: art,                                              // A
+        datum: String(r[1]==null?'':r[1]).trim(),               // B
+        nachname: nachname,                                     // F
+        vorname: vorname,                                       // G
+        betrag: String(r[15]==null?'':r[15]).trim(),            // P
+        renu: String(r[16]==null?'':r[16]).trim(),              // Q
+        versandt: String(r[17]==null?'':r[17]).trim() !== ''    // R
+      });
+    }
+    liste.reverse(); // neueste (unterste Excel-Zeile) zuerst
+    return liste;
+  }catch(e){ return null; }
+}
+
 // Prueft per Graph-Metadatenabfrage (kein Download), ob zu einer
 // Rechnungsnummer eine PDF-Datei im "fertige Rechnungen"-Ordner existiert,
 // und liefert deren webUrl (OneDrive-Web-Vorschau, im Handy-Browser
@@ -1680,6 +1729,10 @@ function ansichtStart(){
       <button class="btn-sekundaer" id="btnLuftlinienTool">Luftlinie berechnen
         <span class="unter">Entfernung Wache/Praxis -- beliebige Adresse, ohne eine Rechnung anzulegen</span>
       </button>
+      ${msGraphStatus==='angemeldet' ? `
+      <button class="btn-sekundaer" id="btnAlleRechnungen" style="margin-top:8px;">Alle Rechnungen
+        <span class="unter">Komplette Rechnungsübersicht durchsuchen und PDFs öffnen -- auch reine PC-Fälle</span>
+      </button>` : ''}
     </div>`;
   app.innerHTML = html;
   document.getElementById('kLS').onclick = ()=>ansichtMaske('ls');
@@ -1719,6 +1772,8 @@ function ansichtStart(){
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
   };
   document.getElementById('btnLuftlinienTool').onclick = ansichtLuftlinienTool;
+  const btnAlle = document.getElementById('btnAlleRechnungen');
+  if(btnAlle) btnAlle.onclick = ansichtAlleRechnungen;
 }
 
 // Eigenständiges Werkzeug (Start -> "Luftlinie berechnen"): unabhängig von
@@ -2156,6 +2211,92 @@ async function rechnungsverwaltungStatusLaden(alle){
       pdfBadge.onclick = (ev)=>{ ev.stopPropagation(); window.open(webUrl, '_blank'); };
       el.appendChild(pdfBadge);
     });
+  });
+}
+
+// Eigenstaendige Ansicht (Start -> "Alle Rechnungen"): zeigt WIRKLICH jede
+// Zeile der Excel-Rechnungsuebersicht per Graph-API, unabhaengig davon, ob
+// der Fall lokal auf dem Handy gespeichert ist -- im Unterschied zur
+// "Rechnungsuebersicht"-Liste (ansichtKorrigieren), die nur lokal
+// gespeicherte, noch nicht abgeschlossene Faelle zeigt. Bewusst rein
+// lesend (kein Bearbeiten): nur Suchen/Filtern und PDFs oeffnen -- siehe
+// Begruendung im Kommentar bei msGraphAlleZeilenLaden weiter oben. PDF-
+// Links werden erst beim Antippen einer Zeile nachgeladen, nicht vorab
+// fuer die ganze (potenziell lange) Liste.
+let alleRechnungenCache = null; // pro App-Sitzung gecacht, "Neu laden" erzwingt Refresh
+async function ansichtAlleRechnungen(){
+  vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtAlleRechnungen(); };
+  setzeTitel('Alle Rechnungen', ansichtStart);
+  app.innerHTML = `
+    <div class="feld" style="margin-bottom:6px;">
+      <input type="text" id="txtAlleSuche" autocomplete="off" placeholder="Suche: Name oder Rechnungsnummer">
+    </div>
+    <button class="btn-sekundaer" id="btnAlleNeuLaden" style="margin-bottom:12px;">Neu laden</button>
+    <div id="alleRechnungenListe"><div class="leer-hinweis">Lade Rechnungsübersicht...</div></div>`;
+
+  const suchfeld = document.getElementById('txtAlleSuche');
+  suchfeld.oninput = ()=> alleRechnungenListeRendern(alleRechnungenCache, suchfeld.value);
+  document.getElementById('btnAlleNeuLaden').onclick = async ()=>{
+    document.getElementById('alleRechnungenListe').innerHTML = '<div class="leer-hinweis">Lade Rechnungsübersicht...</div>';
+    alleRechnungenCache = await msGraphAlleZeilenLaden();
+    alleRechnungenListeRendern(alleRechnungenCache, suchfeld.value);
+  };
+
+  if(!alleRechnungenCache) alleRechnungenCache = await msGraphAlleZeilenLaden();
+  alleRechnungenListeRendern(alleRechnungenCache, suchfeld.value);
+}
+
+function alleRechnungenListeRendern(liste, suchtext){
+  const zielEl = document.getElementById('alleRechnungenListe');
+  if(!zielEl) return;
+  if(liste === null){
+    zielEl.innerHTML = '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden (kein Netz oder nicht angemeldet). Bitte "Neu laden" versuchen.</div>';
+    return;
+  }
+  const suche = (suchtext||'').trim().toLowerCase();
+  const gefiltert = suche ? liste.filter(f=>
+    (f.nachname+' '+f.vorname).toLowerCase().includes(suche) || f.renu.toLowerCase().includes(suche)
+  ) : liste;
+
+  if(!gefiltert.length){
+    zielEl.innerHTML = '<div class="leer-hinweis">Keine Treffer.</div>';
+    return;
+  }
+  // Lange Listen nicht komplett auf einmal rendern -- erste 150 Treffer,
+  // Rest durch Eingrenzen der Suche statt endlosem Scrollen erreichbar.
+  const MAX_ANZEIGE = 150;
+  const anzuzeigen = gefiltert.slice(0, MAX_ANZEIGE);
+
+  zielEl.innerHTML = anzuzeigen.map((f,i)=>`
+    <div class="fall-zeile ${f.art==='L'?'ls':'pt'}" data-i="${i}">
+      <div class="inhalt">
+        <div class="name"><span class="badge-neu ${f.art==='L'?'ls':'pt'}">${f.art==='L'?'L':'P'}</span>${f.nachname}, ${f.vorname}<span class="sync-status">${f.versandt ? '<span class="badge-brief" title="Rechnung wurde bereits versendet">&#9993;</span>' : ''}<span class="pdf-platz"></span></span></div>
+        <div class="info">${f.datum || ''}${f.betrag ? ' &middot; ' + f.betrag + ' €' : ''}${f.renu ? ' &middot; Nr. ' + f.renu : ' &middot; ohne Rechnungsnummer'}</div>
+      </div>
+    </div>`).join('') +
+    (gefiltert.length > MAX_ANZEIGE ? `<div class="leer-hinweis">${gefiltert.length - MAX_ANZEIGE} weitere Treffer -- bitte Suche eingrenzen.</div>` : '');
+
+  zielEl.querySelectorAll('.fall-zeile').forEach(el=>{
+    const f = anzuzeigen[parseInt(el.dataset.i,10)];
+    if(!f.renu){ el.style.opacity = '.6'; return; } // ohne Rechnungsnummer sicher kein PDF vorhanden
+    el.style.cursor = 'pointer';
+    el.onclick = async ()=>{
+      const platz = el.querySelector('.pdf-platz');
+      if(el.dataset.geladen === '1'){
+        if(el.dataset.url) window.open(el.dataset.url, '_blank');
+        return;
+      }
+      platz.innerHTML = ' <span style="font-size:12px; color:var(--text-schwach);">lädt…</span>';
+      const url = await msGraphPdfWebUrlLaden(f.renu);
+      el.dataset.geladen = '1';
+      if(url){
+        el.dataset.url = url;
+        platz.innerHTML = '<span class="badge-pdf" title="Rechnung als PDF ansehen">&#128196;</span>';
+        window.open(url, '_blank');
+      } else {
+        platz.innerHTML = ' <span style="font-size:12px; color:var(--text-schwach);">kein PDF gefunden</span>';
+      }
+    };
   });
 }
 
