@@ -422,15 +422,15 @@
     margin-right:8px; vertical-align:middle;}
   .badge-neu.ls{background:var(--ls-farbe);}
   .badge-neu.pt{background:var(--pt-farbe);}
-  /* Sync-/Versand-/PDF-Status (Rechnungsübersicht) -- goldenes "S" =
-     bereits in der Übersicht vorhanden, Brief-Symbol = bereits versendet,
-     Dokument-Symbol = PDF vorhanden und antippbar. Wird erst nachträglich
-     per Graph-Abfrage befüllt, siehe rechnungsverwaltungStatusLaden(). */
+  /* Versand-/PDF-Status, nur in der Rechnungsverwaltung (ansichtAlleRechnungen):
+     Brief-Symbol = bereits versendet, Dokument-Symbol = PDF vorhanden und
+     antippbar. Ein goldenes "S" ("bereits in der Übersicht vorhanden") gibt
+     es bewusst nicht mehr: in "Lokale Rechnungen" ist jede verbleibende
+     Zeile per Definition NOCH NICHT übernommen (sie verschwindet automatisch
+     sobald doch, siehe lokaleFaelleBereitsUebernommenEntfernen), und in der
+     Rechnungsverwaltung ist jede Zeile per Definition BEREITS übernommen --
+     das "S" wäre in beiden Ansichten immer redundant gewesen. */
   .sync-status{margin-left:6px; white-space:nowrap;}
-  .badge-sync{display:inline-block; width:18px; height:18px; line-height:18px; text-align:center;
-    background:#d4af37; color:#3a2c00; font-size:11px; font-weight:bold; border-radius:4px;
-    vertical-align:middle;}
-  body.dunkel .badge-sync{background:#c7a233; color:#241b00;}
   .badge-brief{display:inline-block; margin-left:4px; font-size:14px; vertical-align:middle; opacity:.85;}
   .badge-pdf{display:inline-block; margin-left:4px; font-size:16px; vertical-align:middle; cursor:pointer;}
   /* Fall steht zwar schon in der Uebersicht (goldenes "S"), aber die
@@ -1690,7 +1690,7 @@ function ansichtStart(){
       <button class="karte ls" id="kLS"><span class="icon">&#9760;</span>Leichen-<br>schau</button>
       <button class="karte pt" id="kPT"><span class="icon">&#9877;</span>Privat-<br>rechnung</button>
     </div>
-    <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Rechnungsübersicht
+    <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Lokale Rechnungen
       <span class="unter">${gesamtOffen} noch nicht am PC übernommen</span>
     </button>`;
   // Immer 3 feste Buttons, Reihenfolge links->rechts: Import, Export, Sync.
@@ -1730,7 +1730,7 @@ function ansichtStart(){
         <span class="unter">Entfernung Wache/Praxis -- beliebige Adresse, ohne eine Rechnung anzulegen</span>
       </button>
       ${msGraphStatus==='angemeldet' ? `
-      <button class="btn-sekundaer" id="btnAlleRechnungen" style="margin-top:8px;">Alle Rechnungen
+      <button class="btn-sekundaer" id="btnAlleRechnungen" style="margin-top:8px;">Rechnungsverwaltung
         <span class="unter">Komplette Rechnungsübersicht durchsuchen und PDFs öffnen -- auch reine PC-Fälle</span>
       </button>` : ''}
     </div>`;
@@ -2012,7 +2012,7 @@ function rechnungsnummernVergeben(faelleAusw){
 function ansichtKorrigieren(){
   einstellungenOffen = false;
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtKorrigieren(); };
-  setzeTitel('Rechnungsübersicht', ansichtStart);
+  setzeTitel('Lokale Rechnungen', ansichtStart);
   const alle = [...ladeFaelle('ls').map((f,i)=>({...f, art:'ls', idx:i})), ...ladeFaelle('pt').map((f,i)=>({...f, art:'pt', idx:i}))];
   if(!alle.length){ app.innerHTML = '<div class="leer-hinweis">Keine lokal gespeicherten Fälle vorhanden.</div>'; return; }
 
@@ -2041,7 +2041,7 @@ function ansichtKorrigieren(){
         <div class="fall-zeile ${f.art}" data-art="${f.art}" data-idx="${f.idx}">
           <input type="checkbox" class="chk" data-art="${f.art}" data-idx="${f.idx}">
           <div class="inhalt">
-            <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${f.werte.txtName || '(ohne Namen)'}<span class="sync-status" data-art="${f.art}" data-idx="${f.idx}"></span></div>
+            <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${f.werte.txtName || '(ohne Namen)'}</div>
             <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}</div>
           </div>
         </div>`).join('')}
@@ -2139,94 +2139,66 @@ function ansichtKorrigieren(){
 
   auswahlAktualisieren();
 
-  // Sync-/Versand-/PDF-Status je Fall NACHTRAEGLICH per Graph-API laden
-  // (goldenes "S", Brief-Symbol, PDF-Symbol -- siehe rechnungsverwaltungStatusLaden)
-  // -- bewusst NICHT blockierend vor dem ersten Rendern, damit die Liste
-  // sofort da ist; die Badges "poppen" stattdessen nach, sobald die
-  // Graph-Antwort da ist. Nur wenn Microsoft/OneDrive-Sync aktiv ist --
-  // ohne Anmeldung gibt es keine Datenquelle dafuer.
-  if(msGraphStatus==='angemeldet') rechnungsverwaltungStatusLaden(alle);
+  // Automatischer Abgleich: Faelle, die per PC-Sync (One-Click-Import,
+  // Fingerabdruck-Abgleich) laengst in die Rechnungsuebersicht uebernommen
+  // wurden, haben hier lokal nichts mehr verloren -- sie "rutschen" in die
+  // Rechnungsverwaltung und werden aus "Lokale Rechnungen" automatisch
+  // entfernt. Bewusst NICHT blockierend vor dem ersten Rendern (Liste ist
+  // sofort da); der Abgleich laeuft im Hintergrund nach und rendert bei
+  // Treffern neu. Nur wenn Microsoft/OneDrive-Sync aktiv ist -- ohne
+  // Anmeldung gibt es keine Datenquelle dafuer.
+  if(msGraphStatus==='angemeldet') lokaleFaelleBereitsUebernommenEntfernen(alle);
 }
 
-// Holt fuer alle uebergebenen (lokalen) Faelle LIVE per Graph-API den
-// aktuellen Stand aus der Rechnungsuebersicht und ergaenzt je Fall-Zeile:
-//   - goldenes "S"   -- Fall steht bereits in der Uebersicht (Fingerabdruck-
-//                       Treffer, exakt dieselbe Logik wie beim Einlesen
-//                       "Aus Handy einlesen" am PC)
-//   - Brief-Symbol   -- Spalte R (Versanddatum) ist dort gefuellt, d.h. die
-//                       Rechnung wurde am PC bereits tatsaechlich versendet
-//   - PDF-Symbol     -- zur ermittelten Rechnungsnummer liegt im Ordner
-//                       "fertige Rechnungen" bereits eine PDF-Datei; antippen
-//                       oeffnet sie direkt im Handy-Browser (OneDrive-Vorschau)
-// Alles rein lesend, nichts davon veraendert etwas.
-async function rechnungsverwaltungStatusLaden(alle){
+// Prueft fuer alle uebergebenen (lokalen) Faelle per Graph-API/Fingerabdruck,
+// ob sie bereits in der Rechnungsuebersicht stehen (exakt dieselbe Logik wie
+// beim Einlesen "Aus Handy einlesen" am PC) -- und entfernt Treffer aus dem
+// lokalen Speicher: sobald ein Fall am PC uebernommen wurde, gehoert er in
+// die Rechnungsverwaltung (dort ist er per Definition schon vorhanden;
+// Vollstaendigkeit/rote Markierung wird dort, nicht hier, angezeigt), nicht
+// mehr in "Lokale Rechnungen". Analog zum Loeschen ueber "Ausgewaehlte
+// loeschen": je Art absteigend nach idx loeschen, damit sich Indizes der
+// noch zu loeschenden Eintraege nicht verschieben.
+async function lokaleFaelleBereitsUebernommenEntfernen(alle){
   const map = await msGraphUebersichtFingerprintsLaden();
-  if(!map) return; // kein Login/kein Netz/Fehler -- einfach keine Badges anzeigen
-  alle.forEach(f=>{
-    const eintrag = map.get(fallFingerprintBauen(f));
-    if(!eintrag) return; // Fall steht noch nicht in der Uebersicht
-    const el = app.querySelector(`.sync-status[data-art="${f.art}"][data-idx="${f.idx}"]`);
-    if(!el) return;
-    const zeile = app.querySelector(`.fall-zeile[data-art="${f.art}"][data-idx="${f.idx}"]`);
+  if(!map) return; // kein Login/kein Netz/Fehler -- lokale Liste bleibt unveraendert
 
-    // "unvollstaendig markieren" (roter Name + Hinweis-Badge): der Fall
-    // wurde von der stillen Erzeugung am PC (gStillModus, Modul1.bas) noch
-    // NICHT zu einer fertigen Rechnung gemacht -- entweder weil noch keine
-    // Rechnungsnummer gezogen wurde (Spalte Q leer, ohne Renu ist keine
-    // Erzeugung moeglich), oder weil trotz Renu noch kein passendes PDF im
-    // Zielordner liegt (uebersprungener Fall: Pflichtfeld/Datum/Betrag/Jahr
-    // etc. -- siehe StillFallUebersprungen). Korrektur wie gewohnt per
-    // Antippen der Zeile -> "Rechnung korrigieren".
-    const alsUnvollstaendigMarkieren = ()=>{
-      if(zeile) zeile.classList.add('unvollstaendig');
-      const hinweis = document.createElement('span');
-      hinweis.className = 'badge-unvollstaendig';
-      hinweis.title = 'Noch nicht als Rechnung erzeugt -- bitte über "Rechnung korrigieren" prüfen und ergänzen.';
-      hinweis.textContent = '(unvollständig)';
-      el.appendChild(hinweis);
-    };
+  const uebernommen = alle.filter(f=> map.has(fallFingerprintBauen(f)));
+  if(!uebernommen.length) return;
 
-    let html = `<span class="badge-sync" title="Bereits in der Rechnungsübersicht vorhanden">S</span>`;
-    if(eintrag.versandt) html += `<span class="badge-brief" title="Rechnung wurde bereits versendet">&#9993;</span>`;
-    el.innerHTML = html;
-
-    if(!eintrag.renu){
-      alsUnvollstaendigMarkieren();
-      return;
-    }
-
-    // PDF-Pruefung separat/verzoegert (eigene Graph-Anfrage je Fall) --
-    // erst NACHDEM S/Brief schon sichtbar sind, damit die Grundaussage
-    // ("steht in der Uebersicht") nicht auf die langsamere Einzelabfrage
-    // warten muss.
-    msGraphPdfWebUrlLaden(eintrag.renu).then(webUrl=>{
-      if(!webUrl){
-        alsUnvollstaendigMarkieren();
-        return;
-      }
-      const pdfBadge = document.createElement('span');
-      pdfBadge.className = 'badge-pdf';
-      pdfBadge.title = 'Rechnung als PDF ansehen';
-      pdfBadge.innerHTML = '&#128196;';
-      pdfBadge.onclick = (ev)=>{ ev.stopPropagation(); window.open(webUrl, '_blank'); };
-      el.appendChild(pdfBadge);
-    });
+  ['ls','pt'].forEach(art=>{
+    const idxListe = uebernommen.filter(f=>f.art===art).map(f=>f.idx).sort((a,b)=>b-a);
+    if(!idxListe.length) return;
+    const arr = ladeFaelle(art);
+    idxListe.forEach(i=> arr.splice(i,1));
+    speichereFaelle(art, arr);
   });
+
+  appToastAnzeigen(`${uebernommen.length} Rechnung(en) wurden bereits am PC übernommen und sind jetzt in der Rechnungsverwaltung zu finden.`, 3000);
+  // Nur neu rendern, wenn diese Ansicht (inzwischen) noch aktiv ist -- ein
+  // schneller Wegklick waehrend die Graph-Antwort noch unterwegs war soll
+  // nicht versehentlich eine andere, laengst geoeffnete Ansicht ueberschreiben.
+  if(document.getElementById('korrigierenListe')) ansichtKorrigieren();
 }
 
-// Eigenstaendige Ansicht (Start -> "Alle Rechnungen"): zeigt WIRKLICH jede
-// Zeile der Excel-Rechnungsuebersicht per Graph-API, unabhaengig davon, ob
-// der Fall lokal auf dem Handy gespeichert ist -- im Unterschied zur
-// "Rechnungsuebersicht"-Liste (ansichtKorrigieren), die nur lokal
-// gespeicherte, noch nicht abgeschlossene Faelle zeigt. Bewusst rein
-// lesend (kein Bearbeiten): nur Suchen/Filtern und PDFs oeffnen -- siehe
+// Eigenstaendige Ansicht (Start -> "Rechnungsverwaltung"): zeigt WIRKLICH
+// jede Zeile der Excel-Rechnungsuebersicht per Graph-API, unabhaengig davon,
+// ob der Fall lokal auf dem Handy gespeichert ist -- im Unterschied zur
+// "Lokale Rechnungen"-Liste (ansichtKorrigieren), die nur lokal gespeicherte,
+// noch nicht am PC uebernommene Faelle zeigt (und deren Eintraege nach
+// erfolgtem PC-Sync automatisch von dort verschwinden). Bewusst rein lesend
+// (kein Bearbeiten): nur Suchen/Filtern und PDFs oeffnen -- siehe
 // Begruendung im Kommentar bei msGraphAlleZeilenLaden weiter oben. PDF-
 // Links werden erst beim Antippen einer Zeile nachgeladen, nicht vorab
-// fuer die ganze (potenziell lange) Liste.
+// fuer die ganze (potenziell lange) Liste -- Ausnahme: fuer ein begrenztes
+// Fenster der zuletzt hinzugekommenen Zeilen wird die PDF-Pruefung eager
+// vorgezogen, um unvollstaendige (von der stillen Erzeugung am PC
+// uebersprungene) Faelle zeitnah rot zu markieren, ohne bei einer langen
+// Liste auf einen Schlag hunderte Graph-Anfragen abzufeuern.
 let alleRechnungenCache = null; // pro App-Sitzung gecacht, "Neu laden" erzwingt Refresh
 async function ansichtAlleRechnungen(){
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtAlleRechnungen(); };
-  setzeTitel('Alle Rechnungen', ansichtStart);
+  setzeTitel('Rechnungsverwaltung', ansichtStart);
   app.innerHTML = `
     <div class="feld" style="margin-bottom:6px;">
       <input type="text" id="txtAlleSuche" autocomplete="off" placeholder="Suche: Name oder Rechnungsnummer">
@@ -2276,9 +2248,39 @@ function alleRechnungenListeRendern(liste, suchtext){
     </div>`).join('') +
     (gefiltert.length > MAX_ANZEIGE ? `<div class="leer-hinweis">${gefiltert.length - MAX_ANZEIGE} weitere Treffer -- bitte Suche eingrenzen.</div>` : '');
 
+  // "unvollstaendig" markieren (roter Name + Hinweis-Badge): der Fall wurde
+  // von der stillen Erzeugung am PC (gStillModus, Modul1.bas) noch NICHT zu
+  // einer fertigen Rechnung gemacht -- entweder weil noch keine
+  // Rechnungsnummer gezogen wurde (Spalte Q leer, ohne Renu ist keine
+  // Erzeugung moeglich), oder weil trotz Renu noch kein passendes PDF im
+  // Zielordner liegt (uebersprungener Fall: Pflichtfeld/Datum/Betrag/Jahr
+  // etc. -- siehe StillFallUebersprungen). Korrektur wie gewohnt manuell
+  // ueber "Rechnung korrigieren" am PC.
+  const alsUnvollstaendigMarkieren = (el)=>{
+    el.classList.add('unvollstaendig');
+    const platz = el.querySelector('.pdf-platz');
+    const hinweis = document.createElement('span');
+    hinweis.className = 'badge-unvollstaendig';
+    hinweis.title = 'Noch nicht als Rechnung erzeugt -- bitte am PC über "Rechnung korrigieren" prüfen und ergänzen.';
+    hinweis.textContent = '(unvollständig)';
+    platz.appendChild(hinweis);
+  };
+
+  // Eager-Fenster: fuer die ersten paar sichtbaren Zeilen wird der PDF-Status
+  // sofort mitgeladen (statt erst beim Antippen), damit unvollstaendige
+  // Faelle zeitnah rot auffallen -- ohne bei einer langen Liste auf einen
+  // Schlag hunderte Graph-Anfragen abzufeuern. Darueber hinaus bleibt es
+  // beim bewaehrten lazy Laden per Antippen.
+  const EAGER_FENSTER = 40;
+
   zielEl.querySelectorAll('.fall-zeile').forEach(el=>{
-    const f = anzuzeigen[parseInt(el.dataset.i,10)];
-    if(!f.renu){ el.style.opacity = '.6'; return; } // ohne Rechnungsnummer sicher kein PDF vorhanden
+    const i = parseInt(el.dataset.i,10);
+    const f = anzuzeigen[i];
+    if(!f.renu){
+      // Ohne Rechnungsnummer sicher noch kein PDF vorhanden -- sofort rot.
+      alsUnvollstaendigMarkieren(el);
+      return;
+    }
     el.style.cursor = 'pointer';
     el.onclick = async ()=>{
       const platz = el.querySelector('.pdf-platz');
@@ -2294,9 +2296,26 @@ function alleRechnungenListeRendern(liste, suchtext){
         platz.innerHTML = '<span class="badge-pdf" title="Rechnung als PDF ansehen">&#128196;</span>';
         window.open(url, '_blank');
       } else {
-        platz.innerHTML = ' <span style="font-size:12px; color:var(--text-schwach);">kein PDF gefunden</span>';
+        el.classList.remove('unvollstaendig');
+        alsUnvollstaendigMarkieren(el);
       }
     };
+
+    if(i < EAGER_FENSTER){
+      msGraphPdfWebUrlLaden(f.renu).then(url=>{
+        el.dataset.geladen = '1';
+        if(url){
+          el.dataset.url = url;
+          const pdfBadge = document.createElement('span');
+          pdfBadge.className = 'badge-pdf';
+          pdfBadge.title = 'Rechnung als PDF ansehen';
+          pdfBadge.innerHTML = '&#128196;';
+          el.querySelector('.pdf-platz').appendChild(pdfBadge);
+        } else {
+          alsUnvollstaendigMarkieren(el);
+        }
+      });
+    }
   });
 }
 
