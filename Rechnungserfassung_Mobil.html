@@ -370,20 +370,26 @@
   .auswahlleiste .zeile1{display:flex; align-items:center; gap:8px; font-size:13.5px; margin-top:10px;}
   .auswahlleiste .zeile1 label{display:flex; align-items:center; gap:6px; cursor:pointer;}
   .auswahlleiste .aktionen-reihe{display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;}
-  /* KORREKTUR (Rueckmeldung): nicht die Breite war das Problem, sondern die
-     Hoehe -- "Ausgewaehlte loeschen" (rot) ist kuerzerer Text und blieb
-     dadurch je nach Zeilenumbruch einzeilig, waehrend die anderen Buttons
-     zweizeilig wurden -- ohne feste Mindesthoehe wirkte der rote Button
-     dadurch kleiner. min-height sorgt jetzt dafuer, dass alle 3 Buttons
-     immer gleich hoch sind, unabhaengig vom Zeilenumbruch. */
-  .auswahlleiste .aktionen-reihe button{
-    flex:1; min-width:110px; min-height:46px; padding:9px 8px; font-size:12.5px; font-weight:600;
-    border-radius:8px; line-height:1.25;
+  /* KORREKTUR (Rueckmeldung): "Ausgewaehlte loeschen" wich in der Groesse
+     von den beiden Buttons daneben ab -- Ursache war min-width:110px in
+     Kombination mit flex-wrap: je nach Bildschirmbreite wanderte mal dieser,
+     mal ein anderer Button allein in eine neue Zeile und wurde dort, da
+     flex:1 ohne Geschwister, auf die volle Zeilenbreite gestreckt. Die 3
+     Buttons stecken jetzt (analog .datensicherung-reihe) in einem eigenen,
+     NICHT umbrechenden Flex-Container -- dadurch bleiben sie immer exakt
+     gleich breit in einer Zeile, unabhaengig von der Bildschirmbreite. Nur
+     das separate "Letzte Nr."-Feld (rn-mini) darf bei Bedarf weiterhin in
+     eine eigene Zeile umbrechen (siehe .aktionen-reihe selbst, weiterhin
+     flex-wrap:wrap). */
+  .auswahlleiste .aktionen-buttons{display:flex; gap:8px; flex:1 1 100%; align-items:stretch;}
+  .auswahlleiste .aktionen-buttons button{
+    flex:1; min-width:0; min-height:46px; padding:9px 6px; font-size:12px; font-weight:600;
+    border-radius:8px; line-height:1.2;
     background:var(--karte); cursor:pointer; border:1.5px solid var(--rand); color:var(--text);
   }
-  .auswahlleiste .aktionen-reihe button:disabled{opacity:.45; cursor:default;}
-  .auswahlleiste .aktionen-reihe button.gefahr{border-color:var(--fehler); color:var(--fehler);}
-  .auswahlleiste .aktionen-reihe button.betont{border-color:var(--ls-farbe); color:var(--ls-farbe);}
+  .auswahlleiste .aktionen-buttons button:disabled{opacity:.45; cursor:default;}
+  .auswahlleiste .aktionen-buttons button.gefahr{border-color:var(--fehler); color:var(--fehler);}
+  .auswahlleiste .aktionen-buttons button.betont{border-color:var(--ls-farbe); color:var(--ls-farbe);}
   /* "Letzte Rechnungsnummer" -- auf Nutzerwunsch zusaetzlich ganz rechts bei
      den Buttons der Rechnungsuebersicht anzeig- und bearbeitbar (bisher nur
      in den Einstellungen). "margin-left:auto" schiebt es innerhalb der
@@ -430,17 +436,29 @@
      sobald doch, siehe lokaleFaelleBereitsUebernommenEntfernen), und in der
      Rechnungsverwaltung ist jede Zeile per Definition BEREITS übernommen --
      das "S" wäre in beiden Ansichten immer redundant gewesen. */
+  /* Rechte Symbolspalte in der Rechnungsverwaltung (Brief/PDF/Warnsymbol):
+     eigene Spalte statt inline neben dem Namen -- rechtsbuendig, vertikal
+     zur ganzen Zeile (Name+Info) zentriert, Symbole deutlich groesser als
+     vorher, damit sie auf einen Blick erfassbar sind. */
+  .fall-zeile .fall-icons{
+    flex-shrink:0; align-self:center; display:flex; align-items:center; justify-content:flex-end;
+    gap:8px; min-width:30px;
+  }
   .sync-status{margin-left:6px; white-space:nowrap;}
-  .badge-brief{display:inline-block; margin-left:4px; font-size:14px; vertical-align:middle; opacity:.85;}
-  .badge-pdf{display:inline-block; margin-left:4px; font-size:16px; vertical-align:middle; cursor:pointer;}
-  /* Fall steht zwar schon in der Uebersicht (goldenes "S"), aber die
-     stille Erzeugung am PC konnte noch kein PDF dazu erstellen (Feld fehlt/
-     Datum ungueltig/Betrag weicht ab/Jahr weicht ab/... -- siehe gStillModus
-     in Modul1.bas). Name wird rot hervorgehoben, damit der Fall auffaellt;
-     Korrektur wie gewohnt per Antippen der Zeile -> "Rechnung korrigieren". */
+  .badge-brief{display:inline-block; font-size:22px; line-height:1; vertical-align:middle; opacity:.85;}
+  .badge-pdf{display:inline-block; font-size:28px; line-height:1; vertical-align:middle; cursor:pointer;}
+  /* Fall steht zwar schon in der Rechnungsuebersicht (nur solche Zeilen
+     zeigt die Rechnungsverwaltung ueberhaupt), aber die stille Erzeugung am
+     PC konnte noch kein PDF dazu erstellen (Feld fehlt/Datum ungueltig/
+     Betrag weicht ab/Jahr weicht ab/... -- siehe gStillModus in Modul1.bas).
+     Name wird rot hervorgehoben UND rechts ein rotes Warnsymbol statt des
+     Dokument-Symbols gezeigt (die beiden schliessen sich gegenseitig aus:
+     entweder es gibt schon ein PDF zum Ansehen, oder der Fall braucht noch
+     eine manuelle Korrektur -- nie beides). Korrektur wie gewohnt per
+     Antippen der Zeile -> "Rechnung korrigieren" am PC. */
   .fall-zeile.unvollstaendig .name{color:var(--fehler);}
-  .badge-unvollstaendig{display:inline-block; margin-left:4px; font-size:11px; font-weight:700;
-    color:var(--fehler); white-space:nowrap; vertical-align:middle;}
+  .badge-unvollstaendig{display:inline-block; font-size:26px; line-height:1;
+    color:var(--fehler); vertical-align:middle;}
 
   .position-zeile{display:flex; align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px solid var(--rand);}
   .position-zeile input{width:20px; height:20px; margin-top:1px; flex-shrink:0;}
@@ -1006,7 +1024,19 @@ function syncButtonInfo(){
       aktion: async ()=>{ appToastAnzeigen('Auto-Sync wird von diesem Browser nicht unterstützt. Bitte Export/Import verwenden.', 2800); }
     };
   }
-  // 'nicht_verbunden' oder 'unbekannt' (siehe autoSyncInitialisieren)
+  // 'nicht_verbunden' oder 'unbekannt' (siehe autoSyncInitialisieren) --
+  // noch gar kein Sync eingerichtet: als Standard-Weg direkt den robusteren
+  // OneDrive-Sync (Microsoft-Anmeldung) anstossen, statt zuerst den
+  // Ordner-Auto-Sync anzubieten. Nur wenn OneDrive-Anmeldung technisch gar
+  // nicht verfuegbar ist (z.B. MSAL konnte nicht laden), auf den
+  // Ordner-Auto-Sync zurueckfallen.
+  if(msGraphVerfuegbar()){
+    return {
+      klasse:'sync-rot', text:'Sync einrichten',
+      unter:'Mit OneDrive anmelden',
+      aktion: async ()=>{ await msGraphAnmelden(); } // Redirect -- Seite laedt danach neu
+    };
+  }
   return {
     klasse:'sync-rot', text:'Sync einrichten',
     unter:'Ordner auswählen',
@@ -1692,7 +1722,11 @@ function ansichtStart(){
     </div>
     <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Lokale Rechnungen
       <span class="unter">${gesamtOffen} noch nicht am PC übernommen</span>
-    </button>`;
+    </button>
+    ${msGraphStatus==='angemeldet' ? `
+    <button class="btn-sekundaer btn-uebersicht" id="btnAlleRechnungen">Rechnungsverwaltung
+      <span class="unter">Komplette Rechnungsübersicht durchsuchen und PDFs öffnen</span>
+    </button>` : ''}`;
   // Immer 3 feste Buttons, Reihenfolge links->rechts: Import, Export, Sync.
   // Vorher wechselte hier je nach Sync-Status ein einzelner Button
   // ("erneut verbinden" ODER "exportieren") -- das führte dazu, dass der
@@ -1729,10 +1763,9 @@ function ansichtStart(){
       <button class="btn-sekundaer" id="btnLuftlinienTool">Luftlinie berechnen
         <span class="unter">Entfernung Wache/Praxis -- beliebige Adresse, ohne eine Rechnung anzulegen</span>
       </button>
-      ${msGraphStatus==='angemeldet' ? `
-      <button class="btn-sekundaer" id="btnAlleRechnungen" style="margin-top:8px;">Rechnungsverwaltung
-        <span class="unter">Komplette Rechnungsübersicht durchsuchen und PDFs öffnen -- auch reine PC-Fälle</span>
-      </button>` : ''}
+      <button class="btn-sekundaer" id="btnNotapotheke" style="margin-top:8px;">Apotheken-Notdienst
+        <span class="unter">Aktueller Standort -- direkt in die Umkreissuche bei aponet.de</span>
+      </button>
     </div>`;
   app.innerHTML = html;
   document.getElementById('kLS').onclick = ()=>ansichtMaske('ls');
@@ -1772,8 +1805,70 @@ function ansichtStart(){
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
   };
   document.getElementById('btnLuftlinienTool').onclick = ansichtLuftlinienTool;
+  document.getElementById('btnNotapotheke').onclick = notapothekenSucheOeffnen;
   const btnAlle = document.getElementById('btnAlleRechnungen');
   if(btnAlle) btnAlle.onclick = ansichtAlleRechnungen;
+}
+
+// Werkzeug (Start -> "Apotheken-Notdienst"): ermittelt den aktuellen
+// GPS-Standort, wandelt ihn per Nominatim-Reverse-Geocoding in PLZ+Ort um
+// und oeffnet damit DIREKT die Ergebnisseite der aponet.de-Umkreissuche
+// (URL-Muster "https://www.aponet.de/notdienstsuche/<PLZ>-<Ort>", von
+// aponet.de selbst so verlinkt -- zeigt sofort die Notdienst-Apotheken im
+// Umkreis, kein manuelles Eintippen von PLZ/Ort mehr noetig). Schlaegt die
+// Standort- oder Adressermittlung fehl (kein GPS, Berechtigung verweigert,
+// kein Internet), wird ersatzweise die normale aponet.de-Notdienstsuche
+// geoeffnet, in der PLZ/Ort dann wie gewohnt manuell eingegeben werden
+// koennen -- das Werkzeug bleibt so in jedem Fall nutzbar. ALLE Hinweise
+// dazu laufen ueber den bestehenden Toast (appToastAnzeigen), NIE ueber ein
+// natives confirm()/alert() (siehe Vorgabe: keine nativen Popups in der
+// Handy-App).
+async function notapothekenSucheOeffnen(){
+  const APONET_SUCHE = 'https://www.aponet.de/apotheke/notdienstsuche';
+  const btn = document.getElementById('btnNotapotheke');
+  const btnTextOriginal = btn ? btn.innerHTML : '';
+  const zuruecksetzen = ()=>{ if(btn){ btn.disabled = false; btn.innerHTML = btnTextOriginal; } };
+
+  if(!('geolocation' in navigator)){
+    appToastAnzeigen('Standortermittlung wird von diesem Gerät/Browser nicht unterstützt -- aponet.de wird zum manuellen Suchen geöffnet.', 3200);
+    window.open(APONET_SUCHE, '_blank');
+    return;
+  }
+
+  if(btn){
+    btn.disabled = true;
+    btn.innerHTML = 'Standort wird ermittelt…<span class="unter">Bitte kurz warten</span>';
+  }
+
+  navigator.geolocation.getCurrentPosition(async (pos)=>{
+    try{
+      const {latitude, longitude} = pos.coords;
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1`;
+      const res = await fetch(url, {headers:{'Accept':'application/json'}});
+      const data = await res.json();
+      const a = (data && data.address) || {};
+      const plz = a.postcode;
+      const ort = a.city || a.town || a.village || a.municipality || a.city_district;
+      if(plz && ort){
+        window.open(`https://www.aponet.de/notdienstsuche/${encodeURIComponent(plz)}-${encodeURIComponent(ort.replace(/\s+/g,'-'))}`, '_blank');
+      } else {
+        appToastAnzeigen('Standort konnte keiner eindeutigen PLZ/Ort zugeordnet werden -- aponet.de wird zum manuellen Suchen geöffnet.', 3200);
+        window.open(APONET_SUCHE, '_blank');
+      }
+    }catch(e){
+      appToastAnzeigen('PLZ/Ort zum Standort konnte nicht ermittelt werden (vermutlich kein Internet) -- aponet.de wird zum manuellen Suchen geöffnet.', 3200);
+      window.open(APONET_SUCHE, '_blank');
+    }finally{
+      zuruecksetzen();
+    }
+  }, (err)=>{
+    const verweigert = err && err.code === err.PERMISSION_DENIED;
+    appToastAnzeigen(verweigert
+      ? 'Standortzugriff wurde verweigert -- aponet.de wird zum manuellen Suchen geöffnet.'
+      : 'Standort konnte nicht ermittelt werden -- aponet.de wird zum manuellen Suchen geöffnet.', 3200);
+    window.open(APONET_SUCHE, '_blank');
+    zuruecksetzen();
+  }, {enableHighAccuracy:true, timeout:10000, maximumAge:300000});
 }
 
 // Eigenständiges Werkzeug (Start -> "Luftlinie berechnen"): unabhängig von
@@ -2022,9 +2117,11 @@ function ansichtKorrigieren(){
   app.innerHTML = `
     <div class="auswahlleiste">
       <div class="aktionen-reihe">
-        <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
-        <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
-        <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
+        <div class="aktionen-buttons">
+          <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
+          <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
+          <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
+        </div>
         ${msGraphStatus==='angemeldet' ? '' : `
         <div class="rn-mini">
           <label for="rnLetzteMini">Letzte Nr.</label>
@@ -2242,28 +2339,26 @@ function alleRechnungenListeRendern(liste, suchtext){
   zielEl.innerHTML = anzuzeigen.map((f,i)=>`
     <div class="fall-zeile ${f.art==='L'?'ls':'pt'}" data-i="${i}">
       <div class="inhalt">
-        <div class="name"><span class="badge-neu ${f.art==='L'?'ls':'pt'}">${f.art==='L'?'L':'P'}</span>${f.nachname}, ${f.vorname}<span class="sync-status">${f.versandt ? '<span class="badge-brief" title="Rechnung wurde bereits versendet">&#9993;</span>' : ''}<span class="pdf-platz"></span></span></div>
+        <div class="name"><span class="badge-neu ${f.art==='L'?'ls':'pt'}">${f.art==='L'?'L':'P'}</span>${f.nachname}, ${f.vorname}</div>
         <div class="info">${f.datum || ''}${f.betrag ? ' &middot; ' + f.betrag + ' €' : ''}${f.renu ? ' &middot; Nr. ' + f.renu : ' &middot; ohne Rechnungsnummer'}</div>
       </div>
+      <div class="fall-icons">${f.versandt ? '<span class="badge-brief" title="Rechnung wurde bereits versendet">&#9993;</span>' : ''}<span class="pdf-platz"></span></div>
     </div>`).join('') +
     (gefiltert.length > MAX_ANZEIGE ? `<div class="leer-hinweis">${gefiltert.length - MAX_ANZEIGE} weitere Treffer -- bitte Suche eingrenzen.</div>` : '');
 
-  // "unvollstaendig" markieren (roter Name + Hinweis-Badge): der Fall wurde
-  // von der stillen Erzeugung am PC (gStillModus, Modul1.bas) noch NICHT zu
-  // einer fertigen Rechnung gemacht -- entweder weil noch keine
-  // Rechnungsnummer gezogen wurde (Spalte Q leer, ohne Renu ist keine
+  // "unvollstaendig" markieren (roter Name + rotes Warnsymbol rechts): der
+  // Fall wurde von der stillen Erzeugung am PC (gStillModus, Modul1.bas)
+  // noch NICHT zu einer fertigen Rechnung gemacht -- entweder weil noch
+  // keine Rechnungsnummer gezogen wurde (Spalte Q leer, ohne Renu ist keine
   // Erzeugung moeglich), oder weil trotz Renu noch kein passendes PDF im
   // Zielordner liegt (uebersprungener Fall: Pflichtfeld/Datum/Betrag/Jahr
   // etc. -- siehe StillFallUebersprungen). Korrektur wie gewohnt manuell
-  // ueber "Rechnung korrigieren" am PC.
+  // ueber "Rechnung korrigieren" am PC. Bewusst nur ein Icon statt Text --
+  // passend zu den anderen, groesseren Symbolen rechts in der Zeile.
   const alsUnvollstaendigMarkieren = (el)=>{
     el.classList.add('unvollstaendig');
     const platz = el.querySelector('.pdf-platz');
-    const hinweis = document.createElement('span');
-    hinweis.className = 'badge-unvollstaendig';
-    hinweis.title = 'Noch nicht als Rechnung erzeugt -- bitte am PC über "Rechnung korrigieren" prüfen und ergänzen.';
-    hinweis.textContent = '(unvollständig)';
-    platz.appendChild(hinweis);
+    platz.innerHTML = '<span class="badge-unvollstaendig" title="Noch nicht als Rechnung erzeugt -- bitte am PC über &quot;Rechnung korrigieren&quot; prüfen und ergänzen.">&#9888;</span>';
   };
 
   // Eager-Fenster: fuer die ersten paar sichtbaren Zeilen wird der PDF-Status
@@ -2339,9 +2434,16 @@ function ansichtEinstellungen(){
         <input type="text" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}" placeholder="Straße Hausnummer, PLZ Ort">
       </div>
     </div>
-    ${msGraphStatus==='angemeldet' ? '' : `
     <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">Rechnungsnummern-Zähler</div>
+      <div class="trennlinie">Sync mit PC</div>
+      <div class="sync-unter-titel">Microsoft/OneDrive-Anmeldung <span class="sync-empfehlung">(empfohlen)</span></div>
+      ${msGraphAbschnittHtml()}
+      <div class="sync-trenner"></div>
+      <div class="sync-unter-titel">Ordner-Sync <span class="sync-empfehlung">(Alternative)</span></div>
+      ${autoSyncAbschnittHtml()}
+      ${msGraphStatus==='angemeldet' ? '' : `
+      <div class="sync-trenner"></div>
+      <div class="sync-unter-titel">Rechnungsnummern-Zähler <span class="sync-empfehlung">(nur beim manuellen Copy-Paste-Weg nötig -- geringste Zuverlässigkeit)</span></div>
       <div class="feld">
         <label for="txtRnLetzte">Laufende Nummer der letzten Rechnung in der Übersicht (nur die 3 Ziffern, Spalte Q)</label>
         <input type="text" id="txtRnLetzte" inputmode="numeric" maxlength="3" value="${(e.rnLetzte||'').replace(/"/g,'&quot;')}" placeholder="z.B. 003">
@@ -2355,15 +2457,7 @@ function ansichtEinstellungen(){
         Fall selbstständig weiter. Falls zwischendurch auch direkt am PC eine Rechnung angelegt wurde (ohne über das
         Handy zu laufen), bitte die aktuell letzte laufende Nummer aus der Übersicht hier erneut eintragen, um den
         Zähler abzugleichen.
-      </div>
-    </div>`}
-    <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">Sync mit PC</div>
-      <div class="sync-unter-titel">Microsoft/OneDrive-Anmeldung <span class="sync-empfehlung">(empfohlen)</span></div>
-      ${msGraphAbschnittHtml()}
-      <div class="sync-trenner"></div>
-      <div class="sync-unter-titel">Ordner-Sync <span class="sync-empfehlung">(Alternative)</span></div>
-      ${autoSyncAbschnittHtml()}
+      </div>`}
     </div>
   `;
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
