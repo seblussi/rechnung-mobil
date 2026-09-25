@@ -167,20 +167,27 @@
      unter der Rechnungsübersicht und wirkten optisch dazugehörig. */
   .sync-box .datensicherung-reihe{margin-bottom:6px;}
   /* "Excel-Dateien öffnen" und "Werkzeuge": je 2 Buttons nebeneinander
-     (statt untereinander), mit einem runden, farbigen Icon-Badge oben --
-     analog zu den bunten Kreis-Buttons am PC (.zahnrad, body.bunt), damit
-     beide Oberflächen auf den ersten Blick zusammengehören. */
+     (statt untereinander). KORREKTUR (Rückmeldung): das Icon stand vorher
+     GROSS und zentriert ÜBER dem Text (eigene kleine "Kachel" je Button) --
+     jetzt stattdessen klassisch INLINE als kleines Icon LINKS neben dem
+     Text, in einer normalen einzeiligen Button-Zeile, wie ein gewöhnlicher
+     Button mit Icon-Vorsatz statt einer eigenständigen Karte. */
   .icon-buttons-2{display:flex; gap:8px;}
   .icon-buttons-2 .btn-icon{
-    flex:1; margin-bottom:0; padding:16px 8px 12px;
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-    text-align:center; font-size:13.5px;
+    flex:1; margin-bottom:0; padding:12px 10px;
+    display:flex; flex-direction:row; align-items:center; gap:10px;
+    text-align:left; font-size:13.5px;
   }
   .btn-icon-symbol{
     display:flex; align-items:center; justify-content:center;
-    width:46px; height:46px; border-radius:14px; flex-shrink:0;
-    box-shadow:0 1px 3px rgba(0,0,0,.15);
+    width:34px; height:34px; border-radius:9px; flex-shrink:0;
   }
+  /* Grauer Standard-Ton wie die PC-Icons AUSSERHALB des optionalen
+     Buntmodus (.zahnrad dort: #eef1f6 hell / #2a3140 dunkel) -- Fahrtenbuch
+     und Rechnungsübersicht bleiben hier bewusst neutral statt fest
+     eingefärbt, damit Handy und PC im Normalzustand gleich aussehen. */
+  .btn-icon-symbol.btn-icon-grau{background:#eef1f6;}
+  body.dunkel .btn-icon-symbol.btn-icon-grau{background:#2a3140;}
   .icon-buttons-2 .btn-icon .btn-titel{display:block; font-weight:700; font-size:14px; line-height:1.25;}
   .icon-buttons-2 .btn-icon .unter{font-size:11.5px; margin-top:0;}
   /* Startseite: einheitlicher vertikaler Abstand zwischen allen Boxen
@@ -189,6 +196,19 @@
      licher 20/22/24px-Werte. Ersetzt fuer diese Boxen das allgemeine
      .abschnitt-margin-bottom (24px). */
   .abschnitt.start-abschnitt{margin-top:0; margin-bottom:14px;}
+  /* "Lokale Rechnungen" + "Rechnungsverwaltung" nebeneinander statt
+     untereinander -- die einzelne .btn-uebersicht-Regel (Padding/Schrift­
+     größe) bleibt unveraendert, nur margin-bottom wandert auf die
+     gemeinsame Zeile, damit beide exakt gleich hoch bleiben (flex
+     align-items:stretch, Standardverhalten). */
+  .uebersicht-reihe{display:flex; gap:8px; margin-bottom:14px; align-items:stretch;}
+  .uebersicht-reihe .btn-uebersicht{flex:1; margin-bottom:0;}
+  /* "Rechnungsverwaltung" ist jetzt immer sichtbar, aber ohne aktive
+     OneDrive-Anmeldung ausgegraut statt komplett zu verschwinden -- Klick
+     bleibt moeglich und fuehrt direkt zur Anmeldung (siehe Wiring). */
+  .btn-uebersicht.deaktiviert{background:#c7cedb; border-color:#c7cedb; color:#4c5566;}
+  body.dunkel .btn-uebersicht.deaktiviert{background:#333c4e; border-color:#333c4e; color:#9aa5b4;}
+  .btn-uebersicht.deaktiviert .unter{color:inherit; opacity:.9;}
 
   /* Jeder Formularabschnitt bekommt eine eigene "Karte" mit Rand und
      Hintergrund -- deutlich klarere optische Trennung als vorher nur mit
@@ -1722,21 +1742,22 @@ function schliesseEinstellungen(){
   ruecksprungAusEinstellungen();
 }
 
-// Eigene kleine SVG-Icons fuer die Werkzeuge-Kacheln (Start), da kein
-// passendes Emoji existiert bzw. das offizielle Apotheken-A ein geschuetztes
-// Markenzeichen ist -- deshalb hier bewusst ein einfacher, generischer
-// Buchstabe statt einer Nachbildung des echten Logos.
+// Eigene kleine Icons fuer die Werkzeuge-Buttons (Start), da kein
+// passendes Emoji existiert.
 // Luftlinie: geschwungene gestrichelte Linie, die zu einem Ziel-Pin fuehrt
 // (Pin bewusst in Blau, wie gewuenscht).
-const SVG_ICON_LUFTLINIE = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const SVG_ICON_LUFTLINIE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M3 17c3-1 4.5-3 6-5s3-4.5 6-5.5" stroke="#8a94a3" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="0.2 3"/>
   <path d="M19 2.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.19 4.25 7.75 4.25 7.75s4.25-4.56 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25z" fill="#2f6fed"/>
   <circle cx="19" cy="6.75" r="1.6" fill="#fff"/>
 </svg>`;
-// Apotheke: einfacher, generischer roter Kreis mit weissem "A" -- KEINE
-// Nachbildung des tatsaechlichen (markenrechtlich geschuetzten) Apotheken-
-// Logos, nur ein neutraler Buchstabe in der typischen Apotheken-Signalfarbe.
-const SVG_ICON_APOTHEKE = `<span style="font-family:Arial,sans-serif; font-weight:800; font-size:22px; color:#fff;">A</span>`;
+// Apotheke: das ECHTE, markenrechtlich geschuetzte "Apotheken-A" (rotes,
+// ineinander verschlungenes A-Symbol, wie z.B. auf aponet.de zu sehen) wird
+// hier bewusst NICHT nachgebaut -- das waere die Reproduktion eines realen,
+// geschuetzten Logos. Stattdessen ein schlichter, roter, serifenbetonter
+// Buchstabe "A" in der typischen Apotheken-Signalfarbe -- erkennbar als
+// "Apotheke gemeint", ohne das echte Logo zu kopieren.
+const SVG_ICON_APOTHEKE = `<span style="font-family:Georgia,'Times New Roman',serif; font-weight:700; font-style:italic; font-size:19px; color:#fff;">A</span>`;
 
 function ansichtStart(){
   einstellungenOffen = false;
@@ -1753,29 +1774,31 @@ function ansichtStart(){
       <button class="karte ls" id="kLS"><span class="icon">&#9760;</span>Leichen-<br>schau</button>
       <button class="karte pt" id="kPT"><span class="icon">&#9877;</span>Privat-<br>rechnung</button>
     </div>
-    <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Lokale Rechnungen
-      <span class="unter">${gesamtOffen} noch nicht am PC übernommen</span>
-    </button>
-    ${msGraphStatus==='angemeldet' ? `
-    <button class="btn-sekundaer btn-uebersicht" id="btnAlleRechnungen">Rechnungsverwaltung
-      <span class="unter">Komplette Rechnungsübersicht durchsuchen und PDFs öffnen</span>
-    </button>` : ''}`;
+    <div class="uebersicht-reihe">
+      <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Lokale Rechnungen
+        <span class="unter">${gesamtOffen} noch nicht am PC übernommen</span>
+      </button>
+      <button class="btn-sekundaer btn-uebersicht${msGraphStatus==='angemeldet' ? '' : ' deaktiviert'}" id="btnAlleRechnungen">Rechnungsverwaltung
+        <span class="unter">${msGraphStatus==='angemeldet' ? 'Durchsuchen, PDFs öffnen' : 'OneDrive-Anmeldung nötig'}</span>
+      </button>
+    </div>`;
   // Icons wie am PC (dort .zahnrad-Buttons mit denselben Emoji, siehe
   // btnUebersichtShortcut/btnFahrdienstShortcut in Rechnungssoftware.hta) --
-  // Rechnungsübersicht &#128203;/teal (#0e9488), Fahrtenbuch/Fahrdienst-
-  // Dokumentation &#128657;/rot (#e0303f), identisch zu den dortigen
-  // Buntmodus-Farben, damit PC und Handy auf den ersten Blick zusammengehören.
+  // hier bewusst wie am PC standardmaessig GRAU (dort nur im optionalen
+  // "Buntmodus" farbig) statt fix eingefaerbt, damit beide Oberflaechen im
+  // Normalzustand gleich aussehen. Reihenfolge getauscht: erst Fahrtenbuch,
+  // dann Rechnungsuebersicht.
   html += `
     <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Excel-Dateien öffnen</div>
       <div class="icon-buttons-2">
-        <button class="btn-sekundaer btn-icon" id="btnOeffneUebersicht">
-          <span class="btn-icon-symbol" style="background:#0e9488;">&#128203;</span>
-          <span class="btn-titel">Rechnungsübersicht</span>
-        </button>
         <button class="btn-sekundaer btn-icon" id="btnOeffneFahrtenbuch">
-          <span class="btn-icon-symbol" style="background:#e0303f;">&#128657;</span>
+          <span class="btn-icon-symbol btn-icon-grau">&#128657;</span>
           <span class="btn-titel">Fahrtenbuch</span>
+        </button>
+        <button class="btn-sekundaer btn-icon" id="btnOeffneUebersicht">
+          <span class="btn-icon-symbol btn-icon-grau">&#128203;</span>
+          <span class="btn-titel">Rechnungsübersicht</span>
         </button>
       </div>
     </div>
@@ -1785,12 +1808,10 @@ function ansichtStart(){
         <button class="btn-sekundaer btn-icon" id="btnLuftlinienTool">
           <span class="btn-icon-symbol" style="background:#eaf1fb;">${SVG_ICON_LUFTLINIE}</span>
           <span class="btn-titel">Luftlinie berechnen</span>
-          <span class="unter">Entfernung ab Wache/Praxis</span>
         </button>
         <button class="btn-sekundaer btn-icon" id="btnNotapotheke">
-          <span class="btn-icon-symbol" style="background:#e2001a;">${SVG_ICON_APOTHEKE}</span>
+          <span class="btn-icon-symbol" style="background:#fdeaea;">${SVG_ICON_APOTHEKE}</span>
           <span class="btn-titel">Apotheken-Notdienst</span>
-          <span class="unter">Umkreissuche aponet.de</span>
         </button>
       </div>
     </div>`;
@@ -1862,8 +1883,15 @@ function ansichtStart(){
   };
   document.getElementById('btnLuftlinienTool').onclick = ansichtLuftlinienTool;
   document.getElementById('btnNotapotheke').onclick = notapothekenSucheOeffnen;
-  const btnAlle = document.getElementById('btnAlleRechnungen');
-  if(btnAlle) btnAlle.onclick = ansichtAlleRechnungen;
+  // "Rechnungsverwaltung" ist jetzt IMMER sichtbar (nicht mehr nur bei
+  // aktiver OneDrive-Anmeldung), aber ohne Anmeldung ausgegraut (siehe
+  // .btn-uebersicht.deaktiviert) -- ein Klick darauf fuehrt direkt zu den
+  // Einstellungen zur Anmeldung, statt einfach nichts zu tun.
+  document.getElementById('btnAlleRechnungen').onclick = ()=>{
+    if(msGraphStatus==='angemeldet'){ ansichtAlleRechnungen(); return; }
+    appToastAnzeigen('Für die Rechnungsverwaltung bitte zuerst in den Einstellungen mit OneDrive/Microsoft anmelden.', 3200);
+    ansichtEinstellungen();
+  };
 }
 
 // Werkzeug (Start -> "Apotheken-Notdienst"): ermittelt den aktuellen
