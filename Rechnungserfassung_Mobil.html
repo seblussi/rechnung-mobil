@@ -1782,6 +1782,7 @@ const SVG_ICON_LUFTLINIE = `<svg width="40" height="40" viewBox="0 0 24 24" fill
     <path d="M19 2.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.19 4.25 7.75 4.25 7.75s4.25-4.56 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25z" fill="#e0303f"/>
     <circle cx="19" cy="7.35" r="1.6" fill="#fff"/>
   </g>
+  <circle cx="19" cy="10.7" r="0.9" fill="#8a94a3"/>
 </svg>`;
 // Apotheke: das vom Nutzer gezeigte Symbol (rotes Sechseck, weisser Kelch/
 // Schlange, ineinander verschlungenes "A") ist das ECHTE, markenrechtlich
@@ -1938,12 +1939,16 @@ function ansichtStart(){
   document.getElementById('btnNotapotheke').onclick = notapothekenSucheOeffnen;
   // "Rechnungsverwaltung" ist jetzt IMMER sichtbar (nicht mehr nur bei
   // aktiver OneDrive-Anmeldung), aber ohne Anmeldung ausgegraut (siehe
-  // .btn-uebersicht.deaktiviert) -- ein Klick darauf fuehrt direkt zu den
-  // Einstellungen zur Anmeldung, statt einfach nichts zu tun.
+  // .btn-uebersicht.deaktiviert) -- ein Klick darauf stoesst jetzt DIREKT
+  // die OneDrive-Anmeldung an (msGraphAnmelden(), Redirect), statt erst
+  // ueber die Einstellungen umzuleiten.
   document.getElementById('btnAlleRechnungen').onclick = ()=>{
     if(msGraphStatus==='angemeldet'){ ansichtAlleRechnungen(); return; }
-    appToastAnzeigen('Für die Rechnungsverwaltung bitte zuerst in den Einstellungen mit OneDrive/Microsoft anmelden.', 3200);
-    ansichtEinstellungen();
+    if(!msGraphVerfuegbar() || msGraphStatus==='nicht_verfuegbar'){
+      appToastAnzeigen('OneDrive-Anmeldung ist auf diesem Gerät gerade nicht verfügbar.', 3200);
+      return;
+    }
+    msGraphAnmelden();
   };
 }
 
