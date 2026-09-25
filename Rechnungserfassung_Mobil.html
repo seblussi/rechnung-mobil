@@ -167,28 +167,43 @@
      unter der Rechnungsübersicht und wirkten optisch dazugehörig. */
   .sync-box .datensicherung-reihe{margin-bottom:6px;}
   /* "Excel-Dateien öffnen" und "Werkzeuge": je 2 Buttons nebeneinander
-     (statt untereinander). KORREKTUR (Rückmeldung): das Icon stand vorher
-     GROSS und zentriert ÜBER dem Text (eigene kleine "Kachel" je Button) --
-     jetzt stattdessen klassisch INLINE als kleines Icon LINKS neben dem
-     Text, in einer normalen einzeiligen Button-Zeile, wie ein gewöhnlicher
-     Button mit Icon-Vorsatz statt einer eigenständigen Karte. */
-  .icon-buttons-2{display:flex; gap:8px;}
+     (statt untereinander), wieder als groessere Karte (Icon oben, Titel +
+     Untertext) -- auf Nutzerwunsch zurueck vom kompakten einzeiligen Design.
+     Die dezente Icon-Farbe zieht jetzt ueber den GANZEN Button (nicht nur
+     das kleine Badge): .btn-icon-blau/-rot/-grau faerben den Button-
+     Hintergrund leicht ein, das Icon selbst sitzt gross in einem weissen
+     Kreis-Badge darauf. */
+  /* KORREKTUR (Rückmeldung: Abstand unterhalb der Buttons zu klein):
+     .abschnitt selbst hat nur 4px Padding unten (siehe .abschnitt-Regel) --
+     die Sync-Box gleicht das schon mit einem eigenen margin-bottom auf ihrer
+     Button-Reihe aus (.sync-box .datensicherung-reihe oben), hier bisher
+     aber gefehlt. Gleicher Wert wie dort, damit alle Boxen einheitlich
+     wirken. */
+  .icon-buttons-2{display:flex; gap:8px; margin-bottom:6px;}
   .icon-buttons-2 .btn-icon{
-    flex:1; margin-bottom:0; padding:12px 10px;
-    display:flex; flex-direction:row; align-items:center; gap:10px;
-    text-align:left; font-size:13.5px;
+    flex:1; margin-bottom:0; padding:18px 10px 14px;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    text-align:center; font-size:13.5px; border-radius:12px;
   }
   .btn-icon-symbol{
     display:flex; align-items:center; justify-content:center;
-    width:34px; height:34px; border-radius:9px; flex-shrink:0;
+    width:58px; height:58px; border-radius:16px; flex-shrink:0;
+    background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.15); font-size:34px;
   }
+  body.dunkel .btn-icon-symbol{background:#1b2028;}
   /* Grauer Standard-Ton wie die PC-Icons AUSSERHALB des optionalen
      Buntmodus (.zahnrad dort: #eef1f6 hell / #2a3140 dunkel) -- Fahrtenbuch
      und Rechnungsübersicht bleiben hier bewusst neutral statt fest
      eingefärbt, damit Handy und PC im Normalzustand gleich aussehen. */
-  .btn-icon-symbol.btn-icon-grau{background:#eef1f6;}
-  body.dunkel .btn-icon-symbol.btn-icon-grau{background:#2a3140;}
-  .icon-buttons-2 .btn-icon .btn-titel{display:block; font-weight:700; font-size:14px; line-height:1.25;}
+  .btn-icon.btn-icon-grau{background:#eef1f6; border-color:#dde2ea;}
+  body.dunkel .btn-icon.btn-icon-grau{background:#232936; border-color:#333c4e;}
+  /* Luftlinie: dezentes Blau ueber den ganzen Button (statt nur das
+     Icon-Badge), Apotheke: sanftes Rot -- wie gewuenscht. */
+  .btn-icon.btn-icon-blau{background:#eaf1fb; border-color:#cfe0f7;}
+  body.dunkel .btn-icon.btn-icon-blau{background:#16243a; border-color:#274469;}
+  .btn-icon.btn-icon-rot{background:#fdeaea; border-color:#f3d3d3;}
+  body.dunkel .btn-icon.btn-icon-rot{background:#3a1717; border-color:#5c2828;}
+  .icon-buttons-2 .btn-icon .btn-titel{display:block; font-weight:700; font-size:14.5px; line-height:1.25;}
   .icon-buttons-2 .btn-icon .unter{font-size:11.5px; margin-top:0;}
   /* Startseite: einheitlicher vertikaler Abstand zwischen allen Boxen
      ("Sync", "Excel-Dateien öffnen", "Werkzeuge") -- orientiert am Abstand
@@ -201,14 +216,18 @@
      größe) bleibt unveraendert, nur margin-bottom wandert auf die
      gemeinsame Zeile, damit beide exakt gleich hoch bleiben (flex
      align-items:stretch, Standardverhalten). */
-  .uebersicht-reihe{display:flex; gap:8px; margin-bottom:14px; align-items:stretch;}
-  .uebersicht-reihe .btn-uebersicht{flex:1; margin-bottom:0;}
+  .uebersicht-reihe{display:flex; gap:12px; margin-bottom:14px; align-items:stretch;}
+  .uebersicht-reihe .btn-uebersicht{flex:1; min-width:0; margin-bottom:0;}
   /* "Rechnungsverwaltung" ist jetzt immer sichtbar, aber ohne aktive
      OneDrive-Anmeldung ausgegraut statt komplett zu verschwinden -- Klick
-     bleibt moeglich und fuehrt direkt zur Anmeldung (siehe Wiring). */
-  .btn-uebersicht.deaktiviert{background:#c7cedb; border-color:#c7cedb; color:#4c5566;}
-  body.dunkel .btn-uebersicht.deaktiviert{background:#333c4e; border-color:#333c4e; color:#9aa5b4;}
-  .btn-uebersicht.deaktiviert .unter{color:inherit; opacity:.9;}
+     bleibt moeglich und fuehrt direkt zur Anmeldung (siehe Wiring).
+     KORREKTUR (Rückmeldung: Grauton zu kräftig, wirkte nicht "inaktiv"):
+     statt einer alternativen kräftigen Grau-Farbe jetzt einfach die normale
+     dunkle .btn-uebersicht-Optik stark abgeblendet (opacity), genau wie
+     deaktivierte Buttons an anderer Stelle in der App (z.B.
+     .aktionen-buttons button:disabled) -- liest sich damit eindeutig als
+     "inaktiv", statt wie eine zweite, ebenso kräftige Farbvariante. */
+  .btn-uebersicht.deaktiviert{opacity:.25;}
 
   /* Jeder Formularabschnitt bekommt eine eigene "Karte" mit Rand und
      Hintergrund -- deutlich klarere optische Trennung als vorher nur mit
@@ -1742,22 +1761,49 @@ function schliesseEinstellungen(){
   ruecksprungAusEinstellungen();
 }
 
-// Eigene kleine Icons fuer die Werkzeuge-Buttons (Start), da kein
-// passendes Emoji existiert.
-// Luftlinie: geschwungene gestrichelte Linie, die zu einem Ziel-Pin fuehrt
-// (Pin bewusst in Blau, wie gewuenscht).
-const SVG_ICON_LUFTLINIE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M3 17c3-1 4.5-3 6-5s3-4.5 6-5.5" stroke="#8a94a3" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="0.2 3"/>
-  <path d="M19 2.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.19 4.25 7.75 4.25 7.75s4.25-4.56 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25z" fill="#2f6fed"/>
-  <circle cx="19" cy="6.75" r="1.6" fill="#fff"/>
+// Eigene kleine Icons fuer die Buttons "Excel-Dateien oeffnen" und
+// "Werkzeuge" (Start), da kein passendes Emoji existiert bzw. auf
+// Nutzerwunsch alle vier Icons im selben gezeichneten Stil sein sollen
+// (statt Emoji bei Fahrtenbuch/Rechnungsuebersicht). In einem weissen,
+// jetzt eckigen (statt runden) Badge auf dem farbig getoenten Button
+// platziert -- siehe .btn-icon-symbol/.btn-icon-*.
+// Luftlinie: lange, flache Anfangsstrecke vorne rechts (wie zuletzt
+// gewuenscht), danach mehrere KLEINERE Zacken statt weniger grosser
+// (feineres Zickzack), alle Ecken abgerundet per Q-Kurve statt hartem Knick
+// -- vom grossen blauen Pin vorne links unten zum kleinen roten Pin hinten
+// rechts oben. Reihenfolge im SVG bewusst Linie ZUERST, dann beide Pins
+// DARUEBER gezeichnet, damit die Linie an den Enden hinter den
+// Pin-Koerpern verschwindet ("Linie unterhalb der Pins").
+const SVG_ICON_LUFTLINIE = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M5.00 20.00L12.60 19.00Q15.40 18.60 14.40 17.40L12.60 15.20Q11.60 14.00 19.00 10.00" stroke="#8a94a3" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="0.2 3"/>
+  <path d="M19 2.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.19 4.25 7.75 4.25 7.75s4.25-4.56 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25z" fill="#2f6fed" transform="translate(-17.8,2.6) scale(1.2)"/>
+  <circle cx="19" cy="6.75" r="1.6" fill="#fff" transform="translate(-17.8,2.6) scale(1.2)"/>
+  <g transform="translate(9.5,2.75) scale(0.5)">
+    <path d="M19 2.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.19 4.25 7.75 4.25 7.75s4.25-4.56 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25z" fill="#e0303f"/>
+    <circle cx="19" cy="7.35" r="1.6" fill="#fff"/>
+  </g>
 </svg>`;
-// Apotheke: das ECHTE, markenrechtlich geschuetzte "Apotheken-A" (rotes,
-// ineinander verschlungenes A-Symbol, wie z.B. auf aponet.de zu sehen) wird
-// hier bewusst NICHT nachgebaut -- das waere die Reproduktion eines realen,
-// geschuetzten Logos. Stattdessen ein schlichter, roter, serifenbetonter
-// Buchstabe "A" in der typischen Apotheken-Signalfarbe -- erkennbar als
-// "Apotheke gemeint", ohne das echte Logo zu kopieren.
-const SVG_ICON_APOTHEKE = `<span style="font-family:Georgia,'Times New Roman',serif; font-weight:700; font-style:italic; font-size:19px; color:#fff;">A</span>`;
+// Apotheke: das vom Nutzer gezeigte Symbol (rotes Sechseck, weisser Kelch/
+// Schlange, ineinander verschlungenes "A") ist das ECHTE, markenrechtlich
+// geschuetzte Apotheken-A der ABDA (z.B. so auf aponet.de zu sehen, auch als
+// Wikipedia-Datei frei abrufbar -- freie Abrufbarkeit aendert nichts an der
+// Markenrechtslage) -- das wird hier bewusst NICHT nachgebaut, das waere die
+// Reproduktion eines realen, geschuetzten Logos. Stattdessen eine simple,
+// generische Tablette/Kapsel (keine Marke, weltweit gebraeuchliches
+// Piktogramm fuer Medikamente/Apotheken) -- klar erkennbar, ohne das echte
+// Logo zu kopieren.
+const SVG_ICON_APOTHEKE = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="rotate(-40 12 12)">
+    <clipPath id="apoTablettenClip"><rect x="4" y="9" width="16" height="6" rx="3"/></clipPath>
+    <rect x="4" y="9" width="16" height="6" rx="3" fill="#fff" stroke="#c62828" stroke-width="1.6"/>
+    <rect x="12" y="9" width="8" height="6" fill="#c62828" clip-path="url(#apoTablettenClip)"/>
+  </g>
+</svg>`;
+// Fahrtenbuch/Rechnungsuebersicht: auf Nutzerwunsch zurueck zu den
+// urspruenglichen Emoji-Icons (statt der zwischenzeitlich gezeichneten
+// SVG-Variante RTW/Tabelle) -- siehe .btn-icon-symbol (font-size dafuer
+// vergroessert, damit Emoji und die gezeichneten SVG-Icons Luftlinie/
+// Apotheke in vergleichbarer Groesse wirken).
 
 function ansichtStart(){
   einstellungenOffen = false;
@@ -1787,31 +1833,38 @@ function ansichtStart(){
   // hier bewusst wie am PC standardmaessig GRAU (dort nur im optionalen
   // "Buntmodus" farbig) statt fix eingefaerbt, damit beide Oberflaechen im
   // Normalzustand gleich aussehen. Reihenfolge getauscht: erst Fahrtenbuch,
-  // dann Rechnungsuebersicht.
+  // dann Rechnungsuebersicht. Auf Nutzerwunsch zurueck zum groesseren
+  // Karten-Design (Icon oben, Titel + Untertext), statt der kompakteren
+  // einzeiligen Variante -- und die dezente Icon-Farbe (Blau/Rot/Grau) zieht
+  // jetzt ueber den GANZEN Button statt nur ueber das kleine Icon-Badge.
   html += `
     <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Excel-Dateien öffnen</div>
       <div class="icon-buttons-2">
-        <button class="btn-sekundaer btn-icon" id="btnOeffneFahrtenbuch">
-          <span class="btn-icon-symbol btn-icon-grau">&#128657;</span>
+        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnOeffneFahrtenbuch">
+          <span class="btn-icon-symbol">&#128657;</span>
           <span class="btn-titel">Fahrtenbuch</span>
+          <span class="unter">Fahrdienst-Dokumentation</span>
         </button>
-        <button class="btn-sekundaer btn-icon" id="btnOeffneUebersicht">
-          <span class="btn-icon-symbol btn-icon-grau">&#128203;</span>
+        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnOeffneUebersicht">
+          <span class="btn-icon-symbol">&#128203;</span>
           <span class="btn-titel">Rechnungsübersicht</span>
+          <span class="unter">Excel-Datei öffnen</span>
         </button>
       </div>
     </div>
     <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Werkzeuge</div>
       <div class="icon-buttons-2">
-        <button class="btn-sekundaer btn-icon" id="btnLuftlinienTool">
-          <span class="btn-icon-symbol" style="background:#eaf1fb;">${SVG_ICON_LUFTLINIE}</span>
+        <button class="btn-sekundaer btn-icon btn-icon-blau" id="btnLuftlinienTool">
+          <span class="btn-icon-symbol">${SVG_ICON_LUFTLINIE}</span>
           <span class="btn-titel">Luftlinie berechnen</span>
+          <span class="unter">Entfernung ab Wache/Praxis</span>
         </button>
-        <button class="btn-sekundaer btn-icon" id="btnNotapotheke">
-          <span class="btn-icon-symbol" style="background:#fdeaea;">${SVG_ICON_APOTHEKE}</span>
+        <button class="btn-sekundaer btn-icon btn-icon-rot" id="btnNotapotheke">
+          <span class="btn-icon-symbol">${SVG_ICON_APOTHEKE}</span>
           <span class="btn-titel">Apotheken-Notdienst</span>
+          <span class="unter">Umkreissuche aponet.de</span>
         </button>
       </div>
     </div>`;
