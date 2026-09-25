@@ -166,6 +166,23 @@
      "Werkzeuge" weiter unten) -- vorher standen sie unbeschriftet direkt
      unter der Rechnungsübersicht und wirkten optisch dazugehörig. */
   .sync-box .datensicherung-reihe{margin-bottom:6px;}
+  /* "Excel-Dateien öffnen" und "Werkzeuge": je 2 Buttons nebeneinander
+     (statt untereinander), mit einem runden, farbigen Icon-Badge oben --
+     analog zu den bunten Kreis-Buttons am PC (.zahnrad, body.bunt), damit
+     beide Oberflächen auf den ersten Blick zusammengehören. */
+  .icon-buttons-2{display:flex; gap:8px;}
+  .icon-buttons-2 .btn-icon{
+    flex:1; margin-bottom:0; padding:16px 8px 12px;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    text-align:center; font-size:13.5px;
+  }
+  .btn-icon-symbol{
+    display:flex; align-items:center; justify-content:center;
+    width:46px; height:46px; border-radius:14px; flex-shrink:0;
+    box-shadow:0 1px 3px rgba(0,0,0,.15);
+  }
+  .icon-buttons-2 .btn-icon .btn-titel{display:block; font-weight:700; font-size:14px; line-height:1.25;}
+  .icon-buttons-2 .btn-icon .unter{font-size:11.5px; margin-top:0;}
   /* Startseite: einheitlicher vertikaler Abstand zwischen allen Boxen
      ("Sync", "Excel-Dateien öffnen", "Werkzeuge") -- orientiert am Abstand
      der Kacheln zum Rand (14px, main-Padding), statt bisher uneinheit­
@@ -1705,6 +1722,22 @@ function schliesseEinstellungen(){
   ruecksprungAusEinstellungen();
 }
 
+// Eigene kleine SVG-Icons fuer die Werkzeuge-Kacheln (Start), da kein
+// passendes Emoji existiert bzw. das offizielle Apotheken-A ein geschuetztes
+// Markenzeichen ist -- deshalb hier bewusst ein einfacher, generischer
+// Buchstabe statt einer Nachbildung des echten Logos.
+// Luftlinie: geschwungene gestrichelte Linie, die zu einem Ziel-Pin fuehrt
+// (Pin bewusst in Blau, wie gewuenscht).
+const SVG_ICON_LUFTLINIE = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M3 17c3-1 4.5-3 6-5s3-4.5 6-5.5" stroke="#8a94a3" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="0.2 3"/>
+  <path d="M19 2.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.19 4.25 7.75 4.25 7.75s4.25-4.56 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25z" fill="#2f6fed"/>
+  <circle cx="19" cy="6.75" r="1.6" fill="#fff"/>
+</svg>`;
+// Apotheke: einfacher, generischer roter Kreis mit weissem "A" -- KEINE
+// Nachbildung des tatsaechlichen (markenrechtlich geschuetzten) Apotheken-
+// Logos, nur ein neutraler Buchstabe in der typischen Apotheken-Signalfarbe.
+const SVG_ICON_APOTHEKE = `<span style="font-family:Arial,sans-serif; font-weight:800; font-size:22px; color:#fff;">A</span>`;
+
 function ansichtStart(){
   einstellungenOffen = false;
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtStart(); };
@@ -1727,6 +1760,40 @@ function ansichtStart(){
     <button class="btn-sekundaer btn-uebersicht" id="btnAlleRechnungen">Rechnungsverwaltung
       <span class="unter">Komplette Rechnungsübersicht durchsuchen und PDFs öffnen</span>
     </button>` : ''}`;
+  // Icons wie am PC (dort .zahnrad-Buttons mit denselben Emoji, siehe
+  // btnUebersichtShortcut/btnFahrdienstShortcut in Rechnungssoftware.hta) --
+  // Rechnungsübersicht &#128203;/teal (#0e9488), Fahrtenbuch/Fahrdienst-
+  // Dokumentation &#128657;/rot (#e0303f), identisch zu den dortigen
+  // Buntmodus-Farben, damit PC und Handy auf den ersten Blick zusammengehören.
+  html += `
+    <div class="abschnitt start-abschnitt">
+      <div class="trennlinie">Excel-Dateien öffnen</div>
+      <div class="icon-buttons-2">
+        <button class="btn-sekundaer btn-icon" id="btnOeffneUebersicht">
+          <span class="btn-icon-symbol" style="background:#0e9488;">&#128203;</span>
+          <span class="btn-titel">Rechnungsübersicht</span>
+        </button>
+        <button class="btn-sekundaer btn-icon" id="btnOeffneFahrtenbuch">
+          <span class="btn-icon-symbol" style="background:#e0303f;">&#128657;</span>
+          <span class="btn-titel">Fahrtenbuch</span>
+        </button>
+      </div>
+    </div>
+    <div class="abschnitt start-abschnitt">
+      <div class="trennlinie">Werkzeuge</div>
+      <div class="icon-buttons-2">
+        <button class="btn-sekundaer btn-icon" id="btnLuftlinienTool">
+          <span class="btn-icon-symbol" style="background:#eaf1fb;">${SVG_ICON_LUFTLINIE}</span>
+          <span class="btn-titel">Luftlinie berechnen</span>
+          <span class="unter">Entfernung ab Wache/Praxis</span>
+        </button>
+        <button class="btn-sekundaer btn-icon" id="btnNotapotheke">
+          <span class="btn-icon-symbol" style="background:#e2001a;">${SVG_ICON_APOTHEKE}</span>
+          <span class="btn-titel">Apotheken-Notdienst</span>
+          <span class="unter">Umkreissuche aponet.de</span>
+        </button>
+      </div>
+    </div>`;
   // Immer 3 feste Buttons, Reihenfolge links->rechts: Import, Export, Sync.
   // Vorher wechselte hier je nach Sync-Status ein einzelner Button
   // ("erneut verbinden" ODER "exportieren") -- das führte dazu, dass der
@@ -1735,6 +1802,10 @@ function ansichtStart(){
   // 'unbekannt', siehe autoSyncInitialisieren-Aufruf am Dateiende) und
   // Export komplett fehlte, solange Auto-Sync lief. Jetzt immer alle drei
   // sichtbar, nur Beschriftung/Symbol/Aktion des Sync-Buttons ändert sich.
+  // Auf Nutzerwunsch nach ganz unten verschoben -- Sync ist die am
+  // seltensten angefasste Funktion (laeuft bei Auto-Sync/OneDrive ohnehin im
+  // Hintergrund), waehrend "Lokale Rechnungen"/"Rechnungsverwaltung" und die
+  // Werkzeuge weiter oben deutlich haeufiger gebraucht werden.
   const syncInfo = syncButtonInfo();
   html += `<div class="abschnitt start-abschnitt sync-box">
     <div class="trennlinie">Sync</div>
@@ -1752,21 +1823,6 @@ function ansichtStart(){
     </div>
   </div>
   <div class="warnhinweis" id="startHinweis"></div>`;
-  html += `
-    <div class="abschnitt start-abschnitt">
-      <div class="trennlinie">Excel-Dateien öffnen</div>
-      <button class="btn-sekundaer" id="btnOeffneUebersicht">Rechnungsübersicht öffnen</button>
-      <button class="btn-sekundaer" id="btnOeffneFahrtenbuch">Fahrtenbuch öffnen</button>
-    </div>
-    <div class="abschnitt start-abschnitt">
-      <div class="trennlinie">Werkzeuge</div>
-      <button class="btn-sekundaer" id="btnLuftlinienTool">Luftlinie berechnen
-        <span class="unter">Entfernung Wache/Praxis -- beliebige Adresse, ohne eine Rechnung anzulegen</span>
-      </button>
-      <button class="btn-sekundaer" id="btnNotapotheke" style="margin-top:8px;">Apotheken-Notdienst
-        <span class="unter">Aktueller Standort -- direkt in die Umkreissuche bei aponet.de</span>
-      </button>
-    </div>`;
   app.innerHTML = html;
   document.getElementById('kLS').onclick = ()=>ansichtMaske('ls');
   document.getElementById('kPT').onclick = ()=>ansichtMaske('pt');
