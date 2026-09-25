@@ -1843,14 +1843,35 @@ async function notapothekenSucheOeffnen(){
   navigator.geolocation.getCurrentPosition(async (pos)=>{
     try{
       const {latitude, longitude} = pos.coords;
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16&addressdetails=1`;
+      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
       const res = await fetch(url, {headers:{'Accept':'application/json'}});
       const data = await res.json();
       const a = (data && data.address) || {};
       const plz = a.postcode;
-      const ort = a.city || a.town || a.village || a.municipality || a.city_district;
+      // Nominatim liefert bei manchen Orten den amtlichen Doppelnamen mit
+      // Schraegstrich (z.B. "Lahr/Schwarzwald") -- fuer die aponet.de-URL
+      // wird bewusst nur der eigentliche Ortsname VOR dem "/" verwendet
+      // (bestaetigt funktionierendes URL-Muster, z.B. ".../77933-Lahr" statt
+      // eines fehlerhaften verschachtelten Pfads ".../77933-Lahr/Schwarzwald").
+      // Verbleibende Leerzeichen (mehrteilige Ortsnamen) werden zu Bindestrich.
+      const ortRoh = a.city || a.town || a.village || a.municipality || a.city_district || '';
+      const ort = ortRoh.split('/')[0].trim().replace(/\s+/g,'-');
+      // Strasse+Hausnummer: aponet.de bietet dafuer zwar ein Verfeinerungs-
+      // Feld ("Straße und Hausnummer") auf der Ergebnisseite, aber KEIN
+      // bestaetigtes, zuverlaessiges URL-Parameter dafuer -- ein geratener
+      // Parameter koennte die Suche unbemerkt verfaelschen statt sie zu
+      // praezisieren. Stattdessen wird die Adresse in die Zwischenablage
+      // kopiert, damit sie auf der geoeffneten Seite bei Bedarf direkt in
+      // genau dieses Feld eingefuegt werden kann.
+      const strasse = [a.road, a.house_number].filter(Boolean).join(' ');
       if(plz && ort){
-        window.open(`https://www.aponet.de/notdienstsuche/${encodeURIComponent(plz)}-${encodeURIComponent(ort.replace(/\s+/g,'-'))}`, '_blank');
+        window.open(`https://www.aponet.de/notdienstsuche/${encodeURIComponent(plz)}-${encodeURIComponent(ort)}`, '_blank');
+        if(strasse){
+          try{
+            await navigator.clipboard.writeText(strasse);
+            appToastAnzeigen(`"${strasse}" wurde in die Zwischenablage kopiert -- für eine genauere Umkreissuche auf aponet.de bei "Straße und Hausnummer" einfügen.`, 4200);
+          }catch(e){ /* Zwischenablage optional -- PLZ/Ort-Suche ist bereits geoeffnet */ }
+        }
       } else {
         appToastAnzeigen('Standort konnte keiner eindeutigen PLZ/Ort zugeordnet werden -- aponet.de wird zum manuellen Suchen geöffnet.', 3200);
         window.open(APONET_SUCHE, '_blank');
