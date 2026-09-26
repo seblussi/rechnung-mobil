@@ -1045,6 +1045,21 @@ function fahrdienstDatumInfo(wert){
   return {text: String(wert).trim(), jahr: null};
 }
 
+// Entfernt ein evtl. in der Zelle vorangestelltes Label "Fahrdienst" (samt
+// folgendem Leerzeichen/Bindestrich/Doppelpunkt) vom Namen des Dienstinhabers
+// -- exakt dieselbe Bereinigung wie in der HTA (FahrdienstArztBereinigen),
+// noetig weil manche Zeilen "Fahrdienst <Name>" in einer einzigen Zelle
+// stehen haben statt Label und Name getrennt in B/C. Ohne die Bereinigung
+// tauchte in der Quartalsuebersicht faelschlich ein eigener "Fahrdienst
+// XY"-Eintrag statt des eigentlichen Vertretungsarztes auf.
+function fahrdienstArztBereinigen(roh){
+  let t = String(roh==null ? '' : roh).trim();
+  if(t.slice(0,10).toLowerCase() === 'fahrdienst'){
+    t = t.slice(10).replace(/^[\s\-:]+/, '').trim();
+  }
+  return t;
+}
+
 function fahrdienstZeilenAuswerten(zeilen){
   const ERSTE_DATENZEILE = 4; // 0-basiert -- entspricht Excel-Zeile 5
   const COL_A=0, COL_B=1, COL_C=2, COL_D=3, COL_E=4, COL_AG=32, COL_AR=43;
@@ -1071,7 +1086,7 @@ function fahrdienstZeilenAuswerten(zeilen){
     const dienststundenRoh = Number(r[COL_C]);
     const dienststunden = isFinite(dienststundenRoh) ? dienststundenRoh : 0;
     const arztZeile = zeilen[zeile+1] || [];
-    const arzt = String(arztZeile[COL_C]==null ? '' : arztZeile[COL_C]).trim();
+    const arzt = fahrdienstArztBereinigen(arztZeile[COL_C]);
 
     let blockEnde = zeile;
     let pruef = zeile + 1;
@@ -3035,10 +3050,50 @@ function autoSyncAbschnittWiring(){
   };
 }
 
+// KORREKTUR (Rueckmeldung: ueber OneDrive/Ordner synchronisierte Faelle
+// bekamen NIE automatisch eine Rechnungsnummer -- die automatische Vergabe
+// (rechnungsnummernVergeben, siehe oben) war ausschliesslich an den Button
+// "In Zwischenablage kopieren" angehaengt, dem inzwischen unzuverlaessigsten
+// und kaum noch genutzten Weg. Der eigentliche Hauptweg (Graph-/Ordner-Sync,
+// exportDatenBauen) rief sie nie auf -- jeder so synchronisierte Fall blieb
+// deshalb ausnahmslos ohne Rechnungsnummer und damit ohne automatische
+// Rechnungserstellung an der HTA, unabhaengig vom "Rechnungsnummern-Zaehler"
+// in den Einstellungen). Jetzt wird derselbe Zaehler-basierte Mechanismus
+// VOR jedem Export angewendet, damit auch synchronisierte Faelle automatisch
+// eine Nummer bekommen, sofern der Zaehler einmalig hinterlegt wurde -- exakt
+// wie beim Copy-Paste-Weg, nur zusaetzlich auch hier.
+function rechnungsnummernVorSyncVergeben(){
+  const e = ladeEinstellungen();
+  let zaehler = e.rnNaechsterZaehler;
+  if(!zaehler) return; // kein Zaehler-Abgleich hinterlegt -- wie bisher ohne Nummer belassen
+  const geaendert = {ls:false, pt:false};
+  ['ls','pt'].forEach(art=>{
+    const faelle = ladeFaelle(art);
+    faelle.forEach(f=>{
+      if(f.rechnungsnummer) return; // bereits vergeben, nicht erneut vergeben
+      const {nachname, vorname} = nameAufteilen(f.werte.txtName);
+      const datumNorm = normalisiereDatum(f.werte.txtDatumExcel);
+      const nummer = rechnungsnummerBerechnen(nachname, vorname, datumNorm, zaehler);
+      if(!nummer) return;
+      f.rechnungsnummer = nummer;
+      geaendert[art] = true;
+      zaehler++;
+    });
+    if(geaendert[art]) speichereFaelle(art, faelle);
+  });
+  if(zaehler !== e.rnNaechsterZaehler){
+    e.rnNaechsterZaehler = zaehler;
+    speichereEinstellungen(e);
+  }
+}
+
 // Baut die Export-Daten (Fälle + vom Handy neu angelegte Bestatter) --
 // gemeinsame Grundlage sowohl für den manuellen Export-Button als auch für
-// den automatischen Ordner-Sync unten.
+// den automatischen Ordner-/OneDrive-Sync unten. Vergibt vorher automatisch
+// Rechnungsnummern an noch nummerlose Fälle (siehe
+// rechnungsnummernVorSyncVergeben oben).
 function exportDatenBauen(){
+  rechnungsnummernVorSyncVergeben();
   return {faelle: [...ladeFaelle('ls').map(f=>({...f,art:'ls'})), ...ladeFaelle('pt').map(f=>({...f,art:'pt'}))],
           bestatterAenderungen: ladeKatalog().filter(b=>b.herkunft==='handy')};
 }
@@ -4821,6 +4876,15 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     return w;
   }
 
+  // KORREKTUR (Rueckmeldung: die orangenen Warnhinweise sind reine
+  // Info-Hinweise, keine echten Fehler -- sie sollten das Speichern nicht
+  // dauerhaft blockieren, sondern nur EINMAL darauf aufmerksam machen. Ein
+  // erneuter Klick auf "Speichern" gilt als "habe ich geprüft" und speichert
+  // dann durch, auch wenn derselbe Hinweis noch angezeigt wird). Wird pro
+  // Masken-Aufruf frisch auf false gesetzt (Closure-Variable), damit eine neu
+  // geoeffnete Maske wieder mit der ersten Warnung startet.
+  let warnhinweiseBestaetigt = false;
+
   document.getElementById('btnSpeichern').onclick = ()=>{
     alleChecksAusfuehren();
     if(art==='ls') pruefeBestatterLeer();
@@ -4830,13 +4894,14 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     // sobald kein Bestatter eingetragen ist (ohne jede Möglichkeit, ihn
     // "bewusst so [zu] belassen", wie es der Hinweistext selbst anbietet).
     const offeneWarnung = app.querySelector('.warnhinweis.aktiv:not(#txtBName_warn)');
-    if(offeneWarnung){
+    if(offeneWarnung && !warnhinweiseBestaetigt){
       // WICHTIG: alertBanner() scrollt selbst auch (zum Banner unten) --
       // erst NACH alertBanner() zum eigentlichen Hinweis scrollen, sonst
       // gewinnt dessen Scroll und man landet wieder unten am Banner statt
       // beim eigentlich markierten Feld.
-      alertBanner('Bitte zuerst die markierten Hinweise oben prüfen (korrigieren oder bewusst so belassen).');
+      alertBanner('Bitte zuerst die markierten Hinweise oben prüfen. Nochmal auf "Speichern" tippen, um trotzdem fortzufahren.');
       offeneWarnung.scrollIntoView({behavior:'smooth', block:'center'});
+      warnhinweiseBestaetigt = true; // naechster Klick speichert durch, auch wenn der Hinweis noch offen ist
       return;
     }
     const w = werteEinsammeln();
