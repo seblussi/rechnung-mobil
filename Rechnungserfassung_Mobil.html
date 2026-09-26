@@ -688,7 +688,71 @@ function rechnungsnummerBerechnen(nachname, vorname, datumNorm, zaehler){
 }
 function rnZaehlerStandText(e){
   if(!e.rnNaechsterZaehler) return 'Noch kein Zähler-Abgleich hinterlegt -- die Rechnungsnummer (Spalte Q) wird beim Kopieren solange freigelassen wie bisher.';
-  return `Nächste vergebene laufende Nummer: ${String(e.rnNaechsterZaehler).padStart(3,'0')} (z.B. "...-${String(e.rnNaechsterZaehler).padStart(3,'0')}").`;
+  return `Nächste vergebene laufende Nummer: ${String(e.rnNaechsterZaehler).padStart(3,'0')} (z.B. "...-${String(e.rnNaechsterZaehler).padStart(3,'0')}"). Solange OneDrive-Sync aktiv ist, wird das automatisch live aus der Rechnungsübersicht ermittelt -- diese Angabe ist nur die Rückfallebene für den Ausnahmefall ohne Sync.`;
+}
+
+// Ermittelt LIVE per Graph-API die tatsaechlich hoechste in der
+// Rechnungsuebersicht (Spalte Q, "...-NNN") bereits vergebene laufende
+// Nummer und gibt die naechste freie zurueck. Das ist die eigentliche,
+// autoritative Quelle -- der manuell in den Einstellungen gepflegte
+// Zaehler (rnNaechsterZaehler) dient nur noch als Rueckfallebene fuer den
+// Ausnahmefall, dass gerade kein Sync moeglich ist (z.B. offline). Gibt
+// null zurueck, wenn die Liste live nicht lesbar ist (kein Login, kein
+// Netz, Datei nicht erreichbar) -- der Aufrufer faellt dann auf den
+// lokalen Zaehler zurueck.
+async function msGraphNaechsteRenuLiveErmitteln(){
+  if(msGraphStatus!=='angemeldet') return null;
+  try{
+    const token = await msGraphTokenHolen();
+    if(!token) return null;
+    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
+    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if(!wsRes.ok) return null;
+    const wsDaten = await wsRes.json();
+    const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
+    if(!blattName) return null;
+    const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
+      "')/usedRange(valuesOnly=true)?$select=values";
+    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
+    if(!rangeRes.ok) return null;
+    const rangeDaten = await rangeRes.json();
+    const zeilen = rangeDaten.values || [];
+    let hoechste = 0;
+    for(let i=1;i<zeilen.length;i++){
+      const renu = String(zeilen[i][16]==null?'':zeilen[i][16]).trim(); // Q: Rechnungsnummer
+      const treffer = renu.match(/-(\d{3})$/);
+      if(treffer){
+        const n = parseInt(treffer[1], 10);
+        if(n > hoechste) hoechste = n;
+      }
+    }
+    return hoechste + 1;
+  }catch(e){ return null; }
+}
+
+// Zentrale Stelle fuer "welche laufende Nummer wird als naechstes
+// vergeben" -- im Normalfall (OneDrive-Sync aktiv) IMMER live aus der
+// echten Rechnungsuebersicht (siehe oben), damit der Zaehler nie von Hand
+// gepflegt werden muss und nie von der Realitaet abweichen kann. Nur wenn
+// das gerade nicht moeglich ist (kein Login, kein Netz), faellt sie auf
+// den lokal gespeicherten Zaehler-Stand zurueck. Bei jedem erfolgreichen
+// Live-Abgleich wird dieser lokale Rueckfallwert automatisch mit
+// aktualisiert ("Zähler-Selbstheilung"), damit er auch im seltenen
+// Ausnahmefall (offline) nicht unnoetig veraltet ist.
+async function naechsterRenuZaehlerErmitteln(){
+  const e = ladeEinstellungen();
+  const live = await msGraphNaechsteRenuLiveErmitteln();
+  if(live!==null){
+    if(live !== e.rnNaechsterZaehler){
+      e.rnNaechsterZaehler = live;
+      e.rnLetzte = String(live-1).padStart(3,'0');
+      speichereEinstellungen(e);
+    }
+    return live;
+  }
+  return e.rnNaechsterZaehler; // Rueckfall: manuell gepflegter Stand (kann null sein)
 }
 // Wiring fuer das "letzte Rechnungsnummer"-Feld -- auf Nutzerwunsch jetzt an
 // ZWEI Stellen vorhanden (Einstellungen UND ganz rechts bei den Buttons auf
@@ -1060,9 +1124,35 @@ function fahrdienstArztBereinigen(roh){
   return t;
 }
 
+// Liest den Wert der Diensttag-Zeitzelle (Spalte C) aus und liefert daraus
+// sowohl die Dienststunden-Zahl (fuer die Verguetungsberechnung) als auch
+// den Anzeige-Text. Zwei Formate werden unterstuetzt:
+//  - Neues, bevorzugtes Format: reiner Text "18-23" (Start-Ende) -- wird
+//    direkt geparst, ergibt Stunden UND Anzeige-Text ("18-23 Uhr") aus EINER
+//    einzigen, live gelesenen Quelle -- kein Zwischenspeicher/Cache noetig.
+//  - Altes Format (nur noch fuer Zeilen, die die HTA beim naechsten Oeffnen
+//    von "Fahrtenbuch auslesen" noch nicht auf Text umgestellt hat): eine
+//    reine Zahl, z.B. weil Spalte C dort noch eine Formel (=23-18) war --
+//    Graph liefert dafuer nur das Formel-ERGEBNIS (die Zahl), keinen Text,
+//    daher faellt die Anzeige in dem Fall auf "X Std." zurueck.
+function fahrdienstZeitInfo(wert){
+  if(wert===null || wert===undefined || String(wert).trim()===''){ return {stunden:0, label:''}; }
+  const text = String(wert).trim();
+  const treffer = text.match(/^(\d{1,2}(?:[.,]\d+)?)\s*-\s*(\d{1,2}(?:[.,]\d+)?)$/);
+  if(treffer){
+    const start = parseFloat(treffer[1].replace(',','.'));
+    const ende = parseFloat(treffer[2].replace(',','.'));
+    const stunden = (isFinite(start) && isFinite(ende)) ? (ende - start) : 0;
+    return {stunden, label: treffer[1] + '-' + treffer[2] + ' Uhr'};
+  }
+  const zahl = Number(text.replace(',','.'));
+  const stunden = isFinite(zahl) ? zahl : 0;
+  return {stunden, label: stunden ? (stunden + ' Std.') : ''};
+}
+
 function fahrdienstZeilenAuswerten(zeilen){
   const ERSTE_DATENZEILE = 4; // 0-basiert -- entspricht Excel-Zeile 5
-  const COL_A=0, COL_B=1, COL_C=2, COL_D=3, COL_E=4, COL_AG=32, COL_AR=43;
+  const COL_A=0, COL_B=1, COL_C=2, COL_D=3, COL_E=4, COL_AG=32;
   const leer = (v)=> v===null || v===undefined || String(v).trim()==='';
   const zeileKomplettLeer = (r)=> !r || (leer(r[COL_A]) && leer(r[COL_B]) && leer(r[COL_C]) && leer(r[COL_D]));
 
@@ -1083,8 +1173,8 @@ function fahrdienstZeilenAuswerten(zeilen){
     // abgeleitete Jahr mit der Quartalszahl zu einem eindeutigen Schluessel
     // kombiniert.
     const quartalKey = 'Quartal ' + quartal + ' / ' + (datumInfo.jahr!=null ? datumInfo.jahr : '?');
-    const dienststundenRoh = Number(r[COL_C]);
-    const dienststunden = isFinite(dienststundenRoh) ? dienststundenRoh : 0;
+    const zeitInfo = fahrdienstZeitInfo(r[COL_C]);
+    const dienststunden = zeitInfo.stunden;
     const arztZeile = zeilen[zeile+1] || [];
     const arzt = fahrdienstArztBereinigen(arztZeile[COL_C]);
 
@@ -1112,16 +1202,7 @@ function fahrdienstZeilenAuswerten(zeilen){
       }
     }
     const stundenlohn = dienststunden ? gesamt/dienststunden : 0;
-
-    // Die HTA schreibt die fertige "8-16 Uhr"-Zeitspanne (aus der
-    // Dienstzeit-Formel in Spalte C berechnet) als reinen Text-Wert in
-    // Spalte AR zurueck (siehe FahrdienstAuswertungDurchfuehren) -- genau
-    // damit die App, die die Datei nur ueber usedRange(valuesOnly=true) also
-    // OHNE Formeln liest, dieselbe Zeitspanne trotzdem anzeigen kann. Nur bei
-    // noch nicht am PC neu berechneten (aelteren) Diensttagen faellt das auf
-    // die reine Stundenzahl zurueck.
-    const zeitLabelGespeichert = String(r[COL_AR]==null ? '' : r[COL_AR]).trim();
-    const zeitLabel = zeitLabelGespeichert || (dienststunden ? (dienststunden + ' Std.') : '');
+    const zeitLabel = zeitInfo.label;
 
     bloecke.push({
       quartal, quartalKey, datumText, zeitLabel,
@@ -1270,7 +1351,7 @@ async function msGraphSyncSchreiben(){
   try{
     const token = await msGraphTokenHolen();
     if(!token) return; // z.B. Zustimmung abgelaufen -- naechster Versuch bei der naechsten Aenderung
-    const daten = exportDatenBauen();
+    const daten = await exportDatenBauen();
     const istLeer = daten.faelle.length===0 && (!daten.bestatterAenderungen || daten.bestatterAenderungen.length===0);
     if(istLeer && await msGraphSyncDateiHatBereitsDaten(token)){
       return; // Schutz vor Datenverlust -- siehe Kommentar in autoSyncSchreiben
@@ -2589,9 +2670,8 @@ function faelleAlsUebersichtsZeilen(faelle){
 // Fall (ls/pt) sowie den erhöhten Zaehler in den Einstellungen.
 // Gibt zurück, wie viele Fälle KEINE Nummer erhalten konnten (weil noch
 // kein Zaehler-Abgleich in den Einstellungen hinterlegt ist).
-function rechnungsnummernVergeben(faelleAusw){
-  const e = ladeEinstellungen();
-  let zaehler = e.rnNaechsterZaehler;
+async function rechnungsnummernVergeben(faelleAusw){
+  let zaehler = await naechsterRenuZaehlerErmitteln();
   let ohneNummer = 0;
   const faelleNachArt = {ls: ladeFaelle('ls'), pt: ladeFaelle('pt')};
   let geaendert = {ls:false, pt:false};
@@ -2609,9 +2689,10 @@ function rechnungsnummernVergeben(faelleAusw){
   });
   if(geaendert.ls) speichereFaelle('ls', faelleNachArt.ls);
   if(geaendert.pt) speichereFaelle('pt', faelleNachArt.pt);
-  if(zaehler !== e.rnNaechsterZaehler){
-    e.rnNaechsterZaehler = zaehler;
-    speichereEinstellungen(e);
+  const eNeu = ladeEinstellungen();
+  if(zaehler !== eNeu.rnNaechsterZaehler){
+    eNeu.rnNaechsterZaehler = zaehler;
+    speichereEinstellungen(eNeu);
   }
   return ohneNummer;
 }
@@ -2700,7 +2781,7 @@ function ansichtKorrigieren(){
 
   document.getElementById('btnAuswKopieren').onclick = async ()=>{
     const faelleAusw = alle.filter(f=> ausgewaehlt.has(schluessel(f)));
-    const ohneNummer = rechnungsnummernVergeben(faelleAusw);
+    const ohneNummer = await rechnungsnummernVergeben(faelleAusw);
     // "In Zwischenablage kopieren" vergibt hier ggf. neue Rechnungsnummern
     // und zaehlt dabei einstellungen.rnNaechsterZaehler weiter -- das Feld
     // "Letzte Nr." ganz rechts bei den Buttons soll das sofort widerspiegeln,
@@ -3066,10 +3147,9 @@ function autoSyncAbschnittWiring(){
 // VOR jedem Export angewendet, damit auch synchronisierte Faelle automatisch
 // eine Nummer bekommen, sofern der Zaehler einmalig hinterlegt wurde -- exakt
 // wie beim Copy-Paste-Weg, nur zusaetzlich auch hier.
-function rechnungsnummernVorSyncVergeben(){
-  const e = ladeEinstellungen();
-  let zaehler = e.rnNaechsterZaehler;
-  if(!zaehler) return; // kein Zaehler-Abgleich hinterlegt -- wie bisher ohne Nummer belassen
+async function rechnungsnummernVorSyncVergeben(){
+  let zaehler = await naechsterRenuZaehlerErmitteln();
+  if(!zaehler) return; // weder live noch manuell ein Zaehler-Stand verfuegbar -- wie bisher ohne Nummer belassen
   const geaendert = {ls:false, pt:false};
   ['ls','pt'].forEach(art=>{
     const faelle = ladeFaelle(art);
@@ -3085,9 +3165,10 @@ function rechnungsnummernVorSyncVergeben(){
     });
     if(geaendert[art]) speichereFaelle(art, faelle);
   });
-  if(zaehler !== e.rnNaechsterZaehler){
-    e.rnNaechsterZaehler = zaehler;
-    speichereEinstellungen(e);
+  const eNeu = ladeEinstellungen();
+  if(zaehler !== eNeu.rnNaechsterZaehler){
+    eNeu.rnNaechsterZaehler = zaehler;
+    speichereEinstellungen(eNeu);
   }
 }
 
@@ -3095,9 +3176,10 @@ function rechnungsnummernVorSyncVergeben(){
 // gemeinsame Grundlage sowohl für den manuellen Export-Button als auch für
 // den automatischen Ordner-/OneDrive-Sync unten. Vergibt vorher automatisch
 // Rechnungsnummern an noch nummerlose Fälle (siehe
-// rechnungsnummernVorSyncVergeben oben).
-function exportDatenBauen(){
-  rechnungsnummernVorSyncVergeben();
+// rechnungsnummernVorSyncVergeben oben; ermittelt den Zaehler dafuer nach
+// Moeglichkeit LIVE aus der echten Rechnungsuebersicht).
+async function exportDatenBauen(){
+  await rechnungsnummernVorSyncVergeben();
   return {faelle: [...ladeFaelle('ls').map(f=>({...f,art:'ls'})), ...ladeFaelle('pt').map(f=>({...f,art:'pt'}))],
           bestatterAenderungen: ladeKatalog().filter(b=>b.herkunft==='handy')};
 }
@@ -3120,7 +3202,7 @@ function exportDatenBauen(){
 //     Der zuverlässige Weg dagegen bleibt der Auto-Sync.
 const EXPORT_DATEINAME = 'rechnungserfassung_export.json';
 async function jsonExport(){
-  const daten = exportDatenBauen();
+  const daten = await exportDatenBauen();
   const inhalt = JSON.stringify(daten,null,2);
 
   if(autoSyncStatus==='verbunden' && autoSyncOrdnerHandle){
@@ -3448,7 +3530,7 @@ async function autoSyncSchreiben(){
   if(autoSyncSchreibtGerade){ autoSyncErneutNoetig = true; return; }
   autoSyncSchreibtGerade = true;
   try{
-    const daten = exportDatenBauen();
+    const daten = await exportDatenBauen();
     const istLeer = daten.faelle.length===0 && (!daten.bestatterAenderungen || daten.bestatterAenderungen.length===0);
     // SCHUTZ VOR DATENVERLUST: steht hier aktuell NICHTS Lokales an (z.B.
     // weil der lokale Speicher unerwartet leer ist -- etwa nach Cache-
@@ -5141,6 +5223,18 @@ try{
 if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
   navigator.serviceWorker.register('./sw.js').catch(()=>{});
 }
+
+// Offline erfasste/geänderte Fälle stossen normalerweise erst beim NÄCHSTEN
+// Speichern wieder einen Sync-Versuch an (siehe synchronisiereAlle -- läuft
+// bisher nur bei jeder Datenänderung). Kommt die Verbindung zurück, ohne
+// dass danach sofort noch etwas bearbeitet wird, bliebe der Fall bis dahin
+// ohne Sync (und damit auch ohne automatisch vergebene Rechnungsnummer).
+// Deshalb zusätzlich hier: sobald der Browser wieder online meldet, einmal
+// von selbst nachsynchronisieren -- robuster als sich darauf zu verlassen,
+// dass ohnehin bald wieder etwas gespeichert wird.
+window.addEventListener('online', ()=>{
+  try{ synchronisiereAlle(); }catch(e){}
+});
 </script>
 </body>
 </html>
