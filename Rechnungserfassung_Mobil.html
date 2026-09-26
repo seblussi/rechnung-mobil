@@ -816,24 +816,39 @@ async function msGraphTokenHolen(){
 // Ersetzt/ergaenzt excelDateiOeffnen(url) um eine vorgeschaltete, LIVE ueber
 // die Microsoft-Graph-API ermittelte Adresse der aktuell unter dem
 // angegebenen OneDrive-Pfad liegenden Datei -- robust gegen genau das
-// Problem, das die fest hinterlegten Freigabelinks hatten (Link zeigt nach
-// einem Datei-Ersetzen/Verschieben weiter auf die ALTE Datei-ID). Klappt
-// die Graph-Anfrage aus irgendeinem Grund nicht (nicht angemeldet, kein
-// Netz, Fehler), wird transparent auf den bisherigen statischen
-// Freigabelink zurueckgefallen -- die Buttons funktionieren also so oder so.
+// Problem, das die fest hinterlegten Freigabelinks haben (Link zeigt nach
+// einem Datei-Ersetzen/Verschieben weiter auf die ALTE Datei-ID).
+// KORREKTUR: die erste Umsetzung fragte dafuer "?$select=webUrl" ab -- also
+// die DIREKTE Item-Adresse der Datei im eigenen Laufwerk. Genau DAS schlug
+// mit aktiver OneDrive-Anmeldung zuverlaessig fehl ("Datei nicht gefunden"),
+// obwohl dieselbe Datei ueber den statischen Freigabelink (ein bereits
+// bestehender "jeder mit dem Link kann bearbeiten"-Sharing-Link) einwandfrei
+// funktioniert. Naheliegendste Erklaerung: eine direkte Item-webUrl ist an
+// das genaue, im Graph-Token aktive Konto gebunden, waehrend ein per
+// createLink erzeugter Freigabelink (wie beim manuell erstellten,
+// funktionierenden statischen Link) bewusst OHNE diese Bindung auskommt.
+// Deshalb jetzt nicht mehr "?$select=webUrl", sondern echtes createLink
+// (siehe Graph-Doku "Create a sharing link for a DriveItem") -- erzeugt
+// serverseitig entweder einen neuen oder liefert einen bereits vorhandenen,
+// zum angefragten Typ/Scope passenden Freigabelink zurueck (kein Spam bei
+// wiederholten Klicks). Das ist strukturell derselbe Linktyp wie der
+// statische Fallback, nur live nach dem aktuellen Pfad aufgeloest.
 async function excelDateiUeberGraphOeffnen(pfadRelativZuOneDrive, statischerFallbackLink){
   const token = await msGraphTokenHolen();
   if(!token){ excelDateiOeffnen(statischerFallbackLink); return; }
   try{
-    const antwort = await fetch(msGraphPfadUrl(pfadRelativZuOneDrive) + '?$select=webUrl', {
-      headers: { Authorization: 'Bearer ' + token }
+    const antwort = await fetch(msGraphPfadUrl(pfadRelativZuOneDrive) + '/createLink', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'edit', scope: 'anonymous' })
     });
     if(!antwort.ok) throw new Error('Graph-Antwort ' + antwort.status);
     const daten = await antwort.json();
-    if(daten && daten.webUrl){
-      excelDateiOeffnen(daten.webUrl);
+    const link = daten && daten.link && daten.link.webUrl;
+    if(link){
+      excelDateiOeffnen(link);
     } else {
-      throw new Error('Keine webUrl in der Graph-Antwort');
+      throw new Error('Keine Freigabe-URL in der createLink-Antwort');
     }
   }catch(e){
     excelDateiOeffnen(statischerFallbackLink);
@@ -1010,9 +1025,29 @@ async function msGraphFahrdienstAuswertungLaden(){
 // wie FahrdienstAuswertungDurchfuehren in der HTA -- NUR ohne das
 // Zurückschreiben in die Datei, das bleibt der HTA am PC vorbehalten.
 // "zeilen" ist das 2D-Array aus usedRange (Zeile 0 = Excel-Zeile 1).
+// Wandelt eine Excel-Datumsseriennummer (Tage seit dem 30.12.1899, so wie
+// Graph "usedRange(valuesOnly=true)" ein Datum liefert -- als reine Zahl,
+// NICHT als formatiertes Datum) in {text:"TT.MM.JJJJ", jahr:JJJJ} um. War der
+// Wert schon Text oder leer, wird er unveraendert durchgereicht (jahr: null).
+function fahrdienstDatumInfo(wert){
+  if(wert===null || wert===undefined || String(wert).trim()==='') return {text:'', jahr:null};
+  const n = Number(wert);
+  if(isFinite(n) && n > 0){
+    const ms = Math.round((n - 25569) * 86400 * 1000);
+    const d = new Date(ms);
+    if(!isNaN(d.getTime())){
+      const tt = String(d.getUTCDate()).padStart(2,'0');
+      const mm = String(d.getUTCMonth()+1).padStart(2,'0');
+      const jj = d.getUTCFullYear();
+      return {text: tt+'.'+mm+'.'+jj, jahr: jj};
+    }
+  }
+  return {text: String(wert).trim(), jahr: null};
+}
+
 function fahrdienstZeilenAuswerten(zeilen){
   const ERSTE_DATENZEILE = 4; // 0-basiert -- entspricht Excel-Zeile 5
-  const COL_A=0, COL_B=1, COL_C=2, COL_D=3, COL_E=4, COL_AG=32;
+  const COL_A=0, COL_B=1, COL_C=2, COL_D=3, COL_E=4, COL_AG=32, COL_AR=43;
   const leer = (v)=> v===null || v===undefined || String(v).trim()==='';
   const zeileKomplettLeer = (r)=> !r || (leer(r[COL_A]) && leer(r[COL_B]) && leer(r[COL_C]) && leer(r[COL_D]));
 
@@ -1024,7 +1059,15 @@ function fahrdienstZeilenAuswerten(zeilen){
 
     const blockStart = zeile;
     const quartal = r[COL_A];
-    const datumText = String(r[COL_B]==null ? '' : r[COL_B]).trim();
+    const datumInfo = fahrdienstDatumInfo(r[COL_B]);
+    const datumText = datumInfo.text;
+    // Spalte A enthaelt NUR die Quartalszahl (1-4), ohne Jahr -- ueber
+    // mehrere Jahre hinweg wuerden sonst alle "Quartal 1"-Diensttage
+    // (2025, 2026, ...) in einen Topf geworfen. Deshalb wird, genau wie in
+    // der HTA (FahrdienstAuswertungDurchfuehren), das aus dem Datum
+    // abgeleitete Jahr mit der Quartalszahl zu einem eindeutigen Schluessel
+    // kombiniert.
+    const quartalKey = 'Quartal ' + quartal + ' / ' + (datumInfo.jahr!=null ? datumInfo.jahr : '?');
     const dienststundenRoh = Number(r[COL_C]);
     const dienststunden = isFinite(dienststundenRoh) ? dienststundenRoh : 0;
     const arztZeile = zeilen[zeile+1] || [];
@@ -1055,14 +1098,18 @@ function fahrdienstZeilenAuswerten(zeilen){
     }
     const stundenlohn = dienststunden ? gesamt/dienststunden : 0;
 
-    // Ohne Formel-Zugriff (usedRange liefert nur Werte) lässt sich die
-    // "8-16 Uhr"-Zeitspanne wie in der HTA nicht rekonstruieren -- hier
-    // deshalb bewusst nur die reine Stundenzahl (entspricht dem Fallback,
-    // den auch FahrdienstZeitLabel in der HTA nutzt, wenn keine Formel
-    // gefunden wird).
+    // Die HTA schreibt die fertige "8-16 Uhr"-Zeitspanne (aus der
+    // Dienstzeit-Formel in Spalte C berechnet) als reinen Text-Wert in
+    // Spalte AR zurueck (siehe FahrdienstAuswertungDurchfuehren) -- genau
+    // damit die App, die die Datei nur ueber usedRange(valuesOnly=true) also
+    // OHNE Formeln liest, dieselbe Zeitspanne trotzdem anzeigen kann. Nur bei
+    // noch nicht am PC neu berechneten (aelteren) Diensttagen faellt das auf
+    // die reine Stundenzahl zurueck.
+    const zeitLabelGespeichert = String(r[COL_AR]==null ? '' : r[COL_AR]).trim();
+    const zeitLabel = zeitLabelGespeichert || (dienststunden ? (dienststunden + ' Std.') : '');
+
     bloecke.push({
-      quartal, datumText,
-      zeitLabel: dienststunden ? (dienststunden + ' Std.') : '',
+      quartal, quartalKey, datumText, zeitLabel,
       arzt, gesamt, stundenlohn, gkv, ls, pt
     });
 
@@ -1071,18 +1118,18 @@ function fahrdienstZeilenAuswerten(zeilen){
 
   const quartaleMap = new Map();
   bloecke.forEach(b=>{
-    if(!quartaleMap.has(b.quartal)) quartaleMap.set(b.quartal, new Map());
-    const aerzteMap = quartaleMap.get(b.quartal);
+    if(!quartaleMap.has(b.quartalKey)) quartaleMap.set(b.quartalKey, new Map());
+    const aerzteMap = quartaleMap.get(b.quartalKey);
     if(!aerzteMap.has(b.arzt)) aerzteMap.set(b.arzt, {summe:0, dienste:[]});
     const eintrag = aerzteMap.get(b.arzt);
     eintrag.summe += b.gkv;
     eintrag.dienste.push(b.datumText + (b.zeitLabel ? ', ' + b.zeitLabel : ''));
   });
   const quartale = [];
-  quartaleMap.forEach((aerzteMap, quartal)=>{
+  quartaleMap.forEach((aerzteMap, quartalKey)=>{
     const aerzte = [];
     aerzteMap.forEach((eintrag, arzt)=> aerzte.push({arzt, summe: eintrag.summe, dienste: eintrag.dienste}));
-    quartale.push({quartal, aerzte});
+    quartale.push({quartal: quartalKey, aerzte});
   });
 
   return {bloecke, quartale};
@@ -1132,7 +1179,7 @@ function fahrdienstAuswertungRendern(daten){
 
   html += '<div class="abschnitt"><div class="trennlinie">Quartale je vertretenem Arzt</div>';
   daten.quartale.forEach(q=>{
-    html += `<div class="fahrdienst-quartal-titel">Quartal ${q.quartal}</div>`;
+    html += `<div class="fahrdienst-quartal-titel">${q.quartal}</div>`;
     q.aerzte.forEach(a=>{
       html += `<div class="fahrdienst-arzt-karte">
         <div class="fahrdienst-arzt-name">${a.arzt}</div>
