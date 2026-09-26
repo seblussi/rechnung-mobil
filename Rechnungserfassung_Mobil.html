@@ -2370,7 +2370,7 @@ function ansichtLuftlinienTool(){
   }
   html += `
       <div class="luft-zwischenablage-reihe">
-        <span class="luft-maps-icon" id="btnLuftMapsOeffnen" title="In Maps öffnen"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <span class="luft-maps-icon" id="btnLuftMapsOeffnen" title="Google Maps öffnen"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M19 2.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.19 4.25 7.75 4.25 7.75s4.25-4.56 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25z" fill="#e0303f" transform="translate(-7,3.5)"/>
           <circle cx="19" cy="6.75" r="1.6" fill="#fff" transform="translate(-7,3.5)"/>
         </svg></span>
@@ -2411,14 +2411,13 @@ function ansichtLuftlinienTool(){
     ergebnisEl.innerHTML = html;
   };
 
-  // Klick auf das Pin-Icon oeffnet Maps mit der aktuell eingetragenen
-  // Adresse (Kartenname bewusst offen gelassen -- google.com/maps-Links
-  // oeffnen auf dem Handy automatisch die installierte Maps-App, falls
-  // vorhanden, sonst den Browser).
+  // KORREKTUR (Rueckmeldung: der Button soll einfach nur Google Maps leer
+  // oeffnen, ohne die eingetragene Adresse zu uebernehmen) -- kein Query-Link
+  // mehr, einfach die leere Maps-Startseite; google.com/maps oeffnet auf dem
+  // Handy automatisch die installierte Maps-App, falls vorhanden, sonst den
+  // Browser.
   document.getElementById('btnLuftMapsOeffnen').onclick = ()=>{
-    const adresse = document.getElementById('txtLuftAdresse').value.trim();
-    if(!adresse){ zeigeErgebnis('Bitte zuerst eine Adresse eintragen oder aus der Zwischenablage einfügen.', true); return; }
-    window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(adresse), '_blank');
+    window.open('https://www.google.com/maps', '_blank');
   };
 
   document.getElementById('btnLuftZwischenablage').onclick = async ()=>{
