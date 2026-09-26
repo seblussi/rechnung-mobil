@@ -494,6 +494,19 @@
   .einstellung-zeile .txt{font-size:14.5px;}
   .einstellung-zeile .txt .hinweis{display:block; font-size:12px; color:var(--text-schwach);}
   .leer-hinweis{text-align:center; color:var(--text-schwach); font-size:14px; padding:30px 10px;}
+
+  /* Fahrdienst-Auswertung (Werkzeug "Fahrtenbuch öffnen") -- Diensttage-
+     Tabelle + nach Quartal/Arzt gruppierte Karten, analog zur gleichnamigen
+     Ansicht in der HTA am PC (reine Anzeige, kein Zurückschreiben von hier
+     aus möglich). */
+  .fahrdienst-tabelle{width:100%; border-collapse:collapse; font-size:12px;}
+  .fahrdienst-tabelle th{background:var(--rand); padding:5px 6px; text-align:left; white-space:nowrap;}
+  .fahrdienst-tabelle td{padding:4px 6px; border-bottom:1px solid var(--rand); white-space:nowrap;}
+  .fahrdienst-quartal-titel{font-size:15px; font-weight:700; margin:18px 0 8px; color:var(--titelfarbe);}
+  .fahrdienst-arzt-karte{background:var(--karte); border:1px solid var(--rand); border-radius:10px; padding:10px 14px; margin-bottom:10px;}
+  .fahrdienst-arzt-name{font-weight:700; font-size:14px; margin-bottom:4px;}
+  .fahrdienst-arzt-karte ul{margin:4px 0 8px; padding-left:18px; font-size:13px;}
+  .fahrdienst-arzt-summe{font-size:13px; color:var(--text-schwach);}
   /* Wie am PC (Rechnungsverwaltung): farbiges L/P-Badge VOR dem Namen statt
      ausgeschriebenem "LS"/"PT" dahinter -- gleiche Form/Groesse wie dort
      (18x18px, abgerundetes Quadrat, ein Buchstabe). */
@@ -954,6 +967,186 @@ async function msGraphAlleZeilenLaden(){
   }catch(e){ return null; }
 }
 
+// =====================================================================
+// Fahrdienst-Auswertung (Werkzeug "Fahrtenbuch öffnen") -- reine ANZEIGE,
+// analog zur gleichnamigen Auswertung in der HTA am PC (siehe dort
+// FahrdienstAuswertungDurchfuehren): Diensttage-Übersicht (Gesamt/
+// Stundenlohn/gesetzlich/LS+PT/LS/PT) sowie je Quartal eine nach
+// vertretenem Arzt gruppierte Dienstliste samt 8,7904%-Gebührenabzug.
+// Zurückschreiben in die Excel-Datei (Spalten AH-AM) kann NUR die HTA per
+// Excel-Automation -- von hier aus wird nichts in die Datei geschrieben,
+// nur live per Microsoft-Graph-Excel-API gelesen und lokal berechnet.
+// =====================================================================
+const FAHRDIENST_GEBUEHR_SATZ = 0.087904;
+
+// Laedt "Tabellenblatt1" der Fahrdienst-Dokumentation komplett per Graph-
+// Excel-API (usedRange, nur Werte -- keine Formeln, siehe fahrdienstZeitLabel
+// weiter unten) und wertet sie clientseitig aus. Liefert null bei jedem
+// Fehler (kein Login, kein Netz, Datei nicht erreichbar).
+async function msGraphFahrdienstAuswertungLaden(){
+  if(msGraphStatus!=='angemeldet') return null;
+  const token = await msGraphTokenHolen();
+  if(!token) return null;
+  try{
+    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_FAHRTENBUCH);
+    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if(!wsRes.ok) return null;
+    const wsDaten = await wsRes.json();
+    const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
+    if(!blattName) return null;
+    const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
+      "')/usedRange(valuesOnly=true)?$select=values";
+    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
+    if(!rangeRes.ok) return null;
+    const rangeDaten = await rangeRes.json();
+    return fahrdienstZeilenAuswerten(rangeDaten.values || []);
+  }catch(e){ return null; }
+}
+
+// Reine Rechen-/Gruppierungslogik, 1:1 dieselbe Diensttag-Block-Erkennung
+// und Kategorisierung (Spalte E: leer=GKV, L/LS=Leichenschau, P/PT=Privat)
+// wie FahrdienstAuswertungDurchfuehren in der HTA -- NUR ohne das
+// Zurückschreiben in die Datei, das bleibt der HTA am PC vorbehalten.
+// "zeilen" ist das 2D-Array aus usedRange (Zeile 0 = Excel-Zeile 1).
+function fahrdienstZeilenAuswerten(zeilen){
+  const ERSTE_DATENZEILE = 4; // 0-basiert -- entspricht Excel-Zeile 5
+  const COL_A=0, COL_B=1, COL_C=2, COL_D=3, COL_E=4, COL_AG=32;
+  const leer = (v)=> v===null || v===undefined || String(v).trim()==='';
+  const zeileKomplettLeer = (r)=> !r || (leer(r[COL_A]) && leer(r[COL_B]) && leer(r[COL_C]) && leer(r[COL_D]));
+
+  const bloecke = [];
+  let zeile = ERSTE_DATENZEILE;
+  while(zeile < zeilen.length && !zeileKomplettLeer(zeilen[zeile])){
+    const r = zeilen[zeile];
+    if(leer(r[COL_A])){ zeile++; continue; }
+
+    const blockStart = zeile;
+    const quartal = r[COL_A];
+    const datumText = String(r[COL_B]==null ? '' : r[COL_B]).trim();
+    const dienststundenRoh = Number(r[COL_C]);
+    const dienststunden = isFinite(dienststundenRoh) ? dienststundenRoh : 0;
+    const arztZeile = zeilen[zeile+1] || [];
+    const arzt = String(arztZeile[COL_C]==null ? '' : arztZeile[COL_C]).trim();
+
+    let blockEnde = zeile;
+    let pruef = zeile + 1;
+    while(pruef < zeilen.length){
+      const pr = zeilen[pruef] || [];
+      if(!leer(pr[COL_A])) break;
+      if(zeileKomplettLeer(pr)) break;
+      blockEnde = pruef;
+      pruef++;
+    }
+
+    let gesamt=0, gkv=0, ls=0, pt=0;
+    for(let rIdx=blockStart; rIdx<=blockEnde; rIdx++){
+      const rr = zeilen[rIdx] || [];
+      if(!leer(rr[COL_D])){
+        let wert = Number(rr[COL_AG]);
+        if(!isFinite(wert)) wert = 0;
+        const kategorie = String(rr[COL_E]==null ? '' : rr[COL_E]).trim().toUpperCase();
+        gesamt += wert;
+        if(kategorie==='L' || kategorie==='LS') ls += wert;
+        else if(kategorie==='P' || kategorie==='PT') pt += wert;
+        else gkv += wert;
+      }
+    }
+    const stundenlohn = dienststunden ? gesamt/dienststunden : 0;
+
+    // Ohne Formel-Zugriff (usedRange liefert nur Werte) lässt sich die
+    // "8-16 Uhr"-Zeitspanne wie in der HTA nicht rekonstruieren -- hier
+    // deshalb bewusst nur die reine Stundenzahl (entspricht dem Fallback,
+    // den auch FahrdienstZeitLabel in der HTA nutzt, wenn keine Formel
+    // gefunden wird).
+    bloecke.push({
+      quartal, datumText,
+      zeitLabel: dienststunden ? (dienststunden + ' Std.') : '',
+      arzt, gesamt, stundenlohn, gkv, ls, pt
+    });
+
+    zeile = blockEnde + 1;
+  }
+
+  const quartaleMap = new Map();
+  bloecke.forEach(b=>{
+    if(!quartaleMap.has(b.quartal)) quartaleMap.set(b.quartal, new Map());
+    const aerzteMap = quartaleMap.get(b.quartal);
+    if(!aerzteMap.has(b.arzt)) aerzteMap.set(b.arzt, {summe:0, dienste:[]});
+    const eintrag = aerzteMap.get(b.arzt);
+    eintrag.summe += b.gkv;
+    eintrag.dienste.push(b.datumText + (b.zeitLabel ? ', ' + b.zeitLabel : ''));
+  });
+  const quartale = [];
+  quartaleMap.forEach((aerzteMap, quartal)=>{
+    const aerzte = [];
+    aerzteMap.forEach((eintrag, arzt)=> aerzte.push({arzt, summe: eintrag.summe, dienste: eintrag.dienste}));
+    quartale.push({quartal, aerzte});
+  });
+
+  return {bloecke, quartale};
+}
+
+let fahrdienstAuswertungCache = null;
+
+async function ansichtFahrdienstAuswertung(){
+  setzeTitel('Fahrdienst-Auswertung', ansichtStart);
+  app.innerHTML = `
+    <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Reine Ansicht -- geschrieben wird in die Excel-Datei weiterhin nur am PC über "Fahrtenbuch öffnen" in der Rechnungssoftware.</div>
+    <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="margin-bottom:12px;">Neu laden</button>
+    <div id="fahrdienstInhalt"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>`;
+
+  document.getElementById('btnFahrdienstNeuLaden').onclick = async ()=>{
+    document.getElementById('fahrdienstInhalt').innerHTML = '<div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div>';
+    fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
+    fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
+  };
+
+  fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
+  fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
+}
+
+function fahrdienstAuswertungRendern(daten){
+  const zielEl = document.getElementById('fahrdienstInhalt');
+  if(!zielEl) return;
+  if(!daten){
+    zielEl.innerHTML = '<div class="leer-hinweis">Konnte nicht geladen werden (kein Netz oder nicht angemeldet). Bitte "Neu laden" versuchen.</div>';
+    return;
+  }
+  if(!daten.bloecke.length){
+    zielEl.innerHTML = '<div class="leer-hinweis">Keine Diensttage in der Datei gefunden.</div>';
+    return;
+  }
+  const euro = (w)=> (Number(w)||0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+  const gebuehrText = (FAHRDIENST_GEBUEHR_SATZ*100).toLocaleString('de-DE', {maximumFractionDigits:4});
+
+  let html = '<div class="abschnitt"><div class="trennlinie">Diensttage-Übersicht</div>';
+  html += '<div style="overflow-x:auto;"><table class="fahrdienst-tabelle"><tr>' +
+    '<th>Datum</th><th>Arzt</th><th>Zeit</th><th>Gesamt</th><th>Std.-Lohn</th><th>gesetzl.</th><th>LS+PT</th><th>LS</th><th>PT</th></tr>' +
+    daten.bloecke.map(b=>`<tr>
+      <td>${b.datumText}</td><td>${b.arzt}</td><td>${b.zeitLabel}</td>
+      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}</td>
+      <td>${euro(b.ls+b.pt)}</td><td>${euro(b.ls)}</td><td>${euro(b.pt)}</td>
+    </tr>`).join('') + '</table></div></div>';
+
+  html += '<div class="abschnitt"><div class="trennlinie">Quartale je vertretenem Arzt</div>';
+  daten.quartale.forEach(q=>{
+    html += `<div class="fahrdienst-quartal-titel">Quartal ${q.quartal}</div>`;
+    q.aerzte.forEach(a=>{
+      html += `<div class="fahrdienst-arzt-karte">
+        <div class="fahrdienst-arzt-name">${a.arzt}</div>
+        <ul>${a.dienste.map(d=>`<li>${d}</li>`).join('')}</ul>
+        <div class="fahrdienst-arzt-summe">Gesamtsumme (GKV): ${euro(a.summe)}</div>
+        <div class="fahrdienst-arzt-summe">abzügl. ${gebuehrText}% Gebühr: ${euro(a.summe*(1-FAHRDIENST_GEBUEHR_SATZ))}</div>
+      </div>`;
+    });
+  });
+  html += '</div>';
+
+  zielEl.innerHTML = html;
+}
+
 // Prueft per Graph-Metadatenabfrage (kein Download), ob zu einer
 // Rechnungsnummer eine PDF-Datei im "fertige Rechnungen"-Ordner existiert,
 // und liefert deren webUrl (OneDrive-Web-Vorschau, im Handy-Browser
@@ -1032,6 +1225,44 @@ async function msGraphSyncSchreiben(){
   } finally {
     msGraphSyncSchreibtGerade = false;
     if(msGraphSyncErneutNoetig){ msGraphSyncErneutNoetig = false; msGraphSyncSchreiben(); }
+  }
+}
+
+// Gegenstueck zu msGraphSyncSchreiben() (Upload): laedt die Sync-Datei aus
+// OneDrive automatisch HERUNTER und spielt sie ein -- Problem vorher: nach
+// Loeschen von Browserverlauf/Cache/Cookies waren die lokal gespeicherten,
+// noch nicht am PC uebernommenen Faelle weg, und selbst eine erneute
+// OneDrive-Anmeldung holte sie nicht zurueck (die App lud die Cloud-Datei nie
+// von selbst herunter, nur hoch) -- man musste die Datei von Hand aus
+// OneDrive laden und ueber "Importieren" einlesen. Laeuft jetzt automatisch
+// bei jedem Start/Neuladen der Seite MIT aktiver OneDrive-Anmeldung sowie
+// direkt nach einer frischen Anmeldung (siehe Aufrufstelle ganz unten im
+// Skript). Nutzt fuer das eigentliche Einspielen dieselbe, bereits
+// vorhandene MERGE-Logik wie der manuelle Import (jsonImportVerarbeiten) --
+// rein additiv ueber Wert+Zeitstempel, ueberschreibt/loescht also nie etwas
+// lokal Vorhandenes, egal wie oft sie laeuft. Gibt true zurueck, wenn
+// dadurch etwas Neues uebernommen wurde (fuer die Aufrufstelle, um bei
+// Bedarf die aktuell sichtbare Ansicht neu aufzubauen).
+async function msGraphSyncAutomatischEinlesen(){
+  if(msGraphStatus !== 'angemeldet') return false;
+  try{
+    const token = await msGraphTokenHolen();
+    if(!token) return false;
+    const antwort = await fetch(msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON) + '/content', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if(!antwort.ok) return false; // z.B. Datei existiert in OneDrive noch nicht
+    const text = await antwort.text();
+    const ergebnis = jsonImportVerarbeiten(text);
+    if(ergebnis.geaendert){
+      appToastAnzeigen('Automatisch aus OneDrive nachgeladen: ' + ergebnis.html, 3800);
+      return true;
+    }
+    return false;
+  }catch(e){
+    // stiller Fehlschlag (z.B. kein Netz) -- naechster Versuch beim naechsten
+    // Start/Neuladen bzw. der naechsten Anmeldung.
+    return false;
   }
 }
 
@@ -1952,6 +2183,10 @@ function ansichtStart(){
   document.getElementById('btnOeffneFahrtenbuch').onclick = ()=>{
     excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_FAHRTENBUCH,
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
+    // Analog zur HTA am PC: waehrend die Excel-Datei oeffnet, direkt die
+    // Fahrdienst-Auswertung dazu anzeigen (siehe ansichtFahrdienstAuswertung
+    // -- reine Anzeige per Graph-Excel-API, kein Zurueckschreiben von hier).
+    ansichtFahrdienstAuswertung();
   };
   document.getElementById('btnLuftlinienTool').onclick = ansichtLuftlinienTool;
   document.getElementById('btnNotapotheke').onclick = notapothekenSucheOeffnen;
@@ -4771,6 +5006,19 @@ try{
     // aktualisieren -- direkt nach einem frischen Login landet man dort,
     // und der Button soll sofort "OneDrive" statt des alten Zustands zeigen.
     else if(aktuelleAnsichtIstHauptbildschirm) ansichtStart();
+
+    // Automatischer Download+Merge der OneDrive-Sync-Datei (siehe Kommentar
+    // dort) -- laeuft bei jedem Start/Neuladen mit aktiver Anmeldung sowie
+    // direkt nach einer frischen Anmeldung (beides landet hier, da
+    // msGraphStatus in beiden Faellen 'angemeldet' ist). Ohne await, damit
+    // der erste Bildschirmaufbau (siehe oben) nicht darauf warten muss; nur
+    // bei tatsaechlich uebernommenen neuen Faellen wird die evtl. gerade
+    // sichtbare Ansicht anschliessend einmal neu aufgebaut.
+    msGraphSyncAutomatischEinlesen().then((geaendert)=>{
+      if(!geaendert) return;
+      if(einstellungenOffen) ansichtEinstellungen();
+      else if(aktuelleAnsichtIstHauptbildschirm) ansichtStart();
+    }).catch(()=>{});
   }).catch(()=>{});
 }catch(e){}
 
