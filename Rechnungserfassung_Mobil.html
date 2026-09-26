@@ -322,6 +322,24 @@
      Hintergrund. Hintergrund hier deshalb explizit erneut setzen. */
   .maske.pt .btn-primaer.blass{background:var(--karte); color:var(--pt-farbe); border-color:var(--pt-farbe);}
   .btn-primaer.blass .unter{display:block; font-size:12px; margin-top:2px; font-weight:400; opacity:.85;}
+  /* "Aus Zwischenablage einfügen" (Luftlinie-Tool): kleines Karten-Icon
+     LINKS neben dem Button, als eigenes Element (nicht im Button-Text) --
+     eigenes, generisches Symbol (derselbe Pin-Umriss wie der blaue Pin im
+     Luftlinie-Icon, nur rot) statt des original markenrechtlich
+     geschuetzten Google-Maps-Logos (gleiche Ueberlegung wie beim
+     Apotheken-Symbol weiter oben). Blauer Rahmen umrandet das GANZE
+     Icon-Badge, Klick darauf oeffnet Maps mit der eingetragenen Adresse
+     (siehe Wiring). align-items:stretch + aspect-ratio:1/1 (statt fester
+     Pixelmasse) -- Badge passt sich dadurch automatisch der tatsaechlichen
+     Hoehe des Buttons daneben an, bleibt aber quadratisch. */
+  .luft-zwischenablage-reihe{display:flex; align-items:stretch; gap:10px; margin-bottom:16px;}
+  .luft-zwischenablage-reihe .btn-primaer{margin-bottom:0; margin-top:0; flex:1;}
+  .luft-maps-icon{
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    aspect-ratio:1/1; height:auto; border-radius:12px; background:#eaf1fb;
+    border:2px solid #2f6fed; box-shadow:0 1px 3px rgba(0,0,0,.15); cursor:pointer;
+  }
+  body.dunkel .luft-maps-icon{background:#16243a;}
   /* "Sterbeort abweichend?" sitzt wie am PC (btnSterbeAbw: gleiche Zeile wie
      "PLZ + Stadt", rechtsbuendig, kompakte Schaltflaeche) rechts NEBEN dem
      PLZ/Ort-Feld statt als eigene volle Zeile darunter. */
@@ -2054,7 +2072,13 @@ function ansichtLuftlinienTool(){
     html += `<div class="warnhinweis aktiv">Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen). Ohne Praxisadresse kann keine Entfernung berechnet werden.</div>`;
   }
   html += `
-      <button class="btn-primaer blass" id="btnLuftZwischenablage" style="margin-bottom:16px;">Aus Zwischenablage einfügen</button>
+      <div class="luft-zwischenablage-reihe">
+        <span class="luft-maps-icon" id="btnLuftMapsOeffnen" title="In Maps öffnen"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 2.5c-2.35 0-4.25 1.9-4.25 4.25 0 3.19 4.25 7.75 4.25 7.75s4.25-4.56 4.25-7.75c0-2.35-1.9-4.25-4.25-4.25z" fill="#e0303f" transform="translate(-7,3.5)"/>
+          <circle cx="19" cy="6.75" r="1.6" fill="#fff" transform="translate(-7,3.5)"/>
+        </svg></span>
+        <button class="btn-primaer blass" id="btnLuftZwischenablage">Aus Zwischenablage einfügen</button>
+      </div>
       <div class="feld">
         <label for="txtLuftAdresse">Adresse</label>
         <input type="text" id="txtLuftAdresse" autocomplete="off" placeholder="Straße Hausnummer, PLZ Ort">
@@ -2063,6 +2087,20 @@ function ansichtLuftlinienTool(){
       <div id="luftErgebnis" class="luft-ergebnis"></div>
     </div>`;
   app.innerHTML = html;
+
+  // FIX (Rueckmeldung: Icon-Badge war nicht wirklich quadratisch): CSS
+  // aspect-ratio + align-items:stretch reicht dafuer offenbar nicht zuver­
+  // laessig -- stattdessen nach dem Rendern die TATSAECHLICHE Hoehe des
+  // Buttons daneben messen und Breite/Hoehe des Badges explizit darauf
+  // setzen (garantiert quadratisch, unabhaengig vom Textumbruch im Button).
+  requestAnimationFrame(()=>{
+    const btnZw = document.getElementById('btnLuftZwischenablage');
+    const iconEl = document.getElementById('btnLuftMapsOeffnen');
+    if(btnZw && iconEl && btnZw.offsetHeight){
+      iconEl.style.width = btnZw.offsetHeight + 'px';
+      iconEl.style.height = btnZw.offsetHeight + 'px';
+    }
+  });
 
   const ergebnisEl = document.getElementById('luftErgebnis');
   // Eigene, deutlich groessere/auffaelligere Darstellung fuer das
@@ -2074,6 +2112,16 @@ function ansichtLuftlinienTool(){
     ergebnisEl.classList.add('aktiv');
     ergebnisEl.classList.toggle('fehler', !!istFehler);
     ergebnisEl.innerHTML = html;
+  };
+
+  // Klick auf das Pin-Icon oeffnet Maps mit der aktuell eingetragenen
+  // Adresse (Kartenname bewusst offen gelassen -- google.com/maps-Links
+  // oeffnen auf dem Handy automatisch die installierte Maps-App, falls
+  // vorhanden, sonst den Browser).
+  document.getElementById('btnLuftMapsOeffnen').onclick = ()=>{
+    const adresse = document.getElementById('txtLuftAdresse').value.trim();
+    if(!adresse){ zeigeErgebnis('Bitte zuerst eine Adresse eintragen oder aus der Zwischenablage einfügen.', true); return; }
+    window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(adresse), '_blank');
   };
 
   document.getElementById('btnLuftZwischenablage').onclick = async ()=>{
