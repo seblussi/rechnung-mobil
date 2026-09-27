@@ -2733,7 +2733,7 @@ function ansichtKorrigieren(){
           <input type="checkbox" class="chk" data-art="${f.art}" data-idx="${f.idx}">
           <div class="inhalt">
             <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${f.werte.txtName || '(ohne Namen)'}</div>
-            <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}</div>
+            <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}${f.rechnungsnummer ? ' &middot; Nr. ' + f.rechnungsnummer : ' &middot; ohne Rechnungsnummer'}</div>
           </div>
         </div>`).join('')}
     </div>
