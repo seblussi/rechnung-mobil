@@ -145,17 +145,6 @@
   body.dunkel .btn-sync.sync-rot{background:#3a1414; color:#f0a3a3; border-color:#b23a3a;}
   .btn-sync.sync-verbunden{border-color:#3ba55c; color:#1e6b37; background:#e6f7ea;}
   body.dunkel .btn-sync.sync-verbunden{background:#123a1f; color:#8fd9a8; border-color:#2e8a4c;}
-  /* Wiederverwendbarer "gruen = bereits aktuell"-Zustand fuer beliebige
-     .btn-sekundaer-Buttons (z.B. "Neu laden" in der Fahrdienst-Auswertung,
-     analog zum gleichnamigen Status in der PC-Software) -- dieselben
-     Farbtoene wie .btn-sync.sync-verbunden, aber ohne an die Sync-Button-
-     Klasse gebunden zu sein. */
-  .btn-status-aktuell{border-color:#3ba55c; color:#1e6b37; background:#e6f7ea;}
-  body.dunkel .btn-status-aktuell{background:#123a1f; color:#8fd9a8; border-color:#2e8a4c;}
-  /* deaktiviert (siehe fahrdienstNeuLadenAlsAktuellMarkieren) soll weiterhin
-     voll sichtbar/gruen bleiben statt vom Browser ausgegraut zu werden --
-     nur der Mauszeiger zeigt an, dass gerade nichts zu tun ist. */
-  .btn-status-aktuell:disabled{opacity:1; cursor:default;}
   /* Export/Import/Sync nebeneinander als gleich breite, wieder near-quadra­
      tische Buttons (wie ursprünglich) -- die einzelnen .btn-sekundaer-Regeln
      (width:100% etc.) bleiben dabei unveraendert, nur die Anordnung wird per
@@ -780,18 +769,46 @@ async function msGraphNaechsteRenuLiveErmitteln(){
 // Live-Abgleich wird dieser lokale Rueckfallwert automatisch mit
 // aktualisiert ("Zähler-Selbstheilung"), damit er auch im seltenen
 // Ausnahmefall (offline) nicht unnoetig veraltet ist.
+// Ermittelt die hoechste Nummer, die HIER auf dem Handy bereits an einen
+// lokalen Fall vergeben wurde (Spalte Q-Suffix "-NNN" aus f.rechnungsnummer),
+// unabhaengig davon, ob dieser Fall schon per "Handy laden" am PC verarbeitet
+// und dadurch in die echte Uebersicht eingetragen wurde. Das ist noetig, weil
+// die Live-Ermittlung (siehe msGraphNaechsteRenuLiveErmitteln) nur das sieht,
+// was TATSAECHLICH schon in der Excel-Datei steht -- ein am Handy bereits
+// nummerierter, aber noch nicht am PC eingelesener Fall taucht dort also noch
+// NICHT auf und wuerde sonst ein zweites Mal vergeben (siehe Ruecklauf:
+// doppelte Nummern bei zwei kurz hintereinander erzeugten Rechnungen).
+function hoechsteLokalVergebeneRenu(){
+  let hoechste = 0;
+  ['ls','pt'].forEach(art=>{
+    ladeFaelle(art).forEach(f=>{
+      const treffer = String(f.rechnungsnummer||'').match(/-(\d{3})$/);
+      if(treffer){
+        const n = parseInt(treffer[1], 10);
+        if(n > hoechste) hoechste = n;
+      }
+    });
+  });
+  return hoechste;
+}
 async function naechsterRenuZaehlerErmitteln(){
   const e = ladeEinstellungen();
   const live = await msGraphNaechsteRenuLiveErmitteln();
+  // Untergrenze: nie eine Nummer erneut vergeben, die hier lokal (z.B. in
+  // einem noch nicht per "Handy laden" abgeholten Fall) bereits vergeben ist,
+  // selbst wenn die Excel-Datei das noch nicht widerspiegelt.
+  const lokaleUntergrenze = hoechsteLokalVergebeneRenu() + 1;
   if(live!==null){
-    if(live !== e.rnNaechsterZaehler){
-      e.rnNaechsterZaehler = live;
-      e.rnLetzte = String(live-1).padStart(3,'0');
+    const naechster = Math.max(live, lokaleUntergrenze);
+    if(naechster !== e.rnNaechsterZaehler){
+      e.rnNaechsterZaehler = naechster;
+      e.rnLetzte = String(naechster-1).padStart(3,'0');
       speichereEinstellungen(e);
     }
-    return live;
+    return naechster;
   }
-  return e.rnNaechsterZaehler; // Rueckfall: manuell gepflegter Stand (kann null sein)
+  if(!e.rnNaechsterZaehler) return lokaleUntergrenze>1 ? lokaleUntergrenze : null;
+  return Math.max(e.rnNaechsterZaehler, lokaleUntergrenze); // Rueckfall: manuell gepflegter Stand
 }
 // Wiring fuer das "letzte Rechnungsnummer"-Feld -- auf Nutzerwunsch jetzt an
 // ZWEI Stellen vorhanden (Einstellungen UND ganz rechts bei den Buttons auf
@@ -1286,7 +1303,6 @@ async function ansichtFahrdienstAuswertung(){
     document.getElementById('fahrdienstInhalt').innerHTML = '<div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div>';
     fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
     fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
-    fahrdienstNeuLadenAlsAktuellMarkieren();
   };
   document.getElementById('btnFahrdienstExcelOeffnen').onclick = ()=>{
     excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_FAHRTENBUCH,
@@ -1295,22 +1311,6 @@ async function ansichtFahrdienstAuswertung(){
 
   fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
   fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
-  // NUTZERWUNSCH: "Aktuell" gilt bereits direkt nach dem ersten Laden, solange
-  // man die Ansicht nicht verlaesst -- es ist eine reine Ansicht (siehe
-  // Hinweistext oben), es gibt also gar keine Moeglichkeit, dass der gerade
-  // frisch geladene Stand veraltet sein koennte, ohne dass man die Ansicht
-  // neu betreten haette (was ohnehin automatisch neu laedt). Deshalb kein
-  // Vergleich mit einem vorherigen Stand mehr noetig: nach JEDEM erfolgreichen
-  // Laden (Erstaufruf UND "Neu laden"-Klick) direkt gruen + deaktiviert.
-  fahrdienstNeuLadenAlsAktuellMarkieren();
-}
-
-function fahrdienstNeuLadenAlsAktuellMarkieren(){
-  const btn = document.getElementById('btnFahrdienstNeuLaden');
-  if(!btn) return;
-  btn.classList.add('btn-status-aktuell');
-  btn.textContent = '✓ Aktuell';
-  btn.disabled = true;
 }
 
 function fahrdienstAuswertungRendern(daten){
