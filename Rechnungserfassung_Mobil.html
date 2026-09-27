@@ -1060,8 +1060,11 @@ async function msGraphUebersichtFingerprintsLaden(){
       if(key.replace(/\|/g,'')==='') continue; // komplett leere Zeile
       if(map.has(key)) continue; // erste Fundstelle gewinnt, wie am PC
       map.set(key, {
-        renu: String(r[16]==null?'':r[16]).trim(),          // Q: Rechnungsnummer
-        versandt: String(r[17]==null?'':r[17]).trim() !== '' // R: Versanddatum gefuellt?
+        renu: String(r[16]==null?'':r[16]).trim()          // Q: Rechnungsnummer
+        // Kein "versandt"-Feld mehr hier: Spalte R enthaelt IMMER das
+        // Rechnungsdatum (nie leer), das eigentliche "versendet"-Signal ist
+        // die Fett-Formatierung der Zelle -- siehe msGraphBriefVersendetLaden
+        // weiter unten und der Kommentar in SchreibeInUebersicht (Modul1.bas).
       });
     }
     return map;
@@ -2980,13 +2983,14 @@ async function ansichtAlleRechnungen(){
   alleRechnungenListeRendern(alleRechnungenCache, suchfeld.value);
 }
 
-function alleRechnungenListeRendern(liste, suchtext){
+function alleRechnungenListeRendern(cache, suchtext){
   const zielEl = document.getElementById('alleRechnungenListe');
   if(!zielEl) return;
-  if(liste === null){
+  if(cache === null){
     zielEl.innerHTML = '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden (kein Netz oder nicht angemeldet). Bitte "Neu laden" versuchen.</div>';
     return;
   }
+  const liste = cache.liste, blattName = cache.blattName;
   const suche = (suchtext||'').trim().toLowerCase();
   const gefiltert = suche ? liste.filter(f=>
     (f.nachname+' '+f.vorname).toLowerCase().includes(suche) || f.renu.toLowerCase().includes(suche)
@@ -3007,7 +3011,7 @@ function alleRechnungenListeRendern(liste, suchtext){
         <div class="name"><span class="badge-neu ${f.art==='L'?'ls':'pt'}">${f.art==='L'?'L':'P'}</span>${f.nachname}, ${f.vorname}</div>
         <div class="info">${f.datum || ''}${f.betrag ? ' &middot; ' + f.betrag + ' €' : ''}${f.renu ? ' &middot; Nr. ' + f.renu : ' &middot; ohne Rechnungsnummer'}</div>
       </div>
-      <div class="fall-icons">${f.versandt ? '<span class="badge-brief" title="Rechnung wurde bereits versendet">&#9993;</span>' : ''}<span class="pdf-platz"></span></div>
+      <div class="fall-icons"><span class="brief-platz"></span><span class="pdf-platz"></span></div>
     </div>`).join('') +
     (gefiltert.length > MAX_ANZEIGE ? `<div class="leer-hinweis">${gefiltert.length - MAX_ANZEIGE} weitere Treffer -- bitte Suche eingrenzen.</div>` : '');
 
@@ -3075,6 +3079,18 @@ function alleRechnungenListeRendern(liste, suchtext){
           alsUnvollstaendigMarkieren(el);
         }
       });
+      // Brief-Status (fett formatierte Spalte R = tatsaechlich per
+      // LetterXpress versendet) separat und unabhaengig vom PDF-Status
+      // nachladen -- eigener Graph-Aufruf pro Zeile, siehe
+      // msGraphBriefVersendetLaden weiter oben.
+      if(f.zeile){
+        msGraphBriefVersendetLaden(blattName, f.zeile).then(versendet=>{
+          if(versendet){
+            const briefPlatz = el.querySelector('.brief-platz');
+            if(briefPlatz) briefPlatz.innerHTML = '<span class="badge-brief" title="Rechnung wurde bereits versendet">&#9993;</span>';
+          }
+        });
+      }
     }
   });
 }
