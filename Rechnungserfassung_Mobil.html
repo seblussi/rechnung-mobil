@@ -13,6 +13,15 @@
      einzelne (v.a. transparent/blass gestylte) Elemente eigenmaechtig
      umfaerbt und dadurch z.B. Buttontext unsichtbar macht. -->
 <meta name="color-scheme" content="light dark">
+<style>
+  /* Zusaetzlich zur Meta-Angabe oben auch als CSS-Eigenschaft auf html
+     selbst (nicht erst auf body) gesetzt -- manche Mobil-Browser (u.a.
+     Opera Mobile) pruefen fuer ihre eigene "Nachtmodus"-Heuristik offenbar
+     eher das Wurzelelement als den body. Wird unten (body{color-scheme:...})
+     je nach App-Zustand ohnehin nochmal praeziser (nur "light" ODER "dark"
+     statt "light dark") ueberschrieben. */
+  html{color-scheme:light dark;}
+</style>
 <script src="icd_katalog.js"></script>
 <!-- MSAL Browser (Microsoft Authentication Library) -- fuer die Microsoft-
      Anmeldung (OneDrive-Zugriff via Graph API), siehe Abschnitt
@@ -136,6 +145,13 @@
   body.dunkel .btn-sync.sync-rot{background:#3a1414; color:#f0a3a3; border-color:#b23a3a;}
   .btn-sync.sync-verbunden{border-color:#3ba55c; color:#1e6b37; background:#e6f7ea;}
   body.dunkel .btn-sync.sync-verbunden{background:#123a1f; color:#8fd9a8; border-color:#2e8a4c;}
+  /* Wiederverwendbarer "gruen = bereits aktuell"-Zustand fuer beliebige
+     .btn-sekundaer-Buttons (z.B. "Neu laden" in der Fahrdienst-Auswertung,
+     analog zum gleichnamigen Status in der PC-Software) -- dieselben
+     Farbtoene wie .btn-sync.sync-verbunden, aber ohne an die Sync-Button-
+     Klasse gebunden zu sein. */
+  .btn-status-aktuell{border-color:#3ba55c; color:#1e6b37; background:#e6f7ea;}
+  body.dunkel .btn-status-aktuell{background:#123a1f; color:#8fd9a8; border-color:#2e8a4c;}
   /* Export/Import/Sync nebeneinander als gleich breite, wieder near-quadra­
      tische Buttons (wie ursprünglich) -- die einzelnen .btn-sekundaer-Regeln
      (width:100% etc.) bleiben dabei unveraendert, nur die Anordnung wird per
@@ -202,7 +218,13 @@
      und Rechnungsübersicht bleiben hier bewusst neutral statt fest
      eingefärbt, damit Handy und PC im Normalzustand gleich aussehen. */
   .btn-icon.btn-icon-grau{background:#eef1f6; border-color:#dde2ea;}
-  body.dunkel .btn-icon.btn-icon-grau{background:#232936; border-color:#333c4e;}
+  /* KORREKTUR (Rueckmeldung: Buttons von "Excel-Dateien oeffnen" heben sich
+     im Dunkelmodus zu wenig vom Karten-Hintergrund ab): vorheriger Ton
+     (#232936) lag fast auf demselben Grauwert wie --karte (#242b36) im
+     Dunkelmodus -- kaum Kontrast. Deutlich helleres Grau + sichtbarerer
+     Rand, damit die Buttons als eigene Flaeche erkennbar bleiben (wie im
+     Hellmodus, wo sie sich klar vom weissen Kartenhintergrund abheben). */
+  body.dunkel .btn-icon.btn-icon-grau{background:#333e4f; border-color:#4a5772;}
   /* Luftlinie: dezentes Blau ueber den ganzen Button (statt nur das
      Icon-Badge), Apotheke: sanftes Rot -- wie gewuenscht. */
   .btn-icon.btn-icon-blau{background:#eaf1fb; border-color:#cfe0f7;}
@@ -653,7 +675,7 @@ function ladeKatalog(){
 }
 function speichereKatalog(k){ LS.set('bestatter_katalog', k); synchronisiereAlle(); }
 function ladeEinstellungen(){
-  return LS.get('einstellungen', {dunkel:false, praxisadresse:'Im Drachenacker 25, 77656 Offenburg', reiseBasisLuftlinie:false, rnLetzte:'', rnNaechsterZaehler:null});
+  return LS.get('einstellungen', {dunkel:false, dunkelManuell:false, praxisadresse:'Im Drachenacker 25, 77656 Offenburg', reiseBasisLuftlinie:false, rnLetzte:'', rnNaechsterZaehler:null});
 }
 function speichereEinstellungen(e){ LS.set('einstellungen', e); }
 
@@ -1253,17 +1275,45 @@ async function ansichtFahrdienstAuswertung(){
     <div id="fahrdienstInhalt"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>`;
 
   document.getElementById('btnFahrdienstNeuLaden').onclick = async ()=>{
+    const btnNeuLaden = document.getElementById('btnFahrdienstNeuLaden');
+    // Vorherigen Stand VOR dem Ueberschreiben sichern, um danach vergleichen
+    // zu koennen, ob sich beim Neu-Laden ueberhaupt etwas geaendert hat.
+    const vorherJson = JSON.stringify(fahrdienstAuswertungCache);
+    btnNeuLaden.classList.remove('btn-status-aktuell');
+    btnNeuLaden.textContent = 'Neu laden';
     document.getElementById('fahrdienstInhalt').innerHTML = '<div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div>';
     fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
     fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
+    fahrdienstNeuLadenStatusAnzeigen(vorherJson);
   };
   document.getElementById('btnFahrdienstExcelOeffnen').onclick = ()=>{
     excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_FAHRTENBUCH,
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
   };
 
+  const vorherJsonBeimOeffnen = JSON.stringify(fahrdienstAuswertungCache);
   fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
   fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
+  fahrdienstNeuLadenStatusAnzeigen(vorherJsonBeimOeffnen);
+}
+
+// Faerbt den "Neu laden"-Button gruen mit dem Hinweis "Aktuell", wenn der
+// gerade frisch geladene Stand (fahrdienstAuswertungCache, JSON-verglichen)
+// identisch zum vorherigen ist -- analog zur gruenen/blauen Statuszeile in
+// der PC-Rechnungssoftware. vorherJson ist null (JSON.stringify von
+// "undefined"/erstem Aufruf), wenn es noch keinen Vergleichsstand gab; dann
+// bleibt der Button bewusst im normalen Zustand (kein Vergleich moeglich).
+function fahrdienstNeuLadenStatusAnzeigen(vorherJson){
+  const btn = document.getElementById('btnFahrdienstNeuLaden');
+  if(!btn) return;
+  const jetztJson = JSON.stringify(fahrdienstAuswertungCache);
+  if(vorherJson === jetztJson){
+    btn.classList.add('btn-status-aktuell');
+    btn.textContent = '✓ Aktuell';
+  }else{
+    btn.classList.remove('btn-status-aktuell');
+    btn.textContent = 'Neu laden';
+  }
 }
 
 function fahrdienstAuswertungRendern(daten){
@@ -3033,6 +3083,11 @@ function ansichtEinstellungen(){
   // "Speichern"-Schritt.
   const anwenden = ()=>{
     e.dunkel = document.getElementById('chkDunkel').checked;
+    // Sobald der Dunkelmodus hier ODER ueber den Sonne/Mond-Kurzschalter
+    // manuell gesetzt wurde, folgt die App nicht mehr automatisch dem
+    // System-/Browser-Farbschema (siehe dunkelModusAutoSyncEinrichten) --
+    // sonst wuerde ein spaeterer OS-Wechsel die bewusste Wahl ueberschreiben.
+    e.dunkelManuell = true;
     // Checkbox-Beschriftung/-Haken wie am PC ("Im Grenzbereich
     // Reiseentschaedigung priorisieren", angehakt = Standard) -- invertiert
     // zum intern gespeicherten Flag reiseBasisLuftlinie (True = Luftlinie
@@ -3658,10 +3713,47 @@ document.getElementById('btnEinstellungen').onclick = ()=>{
 document.getElementById('btnDunkelToggle').onclick = ()=>{
   const e = ladeEinstellungen();
   e.dunkel = !e.dunkel;
+  e.dunkelManuell = true; // siehe dunkelModusAutoSyncEinrichten
   speichereEinstellungen(e);
   themaAnwenden();
   if(einstellungenOffen) ansichtEinstellungen();
 };
+
+// NUTZERWUNSCH: "Der [vom Handy-Browser] erzwungene Nachtmodus soll so
+// aussehen wie der App interne Dunkelmodus" -- manche mobilen Browser (u.a.
+// Opera Mobile) haben einen eigenen "Nachtmodus", der Seiten OHNE eigenes
+// Dunkeldesign nachtraeglich (und oft nur unvollstaendig/seltsam) einfaerbt.
+// Die App hat zwar bereits ein eigenes, vollstaendiges Dunkeldesign (siehe
+// color-scheme-Meta/CSS oben), aber offenbar reicht das bei manchen Browsern
+// nicht aus, um deren automatische Nachfaerbung zu unterdruecken. Deshalb
+// zusaetzlich: folgt die App dem System-/Browser-Farbschema automatisch
+// (matchMedia "prefers-color-scheme: dark"), SOLANGE der Dunkelmodus noch
+// nie manuell (Checkbox oder Sonne/Mond-Kurzschalter) umgeschaltet wurde --
+// dadurch bekommt man in einem Browser-Nachtmodus (der ueblicherweise auch
+// dieses Media-Feature setzt) von Anfang an das echte, fertig gestaltete
+// Dunkeldesign der App zu sehen, statt der ggf. fehlerhaften Nachfaerbung
+// des Browsers. Sobald einmal manuell umgeschaltet wurde, hat diese Wahl
+// Vorrang und wird nicht mehr automatisch ueberschrieben.
+function dunkelModusAutoSyncEinrichten(){
+  try{
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const abgleichen = ()=>{
+      const e = ladeEinstellungen();
+      if(e.dunkelManuell) return; // bewusste Nutzerwahl hat Vorrang
+      if(!!e.dunkel === mq.matches) return; // schon passend, nichts zu tun
+      e.dunkel = mq.matches;
+      speichereEinstellungen(e);
+      themaAnwenden();
+      if(einstellungenOffen) ansichtEinstellungen();
+    };
+    abgleichen();
+    // addEventListener ist der moderne Weg; addListener als Fallback fuer
+    // aeltere WebView-/Browser-Engines, die "change" auf MediaQueryList noch
+    // nicht per addEventListener unterstuetzen.
+    if(mq.addEventListener) mq.addEventListener('change', abgleichen);
+    else if(mq.addListener) mq.addListener(abgleichen);
+  }catch(e){}
+}
 
 /* ==========================================================
    Rechnungspositionen-Auswahl (gemeinsame Ansicht für LS/PT)
@@ -5198,6 +5290,7 @@ function appToastAnzeigen(text, dauerMs){
 // Zurück-Tasten-Absicherung oben, aber auch die eigentliche Bildschirm-
 // anzeige) nicht mit lahmlegen.
 try{ themaAnwenden(); }catch(e){}
+try{ dunkelModusAutoSyncEinrichten(); }catch(e){}
 try{ ansichtStart(); }catch(e){}
 // Ohne await -- die Startansicht soll nicht auf die (async) Prüfung des
 // evtl. schon zuvor gewählten Sync-Ordners warten. Ist der Ordner noch
