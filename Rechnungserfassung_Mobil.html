@@ -512,6 +512,7 @@
   .fall-zeile.pt{border-left-color:var(--pt-farbe);}
   .fall-zeile .name{font-weight:600;}
   .fall-zeile .info{font-size:12.5px; color:var(--text-schwach); margin-top:2px;}
+  .renu-reset{text-decoration:underline dotted; text-underline-offset:2px; cursor:pointer;}
   .einstellung-zeile{
     display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--rand); cursor:pointer;
   }
@@ -528,6 +529,11 @@
   .fahrdienst-tabelle th{background:var(--rand); padding:5px 6px; text-align:left; white-space:nowrap;}
   .fahrdienst-tabelle td{padding:4px 6px; border-bottom:1px solid var(--rand); white-space:nowrap;}
   .fahrdienst-quartal-titel{font-size:15px; font-weight:700; margin:18px 0 8px; color:var(--titelfarbe);}
+  /* --titelfarbe ist ein dunkles Navyblau -- als Text auf der (im
+     Dunkelmodus ebenfalls dunklen) Kartenfarbe kaum noch zu erkennen, anders
+     als in der Kopfzeile, wo dieselbe Farbe als HELLER Hintergrund hinter
+     weisser Schrift steht. Im Dunkelmodus deshalb ein helleres Blau. */
+  body.dunkel .fahrdienst-quartal-titel{color:#8ac2f0;}
   .fahrdienst-arzt-karte{background:var(--karte); border:1px solid var(--rand); border-radius:10px; padding:10px 14px; margin-bottom:10px;}
   .fahrdienst-arzt-name{font-weight:700; font-size:14px; margin-bottom:4px;}
   .fahrdienst-arzt-karte ul{margin:4px 0 8px; padding-left:18px; font-size:13px;}
@@ -2733,7 +2739,7 @@ function ansichtKorrigieren(){
           <input type="checkbox" class="chk" data-art="${f.art}" data-idx="${f.idx}">
           <div class="inhalt">
             <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${f.werte.txtName || '(ohne Namen)'}</div>
-            <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}${f.rechnungsnummer ? ' &middot; Nr. ' + f.rechnungsnummer : ' &middot; ohne Rechnungsnummer'}</div>
+            <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}${f.rechnungsnummer ? ' &middot; <span class="renu-reset" data-art="'+f.art+'" data-idx="'+f.idx+'" title="Antippen, um diese Nummer zurückzusetzen (z.B. bei Dopplungen)">Nr. '+f.rechnungsnummer+' &#9998;</span>' : ' &middot; ohne Rechnungsnummer'}</div>
           </div>
         </div>`).join('')}
     </div>
@@ -2766,6 +2772,33 @@ function ansichtKorrigieren(){
     // Klick auf die Zeile selbst (ausserhalb der Checkbox) oeffnet die
     // Rechnung weiterhin wie gewohnt zum Bearbeiten.
     el.querySelector('.inhalt').onclick = ()=> ansichtMaske(f.art, f.idx);
+    // Klick auf die Rechnungsnummer selbst: eigene, unabhaengige Aktion zum
+    // Zuruecksetzen dieser EINEN Nummer (z.B. bei einer versehentlichen
+    // Dopplung, siehe naechsterRenuZaehlerErmitteln) -- oeffnet NICHT
+    // zusaetzlich die Bearbeiten-Maske.
+    const renuEl = el.querySelector('.renu-reset');
+    if(renuEl){
+      renuEl.onclick = (ev)=>{
+        ev.stopPropagation();
+        const nummerAlt = renuEl.dataset.idx!==undefined ? (ladeFaelle(f.art)[f.idx]||{}).rechnungsnummer : '';
+        zeigeHinweis(`Rechnungsnummer "${nummerAlt||''}" bei diesem Fall wirklich zurücksetzen? Beim nächsten "In Zwischenablage kopieren" bzw. Sync wird automatisch die nächste freie Nummer neu vergeben.
+          <div class="aktionen">
+            <button data-akt="renuJa">Ja, zurücksetzen</button>
+            <button data-akt="renuNein">Abbrechen</button>
+          </div>`);
+        const hinweisEl = document.getElementById('korrigierenHinweis');
+        hinweisEl.querySelector('[data-akt="renuNein"]').onclick = ()=> zeigeHinweis('');
+        hinweisEl.querySelector('[data-akt="renuJa"]').onclick = ()=>{
+          const arr = ladeFaelle(f.art);
+          if(arr[f.idx]){
+            delete arr[f.idx].rechnungsnummer;
+            speichereFaelle(f.art, arr);
+          }
+          appToastAnzeigen('Rechnungsnummer zurückgesetzt.', 2000);
+          ansichtKorrigieren();
+        };
+      };
+    }
   });
 
   document.getElementById('chkAlle').onclick = (ev)=>{
