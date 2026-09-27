@@ -179,7 +179,13 @@
      Button-Reihe aus (.sync-box .datensicherung-reihe oben), hier bisher
      aber gefehlt. Gleicher Wert wie dort, damit alle Boxen einheitlich
      wirken. */
-  .icon-buttons-2{display:flex; gap:8px; margin-bottom:6px;}
+  /* KORREKTUR (Rueckmeldung: unterer Abstand zu den Buttons soll gleich dem
+     oberen sein): oberer Abstand (Trennlinie -> Buttons) betraegt 14px
+     (.trennlinie margin-bottom). Unterer Abstand (Buttons -> Boxrand) war
+     bisher nur 4px (.abschnitt Padding unten) + 6px (hier) = 10px --
+     margin-bottom hier auf 10px erhoeht, damit zusammen mit dem
+     .abschnitt-Padding ebenfalls 14px herauskommen. */
+  .icon-buttons-2{display:flex; gap:8px; margin-bottom:10px;}
   .icon-buttons-2 .btn-icon{
     flex:1; margin-bottom:0; padding:18px 10px 14px;
     display:flex; flex-direction:column; align-items:center; gap:8px;
@@ -582,7 +588,10 @@
 <header>
   <button class="zurueck" id="btnZurueck" style="visibility:hidden">&#8592;</button>
   <h1 id="titel">Rechnungserfassung</h1>
-  <button class="zahnrad" id="btnEinstellungen">&#9881;</button>
+  <div style="display:flex; align-items:center;">
+    <button class="zahnrad" id="btnDunkelToggle" title="Dunkelmodus umschalten">&#9728;</button>
+    <button class="zahnrad" id="btnEinstellungen">&#9881;</button>
+  </div>
 </header>
 
 <main id="app"></main>
@@ -1237,13 +1246,20 @@ async function ansichtFahrdienstAuswertung(){
   setzeTitel('Fahrdienst-Auswertung', ansichtStart);
   app.innerHTML = `
     <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Reine Ansicht -- geschrieben wird in die Excel-Datei weiterhin nur am PC über "Fahrtenbuch öffnen" in der Rechnungssoftware.</div>
-    <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="margin-bottom:12px;">Neu laden</button>
+    <div style="display:flex; gap:8px; margin-bottom:12px;">
+      <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="flex:1; margin-bottom:0;">Neu laden</button>
+      <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">Fahrtenbuch öffnen</button>
+    </div>
     <div id="fahrdienstInhalt"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>`;
 
   document.getElementById('btnFahrdienstNeuLaden').onclick = async ()=>{
     document.getElementById('fahrdienstInhalt').innerHTML = '<div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div>';
     fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
     fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
+  };
+  document.getElementById('btnFahrdienstExcelOeffnen').onclick = ()=>{
+    excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_FAHRTENBUCH,
+      'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
   };
 
   fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
@@ -3623,10 +3639,28 @@ async function autoSyncBerechtigungErneuern(){
 function themaAnwenden(){
   const e = ladeEinstellungen();
   document.body.classList.toggle('dunkel', !!e.dunkel);
+  // Sonne/Mond-Symbol neben dem Zahnrad zeigt IMMER das gerade aktive
+  // Design (Sonne = hell, Mond = dunkel) -- unabhaengig davon, ob man die
+  // Checkbox in den Einstellungen oder diesen Kurzschalter benutzt hat,
+  // damit beide Wege garantiert im selben Zustand landen.
+  const btnDunkelToggle = document.getElementById('btnDunkelToggle');
+  if(btnDunkelToggle) btnDunkelToggle.innerHTML = e.dunkel ? '&#127769;' : '&#9728;';
 }
 document.getElementById('btnEinstellungen').onclick = ()=>{
   if(einstellungenOffen) schliesseEinstellungen();
   else { vorbereiteRuecksprung(); ansichtEinstellungen(); }
+};
+// Kurzschalter neben dem Zahnrad: Dunkelmodus direkt umschalten, ohne extra
+// den Weg über die Einstellungen zu nehmen -- schreibt in dieselbe
+// Einstellung (e.dunkel) wie die Checkbox dort, damit beide immer synchron
+// bleiben. Steht die Einstellungen-Seite gerade offen, wird sie neu
+// aufgebaut, damit die dortige Checkbox den neuen Stand sofort zeigt.
+document.getElementById('btnDunkelToggle').onclick = ()=>{
+  const e = ladeEinstellungen();
+  e.dunkel = !e.dunkel;
+  speichereEinstellungen(e);
+  themaAnwenden();
+  if(einstellungenOffen) ansichtEinstellungen();
 };
 
 /* ==========================================================
