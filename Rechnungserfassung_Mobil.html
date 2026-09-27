@@ -1519,6 +1519,29 @@ async function msGraphSyncAutomatischEinlesen(){
   }
 }
 
+// Legt vor jedem Sync-Versuch eine Momentaufnahme der aktuellen lokalen
+// Faelle (LS + PT) an -- als Sicherheitsnetz, falls am PC beim Einlesen
+// etwas schiefgeht (Sync-Konflikt, versehentliches Loeschen/Ueberschreiben,
+// Renu-Durcheinander) und man auf den Stand VOR diesem Sync zurueckwill.
+// Rotierend: die letzten BACKUP_MAX Staende bleiben erhalten, aeltere
+// fallen raus. Ein neuer Eintrag wird nur angelegt, wenn sich der Inhalt
+// seit dem letzten Backup tatsaechlich geaendert hat (sonst wuerde bei
+// mehreren Aenderungen kurz hintereinander -- jede ruft synchronisiereAlle
+// auf -- der Speicher schnell mit identischen Stuenden volllaufen).
+const BACKUP_MAX = 20;
+function backupVorSyncAnlegen(){
+  try{
+    const stand = { ls: ladeFaelle('ls'), pt: ladeFaelle('pt') };
+    const inhalt = JSON.stringify(stand);
+    if(inhalt === '{"ls":[],"pt":[]}') return; // nichts da, kein Backup noetig
+    const liste = LS.get('sync_backups', []);
+    if(liste.length && liste[0].inhalt === inhalt) return; // unveraendert seit letztem Backup
+    liste.unshift({ zeitstempel: Date.now(), inhalt: inhalt });
+    if(liste.length > BACKUP_MAX) liste.length = BACKUP_MAX;
+    LS.set('sync_backups', liste);
+  }catch(e){ /* Backup ist ein Sicherheitsnetz, kein Sync-Blocker -- Fehler ignorieren */ }
+}
+
 // Zentrale Stelle, die bei JEDER Datenaenderung (siehe speichereFaelle/
 // speichereKatalog) GENAU EINEN der beiden automatischen Sync-Wege
 // anstoesst -- bewusst NICHT beide gleichzeitig (das waere redundant und
@@ -1532,6 +1555,7 @@ async function msGraphSyncAutomatischEinlesen(){
 //      (fehleranfälligster Weg, siehe rnLetzte-Zaehler) als Ruckfallebene,
 //      hier nichts zu tun.
 function synchronisiereAlle(){
+  backupVorSyncAnlegen();
   if(msGraphStatus === 'angemeldet'){
     msGraphSyncSchreiben();
   } else if(autoSyncStatus === 'verbunden' && autoSyncOrdnerHandle){
@@ -2750,7 +2774,12 @@ function ansichtKorrigieren(){
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtKorrigieren(); };
   setzeTitel('Lokale Rechnungen', ansichtStart);
   const alle = [...ladeFaelle('ls').map((f,i)=>({...f, art:'ls', idx:i})), ...ladeFaelle('pt').map((f,i)=>({...f, art:'pt', idx:i}))];
-  if(!alle.length){ app.innerHTML = '<div class="leer-hinweis">Keine lokal gespeicherten Fälle vorhanden.</div>'; return; }
+  if(!alle.length){
+    app.innerHTML = '<div class="leer-hinweis">Keine lokal gespeicherten Fälle vorhanden.</div>' +
+      '<button class="btn-sekundaer" id="btnBackupsOeffnen" style="margin-top:12px;">Backups ansehen</button>';
+    document.getElementById('btnBackupsOeffnen').onclick = ansichtSyncBackups;
+    return;
+  }
 
   const ausgewaehlt = new Set(); // Schlüssel "art:idx"
   const schluessel = f => f.art+':'+f.idx;
@@ -2762,6 +2791,7 @@ function ansichtKorrigieren(){
           <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
           <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
           <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
+          <button type="button" id="btnAuswBackups">Backups</button>
         </div>
         ${msGraphStatus==='angemeldet' ? '' : `
         <div class="rn-mini">
@@ -2854,6 +2884,8 @@ function ansichtKorrigieren(){
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
   };
 
+  document.getElementById('btnAuswBackups').onclick = ansichtSyncBackups;
+
   document.getElementById('btnAuswKopieren').onclick = async ()=>{
     const faelleAusw = alle.filter(f=> ausgewaehlt.has(schluessel(f)));
     const ohneNummer = await rechnungsnummernVergeben(faelleAusw);
@@ -2915,6 +2947,62 @@ function ansichtKorrigieren(){
   if(msGraphStatus==='angemeldet') lokaleFaelleBereitsUebernommenEntfernen(alle);
 }
 
+// Zeigt die rotierenden Sicherungen, die backupVorSyncAnlegen() vor jedem
+// Sync-Versuch anlegt (siehe dort) -- pro Eintrag Zeitpunkt + Anzahl LS/PT-
+// Faelle, mit der Moeglichkeit, genau diesen Stand wiederherzustellen. Rein
+// lokal (localStorage), kein Graph-Zugriff noetig.
+function ansichtSyncBackups(){
+  vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtSyncBackups(); };
+  setzeTitel('Backups', ansichtKorrigieren);
+  const liste = LS.get('sync_backups', []);
+  if(!liste.length){
+    app.innerHTML = '<div class="leer-hinweis">Noch keine Backups vorhanden -- ein Backup wird automatisch vor jedem Sync-Versuch angelegt.</div>';
+    return;
+  }
+  app.innerHTML = `
+    <div class="leer-hinweis" style="margin-bottom:10px;">Automatisch vor jedem Sync-Versuch angelegt (letzte ${BACKUP_MAX} Stände). "Wiederherstellen" ersetzt die aktuellen lokalen Rechnungen durch diesen Stand.</div>
+    <div id="backupsListe">
+      ${liste.map((b,i)=>{
+        const stand = JSON.parse(b.inhalt);
+        return `<div class="fall-zeile" data-i="${i}">
+          <div class="inhalt">
+            <div class="name">${new Date(b.zeitstempel).toLocaleString('de-DE')}</div>
+            <div class="info">${stand.ls.length} LS, ${stand.pt.length} PT</div>
+          </div>
+          <button type="button" class="btn-sekundaer btn-backup-wiederherstellen" data-i="${i}">Wiederherstellen</button>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="warnhinweis" id="backupsHinweis"></div>`;
+
+  const zeigeHinweisBackup = (txt)=>{
+    const el = document.getElementById('backupsHinweis');
+    if(!txt){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
+    el.innerHTML = txt; el.classList.add('aktiv');
+  };
+
+  app.querySelectorAll('.btn-backup-wiederherstellen').forEach(btn=>{
+    btn.onclick = ()=>{
+      const i = parseInt(btn.dataset.i,10);
+      const stand = JSON.parse(liste[i].inhalt);
+      const zeitpunkt = new Date(liste[i].zeitstempel).toLocaleString('de-DE');
+      zeigeHinweisBackup(`Stand vom ${zeitpunkt} wiederherstellen (${stand.ls.length} LS, ${stand.pt.length} PT)? Die AKTUELL lokal gespeicherten Rechnungen werden dabei ersetzt.
+        <div class="aktionen">
+          <button data-akt="backupJa">Ja, wiederherstellen</button>
+          <button data-akt="backupNein">Abbrechen</button>
+        </div>`);
+      const hinweisEl = document.getElementById('backupsHinweis');
+      hinweisEl.querySelector('[data-akt="backupNein"]').onclick = ()=> zeigeHinweisBackup('');
+      hinweisEl.querySelector('[data-akt="backupJa"]').onclick = ()=>{
+        speichereFaelle('ls', stand.ls);
+        speichereFaelle('pt', stand.pt);
+        appToastAnzeigen('Backup wiederhergestellt.', 2200);
+        ansichtKorrigieren();
+      };
+    };
+  });
+}
+
 // Prueft fuer alle uebergebenen (lokalen) Faelle per Graph-API/Fingerabdruck,
 // ob sie bereits in der Rechnungsuebersicht stehen (exakt dieselbe Logik wie
 // beim Einlesen "Aus Handy einlesen" am PC) -- und entfernt Treffer aus dem
@@ -2928,8 +3016,34 @@ async function lokaleFaelleBereitsUebernommenEntfernen(alle){
   const map = await msGraphUebersichtFingerprintsLaden();
   if(!map) return; // kein Login/kein Netz/Fehler -- lokale Liste bleibt unveraendert
 
-  const uebernommen = alle.filter(f=> map.has(fallFingerprintBauen(f)));
+  const gefunden = alle.filter(f=> map.has(fallFingerprintBauen(f)));
+  if(!gefunden.length) return;
+
+  // NICHT allein anhand "Zeile existiert in der Uebersicht" loeschen: die
+  // Zeile kann auch dann schon angelegt sein, wenn die stille Erzeugung am
+  // PC den Fall uebersprungen hat (Pflichtfeld/Betrag/Jahr unklar, siehe
+  // StillFallUebersprungen) -- genau dieser Fall wird dort dann per
+  // Warnhinweis rot markiert und braucht ggf. noch manuelle Anpassungen.
+  // Wuerde man den lokalen Fall trotzdem schon loeschen, waere er komplett
+  // weg, sobald die Uebersicht-Zeile einmal existiert. Deshalb zusaetzlich
+  // pruefen, ob am Ziel-PDF-Ordner tatsaechlich schon eine fertige PDF
+  // liegt (wie schon fuer die "unvollstaendig"-Markierung in
+  // ansichtAlleRechnungen genutzt) -- nur dann wirklich eine fertige
+  // Rechnung, erst dann lokal loeschen.
+  const uebernommen = [];
+  for(const f of gefunden){
+    const eintrag = map.get(fallFingerprintBauen(f));
+    const renu = eintrag && eintrag.renu;
+    if(!renu) continue;
+    const pdfUrl = await msGraphPdfWebUrlLaden(renu);
+    if(pdfUrl) uebernommen.push(f);
+  }
   if(!uebernommen.length) return;
+
+  // Vor dem Loeschen zusaetzlich sichern -- auch bei erfolgreicher
+  // Uebernahme schadet ein Backup nicht und deckt den Fall ab, dass die
+  // PDF-Pruefung selbst (Netzwerk) mal einen Fehlalarm liefert.
+  backupVorSyncAnlegen();
 
   ['ls','pt'].forEach(art=>{
     const idxListe = uebernommen.filter(f=>f.art===art).map(f=>f.idx).sort((a,b)=>b-a);
@@ -2939,7 +3053,7 @@ async function lokaleFaelleBereitsUebernommenEntfernen(alle){
     speichereFaelle(art, arr);
   });
 
-  appToastAnzeigen(`${uebernommen.length} Rechnung(en) wurden bereits am PC übernommen und sind jetzt in der Rechnungsverwaltung zu finden.`, 3000);
+  appToastAnzeigen(`${uebernommen.length} Rechnung(en) wurden bereits am PC übernommen (PDF vorhanden) und sind jetzt in der Rechnungsverwaltung zu finden.`, 3000);
   // Nur neu rendern, wenn diese Ansicht (inzwischen) noch aktiv ist -- ein
   // schneller Wegklick waehrend die Graph-Antwort noch unterwegs war soll
   // nicht versehentlich eine andere, laengst geoeffnete Ansicht ueberschreiben.
