@@ -720,6 +720,22 @@ function rechnungsnummerBerechnen(nachname, vorname, datumNorm, zaehler){
   if(!yymmdd || !initN || !initV || !zaehler) return '';
   return initN + initV + yymmdd + '-' + String(zaehler).padStart(3,'0');
 }
+// Extrahiert die 3-stellige laufende Nummer aus einem Spalte-Q-Wert --
+// analog zur gleichnamigen Funktion DreistelligeNummerAusRenu am PC (HTA).
+// Normalfall ist "...-NNN" (Bindestrich + 3 Ziffern am Ende), aber es gibt
+// einen Sonderfall, in dem in Spalte Q (noch) nur die reine 3-stellige Zahl
+// ohne Bindestrich/Buchstaben steht (siehe RenuSpalteQReparierenFallsNoetig
+// am PC). Ohne diesen zweiten Fall wuerde eine solche Zeile bei der
+// Hoechststand-Ermittlung schlicht ignoriert, ihre Nummer also faelschlich
+// als "noch frei" gelten -- und dieselbe Nummer koennte erneut vergeben
+// werden (Dopplungsgefahr).
+function renuZaehlerAusText(wert){
+  const text = String(wert==null?'':wert).trim();
+  const treffer = text.match(/-(\d{3})$/);
+  if(treffer) return parseInt(treffer[1], 10);
+  if(/^\d{3}$/.test(text)) return parseInt(text, 10);
+  return null;
+}
 function rnZaehlerStandText(e){
   if(!e.rnNaechsterZaehler) return 'Noch kein Zähler-Abgleich hinterlegt -- die Rechnungsnummer (Spalte Q) wird beim Kopieren solange freigelassen wie bisher.';
   return `Nächste vergebene laufende Nummer: ${String(e.rnNaechsterZaehler).padStart(3,'0')} (z.B. "...-${String(e.rnNaechsterZaehler).padStart(3,'0')}"). Solange OneDrive-Sync aktiv ist, wird das automatisch live aus der Rechnungsübersicht ermittelt -- diese Angabe ist nur die Rückfallebene für den Ausnahmefall ohne Sync.`;
@@ -755,12 +771,8 @@ async function msGraphNaechsteRenuLiveErmitteln(){
     const zeilen = rangeDaten.values || [];
     let hoechste = 0;
     for(let i=1;i<zeilen.length;i++){
-      const renu = String(zeilen[i][16]==null?'':zeilen[i][16]).trim(); // Q: Rechnungsnummer
-      const treffer = renu.match(/-(\d{3})$/);
-      if(treffer){
-        const n = parseInt(treffer[1], 10);
-        if(n > hoechste) hoechste = n;
-      }
+      const n = renuZaehlerAusText(zeilen[i][16]); // Q: Rechnungsnummer
+      if(n!==null && n > hoechste) hoechste = n;
     }
     return hoechste + 1;
   }catch(e){ return null; }
@@ -788,11 +800,8 @@ function hoechsteLokalVergebeneRenu(){
   let hoechste = 0;
   ['ls','pt'].forEach(art=>{
     ladeFaelle(art).forEach(f=>{
-      const treffer = String(f.rechnungsnummer||'').match(/-(\d{3})$/);
-      if(treffer){
-        const n = parseInt(treffer[1], 10);
-        if(n > hoechste) hoechste = n;
-      }
+      const n = renuZaehlerAusText(f.rechnungsnummer);
+      if(n!==null && n > hoechste) hoechste = n;
     });
   });
   return hoechste;
