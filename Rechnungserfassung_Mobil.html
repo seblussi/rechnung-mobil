@@ -152,6 +152,10 @@
      Klasse gebunden zu sein. */
   .btn-status-aktuell{border-color:#3ba55c; color:#1e6b37; background:#e6f7ea;}
   body.dunkel .btn-status-aktuell{background:#123a1f; color:#8fd9a8; border-color:#2e8a4c;}
+  /* deaktiviert (siehe fahrdienstNeuLadenAlsAktuellMarkieren) soll weiterhin
+     voll sichtbar/gruen bleiben statt vom Browser ausgegraut zu werden --
+     nur der Mauszeiger zeigt an, dass gerade nichts zu tun ist. */
+  .btn-status-aktuell:disabled{opacity:1; cursor:default;}
   /* Export/Import/Sync nebeneinander als gleich breite, wieder near-quadra­
      tische Buttons (wie ursprünglich) -- die einzelnen .btn-sekundaer-Regeln
      (width:100% etc.) bleiben dabei unveraendert, nur die Anordnung wird per
@@ -201,7 +205,11 @@
      bisher nur 4px (.abschnitt Padding unten) + 6px (hier) = 10px --
      margin-bottom hier auf 10px erhoeht, damit zusammen mit dem
      .abschnitt-Padding ebenfalls 14px herauskommen. */
-  .icon-buttons-2{display:flex; gap:8px; margin-bottom:10px;}
+  /* KORREKTUR (Rueckmeldung: Abstand zwischen den Buttons in "Excel-Dateien
+     oeffnen"/"Werkzeuge" soll exakt so gross sein wie zwischen den LS/PT-
+     Kacheln oben) -- von 8px auf denselben Wert wie .kachelreihe (12px)
+     angeglichen. */
+  .icon-buttons-2{display:flex; gap:12px; margin-bottom:10px;}
   .icon-buttons-2 .btn-icon{
     flex:1; margin-bottom:0; padding:18px 10px 14px;
     display:flex; flex-direction:column; align-items:center; gap:8px;
@@ -1275,45 +1283,34 @@ async function ansichtFahrdienstAuswertung(){
     <div id="fahrdienstInhalt"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>`;
 
   document.getElementById('btnFahrdienstNeuLaden').onclick = async ()=>{
-    const btnNeuLaden = document.getElementById('btnFahrdienstNeuLaden');
-    // Vorherigen Stand VOR dem Ueberschreiben sichern, um danach vergleichen
-    // zu koennen, ob sich beim Neu-Laden ueberhaupt etwas geaendert hat.
-    const vorherJson = JSON.stringify(fahrdienstAuswertungCache);
-    btnNeuLaden.classList.remove('btn-status-aktuell');
-    btnNeuLaden.textContent = 'Neu laden';
     document.getElementById('fahrdienstInhalt').innerHTML = '<div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div>';
     fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
     fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
-    fahrdienstNeuLadenStatusAnzeigen(vorherJson);
+    fahrdienstNeuLadenAlsAktuellMarkieren();
   };
   document.getElementById('btnFahrdienstExcelOeffnen').onclick = ()=>{
     excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_FAHRTENBUCH,
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
   };
 
-  const vorherJsonBeimOeffnen = JSON.stringify(fahrdienstAuswertungCache);
   fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
   fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
-  fahrdienstNeuLadenStatusAnzeigen(vorherJsonBeimOeffnen);
+  // NUTZERWUNSCH: "Aktuell" gilt bereits direkt nach dem ersten Laden, solange
+  // man die Ansicht nicht verlaesst -- es ist eine reine Ansicht (siehe
+  // Hinweistext oben), es gibt also gar keine Moeglichkeit, dass der gerade
+  // frisch geladene Stand veraltet sein koennte, ohne dass man die Ansicht
+  // neu betreten haette (was ohnehin automatisch neu laedt). Deshalb kein
+  // Vergleich mit einem vorherigen Stand mehr noetig: nach JEDEM erfolgreichen
+  // Laden (Erstaufruf UND "Neu laden"-Klick) direkt gruen + deaktiviert.
+  fahrdienstNeuLadenAlsAktuellMarkieren();
 }
 
-// Faerbt den "Neu laden"-Button gruen mit dem Hinweis "Aktuell", wenn der
-// gerade frisch geladene Stand (fahrdienstAuswertungCache, JSON-verglichen)
-// identisch zum vorherigen ist -- analog zur gruenen/blauen Statuszeile in
-// der PC-Rechnungssoftware. vorherJson ist null (JSON.stringify von
-// "undefined"/erstem Aufruf), wenn es noch keinen Vergleichsstand gab; dann
-// bleibt der Button bewusst im normalen Zustand (kein Vergleich moeglich).
-function fahrdienstNeuLadenStatusAnzeigen(vorherJson){
+function fahrdienstNeuLadenAlsAktuellMarkieren(){
   const btn = document.getElementById('btnFahrdienstNeuLaden');
   if(!btn) return;
-  const jetztJson = JSON.stringify(fahrdienstAuswertungCache);
-  if(vorherJson === jetztJson){
-    btn.classList.add('btn-status-aktuell');
-    btn.textContent = '✓ Aktuell';
-  }else{
-    btn.classList.remove('btn-status-aktuell');
-    btn.textContent = 'Neu laden';
-  }
+  btn.classList.add('btn-status-aktuell');
+  btn.textContent = '✓ Aktuell';
+  btn.disabled = true;
 }
 
 function fahrdienstAuswertungRendern(daten){
