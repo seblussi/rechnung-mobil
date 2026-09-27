@@ -2261,64 +2261,10 @@ function ansichtStart(){
         </button>
       </div>
     </div>`;
-  // Immer 3 feste Buttons, Reihenfolge links->rechts: Import, Export, Sync.
-  // Vorher wechselte hier je nach Sync-Status ein einzelner Button
-  // ("erneut verbinden" ODER "exportieren") -- das führte dazu, dass der
-  // Reconnect-Button z.B. nach einem unbeachteten Berechtigungs-Status
-  // scheinbar "verschwand" (autoSyncStatus war beim ersten Rendern noch
-  // 'unbekannt', siehe autoSyncInitialisieren-Aufruf am Dateiende) und
-  // Export komplett fehlte, solange Auto-Sync lief. Jetzt immer alle drei
-  // sichtbar, nur Beschriftung/Symbol/Aktion des Sync-Buttons ändert sich.
-  // Auf Nutzerwunsch nach ganz unten verschoben -- Sync ist die am
-  // seltensten angefasste Funktion (laeuft bei Auto-Sync/OneDrive ohnehin im
-  // Hintergrund), waehrend "Lokale Rechnungen"/"Rechnungsverwaltung" und die
-  // Werkzeuge weiter oben deutlich haeufiger gebraucht werden.
-  const syncInfo = syncButtonInfo();
-  html += `<div class="abschnitt start-abschnitt sync-box">
-    <div class="trennlinie">Sync</div>
-    <div class="datensicherung-reihe">
-      <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span><span class="btn-titel">Importieren</span>
-        <span class="unter">Datei laden</span>
-      </button>
-      <input type="file" id="jsonImportInput" accept="application/json,.json" style="display:none">
-      <button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span><span class="btn-titel">Exportieren</span>
-        <span class="unter">Als Datei sichern</span>
-      </button>
-      <button class="btn-sekundaer btn-sync ${syncInfo.klasse}" id="btnSync"><span class="icon-pfeil">&#8644;</span><span class="btn-titel">${syncInfo.text}</span>
-        <span class="unter">${syncInfo.unter}</span>
-      </button>
-    </div>
-  </div>
-  <div class="warnhinweis" id="startHinweis"></div>`;
   app.innerHTML = html;
   document.getElementById('kLS').onclick = ()=>ansichtMaske('ls');
   document.getElementById('kPT').onclick = ()=>ansichtMaske('pt');
   document.getElementById('btnKorrigieren').onclick = ansichtKorrigieren;
-  document.getElementById('btnJsonExport').onclick = jsonExport;
-  document.getElementById('btnSync').onclick = syncInfo.aktion;
-  const startHinweis = (txt)=>{
-    const el = document.getElementById('startHinweis');
-    if(!el) return;
-    if(!txt){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
-    el.innerHTML = txt; el.classList.add('aktiv');
-  };
-  document.getElementById('btnJsonImport').onclick = ()=>{
-    startHinweis('');
-    document.getElementById('jsonImportInput').click();
-  };
-  document.getElementById('jsonImportInput').onchange = async (ev)=>{
-    const datei = ev.target.files && ev.target.files[0];
-    ev.target.value = ''; // erlaubt erneutes Auswaehlen derselben Datei
-    if(!datei) return;
-    try{
-      const text = await datei.text();
-      const ergebnis = jsonImportVerarbeiten(text);
-      startHinweis(ergebnis.html);
-      if(ergebnis.geaendert){ setTimeout(ansichtStart, 1600); }
-    }catch(e){
-      startHinweis('Die Datei "'+datei.name+'" konnte nicht gelesen werden. Bitte die zuvor exportierte JSON-Datei unverändert auswählen.');
-    }
-  };
   document.getElementById('btnOeffneUebersicht').onclick = ()=>{
     excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
@@ -3003,6 +2949,13 @@ function ansichtEinstellungen(){
   einstellungenOffen = true;
   setzeTitel('Einstellungen', schliesseEinstellungen);
   const e = ladeEinstellungen();
+  // "Fälle sichern / übertragen" (Import/Export/Sync) ist auf Nutzerwunsch
+  // von der Startseite hierher in die Einstellungen verschoben -- Sync ist
+  // die am seltensten angefasste Funktion (laeuft bei Auto-Sync/OneDrive
+  // ohnehin im Hintergrund), waehrend "Lokale Rechnungen"/
+  // "Rechnungsverwaltung" und die Werkzeuge auf der Startseite deutlich
+  // haeufiger gebraucht werden.
+  const syncInfo = syncButtonInfo();
   app.innerHTML = `
     <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Allgemein</div>
@@ -3021,6 +2974,21 @@ function ansichtEinstellungen(){
     </div>
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Sync mit PC</div>
+      <div class="sync-unter-titel">Fälle sichern / übertragen</div>
+      <div class="datensicherung-reihe" style="margin-bottom:6px;">
+        <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span><span class="btn-titel">Importieren</span>
+          <span class="unter">Datei laden</span>
+        </button>
+        <input type="file" id="jsonImportInput" accept="application/json,.json" style="display:none">
+        <button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span><span class="btn-titel">Exportieren</span>
+          <span class="unter">Als Datei sichern</span>
+        </button>
+        <button class="btn-sekundaer btn-sync ${syncInfo.klasse}" id="btnSync"><span class="icon-pfeil">&#8644;</span><span class="btn-titel">${syncInfo.text}</span>
+          <span class="unter">${syncInfo.unter}</span>
+        </button>
+      </div>
+      <div class="warnhinweis" id="einstellungenSyncHinweis"></div>
+      <div class="sync-trenner"></div>
       <div class="sync-unter-titel">Microsoft/OneDrive-Anmeldung <span class="sync-empfehlung">(empfohlen)</span></div>
       ${msGraphAbschnittHtml()}
       <div class="sync-trenner"></div>
@@ -3070,6 +3038,34 @@ function ansichtEinstellungen(){
     warnEl: document.getElementById('txtRnLetzte_warn'),
     standEl: document.getElementById('rnZaehlerStand')
   });
+  document.getElementById('btnJsonExport').onclick = jsonExport;
+  document.getElementById('btnSync').onclick = syncInfo.aktion;
+  const einstellungenSyncHinweis = (txt)=>{
+    const el = document.getElementById('einstellungenSyncHinweis');
+    if(!el) return;
+    if(!txt){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
+    el.innerHTML = txt; el.classList.add('aktiv');
+  };
+  document.getElementById('btnJsonImport').onclick = ()=>{
+    einstellungenSyncHinweis('');
+    document.getElementById('jsonImportInput').click();
+  };
+  document.getElementById('jsonImportInput').onchange = async (ev)=>{
+    const datei = ev.target.files && ev.target.files[0];
+    ev.target.value = ''; // erlaubt erneutes Auswaehlen derselben Datei
+    if(!datei) return;
+    try{
+      const text = await datei.text();
+      const ergebnis = jsonImportVerarbeiten(text);
+      einstellungenSyncHinweis(ergebnis.html);
+      // Nach erfolgreichem Import zurueck zur Startseite, damit die dort
+      // angezeigte Anzahl "noch nicht am PC uebernommen" sofort den neuen
+      // Stand zeigt (Import wirkt sich nur dort sichtbar aus).
+      if(ergebnis.geaendert){ setTimeout(schliesseEinstellungen, 1600); }
+    }catch(e){
+      einstellungenSyncHinweis('Die Datei "'+datei.name+'" konnte nicht gelesen werden. Bitte die zuvor exportierte JSON-Datei unverändert auswählen.');
+    }
+  };
   autoSyncAbschnittWiring();
   msGraphAbschnittWiring();
 }
