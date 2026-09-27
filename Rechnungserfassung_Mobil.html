@@ -1109,12 +1109,41 @@ async function msGraphAlleZeilenLaden(){
         vorname: vorname,                                       // G
         betrag: String(r[15]==null?'':r[15]).trim(),            // P
         renu: String(r[16]==null?'':r[16]).trim(),              // Q
-        versandt: String(r[17]==null?'':r[17]).trim() !== ''    // R
+        zeile: i+1                                              // Excel-Zeilennummer (1-basiert, Kopfzeile=1)
+        // Spalte R ("Rechnungsdatum") absichtlich NICHT mehr als "versandt"
+        // ausgewertet -- R enthaelt IMMER ein Datum, auch wenn nie versendet
+        // wurde (siehe SchreibeInUebersicht in Modul1.bas: werte(15) wird bei
+        // JEDER Rechnung geschrieben). Das tatsaechliche Signal "per
+        // LetterXpress versendet" ist ausschliesslich die FETT-Formatierung
+        // dieser Zelle (siehe BriefAlsVersendetMarkieren in der HTA) -- wird
+        // separat per msGraphBriefVersendetLaden() nachgeladen, siehe unten.
       });
     }
     liste.reverse(); // neueste (unterste Excel-Zeile) zuerst
-    return liste;
+    return {liste, blattName};
   }catch(e){ return null; }
+}
+
+// Prueft per Graph, ob die Rechnungsdatum-Zelle (Spalte R) einer Excel-Zeile
+// FETT formatiert ist -- das (und NUR das) ist am PC das Signal "per
+// LetterXpress tatsaechlich versendet" (siehe Kommentar in
+// SchreibeInUebersicht, Modul1.bas). Die Zelle selbst ist bei JEDER
+// Rechnung gefuellt, unabhaengig vom Versand -- ob sie leer ist, sagt also
+// nichts aus. Liefert false bei jedem Fehler (dann lieber kein Brief-Symbol
+// zeigen als faelschlich eines).
+async function msGraphBriefVersendetLaden(blattName, zeile){
+  if(!blattName || !zeile) return false;
+  const token = await msGraphTokenHolen();
+  if(!token) return false;
+  try{
+    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
+    const url = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
+      "')/range(address='R" + zeile + "')/format/font?$select=bold";
+    const antwort = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if(!antwort.ok) return false;
+    const daten = await antwort.json();
+    return daten.bold === true;
+  }catch(e){ return false; }
 }
 
 // =====================================================================
