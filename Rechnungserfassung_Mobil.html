@@ -526,6 +526,24 @@
     display:block; width:auto; flex:0 0 auto; margin-bottom:0;
     padding:10px 14px; font-size:13.5px; white-space:nowrap; align-self:center;
   }
+  /* NUTZERWUNSCH: Backup-Zeile antippen klappt die enthaltenen Rechnungen
+     (LS+PT) darunter auf. Der Abstand zwischen Eintraegen sitzt jetzt am
+     Wrapper statt an .fall-zeile selbst, damit Zeile + aufgeklapptes Panel
+     optisch als EIN Block zusammengehoeren. */
+  .backup-eintrag-wrapper{margin-bottom:8px;}
+  .backup-eintrag-wrapper .backup-zeile{margin-bottom:0;}
+  .backup-rechnungen{
+    margin:0 0 2px 4px; padding:4px 0 4px 12px; border-left:2px solid var(--rand);
+  }
+  .backup-rechnung-zeile{
+    display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px;
+    border-bottom:1px solid var(--rand);
+  }
+  .backup-rechnung-zeile:last-child{border-bottom:none;}
+  .backup-rechnung-zeile .name{
+    font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .backup-rechnung-zeile .info{font-size:11.5px; color:var(--text-schwach); white-space:nowrap;}
   .renu-reset{text-decoration:underline dotted; text-underline-offset:2px; cursor:pointer;}
   .einstellung-zeile{
     display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--rand); cursor:pointer;
@@ -3191,16 +3209,19 @@ function ansichtSyncBackups(){
     return;
   }
   app.innerHTML = `
-    <div class="leer-hinweis" style="margin-bottom:10px;">Automatisch vor jedem Sync-Versuch angelegt (letzte ${BACKUP_MAX} Stände). "Wiederherstellen" ersetzt die aktuellen lokalen Rechnungen durch diesen Stand.</div>
+    <div class="leer-hinweis" style="margin-bottom:10px;">Automatisch vor jedem Sync-Versuch angelegt (letzte ${BACKUP_MAX} Stände). "Wiederherstellen" ersetzt die aktuellen lokalen Rechnungen durch diesen Stand. Zum Ansehen der enthaltenen Rechnungen auf die Zeile tippen.</div>
     <div id="backupsListe">
       ${liste.map((b,i)=>{
         const stand = JSON.parse(b.inhalt);
-        return `<div class="fall-zeile" data-i="${i}">
-          <div class="inhalt">
-            <div class="name">${new Date(b.zeitstempel).toLocaleString('de-DE')}</div>
-            <div class="info">${stand.ls.length} LS, ${stand.pt.length} PT</div>
+        return `<div class="backup-eintrag-wrapper" data-i="${i}">
+          <div class="fall-zeile backup-zeile" data-i="${i}">
+            <div class="inhalt">
+              <div class="name">${new Date(b.zeitstempel).toLocaleString('de-DE')}</div>
+              <div class="info">${stand.ls.length} LS, ${stand.pt.length} PT</div>
+            </div>
+            <button type="button" class="btn-sekundaer btn-backup-wiederherstellen" data-i="${i}">Wiederherstellen</button>
           </div>
-          <button type="button" class="btn-sekundaer btn-backup-wiederherstellen" data-i="${i}">Wiederherstellen</button>
+          <div class="backup-rechnungen" id="backupRechnungen${i}" style="display:none;"></div>
         </div>`;
       }).join('')}
     </div>
@@ -3211,6 +3232,38 @@ function ansichtSyncBackups(){
     if(!txt){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
     el.innerHTML = txt; el.classList.add('aktiv');
   };
+
+  // NUTZERWUNSCH: Klick auf die Backup-Zeile (nicht auf "Wiederherstellen")
+  // klappt die im Stand enthaltenen Rechnungen (LS + PT, mit Name/Datum)
+  // darunter auf/zu -- rein informativ, keine Aktion auf den Eintraegen
+  // selbst. Wird nur beim ersten Aufklappen befuellt (Lazy-Rendering).
+  app.querySelectorAll('.backup-zeile').forEach(zeile=>{
+    zeile.style.cursor = 'pointer';
+    zeile.onclick = (ev)=>{
+      if(ev.target.closest('.btn-backup-wiederherstellen')) return;
+      const i = parseInt(zeile.dataset.i,10);
+      const panel = document.getElementById('backupRechnungen'+i);
+      if(!panel) return;
+      const eingeklappt = panel.style.display === 'none';
+      if(eingeklappt && !panel.dataset.befuellt){
+        const stand = JSON.parse(liste[i].inhalt);
+        const eintraege = [
+          ...stand.ls.map(f=>({...f, art:'ls'})),
+          ...stand.pt.map(f=>({...f, art:'pt'}))
+        ];
+        panel.innerHTML = eintraege.length
+          ? eintraege.map(f=>`
+              <div class="backup-rechnung-zeile">
+                <span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>
+                <span class="name">${(f.werte && f.werte.txtName) || '(ohne Namen)'}</span>
+                <span class="info">${(f.werte && f.werte.txtDatum) || ''}${f.rechnungsnummer ? ' &middot; Nr. ' + f.rechnungsnummer : ''}</span>
+              </div>`).join('')
+          : '<div class="leer-hinweis">Dieser Stand enthält keine Rechnungen.</div>';
+        panel.dataset.befuellt = '1';
+      }
+      panel.style.display = eingeklappt ? 'block' : 'none';
+    };
+  });
 
   app.querySelectorAll('.btn-backup-wiederherstellen').forEach(btn=>{
     btn.onclick = ()=>{
