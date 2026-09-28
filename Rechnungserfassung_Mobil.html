@@ -1025,6 +1025,37 @@ function fallFingerprintBauen(f){
     .map(v=>String(v||'').toUpperCase().trim()).join('|');
 }
 
+// Gegenstueck zu fallFingerprintBauen(), aber fuer eine bereits aus der
+// Uebersicht per msGraphAlleZeilenLaden() geladene Zeile (Felder art/datum/
+// nachname/vorname/geda statt f.werte.*) -- selbe Spalten (A,B,F,G,H),
+// selbes Format, damit beide Seiten denselben Schluessel ergeben.
+function zeilenFingerprintBauen(f){
+  return [f.art, f.datum, f.nachname, f.vorname, f.geda]
+    .map(v=>String(v||'').toUpperCase().trim()).join('|');
+}
+
+// Sucht zu einer "unvollstaendigen" Zeile aus der Rechnungsverwaltung
+// (msGraphAlleZeilenLaden) den passenden, noch lokal auf dem Handy
+// gespeicherten Fall (ladeFaelle) ueber denselben Fingerabdruck wie
+// lokaleFaelleBereitsUebernommenEntfernen ihn verwendet. Da ein solcher Fall
+// dank des "nicht loeschen bei Sync-Problemen"-Verhaltens (siehe dort) auf
+// dem Handy erhalten bleibt, enthaelt er weiterhin alle Original-Angaben
+// (Adresse, Diagnosen, Positionen etc.) -- im Gegensatz zur Uebersichtszeile,
+// die nur eine schmale Zusammenfassung ist. Gefunden werden kann so direkt
+// in ansichtMaske() gesprungen werden, um den Fall zu korrigieren; beim
+// naechsten Sync wird automatisch erneut versucht, daraus eine fertige
+// Rechnung zu erzeugen. Gibt {art, idx} oder null zurueck.
+function lokalenFallFuerZeileFinden(zeile){
+  const ziel = zeilenFingerprintBauen(zeile);
+  for(const art of ['ls','pt']){
+    const arr = ladeFaelle(art);
+    for(let idx=0; idx<arr.length; idx++){
+      if(fallFingerprintBauen({...arr[idx], art}) === ziel) return {art, idx};
+    }
+  }
+  return null;
+}
+
 // Laedt die komplette Uebersicht LIVE per Graph-Excel-API (workbook/
 // usedRange) und baut daraus eine Fingerabdruck->{renu,versandt}-Map --
 // eine einzige Anfrage fuer die komplette Tabelle statt pro Fall einzeln.
@@ -1110,6 +1141,7 @@ async function msGraphAlleZeilenLaden(){
         datum: String(r[1]==null?'':r[1]).trim(),               // B
         nachname: nachname,                                     // F
         vorname: vorname,                                       // G
+        geda: String(r[7]==null?'':r[7]).trim(),                // H -- nur fuer lokalenFallFuerZeileFinden()
         betrag: String(r[15]==null?'':r[15]).trim(),            // P
         renu: String(r[16]==null?'':r[16]).trim(),              // Q
         zeile: i+1                                              // Excel-Zeilennummer (1-basiert, Kopfzeile=1)
@@ -3065,10 +3097,14 @@ async function lokaleFaelleBereitsUebernommenEntfernen(alle){
 // ob der Fall lokal auf dem Handy gespeichert ist -- im Unterschied zur
 // "Lokale Rechnungen"-Liste (ansichtKorrigieren), die nur lokal gespeicherte,
 // noch nicht am PC uebernommene Faelle zeigt (und deren Eintraege nach
-// erfolgtem PC-Sync automatisch von dort verschwinden). Bewusst rein lesend
-// (kein Bearbeiten): nur Suchen/Filtern und PDFs oeffnen -- siehe
-// Begruendung im Kommentar bei msGraphAlleZeilenLaden weiter oben. PDF-
-// Links werden erst beim Antippen einer Zeile nachgeladen, nicht vorab
+// erfolgtem PC-Sync automatisch von dort verschwinden). Grundsaetzlich rein
+// lesend (Suchen/Filtern, PDFs oeffnen) -- siehe Begruendung im Kommentar bei
+// msGraphAlleZeilenLaden weiter oben. EINZIGE Ausnahme: eine "unvollstaendige"
+// Zeile, zu der noch ein lokal gespeicherter Fall existiert, ist antippbar
+// und oeffnet diesen zum Bearbeiten (siehe alsUnvollstaendigMarkieren /
+// lokalenFallFuerZeileFinden weiter unten) -- fuer alle anderen Zeilen bleibt
+// es bei reiner Anzeige. PDF-Links werden erst beim Antippen einer Zeile
+// nachgeladen, nicht vorab
 // fuer die ganze (potenziell lange) Liste -- Ausnahme: fuer ein begrenztes
 // Fenster der zuletzt hinzugekommenen Zeilen wird die PDF-Pruefung eager
 // vorgezogen, um unvollstaendige (von der stillen Erzeugung am PC
@@ -3135,13 +3171,27 @@ function alleRechnungenListeRendern(cache, suchtext){
   // keine Rechnungsnummer gezogen wurde (Spalte Q leer, ohne Renu ist keine
   // Erzeugung moeglich), oder weil trotz Renu noch kein passendes PDF im
   // Zielordner liegt (uebersprungener Fall: Pflichtfeld/Datum/Betrag/Jahr
-  // etc. -- siehe StillFallUebersprungen). Korrektur wie gewohnt manuell
-  // ueber "Rechnung korrigieren" am PC. Bewusst nur ein Icon statt Text --
-  // passend zu den anderen, groesseren Symbolen rechts in der Zeile.
-  const alsUnvollstaendigMarkieren = (el)=>{
+  // etc. -- siehe StillFallUebersprungen).
+  // NUTZERWUNSCH: existiert zu dieser Zeile noch ein lokal auf dem Handy
+  // gespeicherter Fall (lokalenFallFuerZeileFinden -- moeglich, weil ein
+  // solcher Fall bei Sync-Problemen NICHT geloescht wird, siehe
+  // lokaleFaelleBereitsUebernommenEntfernen), wird die Zeile stattdessen
+  // direkt zum Bearbeiten antippbar (oeffnet denselben Bearbeiten-Dialog wie
+  // in "Lokale Rechnungen") -- die vollstaendigen Angaben (Adresse,
+  // Diagnosen, Positionen) sind dort ja noch vorhanden, in der schmalen
+  // Uebersichtszeile dagegen nicht. Ohne lokalen Fund bleibt es beim reinen
+  // Warnhinweis, Korrektur dann weiterhin manuell am PC.
+  const alsUnvollstaendigMarkieren = (el, f)=>{
     el.classList.add('unvollstaendig');
     const platz = el.querySelector('.pdf-platz');
-    platz.innerHTML = '<span class="badge-unvollstaendig" title="Noch nicht als Rechnung erzeugt -- bitte am PC über &quot;Rechnung korrigieren&quot; prüfen und ergänzen.">&#9888;</span>';
+    const lokal = lokalenFallFuerZeileFinden(f);
+    if(lokal){
+      platz.innerHTML = '<span class="badge-unvollstaendig" title="Noch nicht als Rechnung erzeugt -- lokal auf dem Handy vorhanden, zum Bearbeiten antippen.">&#9998;</span>';
+      el.style.cursor = 'pointer';
+      el.onclick = ()=> ansichtMaske(lokal.art, lokal.idx);
+    } else {
+      platz.innerHTML = '<span class="badge-unvollstaendig" title="Noch nicht als Rechnung erzeugt -- bitte am PC über &quot;Rechnung korrigieren&quot; prüfen und ergänzen.">&#9888;</span>';
+    }
   };
 
   // Eager-Fenster: fuer die ersten paar sichtbaren Zeilen wird der PDF-Status
@@ -3156,7 +3206,7 @@ function alleRechnungenListeRendern(cache, suchtext){
     const f = anzuzeigen[i];
     if(!f.renu){
       // Ohne Rechnungsnummer sicher noch kein PDF vorhanden -- sofort rot.
-      alsUnvollstaendigMarkieren(el);
+      alsUnvollstaendigMarkieren(el, f);
       return;
     }
     el.style.cursor = 'pointer';
@@ -3175,7 +3225,7 @@ function alleRechnungenListeRendern(cache, suchtext){
         window.open(url, '_blank');
       } else {
         el.classList.remove('unvollstaendig');
-        alsUnvollstaendigMarkieren(el);
+        alsUnvollstaendigMarkieren(el, f);
       }
     };
 
@@ -3190,7 +3240,7 @@ function alleRechnungenListeRendern(cache, suchtext){
           pdfBadge.innerHTML = '&#128196;';
           el.querySelector('.pdf-platz').appendChild(pdfBadge);
         } else {
-          alsUnvollstaendigMarkieren(el);
+          alsUnvollstaendigMarkieren(el, f);
         }
       });
       // Brief-Status (fett formatierte Spalte R = tatsaechlich per
