@@ -1911,6 +1911,64 @@ function grossKleinNormalisieren(s){
   ).join('-');
   return s.split(' ').map(w => grossNachTrenner(w)).join(' ');
 }
+// Schreibt "str"/"str." zu "straße" aus -- 1:1 wie StrasseAusschreiben am PC
+// (LS_Modul1.bas/PT_Modul1.bas): sowohl angehängt ("Musterstr") als auch als
+// eigenes Wort ("Muster Str."). Löst bewusst NUR aus, wenn direkt danach ein
+// Leerzeichen, eine Ziffer oder (bei "str.") der Punkt selbst folgt -- sonst
+// würde es mitten in "Strand"/"Stroh" oder bei bereits ausgeschriebenem
+// "Straße" fälschlich zuschlagen.
+function strasseAusschreiben(text){
+  if(!text) return '';
+  return text.replace(/str\./gi, 'straße').replace(/str(?=[ 0-9])/gi, 'straße');
+}
+
+// =====================================================================
+// Live-Korrektur WÄHREND des Tippens (nicht erst beim Verlassen des
+// Feldes) -- 1:1 nachgebaut nach dem tatsächlichen PC-Vorbild (Txt_Change
+// in der dortigen Klasse fürs generische Textfeld-Handling): bei JEDEM
+// Tastenanschlag wird der GESAMTE aktuelle Feldinhalt neu durch
+// StrasseAusschreiben (falls Straßenfeld) und danach GrossKleinKorrigieren
+// gejagt -- nicht nur, wenn gerade ein Leerzeichen getippt wurde. Beide
+// Funktionen sind idempotent (wenden erneut angewandt keine weitere
+// Änderung mehr an), daher stört das wiederholte Anwenden bei jedem
+// Tastendruck nicht. Der Cursor wird exakt wie am PC nachgeführt:
+// SelStart + (neue Länge - alte Länge) -- unabhängig davon, WO im Text
+// sich etwas geändert hat.
+let gGrossSchreibLaeuft = false;
+function grossKleinKorrigieren(text){
+  // Entspricht GrossKleinKorrigieren (PC): Leerzeichen UND Bindestrich
+  // sind Wortgrenzen, nur der erste Buchstabe je Wort wird grossgeschrieben,
+  // der Rest bleibt unangetastet (korrigiert also gezielt vergessene
+  // Grossschreibung, ohne z.B. "O'Brien" kaputtzumachen).
+  let ergebnis = '', vorherigesTrennz = true;
+  for(const c of text){
+    ergebnis += (vorherigesTrennz && c!==' ' && c!=='-') ? c.toUpperCase() : c;
+    vorherigesTrennz = (c===' '||c==='-');
+  }
+  return ergebnis;
+}
+// Hängt die Live-Korrektur (ggf. Straßen-Ausschreibung + Großschreibung)
+// an ein Eingabefeld an -- 1:1 wie IstGrossSchreibFeld/IstStrassenFeld am
+// PC festlegen, WELCHE Felder das bekommen (siehe Aufrufe in der
+// Masken-Initialisierung weiter unten).
+function feldLiveGrossschreibungAnhaengen(id, istStrassenfeld){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', ()=>{
+    if(gGrossSchreibLaeuft) return; // Wiedereintritt verhindern (das el.value=... unten loest selbst wieder 'input' aus)
+    const textVorher = el.value;
+    let textNachher = textVorher;
+    if(istStrassenfeld) textNachher = strasseAusschreiben(textNachher);
+    textNachher = grossKleinKorrigieren(textNachher);
+    if(textNachher === textVorher) return;
+    let posCursor = el.selectionStart + (textNachher.length - textVorher.length);
+    if(posCursor < 0) posCursor = 0;
+    gGrossSchreibLaeuft = true;
+    el.value = textNachher;
+    gGrossSchreibLaeuft = false;
+    el.setSelectionRange(posCursor, posCursor);
+  });
+}
 // Zerlegt eine als EINE Zeile kopierte Adresse (z.B. aus Google Maps: "Musterstraße 12, 77656 Offenburg"
 // oder mit angehängtem Land "Musterstraße 12, 77656 Offenburg, Deutschland") in Straße+Hausnummer und
 // PLZ+Ort -- fürs direkte Einlesen ins Bestatter-Adressfeldpaar, ohne die Zeile von Hand aufzutrennen.
@@ -1951,7 +2009,7 @@ async function ausZwischenablageEinlesen(art, ctx){
 
   if(patient) ctx.setValue('txtName', grossKleinNormalisieren(patient));
   if(geb) ctx.setValue('txtGeda', geb);
-  if(strasse) ctx.setValue('txtPAdresse1', grossKleinNormalisieren(strasse));
+  if(strasse) ctx.setValue('txtPAdresse1', grossKleinNormalisieren(strasseAusschreiben(strasse)));
   if(ort) ctx.setValue('txtPAdresse2', grossKleinNormalisieren(ort));
 
   if(art==='ls'){
@@ -4529,6 +4587,21 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   document.getElementById('txtPAdresse1').addEventListener('blur', ()=> strasseFeldBlur('txtPAdresse1'));
   if(art==='ls') document.getElementById('txtAdresse1').addEventListener('blur', ()=> strasseFeldBlur('txtAdresse1'));
 
+  // Großschreib-/Straßen-Automatik zusätzlich schon WÄHREND des Tippens
+  // (nicht erst beim Verlassen des Feldes) -- 1:1 wie am PC (IstGrossSchreibFeld/
+  // IstStrassenFeld): Name + alle Adressfelder bekommen die Großschreibung,
+  // die reinen Straßenzeilen zusätzlich die "str"->"straße"-Ausschreibung.
+  feldLiveGrossschreibungAnhaengen('txtName', false);
+  feldLiveGrossschreibungAnhaengen('txtPAdresse1', true);
+  feldLiveGrossschreibungAnhaengen('txtPAdresse2', false);
+  if(art==='ls'){
+    feldLiveGrossschreibungAnhaengen('txtSterbeAdr1', true);
+    feldLiveGrossschreibungAnhaengen('txtSterbeAdr2', false);
+    feldLiveGrossschreibungAnhaengen('txtBName', false);
+    feldLiveGrossschreibungAnhaengen('txtAdresse1', true);
+    feldLiveGrossschreibungAnhaengen('txtAdresse2', false);
+  }
+
   ['txtPAdresse1','txtPAdresse2'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.addEventListener('blur', ()=> kmAutomatikAusloesen());
   });
@@ -5134,13 +5207,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     if(!el) return;
     const roh = el.value;
     if(!roh) return;
-    const ausgeschrieben = roh.replace(/str\./gi, 'straße').replace(/str(?=[ 0-9])/gi, 'straße');
-    let ergebnis = '', vorherigesTrennz = true;
-    for(const c of ausgeschrieben){
-      ergebnis += (vorherigesTrennz && c!==' ' && c!=='-') ? c.toUpperCase() : c;
-      vorherigesTrennz = (c===' '||c==='-');
-    }
-    el.value = ergebnis;
+    el.value = grossKleinKorrigieren(strasseAusschreiben(roh));
   }
 
   function feldWarnung(id, html){
