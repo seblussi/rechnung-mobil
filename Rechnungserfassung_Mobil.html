@@ -512,6 +512,20 @@
   .fall-zeile.pt{border-left-color:var(--pt-farbe);}
   .fall-zeile .name{font-weight:600;}
   .fall-zeile .info{font-size:12.5px; color:var(--text-schwach); margin-top:2px;}
+  /* KORREKTUR (Rueckmeldung "Backup Ansicht seltsam"): die Backup-Zeilen
+     nutzen .fall-zeile (display:flex) mit dem "Wiederherstellen"-Button aus
+     .btn-sekundaer -- die dort geerbten "display:block; width:100%"
+     wurden als flex-basis:100% interpretiert, wodurch der Button fast die
+     GANZE Zeile beanspruchte und .inhalt (min-width:0) auf eine winzige
+     Spalte zusammengequetscht wurde (Datum/Anzahl wirkten dadurch
+     abgeschnitten/umgebrochen, hinter dem Button verschwindend). Hier
+     gezielt auf Inhaltsbreite zurueckgesetzt, damit der Button rechts nur
+     so breit wie sein Text ist und .inhalt links den Rest der Zeile
+     bekommt. */
+  .fall-zeile .btn-backup-wiederherstellen{
+    display:block; width:auto; flex:0 0 auto; margin-bottom:0;
+    padding:10px 14px; font-size:13.5px; white-space:nowrap; align-self:center;
+  }
   .renu-reset{text-decoration:underline dotted; text-underline-offset:2px; cursor:pointer;}
   .einstellung-zeile{
     display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--rand); cursor:pointer;
