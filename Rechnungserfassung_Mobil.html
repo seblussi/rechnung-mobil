@@ -2097,14 +2097,14 @@ function reiseGesamtBetrag(kmFahrstreckeText){
   return {basis:REISEENTSCHAEDIGUNG.betrag, kmGerundet, kmZeile, gesamt:Math.round((REISEENTSCHAEDIGUNG.betrag+kmZeile)*100)/100};
 }
 
-const POSITIONEN_LS = {
+let POSITIONEN_LS = {
   grundleistung: [
     {ziffer:'101', faktor:1, bez:'Eingehende Untersuchung eines Toten, Ausstellung einer Todesbescheinigung', betrag:165.77, standard:true},
     {ziffer:'102', faktor:1, bez:'Zuschlag bei unbekannter Identität des Toten oder besonderen Todesumständen', betrag:27.63},
     {ziffer:'E', faktor:1, bez:'Zuschlag für dringend angeforderte und unverzüglich erfolgte Ausführung', betrag:9.33}
   ]
 };
-const POSITIONEN_PT = {
+let POSITIONEN_PT = {
   grundleistung: [
     {ziffer:'50', faktor:3.5, bez:'Hausbesuch', betrag:65.28, standard:true},
     {ziffer:'1', faktor:2.3, bez:'Beratung - auch mittels Fernsprecher', betrag:10.72},
@@ -2121,6 +2121,133 @@ const POSITIONEN_PT = {
     {ziffer:'60', faktor:2.3, bez:'Konsiliarische Erörterung zwischen zwei Ärzten', betrag:16.08}
   ]
 };
+
+// =====================================================================
+// Dynamisches Nachladen des GOÄ-Positionskatalogs aus der Excel-Vorlage
+// (Tabelle1, Spalte B/C=Ziffer je nach Art) -- siehe Kommentar bei
+// msGraphPositionsKatalogLaden weiter unten fuer den Hintergrund.
+// =====================================================================
+const MSGRAPH_PFAD_VORLAGE_LS = 'KVBW Onedrive/Vorlage_Abrechnung_Leichenschau_makro.xlsm';
+const MSGRAPH_PFAD_VORLAGE_PT = 'KVBW Onedrive/Vorlage_Abrechnung_Privatpatienten_makro.xlsm';
+const POSITIONSKATALOG_CACHE_SCHLUESSEL = 'positionsKatalogCache_v1';
+
+// Liest den GOÄ-Positionskatalog LIVE aus der Excel-Arbeitsvorlage (Tabelle1)
+// -- genau die Tabelle, die auch die PC-Makromaske per RechnungspunkteEinlesen
+// dynamisch ausliest. Damit ist die Excel-Datei die EINE gemeinsame Quelle
+// fuer PC und Handy, statt einer separat gepflegten (und potenziell
+// abweichenden) Liste in dieser App. Voraussetzung: die beiden Vorlage-
+// Dateien liegen im selben OneDrive-Ordner wie die uebrigen synchronisierten
+// Dateien (siehe MSGRAPH_PFAD_VORLAGE_LS/_PT oben).
+//
+// Layout je Art (1:1 wie SPALTE_ZIFFER/SPALTE_BEZEICHNUNG/SPALTE_BETRAG in
+// LS_Modul1.bas / PT_Modul1.bas):
+//   PT: Ziffer=Spalte B(1), Faktor=Spalte C(2), Bezeichnung=Spalte D(3), Betrag=Spalte E(4)
+//   LS: Ziffer=Spalte C(2), kein Faktor,        Bezeichnung=Spalte E(4), Betrag=Spalte F(5)
+// (0-basierte Indizes wie im values-Array der Graph-Antwort)
+//
+// Eine "Position" beginnt bei einer Zeile mit nicht-leerer Ziffer-Zelle;
+// Folgezeilen mit leerer Ziffer gehoeren als Bezeichnungs-Fortsetzung zur
+// vorherigen Position (genau wie RechnungspunkteEinlesen es in VBA
+// handhabt, z.B. bei "H"/Zuschlag Wochenende oder "7"/Untersuchung, die
+// sich in der Vorlage ueber 2 Zeilen erstrecken). Das Einlesen endet an der
+// Zeile mit "Gesamt" in der Bezeichnung.
+async function msGraphPositionsKatalogLaden(art){
+  if(msGraphStatus!=='angemeldet') return null;
+  const token = await msGraphTokenHolen();
+  if(!token) return null;
+  const pfad = art==='ls' ? MSGRAPH_PFAD_VORLAGE_LS : MSGRAPH_PFAD_VORLAGE_PT;
+  const spZiffer = art==='ls' ? 2 : 1;
+  const spBez    = art==='ls' ? 4 : 3;
+  const spBetrag = art==='ls' ? 5 : 4;
+  const spFaktor = art==='ls' ? null : 2;
+  try{
+    const basisUrl = msGraphPfadUrl(pfad);
+    const rangeUrl = basisUrl + "/workbook/worksheets('Tabelle1')/usedRange(valuesOnly=true)?$select=values";
+    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
+    if(!rangeRes.ok) return null;
+    const rangeDaten = await rangeRes.json();
+    const zeilen = rangeDaten.values || [];
+    const positionen = [];
+    let aktuelle = null;
+    // Zeile 0 = Kopfzeile, ab Zeile 1 die eigentlichen Positionen.
+    for(let i=1;i<zeilen.length;i++){
+      const r = zeilen[i];
+      const ziffer = String(r[spZiffer]==null?'':r[spZiffer]).trim();
+      const bezTeil = String(r[spBez]==null?'':r[spBez]).trim();
+      if(ziffer!==''){
+        // Ende des Katalogs: Zeile mit "Gesamt" (Summenzeile) erreicht.
+        if(/gesamt/i.test(bezTeil) || /gesamt/i.test(ziffer)) break;
+        // Nur echte GOÄ-Ziffern uebernehmen (Zahl oder "E") -- Zeilen wie
+        // "Reiseentschädigung" oder Wegegeld-Ziffern ("0", km-Formel) sind
+        // in dieser App bereits fest hinterlegt (REISEENTSCHAEDIGUNG/
+        // WEGEGELD_TAG/_NACHT) und sollen hier nicht dubliziert werden.
+        if(!/^\d+$/.test(ziffer) && ziffer!=='E'){ aktuelle = null; continue; }
+        const betragRoh = r[spBetrag];
+        const betrag = typeof betragRoh==='number' ? betragRoh : parseFloat(String(betragRoh||'').replace(',','.'));
+        if(isNaN(betrag)){ aktuelle = null; continue; }
+        aktuelle = {
+          ziffer: ziffer,
+          faktor: spFaktor!==null ? (parseFloat(String(r[spFaktor]||'').toString().replace(',','.')) || 1) : 1,
+          bez: bezTeil,
+          betrag: Math.round(betrag*100)/100
+        };
+        positionen.push(aktuelle);
+      } else if(aktuelle && bezTeil!==''){
+        // Fortsetzungszeile der Bezeichnung (mehrzeiliger Text in der Vorlage).
+        aktuelle.bez = (aktuelle.bez + ' ' + bezTeil).trim();
+      }
+    }
+    if(positionen.length===0) return null;
+    return positionen;
+  }catch(e){ return null; }
+}
+
+// Orchestriert das Nachladen fuer beide Arten und ersetzt die Positionen in
+// POSITIONEN_LS/POSITIONEN_PT IN-PLACE (bestehende Objektreferenzen bleiben
+// gueltig, die 3 Stellen, die grundleistung lesen, sehen die neuen Daten
+// automatisch). Die "standard"-Markierung (automatisch vorausgewaehlte
+// Grundleistung: 101 bei LS, 50 bei PT) wird dabei erhalten, auch wenn die
+// Excel-Vorlage das Flag selbst natuerlich nicht kennt. Ergebnis wird
+// zusaetzlich in localStorage gecacht, damit beim naechsten Start (auch
+// offline) sofort etwas Sinnvolles da ist, bevor der Live-Abgleich (falls
+// online) es ggf. aktualisiert.
+async function positionsKatalogAktualisieren(){
+  if(msGraphStatus!=='angemeldet') return false;
+  const STANDARD_ZIFFER = {ls:'101', pt:'50'};
+  let geaendert = false;
+  for(const art of ['ls','pt']){
+    const neu = await msGraphPositionsKatalogLaden(art);
+    if(!neu) continue; // Fehler/nicht erreichbar -- bestehenden Katalog unangetastet lassen
+    neu.forEach(p=>{ if(p.ziffer===STANDARD_ZIFFER[art]) p.standard = true; });
+    const ziel = art==='ls' ? POSITIONEN_LS : POSITIONEN_PT;
+    ziel.grundleistung.length = 0;
+    ziel.grundleistung.push(...neu);
+    geaendert = true;
+  }
+  if(geaendert){
+    try{
+      localStorage.setItem(POSITIONSKATALOG_CACHE_SCHLUESSEL, JSON.stringify({
+        ls: POSITIONEN_LS.grundleistung, pt: POSITIONEN_PT.grundleistung
+      }));
+    }catch(e){}
+  }
+  return geaendert;
+}
+
+// Beim Start (noch bevor ein evtl. Login online abgeschlossen ist): falls
+// ein frueherer Live-Abgleich schon einmal etwas gecacht hat, dieses sofort
+// uebernehmen -- so steht auch offline / vor dem ersten erfolgreichen
+// Graph-Aufruf bereits der zuletzt bekannte (statt der fest einprogrammierte)
+// Katalogstand zur Verfuegung.
+(function positionsKatalogCacheBeimStartLaden(){
+  try{
+    const roh = localStorage.getItem(POSITIONSKATALOG_CACHE_SCHLUESSEL);
+    if(!roh) return;
+    const cache = JSON.parse(roh);
+    if(cache && Array.isArray(cache.ls) && cache.ls.length) POSITIONEN_LS.grundleistung = cache.ls;
+    if(cache && Array.isArray(cache.pt) && cache.pt.length) POSITIONEN_PT.grundleistung = cache.pt;
+  }catch(e){}
+})();
 
 // Gegenseitige GOÄ-Ausschlüsse für die Rechnungspositionen -- 1:1 wie am
 // PC (ZifferAusschlussListe), nur für die in dieser Praxis tatsächlich
@@ -5580,6 +5707,13 @@ try{
       if(einstellungenOffen) ansichtEinstellungen();
       else if(aktuelleAnsichtIstHauptbildschirm) ansichtStart();
     }).catch(()=>{});
+
+    // Positionskatalog (GOÄ-Ziffern) live aus den Excel-Vorlagen nachladen
+    // -- siehe Kommentar bei positionsKatalogAktualisieren weiter oben.
+    // Ebenfalls ohne await; betrifft nur die Positionsliste in der Maske
+    // (Seite 2), die ohnehin erst beim tatsaechlichen Oeffnen einer
+    // Rechnung angezeigt wird, also nicht den Bildschirmaufbau blockieren muss.
+    positionsKatalogAktualisieren().catch(()=>{});
   }).catch(()=>{});
 }catch(e){}
 
