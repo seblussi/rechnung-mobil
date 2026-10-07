@@ -539,6 +539,11 @@
     display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px;
     border-bottom:1px solid var(--rand);
   }
+  /* Zweiter "Wiederherstellen"-Button unten im aufgeklappten Panel (NUTZER-
+     WUNSCH: Wiederherstellen soll auch im ausgeklappten Zustand moeglich
+     sein, ohne erst wieder zuklappen zu muessen) -- hier normale Blockbreite
+     (kein Flex-Kontext wie beim oberen Button), nur etwas Abstand nach oben. */
+  .backup-rechnungen .btn-backup-wiederherstellen{margin-top:8px;}
   .backup-rechnung-zeile:last-child{border-bottom:none;}
   .backup-rechnung-zeile .name{
     font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
@@ -2271,7 +2276,14 @@ async function msGraphPositionsKatalogLaden(art){
         // "Reiseentschädigung" oder Wegegeld-Ziffern ("0", km-Formel) sind
         // in dieser App bereits fest hinterlegt (REISEENTSCHAEDIGUNG/
         // WEGEGELD_TAG/_NACHT) und sollen hier nicht dubliziert werden.
-        if(!/^\d+$/.test(ziffer) && ziffer!=='E'){ aktuelle = null; continue; }
+        // BUGFIX: die Wegegeld/km-Zeile steht in der Vorlage mit Ziffer "0"
+        // -- das bestand bisher NUR im Kommentar, der Code liess "0" aber
+        // durchrutschen (/^\d+$/ trifft auch auf "0" zu), wodurch die
+        // 0,26-EUR/km-Zeile zusaetzlich als eigene Position unter
+        // "Grundpauschalen" auftauchte (Duplikat zur fest hinterlegten
+        // Reiseentschaedigungs-Zeile unter "Wegegeld"). Ziffer "0" jetzt
+        // explizit mit ausschliessen.
+        if(ziffer==='0' || (!/^\d+$/.test(ziffer) && ziffer!=='E')){ aktuelle = null; continue; }
         const betragRoh = r[spBetrag];
         const betrag = typeof betragRoh==='number' ? betragRoh : parseFloat(String(betragRoh||'').replace(',','.'));
         if(isNaN(betrag)){ aktuelle = null; continue; }
@@ -2334,8 +2346,13 @@ async function positionsKatalogAktualisieren(){
     const roh = localStorage.getItem(POSITIONSKATALOG_CACHE_SCHLUESSEL);
     if(!roh) return;
     const cache = JSON.parse(roh);
-    if(cache && Array.isArray(cache.ls) && cache.ls.length) POSITIONEN_LS.grundleistung = cache.ls;
-    if(cache && Array.isArray(cache.pt) && cache.pt.length) POSITIONEN_PT.grundleistung = cache.pt;
+    // BUGFIX-Selbstheilung: ein vor dem 0-Ziffer-Fix (siehe
+    // msGraphPositionsKatalogLaden) geschriebener Cache kann noch die
+    // faelschlich uebernommene Wegegeld/km-Zeile (Ziffer "0") enthalten --
+    // beim Laden vorsorglich herausfiltern, damit sie nicht weiter unter
+    // "Grundpauschalen" auftaucht, auch ohne dass online neu geladen wird.
+    if(cache && Array.isArray(cache.ls) && cache.ls.length) POSITIONEN_LS.grundleistung = cache.ls.filter(p=>p.ziffer!=='0');
+    if(cache && Array.isArray(cache.pt) && cache.pt.length) POSITIONEN_PT.grundleistung = cache.pt.filter(p=>p.ziffer!=='0');
   }catch(e){}
 })();
 
@@ -3233,10 +3250,36 @@ function ansichtSyncBackups(){
     el.innerHTML = txt; el.classList.add('aktiv');
   };
 
+  // NUTZERWUNSCH: "Wiederherstellen" soll unabhaengig davon funktionieren,
+  // ob die Zeile gerade auf- oder zugeklappt ist -- deshalb in eine
+  // gemeinsame Funktion ausgelagert, die sowohl vom Button oben in der
+  // Kopfzeile als auch von einem zweiten Button unten im aufgeklappten
+  // Panel aufgerufen wird (siehe dort), statt nur EINEN Button zu verdrahten.
+  const wiederherstellenAusloesen = (i)=>{
+    const stand = JSON.parse(liste[i].inhalt);
+    const zeitpunkt = new Date(liste[i].zeitstempel).toLocaleString('de-DE');
+    zeigeHinweisBackup(`Stand vom ${zeitpunkt} wiederherstellen (${stand.ls.length} LS, ${stand.pt.length} PT)? Die AKTUELL lokal gespeicherten Rechnungen werden dabei ersetzt.
+      <div class="aktionen">
+        <button data-akt="backupJa">Ja, wiederherstellen</button>
+        <button data-akt="backupNein">Abbrechen</button>
+      </div>`);
+    const hinweisEl = document.getElementById('backupsHinweis');
+    hinweisEl.querySelector('[data-akt="backupNein"]').onclick = ()=> zeigeHinweisBackup('');
+    hinweisEl.querySelector('[data-akt="backupJa"]').onclick = ()=>{
+      speichereFaelle('ls', stand.ls);
+      speichereFaelle('pt', stand.pt);
+      appToastAnzeigen('Backup wiederhergestellt.', 2200);
+      ansichtKorrigieren();
+    };
+  };
+
   // NUTZERWUNSCH: Klick auf die Backup-Zeile (nicht auf "Wiederherstellen")
   // klappt die im Stand enthaltenen Rechnungen (LS + PT, mit Name/Datum)
   // darunter auf/zu -- rein informativ, keine Aktion auf den Eintraegen
   // selbst. Wird nur beim ersten Aufklappen befuellt (Lazy-Rendering).
+  // Der zweite "Wiederherstellen"-Button unten im Panel wird HIER mit
+  // befuellt (dynamisch eingefuegt), deshalb direkt beim Erzeugen verdrahtet
+  // statt ueber ein spaeteres querySelectorAll.
   app.querySelectorAll('.backup-zeile').forEach(zeile=>{
     zeile.style.cursor = 'pointer';
     zeile.onclick = (ev)=>{
@@ -3251,38 +3294,29 @@ function ansichtSyncBackups(){
           ...stand.ls.map(f=>({...f, art:'ls'})),
           ...stand.pt.map(f=>({...f, art:'pt'}))
         ];
-        panel.innerHTML = eintraege.length
+        panel.innerHTML = (eintraege.length
           ? eintraege.map(f=>`
               <div class="backup-rechnung-zeile">
                 <span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>
                 <span class="name">${(f.werte && f.werte.txtName) || '(ohne Namen)'}</span>
                 <span class="info">${(f.werte && f.werte.txtDatum) || ''}${f.rechnungsnummer ? ' &middot; Nr. ' + f.rechnungsnummer : ''}</span>
               </div>`).join('')
-          : '<div class="leer-hinweis">Dieser Stand enthält keine Rechnungen.</div>';
+          : '<div class="leer-hinweis">Dieser Stand enthält keine Rechnungen.</div>')
+          + '<button type="button" class="btn-sekundaer btn-backup-wiederherstellen backup-wiederherstellen-panel" data-i="'+i+'">Wiederherstellen</button>';
+        panel.querySelector('.backup-wiederherstellen-panel').onclick = (ev2)=>{
+          ev2.stopPropagation();
+          wiederherstellenAusloesen(i);
+        };
         panel.dataset.befuellt = '1';
       }
       panel.style.display = eingeklappt ? 'block' : 'none';
     };
   });
 
-  app.querySelectorAll('.btn-backup-wiederherstellen').forEach(btn=>{
-    btn.onclick = ()=>{
-      const i = parseInt(btn.dataset.i,10);
-      const stand = JSON.parse(liste[i].inhalt);
-      const zeitpunkt = new Date(liste[i].zeitstempel).toLocaleString('de-DE');
-      zeigeHinweisBackup(`Stand vom ${zeitpunkt} wiederherstellen (${stand.ls.length} LS, ${stand.pt.length} PT)? Die AKTUELL lokal gespeicherten Rechnungen werden dabei ersetzt.
-        <div class="aktionen">
-          <button data-akt="backupJa">Ja, wiederherstellen</button>
-          <button data-akt="backupNein">Abbrechen</button>
-        </div>`);
-      const hinweisEl = document.getElementById('backupsHinweis');
-      hinweisEl.querySelector('[data-akt="backupNein"]').onclick = ()=> zeigeHinweisBackup('');
-      hinweisEl.querySelector('[data-akt="backupJa"]').onclick = ()=>{
-        speichereFaelle('ls', stand.ls);
-        speichereFaelle('pt', stand.pt);
-        appToastAnzeigen('Backup wiederhergestellt.', 2200);
-        ansichtKorrigieren();
-      };
+  app.querySelectorAll('.fall-zeile.backup-zeile .btn-backup-wiederherstellen').forEach(btn=>{
+    btn.onclick = (ev)=>{
+      ev.stopPropagation();
+      wiederherstellenAusloesen(parseInt(btn.dataset.i,10));
     };
   });
 }
