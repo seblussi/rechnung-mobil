@@ -775,7 +775,7 @@ function renuZaehlerAusText(wert){
 }
 function rnZaehlerStandText(e){
   if(!e.rnNaechsterZaehler) return 'Noch kein Zähler-Abgleich hinterlegt -- die Rechnungsnummer (Spalte Q) wird beim Kopieren solange freigelassen wie bisher.';
-  return `Nächste vergebene laufende Nummer: ${String(e.rnNaechsterZaehler).padStart(3,'0')} (z.B. "...-${String(e.rnNaechsterZaehler).padStart(3,'0')}"). Solange OneDrive-Sync aktiv ist, wird das automatisch live aus der Rechnungsübersicht ermittelt -- diese Angabe ist nur die Rückfallebene für den Ausnahmefall ohne Sync.`;
+  return `Nächste vergebene laufende Nummer: ${String(e.rnNaechsterZaehler).padStart(3,'0')} (z.B. "...-${String(e.rnNaechsterZaehler).padStart(3,'0')}"). Solange OneDrive-Sync aktiv ist, wird das automatisch live aus der Rechnungsübersicht ermittelt -- diese Angabe ist nur die Rückfallebene für den Ausnahmefall ohne Sync.${rnLiveFehler ? ' Letzter Live-Abgleich fehlgeschlagen: ' + rnLiveFehler + '.' : ''}`;
 }
 
 // Ermittelt LIVE per Graph-API die tatsaechlich hoechste in der
@@ -787,32 +787,72 @@ function rnZaehlerStandText(e){
 // null zurueck, wenn die Liste live nicht lesbar ist (kein Login, kein
 // Netz, Datei nicht erreichbar) -- der Aufrufer faellt dann auf den
 // lokalen Zaehler zurueck.
-async function msGraphNaechsteRenuLiveErmitteln(){
-  if(msGraphStatus!=='angemeldet') return null;
+let rnLiveFehler = '';        // Grund, falls der Live-Abgleich nicht moeglich war (fuer Anzeige/Diagnose)
+let rnLiveFehlerGemeldet = false;
+function spaltenBuchstabeZuNr(b){ let n=0; for(const c of b) n = n*26 + (c.charCodeAt(0)-64); return n; }
+function xlsxLibLaden(){
+  if(window.XLSX) return Promise.resolve();
+  return new Promise((ok,fehl)=>{
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = ()=>ok(); sc.onerror = ()=>fehl(new Error('Excel-Leser nicht ladbar'));
+    document.head.appendChild(sc);
+  });
+}
+// Liest die Rechnungsuebersicht LIVE als Zeilen-Array (Spalte A = Index 0).
+// 1. Weg: Graph-Excel-API; 2. Weg (Rueckfall): Datei per Graph laden und lokal
+// mit SheetJS lesen. Bei Misserfolg: null und rnLiveFehler gesetzt.
+async function msGraphUebersichtZeilenRoh(){
+  rnLiveFehler = '';
+  if(msGraphStatus!=='angemeldet'){ rnLiveFehler = 'nicht bei Microsoft angemeldet'; return null; }
+  let token = null;
+  try{ token = await msGraphTokenHolen(); }catch(e){}
+  if(!token){ rnLiveFehler = 'Anmelde-Token nicht erneuerbar (in den Einstellungen neu anmelden)'; return null; }
+  const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
   try{
-    const token = await msGraphTokenHolen();
-    if(!token) return null;
-    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
-    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', {
-      headers: { Authorization: 'Bearer ' + token }
-    });
-    if(!wsRes.ok) return null;
-    const wsDaten = await wsRes.json();
-    const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
-    if(!blattName) return null;
-    const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
-      "')/usedRange(valuesOnly=true)?$select=values";
-    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
-    if(!rangeRes.ok) return null;
-    const rangeDaten = await rangeRes.json();
-    const zeilen = rangeDaten.values || [];
-    let hoechste = 0;
-    for(let i=1;i<zeilen.length;i++){
-      const n = renuZaehlerAusText(zeilen[i][16]); // Q: Rechnungsnummer
-      if(n!==null && n > hoechste) hoechste = n;
-    }
-    return hoechste + 1;
-  }catch(e){ return null; }
+    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', { headers: { Authorization: 'Bearer ' + token } });
+    if(wsRes.ok){
+      const wsDaten = await wsRes.json();
+      const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
+      if(blattName){
+        const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
+          "')/usedRange(valuesOnly=true)?$select=values,address";
+        const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
+        if(rangeRes.ok){
+          const d = await rangeRes.json();
+          let zeilen = d.values || [];
+          const m = /!\$?([A-Z]+)\$?(\d+)/.exec(d.address || '');
+          const versatz = m ? spaltenBuchstabeZuNr(m[1]) - 1 : 0;
+          if(versatz > 0) zeilen = zeilen.map(r=>new Array(versatz).fill('').concat(r));
+          return zeilen;
+        }
+        rnLiveFehler = 'Excel-Schnittstelle HTTP ' + rangeRes.status;
+      } else rnLiveFehler = 'Excel-Schnittstelle: kein Blatt';
+    } else rnLiveFehler = 'Excel-Schnittstelle HTTP ' + wsRes.status;
+  }catch(e){ rnLiveFehler = 'Excel-Schnittstelle: ' + (e.message||e); }
+  try{
+    await xlsxLibLaden();
+    const res = await fetch(basisUrl + '/content', { headers: { Authorization: 'Bearer ' + token } });
+    if(!res.ok){ rnLiveFehler += ' / Datei laden HTTP ' + res.status; return null; }
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rg = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+    rg.s.r = 0; rg.s.c = 0;
+    const zeilen = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '', range: rg });
+    rnLiveFehler = '';
+    return zeilen;
+  }catch(e){ rnLiveFehler += ' / Datei lesen: ' + (e.message||e); return null; }
+}
+async function msGraphNaechsteRenuLiveErmitteln(){
+  const zeilen = await msGraphUebersichtZeilenRoh();
+  if(!zeilen) return null;
+  let hoechste = 0;
+  for(let i=1;i<zeilen.length;i++){
+    const n = renuZaehlerAusText(zeilen[i][16]); // Q: Rechnungsnummer
+    if(n!==null && n > hoechste) hoechste = n;
+  }
+  return hoechste + 1;
 }
 
 // Zentrale Stelle fuer "welche laufende Nummer wird als naechstes
@@ -858,6 +898,10 @@ async function naechsterRenuZaehlerErmitteln(){
       speichereEinstellungen(e);
     }
     return naechster;
+  }
+  if(rnLiveFehler && !rnLiveFehlerGemeldet){
+    rnLiveFehlerGemeldet = true;
+    try{ appToastAnzeigen('Rechnungsnummer: Live-Abgleich mit der Übersicht nicht möglich (' + rnLiveFehler + ') -- lokaler Zähler wird verwendet.', 6000); }catch(_){}
   }
   if(!e.rnNaechsterZaehler) return lokaleUntergrenze>1 ? lokaleUntergrenze : null;
   return Math.max(e.rnNaechsterZaehler, lokaleUntergrenze); // Rueckfall: manuell gepflegter Stand
