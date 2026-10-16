@@ -3691,13 +3691,14 @@ const INI_FELDER = [
   {k:'BRIEF_AKTIVIERT',  typ:'bool', label:'Briefversand über LetterXpress aktiviert'},
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
-  {k:'BRIEF_TESTMODUS',  typ:'bool', label:'Testmodus (es wird nichts gedruckt/berechnet)', standard:'1'}
+  {k:'BRIEF_TESTMODUS',  typ:'bool', label:'Testmodus (es wird nichts gedruckt/berechnet)', standard:'1'},
+  {k:'LXP_WEITERLEITUNG', typ:'text', label:'Weiterleitung für den Versand vom Handy (Adresse der Azure-Funktion, z.B. https://NAME.azurewebsites.net/api)'}
 ];
 const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
   {titel:'Arzt', keys:['ARZTNAME','ARZTFUNKTION','ARZTADRESSE1','ARZTADRESSE2','ARZTEMAIL']},
   {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTBANKNAME','ARZTIBAN','ARZTBIC']},
-  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_TESTMODUS']}
+  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_TESTMODUS','LXP_WEITERLEITUNG']}
 ];
 
 // ---------- Windows-1252 lesen/schreiben ----------
@@ -3830,6 +3831,16 @@ async function iniAenderungenSchreiben(aenderungen, basisWerte){
   await msGraphDateiHochladen(token, MSGRAPH_PFAD_INI, cp1252Kodieren(text), 'text/plain');
   iniCacheSpeichern(iniParsen(text).werte);
   return {geschrieben: keys.length};
+}
+
+// ---------- LetterXpress ----------
+// LetterXpress erlaubt keinen direkten Aufruf aus dem Browser (CORS) -- die
+// Anfrage laeuft deshalb ueber eine kleine Weiterleitung (Azure Function),
+// die nur an api.letterxpress.de durchreicht. Zugangsdaten liegen NICHT in
+// der Weiterleitung, sondern werden wie am PC bei jedem Aufruf mitgeschickt.
+function lxpBasisUrl(werte){
+  const w = String((werte && werte.LXP_WEITERLEITUNG) || '').trim().replace(/\/+$/,'');
+  return w || 'https://api.letterxpress.de';
 }
 
 // ---------- Oberflaeche ----------
@@ -4007,18 +4018,27 @@ function betaEinstellungenWiring(){
       // Absichtlich OHNE Brief (nur Anmeldedaten, Testmodus): LetterXpress
       // antwortet mit einer Fehlermeldung, es entsteht kein Auftrag. Wichtig ist
       // nur, OB der Browser die Antwort ueberhaupt lesen darf (CORS).
-      const r = await fetch('https://api.letterxpress.de/v3/printjobs', {
+      const basis = lxpBasisUrl(w);
+      const ueberWeiterleitung = basis !== 'https://api.letterxpress.de';
+      ergebnis('Teste Verbindung zu LetterXpress ' + (ueberWeiterleitung ? 'über die Weiterleitung' : 'direkt') + ' ...');
+      const r = await fetch(basis + '/v3/printjobs', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({auth:{username:w.BRIEF_BENUTZER, apikey:w.BRIEF_APIKEY, mode:'test'}})
       });
       const txt = (await r.text()).slice(0, 300);
       const anmeldungFalsch = r.status===401 || /unauthori/i.test(txt);
-      ergebnis(`<b>✓ Direkter Aufruf vom Handy ist möglich</b> (LetterXpress hat geantwortet, HTTP ${r.status}).<br>` +
+      if(ueberWeiterleitung && r.status===403 && /Nicht erlaubt/.test(txt)){
+        ergebnis('<b>✗ Die Weiterleitung lehnt diese App ab</b> -- in der Azure-Funktion steht vermutlich eine andere erlaubte Adresse (ERLAUBTE_HERKUNFT) bzw. sie fehlt unter CORS.'); return;
+      }
+      ergebnis(`<b>✓ ${ueberWeiterleitung ? 'Versand über die Weiterleitung funktioniert' : 'Direkter Aufruf vom Handy ist möglich'}</b> (LetterXpress hat geantwortet, HTTP ${r.status}).<br>` +
         (anmeldungFalsch ? 'Hinweis: Benutzername/API-Key wurden abgelehnt -- bitte prüfen.<br>' : 'Anmeldedaten wurden angenommen (die Fehlermeldung zum fehlenden Brief ist bei diesem Test normal).<br>') +
         `<span style="font-size:12px; word-break:break-all;">Antwort: ${htmlEsc(txt)}</span>`);
     }catch(e){
-      ergebnis('<b>✗ Der Browser darf LetterXpress nicht direkt aufrufen</b> (vermutlich keine CORS-Freigabe). ' +
-               'Für den Versand vom Handy wird dann eine kleine Weiterleitung benötigt.<br><span style="font-size:12px;">' + htmlEsc(e.message||String(e)) + '</span>');
+      const wl = String(w.LXP_WEITERLEITUNG||'').trim();
+      ergebnis((wl
+        ? '<b>✗ Die Weiterleitung ist nicht erreichbar</b> -- bitte die Adresse prüfen (https://…azurewebsites.net/api) und ob https://seblussi.github.io in der Funktions-App unter „CORS“ eingetragen ist.'
+        : '<b>✗ Der Browser darf LetterXpress nicht direkt aufrufen</b> (keine CORS-Freigabe). Bitte die Weiterleitung (Azure-Funktion) einrichten und ihre Adresse oben eintragen.') +
+        '<br><span style="font-size:12px;">' + htmlEsc(e.message||String(e)) + '</span>');
     }
   };
   document.getElementById('btnTestPdf').onclick = async ()=>{
