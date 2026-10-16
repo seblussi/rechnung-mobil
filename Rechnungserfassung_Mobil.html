@@ -665,7 +665,33 @@
    ========================================================== */
 const LS = {
   get(k, fallback){ try{ const v = localStorage.getItem(k); return v===null? fallback : JSON.parse(v);}catch(e){return fallback;} },
-  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  // KORREKTUR: Fehler beim Schreiben wurden bisher stumm verschluckt. Ist der
+  // Speicher des Browsers voll (u.a. durch die bis zu 20 Sync-Backups, die
+  // jeweils ALLE Faelle enthalten), ging eine neue/geaenderte Rechnung ohne
+  // jeden Hinweis verloren. Jetzt: zuerst die aeltesten Backups opfern und
+  // erneut versuchen; klappt es trotzdem nicht, deutlicher Hinweis.
+  set(k, v){
+    let text;
+    try{ text = JSON.stringify(v); }catch(e){ return false; }
+    for(let versuch=0; versuch<25; versuch++){
+      try{ localStorage.setItem(k, text); return true; }
+      catch(e){
+        if(k === 'sync_backups') return false; // Backups sind verzichtbar
+        let b = [];
+        try{ b = JSON.parse(localStorage.getItem('sync_backups') || '[]'); }catch(_){ b = []; }
+        if(!Array.isArray(b) || !b.length) break;
+        b.pop(); // aeltestes Backup entfernen
+        try{
+          if(b.length) localStorage.setItem('sync_backups', JSON.stringify(b));
+          else localStorage.removeItem('sync_backups');
+        }catch(_){ try{ localStorage.removeItem('sync_backups'); }catch(__){} }
+      }
+    }
+    if(String(k).indexOf('faelle_') === 0 || String(k).indexOf('katalog') >= 0){
+      try{ alert('Achtung: Der Speicher dieser App ist voll -- die letzte \u00c4nderung konnte NICHT gespeichert werden.\n\nBitte jetzt synchronisieren bzw. exportieren und erledigte F\u00e4lle l\u00f6schen.'); }catch(_){}
+    }
+    return false;
+  }
 };
 function ladeFaelle(art){ return LS.get('faelle_'+art, []); }
 function speichereFaelle(art, arr){ LS.set('faelle_'+art, arr); synchronisiereAlle(); }
@@ -802,8 +828,28 @@ function xlsxLibLaden(){
 // Liest die Rechnungsuebersicht LIVE als Zeilen-Array (Spalte A = Index 0).
 // 1. Weg: Graph-Excel-API; 2. Weg (Rueckfall): Datei per Graph laden und lokal
 // mit SheetJS lesen. Bei Misserfolg: null und rnLiveFehler gesetzt.
+// Name des ersten Blatts, falls die Excel-Schnittstelle funktioniert hat --
+// null, wenn die Datei direkt gelesen werden musste (dann gibt es z.B. keine
+// Fett-Abfrage fuer das Brief-Symbol).
+let msGraphUebersichtBlatt = null;
+async function graphFehlerKurz(res){
+  try{
+    const j = await res.json();
+    return (j && j.error && (j.error.message || j.error.code)) ? ': ' + (j.error.message || j.error.code) : '';
+  }catch(e){ return ''; }
+}
+// Excel speichert Datumsangaben teils als Zahl (Tage seit 30.12.1899) --
+// fuer Anzeige und Fingerabdruck als TT.MM.JJJJ.
+function uebersichtDatumText(v){
+  if(typeof v === 'number' && v >= 1 && v < 2958466){
+    const d = new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000);
+    return String(d.getUTCDate()).padStart(2,'0') + '.' + String(d.getUTCMonth()+1).padStart(2,'0') + '.' + d.getUTCFullYear();
+  }
+  return String(v==null ? '' : v).trim();
+}
 async function msGraphUebersichtZeilenRoh(){
   rnLiveFehler = '';
+  msGraphUebersichtBlatt = null;
   if(msGraphStatus!=='angemeldet'){ rnLiveFehler = 'nicht bei Microsoft angemeldet'; return null; }
   let token = null;
   try{ token = await msGraphTokenHolen(); }catch(e){}
@@ -824,11 +870,12 @@ async function msGraphUebersichtZeilenRoh(){
           const m = /!\$?([A-Z]+)\$?(\d+)/.exec(d.address || '');
           const versatz = m ? spaltenBuchstabeZuNr(m[1]) - 1 : 0;
           if(versatz > 0) zeilen = zeilen.map(r=>new Array(versatz).fill('').concat(r));
+          msGraphUebersichtBlatt = blattName;
           return zeilen;
         }
-        rnLiveFehler = 'Excel-Schnittstelle HTTP ' + rangeRes.status;
+        rnLiveFehler = 'Excel-Schnittstelle HTTP ' + rangeRes.status + await graphFehlerKurz(rangeRes);
       } else rnLiveFehler = 'Excel-Schnittstelle: kein Blatt';
-    } else rnLiveFehler = 'Excel-Schnittstelle HTTP ' + wsRes.status;
+    } else rnLiveFehler = 'Excel-Schnittstelle HTTP ' + wsRes.status + await graphFehlerKurz(wsRes);
   }catch(e){ rnLiveFehler = 'Excel-Schnittstelle: ' + (e.message||e); }
   try{
     await xlsxLibLaden();
@@ -1145,42 +1192,26 @@ function lokalenFallFuerZeileFinden(zeile){
 // statt die Ansicht mit einer Fehlermeldung zu blockieren.
 async function msGraphUebersichtFingerprintsLaden(){
   if(msGraphStatus!=='angemeldet') return null;
-  const token = await msGraphTokenHolen();
-  if(!token) return null;
-  try{
-    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
-    // Name des ersten Arbeitsblatts ermitteln (der Blattname selbst ist
-    // nicht fest bekannt/garantiert "Tabelle1").
-    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', {
-      headers: { Authorization: 'Bearer ' + token }
+  // KORREKTUR: frueher NUR ueber die Excel-Schnittstelle -- die streikt z.B.,
+  // wenn die Datei am PC mit ausgeblendetem Fenster gespeichert wurde. Jetzt
+  // ueber msGraphUebersichtZeilenRoh (bei Bedarf Datei direkt lesen).
+  const zeilen = await msGraphUebersichtZeilenRoh();
+  if(!zeilen) return null;
+  const map = new Map();
+  // Zeile 0 = Kopfzeile ueberspringen.
+  for(let i=1;i<zeilen.length;i++){
+    const r = zeilen[i] || [];
+    const key = [r[0], uebersichtDatumText(r[1]), r[5], r[6], uebersichtDatumText(r[7])]
+      .map(v=>String(v==null?'':v).toUpperCase().trim()).join('|');
+    if(key.replace(/\|/g,'')==='') continue; // komplett leere Zeile
+    if(map.has(key)) continue; // erste Fundstelle gewinnt, wie am PC
+    map.set(key, {
+      renu: String(r[16]==null?'':r[16]).trim()          // Q: Rechnungsnummer
+      // Kein "versandt"-Feld: das Signal "versendet" ist die Fett-Formatierung
+      // von Spalte R -- siehe msGraphBriefVersendetLaden.
     });
-    if(!wsRes.ok) return null;
-    const wsDaten = await wsRes.json();
-    const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
-    if(!blattName) return null;
-    const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
-      "')/usedRange(valuesOnly=true)?$select=values";
-    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
-    if(!rangeRes.ok) return null;
-    const rangeDaten = await rangeRes.json();
-    const zeilen = rangeDaten.values || [];
-    const map = new Map();
-    // Zeile 0 = Kopfzeile ueberspringen.
-    for(let i=1;i<zeilen.length;i++){
-      const r = zeilen[i];
-      const key = [r[0],r[1],r[5],r[6],r[7]].map(v=>String(v==null?'':v).toUpperCase().trim()).join('|');
-      if(key.replace(/\|/g,'')==='') continue; // komplett leere Zeile
-      if(map.has(key)) continue; // erste Fundstelle gewinnt, wie am PC
-      map.set(key, {
-        renu: String(r[16]==null?'':r[16]).trim()          // Q: Rechnungsnummer
-        // Kein "versandt"-Feld mehr hier: Spalte R enthaelt IMMER das
-        // Rechnungsdatum (nie leer), das eigentliche "versendet"-Signal ist
-        // die Fett-Formatierung der Zelle -- siehe msGraphBriefVersendetLaden
-        // weiter unten und der Kommentar in SchreibeInUebersicht (Modul1.bas).
-      });
-    }
-    return map;
-  }catch(e){ return null; }
+  }
+  return map;
 }
 
 // Laedt ALLE Zeilen der Rechnungsuebersicht (nicht nur per Fingerabdruck
@@ -1192,52 +1223,36 @@ async function msGraphUebersichtFingerprintsLaden(){
 // langen Uebersicht sehr viele Graph-Anfragen ausloesen) -- das passiert
 // erst bei Bedarf beim Antippen einer Zeile, siehe ansichtAlleRechnungen().
 async function msGraphAlleZeilenLaden(){
-  if(msGraphStatus!=='angemeldet') return null;
-  const token = await msGraphTokenHolen();
-  if(!token) return null;
-  try{
-    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
-    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', {
-      headers: { Authorization: 'Bearer ' + token }
+  if(msGraphStatus!=='angemeldet'){ rnLiveFehler = 'nicht bei Microsoft angemeldet'; return null; }
+  // KORREKTUR: ueber msGraphUebersichtZeilenRoh -- faellt die Excel-
+  // Schnittstelle aus (z.B. Datei am PC mit ausgeblendetem Fenster
+  // gespeichert), wird die Datei direkt gelesen statt gar nichts anzuzeigen.
+  const zeilen = await msGraphUebersichtZeilenRoh();
+  if(!zeilen) return null;
+  const betragText = v=> typeof v === 'number' ? v.toFixed(2).replace('.', ',') : String(v==null?'':v).trim();
+  const liste = [];
+  for(let i=1;i<zeilen.length;i++){
+    const r = zeilen[i] || [];
+    const art = String(r[0]==null?'':r[0]).trim();
+    const nachname = String(r[5]==null?'':r[5]).trim();
+    const vorname = String(r[6]==null?'':r[6]).trim();
+    if(art==='' && nachname==='' && vorname==='') continue; // komplett leere Zeile
+    liste.push({
+      art: art,                                              // A
+      datum: uebersichtDatumText(r[1]),                       // B
+      nachname: nachname,                                     // F
+      vorname: vorname,                                       // G
+      geda: uebersichtDatumText(r[7]),                        // H -- nur fuer lokalenFallFuerZeileFinden()
+      betrag: betragText(r[15]),                              // P
+      renu: String(r[16]==null?'':r[16]).trim(),              // Q
+      zeile: i+1                                              // Excel-Zeilennummer (1-basiert, Kopfzeile=1)
+      // Spalte R ("Rechnungsdatum") absichtlich NICHT als "versandt"
+      // ausgewertet -- das Signal "per LetterXpress versendet" ist die
+      // FETT-Formatierung, siehe msGraphBriefVersendetLaden().
     });
-    if(!wsRes.ok) return null;
-    const wsDaten = await wsRes.json();
-    const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
-    if(!blattName) return null;
-    const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
-      "')/usedRange(valuesOnly=true)?$select=values";
-    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
-    if(!rangeRes.ok) return null;
-    const rangeDaten = await rangeRes.json();
-    const zeilen = rangeDaten.values || [];
-    const liste = [];
-    for(let i=1;i<zeilen.length;i++){
-      const r = zeilen[i];
-      const art = String(r[0]==null?'':r[0]).trim();
-      const nachname = String(r[5]==null?'':r[5]).trim();
-      const vorname = String(r[6]==null?'':r[6]).trim();
-      if(art==='' && nachname==='' && vorname==='') continue; // komplett leere Zeile
-      liste.push({
-        art: art,                                              // A
-        datum: String(r[1]==null?'':r[1]).trim(),               // B
-        nachname: nachname,                                     // F
-        vorname: vorname,                                       // G
-        geda: String(r[7]==null?'':r[7]).trim(),                // H -- nur fuer lokalenFallFuerZeileFinden()
-        betrag: String(r[15]==null?'':r[15]).trim(),            // P
-        renu: String(r[16]==null?'':r[16]).trim(),              // Q
-        zeile: i+1                                              // Excel-Zeilennummer (1-basiert, Kopfzeile=1)
-        // Spalte R ("Rechnungsdatum") absichtlich NICHT mehr als "versandt"
-        // ausgewertet -- R enthaelt IMMER ein Datum, auch wenn nie versendet
-        // wurde (siehe SchreibeInUebersicht in Modul1.bas: werte(15) wird bei
-        // JEDER Rechnung geschrieben). Das tatsaechliche Signal "per
-        // LetterXpress versendet" ist ausschliesslich die FETT-Formatierung
-        // dieser Zelle (siehe BriefAlsVersendetMarkieren in der HTA) -- wird
-        // separat per msGraphBriefVersendetLaden() nachgeladen, siehe unten.
-      });
-    }
-    liste.reverse(); // neueste (unterste Excel-Zeile) zuerst
-    return {liste, blattName};
-  }catch(e){ return null; }
+  }
+  liste.reverse(); // neueste (unterste Excel-Zeile) zuerst
+  return {liste, blattName: msGraphUebersichtBlatt};
 }
 
 // Prueft per Graph, ob die Rechnungsdatum-Zelle (Spalte R) einer Excel-Zeile
@@ -3467,7 +3482,8 @@ function alleRechnungenListeRendern(cache, suchtext){
   const zielEl = document.getElementById('alleRechnungenListe');
   if(!zielEl) return;
   if(cache === null){
-    zielEl.innerHTML = '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden (kein Netz oder nicht angemeldet). Bitte "Neu laden" versuchen.</div>';
+    const grund = rnLiveFehler ? String(rnLiveFehler).replace(/&/g,'&amp;').replace(/</g,'&lt;') : 'kein Netz oder nicht angemeldet';
+    zielEl.innerHTML = '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden (' + grund + '). Bitte "Neu laden" versuchen.</div>';
     return;
   }
   const liste = cache.liste, blattName = cache.blattName;
