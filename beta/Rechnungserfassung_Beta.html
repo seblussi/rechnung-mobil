@@ -67,6 +67,8 @@
      Anmeldung (OneDrive-Zugriff via Graph API), siehe Abschnitt
      "OneDrive-Anmeldung" weiter unten. -->
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
+<!-- BETA: JSZip zum Erzeugen der Word-Datei (.docx) -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
   :root{
     --bg:#f4f6f9;
@@ -3169,6 +3171,7 @@ function ansichtKorrigieren(){
         <div class="aktionen-buttons">
           <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
           <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
+          <button type="button" id="btnAuswRechnungBeta" class="betont" disabled>Word + PDF erstellen <span class="beta-badge">BETA</span></button>
           <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
           <button type="button" id="btnAuswBackups">Backups</button>
         </div>
@@ -3208,6 +3211,7 @@ function ansichtKorrigieren(){
     document.getElementById('auswahlAnzahl').textContent = n ? `${n} ausgewählt` : '';
     document.getElementById('btnAuswLoeschen').disabled = n===0;
     document.getElementById('btnAuswKopieren').disabled = n===0;
+    document.getElementById('btnAuswRechnungBeta').disabled = n===0;
     document.getElementById('chkAlle').checked = n===alle.length;
   }
 
@@ -3264,6 +3268,15 @@ function ansichtKorrigieren(){
   };
 
   document.getElementById('btnAuswBackups').onclick = ansichtSyncBackups;
+
+  // BETA: Word + PDF direkt am Handy erstellen (Ablage im Testordner)
+  document.getElementById('btnAuswRechnungBeta').onclick = async ()=>{
+    const faelleAusw = alle.filter(f=> ausgewaehlt.has(schluessel(f)));
+    const btn = document.getElementById('btnAuswRechnungBeta');
+    btn.disabled = true;
+    try{ await betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis); }
+    finally{ btn.disabled = ausgewaehlt.size === 0; }
+  };
 
   document.getElementById('btnAuswKopieren').onclick = async ()=>{
     const faelleAusw = alle.filter(f=> ausgewaehlt.has(schluessel(f)));
@@ -3657,6 +3670,626 @@ function alleRechnungenListeRendern(cache, suchtext){
     }
   });
 }
+
+// =====================================================================
+// Rechnung als Word-Datei (.docx) direkt im Browser erzeugen
+// =====================================================================
+// Grundlage ist exakt die Word-Vorlage des PCs (…_Makros_v4.docm aus
+// OneDrive). Wie am PC werden die Platzhalter ersetzt (DATE, VNAME, …,
+// BANAME/BABIC/BAIBAN/ENAME in der Fusszeile). Statt des mit Excel
+// verknuepften Tabellenbildes wird eine ECHTE Word-Tabelle eingesetzt, deren
+// Zeilen 1:1 aus der Excel-Vorlage (Tabelle1 bzw. der Snapshot-Kopie)
+// stammen -- dieselben Texte, Zeilenumbrueche, Betraege und dieselbe
+// Reihenfolge wie bisher, nur ohne Excel. Spaltenbreiten, Zeilenhoehe,
+// Rahmen und Schrift sind an den bisherigen PC-Ausdruck angeglichen.
+// Ergebnis ist eine makrofreie .docx (wie SaveAs2 FileFormat:=12 am PC).
+//
+// Benoetigt JSZip (global "JSZip").
+
+const RECHNUNG_LAYOUT = {
+  // Spaltenbreiten in pt (aus dem PC-PDF ausgemessen), Zeilenhoehe 14,8 pt.
+  // "zeilenGesamt" = Hoehe des bisherigen Excel-Bildes in Zeilen -- die
+  // Tabelle wird mit unsichtbaren Leerzeilen auf diese Hoehe aufgefuellt,
+  // damit der Text darunter an derselben Stelle steht wie bisher.
+  pt: { cols: [57.2, 57.2, 60.3, 253.9, 58.7], einzug: 0, zeilenGesamt: 23,
+        sp: {datum:0, ziffer:1, faktor:2, bez:3, betrag:4}, ersteSpalte: 0,
+        ausr: ['center','center','center','left','right'],
+        betragFormat: '0.00', gesamtFormat: '0.00' },
+  ls: { cols: [78.5, 72.0, 60.8, 195.6, 61.2], einzug: 7.2, zeilenGesamt: 15,
+        sp: {datum:0, ziffer:1, faktor:2, bez:3, betrag:4}, ersteSpalte: 1,
+        ausr: ['center','center','center','left','right'],
+        betragFormat: 'general', gesamtFormat: '#,##0.00 €' }
+};
+const RECHNUNG_ZEILENHOEHE_TWIPS = 296;   // 14,8 pt
+const RECHNUNG_ZELLRAND_TWIPS = 34;       // ca. 1,7 pt Innenabstand links/rechts
+
+const RD_ARIAL_BREITEN = {r:[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,552,400,549,333,333,333,576,537,333,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,549,611,556,556,556,556,500,556,500,556,556,1000,333,333,222], b:[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,556,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,552,400,549,333,333,333,576,556,333,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,549,611,611,611,611,611,556,611,556,556,556,1000,500,500,278]}; // Zeichenbreiten (1/1000 em) fuer Zeichen 32..255, danach € – — „ “ ’
+const RD_SONDER = {0x20AC:224, 0x2013:225, 0x2014:226, 0x201E:227, 0x201C:228, 0x2019:229};
+// Geschaetzte Textbreite in pt (Arial, Groesse in pt)
+function rdTextBreite(text, groesse, fett){
+  const tab = fett ? RD_ARIAL_BREITEN.b : RD_ARIAL_BREITEN.r;
+  let summe = 0;
+  for(const ch of String(text)){
+    const c = ch.codePointAt(0);
+    let i = (c >= 32 && c <= 255) ? c - 32 : RD_SONDER[c];
+    summe += (i !== undefined ? tab[i] : 556);
+  }
+  return summe / 1000 * groesse;
+}
+
+// ---------- Zahlenformate wie in Excel (deutsche Darstellung) ----------
+function rdRunden2(v){ return Math.round((v + (v >= 0 ? 1e-9 : -1e-9)) * 100) / 100; }
+function rdZahl(v, format){
+  if(v === '' || v === null || v === undefined) return '';
+  if(typeof v !== 'number'){ const n = Number(String(v).replace(',', '.')); if(isNaN(n)) return String(v); v = n; }
+  if(format === 'general'){
+    // Excel "Standard": so viele Nachkommastellen wie noetig (max. 9)
+    let s = String(Math.round(v * 1e9) / 1e9);
+    return s.replace('.', ',');
+  }
+  const mitTausender = format.indexOf('#,##0') === 0;
+  const r = rdRunden2(Math.abs(v));
+  let [ganz, dez] = r.toFixed(2).split('.');
+  if(mitTausender) ganz = ganz.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  let s = (v < 0 ? '-' : '') + ganz + ',' + dez;
+  if(format.indexOf('€') >= 0) s += ' €';
+  return s;
+}
+function rdXml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ---------- Vorlage (Excel-Werte) in Positionsbloecke zerlegen ----------
+// zeilen: 2D-Array ab Zelle A1 (wie Graph range(...).values)
+function rdVorlageZerlegen(zeilen, art){
+  const L = RECHNUNG_LAYOUT[art], o = L.ersteSpalte;
+  const zelle = (r, i)=>{ const v = r[o + i]; return (v === null || v === undefined) ? '' : v; };
+  const kopf = [0,1,2,3,4].map(i=> String(zelle(zeilen[0] || [], i)));
+  const bloecke = [];
+  let akt = null;
+  for(let i = 1; i < zeilen.length; i++){
+    const r = zeilen[i] || [];
+    const bez = String(zelle(r, L.sp.bez)).trim();
+    const zif = String(zelle(r, L.sp.ziffer)).trim();
+    if(/^gesamt/i.test(bez)) break;
+    const leer = [0,1,2,3,4].every(k=> String(zelle(r,k)).trim() === '');
+    if(leer){ akt = null; continue; }
+    if(zif !== ''){
+      let typ = 'pos';
+      if(/^reiseentsch/i.test(zif)) typ = 'reise';
+      else if(/26 cent/i.test(bez)) typ = 'km';
+      akt = { ziffer: zif, typ, zeilen: [r.slice(o, o + 5).map(v=> v === null || v === undefined ? '' : v)] };
+      bloecke.push(akt);
+    } else if(akt){
+      akt.zeilen.push(r.slice(o, o + 5).map(v=> v === null || v === undefined ? '' : v));
+    }
+  }
+  return {kopf, bloecke};
+}
+
+// ---------- Tabellenzeilen fuer einen Fall bestimmen ----------
+// fall: {art, positionen:[...], datum:'TT.MM.JJJJ', zeit:'HH:MM', km:Zahl}
+function rdTabelleBauen(vorlage, fall){
+  const L = RECHNUNG_LAYOUT[fall.art];
+  const gewaehlt = new Set((fall.positionen || []).map(z=> String(z).trim().toUpperCase()));
+  const reise = gewaehlt.has('REISE');
+  const zeilen = [];
+  const fehlend = [];
+  let summe = 0;
+  // Pruefen, ob jede gewaehlte Ziffer in der Vorlage vorkommt
+  gewaehlt.forEach(z=>{
+    if(z === 'REISE') { if(!vorlage.bloecke.some(b=> b.typ==='reise')) fehlend.push('Reiseentschädigung'); return; }
+    if(!vorlage.bloecke.some(b=> b.typ==='pos' && b.ziffer.toUpperCase() === z)) fehlend.push(z);
+  });
+  vorlage.bloecke.forEach((b, blockNr)=>{
+    const nimm = b.typ === 'pos' ? gewaehlt.has(b.ziffer.toUpperCase()) : reise;
+    if(!nimm) return;
+    b.zeilen.forEach((roh, k)=>{
+      const z = roh.slice();
+      if(b.typ === 'km'){
+        const km = Math.ceil(Number(fall.km) || 0);
+        const betrag = km * 0.26;
+        z[L.sp.ziffer] = km; z[L.sp.betrag] = betrag;
+        summe += betrag;
+        zeilen.push({typ:'km', zellen: z, block: 'reise'});
+        return;
+      }
+      if(k === 0 && typeof z[L.sp.betrag] === 'number') summe += z[L.sp.betrag];
+      zeilen.push({typ: b.typ === 'reise' ? 'reise' : 'pos', zellen: z, ersteZeile: k === 0, block: b.typ === 'reise' ? 'reise' : blockNr});
+    });
+  });
+  // Datum (erste Zeile) und Uhrzeit (zweite Zeile) in der Datumsspalte
+  if(zeilen[0]) zeilen[0].zellen[L.sp.datum] = fall.datum || '';
+  if(zeilen[1]){
+    const alt = String(zeilen[1].zellen[L.sp.datum] || '');
+    if(/UHRZEIT/i.test(alt) || alt === '') zeilen[1].zellen[L.sp.datum] = fall.zeit ? (fall.zeit + ' Uhr') : '';
+  }
+  return {zeilen, summe, fehlend};
+}
+
+// ---------- Word-XML der Tabelle ----------
+function rdTabelleXml(kopf, tab, art, gesamtLabel){
+  const L = RECHNUNG_LAYOUT[art];
+  const tw = L.cols.map(w=> Math.round(w * 20));
+  const linie = (an)=> an ? 'w:val="single" w:sz="6" w:space="0" w:color="000000"' : 'w:val="nil"';
+  const zelleXml = (text, breiteTw, ausr, rand, opts={})=>{
+    const fett = opts.fett ? '<w:b/><w:bCs/>' : '';
+    const span = opts.span ? `<w:gridSpan w:val="${opts.span}"/>` : '';
+    // Passt der Text nicht in die Zelle (in Excel ragte er einfach etwas
+    // hinaus), erst den Innenabstand weglassen, dann notfalls die Schrift
+    // minimal schmaler laufen lassen -- ein Umbruch wuerde in der festen
+    // Zeilenhoehe abgeschnitten.
+    let mar = '', schmal = '';
+    if(String(text) !== ''){
+      const verfuegbar = breiteTw / 20 - 2 * RECHNUNG_ZELLRAND_TWIPS / 20 - 0.5;
+      const breite = rdTextBreite(text, 10, !!opts.fett);
+      if(breite > verfuegbar){
+        mar = '<w:tcMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tcMar>';
+        const ohneRand = breiteTw / 20 - 1;
+        if(breite > ohneRand) schmal = `<w:w w:val="${Math.max(75, Math.floor(ohneRand / breite * 100))}"/>`;
+      }
+    }
+    return `<w:tc><w:tcPr><w:tcW w:w="${breiteTw}" w:type="dxa"/>${span}<w:tcBorders>` +
+      `<w:top ${linie(rand.t)}/><w:left ${linie(rand.l)}/><w:bottom ${linie(rand.b)}/><w:right ${linie(rand.r)}/>` +
+      `</w:tcBorders>${mar}<w:noWrap/><w:vAlign w:val="bottom"/></w:tcPr>` +
+      `<w:p><w:pPr>${opts.zusammen ? '<w:keepNext/>' : ''}<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="${ausr}"/>` +
+      `<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/></w:rPr></w:pPr>` +
+      (String(text) === '' ? '' :
+        `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${fett}${schmal}<w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr>` +
+        `<w:t xml:space="preserve">${rdXml(text)}</w:t></w:r>`) +
+      `</w:p></w:tc>`;
+  };
+  // Mehrseitige Rechnung (sehr viele Positionen): Kopfzeile wiederholt sich
+  // auf jeder Seite, eine Position wird nie ueber den Seitenwechsel getrennt
+  // und die letzte Position bleibt bei der Gesamtzeile.
+  const zeileXml = (zellen, kopfzeile)=> `<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="${RECHNUNG_ZEILENHOEHE_TWIPS}" w:hRule="exact"/>${kopfzeile ? '<w:tblHeader/>' : ''}</w:trPr>${zellen.join('')}</w:tr>`;
+  const S = L.sp;
+  const fmtZelle = (v, spalte)=>{
+    if(spalte === S.betrag) return rdZahl(v, L.betragFormat);
+    if(spalte === S.faktor && typeof v === 'number') return rdZahl(v, 'general');
+    if(typeof v === 'number') return rdZahl(v, 'general');
+    return String(v);
+  };
+  const xml = [];
+  // Kopfzeile
+  xml.push(zeileXml(kopf.map((t,i)=> zelleXml(t, tw[i], 'center', {t:1,b:1,l:i===0,r:1}, {fett:true, zusammen:true})), true));
+  // Positionen
+  tab.zeilen.forEach((z, idx)=>{
+    const c = z.zellen;
+    const naechste = tab.zeilen[idx + 1];
+    const zus = !naechste || naechste.block === z.block;  // mit Folgezeile (bzw. Gesamtzeile) zusammenhalten
+    const zx = (t, w, a, r, o={})=> zelleXml(t, w, a, r, {...o, zusammen: zus});
+    if(z.typ === 'reise'){
+      // Ziffer- und Faktorspalte verbunden: "Reiseentschädigung"
+      xml.push(zeileXml([
+        zx(fmtZelle(c[0],0), tw[0], 'center', {l:1,r:1}),
+        zx(String(c[S.ziffer]), tw[1] + tw[2], 'center', {l:1,r:1}, {span:2}),
+        zx(String(c[S.bez]), tw[3], 'left', {l:1,r:1}),
+        zx(fmtZelle(c[S.betrag], S.betrag), tw[4], 'right', {l:1,r:1})
+      ]));
+      return;
+    }
+    if(z.typ === 'km'){
+      // "86 km": Zahl rechtsbuendig in der Ziffer-, "km" linksbuendig in der Faktorspalte, ohne Trennlinie
+      xml.push(zeileXml([
+        zx('', tw[0], 'center', {l:1,r:1,b:1}),
+        zx(String(c[S.ziffer]), tw[1], 'right', {l:1,r:0,b:1}),
+        zx(String(c[S.faktor] || 'km'), tw[2], 'left', {l:0,r:1,b:1}),
+        zx(String(c[S.bez]), tw[3], 'left', {l:1,r:1,b:1}),
+        zx(rdZahl(c[S.betrag], '0.00'), tw[4], 'right', {l:1,r:1,b:1})
+      ]));
+      return;
+    }
+    const datumAusr = (idx < 2) ? 'right' : 'center';
+    xml.push(zeileXml([0,1,2,3,4].map(i=>
+      zx(fmtZelle(c[i], i), tw[i], i === 0 ? datumAusr : L.ausr[i], {l:1,r:1})
+    )));
+  });
+  // Gesamtzeile
+  xml.push(zeileXml([
+    zelleXml('', tw[0], 'center', {t:1}),
+    zelleXml('', tw[1], 'center', {t:1}),
+    zelleXml('', tw[2], 'center', {t:1}),
+    zelleXml(gesamtLabel, tw[3], 'right', {t:1,r:1}, {fett:true}),
+    zelleXml(rdZahl(tab.summe, L.gesamtFormat), tw[4], 'right', {t:1,b:1,l:1,r:1}, {fett:true})
+  ]));
+  // Auffuellen auf die bisherige Bildhoehe (unsichtbare Leerzeilen)
+  const belegt = tab.zeilen.length + 2;
+  for(let i = belegt; i < L.zeilenGesamt; i++){
+    xml.push(zeileXml(tw.map(w=> zelleXml('', w, 'left', {}))));
+  }
+  const grid = tw.map(w=> `<w:gridCol w:w="${w}"/>`).join('');
+  const gesamtBreite = tw.reduce((a,b)=> a+b, 0);
+  return `<w:tbl><w:tblPr><w:tblW w:w="${gesamtBreite}" w:type="dxa"/>` +
+    `<w:tblInd w:w="${Math.round(L.einzug * 20)}" w:type="dxa"/>` +
+    `<w:tblLayout w:type="fixed"/>` +
+    `<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="${RECHNUNG_ZELLRAND_TWIPS}" w:type="dxa"/>` +
+    `<w:bottom w:w="0" w:type="dxa"/><w:right w:w="${RECHNUNG_ZELLRAND_TWIPS}" w:type="dxa"/></w:tblCellMar>` +
+    `<w:tblLook w:val="0000"/></w:tblPr><w:tblGrid>${grid}</w:tblGrid>${xml.join('')}</w:tbl>`;
+}
+
+// ---------- Platzhalter ersetzen ----------
+// Absatz: entweder leer/selbstschliessend (<w:p .../>) oder mit Inhalt
+const RD_ABSATZ_RE = /<w:p(?:\s[^>]*?)?\/>|<w:p(?:\s[^>]*?)?>[\s\S]*?<\/w:p>/g;
+// Wie ErsetzeAllePlatzhalter am PC: betroffene Absaetze werden mit dem
+// Format des ersten Textstuecks neu geschrieben (so verhaelt sich auch
+// "rng.Text = ..." in Word). Zeilenumbrueche (\n) werden zu <w:br/>.
+function rdAbsatzText(p){
+  return (p.match(/<w:t(?: [^>]*)?>[^<]*<\/w:t>/g) || []).map(t=> t.replace(/<[^>]+>/g,'')).join('')
+    .replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&amp;/g,'&');
+}
+function rdPlatzhalterInXml(xml, platzhalter){
+  return xml.replace(RD_ABSATZ_RE, (p)=>{
+    if(/\/>$/.test(p) && !/<\/w:p>$/.test(p)) return p; // leerer Absatz
+    if(/<w:object|<w:drawing|<w:fldChar|<w:instrText|<w:txbxContent/.test(p)) return p;
+    const alt = rdAbsatzText(p);
+    let neu = alt;
+    platzhalter.forEach(([k, v])=>{ if(neu.indexOf(k) >= 0) neu = neu.split(k).join(v); });
+    if(neu === alt) return p;
+    const kopfEnde = p.indexOf('>') + 1;
+    const pTag = p.slice(0, kopfEnde);
+    const pPr = (p.match(/<w:pPr>[\s\S]*?<\/w:pPr>/) || [''])[0];
+    const ersterRun = p.match(/<w:r(?=[ >])[^>]*>(?:(?!<\/w:r>)[\s\S])*?<w:t(?: [^>]*)?>/);
+    const rPr = ersterRun ? ((ersterRun[0].match(/<w:rPr>[\s\S]*?<\/w:rPr>/) || [''])[0]) : '';
+    const teile = String(neu).split(/\r\n|\n|\r|\u000b/);
+    const inhalt = teile.map((t, i)=> (i ? '<w:br/>' : '') + `<w:t xml:space="preserve">${rdXml(t)}</w:t>`).join('');
+    return `${pTag}${pPr}<w:r>${rPr}${inhalt}</w:r></w:p>`;
+  });
+}
+function rdAbsatzEntfernen(xml, enthaelt){
+  return xml.replace(RD_ABSATZ_RE, (p)=> (/<\/w:p>$/.test(p) && rdAbsatzText(p).indexOf(enthaelt) >= 0) ? '' : p);
+}
+
+// ---------- Hauptfunktion ----------
+// vorlageDocm: ArrayBuffer der Word-Vorlage
+// excelZeilen: 2D-Array der Excel-Vorlage ab A1 (Werte)
+// daten: {art, positionen, datum, zeit, km, rechnungsdatum, vname, padresse1,
+//         padresse2, geda, diag, bname, badresse1, badresse2, betrag, renu,
+//         arzt:{titel,name,funktion,adresse1,adresse2,email,bank,bic,iban,kontoinhaber}}
+// Liefert {blob|uint8, summe, warnungen}
+async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp){
+  const ZipKlasse = (typeof JSZip !== 'undefined') ? JSZip : require('jszip');
+  const zip = await ZipKlasse.loadAsync(vorlageDocm);
+  const vorlage = rdVorlageZerlegen(excelZeilen, daten.art);
+  const tab = rdTabelleBauen(vorlage, daten);
+  if(tab.fehlend.length){
+    throw new Error('Diese Positionen fehlen in der Excel-Vorlage: ' + tab.fehlend.join(', '));
+  }
+  const gesamtLabel = daten.art === 'ls' ? 'Gesamt:' : 'Gesamt';
+  const tabelleXml = rdTabelleXml(vorlage.kopf, tab, daten.art, gesamtLabel);
+
+  const a = daten.arzt || {};
+  const platzhalterKoerper = [
+    ['DATE', daten.rechnungsdatum], ['VNAME', daten.vname], ['PADRESSE1', daten.padresse1 || ''],
+    ['PADRESSE2', daten.padresse2 || ''], ['GEDA', daten.geda || '']
+  ];
+  if(daten.art === 'ls'){
+    platzhalterKoerper.push(['BNAME', daten.bname || ''], ['BADRESSE1', daten.badresse1 || ''],
+      ['BADRESSE2', daten.badresse2 || ''], ['BETRAG', daten.betrag || '']);
+  } else {
+    platzhalterKoerper.push(['DIAG', daten.diag || '']);
+  }
+  platzhalterKoerper.push(['RENU', daten.renu], ['ATITEL', a.titel || ''], ['ANAME', a.name || ''],
+    ['AFUNKTION', a.funktion || ''], ['AADRESSE1', a.adresse1 || ''], ['AADRESSE2', a.adresse2 || ''],
+    ['AEMAIL', a.email || '']);
+  const platzhalterFuss = [['BANAME', a.bank || ''], ['BABIC', a.bic || ''], ['BAIBAN', a.iban || ''], ['ENAME', a.kontoinhaber || '']];
+
+  // Hauptdokument
+  let doc = await zip.file('word/document.xml').async('string');
+  const objPara = (doc.match(RD_ABSATZ_RE) || []).filter(p=> p.indexOf('<w:object') >= 0).map(p=> [p])[0];
+  if(!objPara) throw new Error('In der Word-Vorlage wurde die verknüpfte Excel-Tabelle nicht gefunden.');
+  const relIds = (objPara[0].match(/r:id="(rId\d+)"/g) || []).map(s=> s.slice(6, -1));
+  doc = doc.replace(objPara[0], tabelleXml);
+  doc = rdPlatzhalterInXml(doc, platzhalterKoerper);
+  if(daten.art === 'ls' && !String(daten.bname || '').trim()) doc = rdAbsatzEntfernen(doc, 'c/o Bestattungsinstitut');
+  zip.file('word/document.xml', doc);
+
+  // Kopf-/Fusszeilen
+  for(const name of Object.keys(zip.files)){
+    if(/^word\/(footer|header)\d+\.xml$/.test(name)){
+      const x = await zip.file(name).async('string');
+      const y = rdPlatzhalterInXml(x, name.indexOf('footer') >= 0 ? platzhalterFuss.concat(platzhalterKoerper) : platzhalterKoerper);
+      if(y !== x) zip.file(name, y);
+    }
+  }
+
+  // Dokumenteigenschaften: das Kopffeld "ATITEL ANAME" ist in der Vorlage an
+  // dc:subject gebunden -- Word zeigt beim Oeffnen den Wert von dort an.
+  if(zip.file('docProps/core.xml')){
+    let core = await zip.file('docProps/core.xml').async('string');
+    platzhalterKoerper.forEach(([k, v])=>{ core = core.split(k).join(rdXml(String(v).replace(/[\r\n\u000b]+/g, ' '))); });
+    core = core.replace(/<dcterms:modified([^>]*)>[^<]*<\/dcterms:modified>/, `<dcterms:modified$1>${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</dcterms:modified>`);
+    zip.file('docProps/core.xml', core);
+  }
+
+  // Verknuepfung zur Excel-Datei + Vorschaubild + Makros entfernen
+  let rels = await zip.file('word/_rels/document.xml.rels').async('string');
+  relIds.forEach(id=>{
+    const m = rels.match(new RegExp(`<Relationship [^>]*Id="${id}"[^>]*/>`));
+    if(m){
+      const ziel = (m[0].match(/Target="([^"]+)"/) || [])[1];
+      if(ziel && !/^file:/i.test(ziel) && zip.file('word/' + ziel)) zip.remove('word/' + ziel);
+      rels = rels.replace(m[0], '');
+    }
+  });
+  rels = rels.replace(/<Relationship [^>]*Type="[^"]*vbaProject"[^>]*\/>/g, '');
+  zip.file('word/_rels/document.xml.rels', rels);
+  ['word/vbaProject.bin', 'word/vbaData.xml', 'word/_rels/vbaProject.bin.rels'].forEach(f=>{ if(zip.file(f)) zip.remove(f); });
+  let ct = await zip.file('[Content_Types].xml').async('string');
+  ct = ct.replace('application/vnd.ms-word.document.macroEnabled.main+xml', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml')
+         .replace('application/vnd.ms-word.template.macroEnabledTemplate.main+xml', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml')
+         .replace(/<Override [^>]*PartName="\/word\/vbaData\.xml"[^>]*\/>/g, '')
+         .replace(/<Default [^>]*Extension="bin"[^>]*ContentType="application\/vnd\.ms-office\.vbaProject"[^>]*\/>/g, '');
+  if(!zip.file('word/media/image1.emf') && !/<Relationship [^>]*\.emf"/.test(rels)) ct = ct.replace(/<Default [^>]*Extension="emf"[^>]*\/>/g, '');
+  zip.file('[Content_Types].xml', ct);
+
+  const inhalt = await zip.generateAsync({type: ausgabeTyp || 'blob', compression: 'DEFLATE',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const warnungen = [];
+  const betragApp = Number(String(daten.betrag || '').replace(/\./g,'').replace(',', '.'));
+  if(daten.betrag && !isNaN(betragApp) && Math.abs(rdRunden2(tab.summe) - betragApp) > 0.005){
+    warnungen.push('Summe laut Vorlage ' + rdZahl(tab.summe, '0.00') + ' € weicht vom Betrag in der App (' + daten.betrag + ' €) ab.');
+  }
+  return {inhalt, summe: rdRunden2(tab.summe), warnungen, zeilen: tab.zeilen.length};
+}
+
+
+
+// =====================================================================
+// BETA: Rechnung (Word + PDF) direkt am Handy erstellen + Testbrief
+// =====================================================================
+// Ablauf je Fall:
+//   1. Arztdaten aus der einstellungen.ini (wie am PC)
+//   2. Word-Vorlage (…_Makros_v4.docm) und Excel-Vorlage (Positionen) aus
+//      OneDrive laden
+//   3. .docx erzeugen (siehe rechnungDocxErzeugen) und hochladen
+//   4. PDF von Microsoft aus der .docx erzeugen lassen und daneben ablegen
+// BETA: Ablage NUR im Testordner "KVBW Onedrive/Beta-Test/fertige
+// Rechnungen" -- die echten Rechnungen und die Rechnungsuebersicht bleiben
+// unberuehrt. Der Testbrief geht immer im LetterXpress-TESTMODUS raus (es
+// wird nichts gedruckt, verschickt oder berechnet).
+const BETA_ZIEL_ORDNER = 'KVBW Onedrive/Beta-Test/fertige Rechnungen';
+const MSGRAPH_PFAD_WORDVORLAGE = {
+  ls: 'KVBW Onedrive/Vorlage_Abrechnung_Leichenschau_Makros_v4.docm',
+  pt: 'KVBW Onedrive/Vorlage_Abrechnung_Privatpatienten_Makros_v4.docm'
+};
+const EXCELVORLAGE_SNAPSHOT_BLATT = { ls: 'LS_Snapshot', pt: 'PR_Snapshot' };
+
+function renuDateiname(renu){
+  const t = String(renu||'').split('-');
+  return t.length === 2 ? t[1] + '-' + t[0] : String(renu||'');
+}
+
+// Wie EintragMitFlags/DiagnosenText am PC: ";G"/";V" vor "]", bei V "V.a. " davor
+function diagnosenVolltext(diagnosen){
+  return (diagnosen||[]).map(d=>{
+    let t = d.text || '';
+    const fl = d.flags || '';
+    let marker = '';
+    if(fl.indexOf('G') >= 0) marker += ';G';
+    if(fl.indexOf('V') >= 0) marker += ';V';
+    if(marker){
+      const p = t.lastIndexOf(']');
+      t = p >= 0 ? t.slice(0, p) + marker + t.slice(p) : t + ' [' + marker.slice(1) + ']';
+      if(fl.indexOf('V') >= 0) t = 'V.a. ' + t;
+    }
+    return t;
+  }).join(', ');
+}
+
+async function graphDateiLaden(token, pfad){
+  const r = await fetch(msGraphPfadUrl(pfad) + '/content', { headers:{ Authorization:'Bearer ' + token }, cache:'no-store' });
+  if(!r.ok) throw new Error('„' + pfad.split('/').pop() + '“ konnte nicht aus OneDrive geladen werden (HTTP ' + r.status + ').');
+  return r.arrayBuffer();
+}
+
+async function excelVorlageZeilenLaden(token, art){
+  const pfad = art === 'ls' ? MSGRAPH_PFAD_VORLAGE_LS : MSGRAPH_PFAD_VORLAGE_PT;
+  const basis = msGraphPfadUrl(pfad);
+  // Bevorzugt die unveraenderte Snapshot-Kopie (vollstaendiger Katalog),
+  // sonst Tabelle1
+  for(const blatt of [EXCELVORLAGE_SNAPSHOT_BLATT[art], 'Tabelle1']){
+    try{
+      const url = basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')/range(address='A1:F120')?$select=values";
+      const r = await fetch(url, { headers:{ Authorization:'Bearer ' + token } });
+      if(!r.ok) continue;
+      const d = await r.json();
+      const zeilen = d.values || [];
+      const kopf = (zeilen[0] || []).map(v=> String(v));
+      if(kopf.some(v=> /bezeichnung/i.test(v))) return {zeilen, blatt};
+    }catch(e){ /* naechstes Blatt versuchen */ }
+  }
+  throw new Error('Die Positionen konnten nicht aus der Excel-Vorlage gelesen werden.');
+}
+
+async function arztdatenLaden(){
+  const ini = await iniVonOneDriveLaden();
+  const w = ini.werte;
+  const ja = k => String(w[k]||'').trim() === '1';
+  let titel = '';
+  if(ja('TITEL_PROF')) titel += 'Prof. ';
+  if(ja('TITEL_PRIVDOZ')) titel += 'Priv.-Doz. ';
+  if(ja('TITEL_DR')) titel += 'Dr. ';
+  if(ja('TITEL_DRMED')) titel += 'Dr. med. ';
+  const a = {
+    titel: titel.trim(), name: w.ARZTNAME || '', funktion: String(w.ARZTFUNKTION||'').split('~NL~').join('\n'),
+    adresse1: w.ARZTADRESSE1 || '', adresse2: w.ARZTADRESSE2 || '', email: w.ARZTEMAIL || '',
+    bank: w.ARZTBANKNAME || '', bic: w.ARZTBIC || '', iban: w.ARZTIBAN || '', kontoinhaber: w.ARZTKONTOINHABER || ''
+  };
+  const fehlt = [['ARZTNAME','Name'],['ARZTFUNKTION','Funktion'],['ARZTADRESSE1','Adresse 1'],['ARZTADRESSE2','Adresse 2'],['ARZTEMAIL','E-Mail']]
+    .filter(([k])=> !String(w[k]||'').trim()).map(([,l])=> l);
+  if(fehlt.length) throw new Error('In den Arztinfos fehlen: ' + fehlt.join(', ') + ' (Einstellungen > Arztinfos).');
+  return {arzt: a, ini: w};
+}
+
+function fallRechnungsdaten(f, arzt){
+  const w = f.werte || {};
+  const {nachname, vorname} = nameAufteilen(w.txtName);
+  if(!nachname || !vorname) throw new Error('Name bitte als „Nachname, Vorname“ oder „Vorname Nachname“ eintragen.');
+  const heute = new Date(), p2 = n=> String(n).padStart(2,'0');
+  const rechnungsdatum = normalisiereDatum(w.txtDatum || '') || (p2(heute.getDate()) + '.' + p2(heute.getMonth()+1) + '.' + heute.getFullYear());
+  const daten = {
+    art: f.art, positionen: f.positionen || [],
+    datum: normalisiereDatum(w.txtDatumExcel || '') || '', zeit: (w.txtZeitLS || '').trim(),
+    km: Number(String(w.txtKm || '0').replace(',', '.')) || 0,
+    rechnungsdatum, vname: vorname + ' ' + nachname,
+    padresse1: w.txtPAdresse1 || '', padresse2: w.txtPAdresse2 || '',
+    geda: normalisiereDatum(w.txtGeda || '') || (w.txtGeda || ''),
+    betrag: w.txtBetrag || '', renu: f.rechnungsnummer, arzt
+  };
+  if(f.art === 'pt'){
+    daten.diag = diagnosenVolltext(w.diagnosen);
+  } else {
+    const bestatter = String(w.txtBName || '').trim();
+    if(bestatter){
+      daten.bname = bestatter; daten.badresse1 = w.txtAdresse1 || ''; daten.badresse2 = w.txtAdresse2 || '';
+    } else {
+      // wie am PC: ohne Bestatter an die Patientenadresse, "c/o"-Zeile entfaellt
+      daten.bname = ''; daten.badresse1 = daten.padresse1; daten.badresse2 = daten.padresse2;
+    }
+  }
+  if(!daten.datum) throw new Error('Datum der Leichenschau bzw. des Hausbesuchs fehlt.');
+  if(!daten.positionen.length) throw new Error('Es sind keine Rechnungspositionen ausgewählt.');
+  return daten;
+}
+
+// Erstellt Word + PDF fuer einen Fall (f mit art/idx/werte/positionen/rechnungsnummer)
+async function betaRechnungErstellen(f, meldung){
+  const token = await msGraphTokenHolen();
+  if(!token) throw new Error('Bitte zuerst bei Microsoft/OneDrive anmelden (Einstellungen).');
+  if(typeof JSZip === 'undefined') throw new Error('Die Word-Bibliothek konnte nicht geladen werden (Internet?).');
+  meldung('Arztdaten werden geladen …');
+  const {arzt} = await arztdatenLaden();
+  if(!f.rechnungsnummer){
+    meldung('Rechnungsnummer wird vergeben …');
+    await rechnungsnummernVergeben([f]);
+    const aktuell = ladeFaelle(f.art)[f.idx] || {};
+    f.rechnungsnummer = aktuell.rechnungsnummer;
+    if(!f.rechnungsnummer) throw new Error('Es konnte keine Rechnungsnummer vergeben werden.');
+  }
+  const daten = fallRechnungsdaten(f, arzt);
+  meldung('Vorlagen werden geladen …');
+  const [docm, excel] = await Promise.all([
+    graphDateiLaden(token, MSGRAPH_PFAD_WORDVORLAGE[f.art]),
+    excelVorlageZeilenLaden(token, f.art)
+  ]);
+  meldung('Word-Dokument wird erstellt …');
+  const erg = await rechnungDocxErzeugen(docm, excel.zeilen, daten, 'blob');
+  const name = renuDateiname(daten.renu);
+  meldung('Word-Dokument wird hochgeladen …');
+  await msGraphOrdnerSicherstellen(token, 'KVBW Onedrive/Beta-Test');
+  await msGraphOrdnerSicherstellen(token, BETA_ZIEL_ORDNER);
+  const docxItem = await msGraphDateiHochladen(token, BETA_ZIEL_ORDNER + '/' + name + '.docx', erg.inhalt,
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  if(!docxItem || !docxItem.id) throw new Error('Das Word-Dokument wurde nicht korrekt gespeichert.');
+  meldung('PDF wird erzeugt …');
+  let pdfBlob = null;
+  for(let versuch = 1; versuch <= 3 && !pdfBlob; versuch++){
+    const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + docxItem.id + '/content?format=pdf', { headers:{ Authorization:'Bearer ' + token } });
+    if(r.ok){
+      const b = await r.blob();
+      const kopf = String.fromCharCode(...new Uint8Array(await b.slice(0,5).arrayBuffer()));
+      if(kopf === '%PDF-') pdfBlob = new Blob([b], {type:'application/pdf'});
+    }
+    if(!pdfBlob) await new Promise(res=> setTimeout(res, 1500 * versuch));
+  }
+  if(!pdfBlob) throw new Error('Microsoft konnte aus dem Word-Dokument kein PDF erzeugen.');
+  const pdfItem = await msGraphDateiHochladen(token, BETA_ZIEL_ORDNER + '/' + name + '.pdf', pdfBlob, 'application/pdf');
+  return {name, renu: daten.renu, summe: erg.summe, warnungen: erg.warnungen, pdfBlob,
+          docxUrl: docxItem.webUrl, pdfUrl: pdfItem && pdfItem.webUrl, vorlageBlatt: excel.blatt};
+}
+
+// ---------- LetterXpress: Testbrief ----------
+function md5Hex(str){
+  // MD5 (RFC 1321) ueber die UTF-8-Bytes des Textes -- wie MD5Hex in der HTA
+  const bytes = new TextEncoder().encode(str);
+  const n = bytes.length, nBlocks = ((n + 8) >>> 6) + 1, w = new Uint32Array(nBlocks * 16);
+  for(let i = 0; i < n; i++) w[i >> 2] |= bytes[i] << ((i % 4) * 8);
+  w[n >> 2] |= 0x80 << ((n % 4) * 8);
+  w[nBlocks * 16 - 2] = (n * 8) >>> 0;
+  w[nBlocks * 16 - 1] = Math.floor(n / 0x20000000);
+  const K = new Uint32Array(64), S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+  for(let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296) >>> 0;
+  let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+  for(let blk = 0; blk < nBlocks; blk++){
+    let A = a0, B = b0, C = c0, D = d0;
+    for(let i = 0; i < 64; i++){
+      let F, g;
+      if(i < 16){ F = (B & C) | (~B & D); g = i; }
+      else if(i < 32){ F = (D & B) | (~D & C); g = (5 * i + 1) % 16; }
+      else if(i < 48){ F = B ^ C ^ D; g = (3 * i + 5) % 16; }
+      else { F = C ^ (B | ~D); g = (7 * i) % 16; }
+      F = (F + A + K[i] + w[blk * 16 + g]) >>> 0;
+      A = D; D = C; C = B;
+      B = (B + ((F << S[i]) | (F >>> (32 - S[i])))) >>> 0;
+    }
+    a0 = (a0 + A) >>> 0; b0 = (b0 + B) >>> 0; c0 = (c0 + C) >>> 0; d0 = (d0 + D) >>> 0;
+  }
+  return [a0, b0, c0, d0].map(x=> [0,1,2,3].map(k=> ((x >>> (k * 8)) & 255).toString(16).padStart(2,'0')).join('')).join('');
+}
+async function blobAlsBase64(blob){
+  const b = new Uint8Array(await blob.arrayBuffer());
+  let s = '';
+  for(let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+async function lxpTestbriefSenden(pdfBlob, dateiname){
+  const ini = iniCacheLaden();
+  const w = ini ? ini.werte : {};
+  if(!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > LetterXpress, dann speichern bzw. vom PC laden).');
+  const base64 = await blobAlsBase64(pdfBlob);
+  const koerper = {
+    auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: 'test' }, // BETA: immer Testmodus
+    letter: { base64_file: base64, base64_file_checksum: md5Hex(base64), filename_original: dateiname + '.pdf',
+              specification: { color: '1', mode: 'simplex', shipping: 'national' } }
+  };
+  const r = await fetch(lxpBasisUrl(w) + '/v3/printjobs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(koerper) });
+  const txt = await r.text();
+  if(!r.ok) throw new Error('LetterXpress hat abgelehnt (HTTP ' + r.status + '): ' + txt.slice(0, 300));
+  return txt;
+}
+
+// ---------- Oberflaeche (in "Lokale Rechnungen") ----------
+async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
+  const ergebnisse = [];
+  const protokoll = [];
+  const zeigen = (aktuell)=>{
+    zeigeHinweis(protokoll.join('<br>') + (aktuell ? (protokoll.length ? '<br>' : '') + '<i>' + htmlEsc(aktuell) + '</i>' : ''));
+  };
+  for(const f of faelleAusw){
+    const name = (f.werte && f.werte.txtName) || '(ohne Namen)';
+    try{
+      const e = await betaRechnungErstellen(f, (t)=> zeigen(name + ': ' + t));
+      ergebnisse.push(e);
+      protokoll.push('✓ <b>' + htmlEsc(name) + '</b> → ' + htmlEsc(e.name) + '.docx + .pdf (Summe ' + rdZahl(e.summe, '0.00') + ' €)' +
+        (e.warnungen.length ? '<br>&nbsp;&nbsp;⚠ ' + e.warnungen.map(htmlEsc).join('<br>&nbsp;&nbsp;⚠ ') : '') +
+        `<div class="aktionen"><button data-akt="pdf" data-i="${ergebnisse.length-1}">PDF ansehen</button>` +
+        `<button data-akt="lxp" data-i="${ergebnisse.length-1}">Testbrief (LetterXpress-Testmodus)</button></div>`);
+    }catch(err){
+      protokoll.push('✗ <b>' + htmlEsc(name) + '</b>: ' + htmlEsc(err.message || String(err)));
+    }
+    zeigen('');
+  }
+  protokoll.push('<span style="font-size:12px;">Beta: abgelegt in „Beta-Test/fertige Rechnungen“. Echte Rechnungen und die Rechnungsübersicht wurden nicht verändert.</span>');
+  zeigen('');
+  const el = document.getElementById('korrigierenHinweis');
+  if(!el) return;
+  el.querySelectorAll('[data-akt="pdf"]').forEach(b=>{
+    b.onclick = ()=>{ const e = ergebnisse[+b.dataset.i]; window.open(URL.createObjectURL(e.pdfBlob), '_blank'); };
+  });
+  el.querySelectorAll('[data-akt="lxp"]').forEach(b=>{
+    b.onclick = async ()=>{
+      const e = ergebnisse[+b.dataset.i];
+      b.disabled = true; const alt = b.textContent; b.textContent = 'sende …';
+      try{
+        await lxpTestbriefSenden(e.pdfBlob, e.name);
+        b.textContent = '✓ Testbrief angenommen';
+      }catch(err){
+        b.textContent = alt; b.disabled = false;
+        alert(err.message || String(err));
+      }
+    };
+  });
+}
+
 
 // =====================================================================
 // BETA: Arztinfos / Bank / LetterXpress -- gemeinsame einstellungen.ini
