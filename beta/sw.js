@@ -20,14 +20,15 @@
 //   - nur GET-Anfragen werden ueberhaupt behandelt
 //   - App-Seite/Manifest/Startadresse: network-first
 //   - alles andere (ICD-Katalog, Icons, MSAL-Bibliothek): cache-first
-const CACHE_NAME = 'rechnungserfassung-beta-v1';
+const CACHE_NAME = 'rechnungserfassung-beta-v2';
 const NETZWERK_ZUERST = ['./Rechnungserfassung_Beta.html', './manifest.json', './'];
-const CACHE_ZUERST = ['../icd_katalog.js', '../icon-192.png', '../icon-512.png', '../icon-192-maskable.png', '../icon-512-maskable.png', '../apple-touch-icon.png'];
+const CACHE_ZUERST = ['../icd_katalog.js', '../goae_katalog.js', '../icon-192.png', '../icon-512.png', '../icon-192-maskable.png', '../icon-512-maskable.png', '../apple-touch-icon.png'];
 const NIE_CACHEN = ['nominatim.openstreetmap.org', 'project-osrm.org', 'graph.microsoft.com', 'login.microsoftonline.com', 'login.live.com'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll([...NETZWERK_ZUERST, ...CACHE_ZUERST]))
+    // einzeln, damit eine (noch) fehlende Datei nicht die ganze Installation verhindert
+    caches.open(CACHE_NAME).then((cache) => Promise.all([...NETZWERK_ZUERST, ...CACHE_ZUERST].map((pfad) => cache.add(pfad).catch(() => null))))
   );
   self.skipWaiting();
 });
