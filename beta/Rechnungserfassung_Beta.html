@@ -83,6 +83,42 @@
   .fall-zeile.offen .offen-text{color:#d35400; font-weight:600;}
   .badge-hochladen{display:inline-block; font-size:22px; line-height:1; cursor:pointer; color:#e67e22; margin-left:6px;}
   .badge-loeschen{display:inline-block; font-size:20px; line-height:1; cursor:pointer; margin-left:10px; opacity:.7;}
+  /* Wischen zum Loeschen */
+  .wisch-huelle{position:relative; overflow:hidden; border-radius:10px; margin-bottom:8px;}
+  .wisch-huelle.unter{margin-left:26px;}
+  .wisch-huelle > .fall-zeile{margin-bottom:0; position:relative; z-index:1; touch-action:pan-y;}
+  .wisch-huelle > .position-zeile{position:relative; z-index:1; background:var(--karte); touch-action:pan-y;}
+  .wisch-hinter{position:absolute; inset:0; background:#c0392b; color:#fff; display:flex; align-items:center; justify-content:flex-end; padding-right:18px; font-weight:700; font-size:14px;}
+  .wisch-huelle.wisch-bereit .wisch-hinter{background:#e74c3c;}
+  .eigene-hinweis{font-size:12px; color:var(--text-schwach); margin-bottom:6px;}
+  /* Rechnungsverwaltung: Auswahl, Tagesgruppen, Aktionsleiste */
+  .fall-zeile.gewaehlt{outline:2px solid #2f6fed; outline-offset:-2px;}
+  .fall-zeile.unter .name{font-weight:500; font-size:14px;}
+  .gesamt-gruppe{font-size:13px; font-weight:700; padding:6px 10px; margin:10px 0 6px; border-radius:6px; background:var(--rand); cursor:pointer;}
+  .gesamt-platzhalter{height:130px;}
+  .gesamt-aktionen{position:fixed; left:0; right:0; bottom:0; z-index:900; background:var(--karte); border-top:1px solid var(--rand); box-shadow:0 -4px 16px rgba(0,0,0,.18);
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom)); transform:translateY(110%); transition:transform .2s ease;}
+  .gesamt-aktionen.aktiv{transform:none;}
+  .gesamt-aktionen-kopf{display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; margin-bottom:6px;}
+  .gesamt-aktionen-kopf button{width:auto; padding:4px 10px; font-size:12.5px; border-radius:6px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .gesamt-aktionen-knoepfe{display:grid; grid-template-columns:repeat(6, 1fr); gap:4px;}
+  .gesamt-aktionen-knoepfe button{display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 2px; font-size:11px; border:none; background:none; color:var(--text); width:auto;}
+  .gesamt-aktionen-knoepfe button .sym{font-size:22px; line-height:1;}
+  .gesamt-aktionen-knoepfe button:disabled{opacity:.3;}
+  .gesamt-aktionen-knoepfe button[data-a="weg"]{color:#c0392b;}
+  /* Formular im eigenen Fenster */
+  .beta-form label{display:block; font-size:13px; color:var(--text-schwach); margin:10px 0 0;}
+  .beta-form input, .beta-form textarea{display:block; width:100%; box-sizing:border-box; margin-top:4px; font:inherit; font-size:15px; padding:9px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
+  .beta-form-fehler{color:#c0392b; font-weight:600; margin-bottom:6px;}
+  /* PDF-Anzeige */
+  .beta-pdf{position:fixed; inset:0; z-index:10001; background:#525659; display:none; flex-direction:column;}
+  .beta-pdf.aktiv{display:flex;}
+  .beta-pdf-kopf{display:flex; align-items:center; gap:6px; padding:calc(8px + env(safe-area-inset-top)) 8px 8px; background:#2c3e50; color:#fff;}
+  .beta-pdf-kopf button{width:40px; height:36px; padding:0; border:none; border-radius:8px; background:rgba(255,255,255,.12); color:#fff; font-size:18px;}
+  .beta-pdf-titel{flex:1; min-width:0; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .beta-pdf-seiten{flex:1; overflow:auto; padding:8px; -webkit-overflow-scrolling:touch;}
+  .beta-pdf-seiten canvas{display:block; margin:0 auto 10px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .beta-pdf-seiten .leer-hinweis{color:#eee;}
   .beta-badge{display:inline-block; background:#c0392b; color:#fff; font-size:10.5px; font-weight:700;
     letter-spacing:.5px; border-radius:4px; padding:1px 6px; vertical-align:middle; margin-left:6px;}
   .ini-titel-reihe{display:flex; flex-wrap:wrap; gap:0 14px;}
@@ -2617,6 +2653,7 @@ function icdSuchen(suchtext){
 
 function allePositionenFlach(katalog){
   return [
+    ...betaEigeneAlle(katalog===POSITIONEN_LS ? 'ls' : 'pt').map(betaEigenePositionAlsAuswahl),
     ...(katalog.grundleistung||[]),
     ...ZUSCHLAEGE_ZEIT,
     ...WEGEGELD_TAG, ...WEGEGELD_NACHT,
@@ -3791,6 +3828,37 @@ function rdVorlageZerlegen(zeilen, art){
   return {kopf, bloecke};
 }
 
+// Eigene (von Hand angelegte) Positionen als Bloecke wie aus der Vorlage:
+// Bezeichnung wird passend zur Spaltenbreite auf mehrere Zeilen umbrochen.
+function rdBezUmbrechen(text, breitePt){
+  const zeilen = [];
+  String(text || '').split(/\r\n|\n|\r/).forEach(absatz=>{
+    let akt = '';
+    absatz.split(/\s+/).filter(Boolean).forEach(wort=>{
+      const probe = akt ? akt + ' ' + wort : wort;
+      if(!akt || rdTextBreite(probe, 10, false) <= breitePt) akt = probe;
+      else { zeilen.push(akt); akt = wort; }
+    });
+    zeilen.push(akt);
+  });
+  return zeilen.length ? zeilen : [''];
+}
+function rdEigeneBloecke(eigene, art){
+  const L = RECHNUNG_LAYOUT[art];
+  const breite = L.cols[L.sp.bez] - 2 * RECHNUNG_ZELLRAND_TWIPS / 20 - 1;
+  return (eigene || []).map(p=>{
+    const faktorZahl = Number(String(p.faktor == null ? '' : p.faktor).replace(',', '.'));
+    const faktor = String(p.faktor == null ? '' : p.faktor).trim() === '' ? '' : (isNaN(faktorZahl) ? String(p.faktor) : faktorZahl);
+    const zeilen = rdBezUmbrechen(p.bez, breite).map((t, i)=>{
+      const z = ['', '', '', '', ''];
+      z[L.sp.bez] = t;
+      if(i === 0){ z[L.sp.ziffer] = String(p.ziffer || ''); z[L.sp.faktor] = faktor; z[L.sp.betrag] = Math.round(Number(p.betrag) * 100) / 100; }
+      return z;
+    });
+    return { ziffer: String(p.schluessel || p.id), typ: 'pos', eigene: true, zeilen };
+  });
+}
+
 // ---------- Tabellenzeilen fuer einen Fall bestimmen ----------
 // fall: {art, positionen:[...], datum:'TT.MM.JJJJ', zeit:'HH:MM', km:Zahl}
 function rdTabelleBauen(vorlage, fall){
@@ -3800,6 +3868,15 @@ function rdTabelleBauen(vorlage, fall){
   const zeilen = [];
   const fehlend = [];
   let summe = 0;
+  // eigene Positionen vor dem Wegegeld einreihen (wie eine Zeile der Vorlage)
+  const eigene = rdEigeneBloecke((fall.eigene || []).filter(p=> gewaehlt.has(String(p.schluessel || p.id).toUpperCase())), fall.art);
+  if(eigene.length){
+    const bl = vorlage.bloecke.slice();
+    let pos = bl.findIndex(b=> b.typ !== 'pos' || /^W[TN]\d/i.test(b.ziffer));
+    if(pos < 0) pos = bl.length;
+    bl.splice(pos, 0, ...eigene);
+    vorlage = { kopf: vorlage.kopf, bloecke: bl };
+  }
   // Pruefen, ob jede gewaehlte Ziffer in der Vorlage vorkommt
   gewaehlt.forEach(z=>{
     if(z === 'REISE') { if(!vorlage.bloecke.some(b=> b.typ==='reise')) fehlend.push('Reiseentschädigung'); return; }
@@ -4186,6 +4263,7 @@ function fallRechnungsdaten(f, arzt){
       daten.bname = ''; daten.badresse1 = daten.padresse1; daten.badresse2 = daten.padresse2;
     }
   }
+  daten.eigene = (typeof betaEigeneFuerFall === 'function') ? betaEigeneFuerFall(f) : [];
   if(!daten.datum) throw new Error('Datum der Leichenschau bzw. des Hausbesuchs fehlt.');
   if(!daten.positionen.length) throw new Error('Es sind keine Rechnungspositionen ausgewählt.');
   return daten;
@@ -4529,17 +4607,28 @@ async function uebersichtZeileSchreiben(token, ue, sid, nr, zeile){
 }
 
 // Wie BriefAlsVersendetMarkieren am PC: R = Versanddatum (fett), U += LXP:1
-async function uebersichtVersandVermerken(token, ue, sid, nr, bisherU){
+async function uebersichtVersandVermerken(token, ue, sid, nr, bisherU, flag, original){
+  flag = flag || 'LXP:1';
+  if(original === undefined) original = (flag === 'LXP:1');
   const schutz = await blattSchutzAufheben(token, ue, sid);
+  let neuU = String(bisherU || '');
   try{
-    await gx(token, 'PATCH', zelle(ue, 'R' + nr), { values: [[xlDatumSerial(heuteText())]], numberFormat: [[XL_FORMAT_DATUM]] }, sid);
-    await gx(token, 'PATCH', zelle(ue, 'R' + nr) + '/format/font', { bold: true }, sid);
-    const neuU = lxpFlagSetzenText(bisherU, 'LXP:1');
+    if(original){
+      await gx(token, 'PATCH', zelle(ue, 'R' + nr), { values: [[xlDatumSerial(heuteText())]], numberFormat: [[XL_FORMAT_DATUM]] }, sid);
+      await gx(token, 'PATCH', zelle(ue, 'R' + nr) + '/format/font', { bold: true }, sid);
+    }
+    neuU = lxpFlagSetzenText(bisherU, flag);
     if(neuU !== String(bisherU || '')) await gx(token, 'PATCH', zelle(ue, 'U' + nr), { values: [[neuU]] }, sid);
   } finally {
     await blattSchutzWiederherstellen(token, ue, schutz, sid);
   }
+  return neuU;
 }
+// Wie LxpFlagEntfernen am PC
+function lxpFlagEntfernenText(u, flag){
+  return String(u || '').split('|').map(t=> t.trim()).filter(t=> t && t !== flag).join(' | ');
+}
+function lxpFlagFuerTyp(typ){ return (!typ || typ === 'ORIG') ? 'LXP:1' : 'LXP:' + typ; }
 
 async function zeileFett(token, ue, nr){
   try{ const d = await gx(token, 'GET', zelle(ue, 'R' + nr) + '/format/font?$select=bold'); return !!(d && d.bold === true); }
@@ -4548,6 +4637,37 @@ async function zeileFett(token, ue, nr){
 async function dateiInfo(token, pfad){
   try{ return await gx(token, 'GET', msGraphPfadUrl(pfad) + '?$select=id,name,webUrl,lastModifiedDateTime'); }
   catch(e){ if(e.status === 404) return null; throw e; }
+}
+
+// Word-Datei hochladen, von Microsoft als PDF umwandeln lassen, PDF daneben ablegen
+async function docxHochladenMitPdf(token, ordner, name, docxBlob, meldung){
+  const docxItem = await schritt('Word-Datei hochladen', ()=> msGraphDateiHochladen(token, ordner + '/' + name + '.docx', docxBlob,
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'));
+  if(!docxItem || !docxItem.id) throw new Error('Das Word-Dokument wurde nicht korrekt gespeichert.');
+  if(meldung) meldung('PDF wird erzeugt …');
+  let pdfBlob = null, pdfFehler = '';
+  for(let versuch = 1; versuch <= 3 && !pdfBlob; versuch++){
+    try{
+      const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + docxItem.id + '/content?format=pdf', { headers:{ Authorization:'Bearer ' + token } });
+      if(r.ok){
+        const b = await r.blob();
+        const kopf = String.fromCharCode(...new Uint8Array(await b.slice(0, 5).arrayBuffer()));
+        if(kopf === '%PDF-') pdfBlob = new Blob([b], { type:'application/pdf' });
+        else pdfFehler = 'Antwort war keine PDF';
+      } else pdfFehler = 'HTTP ' + r.status;
+    }catch(e){ pdfFehler = 'keine Antwort (' + ((e && e.message) || e) + ')'; }
+    if(!pdfBlob) await new Promise(res=> setTimeout(res, 1500 * versuch));
+  }
+  if(!pdfBlob) throw new Error('PDF erzeugen: Microsoft konnte aus dem Word-Dokument kein PDF machen (' + pdfFehler + '). Die Word-Datei liegt bereits im Ordner.');
+  const pdfItem = await schritt('PDF hochladen', ()=> msGraphDateiHochladen(token, ordner + '/' + name + '.pdf', pdfBlob, 'application/pdf'));
+  return { docxItem, pdfItem, pdfBlob };
+}
+async function graphItemLaden(token, id){
+  let r;
+  try{ r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + id + '/content', { headers:{ Authorization:'Bearer ' + token }, cache:'no-store' }); }
+  catch(e){ throw new Error('keine Antwort von Microsoft (' + ((e && e.message) || e) + ')'); }
+  if(!r.ok) throw new Error('Datei konnte nicht geladen werden (HTTP ' + r.status + ').');
+  return r.arrayBuffer();
 }
 
 // =====================================================================
@@ -4603,7 +4723,7 @@ async function betaRechnungErstellen(f, meldung, frage, kontext){
   let warVersendet = false;
   if(treffer){
     const u = String(treffer.v[20] == null ? '' : treffer.v[20]);
-    warVersendet = lxpFlagVorhanden(u, 'LXP:1') || await zeileFett(token, ue, treffer.nr);
+    warVersendet = lxpFlagVorhanden(u, 'LXP:1'); // wie am PC: nur das Kennzeichen zaehlt (Freigeben entfernt es, R bleibt fett)
     if(warVersendet){
       if(!await frage(anzeige + ' (' + renu + ') wurde laut Übersicht bereits per Brief verschickt.\n\nTrotzdem Word + PDF neu erstellen? Verschickt wird dabei nichts.'))
         return { uebersprungen: true, grund: 'bereits per Brief verschickt', renu, name };
@@ -4639,25 +4759,7 @@ async function betaRechnungErstellen(f, meldung, frage, kontext){
     await msGraphOrdnerSicherstellen(token, 'KVBW Onedrive/Beta-Test');
     await msGraphOrdnerSicherstellen(token, BETA_ZIEL_ORDNER);
   }
-  const docxItem = await schritt('Word-Datei hochladen', ()=> msGraphDateiHochladen(token, ziel.ordner + '/' + name + '.docx', erg.inhalt,
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'));
-  if(!docxItem || !docxItem.id) throw new Error('Das Word-Dokument wurde nicht korrekt gespeichert.');
-  meldung('PDF wird erzeugt …');
-  let pdfBlob = null, pdfFehler = '';
-  for(let versuch = 1; versuch <= 3 && !pdfBlob; versuch++){
-    try{
-      const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + docxItem.id + '/content?format=pdf', { headers:{ Authorization:'Bearer ' + token } });
-      if(r.ok){
-        const b = await r.blob();
-        const kopf = String.fromCharCode(...new Uint8Array(await b.slice(0, 5).arrayBuffer()));
-        if(kopf === '%PDF-') pdfBlob = new Blob([b], { type:'application/pdf' });
-        else pdfFehler = 'Antwort war keine PDF';
-      } else pdfFehler = 'HTTP ' + r.status;
-    }catch(e){ pdfFehler = 'keine Antwort (' + ((e && e.message) || e) + ')'; }
-    if(!pdfBlob) await new Promise(res=> setTimeout(res, 1500 * versuch));
-  }
-  if(!pdfBlob) throw new Error('PDF erzeugen: Microsoft konnte aus dem Word-Dokument kein PDF machen (' + pdfFehler + '). Die Word-Datei liegt bereits im Ordner, in die Übersicht wurde noch nichts eingetragen.');
-  const pdfItem = await schritt('PDF hochladen', ()=> msGraphDateiHochladen(token, ziel.ordner + '/' + name + '.pdf', pdfBlob, 'application/pdf'));
+  const { docxItem, pdfItem, pdfBlob } = await docxHochladenMitPdf(token, ziel.ordner, name, erg.inhalt, meldung);
 
   // 5. Eintrag in der Uebersicht (neue Zeile bzw. vorhandene aktualisieren)
   meldung('Wird in die Rechnungsübersicht eingetragen …');
@@ -4738,7 +4840,7 @@ function briefTestmodus(werte, ziel){
   const v = String(werte.BRIEF_TESTMODUS == null || werte.BRIEF_TESTMODUS === '' ? '1' : werte.BRIEF_TESTMODUS).trim().toLowerCase();
   return !(v === '0' || v === 'false' || v === 'falsch');
 }
-async function lxpBriefSenden(pdfBlob, dateiname, test){
+async function lxpBriefSenden(pdfBlob, dateiname, test, versandDatumIso){
   const ini = iniCacheLaden();
   const w = ini ? ini.werte : {};
   if(!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > Arztinfos & Briefversand, dann speichern bzw. vom PC laden).');
@@ -4748,6 +4850,7 @@ async function lxpBriefSenden(pdfBlob, dateiname, test){
     letter: { base64_file: base64, base64_file_checksum: md5Hex(base64), filename_original: dateiname + '.pdf',
               specification: { color: '1', mode: 'simplex', shipping: 'national' } }
   };
+  if(versandDatumIso) koerper.letter.dispatch_date = versandDatumIso; // yyyy-mm-dd, muss in der Zukunft liegen
   const basis = lxpBasisUrl(w);
   let host = basis; try{ host = new URL(basis).host; }catch(_){}
   let r;
@@ -4763,42 +4866,72 @@ async function lxpBriefSenden(pdfBlob, dateiname, test){
   return j || txt;
 }
 
-// Prueft frisch in der Uebersicht, ob schon verschickt wurde, schickt den
-// Brief und vermerkt den Versand wie am PC (R fett, U += LXP:1).
-async function betaBriefVersenden(e, frage){
-  frage = frage || betaFrage;
+// Ein Eintrag e: {renu, name (Dateiname ohne .pdf), ziel, typ:'ORIG'|'2A'|'M1'..,
+//                pdfBlob? | pdfItemId?}
+// Prueft frisch in der Uebersicht, ob schon verschickt wurde (LXP-Kennzeichen
+// wie am PC), fragt EINMAL fuer alle, schickt und vermerkt den Versand.
+async function betaBriefeVersenden(liste, frage, opts){
+  frage = frage || betaFrage; opts = opts || {};
   const token = await msGraphTokenHolen();
   if(!token) throw new Error('Bitte zuerst bei Microsoft/OneDrive anmelden.');
-  if(!e.pdfBlob){
-    // vorhandene Rechnung (am PC oder frueher am Handy erstellt): PDF laden
-    const buf = await schritt('PDF laden', ()=> graphDateiLaden(token, e.ziel.ordner + '/' + e.name + '.pdf'));
-    e.pdfBlob = new Blob([buf], { type:'application/pdf' });
-  }
+  const ziel = liste[0].ziel;
   const ini = iniCacheLaden() || await iniVonOneDriveLaden().then(()=> iniCacheLaden());
   const werte = (ini && ini.werte) || {};
-  const test = briefTestmodus(werte, e.ziel);
-  const ue = await schritt('Rechnungsübersicht lesen', ()=> uebersichtLadenRepariert(token, e.ziel, frage));
-  const z = uebersichtAuswerten(ue).nachRenu.get(e.renu);
-  if(!z) throw new Error('Die Rechnung ' + e.renu + ' steht nicht in der Übersicht – es wurde nichts verschickt.');
-  const u = String(z.v[20] == null ? '' : z.v[20]);
-  if(lxpFlagVorhanden(u, 'LXP:1') || await zeileFett(token, ue, z.nr))
-    throw new Error('Laut Übersicht wurde ' + e.renu + ' bereits per Brief verschickt – es wird kein zweiter Brief verschickt.');
-  const seiten = pdfSeitenZaehlen(new Uint8Array(await e.pdfBlob.arrayBuffer()));
-  const seitenTxt = seiten ? ' (' + seiten + (seiten === 1 ? ' Seite' : ' Seiten') + ')' : '';
-  const modusTxt = test
-    ? 'TESTMODUS – es wird NICHTS wirklich verschickt.'
-    : 'LIVE – der Brief wird ECHT gedruckt und verschickt und kostet Geld!';
-  if(!await frage('Rechnung ' + e.name + seitenTxt + ' per LetterXpress verschicken?\n\n' + modusTxt +
-              (seiten > 1 ? '\n\nHinweis: mehrseitig – jede weitere Seite kostet bei LetterXpress etwas extra.' : '')))
-    return { abgebrochen: true };
-  await lxpBriefSenden(e.pdfBlob, e.name, test);
-  // Wie am PC: auch im Testmodus als verschickt vermerken
-  await schritt('Versand in der Übersicht vermerken', async ()=>{
-    const sid = await xlSitzung(token, ue.basis);
-    try{ await uebersichtVersandVermerken(token, ue, sid, z.nr, u); }
-    finally{ await xlSitzungEnde(token, ue.basis, sid); }
-  });
-  return { test, seiten, zeile: z.nr };
+  const test = briefTestmodus(werte, ziel);
+  const ue = await schritt('Rechnungsübersicht lesen', ()=> uebersichtLadenRepariert(token, ziel, frage));
+  const ana = uebersichtAuswerten(ue);
+  const offen = [], schon = [], fehlt = [];
+  for(const e of liste){
+    const z = ana.nachRenu.get(e.renu);
+    if(!z){ fehlt.push(e); continue; }
+    const u = String(z.v[20] == null ? '' : z.v[20]);
+    if(lxpFlagVorhanden(u, lxpFlagFuerTyp(e.typ))) schon.push(e); else offen.push({ e, z });
+  }
+  if(!offen.length){
+    throw new Error(schon.length ? 'Laut Übersicht ist alles Ausgewählte bereits verschickt – es wird kein zweiter Brief verschickt.'
+                                 : 'Die Rechnung steht nicht in der Übersicht – es wurde nichts verschickt.');
+  }
+  // PDFs laden (fuer Seitenzahl und Versand)
+  for(const o of offen){
+    if(!o.e.pdfBlob){
+      const buf = await schritt('PDF laden', ()=> o.e.pdfItemId ? graphItemLaden(token, o.e.pdfItemId) : graphDateiLaden(token, ziel.ordner + '/' + o.e.name + '.pdf'));
+      o.e.pdfBlob = new Blob([buf], { type:'application/pdf' });
+    }
+    o.seiten = pdfSeitenZaehlen(new Uint8Array(await o.e.pdfBlob.arrayBuffer()));
+  }
+  const modusTxt = test ? 'TESTMODUS – es wird NICHTS wirklich verschickt.' : 'LIVE – die Briefe werden ECHT gedruckt und verschickt und kosten Geld!';
+  const terminTxt = opts.versandDatumIso ? '\nVersand geplant zum ' + opts.versandDatumIso.split('-').reverse().join('.') + '.' : '';
+  const mehrseitig = offen.some(o=> o.seiten > 1);
+  const listeTxt = offen.map(o=> '• ' + o.e.name + (o.seiten ? ' (' + o.seiten + (o.seiten === 1 ? ' Seite)' : ' Seiten)') : '')).join('\n');
+  const text = (offen.length === 1 ? 'Diesen Brief' : 'Diese ' + offen.length + ' Briefe') + ' per LetterXpress verschicken?\n\n' + listeTxt + '\n' +
+    (schon.length ? '\n' + schon.length + ' bereits verschickte werden übersprungen.' : '') + terminTxt + '\n' + modusTxt +
+    (mehrseitig ? '\n\nHinweis: mehrseitig – jede weitere Seite kostet bei LetterXpress etwas extra.' : '');
+  if(!await frage(text, offen.length === 1 ? 'Senden' : 'Alle senden', 'Abbrechen')) return { abgebrochen: true, test };
+  const ergebnis = { test, gesendet: [], fehler: [], uebersprungen: schon.length };
+  const uNeu = new Map(); // Zeile -> aktuelles U (mehrere Kennzeichen in einer Zeile)
+  const sid = await xlSitzung(token, ue.basis);
+  try{
+    for(const o of offen){
+      try{
+        await lxpBriefSenden(o.e.pdfBlob, o.e.name, test, opts.versandDatumIso);
+      }catch(err){ ergebnis.fehler.push(o.e.name + ': ' + (err.message || err)); continue; }
+      try{
+        const bisher = uNeu.has(o.z.nr) ? uNeu.get(o.z.nr) : String(o.z.v[20] == null ? '' : o.z.v[20]);
+        const flag = lxpFlagFuerTyp(o.e.typ);
+        uNeu.set(o.z.nr, await uebersichtVersandVermerken(token, ue, sid, o.z.nr, bisher, flag, flag === 'LXP:1'));
+        ergebnis.gesendet.push(o.e);
+      }catch(err){ ergebnis.fehler.push(o.e.name + ': verschickt, aber nicht vermerkt (' + (err.message || err) + ')'); }
+    }
+  } finally { await xlSitzungEnde(token, ue.basis, sid); }
+  ergebnis.zeile = offen[0].z.nr; ergebnis.seiten = offen[0].seiten;
+  return ergebnis;
+}
+// Ein einzelner Brief (Ergebnisfenster nach dem Hochladen)
+async function betaBriefVersenden(e, frage){
+  const r = await betaBriefeVersenden([e], frage);
+  if(r.abgebrochen) return r;
+  if(r.fehler.length) throw new Error(r.fehler.join('\n'));
+  return r;
 }
 
 // ---------- Oberflaeche (in "Lokale Rechnungen") ----------
@@ -4859,7 +4992,7 @@ async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
   const el = document.getElementById('korrigierenHinweis');
   if(!el) return;
   el.querySelectorAll('[data-akt="pdf"]').forEach(b=>{
-    b.onclick = ()=>{ const e = ergebnisse[+b.dataset.i]; window.open(URL.createObjectURL(e.pdfBlob), '_blank'); };
+    b.onclick = ()=>{ const e = ergebnisse[+b.dataset.i]; betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob, webUrl: e.pdfUrl }); };
   });
   el.querySelectorAll('[data-akt="lxp"]').forEach(b=>{
     b.onclick = async ()=>{
@@ -5620,7 +5753,7 @@ function uebersichtZeileAlsFall(z, ziel){
   } else {
     w.diagnosen = diagnosen;
   }
-  return { art, werte: w, positionen, rechnungsnummer: renu,
+  return { art, werte: w, positionen, rechnungsnummer: renu, eigenePositionen: betaEigeneSnapshot(art, positionen),
            zeitstempel: new Date().toISOString().replace('Z', '') + Math.floor(Math.random() * 1000) + 'Z',
            bezug: { renu }, ausUebersicht: true,
            hochgeladen: { renu, ziel: betaZielKey(ziel), am: new Date().toISOString() } };
@@ -5629,7 +5762,7 @@ function uebersichtZeileAlsFall(z, ziel){
 // ---------- Ordnerinhalt (welche PDFs gibt es?) ----------
 async function ordnerDateien(token, pfad){
   const map = new Map();
-  let url = msGraphPfadUrl(pfad) + '/children?$select=name,webUrl,lastModifiedDateTime&$top=200';
+  let url = msGraphPfadUrl(pfad) + '/children?$select=id,name,webUrl,lastModifiedDateTime&$top=200';
   for(let seite = 0; url && seite < 30; seite++){
     let d;
     try{ d = await gx(token, 'GET', url); }
@@ -5734,7 +5867,7 @@ async function betaErgebnisseZeigen(ergebnisse, ziel){
     [{ label:'Fertig', akt:'fertig', primaer:true }]);
   const karte = document.querySelector('.beta-overlay-text');
   karte.querySelectorAll('[data-erg="pdf"]').forEach(b=>{
-    b.onclick = ()=>{ const e = ergebnisse[+b.dataset.i]; if(e.pdfUrl) window.open(e.pdfUrl, '_blank'); else window.open(URL.createObjectURL(e.pdfBlob), '_blank'); };
+    b.onclick = ()=>{ const e = ergebnisse[+b.dataset.i]; betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob, webUrl: e.pdfUrl }); };
   });
   karte.querySelectorAll('[data-erg="lxp"]').forEach(b=>{
     b.onclick = async ()=>{
@@ -5840,127 +5973,7 @@ async function ansichtRechnungenGesamt(neuLaden){
   zeichnen();
 }
 
-function betaGesamtZeichnen(suchtext, ziel){
-  const listeEl = document.getElementById('gesamtListe');
-  if(!listeEl) return;
-  const zk = betaZielKey(ziel);
-  const c = betaGesamtCache || {};
-  const ana = c.ana || null;
-  const dateien = c.dateien || new Map();
-  const such = String(suchtext || '').trim().toLowerCase();
-  const passt = (name, renu)=> !such || String(name || '').toLowerCase().includes(such) || String(renu || '').toLowerCase().includes(such);
-
-  // lokale Faelle mit ihrer Zeile in der Uebersicht verknuepfen
-  const lokale = [];
-  ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, idx)=> f && lokale.push({ ...f, art, idx })));
-  const zeilen = [];
-  const zuZeile = new Map(); // Zeilennummer -> lokaler Fall
-  if(ana){
-    for(const z of c.ue.zeilen){
-      if(z.nr < 2) continue;
-      const v = z.v, t = x=> String(x == null ? '' : x).trim();
-      if(!t(v[0]) && !t(v[5]) && !t(v[6])) continue;
-      const renu = t(v[16]);
-      const datei = renu ? renuDateiname(renu).toLowerCase() : '';
-      zeilen.push({ z, art: t(v[0]).toUpperCase() === 'L' ? 'ls' : 'pt', name: t(v[5]) + ', ' + t(v[6]),
-        datum: xlDatumText(v[1]), betrag: typeof v[15] === 'number' ? v[15].toFixed(2).replace('.', ',') : t(v[15]),
-        renu, pdf: datei ? dateien.get(datei + '.pdf') : null, versendet: lxpFlagVorhanden(v[20], 'LXP:1') });
-    }
-  }
-  const offen = [];
-  lokale.forEach(f=>{
-    let zeile = null;
-    if(ana){
-      const r = (f.bezug && f.bezug.renu) || (f.hochgeladen && f.hochgeladen.renu) || '';
-      if(r) zeile = ana.nachRenu.get(r) || null;
-      if(!zeile){
-        const { nachname, vorname } = nameAufteilen((f.werte || {}).txtName);
-        zeile = ana.nachFp.get(fpSchluessel(f.art === 'ls' ? 'L' : 'P', (f.werte || {}).txtDatumExcel, nachname, vorname, (f.werte || {}).txtGeda)) || null;
-      }
-    }
-    const hochgeladenHier = f.hochgeladen && f.hochgeladen.ziel === zk && !f.uploadFehler;
-    const zeileMitPdf = zeile && (()=>{ const q = String(zeile.v[16] == null ? '' : zeile.v[16]).trim(); return q && dateien.has(renuDateiname(q).toLowerCase() + '.pdf'); })();
-    if(zeile && (hochgeladenHier || zeileMitPdf)){
-      if(!zuZeile.has(zeile.nr)) zuZeile.set(zeile.nr, f);
-    } else {
-      offen.push(f);
-    }
-  });
-
-  if(ana) betaLetzteOffenAnzahl = { zielKey: zk, n: offen.length };
-  const knopf = document.getElementById('btnGesamtHochladen');
-  if(knopf){
-    knopf.style.display = offen.length && ana ? '' : 'none';
-    knopf.textContent = '⬆ Alle hochladen (' + offen.length + ')';
-    knopf.onclick = async ()=>{ await betaFaelleHochladen(offen); ansichtRechnungenGesamt(true); };
-  }
-
-  let html = '';
-  const offenSichtbar = offen.filter(f=> passt((f.werte || {}).txtName, f.rechnungsnummer));
-  if(offenSichtbar.length){
-    html += '<div class="gesamt-abschnitt">Noch nicht hochgeladen</div>' + offenSichtbar.map(f=>`
-      <div class="fall-zeile ${f.art} offen" data-lokal="${f.art}:${htmlEsc(f.zeitstempel)}">
-        <div class="inhalt">
-          <div class="name"><span class="badge-neu ${f.art}">${f.art === 'ls' ? 'L' : 'P'}</span>${htmlEsc((f.werte || {}).txtName || '(ohne Namen)')}</div>
-          <div class="info">${htmlEsc((f.werte || {}).txtDatumExcel || '')}${f.rechnungsnummer ? ' &middot; Nr. ' + htmlEsc(f.rechnungsnummer) : ''}</div>
-          <div class="info offen-text">${f.uploadFehler ? '⚠ ' + htmlEsc(f.uploadFehler) : (ana ? 'noch nicht hochgeladen' : (c.laedt ? 'Abgleich läuft …' : 'noch nicht hochgeladen'))}</div>
-        </div>
-        <div class="fall-icons">
-          <span class="badge-hochladen" data-akt="hoch" title="Jetzt hochladen">&#11014;</span>
-          <span class="badge-loeschen" data-akt="weg" title="Lokal löschen">&#128465;</span>
-        </div>
-      </div>`).join('');
-  }
-  if(c.laedt){
-    html += '<div class="leer-hinweis"><span class="beta-spinner klein"></span>Rechnungsübersicht wird geladen …</div>';
-  } else if(c.fehler){
-    html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '<br>„Neu laden“ versuchen.</div>';
-  } else if(ana){
-    const sichtbar = zeilen.filter(r=> passt(r.name, r.renu)).reverse();
-    const MAX = 150;
-    html += '<div class="gesamt-abschnitt">Rechnungsübersicht (' + zeilen.length + ')</div>' + (sichtbar.length ? sichtbar.slice(0, MAX).map(r=>`
-      <div class="fall-zeile ${r.art}${r.pdf ? '' : ' unvollstaendig'}" data-zeile="${r.z.nr}">
-        <div class="inhalt">
-          <div class="name"><span class="badge-neu ${r.art}">${r.art === 'ls' ? 'L' : 'P'}</span>${htmlEsc(r.name)}</div>
-          <div class="info">${htmlEsc(r.datum)}${r.betrag ? ' &middot; ' + htmlEsc(r.betrag) + ' €' : ''}${r.renu ? ' &middot; Nr. ' + htmlEsc(r.renu) : ' &middot; ohne Rechnungsnummer'}</div>
-        </div>
-        <div class="fall-icons">
-          ${r.versendet ? '<span class="badge-brief" title="per Brief verschickt">&#9993;</span>' : ''}
-          ${r.pdf ? '<span class="badge-pdf" data-akt="pdf" title="PDF ansehen">&#128196;</span>' : '<span class="badge-unvollstaendig" title="Noch keine Rechnung (PDF) im Ordner">&#9888;</span>'}
-        </div>
-      </div>`).join('') + (sichtbar.length > MAX ? '<div class="leer-hinweis">' + (sichtbar.length - MAX) + ' weitere – bitte Suche eingrenzen.</div>' : '')
-      : '<div class="leer-hinweis">Keine Treffer.</div>');
-  }
-  listeEl.innerHTML = html;
-
-  // Bedienung
-  listeEl.querySelectorAll('.fall-zeile.offen').forEach(el=>{
-    const [art, zs] = [el.dataset.lokal.split(':')[0], el.dataset.lokal.slice(3)];
-    el.querySelector('.inhalt').onclick = ()=>{ const i = betaFallIndex(art, zs); if(i >= 0){ betaMaskeHerkunft = 'gesamt'; ansichtMaske(art, i); } };
-    el.querySelector('[data-akt="hoch"]').onclick = async (ev)=>{
-      ev.stopPropagation();
-      const i = betaFallIndex(art, zs); if(i < 0) return;
-      await betaFaelleHochladen([{ ...ladeFaelle(art)[i], art, idx: i }]);
-      ansichtRechnungenGesamt(true);
-    };
-    el.querySelector('[data-akt="weg"]').onclick = async (ev)=>{
-      ev.stopPropagation();
-      const i = betaFallIndex(art, zs); if(i < 0) return;
-      const f = ladeFaelle(art)[i];
-      if(!await betaFrage('„' + ((f.werte || {}).txtName || 'ohne Namen') + '“ lokal löschen?\n\nBetrifft nur den noch nicht hochgeladenen Fall auf dem Handy.', 'Löschen', 'Abbrechen')) return;
-      const arr = ladeFaelle(art); arr.splice(i, 1); speichereFaelle(art, arr);
-      appToastAnzeigen('Gelöscht.', 1800);
-      betaGesamtZeichnen(document.getElementById('txtGesamtSuche').value, ziel);
-    };
-  });
-  listeEl.querySelectorAll('.fall-zeile[data-zeile]').forEach(el=>{
-    const nr = +el.dataset.zeile;
-    const r = zeilen.find(x=> x.z.nr === nr);
-    const pdfEl = el.querySelector('[data-akt="pdf"]');
-    if(pdfEl) pdfEl.onclick = (ev)=>{ ev.stopPropagation(); if(r.pdf && r.pdf.webUrl) window.open(r.pdf.webUrl, '_blank'); };
-    el.querySelector('.inhalt').onclick = ()=> betaZeileBearbeiten(r.z, zuZeile.get(nr), ziel);
-  });
-}
+// betaGesamtZeichnen: siehe beta_verwaltung.js
 
 // Antippen einer Uebersichtszeile: vorhandenen lokalen Fall oeffnen oder aus
 // der Zeile einen bearbeitbaren Fall anlegen
@@ -5987,6 +6000,785 @@ function betaOffenAnzahl(){
   let n = 0;
   ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach(f=>{ if(f && (!f.hochgeladen || f.hochgeladen.ziel !== zk || f.uploadFehler)) n++; }));
   return n;
+}
+
+
+// =====================================================================
+// BETA: Rechnungsverwaltung wie am PC + eigene Positionen + PDF-Anzeige
+// =====================================================================
+
+// ---------- Eigene (von Hand angelegte) Rechnungspositionen ----------
+// Bleiben dauerhaft in der Auswahl (bis sie per Wischen geloescht werden)
+// und liegen zusaetzlich in OneDrive, damit sie auf allen Geraeten gleich
+// sind. Geloeschte bleiben als "geloescht" vermerkt, damit alte Rechnungen
+// sie weiterhin finden. Jeder Fall speichert ausserdem eine Kopie der
+// verwendeten eigenen Positionen (eigenePositionen).
+const EIGENE_POS_PFAD = 'KVBW Onedrive/eigene_positionen.json';
+const EIGENE_POS_CACHE = 'eigene_positionen';
+function betaEigeneDaten(){ const d = LS.get(EIGENE_POS_CACHE, null) || {}; return { ls: d.ls || [], pt: d.pt || [] }; }
+function betaEigeneAlle(art){ return betaEigeneDaten()[art] || []; }
+function betaEigene(art){ return betaEigeneAlle(art).filter(p=> !p.geloescht); }
+function betaEigeneZusammenfuehren(a, b){
+  const m = new Map();
+  [...(a || []), ...(b || [])].forEach(p=>{
+    if(!p || !p.id) return;
+    const alt = m.get(p.id);
+    if(!alt || String(p.geaendert || '') > String(alt.geaendert || '')) m.set(p.id, p);
+  });
+  return [...m.values()].sort((x, y)=> String(x.angelegt || '').localeCompare(String(y.angelegt || '')));
+}
+// Liest den Stand aus OneDrive, fuehrt ihn mit dem lokalen zusammen, wendet
+// optional eine Aenderung an und schreibt zurueck.
+async function betaEigeneAbgleichen(aenderung){
+  const token = await msGraphTokenHolen();
+  let fern = null;
+  if(token){
+    try{
+      const r = await fetch(msGraphPfadUrl(EIGENE_POS_PFAD) + '/content', { headers:{ Authorization:'Bearer ' + token }, cache:'no-store' });
+      if(r.ok) fern = await r.json();
+    }catch(_){}
+  }
+  const lokal = betaEigeneDaten();
+  const neu = { ls: betaEigeneZusammenfuehren(lokal.ls, fern && fern.ls), pt: betaEigeneZusammenfuehren(lokal.pt, fern && fern.pt) };
+  if(aenderung) aenderung(neu);
+  LS.set(EIGENE_POS_CACHE, neu);
+  const text = JSON.stringify({ version: 1, ls: neu.ls, pt: neu.pt });
+  if(token && (aenderung || !fern || JSON.stringify({ version: 1, ls: fern.ls || [], pt: fern.pt || [] }) !== text)){
+    try{ await msGraphDateiHochladen(token, EIGENE_POS_PFAD, new Blob([text], { type:'application/json' }), 'application/json'); }
+    catch(e){ if(aenderung) throw e; }
+  }
+  return neu;
+}
+function betaEigenePositionAlsAuswahl(p){
+  return { ziffer: p.id, anzeigeZiffer: p.ziffer || '', faktor: p.faktor,
+           bez: p.bez + (String(p.faktor || '').trim() ? ' (Faktor ' + p.faktor + ')' : ''), betrag: Number(p.betrag) || 0, eigene: true };
+}
+// Kopie der im Fall gewaehlten eigenen Positionen (beim Speichern)
+function betaEigeneSnapshot(art, positionen, bisher){
+  const out = {};
+  const alle = betaEigeneAlle(art);
+  (positionen || []).filter(k=> /^EIG/i.test(k)).forEach(k=>{
+    const p = alle.find(x=> x.id === k) || (bisher && bisher[k]);
+    if(p) out[k] = { ziffer: p.ziffer, faktor: p.faktor, bez: p.bez, betrag: p.betrag };
+  });
+  return out;
+}
+// Fuer den Word-Generator
+function betaEigeneFuerFall(f){
+  const art = f.art, snap = f.eigenePositionen || {};
+  return (f.positionen || []).filter(k=> /^EIG/i.test(k)).map(k=>{
+    const p = snap[k] || betaEigeneAlle(art).find(x=> x.id === k);
+    if(!p) throw new Error('Eine eigene Rechnungsposition dieses Falls gibt es nicht mehr – bitte die Positionen neu auswählen.');
+    return { schluessel: k, ziffer: p.ziffer, faktor: p.faktor, bez: p.bez, betrag: Number(p.betrag) || 0 };
+  });
+}
+function betaBetragLesen(t){
+  const s = String(t || '').trim().replace(/€/g, '').replace(/\s/g, '');
+  if(!s) return NaN;
+  const n = Number(s.indexOf(',') >= 0 ? s.replace(/\./g, '').replace(',', '.') : s);
+  return Math.round(n * 100) / 100;
+}
+async function betaEigenePositionDialog(art){
+  let w = { ziffer: '', faktor: '', bez: '', betrag: '' }, fehler = '';
+  for(;;){
+    const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<div class="beta-form"><label>Ziffer (z.B. GOÄ-Nummer)<input id="eigZiffer" value="' + htmlEsc(w.ziffer) + '" autocomplete="off"></label>' +
+      '<label>Faktor (optional)<input id="eigFaktor" value="' + htmlEsc(w.faktor) + '" inputmode="decimal" autocomplete="off"></label>' +
+      '<label>Bezeichnung<textarea id="eigBez" rows="3">' + htmlEsc(w.bez) + '</textarea></label>' +
+      '<label>Betrag in €<input id="eigBetrag" value="' + htmlEsc(w.betrag) + '" inputmode="decimal" autocomplete="off"></label></div>' +
+      '<div class="beta-erg-klein">Die Position bleibt dauerhaft in der Auswahl (' + (art === 'ls' ? 'Leichenschau' : 'Privatrechnung') + '). Löschen: in der Liste nach links wischen.</div>';
+    const warte = betaOverlay.ergebnis('Eigene Position', html, [{ label:'Abbrechen', akt:'nein' }, { label:'Speichern', akt:'ja', primaer:true }]);
+    setTimeout(()=>{ const el = document.getElementById(w.ziffer ? 'eigBez' : 'eigZiffer'); if(el) el.focus(); }, 50);
+    const akt = await warte;
+    w = { ziffer: document.getElementById('eigZiffer').value.trim(), faktor: document.getElementById('eigFaktor').value.trim(),
+          bez: document.getElementById('eigBez').value.trim(), betrag: document.getElementById('eigBetrag').value.trim() };
+    if(akt !== 'ja'){ betaOverlay.schliessen(); return null; }
+    const betrag = betaBetragLesen(w.betrag);
+    if(!w.bez) fehler = 'Bitte eine Bezeichnung eintragen.';
+    else if(isNaN(betrag) || betrag <= 0) fehler = 'Bitte einen gültigen Betrag eintragen (z.B. 12,34).';
+    else {
+      const jetzt = new Date().toISOString();
+      const neu = { id: 'EIG' + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 1296).toString(36).toUpperCase(),
+                    ziffer: w.ziffer, faktor: w.faktor, bez: w.bez, betrag, angelegt: jetzt, geaendert: jetzt };
+      betaOverlay.zeigen('Eigene Position'); betaOverlay.fortschritt(null); betaOverlay.schritt('Wird gespeichert …');
+      try{ await betaEigeneAbgleichen(d=>{ d[art] = [...(d[art] || []), neu]; }); }
+      catch(e){ // lokal ist sie trotzdem da
+        const d = betaEigeneDaten(); d[art] = [...d[art], neu]; LS.set(EIGENE_POS_CACHE, d);
+        appToastAnzeigen('Gespeichert (nur auf diesem Gerät – OneDrive gerade nicht erreichbar).', 3000);
+      }
+      betaOverlay.schliessen();
+      return neu;
+    }
+  }
+}
+async function betaEigenePositionLoeschen(art, id){
+  const p = betaEigeneAlle(art).find(x=> x.id === id);
+  if(!p) return false;
+  if(!await betaFrage('Eigene Position „' + (p.ziffer ? p.ziffer + ' – ' : '') + p.bez + '“ dauerhaft aus der Auswahl löschen?\n\nBereits erstellte Rechnungen bleiben unverändert.', 'Löschen', 'Abbrechen')) return false;
+  const jetzt = new Date().toISOString();
+  const markieren = d=>{ d[art] = (d[art] || []).map(x=> x.id === id ? { ...x, geloescht: true, geaendert: jetzt } : x); };
+  try{ await betaEigeneAbgleichen(markieren); }
+  catch(e){ const d = betaEigeneDaten(); markieren(d); LS.set(EIGENE_POS_CACHE, d); }
+  return true;
+}
+// Verdrahtung in "Rechnungspositionen" (siehe Patch in ansichtPositionen)
+function betaEigenePositionenVerdrahten(art, neuZeichnen){
+  const knopf = document.getElementById('btnEigenePosNeu');
+  if(knopf) knopf.onclick = async ()=>{ const neu = await betaEigenePositionDialog(art); if(neu) neuZeichnen(neu.id); };
+  document.querySelectorAll('.wisch-huelle[data-eigene]').forEach(h=>{
+    betaWischen(h.querySelector('.position-zeile'), async ()=>{
+      const ok = await betaEigenePositionLoeschen(art, h.dataset.eigene);
+      if(ok) neuZeichnen(null, h.dataset.eigene);
+      return ok;
+    });
+  });
+  // Im Hintergrund mit OneDrive abgleichen (andere Geraete)
+  if(!betaEigenePositionenVerdrahten.abgeglichen && msGraphStatus === 'angemeldet'){
+    betaEigenePositionenVerdrahten.abgeglichen = true;
+    const vorher = JSON.stringify(betaEigene(art));
+    betaEigeneAbgleichen().then(()=>{ if(JSON.stringify(betaEigene(art)) !== vorher && document.getElementById('btnEigenePosNeu')) neuZeichnen(); }).catch(()=>{});
+  }
+}
+
+// ---------- Wischen zum Loeschen ----------
+// el liegt in einer .wisch-huelle (roter Hintergrund mit Papierkorb).
+// beimLoeschen() -> Promise<boolean> (true = geloescht, sonst zurueckschnappen)
+function betaWischen(el, beimLoeschen){
+  if(!el || el.__wischen) return;
+  el.__wischen = true;
+  let x0 = null, y0 = 0, dx = 0, aktiv = false, zuletzt = 0;
+  const zurueck = ()=>{ el.style.transition = 'transform .2s ease'; el.style.transform = ''; el.parentElement && el.parentElement.classList.remove('wisch-bereit'); };
+  el.addEventListener('touchstart', ev=>{
+    if(ev.touches.length !== 1) return;
+    x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY; dx = 0; aktiv = false;
+    el.style.transition = 'none';
+  }, { passive: true });
+  el.addEventListener('touchmove', ev=>{
+    if(x0 === null) return;
+    const t = ev.touches[0], ddx = t.clientX - x0, ddy = t.clientY - y0;
+    if(!aktiv){
+      if(Math.abs(ddx) > 14 && Math.abs(ddx) > Math.abs(ddy) * 1.6 && ddx < 0) aktiv = true;
+      else if(Math.abs(ddy) > 12 || ddx > 14){ x0 = null; return; }
+    }
+    if(aktiv){
+      dx = Math.min(0, ddx);
+      el.style.transform = 'translateX(' + dx + 'px)';
+      el.parentElement.classList.toggle('wisch-bereit', dx < -90);
+      if(ev.cancelable) ev.preventDefault();
+    }
+  }, { passive: false });
+  el.addEventListener('touchend', async ()=>{
+    if(x0 === null){ return; }
+    x0 = null;
+    if(!aktiv) return;
+    zuletzt = Date.now();
+    if(dx < -90){
+      el.style.transition = 'transform .18s ease';
+      el.style.transform = 'translateX(-100%)';
+      let ok = false;
+      try{ ok = await beimLoeschen(); }catch(e){ ok = false; }
+      if(!ok) zurueck();
+    } else zurueck();
+    aktiv = false;
+  });
+  // Klick direkt nach einer Wischbewegung nicht als Antippen werten
+  el.addEventListener('click', ev=>{ if(Date.now() - zuletzt < 450){ ev.stopPropagation(); ev.preventDefault(); } }, true);
+}
+
+// ---------- PDF direkt in der App anzeigen ----------
+// Statt OneDrive im Browser (dort klappte es beim allerersten Oeffnen oft
+// nicht, weil die Microsoft-Anmeldung im Browser erst aufgebaut wird) laedt
+// die App die PDF selbst und zeigt sie mit pdf.js an.
+const PDFJS_VERSION = '4.10.38';
+const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@' + PDFJS_VERSION + '/legacy/build/pdf.min.mjs';
+const PDFJS_WORKER = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@' + PDFJS_VERSION + '/legacy/build/pdf.worker.min.mjs';
+let pdfjsPromise = null;
+function pdfjsLaden(){
+  if(!pdfjsPromise){
+    pdfjsPromise = import(PDFJS_URL).then(m=>{ m.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; return m; })
+      .catch(e=>{ pdfjsPromise = null; throw new Error('PDF-Anzeige konnte nicht geladen werden (Internet?).'); });
+  }
+  return pdfjsPromise;
+}
+async function betaPdfAnzeigen(opt){
+  // opt: {titel, blob?, itemId?, webUrl?}
+  let el = document.getElementById('betaPdfAnsicht');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'betaPdfAnsicht';
+    el.className = 'beta-pdf';
+    el.innerHTML = '<div class="beta-pdf-kopf"><button type="button" data-a="zu" title="Schließen">✕</button><div class="beta-pdf-titel"></div>' +
+      '<button type="button" data-a="klein" title="Verkleinern">−</button><button type="button" data-a="gross" title="Vergrößern">+</button>' +
+      '<button type="button" data-a="teilen" title="Teilen / Speichern">⇪</button></div><div class="beta-pdf-seiten"></div>';
+    document.body.appendChild(el);
+  }
+  const seitenEl = el.querySelector('.beta-pdf-seiten');
+  el.querySelector('.beta-pdf-titel').textContent = opt.titel || 'PDF';
+  seitenEl.innerHTML = '<div class="leer-hinweis"><span class="beta-spinner klein"></span>PDF wird geladen …</div>';
+  el.classList.add('aktiv');
+  document.body.classList.add('beta-pdf-offen');
+  let zoom = 1, blob = opt.blob || null;
+  const vorherZurueck = aktuellerZurueckHandler;
+  const schliessen = ()=>{ el.classList.remove('aktiv'); document.body.classList.remove('beta-pdf-offen'); seitenEl.innerHTML = ''; aktuellerZurueckHandler = vorherZurueck; };
+  aktuellerZurueckHandler = schliessen; // Handy-Zurueck schliesst die Anzeige
+  el.querySelector('[data-a="zu"]').onclick = schliessen;
+  const zoomSetzen = (z)=>{ zoom = Math.max(1, Math.min(3, z)); seitenEl.querySelectorAll('canvas').forEach(c=> c.style.width = (zoom * 100) + '%'); };
+  el.querySelector('[data-a="klein"]').onclick = ()=> zoomSetzen(zoom - 0.5);
+  el.querySelector('[data-a="gross"]').onclick = ()=> zoomSetzen(zoom + 0.5);
+  el.querySelector('[data-a="teilen"]').onclick = async ()=>{
+    if(!blob) return;
+    const datei = new File([blob], (opt.titel || 'Rechnung') + '.pdf', { type:'application/pdf' });
+    try{
+      if(navigator.canShare && navigator.canShare({ files:[datei] })){ await navigator.share({ files:[datei], title: opt.titel || 'Rechnung' }); return; }
+    }catch(e){ if(e && e.name === 'AbortError') return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = datei.name; document.body.appendChild(a); a.click(); a.remove();
+  };
+  try{
+    if(!blob){
+      const token = await msGraphTokenHolen();
+      if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+      blob = new Blob([await graphItemLaden(token, opt.itemId)], { type:'application/pdf' });
+    }
+    const pdfjs = await pdfjsLaden();
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise;
+    if(!el.classList.contains('aktiv')) return;
+    seitenEl.innerHTML = '';
+    const breite = Math.max(320, seitenEl.clientWidth - 16);
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    for(let i = 1; i <= doc.numPages; i++){
+      const seite = await doc.getPage(i);
+      const v1 = seite.getViewport({ scale: 1 });
+      const vp = seite.getViewport({ scale: (breite * dpr * 2) / v1.width }); // doppelt aufloesen fuer Zoom
+      const c = document.createElement('canvas');
+      c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+      c.style.width = (zoom * 100) + '%';
+      seitenEl.appendChild(c);
+      await seite.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      if(!el.classList.contains('aktiv')) return;
+    }
+  }catch(e){
+    seitenEl.innerHTML = '<div class="leer-hinweis">PDF konnte nicht angezeigt werden: ' + htmlEsc(e.message || String(e)) + '</div>' +
+      (opt.webUrl ? '<div style="text-align:center;"><button type="button" class="btn-sekundaer" id="btnPdfOneDrive" style="width:auto; padding:10px 16px;">In OneDrive öffnen</button></div>' : '');
+    const b = document.getElementById('btnPdfOneDrive'); if(b) b.onclick = ()=> window.open(opt.webUrl, '_blank');
+  }
+}
+
+// ---------- Word-Dokumente fuer Mahnung / 2. Adresse ----------
+function betaMorgenText(){ const d = new Date(); d.setDate(d.getDate() + 1); return zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' + d.getFullYear(); }
+async function docxDokumentXml(buf){
+  const zip = await JSZip.loadAsync(buf);
+  const f = zip.file('word/document.xml');
+  if(!f) throw new Error('Die Word-Datei ist beschädigt.');
+  return { zip, xml: await f.async('string') };
+}
+function docxDatumFinden(xml){
+  let datum = '';
+  xml.replace(RD_ABSATZ_RE, p=>{ if(!datum){ const m = /Datum:\s*(\d{1,2}\.\d{1,2}\.\d{4})/.exec(rdAbsatzText(p)); if(m) datum = m[1]; } return p; });
+  return datum;
+}
+// Absatz mit neuem Text (Format des ersten Textstuecks behalten)
+function docxAbsatzMitText(p, text){
+  const alt = rdAbsatzText(p);
+  if(alt) return rdPlatzhalterInXml(p, [[alt, text]]);
+  const lauf = '<w:r><w:t xml:space="preserve">' + rdXml(text) + '</w:t></w:r>';
+  if(!/<\/w:p>$/.test(p)) return p.replace(/\/>$/, '>' + lauf + '</w:p>');
+  return p.replace(/<\/w:p>$/, lauf + '</w:p>');
+}
+// Wie MahnungZahlungstext am PC
+function betaMahnungZahlungstext(nr, origDatum, vorige){
+  let satz;
+  const liste = (vorige || []).filter(Boolean).map(d=> 'der Mahnung vom ' + d).join(' und ');
+  if(nr <= 1 || !origDatum || !liste) satz = 'Sie sind der Zahlungsaufforderung vom ' + origDatum + ' nicht nachgekommen.';
+  else satz = 'Sie sind der Zahlungsaufforderung vom ' + origDatum + ' sowie ' + liste + ' nicht nachgekommen.';
+  return satz + ' Ich bitte Sie den Betrag unter Angabe der Rechnungsnummer innerhalb von 14 Tagen auf mein Konto zu überweisen. Bei Nichtzahlung geraten Sie automatisch in Verzug.';
+}
+const ZAHLUNGSTEXT_PT = 'Ich bitte Sie den Betrag unter Angabe der Rechnungsnummer innerhalb von 30 Tagen auf mein Konto zu überweisen. Bei Nichtzahlung geraten Sie 30 Tage nach Erhalt dieser Rechnung automatisch in Verzug.';
+const ZAHLUNGSTEXT_LS = 'Ich bitte Sie den Betrag unter Angabe der Rechnungsnummer auf mein Konto zu überweisen.';
+
+// Datum in eine Spalte der Uebersicht (V = 1. Mahnung/2. Adresse, X = 2. Mahnung)
+async function betaUebersichtDatumSetzen(token, ziel, renu, spalte, datumText, frage){
+  const ue = await uebersichtLadenRepariert(token, ziel, frage);
+  const z = uebersichtAuswerten(ue).nachRenu.get(renu);
+  if(!z) throw new Error('Die Rechnung ' + renu + ' steht nicht in der Übersicht.');
+  const idx = spaltenBuchstabeZuNr(spalte) - 1;
+  const alt = xlDatumText(z.v[idx]);
+  if(alt && alt !== datumText && !await frage('In Spalte ' + spalte + ' steht für diese Rechnung bereits „' + alt + '“.\n\nMit ' + datumText + ' überschreiben?', 'Überschreiben', 'Behalten')) return false;
+  const sid = await xlSitzung(token, ue.basis);
+  try{
+    const schutz = await blattSchutzAufheben(token, ue, sid);
+    try{ await gx(token, 'PATCH', zelle(ue, spalte + z.nr), { values: [[xlDatumSerial(datumText)]], numberFormat: [[XL_FORMAT_DATUM]] }, sid); }
+    finally{ await blattSchutzWiederherstellen(token, ue, schutz, sid); }
+  } finally { await xlSitzungEnde(token, ue.basis, sid); }
+  return true;
+}
+// Dateien im Zielordner -- in der Testablage zusaetzlich (nur lesend) die echten
+async function betaDateienAlle(token, ziel){
+  const d = await ordnerDateien(token, ziel.ordner);
+  if(!ziel.echt){
+    try{ (await ordnerDateien(token, MSGRAPH_PFAD_ZIEL_ORDNER)).forEach((v, k)=>{ if(!d.has(k)) d.set(k, v); }); }catch(_){}
+  }
+  return d;
+}
+
+async function betaMahnungErstellen(e){
+  const ziel = betaZiel();
+  betaOverlay.zeigen('Mahnung wird erstellt'); betaOverlay.fortschritt(0.05);
+  try{
+    const token = await msGraphTokenHolen();
+    if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+    betaOverlay.schritt('Rechnung wird geladen …');
+    const basis = renuDateiname(e.renu);
+    const dateien = await betaDateienAlle(token, ziel);
+    const orig = dateien.get((basis + '.docx').toLowerCase());
+    if(!orig) throw new Error('Die Word-Datei der Rechnung (' + basis + '.docx) wurde nicht gefunden.');
+    let nr = 1; while(dateien.has((basis + '_mahnung ' + nr + '.docx').toLowerCase())) nr++;
+    const { zip, xml } = await docxDokumentXml(await graphItemLaden(token, orig.id));
+    const origDatum = docxDatumFinden(xml);
+    const vorige = [];
+    for(let k = 1; k < nr; k++){
+      const it = dateien.get((basis + '_mahnung ' + k + '.docx').toLowerCase());
+      try{ vorige.push(it ? docxDatumFinden((await docxDokumentXml(await graphItemLaden(token, it.id))).xml) : ''); }catch(_){ vorige.push(''); }
+    }
+    betaOverlay.fortschritt(0.35); betaOverlay.schritt(nr + '. Mahnung wird geschrieben …');
+    const morgen = betaMorgenText();
+    const text = betaMahnungZahlungstext(nr, origDatum, vorige);
+    const warnungen = [];
+    let neu = rdPlatzhalterInXml(xml, [['Privatrechnung', nr + '. Mahnung']]);
+    if(neu === xml) warnungen.push('Die Überschrift „Privatrechnung“ wurde nicht gefunden.');
+    const vorZahlung = neu;
+    neu = rdPlatzhalterInXml(neu, [[ZAHLUNGSTEXT_PT, text], [ZAHLUNGSTEXT_LS, text]]);
+    if(neu === vorZahlung) warnungen.push('Der Zahlungstext wurde nicht im erwarteten Wortlaut gefunden – bitte in der Mahnung prüfen.');
+    if(origDatum) neu = rdPlatzhalterInXml(neu, [['Datum: ' + origDatum, 'Datum: ' + morgen]]);
+    else warnungen.push('Das Rechnungsdatum („Datum:“) wurde nicht gefunden.');
+    zip.file('word/document.xml', neu);
+    const blob = await zip.generateAsync({ type:'blob', compression:'DEFLATE', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const name = basis + '_Mahnung ' + nr;
+    if(!ziel.echt){ await msGraphOrdnerSicherstellen(token, 'KVBW Onedrive/Beta-Test'); await msGraphOrdnerSicherstellen(token, BETA_ZIEL_ORDNER); }
+    betaOverlay.fortschritt(0.55); betaOverlay.schritt('Word-Datei wird hochgeladen …');
+    const { pdfBlob, pdfItem } = await docxHochladenMitPdf(token, ziel.ordner, name, blob, t=>{ betaOverlay.fortschritt(0.7); betaOverlay.schritt(t); });
+    betaOverlay.fortschritt(0.9); betaOverlay.schritt('Datum wird in die Übersicht eingetragen …');
+    const spalte = nr === 1 ? 'V' : (nr === 2 ? 'X' : '');
+    if(spalte) await betaUebersichtDatumSetzen(token, ziel, e.renu, spalte, morgen, betaFrage);
+    else warnungen.push('Für die ' + nr + '. Mahnung gibt es keine Spalte in der Übersicht – Datum bitte von Hand eintragen.');
+    return await betaDokumentFertig(nr + '. Mahnung erstellt', { renu: e.renu, name, ziel, typ: 'M' + nr, pdfBlob, pdfItemId: pdfItem && pdfItem.id }, warnungen);
+  }catch(err){
+    await betaOverlay.ergebnis('Mahnung nicht erstellt', '✗ ' + htmlEsc(err.message || String(err)));
+    betaOverlay.schliessen();
+    return false;
+  }
+}
+
+async function betaZweiteAdresseErstellen(e){
+  const ziel = betaZiel();
+  betaOverlay.zeigen('Rechnung an 2. Adresse'); betaOverlay.fortschritt(0.05);
+  try{
+    const token = await msGraphTokenHolen();
+    if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+    const v = e.z.v, t = x=> String(x == null ? '' : x).trim();
+    const melde = [t(v[8]), t(v[9])], sterbe = [t(v[10]), t(v[11])];
+    let adr = melde;
+    const abweichend = (sterbe[0] || sterbe[1]) && (sterbe[0] !== melde[0] || sterbe[1] !== melde[1]) && sterbe[0].toLowerCase() !== 'idem';
+    if(abweichend){
+      const wahl = await betaOverlay.ergebnis('Welche Adresse?', 'Für diese Rechnung gibt es zwei Adressen:',
+        [{ label:'Melde: ' + melde.join(', '), akt:'melde', primaer:true }, { label:'Sterbeort: ' + sterbe.join(', '), akt:'sterbe' }, { label:'Abbrechen', akt:'nein' }]);
+      if(wahl === 'nein'){ betaOverlay.schliessen(); return false; }
+      if(wahl === 'sterbe') adr = sterbe;
+      betaOverlay.zeigen('Rechnung an 2. Adresse');
+    }
+    if(!adr[0] && !adr[1]) throw new Error('In der Übersicht steht keine Patientenadresse.');
+    betaOverlay.schritt('Rechnung wird geladen …');
+    const basis = renuDateiname(e.renu);
+    const dateien = await betaDateienAlle(token, ziel);
+    const orig = dateien.get((basis + '.docx').toLowerCase());
+    if(!orig) throw new Error('Die Word-Datei der Rechnung (' + basis + '.docx) wurde nicht gefunden.');
+    const { zip, xml } = await docxDokumentXml(await graphItemLaden(token, orig.id));
+    // Absaetze einsammeln, "c/o Bestattungsinstitut"-Zeile entfernen, die
+    // beiden folgenden Zeilen (Bestatter-Adresse) durch die Adresse ersetzen
+    const absaetze = [];
+    xml.replace(RD_ABSATZ_RE, (p, pos)=>{ absaetze.push({ p, pos }); return p; });
+    const i = absaetze.findIndex(a=> rdAbsatzText(a.p).indexOf('c/o Bestattungsinstitut') >= 0);
+    if(i < 0 || !absaetze[i + 2]) throw new Error('Diese Rechnung ging nicht an einen Bestatter („c/o Bestattungsinstitut“ fehlt) – sie ist schon an die Patientenadresse adressiert.');
+    const ersatz = new Map([[i, ''], [i + 1, docxAbsatzMitText(absaetze[i + 1].p, adr[0])], [i + 2, docxAbsatzMitText(absaetze[i + 2].p, adr[1])]]);
+    let neu = '', ende = 0;
+    absaetze.forEach((a, k)=>{ neu += xml.slice(ende, a.pos) + (ersatz.has(k) ? ersatz.get(k) : a.p); ende = a.pos + a.p.length; });
+    neu += xml.slice(ende);
+    const warnungen = [];
+    const morgen = betaMorgenText();
+    const origDatum = docxDatumFinden(neu);
+    if(origDatum) neu = rdPlatzhalterInXml(neu, [['Datum: ' + origDatum, 'Datum: ' + morgen]]);
+    else warnungen.push('Das Rechnungsdatum („Datum:“) wurde nicht gefunden.');
+    zip.file('word/document.xml', neu);
+    const blob = await zip.generateAsync({ type:'blob', compression:'DEFLATE', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const name = basis + '_2. Adresse';
+    if(!ziel.echt){ await msGraphOrdnerSicherstellen(token, 'KVBW Onedrive/Beta-Test'); await msGraphOrdnerSicherstellen(token, BETA_ZIEL_ORDNER); }
+    betaOverlay.fortschritt(0.5); betaOverlay.schritt('Word-Datei wird hochgeladen …');
+    const { pdfBlob, pdfItem } = await docxHochladenMitPdf(token, ziel.ordner, name, blob, t2=>{ betaOverlay.fortschritt(0.7); betaOverlay.schritt(t2); });
+    betaOverlay.fortschritt(0.9); betaOverlay.schritt('Datum wird in die Übersicht eingetragen …');
+    await betaUebersichtDatumSetzen(token, ziel, e.renu, 'V', morgen, betaFrage);
+    return await betaDokumentFertig('Rechnung an 2. Adresse erstellt', { renu: e.renu, name, ziel, typ: '2A', pdfBlob, pdfItemId: pdfItem && pdfItem.id },
+      ['Adresse: ' + adr.filter(Boolean).join(', '), ...warnungen]);
+  }catch(err){
+    await betaOverlay.ergebnis('Nicht erstellt', '✗ ' + htmlEsc(err.message || String(err)));
+    betaOverlay.schliessen();
+    return false;
+  }
+}
+
+// Abschluss fuer Mahnung/2. Adresse: ansehen oder gleich verschicken
+async function betaDokumentFertig(titel, e, hinweise){
+  const testmodus = briefTestmodus((iniCacheLaden() || { werte:{} }).werte || {}, e.ziel);
+  for(;;){
+    const akt = await betaOverlay.ergebnis(titel, '<div class="beta-erg">✓ <b>' + htmlEsc(e.name) + '</b>' +
+      (hinweise || []).map(t=> '<br><span class="beta-erg-klein">' + htmlEsc(t) + '</span>').join('') + '</div>',
+      [{ label:'PDF ansehen', akt:'pdf' }, { label:'Brief senden' + (testmodus ? ' (Test)' : ' (LIVE)'), akt:'lxp' }, { label:'Fertig', akt:'ok', primaer:true }]);
+    if(akt === 'pdf'){ betaOverlay.schliessen(); await betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob }); return true; }
+    if(akt === 'lxp'){
+      betaOverlay.zeigen('Brief'); betaOverlay.fortschritt(null);
+      try{
+        const r = await betaBriefeVersenden([e], betaFrage);
+        if(!r.abgebrochen){
+          await betaOverlay.ergebnis('Brief', r.fehler.length ? '✗ ' + htmlEsc(r.fehler.join('\n')) : (r.test ? '✓ Testbrief angenommen und vermerkt.' : '✓ Brief verschickt und vermerkt.'));
+          break;
+        }
+      }catch(err){ await betaOverlay.ergebnis('Brief', '✗ ' + htmlEsc(err.message || String(err))); }
+      continue;
+    }
+    break;
+  }
+  betaOverlay.schliessen();
+  return true;
+}
+
+// ---------- Verwaltungs-Aktionen (Auswahl) ----------
+let betaAuswahl = new Set();
+
+async function betaAktionSenden(eintraege, mitTermin){
+  const ziel = betaZiel();
+  const offen = eintraege.filter(e=> !e.versendet);
+  if(!offen.length){ await betaOverlay.meldung('Alle ausgewählten sind bereits verschickt.'); return false; }
+  const ohnePdf = offen.filter(e=> !e.pdf);
+  if(ohnePdf.length){ await betaOverlay.meldung('Für ' + ohnePdf.map(e=> e.datei).join(', ') + ' gibt es noch keine PDF.'); return false; }
+  let versandDatumIso = null;
+  if(mitTermin){
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    const min = d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate());
+    const akt = await betaOverlay.ergebnis('Versand planen', 'An welchem Tag soll LetterXpress verschicken? (muss in der Zukunft liegen)<div class="beta-form"><label>Versanddatum<input type="date" id="betaVersandDatum" min="' + min + '" value="' + min + '"></label></div>',
+      [{ label:'Abbrechen', akt:'nein' }, { label:'Weiter', akt:'ja', primaer:true }]);
+    versandDatumIso = (document.getElementById('betaVersandDatum') || {}).value || '';
+    if(akt !== 'ja'){ betaOverlay.schliessen(); return false; }
+    if(!versandDatumIso || versandDatumIso < min){ await betaOverlay.meldung('Bitte ein Datum ab morgen wählen.'); return false; }
+  }
+  betaOverlay.zeigen(mitTermin ? 'Versand wird geplant' : 'Briefe werden verschickt'); betaOverlay.fortschritt(null); betaOverlay.schritt('Versandstatus wird geprüft …');
+  try{
+    const r = await betaBriefeVersenden(offen.map(e=> ({ renu: e.renu, name: e.datei, ziel, typ: e.typ, pdfItemId: e.pdf.id })), betaFrage, { versandDatumIso });
+    if(r.abgebrochen){ betaOverlay.schliessen(); return false; }
+    const ok = r.gesendet.length;
+    await betaOverlay.ergebnis(ok ? (ok === 1 ? 'Brief übergeben' : ok + ' Briefe übergeben') : 'Nicht verschickt',
+      (ok ? '✓ ' + ok + ' an LetterXpress übergeben' + (r.test ? ' (Testmodus – nichts verschickt)' : '') + (versandDatumIso ? ', Versand am ' + versandDatumIso.split('-').reverse().join('.') : '') + ' und in der Übersicht vermerkt.' : '') +
+      (r.uebersprungen ? '<br>' + r.uebersprungen + ' bereits verschickte übersprungen.' : '') +
+      (r.fehler.length ? '<br>✗ ' + r.fehler.map(htmlEsc).join('<br>✗ ') : ''));
+  }catch(err){ await betaOverlay.ergebnis('Nicht verschickt', '✗ ' + htmlEsc(err.message || String(err))); }
+  betaOverlay.schliessen();
+  return true;
+}
+
+async function betaAktionFreigeben(eintraege){
+  const ziel = betaZiel();
+  const versendet = eintraege.filter(e=> e.versendet);
+  if(!versendet.length){ await betaOverlay.meldung('Keine der ausgewählten ist als verschickt markiert.'); return false; }
+  if(!await betaFrage('Versand-Sperre für ' + (versendet.length === 1 ? 'diese Position' : 'diese ' + versendet.length + ' Positionen') + ' aufheben?\n\n' +
+    versendet.map(e=> '• ' + e.datei).join('\n') + '\n\nDanach lassen sie sich erneut per LetterXpress verschicken (z.B. wenn der Brief nicht angekommen ist). Das Versanddatum in der Übersicht bleibt stehen.', 'Freigeben', 'Abbrechen')) return false;
+  betaOverlay.zeigen('Versand-Sperre wird aufgehoben'); betaOverlay.fortschritt(null);
+  try{
+    const token = await msGraphTokenHolen();
+    if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+    const ue = await uebersichtLadenRepariert(token, ziel, betaFrage);
+    const ana = uebersichtAuswerten(ue);
+    const proZeile = new Map();
+    versendet.forEach(e=>{ const z = ana.nachRenu.get(e.renu); if(z){ const l = proZeile.get(z.nr) || { z, flags: [] }; l.flags.push(lxpFlagFuerTyp(e.typ)); proZeile.set(z.nr, l); } });
+    const sid = await xlSitzung(token, ue.basis);
+    try{
+      const schutz = await blattSchutzAufheben(token, ue, sid);
+      try{
+        for(const { z, flags } of proZeile.values()){
+          let u = String(z.v[20] == null ? '' : z.v[20]);
+          flags.forEach(f=>{ u = lxpFlagEntfernenText(u, f); });
+          await gx(token, 'PATCH', zelle(ue, 'U' + z.nr), { values: [[u]] }, sid);
+        }
+      } finally { await blattSchutzWiederherstellen(token, ue, schutz, sid); }
+    } finally { await xlSitzungEnde(token, ue.basis, sid); }
+    betaOverlay.schliessen();
+    appToastAnzeigen(versendet.length === 1 ? 'Wieder zum Versand freigegeben.' : versendet.length + ' wieder zum Versand freigegeben.', 2500);
+  }catch(err){ await betaOverlay.ergebnis('Nicht freigegeben', '✗ ' + htmlEsc(err.message || String(err))); betaOverlay.schliessen(); }
+  return true;
+}
+
+// Wie am PC: Dateien loeschen, bei Original-Rechnungen auf Wunsch auch die
+// Zeile der Uebersicht. In der Testablage werden nie echte Dateien geloescht.
+async function betaAktionLoeschen(eintraege){
+  const ziel = betaZiel();
+  const orig = eintraege.filter(e=> e.typ === 'ORIG');
+  const liste = eintraege.map(e=> '• ' + e.datei).join('\n');
+  let mitZeile = false;
+  if(orig.length){
+    const akt = await betaOverlay.ergebnis('Endgültig löschen?', htmlEsc('Die erzeugten Dokumente (Word + PDF) wirklich löschen?\n\n' + liste).replace(/\n/g, '<br>') +
+      (orig.length < eintraege.length ? '<br><br><span class="beta-erg-klein">Für Mahnungen/2. Adresse gibt es keine eigene Zeile – dort werden nur die Dateien gelöscht.</span>' : ''),
+      [{ label:'Abbrechen', akt:'nein' }, { label:'Nur Dateien', akt:'dateien' }, { label:'Dateien + Zeile', akt:'zeile', primaer:true }]);
+    if(akt === 'nein'){ betaOverlay.schliessen(); return false; }
+    mitZeile = akt === 'zeile';
+  } else {
+    if(!await betaFrage('Die erzeugten Dokumente (Word + PDF) wirklich löschen?\n\n' + liste, 'Löschen', 'Abbrechen')) return false;
+  }
+  betaOverlay.zeigen('Wird gelöscht'); betaOverlay.fortschritt(null);
+  const fehler = [];
+  try{
+    const token = await msGraphTokenHolen();
+    if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+    for(const e of eintraege){
+      for(const endung of ['.docx', '.pdf']){
+        try{ await gx(token, 'DELETE', msGraphPfadUrl(ziel.ordner + '/' + e.datei + endung)); }
+        catch(err){ if(err.status !== 404) fehler.push(e.datei + endung + ': ' + err.message); }
+      }
+    }
+    if(mitZeile && orig.length){
+      betaOverlay.schritt('Zeilen werden aus der Übersicht gelöscht …');
+      const ue = await uebersichtLadenRepariert(token, ziel, betaFrage);
+      const ana = uebersichtAuswerten(ue);
+      const nrn = [...new Set(orig.map(e=> (ana.nachRenu.get(e.renu) || {}).nr).filter(Boolean))].sort((a, b)=> b - a);
+      const sid = await xlSitzung(token, ue.basis);
+      try{
+        const schutz = await blattSchutzAufheben(token, ue, sid);
+        try{ for(const nr of nrn) await gx(token, 'POST', zelle(ue, nr + ':' + nr) + '/delete', { shift: 'Up' }, sid); }
+        finally{ await blattSchutzWiederherstellen(token, ue, schutz, sid); }
+      } finally { await xlSitzungEnde(token, ue.basis, sid); }
+      // zugehoerige lokale Faelle (hochgeladen/bearbeitet) mitnehmen
+      const renus = new Set(orig.map(e=> e.renu));
+      ['ls', 'pt'].forEach(art=>{
+        const arr = ladeFaelle(art);
+        const rest = arr.filter(f=> !(f && ((f.bezug && renus.has(f.bezug.renu)) || (f.hochgeladen && renus.has(f.hochgeladen.renu)))));
+        if(rest.length !== arr.length) speichereFaelle(art, rest);
+      });
+    }
+  }catch(err){ fehler.push(err.message || String(err)); }
+  if(fehler.length) await betaOverlay.ergebnis('Löschen', '✗ ' + fehler.map(htmlEsc).join('<br>✗ '));
+  betaOverlay.schliessen();
+  if(!fehler.length) appToastAnzeigen('Gelöscht.', 2000);
+  return !fehler.length;
+}
+
+// ---------- Liste zeichnen (ersetzt die einfache Variante) ----------
+function betaEintraegeBauen(c){
+  const eintraege = [];
+  if(!c || !c.ana) return eintraege;
+  const dateien = c.dateien || new Map();
+  const t = x=> String(x == null ? '' : x).trim();
+  for(const z of c.ue.zeilen){
+    if(z.nr < 2) continue;
+    const v = z.v;
+    if(!t(v[0]) && !t(v[5]) && !t(v[6])) continue;
+    const renu = t(v[16]);
+    const art = t(v[0]).toUpperCase() === 'L' ? 'ls' : 'pt';
+    const name = t(v[5]) + ', ' + t(v[6]);
+    const datum = xlDatumText(v[1]);
+    const sort = xlDatumSerial(fpDatum(datum)) || 0;
+    const u = t(v[20]);
+    const basis = renu ? renuDateiname(renu) : '';
+    const betrag = typeof v[15] === 'number' ? v[15].toFixed(2).replace('.', ',') : t(v[15]);
+    const datei = (n)=> ({ pdf: dateien.get((n + '.pdf').toLowerCase()) || null, docx: dateien.get((n + '.docx').toLowerCase()) || null });
+    eintraege.push({ key: z.nr + '|ORIG', typ: 'ORIG', z, renu, art, name, datum, sort, betrag, datei: basis || ('Zeile ' + z.nr), ...(basis ? datei(basis) : { pdf:null, docx:null }),
+                     versendet: lxpFlagVorhanden(u, 'LXP:1') });
+    if(!basis) continue;
+    if(art === 'ls'){
+      const d2 = datei(basis + '_2. Adresse');
+      if(d2.pdf || d2.docx) eintraege.push({ key: z.nr + '|2A', typ: '2A', z, renu, art, name: name + ' (2. Adresse)', datum, sort, betrag:'', datei: basis + '_2. Adresse', ...d2, versendet: lxpFlagVorhanden(u, 'LXP:2A'), unter: true });
+    }
+    for(let n = 1; n < 20; n++){
+      const dm = datei(basis + '_Mahnung ' + n);
+      if(!dm.pdf && !dm.docx) break;
+      eintraege.push({ key: z.nr + '|M' + n, typ: 'M' + n, z, renu, art, name: name + ' (' + n + '. Mahnung)', datum, sort, betrag:'', datei: basis + '_Mahnung ' + n, ...dm, versendet: lxpFlagVorhanden(u, 'LXP:M' + n), unter: true });
+    }
+  }
+  // neueste zuerst (Datum, dann Zeile), Unterpositionen bleiben unter ihrer Rechnung
+  eintraege.sort((a, b)=> (b.sort - a.sort) || (b.z.nr - a.z.nr) || (a.unter ? 1 : 0) - (b.unter ? 1 : 0) || a.typ.localeCompare(b.typ));
+  return eintraege;
+}
+
+function betaGesamtZeichnen(suchtext, ziel){
+  const listeEl = document.getElementById('gesamtListe');
+  if(!listeEl) return;
+  const zk = betaZielKey(ziel);
+  const c = betaGesamtCache || {};
+  const ana = c.ana || null;
+  const dateien = c.dateien || new Map();
+  const such = String(suchtext || '').trim().toLowerCase();
+  const passt = (name, renu)=> !such || String(name || '').toLowerCase().includes(such) || String(renu || '').toLowerCase().includes(such);
+
+  // lokale Faelle: noch nicht hochgeladen? (wie bisher)
+  const lokale = [];
+  ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, idx)=> f && lokale.push({ ...f, art, idx })));
+  const zuZeile = new Map();
+  const offen = [];
+  lokale.forEach(f=>{
+    let zeile = null;
+    if(ana){
+      const r = (f.bezug && f.bezug.renu) || (f.hochgeladen && f.hochgeladen.renu) || '';
+      if(r) zeile = ana.nachRenu.get(r) || null;
+      if(!zeile){
+        const { nachname, vorname } = nameAufteilen((f.werte || {}).txtName);
+        zeile = ana.nachFp.get(fpSchluessel(f.art === 'ls' ? 'L' : 'P', (f.werte || {}).txtDatumExcel, nachname, vorname, (f.werte || {}).txtGeda)) || null;
+      }
+    }
+    const hochgeladenHier = f.hochgeladen && f.hochgeladen.ziel === zk && !f.uploadFehler;
+    const q = zeile ? String(zeile.v[16] == null ? '' : zeile.v[16]).trim() : '';
+    const zeileMitPdf = zeile && q && dateien.has(renuDateiname(q).toLowerCase() + '.pdf');
+    if(zeile && (hochgeladenHier || zeileMitPdf)){ if(!zuZeile.has(zeile.nr)) zuZeile.set(zeile.nr, f); }
+    else offen.push(f);
+  });
+  if(ana) betaLetzteOffenAnzahl = { zielKey: zk, n: offen.length };
+
+  const knopf = document.getElementById('btnGesamtHochladen');
+  if(knopf){
+    knopf.style.display = offen.length && ana ? '' : 'none';
+    knopf.textContent = '⬆ Alle hochladen (' + offen.length + ')';
+    knopf.onclick = async ()=>{ await betaFaelleHochladen(offen); ansichtRechnungenGesamt(true); };
+  }
+
+  const eintraege = betaEintraegeBauen(c);
+  const nachKey = new Map(eintraege.map(e=> [e.key, e]));
+  // Auswahl bereinigen (nach Neuladen evtl. nicht mehr vorhanden)
+  [...betaAuswahl].forEach(k=>{ if(!nachKey.has(k)) betaAuswahl.delete(k); });
+
+  let html = '';
+  const offenSichtbar = offen.filter(f=> passt((f.werte || {}).txtName, f.rechnungsnummer));
+  if(offenSichtbar.length){
+    html += '<div class="gesamt-abschnitt">Noch nicht hochgeladen</div>' + offenSichtbar.map(f=>`
+      <div class="wisch-huelle" data-lokal="${f.art}:${htmlEsc(f.zeitstempel)}"><div class="wisch-hinter">&#128465; Löschen</div>
+      <div class="fall-zeile ${f.art} offen">
+        <div class="inhalt">
+          <div class="name"><span class="badge-neu ${f.art}">${f.art === 'ls' ? 'L' : 'P'}</span>${htmlEsc((f.werte || {}).txtName || '(ohne Namen)')}</div>
+          <div class="info">${htmlEsc((f.werte || {}).txtDatumExcel || '')}${f.rechnungsnummer ? ' &middot; Nr. ' + htmlEsc(f.rechnungsnummer) : ''}</div>
+          <div class="info offen-text">${f.uploadFehler ? '⚠ ' + htmlEsc(f.uploadFehler) : (ana ? 'noch nicht hochgeladen' : (c.laedt ? 'Abgleich läuft …' : 'noch nicht hochgeladen'))}</div>
+        </div>
+        <div class="fall-icons"><span class="badge-hochladen" data-akt="hoch" title="Jetzt hochladen">&#11014;</span></div>
+      </div></div>`).join('');
+  }
+  if(c.laedt){
+    html += '<div class="leer-hinweis"><span class="beta-spinner klein"></span>Rechnungsübersicht wird geladen …</div>';
+  } else if(c.fehler){
+    html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '<br>„Neu laden“ versuchen.</div>';
+  } else if(ana){
+    // Treffer der Suche: Rechnung samt Unterpositionen
+    const sichtbarZeilen = new Set(eintraege.filter(e=> e.typ === 'ORIG' && passt(e.name, e.renu)).map(e=> e.z.nr));
+    const sichtbar = eintraege.filter(e=> sichtbarZeilen.has(e.z.nr));
+    const MAX = 200;
+    html += '<div class="gesamt-abschnitt">Rechnungsübersicht (' + eintraege.filter(e=> e.typ === 'ORIG').length + ')</div>';
+    if(!sichtbar.length) html += '<div class="leer-hinweis">Keine Treffer.</div>';
+    let letzteGruppe = null;
+    sichtbar.slice(0, MAX).forEach(e=>{
+      if(e.datum !== letzteGruppe){ letzteGruppe = e.datum; html += '<div class="gesamt-gruppe" data-gruppe="' + htmlEsc(e.datum) + '">' + htmlEsc(e.datum || 'ohne Datum') + '</div>'; }
+      const symbol = e.pdf ? '<span class="badge-pdf" data-akt="pdf" title="PDF ansehen">&#128196;</span>'
+                           : '<span class="badge-unvollstaendig" title="Keine PDF im Ordner">&#9888;</span>';
+      html += `
+      <div class="wisch-huelle${e.unter ? ' unter' : ''}" data-key="${htmlEsc(e.key)}"><div class="wisch-hinter">&#128465; Löschen</div>
+      <div class="fall-zeile ${e.art}${e.pdf ? '' : ' unvollstaendig'}${e.unter ? ' unter' : ''}${betaAuswahl.has(e.key) ? ' gewaehlt' : ''}">
+        <input type="checkbox" class="chk" ${betaAuswahl.has(e.key) ? 'checked' : ''}>
+        <div class="inhalt">
+          <div class="name">${e.unter ? '' : '<span class="badge-neu ' + e.art + '">' + (e.art === 'ls' ? 'L' : 'P') + '</span>'}${htmlEsc(e.name)}</div>
+          <div class="info">${e.unter ? htmlEsc(e.datei) : (htmlEsc(e.datum) + (e.betrag ? ' &middot; ' + htmlEsc(e.betrag) + ' €' : '') + (e.renu ? ' &middot; Nr. ' + htmlEsc(e.renu) : ' &middot; ohne Rechnungsnummer'))}</div>
+        </div>
+        <div class="fall-icons">${e.versendet ? '<span class="badge-brief" title="per Brief verschickt">&#9993;</span>' : ''}${symbol}</div>
+      </div></div>`;
+    });
+    if(sichtbar.length > MAX) html += '<div class="leer-hinweis">' + (sichtbar.length - MAX) + ' weitere – bitte Suche eingrenzen.</div>';
+  }
+  listeEl.innerHTML = html + '<div class="gesamt-platzhalter"></div>';
+
+  // --- lokale Faelle ---
+  listeEl.querySelectorAll('.wisch-huelle[data-lokal]').forEach(h=>{
+    const art = h.dataset.lokal.split(':')[0], zs = h.dataset.lokal.slice(3);
+    const zeileEl = h.querySelector('.fall-zeile');
+    zeileEl.querySelector('.inhalt').onclick = ()=>{ const i = betaFallIndex(art, zs); if(i >= 0){ betaMaskeHerkunft = 'gesamt'; ansichtMaske(art, i); } };
+    zeileEl.querySelector('[data-akt="hoch"]').onclick = async (ev)=>{
+      ev.stopPropagation();
+      const i = betaFallIndex(art, zs); if(i < 0) return;
+      await betaFaelleHochladen([{ ...ladeFaelle(art)[i], art, idx: i }]);
+      ansichtRechnungenGesamt(true);
+    };
+    betaWischen(zeileEl, async ()=>{
+      const i = betaFallIndex(art, zs); if(i < 0) return false;
+      const f = ladeFaelle(art)[i];
+      if(!await betaFrage('„' + ((f.werte || {}).txtName || 'ohne Namen') + '“ auf dem Handy löschen?\n\nBetrifft nur den noch nicht hochgeladenen Fall.', 'Löschen', 'Abbrechen')) return false;
+      const arr = ladeFaelle(art); arr.splice(i, 1); speichereFaelle(art, arr);
+      appToastAnzeigen('Gelöscht.', 1800);
+      betaGesamtZeichnen(document.getElementById('txtGesamtSuche').value, ziel);
+      return true;
+    });
+  });
+
+  // --- Eintraege der Uebersicht ---
+  const auswahlGeaendert = ()=>{ betaAktionsleisteAktualisieren(nachKey, ziel); };
+  listeEl.querySelectorAll('.wisch-huelle[data-key]').forEach(h=>{
+    const e = nachKey.get(h.dataset.key);
+    const zeileEl = h.querySelector('.fall-zeile');
+    const chk = zeileEl.querySelector('.chk');
+    chk.onclick = (ev)=>{ ev.stopPropagation(); if(chk.checked) betaAuswahl.add(e.key); else betaAuswahl.delete(e.key); zeileEl.classList.toggle('gewaehlt', chk.checked); auswahlGeaendert(); };
+    const pdfEl = zeileEl.querySelector('[data-akt="pdf"]');
+    if(pdfEl) pdfEl.onclick = (ev)=>{ ev.stopPropagation(); betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl }); };
+    zeileEl.querySelector('.inhalt').onclick = ()=>{
+      if(e.typ === 'ORIG') betaZeileBearbeiten(e.z, zuZeile.get(e.z.nr), ziel);
+      else if(e.pdf) betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl });
+    };
+    betaWischen(zeileEl, async ()=>{
+      const ok = await betaAktionLoeschen([e]);
+      if(ok){ betaAuswahl.delete(e.key); ansichtRechnungenGesamt(true); }
+      return ok;
+    });
+  });
+  // Tages-Ueberschrift antippen: alle dieses Tages an-/abwaehlen (wie am PC)
+  listeEl.querySelectorAll('.gesamt-gruppe').forEach(g=>{
+    g.onclick = ()=>{
+      const tag = eintraege.filter(e=> e.datum === g.dataset.gruppe && listeEl.querySelector('.wisch-huelle[data-key="' + CSS.escape(e.key) + '"]'));
+      const alle = tag.every(e=> betaAuswahl.has(e.key));
+      tag.forEach(e=>{ if(alle) betaAuswahl.delete(e.key); else betaAuswahl.add(e.key); });
+      betaGesamtZeichnen(document.getElementById('txtGesamtSuche').value, ziel);
+    };
+  });
+  auswahlGeaendert();
+}
+
+function betaAktionsleisteAktualisieren(nachKey, ziel){
+  let leiste = document.getElementById('gesamtAktionen');
+  const gewaehlt = [...betaAuswahl].map(k=> nachKey.get(k)).filter(Boolean);
+  if(!document.getElementById('gesamtListe')){ if(leiste) leiste.remove(); return; }
+  if(!leiste){
+    leiste = document.createElement('div');
+    leiste.id = 'gesamtAktionen';
+    leiste.className = 'gesamt-aktionen';
+    app.appendChild(leiste);
+  }
+  if(!gewaehlt.length){ leiste.classList.remove('aktiv'); return; }
+  const orig = gewaehlt.filter(e=> e.typ === 'ORIG');
+  const einOrig = gewaehlt.length === 1 && orig.length === 1;
+  const kann = {
+    senden: gewaehlt.some(e=> !e.versendet),
+    termin: gewaehlt.some(e=> !e.versendet),
+    adresse: einOrig && orig[0].art === 'ls' && !!orig[0].docx,
+    mahnung: einOrig && !!orig[0].docx,
+    frei: gewaehlt.some(e=> e.versendet),
+    weg: true
+  };
+  const k = (id, sym, label)=> `<button type="button" data-a="${id}" ${kann[id] ? '' : 'disabled'}><span class="sym">${sym}</span><span>${label}</span></button>`;
+  leiste.innerHTML = `<div class="gesamt-aktionen-kopf"><span>${gewaehlt.length} ausgewählt</span><button type="button" data-a="leer">Auswahl aufheben</button></div>
+    <div class="gesamt-aktionen-knoepfe">${k('senden', '&#9993;', 'Senden')}${k('termin', '&#8987;', 'Termin')}${k('adresse', '&#128205;', '2. Adresse')}${k('mahnung', '&#128231;', 'Mahnung')}${k('frei', '&#128275;', 'Freigeben')}${k('weg', '&#128465;', 'Löschen')}</div>`;
+  leiste.classList.add('aktiv');
+  const fertig = async (veraendert)=>{ if(veraendert){ betaAuswahl.clear(); await ansichtRechnungenGesamt(true); } };
+  leiste.querySelector('[data-a="leer"]').onclick = ()=>{ betaAuswahl.clear(); betaGesamtZeichnen(document.getElementById('txtGesamtSuche').value, ziel); };
+  leiste.querySelector('[data-a="senden"]').onclick = async ()=> fertig(await betaAktionSenden(gewaehlt, false));
+  leiste.querySelector('[data-a="termin"]').onclick = async ()=> fertig(await betaAktionSenden(gewaehlt, true));
+  leiste.querySelector('[data-a="adresse"]').onclick = async ()=> fertig(await betaZweiteAdresseErstellen(orig[0]));
+  leiste.querySelector('[data-a="mahnung"]').onclick = async ()=> fertig(await betaMahnungErstellen(orig[0]));
+  leiste.querySelector('[data-a="frei"]').onclick = async ()=> fertig(await betaAktionFreigeben(gewaehlt));
+  leiste.querySelector('[data-a="weg"]').onclick = async ()=> fertig(await betaAktionLoeschen(gewaehlt));
 }
 
 
@@ -6782,6 +7574,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     .map(p=> p.standard ? {...p, automatisch:true} : p);
   const gruppen = [
     {titel:'Grundpauschalen', liste: grundOhneE, automatisch:false},
+    {titel:'Eigene Positionen', liste: betaEigene(art).map(betaEigenePositionAlsAuswahl), automatisch:false, eigene:true},
     {titel:'Zeitzuschläge', liste: eEintrag ? [{...eEintrag, automatisch:false}, ...ZUSCHLAEGE_ZEIT] : ZUSCHLAEGE_ZEIT, automatisch:true},
     {titel:'Wegegeld', liste: [...WEGEGELD_TAG, ...WEGEGELD_NACHT, {ziffer:'REISE', bez:reiseBez, betrag:reise.gesamt}], automatisch:true}
   ];
@@ -6796,12 +7589,13 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       const istAuto = (typeof p.automatisch==='boolean') ? p.automatisch : g.automatisch;
       const checked = ausgewaehlteZiffern.has(p.ziffer) ? 'checked' : '';
       const gesperrt = istAuto ? 'disabled' : '';
-      html += `<label class="position-zeile${istAuto?' auto-gesperrt':''}">
+      html += `${p.eigene ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>` : ''}<label class="position-zeile${istAuto?' auto-gesperrt':''}">
         <input type="checkbox" data-ziffer="${p.ziffer}" data-betrag="${p.betrag}" data-auto="${istAuto?'1':'0'}" ${checked} ${gesperrt}>
-        <div class="haupt"><span class="ziffer">${p.ziffer||''}</span> ${p.bez}${gemischt&&istAuto?' <span class="auto-hinweis">automatisch</span>':''}</div>
+        <div class="haupt"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> ${p.eigene ? htmlEsc(p.bez) : p.bez}${gemischt&&istAuto?' <span class="auto-hinweis">automatisch</span>':''}</div>
         <div class="betrag">${p.betrag.toFixed(2).replace('.',',')} &euro;</div>
-      </label>`;
+      </label>${p.eigene ? '</div>' : ''}`;
     });
+    if(g.eigene) html += `<button type="button" class="btn-sekundaer" id="btnEigenePosNeu" style="margin:8px 0 4px;">+ Eigene Position hinzufügen</button>${g.liste.length ? '<div class="eigene-hinweis">Zum Löschen nach links wischen.</div>' : ''}`;
   });
   html += `<div class="summenzeile"><span>Gesamt</span><span id="posSumme">0,00 &euro;</span></div>`;
   html += `<button class="btn-primaer" id="btnPositionenFertig">Übernehmen</button>`;
@@ -6841,6 +7635,13 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   function positionAktualisieren(){ ausschluesseAktualisieren(); summeBerechnen(); }
   app.querySelectorAll('.position-zeile input').forEach(cb=> cb.addEventListener('change', positionAktualisieren));
   positionAktualisieren();
+  // BETA: eigene Positionen (anlegen, per Wischen loeschen)
+  betaEigenePositionenVerdrahten(art, (neuId, entferntId)=>{
+    const set = new Set(Array.from(app.querySelectorAll('.position-zeile input:checked')).map(cb=> cb.dataset.ziffer));
+    if(neuId) set.add(neuId);
+    if(entferntId) set.delete(entferntId);
+    ansichtPositionen(art, set, betragSchaetzung, weiter, kmFahrstreckeGesamt);
+  });
 
   document.getElementById('btnPositionenFertig').onclick = ()=>{
     const gewaehlt = new Set();
@@ -8167,6 +8968,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     }
     // BETA: Verknuepfung zur Uebersichtszeile behalten (bearbeitete Rechnung)
     if(korrekturIdx!==undefined && faelle[korrekturIdx].bezug) eintrag.bezug = faelle[korrekturIdx].bezug;
+    // BETA: Kopie der verwendeten eigenen Positionen im Fall
+    eintrag.eigenePositionen = betaEigeneSnapshot(art, eintrag.positionen, korrekturIdx!==undefined ? faelle[korrekturIdx].eigenePositionen : null);
     if(korrekturIdx!==undefined) faelle[korrekturIdx]=eintrag; else faelle.push(eintrag);
     speichereFaelle(art, faelle);
     // Erfolgreich gespeichert -- ein evtl. zwischengespeicherter Entwurf
