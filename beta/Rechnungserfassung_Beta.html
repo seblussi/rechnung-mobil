@@ -3692,7 +3692,7 @@ const INI_FELDER = [
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
   {k:'BRIEF_TESTMODUS',  typ:'bool', label:'Testmodus (es wird nichts gedruckt/berechnet)', standard:'1'},
-  {k:'LXP_WEITERLEITUNG', typ:'text', label:'Weiterleitung für den Versand vom Handy (Adresse der Azure-Funktion, z.B. https://NAME.azurewebsites.net/api)'}
+  {k:'LXP_WEITERLEITUNG', typ:'text', label:'Weiterleitung für den Versand vom Handy (leer lassen = Standard-Weiterleitung in Frankfurt)'}
 ];
 const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
@@ -3838,9 +3838,12 @@ async function iniAenderungenSchreiben(aenderungen, basisWerte){
 // Anfrage laeuft deshalb ueber eine kleine Weiterleitung (Azure Function),
 // die nur an api.letterxpress.de durchreicht. Zugangsdaten liegen NICHT in
 // der Weiterleitung, sondern werden wie am PC bei jedem Aufruf mitgeschickt.
+// Voreinstellung: eigene Weiterleitung in Azure (Frankfurt). Ein Eintrag im
+// Feld "Weiterleitung" bzw. LXP_WEITERLEITUNG in der ini hat Vorrang.
+const LXP_WEITERLEITUNG_STANDARD = 'https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net/api';
 function lxpBasisUrl(werte){
   const w = String((werte && werte.LXP_WEITERLEITUNG) || '').trim().replace(/\/+$/,'');
-  return w || 'https://api.letterxpress.de';
+  return w || LXP_WEITERLEITUNG_STANDARD;
 }
 
 // ---------- Oberflaeche ----------
@@ -3876,8 +3879,9 @@ function betaEinstellungenHtml(){
         <div style="display:flex; gap:8px;"><input type="password" id="${id}" value="${htmlEsc(v)}" autocomplete="off" style="flex:1;">
         <button type="button" class="btn-sekundaer ini-zeigen" data-for="${id}" style="width:auto; padding:0 12px;">zeigen</button></div></div>`;
     }
+    const platzhalter = (f.k === 'LXP_WEITERLEITUNG') ? ` placeholder="${htmlEsc(LXP_WEITERLEITUNG_STANDARD)}"` : '';
     return `<div class="feld"><label for="${id}">${f.label}</label>
-      <input type="text" id="${id}" value="${htmlEsc(v)}" autocomplete="off"></div>`;
+      <input type="text" id="${id}" value="${htmlEsc(v)}" autocomplete="off"${platzhalter}></div>`;
   };
   const stand = cache ? ('Zuletzt aus OneDrive geladen: ' + new Date(cache.geladenAm).toLocaleString('de-DE')) : 'Noch nicht aus OneDrive geladen.';
   return `
@@ -4019,7 +4023,7 @@ function betaEinstellungenWiring(){
       // antwortet mit einer Fehlermeldung, es entsteht kein Auftrag. Wichtig ist
       // nur, OB der Browser die Antwort ueberhaupt lesen darf (CORS).
       const basis = lxpBasisUrl(w);
-      const ueberWeiterleitung = basis !== 'https://api.letterxpress.de';
+      const ueberWeiterleitung = true; // direkter Aufruf ist vom Browser aus nicht moeglich (CORS)
       ergebnis('Teste Verbindung zu LetterXpress ' + (ueberWeiterleitung ? 'über die Weiterleitung' : 'direkt') + ' ...');
       const r = await fetch(basis + '/v3/printjobs', {
         method:'POST', headers:{'Content-Type':'application/json'},
