@@ -870,8 +870,28 @@ function xlsxLibLaden(){
 // Liest die Rechnungsuebersicht LIVE als Zeilen-Array (Spalte A = Index 0).
 // 1. Weg: Graph-Excel-API; 2. Weg (Rueckfall): Datei per Graph laden und lokal
 // mit SheetJS lesen. Bei Misserfolg: null und rnLiveFehler gesetzt.
+// Name des ersten Blatts, falls die Excel-Schnittstelle funktioniert hat --
+// null, wenn die Datei direkt gelesen werden musste (dann gibt es z.B. keine
+// Fett-Abfrage fuer das Brief-Symbol).
+let msGraphUebersichtBlatt = null;
+async function graphFehlerKurz(res){
+  try{
+    const j = await res.json();
+    return (j && j.error && (j.error.message || j.error.code)) ? ': ' + (j.error.message || j.error.code) : '';
+  }catch(e){ return ''; }
+}
+// Excel speichert Datumsangaben teils als Zahl (Tage seit 30.12.1899) --
+// fuer Anzeige und Fingerabdruck als TT.MM.JJJJ.
+function uebersichtDatumText(v){
+  if(typeof v === 'number' && v >= 1 && v < 2958466){
+    const d = new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 86400000);
+    return String(d.getUTCDate()).padStart(2,'0') + '.' + String(d.getUTCMonth()+1).padStart(2,'0') + '.' + d.getUTCFullYear();
+  }
+  return String(v==null ? '' : v).trim();
+}
 async function msGraphUebersichtZeilenRoh(){
   rnLiveFehler = '';
+  msGraphUebersichtBlatt = null;
   if(msGraphStatus!=='angemeldet'){ rnLiveFehler = 'nicht bei Microsoft angemeldet'; return null; }
   let token = null;
   try{ token = await msGraphTokenHolen(); }catch(e){}
@@ -892,11 +912,12 @@ async function msGraphUebersichtZeilenRoh(){
           const m = /!\$?([A-Z]+)\$?(\d+)/.exec(d.address || '');
           const versatz = m ? spaltenBuchstabeZuNr(m[1]) - 1 : 0;
           if(versatz > 0) zeilen = zeilen.map(r=>new Array(versatz).fill('').concat(r));
+          msGraphUebersichtBlatt = blattName;
           return zeilen;
         }
-        rnLiveFehler = 'Excel-Schnittstelle HTTP ' + rangeRes.status;
+        rnLiveFehler = 'Excel-Schnittstelle HTTP ' + rangeRes.status + await graphFehlerKurz(rangeRes);
       } else rnLiveFehler = 'Excel-Schnittstelle: kein Blatt';
-    } else rnLiveFehler = 'Excel-Schnittstelle HTTP ' + wsRes.status;
+    } else rnLiveFehler = 'Excel-Schnittstelle HTTP ' + wsRes.status + await graphFehlerKurz(wsRes);
   }catch(e){ rnLiveFehler = 'Excel-Schnittstelle: ' + (e.message||e); }
   try{
     await xlsxLibLaden();
@@ -1213,42 +1234,26 @@ function lokalenFallFuerZeileFinden(zeile){
 // statt die Ansicht mit einer Fehlermeldung zu blockieren.
 async function msGraphUebersichtFingerprintsLaden(){
   if(msGraphStatus!=='angemeldet') return null;
-  const token = await msGraphTokenHolen();
-  if(!token) return null;
-  try{
-    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
-    // Name des ersten Arbeitsblatts ermitteln (der Blattname selbst ist
-    // nicht fest bekannt/garantiert "Tabelle1").
-    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', {
-      headers: { Authorization: 'Bearer ' + token }
+  // KORREKTUR: frueher NUR ueber die Excel-Schnittstelle -- die streikt z.B.,
+  // wenn die Datei am PC mit ausgeblendetem Fenster gespeichert wurde. Jetzt
+  // ueber msGraphUebersichtZeilenRoh (bei Bedarf Datei direkt lesen).
+  const zeilen = await msGraphUebersichtZeilenRoh();
+  if(!zeilen) return null;
+  const map = new Map();
+  // Zeile 0 = Kopfzeile ueberspringen.
+  for(let i=1;i<zeilen.length;i++){
+    const r = zeilen[i] || [];
+    const key = [r[0], uebersichtDatumText(r[1]), r[5], r[6], uebersichtDatumText(r[7])]
+      .map(v=>String(v==null?'':v).toUpperCase().trim()).join('|');
+    if(key.replace(/\|/g,'')==='') continue; // komplett leere Zeile
+    if(map.has(key)) continue; // erste Fundstelle gewinnt, wie am PC
+    map.set(key, {
+      renu: String(r[16]==null?'':r[16]).trim()          // Q: Rechnungsnummer
+      // Kein "versandt"-Feld: das Signal "versendet" ist die Fett-Formatierung
+      // von Spalte R -- siehe msGraphBriefVersendetLaden.
     });
-    if(!wsRes.ok) return null;
-    const wsDaten = await wsRes.json();
-    const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
-    if(!blattName) return null;
-    const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
-      "')/usedRange(valuesOnly=true)?$select=values";
-    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
-    if(!rangeRes.ok) return null;
-    const rangeDaten = await rangeRes.json();
-    const zeilen = rangeDaten.values || [];
-    const map = new Map();
-    // Zeile 0 = Kopfzeile ueberspringen.
-    for(let i=1;i<zeilen.length;i++){
-      const r = zeilen[i];
-      const key = [r[0],r[1],r[5],r[6],r[7]].map(v=>String(v==null?'':v).toUpperCase().trim()).join('|');
-      if(key.replace(/\|/g,'')==='') continue; // komplett leere Zeile
-      if(map.has(key)) continue; // erste Fundstelle gewinnt, wie am PC
-      map.set(key, {
-        renu: String(r[16]==null?'':r[16]).trim()          // Q: Rechnungsnummer
-        // Kein "versandt"-Feld mehr hier: Spalte R enthaelt IMMER das
-        // Rechnungsdatum (nie leer), das eigentliche "versendet"-Signal ist
-        // die Fett-Formatierung der Zelle -- siehe msGraphBriefVersendetLaden
-        // weiter unten und der Kommentar in SchreibeInUebersicht (Modul1.bas).
-      });
-    }
-    return map;
-  }catch(e){ return null; }
+  }
+  return map;
 }
 
 // Laedt ALLE Zeilen der Rechnungsuebersicht (nicht nur per Fingerabdruck
@@ -1260,52 +1265,36 @@ async function msGraphUebersichtFingerprintsLaden(){
 // langen Uebersicht sehr viele Graph-Anfragen ausloesen) -- das passiert
 // erst bei Bedarf beim Antippen einer Zeile, siehe ansichtAlleRechnungen().
 async function msGraphAlleZeilenLaden(){
-  if(msGraphStatus!=='angemeldet') return null;
-  const token = await msGraphTokenHolen();
-  if(!token) return null;
-  try{
-    const basisUrl = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
-    const wsRes = await fetch(basisUrl + '/workbook/worksheets?$select=name', {
-      headers: { Authorization: 'Bearer ' + token }
+  if(msGraphStatus!=='angemeldet'){ rnLiveFehler = 'nicht bei Microsoft angemeldet'; return null; }
+  // KORREKTUR: ueber msGraphUebersichtZeilenRoh -- faellt die Excel-
+  // Schnittstelle aus (z.B. Datei am PC mit ausgeblendetem Fenster
+  // gespeichert), wird die Datei direkt gelesen statt gar nichts anzuzeigen.
+  const zeilen = await msGraphUebersichtZeilenRoh();
+  if(!zeilen) return null;
+  const betragText = v=> typeof v === 'number' ? v.toFixed(2).replace('.', ',') : String(v==null?'':v).trim();
+  const liste = [];
+  for(let i=1;i<zeilen.length;i++){
+    const r = zeilen[i] || [];
+    const art = String(r[0]==null?'':r[0]).trim();
+    const nachname = String(r[5]==null?'':r[5]).trim();
+    const vorname = String(r[6]==null?'':r[6]).trim();
+    if(art==='' && nachname==='' && vorname==='') continue; // komplett leere Zeile
+    liste.push({
+      art: art,                                              // A
+      datum: uebersichtDatumText(r[1]),                       // B
+      nachname: nachname,                                     // F
+      vorname: vorname,                                       // G
+      geda: uebersichtDatumText(r[7]),                        // H -- nur fuer lokalenFallFuerZeileFinden()
+      betrag: betragText(r[15]),                              // P
+      renu: String(r[16]==null?'':r[16]).trim(),              // Q
+      zeile: i+1                                              // Excel-Zeilennummer (1-basiert, Kopfzeile=1)
+      // Spalte R ("Rechnungsdatum") absichtlich NICHT als "versandt"
+      // ausgewertet -- das Signal "per LetterXpress versendet" ist die
+      // FETT-Formatierung, siehe msGraphBriefVersendetLaden().
     });
-    if(!wsRes.ok) return null;
-    const wsDaten = await wsRes.json();
-    const blattName = wsDaten.value && wsDaten.value[0] && wsDaten.value[0].name;
-    if(!blattName) return null;
-    const rangeUrl = basisUrl + "/workbook/worksheets('" + encodeURIComponent(blattName) +
-      "')/usedRange(valuesOnly=true)?$select=values";
-    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
-    if(!rangeRes.ok) return null;
-    const rangeDaten = await rangeRes.json();
-    const zeilen = rangeDaten.values || [];
-    const liste = [];
-    for(let i=1;i<zeilen.length;i++){
-      const r = zeilen[i];
-      const art = String(r[0]==null?'':r[0]).trim();
-      const nachname = String(r[5]==null?'':r[5]).trim();
-      const vorname = String(r[6]==null?'':r[6]).trim();
-      if(art==='' && nachname==='' && vorname==='') continue; // komplett leere Zeile
-      liste.push({
-        art: art,                                              // A
-        datum: String(r[1]==null?'':r[1]).trim(),               // B
-        nachname: nachname,                                     // F
-        vorname: vorname,                                       // G
-        geda: String(r[7]==null?'':r[7]).trim(),                // H -- nur fuer lokalenFallFuerZeileFinden()
-        betrag: String(r[15]==null?'':r[15]).trim(),            // P
-        renu: String(r[16]==null?'':r[16]).trim(),              // Q
-        zeile: i+1                                              // Excel-Zeilennummer (1-basiert, Kopfzeile=1)
-        // Spalte R ("Rechnungsdatum") absichtlich NICHT mehr als "versandt"
-        // ausgewertet -- R enthaelt IMMER ein Datum, auch wenn nie versendet
-        // wurde (siehe SchreibeInUebersicht in Modul1.bas: werte(15) wird bei
-        // JEDER Rechnung geschrieben). Das tatsaechliche Signal "per
-        // LetterXpress versendet" ist ausschliesslich die FETT-Formatierung
-        // dieser Zelle (siehe BriefAlsVersendetMarkieren in der HTA) -- wird
-        // separat per msGraphBriefVersendetLaden() nachgeladen, siehe unten.
-      });
-    }
-    liste.reverse(); // neueste (unterste Excel-Zeile) zuerst
-    return {liste, blattName};
-  }catch(e){ return null; }
+  }
+  liste.reverse(); // neueste (unterste Excel-Zeile) zuerst
+  return {liste, blattName: msGraphUebersichtBlatt};
 }
 
 // Prueft per Graph, ob die Rechnungsdatum-Zelle (Spalte R) einer Excel-Zeile
@@ -3549,7 +3538,8 @@ function alleRechnungenListeRendern(cache, suchtext){
   const zielEl = document.getElementById('alleRechnungenListe');
   if(!zielEl) return;
   if(cache === null){
-    zielEl.innerHTML = '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden (kein Netz oder nicht angemeldet). Bitte "Neu laden" versuchen.</div>';
+    const grund = rnLiveFehler ? String(rnLiveFehler).replace(/&/g,'&amp;').replace(/</g,'&lt;') : 'kein Netz oder nicht angemeldet';
+    zielEl.innerHTML = '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden (' + grund + '). Bitte "Neu laden" versuchen.</div>';
     return;
   }
   const liste = cache.liste, blattName = cache.blattName;
@@ -4042,10 +4032,9 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
 //      OneDrive laden
 //   3. .docx erzeugen (siehe rechnungDocxErzeugen) und hochladen
 //   4. PDF von Microsoft aus der .docx erzeugen lassen und daneben ablegen
-// BETA: Ablage NUR im Testordner "KVBW Onedrive/Beta-Test/fertige
-// Rechnungen" -- die echten Rechnungen und die Rechnungsuebersicht bleiben
-// unberuehrt. Der Testbrief geht immer im LetterXpress-TESTMODUS raus (es
-// wird nichts gedruckt, verschickt oder berechnet).
+//   5. Zeile in die Rechnungsuebersicht schreiben (wie SchreibeInUebersicht)
+// Wohin geschrieben wird, entscheidet betaZiel(): Testablage (Standard) oder
+// Echtbetrieb (Schalter in den Einstellungen).
 const BETA_ZIEL_ORDNER = 'KVBW Onedrive/Beta-Test/fertige Rechnungen';
 const MSGRAPH_PFAD_WORDVORLAGE = {
   ls: 'KVBW Onedrive/Vorlage_Abrechnung_Leichenschau_Makros_v4.docm',
@@ -4075,6 +4064,20 @@ function diagnosenVolltext(diagnosen){
   }).join(', ');
 }
 
+// Fuehrt einen Arbeitsschritt aus und benennt ihn im Fehlerfall -- statt
+// eines nackten "Failed to fetch" steht dann da, WELCHER Zugriff scheiterte.
+async function schritt(name, fn){
+  try{ return await fn(); }
+  catch(e){
+    const msg = (e && e.message) || String(e);
+    if(e instanceof TypeError || /failed to fetch|networkerror|load failed|network request failed/i.test(msg)){
+      throw new Error(name + ': keine Antwort von Microsoft (' + msg + '). Internet prüfen bzw. Einstellungen > Funktionstest > „OneDrive-Verbindung prüfen“.');
+    }
+    if(msg.indexOf(name) === 0) throw e;
+    throw new Error(name + ': ' + msg);
+  }
+}
+
 async function graphDateiLaden(token, pfad){
   const r = await fetch(msGraphPfadUrl(pfad) + '/content', { headers:{ Authorization:'Bearer ' + token }, cache:'no-store' });
   if(!r.ok) throw new Error('„' + pfad.split('/').pop() + '“ konnte nicht aus OneDrive geladen werden (HTTP ' + r.status + ').');
@@ -4086,18 +4089,19 @@ async function excelVorlageZeilenLaden(token, art){
   const basis = msGraphPfadUrl(pfad);
   // Bevorzugt die unveraenderte Snapshot-Kopie (vollstaendiger Katalog),
   // sonst Tabelle1
+  let letzterFehler = '';
   for(const blatt of [EXCELVORLAGE_SNAPSHOT_BLATT[art], 'Tabelle1']){
     try{
       const url = basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')/range(address='A1:F120')?$select=values";
       const r = await fetch(url, { headers:{ Authorization:'Bearer ' + token } });
-      if(!r.ok) continue;
+      if(!r.ok){ letzterFehler = 'HTTP ' + r.status; continue; }
       const d = await r.json();
       const zeilen = d.values || [];
       const kopf = (zeilen[0] || []).map(v=> String(v));
       if(kopf.some(v=> /bezeichnung/i.test(v))) return {zeilen, blatt};
-    }catch(e){ /* naechstes Blatt versuchen */ }
+    }catch(e){ letzterFehler = (e && e.message) || String(e); /* naechstes Blatt versuchen */ }
   }
-  throw new Error('Die Positionen konnten nicht aus der Excel-Vorlage gelesen werden.');
+  throw new Error('Die Positionen konnten nicht aus der Excel-Vorlage gelesen werden' + (letzterFehler ? ' (' + letzterFehler + ')' : '') + '.');
 }
 
 async function arztdatenLaden(){
@@ -4151,53 +4155,497 @@ function fallRechnungsdaten(f, arzt){
   return daten;
 }
 
-// Erstellt Word + PDF fuer einen Fall (f mit art/idx/werte/positionen/rechnungsnummer)
-async function betaRechnungErstellen(f, meldung){
-  const token = await msGraphTokenHolen();
-  if(!token) throw new Error('Bitte zuerst bei Microsoft/OneDrive anmelden (Einstellungen).');
-  if(typeof JSZip === 'undefined') throw new Error('Die Word-Bibliothek konnte nicht geladen werden (Internet?).');
-  meldung('Arztdaten werden geladen …');
-  const {arzt} = await arztdatenLaden();
-  if(!f.rechnungsnummer){
-    meldung('Rechnungsnummer wird vergeben …');
-    await rechnungsnummernVergeben([f]);
-    const aktuell = ladeFaelle(f.art)[f.idx] || {};
-    f.rechnungsnummer = aktuell.rechnungsnummer;
-    if(!f.rechnungsnummer) throw new Error('Es konnte keine Rechnungsnummer vergeben werden.');
-  }
-  const daten = fallRechnungsdaten(f, arzt);
-  meldung('Vorlagen werden geladen …');
-  const [docm, excel] = await Promise.all([
-    graphDateiLaden(token, MSGRAPH_PFAD_WORDVORLAGE[f.art]),
-    excelVorlageZeilenLaden(token, f.art)
-  ]);
-  meldung('Word-Dokument wird erstellt …');
-  const erg = await rechnungDocxErzeugen(docm, excel.zeilen, daten, 'blob');
-  const name = renuDateiname(daten.renu);
-  meldung('Word-Dokument wird hochgeladen …');
-  await msGraphOrdnerSicherstellen(token, 'KVBW Onedrive/Beta-Test');
-  await msGraphOrdnerSicherstellen(token, BETA_ZIEL_ORDNER);
-  const docxItem = await msGraphDateiHochladen(token, BETA_ZIEL_ORDNER + '/' + name + '.docx', erg.inhalt,
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-  if(!docxItem || !docxItem.id) throw new Error('Das Word-Dokument wurde nicht korrekt gespeichert.');
-  meldung('PDF wird erzeugt …');
-  let pdfBlob = null;
-  for(let versuch = 1; versuch <= 3 && !pdfBlob; versuch++){
-    const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + docxItem.id + '/content?format=pdf', { headers:{ Authorization:'Bearer ' + token } });
-    if(r.ok){
-      const b = await r.blob();
-      const kopf = String.fromCharCode(...new Uint8Array(await b.slice(0,5).arrayBuffer()));
-      if(kopf === '%PDF-') pdfBlob = new Blob([b], {type:'application/pdf'});
-    }
-    if(!pdfBlob) await new Promise(res=> setTimeout(res, 1500 * versuch));
-  }
-  if(!pdfBlob) throw new Error('Microsoft konnte aus dem Word-Dokument kein PDF erzeugen.');
-  const pdfItem = await msGraphDateiHochladen(token, BETA_ZIEL_ORDNER + '/' + name + '.pdf', pdfBlob, 'application/pdf');
-  return {name, renu: daten.renu, summe: erg.summe, warnungen: erg.warnungen, pdfBlob,
-          docxUrl: docxItem.webUrl, pdfUrl: pdfItem && pdfItem.webUrl, vorlageBlatt: excel.blatt};
+// =====================================================================
+// Ablageziel der Beta
+// =====================================================================
+// Testablage (Standard): eigene Kopie der Rechnungsuebersicht und eigener
+//   Ordner unter "KVBW Onedrive/Beta-Test", Briefe immer im LetterXpress-
+//   Testmodus. Die echte Uebersicht und "fertige Rechnungen" bleiben unberuehrt.
+// Echtbetrieb (Schalter in den Einstellungen): echte Uebersicht, echter Ordner
+//   "fertige Rechnungen" -- genau wie am PC. Der Briefversand richtet sich dann
+//   nach "Testmodus" in den Briefversand-Einstellungen (einstellungen.ini).
+const BETA_TEST_UEBERSICHT = 'KVBW Onedrive/Beta-Test/Übersicht gestellter Rechnungen (Test).xlsx';
+function betaZiel(){
+  const echt = !!ladeEinstellungen().betaEchtbetrieb;
+  return echt
+    ? {echt:true,  uebersicht: MSGRAPH_PFAD_UEBERSICHT, ordner: MSGRAPH_PFAD_ZIEL_ORDNER, titel:'Echtbetrieb'}
+    : {echt:false, uebersicht: BETA_TEST_UEBERSICHT,   ordner: BETA_ZIEL_ORDNER,         titel:'Testablage'};
 }
 
-// ---------- LetterXpress: Testbrief ----------
+// ---------- Graph-Aufruf mit verwertbarer Fehlermeldung ----------
+async function gx(token, methode, url, koerper, sid){
+  const h = { Authorization:'Bearer ' + token };
+  if(koerper !== undefined) h['Content-Type'] = 'application/json';
+  if(sid) h['workbook-session-id'] = sid;
+  let r;
+  try{
+    r = await fetch(url, { method: methode, headers: h, cache:'no-store',
+                           body: koerper !== undefined ? JSON.stringify(koerper) : undefined });
+  }catch(e){
+    const err = new Error('keine Antwort von Microsoft (' + ((e && e.message) || e) + ')');
+    err.netz = true; throw err;
+  }
+  if(!r.ok){
+    const err = new Error('HTTP ' + r.status + ' ' + await graphFehlerText(r));
+    err.status = r.status; throw err;
+  }
+  if(r.status === 204) return null;
+  const t = await r.text();
+  try{ return t ? JSON.parse(t) : null; }catch(_){ return null; }
+}
+
+// ---------- Excel-Datum/-Uhrzeit ----------
+const XL_EPOCHE = Date.UTC(1899, 11, 30);
+function zz2(n){ return String(n).padStart(2, '0'); }
+function xlDatumText(v){
+  if(typeof v === 'number' && v > 0){
+    const d = new Date(XL_EPOCHE + Math.round(v) * 86400000);
+    return zz2(d.getUTCDate()) + '.' + zz2(d.getUTCMonth() + 1) + '.' + d.getUTCFullYear();
+  }
+  return String(v == null ? '' : v).trim();
+}
+function xlDatumSerial(txt){
+  const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(String(txt || '').trim());
+  if(!m) return null;
+  const ms = Date.UTC(+m[3], +m[2] - 1, +m[1]);
+  const d = new Date(ms);
+  if(d.getUTCDate() !== +m[1] || d.getUTCMonth() !== +m[2] - 1) return null;
+  return Math.round((ms - XL_EPOCHE) / 86400000);
+}
+function xlZeitSerial(txt){
+  const m = /^(\d{1,2}):(\d{2})$/.exec(String(txt || '').trim());
+  if(!m || +m[1] > 23 || +m[2] > 59) return null;
+  return (+m[1] * 60 + +m[2]) / 1440;
+}
+function heuteText(){ const d = new Date(); return zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' + d.getFullYear(); }
+
+// Fingerabdruck wie am PC (Spalten A,B,F,G,H, gross geschrieben) -- Datum
+// zusaetzlich auf TT.MM.JJJJ gebracht, damit "8.10.2026" und "08.10.2026"
+// bzw. eine echte Excel-Datumszahl denselben Schluessel ergeben.
+function fpDatum(s){
+  const m = /^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/.exec(String(s || '').trim());
+  return m ? zz2(+m[1]) + '.' + zz2(+m[2]) + '.' + m[3] : String(s || '').trim();
+}
+function fpSchluessel(a, b, f, g, h){
+  return [a, fpDatum(b), f, g, fpDatum(h)].map(v=> String(v == null ? '' : v).toUpperCase().trim()).join('|');
+}
+
+// ---------- LXP-Kennzeichen in Spalte U (wie LxpFlagVorhanden/-Setzen der HTA) ----------
+function lxpFlagVorhanden(u, flag){ return String(u || '').split('|').some(t=> t.trim() === flag); }
+function lxpFlagSetzenText(u, flag){
+  u = String(u || '');
+  if(lxpFlagVorhanden(u, flag)) return u;
+  return u.trim() === '' ? flag : u + ' | ' + flag;
+}
+function lxpFlagsAus(u){ return String(u || '').split('|').map(t=> t.trim()).filter(t=> /^LXP:/i.test(t)); }
+
+// ---------- Uebersicht "einblenden" (Reparatur) ----------
+// Microsoft (Excel im Browser, Excel-App, Schnittstelle) oeffnet keine Mappe,
+// deren Fenster beim Speichern ausgeblendet war ("cannot open this workbook
+// in the browser since it's hidden"). Die HTA blendet die vorgeladene
+// Uebersicht aus und hat sie bis zur Korrektur auch so gespeichert. Hier wird
+// nur dieser eine Eintrag in xl/workbook.xml entfernt -- alle anderen Teile
+// der Datei bleiben unveraendert. Zurueckgeschrieben wird nur, wenn die Datei
+// seit dem Laden nicht geaendert wurde (If-Match).
+const RE_FENSTER_AUSGEBLENDET = /(<workbookView\b[^>]*?)\s+visibility="(?:hidden|veryHidden)"/g;
+async function xlsxAusOneDrive(token, pfad){
+  const meta = await gx(token, 'GET', msGraphPfadUrl(pfad) + '?$select=id,eTag');
+  let r;
+  try{ r = await fetch(msGraphPfadUrl(pfad) + '/content', { headers:{ Authorization:'Bearer ' + token }, cache:'no-store' }); }
+  catch(e){ const err = new Error('keine Antwort von Microsoft (' + ((e && e.message) || e) + ')'); err.netz = true; throw err; }
+  if(!r.ok) throw new Error('Datei laden: HTTP ' + r.status);
+  const zip = await JSZip.loadAsync(await r.arrayBuffer());
+  return { meta, zip };
+}
+async function uebersichtAusgeblendet(token, pfad){
+  const { zip } = await xlsxAusOneDrive(token, pfad);
+  const f = zip.file('xl/workbook.xml');
+  if(!f) return false;
+  RE_FENSTER_AUSGEBLENDET.lastIndex = 0;
+  return RE_FENSTER_AUSGEBLENDET.test(await f.async('string'));
+}
+async function uebersichtEinblenden(token, pfad){
+  const { meta, zip } = await xlsxAusOneDrive(token, pfad);
+  const f = zip.file('xl/workbook.xml');
+  if(!f) throw new Error('Das ist keine gültige Excel-Datei.');
+  const xml = await f.async('string');
+  const neu = xml.replace(RE_FENSTER_AUSGEBLENDET, '$1');
+  if(neu === xml) return false; // war gar nicht ausgeblendet
+  zip.file('xl/workbook.xml', neu);
+  const typ = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  const blob = await zip.generateAsync({ type:'blob', compression:'DEFLATE', mimeType: typ });
+  let r;
+  try{
+    r = await fetch(msGraphPfadUrl(pfad) + '/content', { method:'PUT', body: blob,
+      headers:{ Authorization:'Bearer ' + token, 'Content-Type': typ, 'If-Match': meta.eTag } });
+  }catch(e){ throw new Error('Reparatur: keine Antwort von Microsoft (' + ((e && e.message) || e) + ')'); }
+  if(r.status === 412) throw new Error('Die Übersicht wurde gerade an anderer Stelle geändert – bitte gleich noch einmal versuchen.');
+  if(!r.ok) throw new Error('Reparatur: Speichern fehlgeschlagen (HTTP ' + r.status + ')');
+  return true;
+}
+// uebersichtLaden mit automatischer Erkennung des ausgeblendeten Fensters:
+// Test-Kopie wird still repariert, die echte Uebersicht nur nach Rueckfrage.
+async function uebersichtLadenRepariert(token, ziel, frage, meldung){
+  try{ return await uebersichtLaden(token, ziel.uebersicht); }
+  catch(e){
+    if(e.netz) throw e;
+    let ausgeblendet = false;
+    try{ ausgeblendet = await uebersichtAusgeblendet(token, ziel.uebersicht); }catch(_){}
+    if(!ausgeblendet) throw e;
+    if(ziel.echt){
+      const ok = await frage('Die Rechnungsübersicht wurde am PC mit ausgeblendetem Fenster gespeichert. So kann Microsoft sie nicht öffnen – deshalb lädt auch die Rechnungsverwaltung nicht.\n\n' +
+        'Jetzt reparieren? (Es wird nur „ausgeblendet“ entfernt, sonst nichts geändert. Am besten ist die HTA am PC dabei geschlossen.)');
+      if(!ok) throw new Error('Die Übersicht ist am PC ausgeblendet gespeichert (Excel am PC: Ansicht > Einblenden, dann speichern).');
+    }
+    if(meldung) meldung('Übersicht wird repariert (Fenster einblenden) …');
+    await uebersichtEinblenden(token, ziel.uebersicht);
+    await new Promise(res=> setTimeout(res, 2000));
+    return await uebersichtLaden(token, ziel.uebersicht);
+  }
+}
+
+// ---------- Test-Uebersicht (Kopie der echten) ----------
+async function testUebersichtSicherstellen(token, neuAnlegen, meldung){
+  const ziel = msGraphPfadUrl(BETA_TEST_UEBERSICHT);
+  if(!neuAnlegen){
+    try{ await gx(token, 'GET', ziel + '?$select=id'); return false; }
+    catch(e){ if(e.status !== 404) throw e; }
+  }
+  if(meldung) meldung('Test-Übersicht wird als Kopie der echten Übersicht angelegt …');
+  await msGraphOrdnerSicherstellen(token, 'KVBW Onedrive/Beta-Test');
+  const quelle = await gx(token, 'GET', msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT) + '?$select=id');
+  const ordner = await gx(token, 'GET', msGraphPfadUrl('KVBW Onedrive/Beta-Test') + '?$select=id,parentReference');
+  if(neuAnlegen){
+    try{ await gx(token, 'DELETE', ziel); }catch(e){ if(e.status !== 404) throw e; }
+  }
+  await gx(token, 'POST', 'https://graph.microsoft.com/v1.0/me/drive/items/' + quelle.id + '/copy',
+    { parentReference: { driveId: ordner.parentReference && ordner.parentReference.driveId, id: ordner.id },
+      name: BETA_TEST_UEBERSICHT.split('/').pop() });
+  // Kopieren laeuft bei Microsoft im Hintergrund -- warten, bis die Datei da ist
+  for(let i = 0; i < 40; i++){
+    await new Promise(res=> setTimeout(res, 1000));
+    let da = false;
+    try{ await gx(token, 'GET', ziel + '?$select=id'); da = true; }
+    catch(e){ if(e.status !== 404) throw e; }
+    if(da){
+      // Die Kopie erbt ein evtl. ausgeblendetes Fenster -> gleich reparieren
+      // (die Kopie hat niemand offen).
+      try{ await uebersichtEinblenden(token, BETA_TEST_UEBERSICHT); }catch(_){}
+      return true;
+    }
+  }
+  throw new Error('Die Kopie der Übersicht ist nach 40 Sekunden noch nicht fertig – bitte gleich noch einmal versuchen.');
+}
+
+// ---------- Uebersicht lesen ----------
+function xlAdresseStart(adresse){
+  const m = /!\$?([A-Z]+)\$?(\d+)/.exec(adresse || '');
+  return m ? { spalte: spaltenBuchstabeZuNr(m[1]) - 1, zeile: +m[2] } : { spalte: 0, zeile: 1 };
+}
+async function uebersichtLaden(token, pfad){
+  const basis = msGraphPfadUrl(pfad);
+  const ws = await gx(token, 'GET', basis + '/workbook/worksheets?$select=name,position');
+  const blaetter = ((ws && ws.value) || []).slice().sort((a, b)=> (a.position || 0) - (b.position || 0));
+  if(!blaetter.length) throw new Error('Die Übersicht enthält kein Tabellenblatt.');
+  const blatt = blaetter[0].name; // wie am PC: immer das erste Blatt
+  const blattUrl = basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')";
+  const ur = await gx(token, 'GET', blattUrl + '/usedRange(valuesOnly=true)?$select=address,values');
+  const st = xlAdresseStart(ur && ur.address);
+  const zeilen = ((ur && ur.values) || []).map((r, i)=> ({ nr: st.zeile + i, v: new Array(st.spalte).fill('').concat(r) }));
+  return { pfad, basis, blatt, blattUrl, zeilen };
+}
+
+function uebersichtAuswerten(ue){
+  const t = v=> String(v == null ? '' : v).trim();
+  const erg = { letzteZeile: 1, hoechsteNr: 0, nachFp: new Map(), nachRenu: new Map(), nachNr: new Map(), alsZahl: {} };
+  for(const z of ue.zeilen){
+    if(z.nr < 2) continue;
+    const v = z.v, a = t(v[0]), f = t(v[5]), q = t(v[16]);
+    if(a) erg.letzteZeile = Math.max(erg.letzteZeile, z.nr); // wie am PC: letzte Zeile ueber Spalte A
+    const n = renuZaehlerAusText(q);
+    if(n !== null){
+      if(n > erg.hoechsteNr) erg.hoechsteNr = n;
+      if(!erg.nachNr.has(n)) erg.nachNr.set(n, z);
+    }
+    if(q && !erg.nachRenu.has(q)) erg.nachRenu.set(q, z);
+    if(a || f){
+      const k = fpSchluessel(a, xlDatumText(v[1]), f, t(v[6]), xlDatumText(v[7]));
+      if(!erg.nachFp.has(k)) erg.nachFp.set(k, z); // erste Fundstelle gewinnt, wie am PC
+      // Stehen Datum/Uhrzeit in den bisherigen Zeilen als echte Excel-Zahl
+      // oder als Text? Die App schreibt es genauso (die letzte Zeile zaehlt).
+      [1, 2, 3, 4, 7].forEach(c=>{ if(v[c] !== '' && v[c] != null) erg.alsZahl[c] = (typeof v[c] === 'number'); });
+    }
+  }
+  return erg;
+}
+
+// Hoechste schon vergebene Nummer in den lokal gespeicherten Faellen -- in der
+// Beta UND (anderer Speicherbereich) in der normalen Version, damit keine
+// Nummer doppelt vergeben wird, die dort fuer einen noch nicht eingelesenen
+// Fall bereits reserviert ist.
+function hoechsteLokaleNrBeideVersionen(){
+  let max = hoechsteLokalVergebeneRenu();
+  try{
+    ['ls', 'pt'].forEach(art=>{
+      const roh = window.__rohSpeicher && window.__rohSpeicher.get('faelle_' + art);
+      if(!roh) return;
+      (JSON.parse(roh) || []).forEach(f=>{ const n = renuZaehlerAusText(f && f.rechnungsnummer); if(n !== null && n > max) max = n; });
+    });
+  }catch(_){}
+  return max;
+}
+
+// ---------- Uebersicht schreiben ----------
+async function xlSitzung(token, basis){
+  try{ const s = await gx(token, 'POST', basis + '/workbook/createSession', { persistChanges: true }); return (s && s.id) || null; }
+  catch(e){ if(e.netz) throw e; return null; } // ohne Sitzung geht es auch (jede Aenderung wird dann einzeln gespeichert)
+}
+async function xlSitzungEnde(token, basis, sid){
+  if(!sid) return;
+  try{ await gx(token, 'POST', basis + '/workbook/closeSession', undefined, sid); }catch(_){}
+}
+// Blattschutz (am PC optional: nur Spalte U gesperrt, ohne Kennwort) kurz
+// aufheben und danach mit denselben Optionen wieder setzen.
+async function blattSchutzAufheben(token, ue, sid){
+  let p = null;
+  try{ p = await gx(token, 'GET', ue.blattUrl + '/protection', undefined, sid); }
+  catch(e){ if(e.netz) throw e; return null; }
+  if(!p || !p.protected) return null;
+  await gx(token, 'POST', ue.blattUrl + '/protection/unprotect', undefined, sid);
+  return p.options || {};
+}
+async function blattSchutzWiederherstellen(token, ue, optionen, sid){
+  if(!optionen) return;
+  await gx(token, 'POST', ue.blattUrl + '/protection/protect', { options: optionen }, sid);
+}
+function zelle(ue, adr){ return ue.blattUrl + "/range(address='" + adr + "')"; }
+
+const XL_FORMAT_DATUM = 'dd\\.mm\\.yyyy';
+const XL_FORMAT_ZEIT = 'h:mm';
+const XL_FORMAT_EURO = '#,##0.00\\ "€"';
+
+// Werte fuer A..R wie SchreibeInUebersicht am PC (LS bzw. PT)
+function fallUebersichtsWerte(f, renu, betrag, rechnungsdatum, alsZahl, aktualisieren){
+  const w = f.werte || {};
+  const { nachname, vorname } = nameAufteilen(w.txtName);
+  const istLs = f.art === 'ls';
+  const formate = {};
+  const datum = (c, txt)=>{
+    if(alsZahl[c] === false) return txt || '';
+    const s = xlDatumSerial(normalisiereDatum(txt || '') || txt);
+    if(s === null) return txt || '';
+    formate[c] = XL_FORMAT_DATUM; return s;
+  };
+  const zeit = (c, txt)=>{
+    if(alsZahl[c] === false) return txt || '';
+    const s = xlZeitSerial(normalisiereZeit(txt || '') || txt);
+    if(s === null) return txt || '';
+    formate[c] = XL_FORMAT_ZEIT; return s;
+  };
+  const leer = aktualisieren ? null : ''; // null = Zelle unveraendert lassen
+  const werte = new Array(18).fill(leer);
+  werte[0] = istLs ? 'L' : 'P';
+  werte[1] = datum(1, w.txtDatumExcel);
+  werte[2] = zeit(2, w.txtZeitLS);
+  if(istLs){
+    werte[3] = datum(3, w.txtSterbedatum);
+    werte[4] = zeit(4, w.txtTodeszeit);
+    werte[10] = w.txtSterbeAdr1 || 'idem';
+    werte[11] = w.txtSterbeAdr2 || 'idem';
+    werte[12] = w.txtBName || '';
+    werte[13] = w.txtAdresse1 || '';
+    werte[14] = w.txtAdresse2 || '';
+  } else {
+    werte[13] = ''; werte[14] = ''; // PT: N/O wie am PC leer, D/E/K/L/M unangetastet
+  }
+  werte[5] = nachname;
+  werte[6] = vorname;
+  werte[7] = datum(7, w.txtGeda);
+  werte[8] = w.txtPAdresse1 || '';
+  werte[9] = w.txtPAdresse2 || '';
+  werte[15] = Math.round(Number(betrag) * 100) / 100; formate[15] = XL_FORMAT_EURO;
+  werte[16] = renu;
+  const r = xlDatumSerial(rechnungsdatum);
+  werte[17] = r === null ? (rechnungsdatum || '') : r; if(r !== null) formate[17] = XL_FORMAT_DATUM;
+  let spalteU = 'POS:' + (f.positionen || []).join(',') + ' | KM:' + (w.txtKm || '0');
+  if(!istLs){ const k = diagnosenKuerzel(w.diagnosen); if(k) spalteU += ' | ICD:' + k; }
+  return { werte, formate, spalteU };
+}
+
+async function uebersichtZeileSchreiben(token, ue, sid, nr, zeile){
+  const schutz = await blattSchutzAufheben(token, ue, sid);
+  try{
+    await gx(token, 'PATCH', zelle(ue, 'A' + nr + ':R' + nr), { values: [zeile.werte] }, sid);
+    for(const c of Object.keys(zeile.formate)){
+      await gx(token, 'PATCH', zelle(ue, String.fromCharCode(65 + +c) + nr), { numberFormat: [[zeile.formate[c]]] }, sid);
+    }
+    await gx(token, 'PATCH', zelle(ue, 'A' + nr + ':Q' + nr) + '/format/font', { name: 'Arial', size: 11 }, sid);
+    if(!zeile.rBehalten) await gx(token, 'PATCH', zelle(ue, 'R' + nr) + '/format/font', { name: 'Arial', size: 11 }, sid);
+    // R nie fett beim Erstellen -- fett heisst "per Brief verschickt"
+    if(!zeile.rBehalten) await gx(token, 'PATCH', zelle(ue, 'R' + nr) + '/format/font', { bold: false }, sid);
+    await gx(token, 'PATCH', zelle(ue, 'T' + nr), { formulas: [['=IF(AND(S' + nr + '="",R' + nr + '=""),"",IF(S' + nr + '<>"",S' + nr + '-R' + nr + ',TODAY()-R' + nr + '))']] }, sid);
+    await gx(token, 'PATCH', zelle(ue, 'U' + nr), { values: [[zeile.spalteU]] }, sid);
+    await gx(token, 'PATCH', zelle(ue, 'U' + nr) + '/format/font', { name: 'Arial', size: 9, color: '#FFFFFF' }, sid);
+    await gx(token, 'PATCH', zelle(ue, 'W' + nr), { formulas: [['=IF(V' + nr + '="","",IF(S' + nr + '="",TODAY()-V' + nr + ',V' + nr + '-S' + nr + '))']] }, sid);
+  } finally {
+    await blattSchutzWiederherstellen(token, ue, schutz, sid);
+  }
+}
+
+// Wie BriefAlsVersendetMarkieren am PC: R = Versanddatum (fett), U += LXP:1
+async function uebersichtVersandVermerken(token, ue, sid, nr, bisherU){
+  const schutz = await blattSchutzAufheben(token, ue, sid);
+  try{
+    await gx(token, 'PATCH', zelle(ue, 'R' + nr), { values: [[xlDatumSerial(heuteText())]], numberFormat: [[XL_FORMAT_DATUM]] }, sid);
+    await gx(token, 'PATCH', zelle(ue, 'R' + nr) + '/format/font', { bold: true }, sid);
+    const neuU = lxpFlagSetzenText(bisherU, 'LXP:1');
+    if(neuU !== String(bisherU || '')) await gx(token, 'PATCH', zelle(ue, 'U' + nr), { values: [[neuU]] }, sid);
+  } finally {
+    await blattSchutzWiederherstellen(token, ue, schutz, sid);
+  }
+}
+
+async function zeileFett(token, ue, nr){
+  try{ const d = await gx(token, 'GET', zelle(ue, 'R' + nr) + '/format/font?$select=bold'); return !!(d && d.bold === true); }
+  catch(e){ if(e.netz) throw e; return false; }
+}
+async function dateiInfo(token, pfad){
+  try{ return await gx(token, 'GET', msGraphPfadUrl(pfad) + '?$select=id,name,webUrl,lastModifiedDateTime'); }
+  catch(e){ if(e.status === 404) return null; throw e; }
+}
+
+// =====================================================================
+// Ein Fall komplett: Nummer, Pruefungen, Word + PDF, Eintrag in der Uebersicht
+// =====================================================================
+// frage(text) -> Promise<boolean> (OK/Abbrechen). kontext: {token, arzt, ziel, vorlagen}
+async function betaRechnungErstellen(f, meldung, frage, kontext){
+  const { token, arzt, ziel } = kontext;
+  const w = f.werte || {};
+  const { nachname, vorname } = nameAufteilen(w.txtName);
+  if(!nachname || !vorname) throw new Error('Name bitte als „Nachname, Vorname“ oder „Vorname Nachname“ eintragen.');
+  const anzeige = nachname + ', ' + vorname;
+
+  // 1. Uebersicht lesen: steht der Fall schon drin? Welche Nummer?
+  meldung('Rechnungsübersicht wird gelesen …');
+  const ue = await schritt('Rechnungsübersicht lesen', ()=> uebersichtLadenRepariert(token, ziel, frage, meldung));
+  const ana = uebersichtAuswerten(ue);
+  const treffer = ana.nachFp.get(fpSchluessel(f.art === 'ls' ? 'L' : 'P', w.txtDatumExcel, nachname, vorname, w.txtGeda)) || null;
+  const hinweise = [];
+  let renu = '';
+  const qTreffer = treffer ? String(treffer.v[16] == null ? '' : treffer.v[16]).trim() : '';
+  if(qTreffer){
+    renu = qTreffer;
+    if(f.rechnungsnummer && f.rechnungsnummer !== renu)
+      hinweise.push('Fall stand schon in der Übersicht (Zeile ' + treffer.nr + ') – dortige Nummer ' + renu + ' übernommen statt ' + f.rechnungsnummer + '.');
+  } else if(f.rechnungsnummer){
+    const n = renuZaehlerAusText(f.rechnungsnummer);
+    const belegt = (n !== null && ana.nachNr.get(n)) || ana.nachRenu.get(f.rechnungsnummer);
+    if(belegt && (!treffer || belegt.nr !== treffer.nr)){
+      hinweise.push('Nummer ' + f.rechnungsnummer + ' ist in der Übersicht schon vergeben (' + belegt.v[5] + ', Zeile ' + belegt.nr + ') – neue Nummer vergeben.');
+    } else renu = f.rechnungsnummer;
+  }
+  if(!renu){
+    const naechste = Math.max(ana.hoechsteNr, hoechsteLokaleNrBeideVersionen()) + 1;
+    renu = rechnungsnummerBerechnen(nachname, vorname, normalisiereDatum(w.txtDatumExcel || ''), naechste);
+    if(!renu) throw new Error('Rechnungsnummer konnte nicht gebildet werden (Name und Datum prüfen).');
+  }
+  if(renu !== f.rechnungsnummer){
+    const arr = ladeFaelle(f.art);
+    if(arr[f.idx]){ arr[f.idx].rechnungsnummer = renu; speichereFaelle(f.art, arr); }
+    f.rechnungsnummer = renu;
+  }
+  const name = renuDateiname(renu);
+
+  // 2. Schon per Brief verschickt?
+  let warVersendet = false;
+  if(treffer){
+    const u = String(treffer.v[20] == null ? '' : treffer.v[20]);
+    warVersendet = lxpFlagVorhanden(u, 'LXP:1') || await zeileFett(token, ue, treffer.nr);
+    if(warVersendet){
+      if(!await frage(anzeige + ' (' + renu + ') wurde laut Übersicht bereits per Brief verschickt.\n\nTrotzdem Word + PDF neu erstellen? Verschickt wird dabei nichts.'))
+        return { uebersprungen: true, grund: 'bereits per Brief verschickt', renu, name };
+    }
+  }
+
+  // 3. Rechnung schon im Ordner (vom PC oder vom Handy)?
+  const [vPdf, vDocx] = await schritt('Ordner prüfen', ()=> Promise.all([
+    dateiInfo(token, ziel.ordner + '/' + name + '.pdf'), dateiInfo(token, ziel.ordner + '/' + name + '.docx')]));
+  const vorhanden = vPdf || vDocx;
+  if(vorhanden){
+    const wann = new Date(vorhanden.lastModifiedDateTime).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+    if(!await frage('Für ' + anzeige + ' liegt schon eine Rechnung „' + name + '“ im Ordner (Stand ' + wann + ').\n\nOK = neu erstellen und ersetzen\nAbbrechen = vorhandene behalten'))
+      return { uebersprungen: true, grund: 'Rechnung ist schon vorhanden', renu, name, url: vPdf && vPdf.webUrl };
+  }
+
+  // 4. Word + PDF
+  const daten = fallRechnungsdaten(f, arzt);
+  if(!kontext.vorlagen[f.art]){
+    meldung('Vorlagen werden geladen …');
+    const docm = await schritt('Word-Vorlage laden', ()=> graphDateiLaden(token, MSGRAPH_PFAD_WORDVORLAGE[f.art]));
+    const excel = await schritt('Excel-Vorlage (Positionen) lesen', ()=> excelVorlageZeilenLaden(token, f.art));
+    kontext.vorlagen[f.art] = { docm, excel };
+  }
+  const { docm, excel } = kontext.vorlagen[f.art];
+  meldung('Word-Dokument wird erstellt …');
+  const erg = await rechnungDocxErzeugen(docm, excel.zeilen, daten, 'blob');
+  meldung('Word-Dokument wird hochgeladen …');
+  if(!ziel.echt){
+    await msGraphOrdnerSicherstellen(token, 'KVBW Onedrive/Beta-Test');
+    await msGraphOrdnerSicherstellen(token, BETA_ZIEL_ORDNER);
+  }
+  const docxItem = await schritt('Word-Datei hochladen', ()=> msGraphDateiHochladen(token, ziel.ordner + '/' + name + '.docx', erg.inhalt,
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'));
+  if(!docxItem || !docxItem.id) throw new Error('Das Word-Dokument wurde nicht korrekt gespeichert.');
+  meldung('PDF wird erzeugt …');
+  let pdfBlob = null, pdfFehler = '';
+  for(let versuch = 1; versuch <= 3 && !pdfBlob; versuch++){
+    try{
+      const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + docxItem.id + '/content?format=pdf', { headers:{ Authorization:'Bearer ' + token } });
+      if(r.ok){
+        const b = await r.blob();
+        const kopf = String.fromCharCode(...new Uint8Array(await b.slice(0, 5).arrayBuffer()));
+        if(kopf === '%PDF-') pdfBlob = new Blob([b], { type:'application/pdf' });
+        else pdfFehler = 'Antwort war keine PDF';
+      } else pdfFehler = 'HTTP ' + r.status;
+    }catch(e){ pdfFehler = 'keine Antwort (' + ((e && e.message) || e) + ')'; }
+    if(!pdfBlob) await new Promise(res=> setTimeout(res, 1500 * versuch));
+  }
+  if(!pdfBlob) throw new Error('PDF erzeugen: Microsoft konnte aus dem Word-Dokument kein PDF machen (' + pdfFehler + '). Die Word-Datei liegt bereits im Ordner, in die Übersicht wurde noch nichts eingetragen.');
+  const pdfItem = await schritt('PDF hochladen', ()=> msGraphDateiHochladen(token, ziel.ordner + '/' + name + '.pdf', pdfBlob, 'application/pdf'));
+
+  // 5. Eintrag in der Uebersicht (neue Zeile bzw. vorhandene aktualisieren)
+  meldung('Wird in die Rechnungsübersicht eingetragen …');
+  const aktualisieren = !!treffer;
+  const zeile = fallUebersichtsWerte(f, renu, erg.summe, daten.rechnungsdatum, ana.alsZahl, aktualisieren);
+  if(warVersendet){
+    // Versandvermerk (R = Versanddatum, fett) nicht ueberschreiben
+    zeile.werte[17] = null; delete zeile.formate[17]; zeile.rBehalten = true;
+  }
+  let nr = treffer ? treffer.nr : 0;
+  await schritt('In die Übersicht eintragen', async ()=>{
+    const sid = await xlSitzung(token, ue.basis);
+    try{
+      if(!nr){
+        // Kurz vor dem Schreiben nachsehen, ob inzwischen (z.B. am PC) Zeilen dazugekommen sind
+        const k = await gx(token, 'GET', zelle(ue, 'A' + (ana.letzteZeile + 1) + ':A' + (ana.letzteZeile + 30)) + '?$select=values', undefined, sid);
+        let off = 0;
+        while(off < 30 && String(((k && k.values) || [])[off] ? k.values[off][0] : '').trim() !== '') off++;
+        nr = ana.letzteZeile + 1 + off;
+      } else {
+        // Vorhandene LXP-Kennzeichen in U behalten
+        const flags = lxpFlagsAus(treffer.v[20]);
+        if(flags.length) zeile.spalteU += ' | ' + flags.join(' | ');
+      }
+      await uebersichtZeileSchreiben(token, ue, sid, nr, zeile);
+    } finally {
+      await xlSitzungEnde(token, ue.basis, sid);
+    }
+  });
+  return { name, renu, zeile: nr, neu: !aktualisieren, summe: erg.summe, warnungen: erg.warnungen, hinweise,
+           pdfBlob, pdfUrl: pdfItem && pdfItem.webUrl, docxUrl: docxItem.webUrl, ziel, ersetzt: !!vorhanden };
+}
+
+// ---------- LetterXpress: Hilfsfunktionen ----------
 function md5Hex(str){
   // MD5 (RFC 1321) ueber die UTF-8-Bytes des Textes -- wie MD5Hex in der HTA
   const bytes = new TextEncoder().encode(str);
@@ -4231,44 +4679,119 @@ async function blobAlsBase64(blob){
   for(let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
   return btoa(s);
 }
-async function lxpTestbriefSenden(pdfBlob, dateiname){
+// ---------- LetterXpress: Brief verschicken ----------
+function pdfSeitenZaehlen(bytes){
+  // grobe Zaehlung der Seitenobjekte; 0 = unbekannt (z.B. komprimierte Objekte)
+  let s = '';
+  for(let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  const m = s.match(/\/Type\s*\/Page(?![s\w])/g);
+  return m ? m.length : 0;
+}
+function briefTestmodus(werte, ziel){
+  if(!ziel.echt) return true; // Testablage: immer Testmodus
+  const v = String(werte.BRIEF_TESTMODUS == null || werte.BRIEF_TESTMODUS === '' ? '1' : werte.BRIEF_TESTMODUS).trim().toLowerCase();
+  return !(v === '0' || v === 'false' || v === 'falsch');
+}
+async function lxpBriefSenden(pdfBlob, dateiname, test){
   const ini = iniCacheLaden();
   const w = ini ? ini.werte : {};
-  if(!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > LetterXpress, dann speichern bzw. vom PC laden).');
+  if(!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > Arztinfos & Briefversand, dann speichern bzw. vom PC laden).');
   const base64 = await blobAlsBase64(pdfBlob);
   const koerper = {
-    auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: 'test' }, // BETA: immer Testmodus
+    auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: test ? 'test' : 'live' },
     letter: { base64_file: base64, base64_file_checksum: md5Hex(base64), filename_original: dateiname + '.pdf',
               specification: { color: '1', mode: 'simplex', shipping: 'national' } }
   };
-  const r = await fetch(lxpBasisUrl(w) + '/v3/printjobs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(koerper) });
+  let r;
+  try{
+    r = await fetch(lxpBasisUrl(w) + '/v3/printjobs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(koerper) });
+  }catch(e){ throw new Error('Keine Verbindung zu LetterXpress (' + ((e && e.message) || e) + ') – es wurde nichts verschickt.'); }
   const txt = await r.text();
-  if(!r.ok) throw new Error('LetterXpress hat abgelehnt (HTTP ' + r.status + '): ' + txt.slice(0, 300));
-  return txt;
+  let j = null; try{ j = JSON.parse(txt); }catch(_){}
+  if(!r.ok || (j && j.status && +j.status >= 400)) throw new Error('LetterXpress hat abgelehnt (HTTP ' + r.status + '): ' + txt.slice(0, 300));
+  return j || txt;
+}
+
+// Prueft frisch in der Uebersicht, ob schon verschickt wurde, schickt den
+// Brief und vermerkt den Versand wie am PC (R fett, U += LXP:1).
+async function betaBriefVersenden(e){
+  const token = await msGraphTokenHolen();
+  if(!token) throw new Error('Bitte zuerst bei Microsoft/OneDrive anmelden.');
+  const ini = iniCacheLaden() || await iniVonOneDriveLaden().then(()=> iniCacheLaden());
+  const werte = (ini && ini.werte) || {};
+  const test = briefTestmodus(werte, e.ziel);
+  const ue = await schritt('Rechnungsübersicht lesen', ()=> uebersichtLadenRepariert(token, e.ziel, async t=> confirm(t)));
+  const z = uebersichtAuswerten(ue).nachRenu.get(e.renu);
+  if(!z) throw new Error('Die Rechnung ' + e.renu + ' steht nicht in der Übersicht – es wurde nichts verschickt.');
+  const u = String(z.v[20] == null ? '' : z.v[20]);
+  if(lxpFlagVorhanden(u, 'LXP:1') || await zeileFett(token, ue, z.nr))
+    throw new Error('Laut Übersicht wurde ' + e.renu + ' bereits per Brief verschickt – es wird kein zweiter Brief verschickt.');
+  const seiten = pdfSeitenZaehlen(new Uint8Array(await e.pdfBlob.arrayBuffer()));
+  const seitenTxt = seiten ? ' (' + seiten + (seiten === 1 ? ' Seite' : ' Seiten') + ')' : '';
+  const modusTxt = test
+    ? 'TESTMODUS – es wird NICHTS wirklich verschickt.'
+    : 'LIVE – der Brief wird ECHT gedruckt und verschickt und kostet Geld!';
+  if(!confirm('Rechnung ' + e.name + seitenTxt + ' per LetterXpress verschicken?\n\n' + modusTxt +
+              (seiten > 1 ? '\n\nHinweis: mehrseitig – jede weitere Seite kostet bei LetterXpress etwas extra.' : '')))
+    return { abgebrochen: true };
+  await lxpBriefSenden(e.pdfBlob, e.name, test);
+  // Wie am PC: auch im Testmodus als verschickt vermerken
+  await schritt('Versand in der Übersicht vermerken', async ()=>{
+    const sid = await xlSitzung(token, ue.basis);
+    try{ await uebersichtVersandVermerken(token, ue, sid, z.nr, u); }
+    finally{ await xlSitzungEnde(token, ue.basis, sid); }
+  });
+  return { test, seiten, zeile: z.nr };
 }
 
 // ---------- Oberflaeche (in "Lokale Rechnungen") ----------
 async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
+  const ziel = betaZiel();
   const ergebnisse = [];
   const protokoll = [];
+  const zielText = ziel.echt
+    ? '<b style="color:#c0392b;">ECHTBETRIEB</b>: echte Rechnungsübersicht und Ordner „fertige Rechnungen“.'
+    : 'Testablage: Ordner „Beta-Test/fertige Rechnungen“ und Test-Übersicht – die echte Übersicht wurde nicht verändert.';
   const zeigen = (aktuell)=>{
     zeigeHinweis(protokoll.join('<br>') + (aktuell ? (protokoll.length ? '<br>' : '') + '<i>' + htmlEsc(aktuell) + '</i>' : ''));
   };
-  for(const f of faelleAusw){
-    const name = (f.werte && f.werte.txtName) || '(ohne Namen)';
-    try{
-      const e = await betaRechnungErstellen(f, (t)=> zeigen(name + ': ' + t));
-      ergebnisse.push(e);
-      protokoll.push('✓ <b>' + htmlEsc(name) + '</b> → ' + htmlEsc(e.name) + '.docx + .pdf (Summe ' + rdZahl(e.summe, '0.00') + ' €)' +
-        (e.warnungen.length ? '<br>&nbsp;&nbsp;⚠ ' + e.warnungen.map(htmlEsc).join('<br>&nbsp;&nbsp;⚠ ') : '') +
-        `<div class="aktionen"><button data-akt="pdf" data-i="${ergebnisse.length-1}">PDF ansehen</button>` +
-        `<button data-akt="lxp" data-i="${ergebnisse.length-1}">Testbrief (LetterXpress-Testmodus)</button></div>`);
-    }catch(err){
-      protokoll.push('✗ <b>' + htmlEsc(name) + '</b>: ' + htmlEsc(err.message || String(err)));
-    }
-    zeigen('');
+  const frage = async (text)=> confirm(text);
+  let kontext = null;
+  try{
+    zeigen('Anmeldung und Arztdaten …');
+    const token = await msGraphTokenHolen();
+    if(!token) throw new Error('Bitte zuerst bei Microsoft/OneDrive anmelden (Einstellungen).');
+    if(typeof JSZip === 'undefined') throw new Error('Die Word-Bibliothek konnte nicht geladen werden (Internet?).');
+    const { arzt } = await schritt('Arztdaten (einstellungen.ini)', ()=> arztdatenLaden());
+    if(!ziel.echt) await schritt('Test-Übersicht anlegen', ()=> testUebersichtSicherstellen(token, false, t=> zeigen(t)));
+    kontext = { token, arzt, ziel, vorlagen: {} };
+  }catch(err){
+    protokoll.push('✗ ' + htmlEsc(err.message || String(err)));
   }
-  protokoll.push('<span style="font-size:12px;">Beta: abgelegt in „Beta-Test/fertige Rechnungen“. Echte Rechnungen und die Rechnungsübersicht wurden nicht verändert.</span>');
+  if(kontext){
+    for(const f of faelleAusw){
+      const name = (f.werte && f.werte.txtName) || '(ohne Namen)';
+      try{
+        const e = await betaRechnungErstellen(f, (t)=> zeigen(name + ': ' + t), frage, kontext);
+        if(e.uebersprungen){
+          protokoll.push('– <b>' + htmlEsc(name) + '</b>: übersprungen (' + htmlEsc(e.grund) + ', ' + htmlEsc(e.name || e.renu) + ')' +
+            (e.url ? ` <a href="${htmlEsc(e.url)}" target="_blank" rel="noopener">vorhandene PDF</a>` : ''));
+          continue;
+        }
+        ergebnisse.push(e);
+        const test = briefTestmodus((iniCacheLaden() || {werte:{}}).werte || {}, ziel);
+        protokoll.push('✓ <b>' + htmlEsc(name) + '</b> → ' + htmlEsc(e.name) + '.docx + .pdf' + (e.ersetzt ? ' (ersetzt)' : '') +
+          ', Summe ' + rdZahl(e.summe, '0.00') + ' €<br>&nbsp;&nbsp;Übersicht: Zeile ' + e.zeile + (e.neu ? ' neu eingetragen' : ' aktualisiert') +
+          [...e.hinweise, ...e.warnungen].map(t=> '<br>&nbsp;&nbsp;⚠ ' + htmlEsc(t)).join('') +
+          `<div class="aktionen"><button data-akt="pdf" data-i="${ergebnisse.length-1}">PDF ansehen</button>` +
+          `<button data-akt="lxp" data-i="${ergebnisse.length-1}">${test ? 'Brief senden (Testmodus)' : 'Brief senden (LIVE)'}</button></div>`);
+      }catch(err){
+        protokoll.push('✗ <b>' + htmlEsc(name) + '</b>: ' + htmlEsc(err.message || String(err)));
+      }
+      zeigen('');
+    }
+  }
+  protokoll.push('<span style="font-size:12px;">' + zielText + '</span>');
   zeigen('');
   const el = document.getElementById('korrigierenHinweis');
   if(!el) return;
@@ -4280,8 +4803,9 @@ async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
       const e = ergebnisse[+b.dataset.i];
       b.disabled = true; const alt = b.textContent; b.textContent = 'sende …';
       try{
-        await lxpTestbriefSenden(e.pdfBlob, e.name);
-        b.textContent = '✓ Testbrief angenommen';
+        const r = await betaBriefVersenden(e);
+        if(r.abgebrochen){ b.textContent = alt; b.disabled = false; return; }
+        b.textContent = r.test ? '✓ Testbrief angenommen, vermerkt' : '✓ Brief verschickt, vermerkt';
       }catch(err){
         b.textContent = alt; b.disabled = false;
         alert(err.message || String(err));
@@ -4479,6 +5003,100 @@ function lxpBasisUrl(werte){
   return w || LXP_WEITERLEITUNG_STANDARD;
 }
 
+// ---------- Verbindungstest (Fehlersuche) ----------
+// Fuehrt jeden OneDrive-Zugriff, den App und Beta brauchen, einzeln aus und
+// zeigt Statuscode, Microsoft-Fehlertext und Dauer. "keine Antwort" heisst:
+// der Browser hat gar keine (lesbare) Antwort bekommen -- Netz weg, Anfrage
+// blockiert oder Microsoft hat ohne CORS-Freigabe geantwortet.
+async function graphFehlerText(r){
+  try{
+    const t = await r.text();
+    try{
+      const j = JSON.parse(t);
+      const e = j && j.error;
+      if(e){
+        let s = (e.code || '') + (e.message ? ': ' + e.message : '');
+        if(e.innerError && e.innerError.code && e.innerError.code !== e.code) s += ' [' + e.innerError.code + ']';
+        return s;
+      }
+    }catch(_){}
+    return t.slice(0, 200);
+  }catch(_){ return ''; }
+}
+async function oneDriveVerbindungstest(ausgabe){
+  const zeilen = [];
+  const zeigen = (laeuft)=> ausgabe('<b>OneDrive-Verbindungstest</b><br>' + zeilen.join('<br>') + (laeuft ? '<br><i>' + htmlEsc(laeuft) + ' …</i>' : ''));
+  zeilen.push('Internet laut Handy: ' + (navigator.onLine ? 'ja' : '<b>nein</b>'));
+  zeilen.push('Anmeldestatus: ' + htmlEsc(String(msGraphStatus)));
+  zeigen('Token wird geholt');
+  const token = await msGraphTokenHolen();
+  if(!token){ zeilen.push('✗ <b>Kein Zugriffstoken</b> -- bitte unten bei Microsoft/OneDrive neu anmelden.'); zeigen(''); return; }
+  zeilen.push('✓ Zugriffstoken vorhanden');
+  const H = {headers:{Authorization:'Bearer ' + token}, cache:'no-store'};
+  const uebersicht = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
+  const tests = [
+    ['Laufwerk', 'https://graph.microsoft.com/v1.0/me/drive?$select=driveType', async r=> (await r.json()).driveType],
+    ['Übersicht (Datei)', uebersicht + '?$select=name,size,lastModifiedDateTime,lastModifiedBy', async r=>{
+      const d = await r.json();
+      const wer = d.lastModifiedBy && (d.lastModifiedBy.application || d.lastModifiedBy.user) ;
+      return Math.round((d.size||0)/1024) + ' KB, geändert ' + new Date(d.lastModifiedDateTime).toLocaleString('de-DE') +
+             (wer && wer.displayName ? ' von ' + wer.displayName : '');
+    }],
+    ['Übersicht (Excel: Blätter)', uebersicht + '/workbook/worksheets?$select=name', async r=> ((await r.json()).value||[]).map(w=>w.name).join(', ')],
+    ['Übersicht (Excel: Zellen)', uebersicht + "/workbook/worksheets('" + encodeURIComponent('L+P') + "')/range(address='A1:Q3')?$select=address", async r=> (await r.json()).address],
+    ['einstellungen.ini', msGraphPfadUrl(MSGRAPH_PFAD_INI) + '/content', async r=> (await r.arrayBuffer()).byteLength + ' Bytes'],
+    ['Word-Vorlage PT', msGraphPfadUrl(MSGRAPH_PFAD_WORDVORLAGE.pt) + '/content', async r=> Math.round((await r.arrayBuffer()).byteLength/1024) + ' KB'],
+    ['Word-Vorlage LS', msGraphPfadUrl(MSGRAPH_PFAD_WORDVORLAGE.ls) + '?$select=size', async r=> Math.round(((await r.json()).size||0)/1024) + ' KB'],
+    ['Excel-Vorlage PT (Positionen)', msGraphPfadUrl(MSGRAPH_PFAD_VORLAGE_PT) + "/workbook/worksheets?$select=name", async r=> ((await r.json()).value||[]).map(w=>w.name).join(', ')],
+    ['Ordner „fertige Rechnungen“', msGraphPfadUrl(MSGRAPH_PFAD_ZIEL_ORDNER) + '?$select=folder', async r=> ((await r.json()).folder||{}).childCount + ' Dateien']
+  ];
+  for(const [name, url, auswerten] of tests){
+    zeigen(name);
+    const t0 = performance.now();
+    let zeile;
+    try{
+      const r = await fetch(url, H);
+      const sek = ((performance.now() - t0)/1000).toFixed(1) + ' s';
+      if(r.ok){
+        let info = '';
+        try{ info = await auswerten(r); }catch(_){}
+        zeile = '✓ ' + htmlEsc(name) + ' <span style="color:var(--text-schwach);">(' + sek + (info ? ', ' + htmlEsc(String(info)) : '') + ')</span>';
+      } else {
+        zeile = '✗ <b>' + htmlEsc(name) + '</b>: HTTP ' + r.status + ' <span style="font-size:12px;">' + htmlEsc(await graphFehlerText(r)) + '</span> (' + sek + ')';
+      }
+    }catch(e){
+      const sek = ((performance.now() - t0)/1000).toFixed(1) + ' s';
+      zeile = '✗ <b>' + htmlEsc(name) + '</b>: keine Antwort (' + htmlEsc(e.message || String(e)) + ', ' + sek + ')';
+    }
+    zeilen.push(zeile);
+  }
+  // Schreibzugriff auf die Excel-Datei: nur eine Sitzung OHNE Speichern oeffnen und schliessen
+  zeigen('Übersicht (Excel: Schreibsitzung)');
+  {
+    const t0 = performance.now();
+    try{
+      const r = await fetch(uebersicht + '/workbook/createSession', { method:'POST', headers:{Authorization:'Bearer ' + token, 'Content-Type':'application/json'}, body: JSON.stringify({persistChanges:false}) });
+      const sek = ((performance.now() - t0)/1000).toFixed(1) + ' s';
+      if(r.ok){
+        const sid = (await r.json()).id;
+        fetch(uebersicht + '/workbook/closeSession', { method:'POST', headers:{Authorization:'Bearer ' + token, 'workbook-session-id': sid} }).catch(()=>{});
+        zeilen.push('✓ Übersicht (Excel: Schreibsitzung) <span style="color:var(--text-schwach);">(' + sek + ', nichts geändert)</span>');
+      } else zeilen.push('✗ <b>Übersicht (Excel: Schreibsitzung)</b>: HTTP ' + r.status + ' <span style="font-size:12px;">' + htmlEsc(await graphFehlerText(r)) + '</span> (' + sek + ')');
+    }catch(e){
+      zeilen.push('✗ <b>Übersicht (Excel: Schreibsitzung)</b>: keine Antwort (' + htmlEsc(e.message || String(e)) + ')');
+    }
+  }
+  zeigen('Übersicht: Fenster ausgeblendet?');
+  try{
+    const ausgeblendet = await uebersichtAusgeblendet(token, MSGRAPH_PFAD_UEBERSICHT);
+    zeilen.push(ausgeblendet
+      ? '✗ <b>Übersicht ist mit ausgeblendetem Fenster gespeichert</b> – Microsoft kann sie so nicht öffnen. Reparieren: Einstellungen > Rechnungen am Handy > „Echte Übersicht reparieren“.'
+      : '✓ Übersicht nicht ausgeblendet');
+  }catch(e){ zeilen.push('✗ <b>Übersicht (Datei prüfen)</b>: ' + htmlEsc(e.message || String(e))); }
+  zeilen.push('<span style="font-size:12px;">Bitte davon einen Screenshot schicken.</span>');
+  zeigen('');
+}
+
 // ---------- Oberflaeche ----------
 let betaIniBasis = null;      // Werte, auf denen die aktuelle Anzeige beruht
 let betaIniBearbeitet = false;
@@ -4533,6 +5151,21 @@ function betaEinstellungenHtml(){
       <div class="warnhinweis" id="iniMeldung"></div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Rechnungen am Handy <span class="beta-badge">BETA</span></div>
+      <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
+        „Word + PDF erstellen“ (in „Lokale Rechnungen“) vergibt die Nummer aus der Rechnungsübersicht, legt Word + PDF ab,
+        trägt die Zeile in die Übersicht ein und kann den Brief verschicken.<br>
+        <b>Testablage</b> (Standard): alles im Ordner „Beta-Test“ mit einer Kopie der Übersicht, Briefe nur im Testmodus.<br>
+        <b>Echtbetrieb</b>: echte Übersicht und „fertige Rechnungen“ wie am PC; Briefe je nach „Testmodus“ oben.
+        Bitte dann nicht gleichzeitig am PC Rechnungen erstellen und die HTA vorher schließen.</div>
+      <div class="einstellung-zeile ini-bool" data-for="chkBetaEchtbetrieb" id="zeileBetaEchtbetrieb">
+        <input type="checkbox" id="chkBetaEchtbetrieb" ${ladeEinstellungen().betaEchtbetrieb ? 'checked' : ''}>
+        <div class="txt">Echtbetrieb (echte Übersicht und echter Ordner)</div></div>
+      <button type="button" class="btn-sekundaer" id="btnUebersichtEinblenden" style="margin-top:8px;"><span class="btn-titel">Echte Übersicht reparieren</span><span class="unter">wenn sie am PC ausgeblendet gespeichert wurde</span></button>
+      <button type="button" class="btn-sekundaer" id="btnTestUebersichtNeu" style="margin-top:8px;">Test-Übersicht neu aus der echten kopieren</button>
+      <div class="hinweis ini-testergebnis" id="ablageErgebnis"></div>
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Funktionstest <span class="beta-badge">BETA</span></div>
       <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
         Prüft, ob die Bausteine für Rechnungserstellung und Briefversand vom Handy aus funktionieren. Es wird dabei
@@ -4541,6 +5174,7 @@ function betaEinstellungenHtml(){
         <button type="button" class="btn-sekundaer" id="btnTestLxp"><span class="btn-titel">LetterXpress</span><span class="unter">Verbindung testen</span></button>
         <button type="button" class="btn-sekundaer" id="btnTestPdf"><span class="btn-titel">PDF-Umwandlung</span><span class="unter">letzte Rechnung testen</span></button>
       </div>
+      <button type="button" class="btn-sekundaer" id="btnTestOneDrive" style="margin-top:8px;"><span class="btn-titel">OneDrive-Verbindung prüfen</span><span class="unter">jeden Zugriff einzeln, mit Fehlercode</span></button>
       <div class="hinweis ini-testergebnis" id="testErgebnis"></div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
@@ -4596,8 +5230,57 @@ function betaEinstellungenWiring(){
     el.addEventListener('change', ()=>{ betaIniBearbeitet = true; });
   });
   document.querySelectorAll('.ini-bool').forEach(z=>{
+    if(z.id === 'zeileBetaEchtbetrieb') return; // eigener Schalter, siehe unten
     z.onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ const cb=document.getElementById(z.dataset.for); cb.checked=!cb.checked; betaIniBearbeitet=true; } };
   });
+  // ---- Ablage: Testablage / Echtbetrieb ----
+  const ablageErgebnis = (html)=>{ const el=document.getElementById('ablageErgebnis'); if(el){ el.innerHTML = html; el.style.display = html?'block':'none'; } };
+  const echtSetzen = (an)=>{
+    const cb = document.getElementById('chkBetaEchtbetrieb');
+    if(an && !confirm('Echtbetrieb einschalten?\n\nDie Beta schreibt dann in die ECHTE Rechnungsübersicht und legt Word + PDF im echten Ordner „fertige Rechnungen“ ab – genau wie der PC. Briefe gehen raus, sobald „Testmodus“ beim Briefversand aus ist.\n\nBitte die HTA am PC vorher schließen.')){
+      cb.checked = false; return;
+    }
+    const e = ladeEinstellungen(); e.betaEchtbetrieb = !!an; speichereEinstellungen(e);
+    cb.checked = !!an;
+    ablageErgebnis(an ? '<b style="color:#c0392b;">Echtbetrieb ist an.</b>' : 'Testablage ist aktiv.');
+  };
+  document.getElementById('chkBetaEchtbetrieb').onchange = (ev)=> echtSetzen(ev.target.checked);
+  document.getElementById('zeileBetaEchtbetrieb').onclick = (ev)=>{
+    if(ev.target.tagName === 'INPUT') return;
+    echtSetzen(!document.getElementById('chkBetaEchtbetrieb').checked);
+  };
+  document.getElementById('btnUebersichtEinblenden').onclick = async ()=>{
+    const btn = document.getElementById('btnUebersichtEinblenden');
+    const token = await msGraphTokenHolen();
+    if(!token){ ablageErgebnis('Bitte zuerst bei Microsoft/OneDrive anmelden (weiter unten).'); return; }
+    btn.disabled = true;
+    try{
+      ablageErgebnis('Prüfe die Übersicht …');
+      if(!await uebersichtAusgeblendet(token, MSGRAPH_PFAD_UEBERSICHT)){
+        ablageErgebnis('✓ Die Übersicht ist nicht ausgeblendet – nichts zu tun.'); return;
+      }
+      if(!confirm('Die Rechnungsübersicht ist mit ausgeblendetem Fenster gespeichert – deshalb kann Microsoft sie nicht öffnen.\n\nJetzt reparieren? Es wird nur „ausgeblendet“ entfernt, sonst nichts geändert.\n\nAm besten ist die HTA am PC dabei geschlossen (die alte HTA blendet sie sonst beim nächsten Speichern wieder aus).')){
+        ablageErgebnis('Nicht repariert.'); return;
+      }
+      ablageErgebnis('Repariere …');
+      await uebersichtEinblenden(token, MSGRAPH_PFAD_UEBERSICHT);
+      alleRechnungenCache = null;
+      ablageErgebnis('✓ Repariert. Die Rechnungsverwaltung sollte jetzt wieder laden (dort „Neu laden“ tippen).');
+    }catch(e){ ablageErgebnis('✗ ' + htmlEsc(e.message || String(e))); }
+    finally{ btn.disabled = false; }
+  };
+  document.getElementById('btnTestUebersichtNeu').onclick = async ()=>{
+    const btn = document.getElementById('btnTestUebersichtNeu');
+    const token = await msGraphTokenHolen();
+    if(!token){ ablageErgebnis('Bitte zuerst bei Microsoft/OneDrive anmelden (weiter unten).'); return; }
+    if(!confirm('Die Test-Übersicht im Ordner „Beta-Test“ durch eine frische Kopie der echten Übersicht ersetzen?')) return;
+    btn.disabled = true;
+    try{
+      await testUebersichtSicherstellen(token, true, t=> ablageErgebnis(htmlEsc(t)));
+      ablageErgebnis('✓ Test-Übersicht neu angelegt („Beta-Test/' + htmlEsc(BETA_TEST_UEBERSICHT.split('/').pop()) + '“).');
+    }catch(e){ ablageErgebnis('✗ ' + htmlEsc(e.message || String(e))); }
+    finally{ btn.disabled = false; }
+  };
   document.querySelectorAll('.ini-zeigen').forEach(b=>{
     b.onclick = ()=>{ const el=document.getElementById(b.dataset.for); const vis = el.type==='password'; el.type = vis?'text':'password'; b.textContent = vis?'verbergen':'zeigen'; };
   });
@@ -4710,6 +5393,12 @@ function betaEinstellungenWiring(){
     }catch(e){
       ergebnis('<b>✗ PDF-Umwandlung fehlgeschlagen:</b> ' + htmlEsc(e.message||String(e)));
     }
+  };
+  document.getElementById('btnTestOneDrive').onclick = async ()=>{
+    const btn = document.getElementById('btnTestOneDrive');
+    btn.disabled = true;
+    try{ await oneDriveVerbindungstest(ergebnis); }
+    finally{ btn.disabled = false; }
   };
   document.getElementById('btnBetaDatenNeu').onclick = ()=>{
     if(!confirm('Alle Fälle der Beta durch die Fälle der normalen Version ersetzen?')) return;
