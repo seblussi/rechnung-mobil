@@ -9,13 +9,26 @@
 // App auf dem Handy nach einem Update "haengen" bleibt) die CACHE_NAME-
 // Versionsnummer erhoehen -- nur so erkennt der Browser ueberhaupt, dass
 // sich der Service Worker geaendert hat und tauscht ihn aus.
-const CACHE_NAME = 'rechnungserfassung-v114';
+//
+// KORREKTUR v115: Die alte Pruefung "url.endsWith('')" (aus './' wurde ''
+// gemacht) war fuer JEDE Adresse wahr. Dadurch lief alles network-first --
+// auch der grosse ICD-Katalog (bei jedem Start neu geladen) und die
+// Microsoft-Graph-Abrufe (Sync-Datei, Rechnungsuebersicht mit Patientendaten),
+// deren Antworten dann dauerhaft im Cache des Handys lagen. Jetzt:
+//   - Microsoft-Anmeldung/Graph, OSM-Dienste: nie aus dem/in den Cache
+//   - nur GET-Anfragen werden ueberhaupt behandelt
+//   - App-Seite/Manifest/Startadresse: network-first
+//   - alles andere (ICD-Katalog, Icons, MSAL-Bibliothek): cache-first
+// v116: Hauptversion (vorher Beta) -- zusaetzlich GOÄ-Katalog; Dateien einzeln
+// cachen, damit eine fehlende Datei nicht die ganze Installation verhindert
+const CACHE_NAME = 'rechnungserfassung-v116';
 const NETZWERK_ZUERST = ['./Rechnungserfassung_Mobil.html', './manifest.json', './'];
-const CACHE_ZUERST = ['./icd_katalog.js', './icon-192.png', './icon-512.png', './icon-192-maskable.png', './icon-512-maskable.png', './apple-touch-icon.png'];
+const CACHE_ZUERST = ['./icd_katalog.js', './goae_katalog.js', './icon-192.png', './icon-512.png', './icon-192-maskable.png', './icon-512-maskable.png', './apple-touch-icon.png'];
+const NIE_CACHEN = ['nominatim.openstreetmap.org', 'project-osrm.org', 'graph.microsoft.com', 'login.microsoftonline.com', 'login.live.com'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll([...NETZWERK_ZUERST, ...CACHE_ZUERST]))
+    caches.open(CACHE_NAME).then((cache) => Promise.all([...NETZWERK_ZUERST, ...CACHE_ZUERST].map((pfad) => cache.add(pfad).catch(() => null))))
   );
   self.skipWaiting();
 });
@@ -28,32 +41,50 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Vollstaendige Adressen der network-first-Dateien (relativ zum Ort des
+// Service Workers aufgeloest), z.B. https://.../Rechnungserfassung_Mobil.html
+const NETZWERK_ZUERST_URLS = NETZWERK_ZUERST.map((pfad) => new URL(pfad, self.location.href).href);
+
 function istNetzwerkZuerst(url) {
-  return NETZWERK_ZUERST.some((pfad) => url.endsWith(pfad.replace('./', '')) || url.endsWith('/'));
+  const ohneQuery = url.split('#')[0].split('?')[0];
+  return NETZWERK_ZUERST_URLS.includes(ohneQuery);
 }
 
 self.addEventListener('fetch', (event) => {
-  const url = event.request.url;
+  const anfrage = event.request;
+  const url = anfrage.url;
 
-  // API-Aufrufe (Nominatim/OSRM) niemals aus dem Cache bedienen
-  if (url.includes('nominatim.openstreetmap.org') || url.includes('project-osrm.org')) {
-    return;
-  }
+  // Nur GET-Anfragen; Anmeldung/Graph/OSM nie ueber den Cache
+  if (anfrage.method !== 'GET') return;
+  if (NIE_CACHEN.some((host) => url.includes(host))) return;
 
   if (istNetzwerkZuerst(url)) {
     event.respondWith(
-      fetch(event.request)
+      fetch(anfrage)
         .then((antwort) => {
-          const kopie = antwort.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, kopie));
+          if (antwort && antwort.ok) {
+            const kopie = antwort.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(anfrage, kopie)).catch(() => {});
+          }
           return antwort;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(anfrage, { ignoreSearch: true }))
     );
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.match(anfrage).then((cached) => {
+      if (cached) return cached;
+      return fetch(anfrage).then((antwort) => {
+        // Einmal online geladene Zusatzdateien (z.B. MSAL-Bibliothek vom CDN)
+        // fuer den Offline-Betrieb ablegen
+        if (antwort && (antwort.ok || antwort.type === 'opaque')) {
+          const kopie = antwort.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(anfrage, kopie)).catch(() => {});
+        }
+        return antwort;
+      });
+    })
   );
 });
