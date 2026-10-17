@@ -228,6 +228,8 @@
   .zeit56-zeile{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 0; font-size:15px;}
   .zeit-knopf{width:auto; min-width:110px; margin:0; padding:9px 14px; font-size:20px; font-weight:600; letter-spacing:1px; border-radius:10px; border:1px solid var(--rand); background:var(--karte); color:var(--text); text-align:center;}
   .zeit-knopf.pflichtfeld-fehlt{border:2px solid var(--fehler, #c0392b);}
+  .zeit-reihe input[type=time]{cursor:pointer;}
+  .zeit-reihe input[type=time].pflichtfeld-fehlt{border:2px solid var(--fehler, #c0392b); box-shadow:0 0 0 3px rgba(192,57,43,.18);}
   .zeit-knopf.offen{border-color:#2f6fed; box-shadow:0 0 0 2px rgba(47,111,237,.25);}
   .zeit-picker{margin:6px 0 2px; padding:10px; border-radius:10px; background:rgba(47,111,237,.07);}
   .zeit-picker[hidden]{display:none;}
@@ -260,6 +262,9 @@
   /* fruehere verschickte Fassung */
   .fall-zeile .info.fassungen-text{font-size:12px; color:var(--text-schwach);}
   .fassung-link{color:#2f6fed; text-decoration:underline; cursor:pointer;}
+  .pos-haeufig{display:block; font-size:12px; color:#2f6fed; margin-top:2px;}
+  .pos-haeufig:empty{display:none;}
+  .pos-haeufig.warn{color:#b9770e; font-weight:600;}
   .haftung-text{font-size:13.5px; line-height:1.5;}
   .haftung-text p{margin:0 0 8px;}
   .haftung-text ul{margin:0 0 8px; padding-left:18px;}
@@ -5106,6 +5111,30 @@ async function betaRechnungErstellen(f, meldung, frage, kontext){
     }
   }
 
+  // 2b. Haeufigkeit laut GOÄ ueber fruehere Rechnungen desselben Patienten
+  //     (z.B. Nr. 3 mehr als einmal im Behandlungsfall nur mit Begruendung)
+  if(f.art === 'pt' && typeof betaHaeufigkeitPruefen === 'function'){
+    const det0 = f.positionsDetails || {};
+    const nrVon = (z)=> /^EIG/i.test(z) && f.eigenePositionen && f.eigenePositionen[z] ? goaeNorm(f.eigenePositionen[z].ziffer) : betaNrVonSchluessel(f.art, z);
+    const akt = {};
+    (f.positionen || []).forEach(z=>{ const nr = nrVon(z); if(nr && /^\d+$/.test(nr)) akt[nr] = (akt[nr] || 0) + betaAnzahlVon(det0, goaeNorm(z)); });
+    const hist = betaPatientHistorie(ue, f.art, w.txtName, w.txtGeda, treffer ? { nr: treffer.nr } : { datum: w.txtDatumExcel, zeit: w.txtZeitLS });
+    const befunde = betaHaeufigkeitPruefen(f.art, akt, w.txtDatumExcel, hist);
+    const pg = {};
+    for(const b of befunde.filter(x=> x.typ === 'begr')){
+      for(const z of (f.positionen || []).filter(z=> nrVon(z) === b.nr)){
+        const k = goaeNorm(z);
+        if(!String((det0.begruendungen || {})[k] || '').trim())
+          throw new Error(b.grund + '. Eine mehrfache Berechnung im Behandlungsfall braucht laut GOÄ eine besondere Begründung – bitte in den Rechnungspositionen über den Faktor-Knopf von Ziffer ' + b.nr + ' eintragen.');
+        pg[k] = b.grund;
+      }
+    }
+    if(Object.keys(pg).length) f.positionsDetails = { ...det0, pflichtGrund: { ...(det0.pflichtGrund || {}), ...pg } };
+    const warn = befunde.filter(x=> x.typ === 'warn' && !(det0.haeufigOk || []).includes(x.schl));
+    if(warn.length && !await frage('Hinweis laut GOÄ für ' + anzeige + ':\n\n' + warn.map(x=> '• Ziffer ' + x.nr + ': ' + x.kurz).join('\n') + '\n\nTrotzdem erstellen?', 'Trotzdem erstellen', 'Abbrechen'))
+      return { uebersprungen: true, grund: 'Hinweis laut GOÄ', renu, name };
+  }
+
   // 3. Rechnung schon im Ordner (vom PC oder vom Handy)?
   const [vPdf, vDocx] = await schritt('Ordner prüfen', ()=> Promise.all([
     dateiInfo(token, ziel.ordner + '/' + name + '.pdf'), dateiInfo(token, ziel.ordner + '/' + name + '.docx')]));
@@ -7985,13 +8014,17 @@ function betaPosBetrag(p, faktor){
 // Leichenschau und Visiten gibt es je Inanspruchnahme nur einmal, Zuschlaege
 // und Wegegeld ohnehin nur einmal.
 const GOAE_NUR_EINMAL = /^(4[5-9]|5[0-5]|10[0-7]|435)$/;
+// Anmerkung vor Nr. 270 ff.: 270, 273-281, 283, 286, 287 je Behandlungstag
+// nur einmal; 271/272 je Gefaesszugang einmal, hoechstens zweimal
+const GOAE_TAG_MAX = { '270':1, '273':1, '274':1, '275':1, '276':1, '277':1, '278':1, '279':1, '280':1, '281':1, '283':1, '286':1, '287':1, '271':2, '272':2 };
 function betaPosAnzahlRegel(p){
   if(!p || !betaPosFaktorEditierbar(p)) return null;
   const nr = betaPosNr(p);
-  if(!nr || GOAE_NUR_EINMAL.test(nr)) return null;
+  if(!nr || GOAE_NUR_EINMAL.test(nr) || GOAE_TAG_MAX[nr] === 1) return null;
   const e = goaeEintrag(nr);
   const m = e && /je (angefangene|weitere|vollendete)[^,;]*$/i.exec(String(e.text || '').trim());
-  return { je: m ? m[0] : '' };
+  return { je: m ? m[0] : '', max: GOAE_TAG_MAX[nr] || 99,
+           hinweis: GOAE_TAG_MAX[nr] ? 'Laut GOÄ je Gefäßzugang einmal, höchstens ' + GOAE_TAG_MAX[nr] + '-mal je Behandlungstag (gesonderte Punktionen verschiedener Gefäße).' : '' };
 }
 function betaAnzahlVon(details, k){
   const n = details && details.anzahl ? Math.floor(Number(details.anzahl[k])) : 1;
@@ -8003,6 +8036,26 @@ function betaAnzahlVon(details, k){
 // der Rechnung stehen; die Anzahl ergibt sich daraus.
 const GOAE_BEGR_IMMER = { '56': 'zeit' };
 function betaBegrImmer(p){ return !!(p && GOAE_BEGR_IMMER[betaPosNr(p)]); }
+// Allg. Bestimmung 3 zu Abschnitt B: 1, 3, 5, 6, 7, 8 mehrmals an demselben
+// Tag nur wenn geboten, mit Uhrzeit; bei 3 generell zu begruenden
+const GOAE_MEHRFACH_TAG = ['1', '3', '5', '6', '7', '8'];
+// Warum ist die Begruendung Pflicht? '' = nicht Pflicht
+//  zeit (56), faktor (ueber Schwellenwert), mehrfach (Anzahl > 1 bei 1/3/5-8),
+//  fall (laut Uebersicht im Behandlungsfall schon berechnet, z.B. Nr. 3)
+function betaBegrPflicht(p, faktor, anzahl, det){
+  if(!p) return '';
+  const r = betaPosRahmen(p); if(!r) return '';
+  if(betaBegrImmer(p)) return 'zeit';
+  if(Number(faktor) > r.schwelle + 1e-9) return 'faktor';
+  if(Number(anzahl) > 1 && GOAE_MEHRFACH_TAG.includes(betaPosNr(p))) return 'mehrfach';
+  if(det && det.pflichtGrund && det.pflichtGrund[betaPosSchluessel(p)]) return 'fall';
+  return '';
+}
+function betaBegrPflichtText(grund, p, det){
+  if(grund === 'mehrfach') return 'Pflicht bei mehrfacher Berechnung am selben Tag – bitte mit Uhrzeiten, z. B. „erneute Beratung um 23:40 wegen …“';
+  if(grund === 'fall') return 'Pflicht: ' + ((det && det.pflichtGrund && det.pflichtGrund[betaPosSchluessel(p)]) || 'mehrfache Berechnung im Behandlungsfall');
+  return '';
+}
 function betaZeitAusBegr(t){
   const m = /(\d{1,2})[:.](\d{2})\s*(?:Uhr)?\s*(?:bis|-|–)\s*(\d{1,2})[:.](\d{2})/i.exec(String(t || ''));
   return m ? { von: zz2(+m[1]) + ':' + m[2], bis: zz2(+m[3]) + ':' + m[4] } : null;
@@ -8014,7 +8067,8 @@ function betaZeitMinuten(von, bis){
   if(d <= 0) d += 24 * 60;
   return d;
 }
-function betaAnzahl56(min){ return isNaN(min) ? NaN : min < 30 ? 0 : Math.max(1, Math.ceil(min / 30)); }
+// unter 30 Minuten nicht berechnungsfaehig, ab 30 Minuten 1x, ab 60 Minuten 2x usw.
+function betaAnzahl56(min){ return isNaN(min) ? NaN : Math.floor(min / 30); }
 // Beginn des Verweilens = Uhrzeit des Besuchs (aus der Maske)
 function betaBesuchUhrzeit(){
   const t = String((window.betaPosKontext || {}).zeit || '').trim();
@@ -8104,6 +8158,10 @@ function betaDetailsVervollstaendigen(art, auswahl, details, alle, legacy){
   const varianten = {};
   Object.keys(alt.varianten || {}).forEach(k=>{ if(gewaehlt.has(goaeNorm(k)) && alt.varianten[k]) varianten[goaeNorm(k)] = alt.varianten[k]; });
   if(Object.keys(varianten).length) d.varianten = varianten;
+  const pg = {};
+  Object.keys(alt.pflichtGrund || {}).forEach(k=>{ if(gewaehlt.has(goaeNorm(k)) && alt.pflichtGrund[k]) pg[goaeNorm(k)] = alt.pflichtGrund[k]; });
+  if(Object.keys(pg).length) d.pflichtGrund = pg;
+  if(alt.haeufigOk && alt.haeufigOk.length) d.haeufigOk = alt.haeufigOk.slice();
   return d;
 }
 function betaEffektivBetrag(art, p, details){
@@ -8121,7 +8179,7 @@ function betaBegruendungFehlt(art, auswahl, details, alle){
   Object.keys(d.faktoren).forEach(k=>{
     const p = alle.find(x=> betaPosSchluessel(x) === k);
     const r = p && betaPosRahmen(p);
-    if(r && (d.faktoren[k] > r.schwelle + 1e-9 || betaBegrImmer(p)) && !String(d.begruendungen[k] || '').trim()) fehlt.push({ p, faktor: d.faktoren[k] });
+    if(r && betaBegrPflicht(p, d.faktoren[k], betaAnzahlVon(d, k), d) && !String(d.begruendungen[k] || '').trim()) fehlt.push({ p, faktor: d.faktoren[k] });
   });
   return fehlt;
 }
@@ -8160,7 +8218,7 @@ function betaDetailsFuerGenerator(f){
     const r = p && betaPosRahmen(p);
     const fak = det.faktoren && det.faktoren[k] !== undefined ? betaFaktorLesen(det.faktoren[k]) : (p ? betaPosStandardFaktor(p) : NaN);
     const t = String(det.begruendungen[k] || '').trim();
-    begruendungen[k] = (r && !isNaN(fak) && (fak > r.schwelle + 1e-9 || betaBegrImmer(p))) ? t : '';
+    begruendungen[k] = (r && !isNaN(fak) && betaBegrPflicht(p, fak, betaAnzahlVon(det, k), det)) ? t : '';
   });
   const varianten = {};
   Object.keys(det.varianten || {}).forEach(k=>{ if(det.varianten[k]) varianten[goaeNorm(k)] = det.varianten[k]; });
@@ -8242,6 +8300,122 @@ function betaUSegmenteLesen(u){
   return out;
 }
 
+// ---------- Haeufigkeit ueber mehrere Rechnungen (GOÄ-Anmerkungen) ----------
+// Behandlungsfall = derselben Erkrankung, ein Monat ab der ersten
+// Inanspruchnahme (Allg. Best. 1 zu Abschnitt B). Quelle der frueheren
+// Rechnungen ist die Rechnungsuebersicht (gleicher Name + Geburtsdatum).
+const GOAE_HAEUFIG = {
+  '3':   { fall: 'begr' },                  // mehr als einmal im Behandlungsfall: besondere Begruendung
+  '4':   { fall: 1 }, '807': { fall: 1 }, '842': { fall: 1 }, '860': { fall: 1 },
+  '15':  { kalenderjahr: 1 }, '26': { kalenderjahr: 1 },
+  '30':  { monate: 12, max: 1 }, '31': { monate: 6, max: 3 }, '33': { monate: 12, max: 3 }, '34': { monate: 6, max: 2 }
+};
+function betaMonatePlus(serial, m){
+  const d = new Date(XL_EPOCHE + serial * 86400000); d.setUTCMonth(d.getUTCMonth() + m);
+  return Math.round((d.getTime() - XL_EPOCHE) / 86400000);
+}
+function betaZeitNorm(t){ const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '').trim()); return m ? zz2(+m[1]) + ':' + m[2] : ''; }
+// fruehere Rechnungen desselben Patienten: [{datum, serial, renu, zaehl:{nr: anzahl}}]
+// ausschluss: {nr} (Zeile der bearbeiteten Rechnung) oder {datum, zeit}
+function betaPatientHistorie(ue, art, name, geda, ausschluss){
+  if(!ue || !ue.zeilen) return null;
+  const t = (x)=> String(x == null ? '' : x).trim();
+  const { nachname, vorname } = nameAufteilen(name);
+  if(!nachname) return null;
+  const schl = [nachname, vorname, fpDatum(geda)].map(x=> t(x).toUpperCase()).join('|');
+  const A = art === 'ls' ? 'L' : 'P';
+  const out = [];
+  ue.zeilen.forEach(z=>{
+    if(z.nr < 2) return;
+    const v = z.v;
+    if(t(v[0]).toUpperCase() !== A) return;
+    if([t(v[5]), t(v[6]), fpDatum(xlDatumText(v[7]))].map(x=> x.toUpperCase()).join('|') !== schl) return;
+    if(ausschluss && ausschluss.nr && z.nr === ausschluss.nr) return;
+    const datum = fpDatum(xlDatumText(v[1])), serial = xlDatumSerial(datum);
+    if(serial == null) return;
+    if(ausschluss && !ausschluss.nr && datum === fpDatum(ausschluss.datum) && betaZeitNorm(xlZeitText(v[2])) === betaZeitNorm(ausschluss.zeit)) return;
+    const u = t(v[20]);
+    const pos = ((/(?:^|\|)\s*POS:([^|]*)/i.exec(u) || [])[1] || '').split(',').map(x=> x.trim()).filter(Boolean);
+    const seg = betaUSegmenteLesen(u);
+    const zaehl = {};
+    pos.forEach(k=>{
+      const nr = /^EIG/i.test(k) ? goaeNorm((seg.eigene[k] || {}).ziffer || betaNrVonSchluessel(art, k)) : goaeNorm(k);
+      if(!nr) return;
+      zaehl[nr] = (zaehl[nr] || 0) + (((seg.details || {}).anzahl || {})[goaeNorm(k)] || 1);
+    });
+    out.push({ datum, serial, renu: t(v[16]), zaehl });
+  });
+  return out;
+}
+// aktuell: {nr: anzahl} der Rechnung; -> [{nr, typ:'begr'|'warn', kurz, grund, schl}]
+function betaHaeufigkeitPruefen(art, aktuell, datumText, historie){
+  const out = [];
+  if(!historie || art !== 'pt') return out;
+  const s0 = xlDatumSerial(fpDatum(datumText));
+  if(s0 == null) return out;
+  const frueher = historie.filter(h=> h.serial <= s0).sort((a, b)=> a.serial - b.serial);
+  let start = null;
+  frueher.forEach(h=>{ if(start === null || h.serial > betaMonatePlus(start, 1)) start = h.serial; });
+  if(start === null || s0 > betaMonatePlus(start, 1)) start = s0;
+  const imFall = frueher.filter(h=> h.serial >= start);
+  const am = (liste, nr)=> liste.filter(h=> h.zaehl[nr]).map(h=> h.datum);
+  const add = (nr, typ, kurz, grund, daten)=> out.push({ nr, typ, kurz, grund: grund || kurz, schl: nr + '@' + (daten || []).join(',') + '@' + typ });
+  Object.keys(aktuell).forEach(nr=>{
+    const r = GOAE_HAEUFIG[nr]; if(!r) return;
+    if(r.fall){
+      const d = am(imFall, nr);
+      if(d.length){
+        const wann = 'schon am ' + d.join(', ') + ' berechnet';
+        if(r.fall === 'begr') add(nr, 'begr', wann + ' (Behandlungsfall) – mehrfache Berechnung braucht laut GOÄ eine besondere Begründung',
+                                  'Ziffer ' + nr + ' im Behandlungsfall ' + wann, d);
+        else add(nr, 'warn', wann + ' – laut GOÄ im Behandlungsfall nur einmal berechnungsfähig (bei derselben Erkrankung)', '', d);
+      } else if(r.fall === 1 && aktuell[nr] > 1) add(nr, 'warn', 'laut GOÄ im Behandlungsfall nur einmal berechnungsfähig', '', []);
+    }
+    if(r.kalenderjahr){
+      const jahr = (s)=> new Date(XL_EPOCHE + s * 86400000).getUTCFullYear();
+      const d = am(frueher.filter(h=> jahr(h.serial) === jahr(s0)), nr);
+      if(d.length + aktuell[nr] > r.kalenderjahr) add(nr, 'warn', (d.length ? 'schon am ' + d.join(', ') + ' berechnet – ' : '') + 'laut GOÄ nur einmal im Kalenderjahr', '', d);
+    }
+    if(r.monate){
+      const ab = betaMonatePlus(s0, -r.monate);
+      const im = frueher.filter(h=> h.serial > ab && h.zaehl[nr]);
+      const bisher = im.reduce((a, h)=> a + h.zaehl[nr], 0);
+      if(bisher + aktuell[nr] > r.max) add(nr, 'warn', 'laut GOÄ innerhalb von ' + (r.monate === 12 ? 'einem Jahr' : r.monate + ' Monaten') + ' höchstens ' + (r.max === 1 ? 'einmal' : r.max + '-mal') +
+        (im.length ? ' (bisher: ' + im.map(h=> h.datum).join(', ') + ')' : ''), '', im.map(h=> h.datum));
+    }
+  });
+  // Allg. Best. 2: 1 und/oder 5 neben Leistungen der Abschnitte C bis O im Behandlungsfall nur einmal
+  const mitCO = (z)=> Object.keys(z).some(n=> /^\d+$/.test(n) && +n >= 200);
+  ['1', '5'].forEach(nr=>{
+    if(!aktuell[nr]) return;
+    const d = imFall.filter(h=> h.zaehl['1'] || h.zaehl['5']).map(h=> h.datum);
+    if(d.length && (mitCO(aktuell) || imFall.some(h=> mitCO(h.zaehl))))
+      add(nr, 'warn', '1/5 schon am ' + d.join(', ') + ' berechnet – neben Leistungen der Abschnitte C bis O (z. B. Injektion, EKG) laut GOÄ im Behandlungsfall nur einmal', '', d);
+  });
+  return out;
+}
+// Uebersicht fuer die Pruefung: aus der Rechnungsverwaltung oder im Hintergrund geladen
+let betaHistorieCache = null, betaHistorieLaeuft = null;
+function betaHistorieUe(){
+  if(typeof betaGesamtCache !== 'undefined' && betaGesamtCache && betaGesamtCache.ue && betaGesamtCache.zielKey === betaZielKey()) return betaGesamtCache.ue;
+  if(betaHistorieCache && Date.now() - betaHistorieCache.am < 15 * 60000) return betaHistorieCache.ue;
+  return null;
+}
+function betaHistorieNachladen(){
+  if(betaHistorieLaeuft) return betaHistorieLaeuft;
+  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return Promise.resolve(null);
+  betaHistorieLaeuft = (async()=>{
+    try{
+      const token = await msGraphTokenHolen(); if(!token) return null;
+      const ue = await uebersichtLaden(token, betaZiel().uebersicht);
+      betaHistorieCache = { ue, am: Date.now() };
+      return ue;
+    }catch(e){ return null; }
+    finally{ setTimeout(()=>{ betaHistorieLaeuft = null; }, 0); }
+  })();
+  return betaHistorieLaeuft;
+}
+
 // ---------- Dialog: Faktor und Begruendung ----------
 async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, opt){
   opt = opt || {};
@@ -8278,23 +8452,15 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       ' · Schwellenwert ' + betaFaktorText(r.schwelle) + ' · Höchstsatz ' + betaFaktorText(r.max) + '</div>' +
       '<div class="beta-form">' +
       (varListe ? '<label>Untersuchung von<select id="fdVariante">' + varListe.map(v=> '<option' + (v === w.variante ? ' selected' : '') + '>' + htmlEsc(v) + '</option>').join('') + '</select></label>' : '') +
-      (zeitModus ? '<div class="zeit56">' +
-        '<div class="zeit56-zeile"><span>Beginn' + (besuchZeit ? ' (Besuch)' : '') + '</span>' + (besuchZeit
-          ? '<b>' + htmlEsc(besuchZeit) + ' Uhr</b>'
-          : '<button type="button" class="zeit-knopf" data-zk="von">' + htmlEsc(w.von || '--:--') + '</button>') +
-          '<input type="hidden" id="fdVon" value="' + htmlEsc(w.von) + '"></div>' +
-        '<div class="zeit56-zeile"><span>Ende</span><button type="button" class="zeit-knopf" data-zk="bis">' + htmlEsc(w.bis || '--:--') + '</button>' +
-          '<input type="hidden" id="fdBis" value="' + htmlEsc(w.bis) + '"></div>' +
-        '<div class="zeit-picker" id="fdPicker" hidden><div class="zp-anzeige">' +
-          '<button type="button" data-zp="h-1">&minus;</button><span id="zpH">00</span><button type="button" data-zp="h1">+</button>' +
-          '<span class="zp-dp">:</span>' +
-          '<button type="button" data-zp="m-1">&minus;</button><span id="zpM">00</span><button type="button" data-zp="m1">+</button></div>' +
-          '<div class="zp-schnell" id="zpSchnell">' + [30, 45, 60, 90, 120].map(m=> '<button type="button" data-zd="' + m + '">+' + (m < 60 ? m + ' Min' : (m / 60).toString().replace('.', ',') + ' Std') + '</button>').join('') + '</div>' +
-          '<button type="button" class="zp-ok" id="zpOk">Fertig</button></div>' +
-        '<div class="beta-erg-klein" id="fdZeitInfo"></div></div>' : '') +
+      (zeitModus ? '<div class="zeit-reihe"><label>von' + (besuchZeit ? ' (Besuch)' : '') + '<input type="time" id="fdVon" value="' + htmlEsc(w.von) + '"></label>' +
+        '<label>bis<input type="time" id="fdBis" value="' + htmlEsc(w.bis) + '"></label></div>' +
+        '<div class="beta-erg-klein" id="fdZeitInfo"></div>' : '') +
       (regel && zeitModus ? '<input type="hidden" id="fdAnzahl" value="' + htmlEsc(w.anzahl) + '">' : '') +
       (regel && !zeitModus ? '<label>Anzahl<span class="anzahl-reihe"><button type="button" data-d="-1"' + (zeitModus ? ' disabled' : '') + '>&minus;</button><input id="fdAnzahl" value="' + htmlEsc(w.anzahl) + '" inputmode="numeric" autocomplete="off"' + (zeitModus ? ' readonly' : '') + '><button type="button" data-d="1"' + (zeitModus ? ' disabled' : '') + '>+</button></span></label>' +
-        '<div class="beta-erg-klein">' + (zeitModus ? 'Ergibt sich aus der Uhrzeit (je angefangene halbe Stunde).' : (regel.je ? 'Laut GOÄ „' + htmlEsc(regel.je) + '“ – mehrfach berechnungsfähig.' : 'Nur wenn die Leistung tatsächlich mehrfach erbracht wurde (z.B. zwei Injektionen).') + ' Steht dann entsprechend oft in der Rechnung.') + '</div>' : '') +
+        '<div class="beta-erg-klein">' + (zeitModus ? 'Ergibt sich aus der Uhrzeit (je angefangene halbe Stunde).' : (regel.je ? 'Laut GOÄ „' + htmlEsc(regel.je) + '“ – mehrfach berechnungsfähig.'
+          : regel.hinweis ? htmlEsc(regel.hinweis)
+          : GOAE_MEHRFACH_TAG.includes(betaPosNr(p)) ? 'Mehrmals am selben Tag nur, wenn medizinisch geboten – dann mit Uhrzeiten in der Begründung' + (betaPosNr(p) === '3' ? ' (bei 3 immer begründen)' : '') + '.'
+          : 'Nur wenn die Leistung tatsächlich mehrfach erbracht wurde (z.B. zwei Injektionen).') + ' Steht dann entsprechend oft in der Rechnung.') + '</div>' : '') +
       '<label>Faktor</label><input type="hidden" id="fdFaktor" value="' + htmlEsc(betaFaktorText(w.faktor)) + '">' +
       '<div class="faktor-stufen">' + stufen.map(s=> '<button type="button" data-f="' + s + '"' + (eigen.has(s) && !r.stufen.includes(s) ? ' class="eigen"' : '') + '>' + betaFaktorText(s) +
         (eigen.has(s) && !r.stufen.includes(s) ? ' <span class="weg" data-weg="' + s + '" title="eigenen Faktor entfernen">&times;</span>' : '') + '</button>').join('') +
@@ -8312,19 +8478,17 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
     const $ = (id)=> document.getElementById(id);
     const fEl = $('fdFaktor'), bEl = $('fdBeg'), aEl = $('fdAnzahl'), vonEl = $('fdVon'), bisEl = $('fdBis');
     let warPflicht = null;
-    const anzahlJetzt = ()=>{ const n = aEl ? Math.floor(Number(aEl.value)) : 1; return n >= 1 && n <= 99 ? n : NaN; };
+    const maxN = (regel && regel.max) || 99;
+    const anzahlJetzt = ()=>{ const n = aEl ? Math.floor(Number(aEl.value)) : 1; return n >= 1 && n <= maxN ? n : NaN; };
     const zeitAktual = ()=>{
       if(!zeitModus) return;
-      document.querySelectorAll('.zeit-knopf').forEach(k=>{
-        const v = (k.dataset.zk === 'von' ? vonEl : bisEl).value;
-        k.textContent = v || '--:--';
-        k.classList.toggle('pflichtfeld-fehlt', !v);
-      });
+      vonEl.classList.toggle('pflichtfeld-fehlt', !vonEl.value);
+      bisEl.classList.toggle('pflichtfeld-fehlt', !bisEl.value);
       const min = betaZeitMinuten(vonEl.value, bisEl.value);
       const info = $('fdZeitInfo');
       if(isNaN(min)){ info.textContent = !vonEl.value ? 'Beginn und Ende eintragen (Pflicht, steht in der Rechnung).' : 'Ende des Verweilens eintragen (Pflicht, steht in der Rechnung).'; bEl.value = ''; return; }
       const n = anzahl56(min);
-      info.textContent = min + ' Minuten → ' + (n ? n + ' × 56 (die erste halbe Stunde gehört zum Besuch, ab 30 Minuten je angefangene halbe Stunde)' : 'unter 30 Minuten – 56 ist nicht berechnungsfähig');
+      info.textContent = min + ' Minuten → ' + (n ? n + ' × 56 (ab 30 Minuten 1 ×, ab 60 Minuten 2 × usw.)' : 'unter 30 Minuten – 56 ist nicht berechnungsfähig');
       if(aEl) aEl.value = String(n);
       bEl.value = zeitText(vonEl.value, bisEl.value);
     };
@@ -8335,56 +8499,29 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       $('fdBetrag').textContent = !ok ? 'Faktor zwischen 1 und ' + betaFaktorText(r.max)
         : isNaN(n) ? 'Anzahl zwischen 1 und 99'
         : n > 1 ? 'Betrag: ' + n + ' × ' + betaEuro(betaPosBetrag(p, f)) + ' = ' + betaEuro(betaRund2(betaPosBetrag(p, f) * n)) : 'Betrag: ' + betaEuro(betaPosBetrag(p, f));
-      const pflicht = ok && (f > r.schwelle + 1e-9 || zeitModus);
+      const grund = ok ? betaBegrPflicht(p, f, zeitModus ? 1 : anzahlJetzt(), { pflichtGrund: opt.pflichtGrund ? { [schl]: opt.pflichtGrund } : {} }) : '';
+      const pflicht = !!grund;
       // ueber den Schwellenwert gegangen und noch leer -> Vorschlag einsetzen
       const vorschlag = (vorlage && vorlage.text) || String(p.begruendung || '');
       if(pflicht && !zeitModus && warPflicht === false && !bEl.value.trim() && vorschlag) bEl.value = vorschlag;
       warPflicht = pflicht;
-      $('fdBegLabel').firstChild.textContent = zeitModus ? 'Begründung (wird aus der Uhrzeit gebildet)' : pflicht ? 'Begründung (Pflicht über ' + betaFaktorText(r.schwelle) + ')' : 'Begründung (wird erst über ' + betaFaktorText(r.schwelle) + ' gedruckt – bleibt als Vorlage gespeichert)';
+      $('fdBegLabel').firstChild.textContent = zeitModus ? 'Begründung (wird aus der Uhrzeit gebildet)' :
+        (grund === 'mehrfach' || grund === 'fall') ? 'Begründung (' + betaBegrPflichtText(grund, p, { pflichtGrund: { [schl]: opt.pflichtGrund } }) + ')' : pflicht ? 'Begründung (Pflicht über ' + betaFaktorText(r.schwelle) + ')' : 'Begründung (wird erst über ' + betaFaktorText(r.schwelle) + ' gedruckt – bleibt als Vorlage gespeichert)';
       bEl.classList.toggle('pflichtfeld-fehlt', pflicht && !zeitModus && !bEl.value.trim());
       document.querySelectorAll('.faktor-stufen button[data-f]').forEach(b=> b.classList.toggle('aktiv', ok && Math.abs(Number(b.dataset.f) - f) < 1e-9));
     };
     bEl.addEventListener('input', ()=>{ aktual(); document.querySelectorAll('.begr-text').forEach(b=> b.classList.toggle('aktiv', katalog[+b.dataset.i] && katalog[+b.dataset.i].text === bEl.value.trim())); });
-    // eigene Uhr (die Android-Uhr schneidet auf manchen Handys "Festlegen" ab)
     if(zeitModus){
-      const picker = $('fdPicker'); let feld = null, h = 0, m = 0;
-      const zeigen = ()=>{ $('zpH').textContent = zz2(h); $('zpM').textContent = zz2(m); };
-      const setzen = ()=>{ feld.value = zz2(h) + ':' + zz2(m); zeitAktual(); aktual(); };
-      const oeffnen = (zk)=>{
-        feld = zk === 'von' ? vonEl : bisEl;
-        let v = feld.value;
-        if(!v){
-          // Ende: Vorschlag Beginn + 30 Minuten, sonst jetzt
-          const basis = zk === 'bis' && vonEl.value ? vonEl.value : zz2(new Date().getHours()) + ':' + zz2(new Date().getMinutes());
-          const [bh, bm] = basis.split(':').map(Number); const t = (bh * 60 + bm + (zk === 'bis' && vonEl.value ? 30 : 0)) % 1440;
-          v = zz2(Math.floor(t / 60)) + ':' + zz2(t % 60);
-        }
-        [h, m] = v.split(':').map(Number);
-        $('zpSchnell').hidden = !(zk === 'bis' && vonEl.value);
-        picker.hidden = false; zeigen(); setzen();
-        document.querySelectorAll('.zeit-knopf').forEach(k=> k.classList.toggle('offen', k.dataset.zk === zk));
-        picker.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      };
-      document.querySelectorAll('.zeit-knopf').forEach(k=> k.onclick = ()=> oeffnen(k.dataset.zk));
-      const schritt = (art_, d)=>{ if(art_ === 'h') h = (h + d + 24) % 24; else { const t = (h * 60 + m + d + 1440) % 1440; h = Math.floor(t / 60); m = t % 60; } zeigen(); setzen(); };
-      document.querySelectorAll('[data-zp]').forEach(b=>{
-        const a_ = b.dataset.zp[0], d = Number(b.dataset.zp.slice(1));
-        let uhr = null, n = 0;
-        const stopp = ()=>{ clearTimeout(uhr); uhr = null; };
-        const wiederholen = ()=>{ schritt(a_, d * (a_ === 'm' && n > 8 ? 5 : 1)); n++; uhr = setTimeout(wiederholen, n < 3 ? 380 : 110); };
-        b.addEventListener('pointerdown', (ev)=>{ ev.preventDefault(); n = 0; wiederholen(); });
-        ['pointerup', 'pointerleave', 'pointercancel'].forEach(t=> b.addEventListener(t, stopp));
+      [vonEl, bisEl].forEach(el=>{
+        el.addEventListener('input', ()=>{ zeitAktual(); aktual(); });
+        el.addEventListener('change', ()=>{ zeitAktual(); aktual(); });
+        // Antippen irgendwo im Feld oeffnet die Uhr (nicht nur auf der Ziffer)
+        el.addEventListener('click', ()=>{ try{ if(el.showPicker) el.showPicker(); }catch(_){} });
       });
-      document.querySelectorAll('[data-zd]').forEach(b=> b.onclick = ()=>{
-        const [bh, bm] = vonEl.value.split(':').map(Number); const t = (bh * 60 + bm + Number(b.dataset.zd)) % 1440;
-        h = Math.floor(t / 60); m = t % 60; zeigen(); setzen();
-      });
-      $('zpOk').onclick = ()=>{ picker.hidden = true; document.querySelectorAll('.zeit-knopf').forEach(k=> k.classList.remove('offen')); };
-      if(!bisEl.value && vonEl.value) setTimeout(()=> oeffnen('bis'), 50);
     }
     if(aEl && !zeitModus){
       aEl.addEventListener('input', aktual);
-      document.querySelectorAll('.anzahl-reihe button').forEach(b=> b.onclick = ()=>{ const n = anzahlJetzt(); aEl.value = String(Math.max(1, Math.min(99, (isNaN(n) ? 1 : n) + Number(b.dataset.d)))); aktual(); });
+      document.querySelectorAll('.anzahl-reihe button').forEach(b=> b.onclick = ()=>{ const n = anzahlJetzt(); aEl.value = String(Math.max(1, Math.min(maxN, (isNaN(n) ? 1 : n) + Number(b.dataset.d)))); aktual(); });
     }
     const merken = ()=> ({ faktor: betaFaktorLesen(fEl.value), beg: bEl.value, anzahl: aEl ? aEl.value : '1', von: vonEl ? vonEl.value : '', bis: bisEl ? bisEl.value : '', variante: $('fdVariante') ? $('fdVariante').value : '' });
     let neuAufbauen = false;
@@ -8419,11 +8556,13 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
     const n = anzahlJetzt();
     if(zeitModus && isNaN(betaZeitMinuten(w.von, w.bis))) fehler = 'Bitte das Ende des Verweilens eintragen – die Uhrzeit muss in der Rechnung stehen.';
     else if(zeitModus && betaZeitMinuten(w.von, w.bis) > 600) fehler = 'Mehr als 10 Stunden Verweilen? Bitte die Endzeit prüfen.';
-    else if(zeitModus && !anzahl56(betaZeitMinuten(w.von, w.bis))) fehler = 'Unter 30 Minuten ist Verweilen (56) nicht berechnungsfähig – die erste halbe Stunde gehört zum Besuch. Bitte die Endzeit prüfen oder 56 abwählen.';
-    else if(isNaN(n)) fehler = 'Bitte eine Anzahl zwischen 1 und 99 eintragen.';
+    else if(zeitModus && !anzahl56(betaZeitMinuten(w.von, w.bis))) fehler = 'Unter 30 Minuten ist Verweilen (56) nicht berechnungsfähig. Bitte die Endzeit prüfen oder 56 abwählen.';
+    else if(isNaN(n)) fehler = 'Bitte eine Anzahl zwischen 1 und ' + maxN + ' eintragen.';
     else if(isNaN(f) || f < 1) fehler = 'Bitte einen Faktor wählen.';
     else if(f > r.max + 1e-9) fehler = 'Höchstens ' + betaFaktorText(r.max) + ' – darüber nur mit schriftlicher Honorarvereinbarung (§ 2 GOÄ).';
     else if(f > r.schwelle + 1e-9 && !w.beg) fehler = 'Über dem ' + betaFaktorText(r.schwelle) + '-fachen ist eine Begründung Pflicht (§ 12 Abs. 3 GOÄ).';
+    else if(!w.beg && n > 1 && GOAE_MEHRFACH_TAG.includes(betaPosNr(p))) fehler = 'Mehrfach am selben Tag: laut GOÄ ' + (betaPosNr(p) === '3' ? 'zu begründen und ' : '') + 'mit der jeweiligen Uhrzeit anzugeben – bitte in die Begründung schreiben.';
+    else if(!w.beg && opt.pflichtGrund) fehler = 'Begründung ist Pflicht: ' + opt.pflichtGrund + '.';
     else {
       betaOverlay.schliessen();
       // jede bestaetigte Begruendung im Katalog sammeln (56: nur Uhrzeit -> nicht)
@@ -8562,7 +8701,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     const loeschbar = p.eigene && !p.fest;
     const label = `<label class="position-zeile${istAuto && !aus?' auto-gesperrt':''}${aus?' auto-aus':''}${mitFaktor?' mit-faktor':''}" data-auto-aus="${aus?'1':'0'}">
         <input type="checkbox" data-ziffer="${htmlEsc(p.ziffer)}" data-betrag="${betragVon(p)}" data-auto="${istAuto?'1':'0'}" ${checked} ${gesperrt}>
-        <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (antippen = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
+        <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span><span class="pos-haeufig" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (antippen = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
         <div class="betrag">${betragVon(p).toFixed(2).replace('.',',')} &euro;</div>
       </label>`;
     const innen = loeschbar ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>${label}</div>` : label;
@@ -8586,7 +8725,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       const cb = el.closest('.position-zeile').querySelector('input');
       if(!cb.checked){ el.innerHTML = ''; return; }
       const r = betaPosRahmen(p), f = faktorVon(p), b = String(begrVon(p) || '').trim(), n = anzahlVon(p);
-      const pflicht = f > r.schwelle + 1e-9 || betaBegrImmer(p);
+      const pflicht = !!betaBegrPflicht(p, f, n, det);
       el.innerHTML = `<button type="button" class="faktor-chip${pflicht ? ' hoch' : ''}">${n > 1 ? n + ' &times; &middot; ' : ''}Faktor ${betaFaktorText(f)} &#9998;</button>` +
         (pflicht ? (b ? `<span class="beg-text">${betaBegrImmer(p) ? 'Verweilen ' : 'Begründung: '}${htmlEsc(b)}</span>` : `<span class="beg-text fehlt">${betaBegrImmer(p) ? 'Ende des Verweilens fehlt – antippen' : 'Begründung fehlt – antippen'}</span>`) : '');
       const zeile = el.closest('.position-zeile');
@@ -8595,7 +8734,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       el.onclick = async (ev)=>{
         ev.preventDefault(); ev.stopPropagation();
         const k0 = betaPosSchluessel(p);
-        const erg = await betaFaktorDialog(art, p, faktorVon(p), begrVon(p), anzahlVon(p), ((det.varianten || {})[k0]) || '');
+        const erg = await betaFaktorDialog(art, p, faktorVon(p), begrVon(p), anzahlVon(p), ((det.varianten || {})[k0]) || '', { pflichtGrund: (det.pflichtGrund || {})[k0] || '' });
         if(!erg) return;
         const k = betaPosSchluessel(p);
         det.faktoren[k] = erg.faktor; det.begruendungen[k] = erg.begruendung;
@@ -8690,7 +8829,34 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       if(automatisch.length) return 'neu';
     }
   }
-  function positionAktualisieren(){ ausschluesseAktualisieren(); zusatzZeichnen(); konflikteZeichnen(); summeBerechnen(); }
+  // Haeufigkeit laut GOÄ (fruehere Rechnungen desselben Patienten)
+  const kxH = window.betaPosKontext || {};
+  const haeufigBerechnen = ()=>{
+    const ue = betaHistorieUe();
+    if(!ue || !kxH.name || art !== 'pt') return null;
+    const hist = betaPatientHistorie(ue, art, kxH.name, kxH.geda, { datum: kxH.datum, zeit: kxH.zeit });
+    const akt = {};
+    gewaehltePositionen().forEach(p=>{ const nr = betaPosNr(p); if(nr && /^\d+$/.test(nr)) akt[nr] = (akt[nr] || 0) + anzahlVon(p); });
+    return betaHaeufigkeitPruefen(art, akt, kxH.datum, hist);
+  };
+  function haeufigZeichnen(){
+    const befunde = haeufigBerechnen();
+    if(befunde){
+      det.pflichtGrund = {};
+      befunde.filter(x=> x.typ === 'begr').forEach(x=> gewaehltePositionen().filter(p=> betaPosNr(p) === x.nr).forEach(p=>{ det.pflichtGrund[betaPosSchluessel(p)] = x.grund; }));
+    }
+    app.querySelectorAll('.pos-haeufig').forEach(el=>{
+      const p = posVon(el.dataset.z), cb = el.closest('.position-zeile').querySelector('input');
+      const t = befunde && p && cb.checked ? befunde.filter(x=> x.nr === betaPosNr(p)) : [];
+      el.textContent = t.map(x=> (x.typ === 'begr' ? 'ℹ ' : '⚠ ') + x.kurz).join(' · ');
+      el.classList.toggle('warn', t.some(x=> x.typ === 'warn'));
+    });
+  }
+  function positionAktualisieren(){ ausschluesseAktualisieren(); haeufigZeichnen(); zusatzZeichnen(); konflikteZeichnen(); summeBerechnen(); }
+  // Uebersicht noch nicht da -> im Hintergrund laden und dann neu pruefen
+  if(art === 'pt' && kxH.name && !betaHistorieUe()){
+    betaHistorieNachladen().then(ue=>{ if(ue && document.getElementById('btnPositionenFertig') && app.contains(document.getElementById('btnPositionenFertig'))) positionAktualisieren(); });
+  }
   const gewaehltJetzt = ()=>{
     const set = new Set(Array.from(app.querySelectorAll('.position-zeile input:checked')).map(cb=> cb.dataset.ziffer));
     set.details = det; return set;
@@ -8762,12 +8928,19 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   }
 
   document.getElementById('btnPositionenFertig').onclick = async ()=>{
+    // Hinweise laut GOÄ (nur einmal im Behandlungsfall usw.) einmal bestaetigen lassen
+    haeufigZeichnen();
+    const warn = (haeufigBerechnen() || []).filter(x=> x.typ === 'warn' && !(det.haeufigOk || []).includes(x.schl));
+    if(warn.length){
+      if(!await betaFrage('Hinweis laut GOÄ:\n\n' + warn.map(x=> '• Ziffer ' + x.nr + ': ' + x.kurz).join('\n') + '\n\nTrotzdem so übernehmen?', 'Übernehmen', 'Zurück')) return;
+      det.haeufigOk = [...(det.haeufigOk || []), ...warn.map(x=> x.schl)];
+    }
     const gewaehlt = gewaehltJetzt();
     const voll = betaDetailsVervollstaendigen(art, gewaehlt, det, alle, legacy);
     const fehlt = betaBegruendungFehlt(art, gewaehlt, voll, alle);
     if(fehlt.length){
       app.querySelectorAll('.beg-text.fehlt').forEach(el=> el.closest('.position-zeile').scrollIntoView({behavior:'smooth', block:'center'}));
-      await betaOverlay.meldung('Bitte noch eine Begründung eintragen für: ' + betaFehltText(fehlt) + '.\n\nÜber dem Schwellenwert ist sie Pflicht (§ 12 Abs. 3 GOÄ).', 'Begründung fehlt');
+      await betaOverlay.meldung('Bitte noch eine Begründung eintragen für: ' + betaFehltText(fehlt) + '.\n\nPflicht über dem Schwellenwert (§ 12 Abs. 3 GOÄ) und laut GOÄ bei mehrfacher Berechnung (z. B. Ziffer 3 im Behandlungsfall, 1/3/5–8 mehrmals am selben Tag).', 'Begründung fehlt');
       return;
     }
     // zuletzt verwendete Begruendungen als Vorlage merken (nur wo sie gedruckt werden)
@@ -11421,7 +11594,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const kmLuftlinie = document.getElementById('txtKmLuftlinie').value;
     const basis = positionenAuswahl || automatischeAuswahl(art==='ls'?POSITIONEN_LS:POSITIONEN_PT, datum, zeit, kmFahrstrecke, kmLuftlinie, manuellerModus);
     // fuer die Automatik in den Rechnungspositionen (Zuschlaege A-D/E-H, Wegegeld)
-    window.betaPosKontext = { datum, zeit, kmFahrstrecke, kmLuftlinie, modus: manuellerModus };
+    window.betaPosKontext = { datum, zeit, kmFahrstrecke, kmLuftlinie, modus: manuellerModus,
+      name: (document.getElementById('txtName') || {}).value || '', geda: (document.getElementById('txtGeda') || {}).value || '' };
     // Schnappschuss der Maskenwerte JETZT nehmen (Maske ist noch im DOM),
     // damit ein Zahnrad-Klick auf der Rechnungspositionen-Unteransicht
     // korrekt hierher zurückfindet, statt aus dem falschen DOM zu lesen.
