@@ -223,6 +223,43 @@
   .profil-pos{display:flex; gap:8px; align-items:flex-start; padding:6px 0; border-bottom:1px solid var(--rand); font-size:13.5px;}
   .profil-pos:last-child{border-bottom:none;}
   .profil-pos input{margin-top:2px;}
+  /* 56: Beginn/Ende + eigene Uhr */
+  .zeit56{margin:4px 0 6px; border:1px solid var(--rand); border-radius:10px; padding:8px 10px;}
+  .zeit56-zeile{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 0; font-size:15px;}
+  .zeit-knopf{width:auto; min-width:110px; margin:0; padding:9px 14px; font-size:20px; font-weight:600; letter-spacing:1px; border-radius:10px; border:1px solid var(--rand); background:var(--karte); color:var(--text); text-align:center;}
+  .zeit-knopf.pflichtfeld-fehlt{border:2px solid var(--fehler, #c0392b);}
+  .zeit-knopf.offen{border-color:#2f6fed; box-shadow:0 0 0 2px rgba(47,111,237,.25);}
+  .zeit-picker{margin:6px 0 2px; padding:10px; border-radius:10px; background:rgba(47,111,237,.07);}
+  .zeit-picker[hidden]{display:none;}
+  .zp-anzeige{display:flex; align-items:center; justify-content:center; gap:8px;}
+  .zp-anzeige span{font-size:34px; font-weight:600; min-width:52px; text-align:center; font-variant-numeric:tabular-nums;}
+  .zp-anzeige .zp-dp{min-width:0;}
+  .zp-anzeige button{width:46px; height:46px; margin:0; padding:0; font-size:24px; border-radius:50%; border:1px solid var(--rand); background:var(--karte); color:var(--text); touch-action:manipulation; user-select:none;}
+  .zp-schnell{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:10px;}
+  .zp-schnell[hidden]{display:none;}
+  .zp-schnell button{width:auto; margin:0; padding:6px 10px; font-size:13px; border-radius:16px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .zp-ok{display:block; width:100%; margin:10px 0 0; padding:9px; border-radius:8px; border:none; background:#2f6fed; color:#fff; font-weight:600;}
+  .beta-form textarea.nur-lesen{background:transparent; border-style:dashed; color:var(--text-schwach); resize:none;}
+  /* Begruendungs-Katalog */
+  .begr-eintrag .begr-text.aktiv{border-style:solid; border-color:#2f6fed;}
+  .begr-std{font-size:10.5px; font-weight:700; color:var(--text-schwach); border:1px solid var(--rand); border-radius:4px; padding:0 4px; margin-left:4px;}
+  .begr-leer{margin-top:4px; font-style:italic;}
+  .begr-eintrag .begr-text.nur{border-style:solid; display:block;}
+  /* Profil bearbeiten */
+  .profil-pos{flex-wrap:wrap; align-items:center;}
+  .profil-pos-haken{display:flex; gap:8px; align-items:flex-start; flex:1; min-width:0; margin:0;}
+  .profil-pos-knoepfe{display:flex; gap:4px; align-items:center;}
+  .profil-faktor{width:auto; margin:0; padding:4px 8px; font-size:12px; border-radius:12px; border:1px solid var(--rand); background:none; color:var(--text-schwach); white-space:nowrap;}
+  .profil-faktor.eigen{border-color:#b9770e; color:#b9770e; font-weight:600;}
+  .profil-weg{width:30px; height:30px; margin:0; padding:0; border-radius:8px; border:1px solid var(--rand); background:none; color:var(--text-schwach); font-size:16px;}
+  .profil-pos-beg{flex-basis:100%; font-size:12px; color:var(--text-schwach); padding-left:26px;}
+  .profil-aus-titel{display:block; width:100%; text-align:left; margin:10px 0 0; padding:6px 0; border:none; background:none; color:var(--text-schwach); font-size:13px;}
+  .profil-ausgeblendet{display:flex; flex-direction:column; gap:4px;}
+  .profil-zurueck{display:flex; gap:6px; width:100%; text-align:left; margin:0; padding:6px 8px; font-size:13px; border-radius:8px; border:1px dashed var(--rand); background:none; color:var(--text-schwach);}
+  .profil-zurueck span{margin-left:auto; color:#2f6fed; font-weight:700;}
+  /* fruehere verschickte Fassung */
+  .fall-zeile .info.fassungen-text{font-size:12px; color:var(--text-schwach);}
+  .fassung-link{color:#2f6fed; text-decoration:underline; cursor:pointer;}
   .haftung-text{font-size:13.5px; line-height:1.5;}
   .haftung-text p{margin:0 0 8px;}
   .haftung-text ul{margin:0 0 8px; padding-left:18px;}
@@ -4521,18 +4558,28 @@ function betaZiel(){
 }
 
 // ---------- Graph-Aufruf mit verwertbarer Fehlermeldung ----------
-async function gx(token, methode, url, koerper, sid){
+// Zeitlimit je Anfrage: ohne Limit konnte eine haengende Verbindung (Handy
+// wechselt Netz, Excel bei Microsoft "wacht auf") die App endlos warten lassen.
+const GX_ZEITLIMIT_MS = 45000;
+async function gx(token, methode, url, koerper, sid, zeitlimitMs){
   const h = { Authorization:'Bearer ' + token };
   if(koerper !== undefined) h['Content-Type'] = 'application/json';
   if(sid) h['workbook-session-id'] = sid;
   let r;
+  const ac = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const limit = zeitlimitMs || GX_ZEITLIMIT_MS;
+  const uhr = ac ? setTimeout(()=> ac.abort(), limit) : null;
   try{
-    r = await fetch(url, { method: methode, headers: h, cache:'no-store',
+    r = await fetch(url, { method: methode, headers: h, cache:'no-store', signal: ac ? ac.signal : undefined,
                            body: koerper !== undefined ? JSON.stringify(koerper) : undefined });
   }catch(e){
-    const err = new Error('keine Antwort von Microsoft (' + ((e && e.message) || e) + ')');
-    err.netz = true; throw err;
+    if(uhr) clearTimeout(uhr);
+    const abbruch = e && e.name === 'AbortError';
+    const err = new Error(abbruch ? 'Microsoft antwortet nicht (nach ' + Math.round(limit / 1000) + ' s abgebrochen)'
+                                  : 'keine Antwort von Microsoft (' + ((e && e.message) || e) + ')');
+    err.netz = true; err.zeitlimit = abbruch; throw err;
   }
+  if(uhr) clearTimeout(uhr);
   if(!r.ok){
     const err = new Error('HTTP ' + r.status + ' ' + await graphFehlerText(r));
     err.status = r.status; throw err;
@@ -4692,12 +4739,22 @@ function xlAdresseStart(adresse){
 }
 async function uebersichtLaden(token, pfad){
   const basis = msGraphPfadUrl(pfad);
-  const ws = await gx(token, 'GET', basis + '/workbook/worksheets?$select=name,position');
+  // Excel bei Microsoft braucht beim ersten Zugriff manchmal sehr lange oder
+  // antwortet mit 502/503/504 -- dann einmal neu versuchen
+  const versuche = async (url)=>{
+    try{ return await gx(token, 'GET', url); }
+    catch(e){
+      if(!(e.zeitlimit || [502, 503, 504].includes(e.status))) throw e;
+      await new Promise(res=> setTimeout(res, 1500));
+      return await gx(token, 'GET', url);
+    }
+  };
+  const ws = await versuche(basis + '/workbook/worksheets?$select=name,position');
   const blaetter = ((ws && ws.value) || []).slice().sort((a, b)=> (a.position || 0) - (b.position || 0));
   if(!blaetter.length) throw new Error('Die Übersicht enthält kein Tabellenblatt.');
   const blatt = blaetter[0].name; // wie am PC: immer das erste Blatt
   const blattUrl = basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')";
-  const ur = await gx(token, 'GET', blattUrl + '/usedRange(valuesOnly=true)?$select=address,values');
+  const ur = await versuche(blattUrl + '/usedRange(valuesOnly=true)?$select=address,values');
   const st = xlAdresseStart(ur && ur.address);
   const zeilen = ((ur && ur.values) || []).map((r, i)=> ({ nr: st.zeile + i, v: new Array(st.spalte).fill('').concat(r) }));
   return { pfad, basis, blatt, blattUrl, zeilen };
@@ -5032,12 +5089,19 @@ async function betaRechnungErstellen(f, meldung, frage, kontext){
   const bearbeitung = !!(bezugRenu && treffer && (renu === bezugRenu || f.umnummern));
 
   // 2. Schon per Brief verschickt?
-  let warVersendet = false;
+  let warVersendet = false, geplantPlan = null;
   if(treffer){
     const u = String(treffer.v[20] == null ? '' : treffer.v[20]);
     warVersendet = lxpFlagVorhanden(u, 'LXP:1'); // wie am PC: nur das Kennzeichen zaehlt (Freigeben entfernt es, R bleibt fett)
     if(warVersendet){
-      if(!await frage(anzeige + ' (' + renu + ') wurde laut Übersicht bereits per Brief verschickt.\n\nTrotzdem Word + PDF neu erstellen? Verschickt wird dabei nichts.'))
+      const am = xlDatumText(treffer.v[17]);
+      const geplant = versandGeplant(u, 'ORIG');
+      geplantPlan = geplant && geplant.id ? geplant : null;
+      if(!await frage('Sind Sie sicher?\n\n' + anzeige + ' (' + renu + ') wurde ' + (geplant ? 'zum Versand am ' + isoDe(geplant.datum) + ' an LetterXpress übergeben' : 'bereits per Brief verschickt' + (am ? ' (' + am + ')' : '')) + '.\n\n' +
+        'Es wird eine NEUE Fassung (Word + PDF) unter derselben Rechnungsnummer erstellt. Die bisherige PDF bleibt als „' + name + '_verschickte Fassung …“ im Ordner erhalten, damit nachvollziehbar ist, was verschickt wurde.' +
+        (geplantPlan ? '\n\nDer geplante Brief enthält noch die bisherige Fassung: er wird automatisch bei LetterXpress storniert und mit der neuen Fassung zum selben Datum (' + isoDe(geplantPlan.datum) + ') neu übergeben – es geht nur ein Brief raus.'
+                     : geplant ? '\n\nAchtung: Für den geplanten Brief ist keine Auftragsnummer gespeichert – bitte im LetterXpress-Kundenkonto stornieren.' : '\n\nVerschickt wird dabei nichts.'),
+        'Ja, neue Fassung erstellen', 'Abbrechen'))
         return { uebersprungen: true, grund: 'bereits per Brief verschickt', renu, name };
     }
   }
@@ -5053,6 +5117,24 @@ async function betaRechnungErstellen(f, meldung, frage, kontext){
                // vorhandene PDF kann trotzdem per Brief verschickt werden (sofern
                // der Fall in der Uebersicht steht und noch nicht verschickt ist)
                sendbar: !!(vPdf && treffer && !warVersendet) };
+  }
+
+  // 3b. Verschickte Fassung sichern, bevor sie ersetzt wird
+  if(warVersendet && vPdf && !geplantPlan){
+    meldung('Verschickte Fassung wird gesichert …');
+    const archiv = await schritt('Verschickte Fassung sichern', async ()=>{
+      const am = (xlDatumText(treffer.v[17]) || heuteText()).replace(/[\\/:*?"<>|]/g, '.');
+      let pfad = '', n = 1;
+      for(; n < 50; n++){
+        pfad = ziel.ordner + '/' + name + '_verschickte Fassung ' + n + ' (' + am + ').pdf';
+        if(!await dateiInfo(token, pfad)) break;
+      }
+      const inhalt = await graphDateiLaden(token, ziel.ordner + '/' + name + '.pdf');
+      const it = await msGraphDateiHochladen(token, pfad, new Blob([inhalt], { type:'application/pdf' }), 'application/pdf');
+      if(!it || !it.id) throw new Error('Die verschickte Fassung konnte nicht gesichert werden – es wurde nichts ersetzt.');
+      return pfad.split('/').pop();
+    });
+    hinweise.push('✓ Verschickte Fassung gesichert als „' + archiv + '“');
   }
 
   // 4. Word + PDF
@@ -5105,12 +5187,25 @@ async function betaRechnungErstellen(f, meldung, frage, kontext){
         // Vorhandene LXP-Kennzeichen in U behalten
         const flags = lxpFlagsAus(treffer.v[20]);
         if(flags.length) zeile.spalteU += ' | ' + flags.join(' | ');
+        const plaeneAlt = versandPlaene(treffer.v[20]);
+        if(Object.keys(plaeneAlt).length) zeile.spalteU = versandPlaeneSetzen(zeile.spalteU, plaeneAlt);
       }
       await uebersichtZeileSchreiben(token, ue, sid, nr, zeile);
     } finally {
       await xlSitzungEnde(token, ue.basis, sid);
     }
   });
+  // 6. Geplanten Brief durch die neue Fassung ersetzen (stornieren + neu uebergeben)
+  if(geplantPlan){
+    if(!pdfBlob) hinweise.push('⚠ Keine PDF – der geplante Brief (' + isoDe(geplantPlan.datum) + ') enthält noch die bisherige Fassung. Bitte über die Sanduhr stornieren und neu senden.');
+    else {
+      meldung('Geplanter Brief wird durch die neue Fassung ersetzt …');
+      try{
+        await versandGeplantErsetzen(token, ziel, renu, 'ORIG', name, geplantPlan, geplantPlan.datum, pdfBlob, pdfItem && pdfItem.id);
+        hinweise.push('✓ Geplanter Brief (' + isoDe(geplantPlan.datum) + ') durch die neue Fassung ersetzt');
+      }catch(err){ hinweise.push('⚠ ' + (err.message || String(err))); }
+    }
+  }
   return { name, renu, zeile: nr, neu: !aktualisieren, summe: erg.summe, warnungen: erg.warnungen, hinweise,
            pdfBlob, pdfUrl: pdfItem && pdfItem.webUrl, docxUrl: docxItem.webUrl, ziel, ersetzt: !!vorhanden };
 }
@@ -5231,7 +5326,7 @@ async function betaBriefeVersenden(liste, frage, opts){
   const ziel = liste[0].ziel;
   const ini = iniCacheLaden() || await iniVonOneDriveLaden().then(()=> iniCacheLaden());
   const werte = (ini && ini.werte) || {};
-  const test = briefTestmodus(werte, ziel);
+  const test = typeof opts.testErzwingen === 'boolean' ? opts.testErzwingen : briefTestmodus(werte, ziel);
   const ue = await schritt('Rechnungsübersicht lesen', ()=> uebersichtLadenRepariert(token, ziel, frage));
   const ana = uebersichtAuswerten(ue);
   const offen = [], schon = [], fehlt = [];
@@ -5283,6 +5378,38 @@ async function betaBriefeVersenden(liste, frage, opts){
   ergebnis.zeile = offen[0].z.nr; ergebnis.seiten = offen[0].seiten;
   return ergebnis;
 }
+// Geplanten Brief ersetzen: LetterXpress erlaubt kein Aendern des Datums,
+// Stornieren aber jederzeit vor dem Versand. Deshalb: alten Auftrag
+// stornieren, Vermerk entfernen, Brief (ggf. neue Fassung) mit dem Datum neu
+// uebergeben. Neu uebergeben wird nur, wenn das Stornieren geklappt hat --
+// es geht also nie zweimal ein Brief raus.
+async function versandGeplantErsetzen(token, ziel, renu, typ, name, plan, neuIso, pdfBlob, pdfItemId){
+  await lxpAuftrag('DELETE', plan.id, plan.modus);
+  const ue = await uebersichtLadenRepariert(token, ziel, betaFrage);
+  const z = uebersichtAuswerten(ue).nachRenu.get(renu);
+  if(!z) throw new Error('Der alte Auftrag ist storniert, die Rechnung steht aber nicht mehr in der Übersicht – bitte neu senden.');
+  const u = String(z.v[20] == null ? '' : z.v[20]);
+  const schl = versandSchluessel(typ), plaene = versandPlaene(u);
+  delete plaene[schl];
+  const neuU = versandPlaeneSetzen(lxpFlagEntfernenText(u, lxpFlagFuerTyp(typ)), plaene);
+  const sid = await xlSitzung(token, ue.basis);
+  try{
+    const schutz = await blattSchutzAufheben(token, ue, sid);
+    try{
+      await gx(token, 'PATCH', zelle(ue, 'U' + z.nr), { values: [[neuU]] }, sid);
+      if(schl === '1') await gx(token, 'PATCH', zelle(ue, 'R' + z.nr) + '/format/font', { bold: false }, sid);
+    } finally { await blattSchutzWiederherstellen(token, ue, schutz, sid); }
+  } finally { await xlSitzungEnde(token, ue.basis, sid); }
+  let r;
+  try{ r = await betaBriefeVersenden([{ renu, name, ziel, typ, pdfBlob: pdfBlob || null, pdfItemId: pdfItemId || null }], async ()=> true, { versandDatumIso: neuIso, testErzwingen: plan.modus === 'test' }); }
+  catch(err){ r = { gesendet: [], fehler: [err.message || String(err)] }; }
+  if(!r.gesendet.length){
+    const e = new Error('Der bisherige Auftrag ist storniert, die neue Übergabe hat aber nicht geklappt (' + (r.fehler || []).join('; ') + '). Bitte den Brief erneut über „Versand planen“ übergeben.');
+    e.storniert = true; throw e;
+  }
+  return r;
+}
+
 // Ein einzelner Brief (Ergebnisfenster nach dem Hochladen)
 async function betaBriefVersenden(e, frage){
   const r = await betaBriefeVersenden([e], frage);
@@ -5332,10 +5459,16 @@ async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
           continue;
         }
         ergebnisse.push(e);
+        if(f.zeitstempel && e.renu && typeof betaFallAendern === 'function'){
+          betaFallAendern(f.art, f.zeitstempel, x=>{
+            x.hochgeladen = { renu: e.renu, ziel: betaZielKey(ziel), am: new Date().toISOString() };
+            x.bezug = { renu: e.renu }; x.rechnungsnummer = e.renu; delete x.uploadFehler;
+          });
+        }
         const test = briefTestmodus((iniCacheLaden() || {werte:{}}).werte || {}, ziel);
         protokoll.push('✓ <b>' + htmlEsc(name) + '</b> → ' + htmlEsc(e.name) + '.docx + .pdf' + (e.ersetzt ? ' (ersetzt)' : '') +
           ', Summe ' + rdZahl(e.summe, '0.00') + ' €<br>&nbsp;&nbsp;Übersicht: Zeile ' + e.zeile + (e.neu ? ' neu eingetragen' : ' aktualisiert') +
-          [...e.hinweise, ...e.warnungen].map(t=> '<br>&nbsp;&nbsp;⚠ ' + htmlEsc(t)).join('') +
+          [...e.hinweise, ...e.warnungen].map(t=> '<br>&nbsp;&nbsp;' + (/^[✓⚠]/.test(t) ? '' : '⚠ ') + htmlEsc(t)).join('') +
           `<div class="aktionen"><button data-akt="pdf" data-i="${ergebnisse.length-1}">PDF ansehen</button>` +
           `<button data-akt="lxp" data-i="${ergebnisse.length-1}">${test ? 'Brief senden (Testmodus)' : 'Brief senden (LIVE)'}</button></div>`);
       }catch(err){
@@ -6202,6 +6335,8 @@ function uebersichtZeileAlsFall(z, ziel){
            hochgeladen: { renu, ziel: betaZielKey(ziel), am: new Date().toISOString() } };
 }
 
+let betaGesamtLauf = 0;
+
 // ---------- Ordnerinhalt (welche PDFs gibt es?) ----------
 async function ordnerDateien(token, pfad){
   const map = new Map();
@@ -6298,7 +6433,7 @@ async function betaErgebnisseZeigen(ergebnisse, ziel){
       (e.sendbar ? '<div class="aktionen"><button type="button" data-erg="lxp" data-i="' + i + '">Vorhandene als Brief senden' + (testmodus ? ' (Testmodus)' : ' (LIVE)') + '</button></div>' : '') + '</div>';
     return '<div class="beta-erg">✓ <b>' + htmlEsc(e.anzeige) + '</b> → ' + htmlEsc(e.name) + (e.ersetzt ? ' (ersetzt)' : '') +
       '<br><span class="beta-erg-klein">Summe ' + rdZahl(e.summe, '0.00') + ' € · Übersicht Zeile ' + e.zeile + (e.neu ? ' neu' : ' aktualisiert') + '</span>' +
-      [...(e.hinweise || []), ...(e.warnungen || [])].map(t=> '<br><span class="beta-erg-klein">⚠ ' + htmlEsc(t) + '</span>').join('') +
+      [...(e.hinweise || []), ...(e.warnungen || [])].map(t=> '<br><span class="beta-erg-klein">' + (/^[✓⚠]/.test(t) ? '' : '⚠ ') + htmlEsc(t) + '</span>').join('') +
       '<div class="aktionen"><button type="button" data-erg="pdf" data-i="' + i + '">PDF ansehen</button>' +
       '<button type="button" data-erg="lxp" data-i="' + i + '">Brief senden' + (testmodus ? ' (Testmodus)' : ' (LIVE)') + '</button></div></div>';
   }).join('');
@@ -6393,24 +6528,45 @@ async function ansichtRechnungenGesamt(neuLaden){
   const zeichnen = ()=> betaGesamtZeichnen(suchEl.value, ziel);
   suchEl.oninput = zeichnen;
   if(neuLaden || !betaGesamtCache || betaGesamtCache.zielKey !== zk){
-    betaGesamtCache = { zielKey: zk, laedt: true };
+    const lauf = ++betaGesamtLauf;   // nur der zuletzt gestartete Ladevorgang zaehlt
+    const cache = { zielKey: zk, laedt: true, schritt: 'Anmeldung bei Microsoft …', seit: Date.now() };
+    betaGesamtCache = cache;
+    const schritt = (t)=>{ if(lauf !== betaGesamtLauf) return; cache.schritt = t; if(document.getElementById('gesamtListe')) zeichnen(); };
     zeichnen();
+    // Sekundenanzeige, damit man sieht, dass noch etwas passiert
+    const ticker = setInterval(()=>{
+      if(lauf !== betaGesamtLauf || !cache.laedt || !document.getElementById('gesamtListe')){ clearInterval(ticker); return; }
+      const el = document.getElementById('gesamtLadeSek');
+      if(el) el.textContent = Math.round((Date.now() - cache.seit) / 1000) + ' s';
+    }, 1000);
+    let neu;
     try{
-      const token = await msGraphTokenHolen();
+      const token = await Promise.race([
+        msGraphTokenHolen(),
+        new Promise((_, rej)=> setTimeout(()=> rej(new Error('Die Microsoft-Anmeldung antwortet nicht (nach 20 s). Ggf. in den Einstellungen neu anmelden.')), 20000))
+      ]);
       if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
       if(!ziel.echt) await testUebersichtSicherstellen(token, false);
+      schritt('Übersicht und Ordner werden gelesen …');
       // Testablage: die am PC erstellten PDFs liegen nur im echten Ordner --
       // zum Anzeigen/Erkennen wird dort zusaetzlich nachgesehen (nur lesend).
+      let ueFertig = false, ordFertig = false;
+      const offen = ()=> schritt(!ueFertig && !ordFertig ? 'Übersicht und Ordner werden gelesen …'
+                                : !ueFertig ? 'Excel-Übersicht wird gelesen (Microsoft braucht beim ersten Mal manchmal etwas) …'
+                                : 'Ordner „fertige Rechnungen“ wird gelesen …');
       const [ue, dateien, echteDateien] = await Promise.all([
-        uebersichtLadenRepariert(token, ziel, betaFrage),
-        ordnerDateien(token, ziel.ordner),
+        uebersichtLadenRepariert(token, ziel, betaFrage).then(x=>{ ueFertig = true; offen(); return x; }),
+        ordnerDateien(token, ziel.ordner).then(x=>{ ordFertig = true; offen(); return x; }),
         ziel.echt ? Promise.resolve(null) : ordnerDateien(token, MSGRAPH_PFAD_ZIEL_ORDNER).catch(()=> null)
       ]);
       if(echteDateien) echteDateien.forEach((v, k)=>{ if(!dateien.has(k)) dateien.set(k, v); });
-      betaGesamtCache = { zielKey: zk, ue, ana: uebersichtAuswerten(ue), dateien, geladenAm: Date.now() };
+      neu = { zielKey: zk, ue, ana: uebersichtAuswerten(ue), dateien, geladenAm: Date.now() };
     }catch(e){
-      betaGesamtCache = { zielKey: zk, fehler: e.message || String(e) };
+      neu = { zielKey: zk, fehler: (e.message || String(e)) + (cache.schritt ? ' (Schritt: ' + cache.schritt.replace(/ …$/, '') + ')' : '') };
     }
+    clearInterval(ticker);
+    if(lauf !== betaGesamtLauf) return;   // inzwischen neu gestartet
+    betaGesamtCache = neu;
     if(!document.getElementById('gesamtListe')) return; // inzwischen weggeklickt
   }
   zeichnen();
@@ -7036,7 +7192,7 @@ async function betaTerminBearbeiten(e, ziel){
   const akt = await betaOverlay.ergebnis('Geplanter Versand',
     htmlEsc(e.datei) + '<br>liegt bei LetterXpress und geht am <b>' + htmlEsc(isoDe(plan.datum)) + '</b> raus' + (plan.modus === 'test' ? ' (Testmodus)' : '') + '.' +
     (plan.id ? '<div class="beta-form"><label>Neues Versanddatum<input type="date" id="betaTerminNeu" min="' + min + '" value="' + htmlEsc(plan.datum) + '"></label></div>' +
-      '<div class="beta-erg-klein" style="margin-top:8px;">Geändert wird der vorhandene Auftrag – es entsteht kein zweiter Brief. LetterXpress lässt Änderungen laut eigener Beschreibung nur in den ersten 15 Minuten nach der Übergabe zu; lehnt es ab, bleibt alles wie es ist.</div>'
+      '<div class="beta-erg-klein" style="margin-top:8px;">LetterXpress lässt das Datum nicht ändern. „Datum ändern“ storniert deshalb den Auftrag und übergibt denselben Brief mit dem neuen Datum neu. Neu übergeben wird nur, wenn das Stornieren geklappt hat – es geht also nie zweimal ein Brief raus.</div>'
              : '<div class="beta-erg-klein" style="margin-top:8px;">Für diesen Brief ist keine LetterXpress-Auftragsnummer gespeichert (vor diesem Update geplant). Ändern geht nur im LetterXpress-Kundenkonto.</div>'),
     plan.id ? [{ label:'Schließen', akt:'nein' }, { label:'Stornieren', akt:'storno' }, { label:'Datum ändern', akt:'aendern', primaer:true }]
             : [{ label:'OK', akt:'nein', primaer:true }]);
@@ -7059,9 +7215,15 @@ async function betaTerminBearbeiten(e, ziel){
     const u = String(z.v[20] == null ? '' : z.v[20]);
     const schl = versandSchluessel(e.typ), plaene = versandPlaene(u), aktuell = plaene[schl];
     if(!aktuell || aktuell.id !== plan.id || aktuell.datum !== plan.datum) throw new Error('Der Versand wurde inzwischen an anderer Stelle geändert – bitte „Neu laden“.');
+    if(akt === 'aendern'){
+      betaOverlay.schritt('Alter Auftrag wird storniert und mit dem ' + isoDe(neu) + ' neu übergeben …');
+      await versandGeplantErsetzen(token, ziel, e.renu, e.typ, e.datei, plan, neu, null, e.pdf && e.pdf.id);
+      betaOverlay.schliessen();
+      appToastAnzeigen('Versand verschoben auf ' + isoDe(neu) + '.', 2600);
+      return true;
+    }
     betaOverlay.schritt('LetterXpress …');
-    if(akt === 'aendern') await lxpAuftrag('PUT', plan.id, plan.modus, { dispatch_date: neu });
-    else await lxpAuftrag('DELETE', plan.id, plan.modus);
+    await lxpAuftrag('DELETE', plan.id, plan.modus);
     betaOverlay.schritt('Übersicht wird aktualisiert …');
     const sid = await xlSitzung(token, ue.basis);
     try{
@@ -7082,7 +7244,7 @@ async function betaTerminBearbeiten(e, ziel){
     return true;
   }catch(err){
     await betaOverlay.ergebnis('Nicht geändert', '✗ ' + htmlEsc(err.message || String(err)) +
-      (err.abgelehnt ? '<br><br>Der Brief geht wie geplant am ' + htmlEsc(isoDe(plan.datum)) + ' raus – es wurde nichts doppelt verschickt. Ändern geht jetzt nur noch im LetterXpress-Kundenkonto bzw. über den LetterXpress-Support.' : ''));
+      (err.abgelehnt && !err.storniert ? '<br><br>Der Brief geht wie geplant am ' + htmlEsc(isoDe(plan.datum)) + ' raus – es wurde nichts doppelt verschickt. Ändern geht jetzt nur noch im LetterXpress-Kundenkonto bzw. über den LetterXpress-Support.' : ''));
     betaOverlay.schliessen();
     return false;
   }
@@ -7102,7 +7264,7 @@ async function betaAktionSenden(eintraege, mitTermin){
     const d = new Date(); d.setDate(d.getDate() + 1);
     const min = d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate());
     const akt = await betaOverlay.ergebnis('Versand planen', 'An welchem Tag soll LetterXpress verschicken? (muss in der Zukunft liegen)<div class="beta-form"><label>Versanddatum<input type="date" id="betaVersandDatum" min="' + min + '" value="' + min + '"></label></div>' +
-      '<div class="beta-erg-klein" style="margin-top:8px;">Der Brief erscheint dann mit &#9203; in der Liste. Antippen: Datum ändern oder stornieren – LetterXpress erlaubt das laut eigener Beschreibung nur in den ersten 15 Minuten nach der Übergabe.</div>',
+      '<div class="beta-erg-klein" style="margin-top:8px;">Der Brief erscheint dann mit &#9203; in der Liste. Antippen: Datum ändern oder stornieren – bis zum Versandtag möglich.</div>',
       [{ label:'Abbrechen', akt:'nein' }, { label:'Weiter', akt:'ja', primaer:true }]);
     versandDatumIso = (document.getElementById('betaVersandDatum') || {}).value || '';
     if(akt !== 'ja'){ betaOverlay.schliessen(); return false; }
@@ -7307,7 +7469,9 @@ function betaEintraegeBauen(c){
     const datei = (n)=> ({ pdf: dateien.get((n + '.pdf').toLowerCase()) || null, docx: dateien.get((n + '.docx').toLowerCase()) || null });
     eintraege.push({ key: z.nr + '|ORIG', typ: 'ORIG', z, renu, art, name, datum, sort, betrag, datei: basis || ('Zeile ' + z.nr), ...(basis ? datei(basis) : { pdf:null, docx:null }),
                      versendet: lxpFlagVorhanden(u, 'LXP:1'), geplant: lxpFlagVorhanden(u, 'LXP:1') ? versandGeplant(u, 'ORIG') : null,
-                     bezahlt: xlDatumText(v[18]), abgeschickt: xlDatumText(v[17]) });
+                     bezahlt: xlDatumText(v[18]), abgeschickt: xlDatumText(v[17]),
+                     fassungen: basis ? [...dateien.entries()].filter(([k])=> k.startsWith((basis + '_verschickte Fassung ').toLowerCase()) && k.endsWith('.pdf'))
+                                          .map(([, it])=> it).sort((a, b)=> String(a.name).localeCompare(String(b.name), 'de', { numeric: true })) : [] });
     if(!basis) continue;
     if(art === 'ls'){
       const d2 = datei(basis + '_2. Adresse');
@@ -7341,13 +7505,14 @@ function betaGesamtZeichnen(suchtext, ziel){
   const zuZeile = new Map();
   const offen = [];
   const andereAblage = [];
+  const nachtragen = [];
   lokale.forEach(f=>{
     // in der jeweils anderen Ablage (Testablage/Echtbetrieb) entstanden?
     const ablage = betaFallAblage(f);
     if(ablage && ablage !== zk){ if(!(f.hochgeladen && f.hochgeladen.ziel === zk)) { andereAblage.push(f); return; } }
     let zeile = null;
     if(ana){
-      const r = (f.bezug && f.bezug.renu) || (f.hochgeladen && f.hochgeladen.renu) || '';
+      const r = (f.bezug && f.bezug.renu) || (f.hochgeladen && f.hochgeladen.renu) || f.rechnungsnummer || '';
       if(r) zeile = ana.nachRenu.get(r) || null;
       if(!zeile){
         const { nachname, vorname } = nameAufteilen((f.werte || {}).txtName);
@@ -7357,11 +7522,23 @@ function betaGesamtZeichnen(suchtext, ziel){
     const hochgeladenHier = f.hochgeladen && f.hochgeladen.ziel === zk && !f.uploadFehler;
     const q = zeile ? String(zeile.v[16] == null ? '' : zeile.v[16]).trim() : '';
     const zeileMitPdf = zeile && q && dateien.has(renuDateiname(q).toLowerCase() + '.pdf');
-    if(zeile && (hochgeladenHier || zeileMitPdf)){ if(!zuZeile.has(zeile.nr)) zuZeile.set(zeile.nr, f); }
+    if(zeile && (hochgeladenHier || zeileMitPdf)){
+      if(!zuZeile.has(zeile.nr)) zuZeile.set(zeile.nr, f);
+      // In der Uebersicht samt PDF gefunden, aber lokal nicht als hochgeladen
+      // vermerkt: nachtragen, damit der Fall beim naechsten Laden nicht
+      // wieder kurz unter "Noch nicht hochgeladen" erscheint
+      if(!hochgeladenHier && zeileMitPdf) nachtragen.push({ art: f.art, zs: f.zeitstempel, renu: q });
+    }
     else if(!ana && hochgeladenHier) { /* hochgeladen -- erscheint, sobald die Uebersicht geladen ist */ }
     else offen.push(f);
   });
   if(ana) betaLetzteOffenAnzahl = { zielKey: zk, n: offen.length };
+  nachtragen.forEach(n=> betaFallAendern(n.art, n.zs, x=>{
+    x.hochgeladen = { renu: n.renu, ziel: zk, am: new Date().toISOString() };
+    if(!x.bezug) x.bezug = { renu: n.renu };
+    if(!x.rechnungsnummer) x.rechnungsnummer = n.renu;
+    delete x.uploadFehler;
+  }));
 
   const knopf = document.getElementById('btnGesamtHochladen');
   if(knopf){
@@ -7415,7 +7592,9 @@ function betaGesamtZeichnen(suchtext, ziel){
       </div></div>`).join('');
   }
   if(c.laedt){
-    html += '<div class="leer-hinweis"><span class="beta-spinner klein"></span>Rechnungsübersicht wird geladen …</div>';
+    html += '<div class="leer-hinweis"><span class="beta-spinner klein"></span>Rechnungsübersicht wird geladen …' +
+      '<div style="font-size:12px;opacity:.75;margin-top:4px;">' + htmlEsc(c.schritt || '') + ' <span id="gesamtLadeSek">' +
+      (c.seit ? Math.round((Date.now() - c.seit) / 1000) + ' s' : '') + '</span></div></div>';
   } else if(c.fehler){
     html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '<br>„Neu laden“ versuchen.</div>';
   } else if(ana){
@@ -7439,6 +7618,7 @@ function betaGesamtZeichnen(suchtext, ziel){
           <div class="info">${e.unter ? htmlEsc(e.datei) : (htmlEsc(e.datum) + (e.betrag ? ' &middot; ' + htmlEsc(e.betrag) + ' €' : '') + (e.renu ? ' &middot; Nr. ' + htmlEsc(e.renu) : ' &middot; ohne Rechnungsnummer'))}</div>
           ${e.geplant ? '<div class="info termin-text">Versand geplant am ' + htmlEsc(isoDe(e.geplant.datum)) + (e.geplant.modus === 'test' ? ' (Testmodus)' : '') + '</div>' : ''}
           ${!e.unter ? betaZahlungInfo(e) : ''}
+          ${(e.fassungen || []).length ? '<div class="info fassungen-text">Frühere verschickte Fassung: ' + e.fassungen.map((it, i)=> '<span class="fassung-link" data-fassung="' + i + '">' + htmlEsc((/\(([^)]*)\)\.pdf$/i.exec(it.name) || [, String(i + 1)])[1]) + '</span>').join(', ') + '</div>' : ''}
         </div>
         <div class="fall-icons">${e.geplant ? '<span class="badge-termin" data-akt="termin" title="Versand geplant – antippen zum Ändern">&#9203;</span>' : (e.versendet ? BRIEF_SYMBOL : '')}${symbol}</div>
       </div></div>`;
@@ -7519,6 +7699,10 @@ function betaGesamtZeichnen(suchtext, ziel){
     chk.onclick = (ev)=>{ ev.stopPropagation(); if(chk.checked) betaAuswahl.add(e.key); else betaAuswahl.delete(e.key); zeileEl.classList.toggle('gewaehlt', chk.checked); auswahlGeaendert(); };
     const pdfEl = zeileEl.querySelector('[data-akt="pdf"]');
     if(pdfEl) pdfEl.onclick = (ev)=>{ ev.stopPropagation(); betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl }); };
+    zeileEl.querySelectorAll('[data-fassung]').forEach(el=> el.onclick = (ev)=>{
+      ev.stopPropagation(); const it = e.fassungen[+el.dataset.fassung];
+      betaPdfAnzeigen({ titel: it.name.replace(/\.pdf$/i, ''), itemId: it.id, webUrl: it.webUrl });
+    });
     const terminEl = zeileEl.querySelector('[data-akt="termin"]');
     if(terminEl) terminEl.onclick = async (ev)=>{ ev.stopPropagation(); if(await betaTerminBearbeiten(e, ziel)) ansichtRechnungenGesamt(true); };
     zeileEl.querySelector('.inhalt').onclick = ()=>{
@@ -7830,6 +8014,12 @@ function betaZeitMinuten(von, bis){
   if(d <= 0) d += 24 * 60;
   return d;
 }
+function betaAnzahl56(min){ return isNaN(min) ? NaN : min < 30 ? 0 : Math.max(1, Math.ceil(min / 30)); }
+// Beginn des Verweilens = Uhrzeit des Besuchs (aus der Maske)
+function betaBesuchUhrzeit(){
+  const t = String((window.betaPosKontext || {}).zeit || '').trim();
+  return /^\d{1,2}:\d{2}$/.test(t) ? zz2(+t.split(':')[0]) + ':' + t.split(':')[1] : '';
+}
 // ---------- Ziffer 7: Organsystem (wie am PC) ----------
 const GOAE_VARIANTEN = { '7': ['Brustorganen', 'Bauchorganen', 'Stütz- und Bewegungsorganen', 'Hautorgan'] };
 function betaVarianten(p){ return (p && !p.eigene && GOAE_VARIANTEN[betaPosNr(p)]) || null; }
@@ -7871,6 +8061,8 @@ function betaBegrVorlagenSpeichern(art, map){
 // die Begruendung, die auch in der Rechnung steht -- die aus der Vorlage)
 function betaPosStandardBegruendung(art, p, legacy){
   if(legacy) return String(p.begruendung || '');
+  // 56: Uhrzeit gehoert zu genau diesem Fall -- nie aus einem frueheren uebernehmen
+  if(betaBegrImmer(p)) return '';
   const v = betaBegrVorlage(art, betaPosSchluessel(p));
   if(v){
     // Pflicht schon beim Standardfaktor -> immer den letzten Text vorschlagen
@@ -8051,10 +8243,14 @@ function betaUSegmenteLesen(u){
 }
 
 // ---------- Dialog: Faktor und Begruendung ----------
-async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante){
+async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, opt){
+  opt = opt || {};
   const r = betaPosRahmen(p);
-  const regel = betaPosAnzahlRegel(p);
-  const zeitModus = GOAE_BEGR_IMMER[betaPosNr(p)] === 'zeit';
+  const regel = opt.profil ? null : betaPosAnzahlRegel(p);
+  const zeitModus = !opt.profil && GOAE_BEGR_IMMER[betaPosNr(p)] === 'zeit';
+  // 56: Beginn = Uhrzeit des Besuchs (aus der Maske), nur das Ende wird eingetragen
+  const kx = window.betaPosKontext || {};
+  const besuchZeit = betaBesuchUhrzeit();
   const varListe = betaVarianten(p);
   const einfach = betaPosEinfachsatz(p);
   const pk = betaPosPunkte(p);
@@ -8062,25 +8258,42 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante){
   const schl = betaPosSchluessel(p);
   const vorlage = betaBegrVorlage(art, schl);
   const zeit0 = betaZeitAusBegr(begruendung) || { von: '', bis: '' };
-  let w = { faktor: Number(faktor), beg: begruendung || '', anzahl: String(anzahl > 1 ? anzahl : 1), von: zeit0.von, bis: zeit0.bis,
+  let w = { faktor: Number(faktor), beg: begruendung || '', anzahl: String(anzahl > 1 ? anzahl : 1), von: besuchZeit || zeit0.von, bis: zeit0.bis,
             variante: variante || (varListe ? (varListe.find(v=> String(p.bez).indexOf(v) >= 0) || varListe[0]) : '') }, fehler = '';
-  // Begruendungstext bei 56: "Verweilen von 10:15 bis 11:20 Uhr" + Zusatz
-  const zeitText = (von, bis)=> 'Verweilen von ' + von + ' bis ' + bis + ' Uhr';
-  const ZEIT_RE = /^Verweilen von \S+ bis \S+ Uhr(?:[;,.]\s*)?/;
+  // Begruendungstext bei 56: "von 13:00 bis 14:10 Uhr" (wird nur aus der Uhrzeit gebildet)
+  const zeitText = (von, bis)=> 'von ' + von + ' bis ' + bis + ' Uhr';
+  // Anzahl 56: die erste halbe Stunde gehoert zum Besuch -- unter 30 Minuten
+  // nicht berechnungsfaehig, ab 30 Minuten je angefangene halbe Stunde
+  const anzahl56 = betaAnzahl56;
   for(;;){
     const stufen = Array.from(new Set([...r.stufen, ...betaEigeneFaktoren().filter(f=> f >= 1 && f <= r.max + 1e-9), w.faktor].filter(f=> !isNaN(f) && f >= 1)))
       .sort((a, b)=> a - b);
     const eigen = new Set(betaEigeneFaktoren());
-    const katalog = betaBegrKatalog(art, schl).filter(x=> x.text !== w.beg).slice(0, 12);
+    const katalog = betaBegrKatalog(art, schl).slice(0, 15);
+    const stdText = String(p.begruendung || '').trim();
+    if(stdText && !katalog.some(x=> x.text === stdText)) katalog.push({ text: stdText, standard: true });
     const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="beta-erg-klein">' + htmlEsc(p.eigene ? (p.eigeneBez || p.bez) : String(p.bez).replace(/<[^>]+>/g, '')) + '</div>' +
       '<div class="beta-erg-klein" style="margin-top:4px;">Einfachsatz ' + betaEuro(einfach) + (pk ? ' (' + pk + ' Punkte)' : '') +
       ' · Schwellenwert ' + betaFaktorText(r.schwelle) + ' · Höchstsatz ' + betaFaktorText(r.max) + '</div>' +
       '<div class="beta-form">' +
       (varListe ? '<label>Untersuchung von<select id="fdVariante">' + varListe.map(v=> '<option' + (v === w.variante ? ' selected' : '') + '>' + htmlEsc(v) + '</option>').join('') + '</select></label>' : '') +
-      (zeitModus ? '<div class="zeit-reihe"><label>von<input type="time" id="fdVon" value="' + htmlEsc(w.von) + '"></label><label>bis<input type="time" id="fdBis" value="' + htmlEsc(w.bis) + '"></label></div>' +
-        '<div class="beta-erg-klein" id="fdZeitInfo"></div>' : '') +
-      (regel ? '<label>Anzahl<span class="anzahl-reihe"><button type="button" data-d="-1"' + (zeitModus ? ' disabled' : '') + '>&minus;</button><input id="fdAnzahl" value="' + htmlEsc(w.anzahl) + '" inputmode="numeric" autocomplete="off"' + (zeitModus ? ' readonly' : '') + '><button type="button" data-d="1"' + (zeitModus ? ' disabled' : '') + '>+</button></span></label>' +
+      (zeitModus ? '<div class="zeit56">' +
+        '<div class="zeit56-zeile"><span>Beginn' + (besuchZeit ? ' (Besuch)' : '') + '</span>' + (besuchZeit
+          ? '<b>' + htmlEsc(besuchZeit) + ' Uhr</b>'
+          : '<button type="button" class="zeit-knopf" data-zk="von">' + htmlEsc(w.von || '--:--') + '</button>') +
+          '<input type="hidden" id="fdVon" value="' + htmlEsc(w.von) + '"></div>' +
+        '<div class="zeit56-zeile"><span>Ende</span><button type="button" class="zeit-knopf" data-zk="bis">' + htmlEsc(w.bis || '--:--') + '</button>' +
+          '<input type="hidden" id="fdBis" value="' + htmlEsc(w.bis) + '"></div>' +
+        '<div class="zeit-picker" id="fdPicker" hidden><div class="zp-anzeige">' +
+          '<button type="button" data-zp="h-1">&minus;</button><span id="zpH">00</span><button type="button" data-zp="h1">+</button>' +
+          '<span class="zp-dp">:</span>' +
+          '<button type="button" data-zp="m-1">&minus;</button><span id="zpM">00</span><button type="button" data-zp="m1">+</button></div>' +
+          '<div class="zp-schnell" id="zpSchnell">' + [30, 45, 60, 90, 120].map(m=> '<button type="button" data-zd="' + m + '">+' + (m < 60 ? m + ' Min' : (m / 60).toString().replace('.', ',') + ' Std') + '</button>').join('') + '</div>' +
+          '<button type="button" class="zp-ok" id="zpOk">Fertig</button></div>' +
+        '<div class="beta-erg-klein" id="fdZeitInfo"></div></div>' : '') +
+      (regel && zeitModus ? '<input type="hidden" id="fdAnzahl" value="' + htmlEsc(w.anzahl) + '">' : '') +
+      (regel && !zeitModus ? '<label>Anzahl<span class="anzahl-reihe"><button type="button" data-d="-1"' + (zeitModus ? ' disabled' : '') + '>&minus;</button><input id="fdAnzahl" value="' + htmlEsc(w.anzahl) + '" inputmode="numeric" autocomplete="off"' + (zeitModus ? ' readonly' : '') + '><button type="button" data-d="1"' + (zeitModus ? ' disabled' : '') + '>+</button></span></label>' +
         '<div class="beta-erg-klein">' + (zeitModus ? 'Ergibt sich aus der Uhrzeit (je angefangene halbe Stunde).' : (regel.je ? 'Laut GOÄ „' + htmlEsc(regel.je) + '“ – mehrfach berechnungsfähig.' : 'Nur wenn die Leistung tatsächlich mehrfach erbracht wurde (z.B. zwei Injektionen).') + ' Steht dann entsprechend oft in der Rechnung.') + '</div>' : '') +
       '<label>Faktor</label><input type="hidden" id="fdFaktor" value="' + htmlEsc(betaFaktorText(w.faktor)) + '">' +
       '<div class="faktor-stufen">' + stufen.map(s=> '<button type="button" data-f="' + s + '"' + (eigen.has(s) && !r.stufen.includes(s) ? ' class="eigen"' : '') + '>' + betaFaktorText(s) +
@@ -8088,9 +8301,12 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante){
         '<button type="button" id="fdFaktorNeu" class="neu">+ eigener</button></div>' +
       '<div class="faktor-eigen" id="fdEigenZeile" hidden><input id="fdEigenWert" inputmode="decimal" placeholder="z.B. 2,8" autocomplete="off"><button type="button" id="fdEigenOk">Übernehmen</button></div>' +
       '<div class="faktor-betrag" id="fdBetrag"></div>' +
-      '<label id="fdBegLabel">Begründung<textarea id="fdBeg" rows="3">' + htmlEsc(w.beg) + '</textarea></label>' +
-      (katalog.length ? '<div class="begr-katalog"><div class="beta-erg-klein">Frühere Begründungen – antippen zum Einsetzen:</div>' +
-        katalog.map((x, i)=> '<div class="begr-eintrag"><button type="button" class="begr-text" data-i="' + i + '">' + htmlEsc(x.text) + '</button><button type="button" class="begr-weg" data-i="' + i + '" title="aus der Liste entfernen">&times;</button></div>').join('') + '</div>' : '') +
+      '<label id="fdBegLabel">Begründung<textarea id="fdBeg" rows="' + (zeitModus ? 1 : 3) + '"' + (zeitModus ? ' readonly class="nur-lesen" tabindex="-1"' : '') + '>' + htmlEsc(w.beg) + '</textarea></label>' +
+      (zeitModus ? '' : '<div class="begr-katalog"><div class="beta-erg-klein">Frühere Begründungen zu Ziffer ' + htmlEsc(nr) + ' – antippen zum Einsetzen:</div>' +
+        (katalog.length ? katalog.map((x, i)=> '<div class="begr-eintrag"><button type="button" class="begr-text' + (x.text === w.beg ? ' aktiv' : '') + '" data-i="' + i + '">' + htmlEsc(x.text) +
+            (x.standard ? ' <span class="begr-std">Standard</span>' : '') + '</button>' +
+            (x.standard ? '' : '<button type="button" class="begr-weg" data-i="' + i + '" title="aus der Liste entfernen">&times;</button>') + '</div>').join('')
+          : '<div class="beta-erg-klein begr-leer">Noch keine. Jede Begründung, die Sie hier mit „Übernehmen“ bestätigen, wird gesammelt und steht dann zur Auswahl (alle Geräte).</div>') + '</div>') +
       '</div><div class="beta-erg-klein" id="fdHinweis"></div>';
     const warte = betaOverlay.ergebnis('Ziffer ' + nr, html, [{ label:'Abbrechen', akt:'nein' }, { label:'Übernehmen', akt:'ja', primaer:true }]);
     const $ = (id)=> document.getElementById(id);
@@ -8099,14 +8315,18 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante){
     const anzahlJetzt = ()=>{ const n = aEl ? Math.floor(Number(aEl.value)) : 1; return n >= 1 && n <= 99 ? n : NaN; };
     const zeitAktual = ()=>{
       if(!zeitModus) return;
+      document.querySelectorAll('.zeit-knopf').forEach(k=>{
+        const v = (k.dataset.zk === 'von' ? vonEl : bisEl).value;
+        k.textContent = v || '--:--';
+        k.classList.toggle('pflichtfeld-fehlt', !v);
+      });
       const min = betaZeitMinuten(vonEl.value, bisEl.value);
       const info = $('fdZeitInfo');
-      if(isNaN(min)){ info.textContent = 'Uhrzeit von–bis eintragen (Pflicht, steht in der Rechnung).'; return; }
-      const n = Math.max(1, Math.ceil(min / 30));
-      info.textContent = min + ' Minuten = ' + n + (n === 1 ? ' angefangene halbe Stunde' : ' angefangene halbe Stunden');
+      if(isNaN(min)){ info.textContent = !vonEl.value ? 'Beginn und Ende eintragen (Pflicht, steht in der Rechnung).' : 'Ende des Verweilens eintragen (Pflicht, steht in der Rechnung).'; bEl.value = ''; return; }
+      const n = anzahl56(min);
+      info.textContent = min + ' Minuten → ' + (n ? n + ' × 56 (die erste halbe Stunde gehört zum Besuch, ab 30 Minuten je angefangene halbe Stunde)' : 'unter 30 Minuten – 56 ist nicht berechnungsfähig');
       if(aEl) aEl.value = String(n);
-      const rest = bEl.value.replace(ZEIT_RE, '').trim();
-      bEl.value = zeitText(vonEl.value, bisEl.value) + (rest ? '; ' + rest : '');
+      bEl.value = zeitText(vonEl.value, bisEl.value);
     };
     const aktual = ()=>{
       const f = betaFaktorLesen(fEl.value);
@@ -8120,12 +8340,48 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante){
       const vorschlag = (vorlage && vorlage.text) || String(p.begruendung || '');
       if(pflicht && !zeitModus && warPflicht === false && !bEl.value.trim() && vorschlag) bEl.value = vorschlag;
       warPflicht = pflicht;
-      $('fdBegLabel').firstChild.textContent = zeitModus ? 'Begründung (Pflicht, mit Uhrzeit)' : pflicht ? 'Begründung (Pflicht über ' + betaFaktorText(r.schwelle) + ')' : 'Begründung (wird erst über ' + betaFaktorText(r.schwelle) + ' gedruckt – bleibt als Vorlage gespeichert)';
-      bEl.classList.toggle('pflichtfeld-fehlt', pflicht && !bEl.value.trim());
+      $('fdBegLabel').firstChild.textContent = zeitModus ? 'Begründung (wird aus der Uhrzeit gebildet)' : pflicht ? 'Begründung (Pflicht über ' + betaFaktorText(r.schwelle) + ')' : 'Begründung (wird erst über ' + betaFaktorText(r.schwelle) + ' gedruckt – bleibt als Vorlage gespeichert)';
+      bEl.classList.toggle('pflichtfeld-fehlt', pflicht && !zeitModus && !bEl.value.trim());
       document.querySelectorAll('.faktor-stufen button[data-f]').forEach(b=> b.classList.toggle('aktiv', ok && Math.abs(Number(b.dataset.f) - f) < 1e-9));
     };
-    bEl.addEventListener('input', aktual);
-    if(vonEl){ vonEl.addEventListener('input', ()=>{ zeitAktual(); aktual(); }); bisEl.addEventListener('input', ()=>{ zeitAktual(); aktual(); }); }
+    bEl.addEventListener('input', ()=>{ aktual(); document.querySelectorAll('.begr-text').forEach(b=> b.classList.toggle('aktiv', katalog[+b.dataset.i] && katalog[+b.dataset.i].text === bEl.value.trim())); });
+    // eigene Uhr (die Android-Uhr schneidet auf manchen Handys "Festlegen" ab)
+    if(zeitModus){
+      const picker = $('fdPicker'); let feld = null, h = 0, m = 0;
+      const zeigen = ()=>{ $('zpH').textContent = zz2(h); $('zpM').textContent = zz2(m); };
+      const setzen = ()=>{ feld.value = zz2(h) + ':' + zz2(m); zeitAktual(); aktual(); };
+      const oeffnen = (zk)=>{
+        feld = zk === 'von' ? vonEl : bisEl;
+        let v = feld.value;
+        if(!v){
+          // Ende: Vorschlag Beginn + 30 Minuten, sonst jetzt
+          const basis = zk === 'bis' && vonEl.value ? vonEl.value : zz2(new Date().getHours()) + ':' + zz2(new Date().getMinutes());
+          const [bh, bm] = basis.split(':').map(Number); const t = (bh * 60 + bm + (zk === 'bis' && vonEl.value ? 30 : 0)) % 1440;
+          v = zz2(Math.floor(t / 60)) + ':' + zz2(t % 60);
+        }
+        [h, m] = v.split(':').map(Number);
+        $('zpSchnell').hidden = !(zk === 'bis' && vonEl.value);
+        picker.hidden = false; zeigen(); setzen();
+        document.querySelectorAll('.zeit-knopf').forEach(k=> k.classList.toggle('offen', k.dataset.zk === zk));
+        picker.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      };
+      document.querySelectorAll('.zeit-knopf').forEach(k=> k.onclick = ()=> oeffnen(k.dataset.zk));
+      const schritt = (art_, d)=>{ if(art_ === 'h') h = (h + d + 24) % 24; else { const t = (h * 60 + m + d + 1440) % 1440; h = Math.floor(t / 60); m = t % 60; } zeigen(); setzen(); };
+      document.querySelectorAll('[data-zp]').forEach(b=>{
+        const a_ = b.dataset.zp[0], d = Number(b.dataset.zp.slice(1));
+        let uhr = null, n = 0;
+        const stopp = ()=>{ clearTimeout(uhr); uhr = null; };
+        const wiederholen = ()=>{ schritt(a_, d * (a_ === 'm' && n > 8 ? 5 : 1)); n++; uhr = setTimeout(wiederholen, n < 3 ? 380 : 110); };
+        b.addEventListener('pointerdown', (ev)=>{ ev.preventDefault(); n = 0; wiederholen(); });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(t=> b.addEventListener(t, stopp));
+      });
+      document.querySelectorAll('[data-zd]').forEach(b=> b.onclick = ()=>{
+        const [bh, bm] = vonEl.value.split(':').map(Number); const t = (bh * 60 + bm + Number(b.dataset.zd)) % 1440;
+        h = Math.floor(t / 60); m = t % 60; zeigen(); setzen();
+      });
+      $('zpOk').onclick = ()=>{ picker.hidden = true; document.querySelectorAll('.zeit-knopf').forEach(k=> k.classList.remove('offen')); };
+      if(!bisEl.value && vonEl.value) setTimeout(()=> oeffnen('bis'), 50);
+    }
     if(aEl && !zeitModus){
       aEl.addEventListener('input', aktual);
       document.querySelectorAll('.anzahl-reihe button').forEach(b=> b.onclick = ()=>{ const n = anzahlJetzt(); aEl.value = String(Math.max(1, Math.min(99, (isNaN(n) ? 1 : n) + Number(b.dataset.d)))); aktual(); });
@@ -8145,9 +8401,8 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante){
       w = merken(); w.faktor = f; neuAufbauen = true; betaOverlay.loesen && betaOverlay.loesen('neu');
     };
     document.querySelectorAll('.begr-text').forEach(b=> b.onclick = ()=>{
-      const t = katalog[+b.dataset.i].text;
-      if(zeitModus && vonEl.value && bisEl.value) bEl.value = zeitText(vonEl.value, bisEl.value) + '; ' + t.replace(ZEIT_RE, '');
-      else bEl.value = t;
+      bEl.value = katalog[+b.dataset.i].text;
+      document.querySelectorAll('.begr-text').forEach(x=> x.classList.toggle('aktiv', x === b));
       aktual();
     });
     document.querySelectorAll('.begr-weg').forEach(b=> b.onclick = ()=>{
@@ -8162,12 +8417,19 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante){
     if(akt !== 'ja'){ betaOverlay.schliessen(); return null; }
     const f = w.faktor;
     const n = anzahlJetzt();
-    if(zeitModus && isNaN(betaZeitMinuten(w.von, w.bis))) fehler = 'Bitte die Uhrzeit von–bis eintragen – sie muss in der Rechnung stehen.';
+    if(zeitModus && isNaN(betaZeitMinuten(w.von, w.bis))) fehler = 'Bitte das Ende des Verweilens eintragen – die Uhrzeit muss in der Rechnung stehen.';
+    else if(zeitModus && betaZeitMinuten(w.von, w.bis) > 600) fehler = 'Mehr als 10 Stunden Verweilen? Bitte die Endzeit prüfen.';
+    else if(zeitModus && !anzahl56(betaZeitMinuten(w.von, w.bis))) fehler = 'Unter 30 Minuten ist Verweilen (56) nicht berechnungsfähig – die erste halbe Stunde gehört zum Besuch. Bitte die Endzeit prüfen oder 56 abwählen.';
     else if(isNaN(n)) fehler = 'Bitte eine Anzahl zwischen 1 und 99 eintragen.';
     else if(isNaN(f) || f < 1) fehler = 'Bitte einen Faktor wählen.';
     else if(f > r.max + 1e-9) fehler = 'Höchstens ' + betaFaktorText(r.max) + ' – darüber nur mit schriftlicher Honorarvereinbarung (§ 2 GOÄ).';
     else if(f > r.schwelle + 1e-9 && !w.beg) fehler = 'Über dem ' + betaFaktorText(r.schwelle) + '-fachen ist eine Begründung Pflicht (§ 12 Abs. 3 GOÄ).';
-    else { betaOverlay.schliessen(); return { faktor: f, begruendung: w.beg, anzahl: n, variante: varListe ? w.variante : undefined }; }
+    else {
+      betaOverlay.schliessen();
+      // jede bestaetigte Begruendung im Katalog sammeln (56: nur Uhrzeit -> nicht)
+      if(!zeitModus && w.beg) betaBegrKatalogAendern(art, [{ schl, text: w.beg }]);
+      return { faktor: f, begruendung: w.beg, anzahl: n, variante: varListe ? w.variante : undefined };
+    }
   }
 }
 
@@ -8181,6 +8443,11 @@ function goaeAusschluesse(nr){
 // Zusaetzlich aus dem Text der GOÄ, ohne Ziffer: neben 52 ist Wegegeld
 // (und damit auch die Reiseentschaedigung) nicht berechnungsfaehig
 const GOAE_OHNE_WEGEGELD = ['52'];
+// Anmerkung zu Nr. 3: "nur berechnungsfähig als einzige Leistung oder im
+// Zusammenhang mit einer Untersuchung nach den Nummern 5, 6, 7, 8, 800 oder
+// 801" (Zuschlaege A-D bleiben erlaubt, sie haben keine Nummer)
+const GOAE_NR3_NEBEN = ['5', '6', '7', '8', '800', '801'];
+const nr3Konflikt = (a, b)=> a === '3' && /^\d+$/.test(b) && b !== '3' && !GOAE_NR3_NEBEN.includes(b);
 const istWegegeld = (nr)=> /^(W[TN]\d+|REISE)$/.test(nr);
 function betaGoaeKonflikte(p, andere){
   const nr = betaPosNr(p);
@@ -8190,6 +8457,7 @@ function betaGoaeKonflikte(p, andere){
     if(q === p || q.ziffer === p.ziffer) return false;
     const qn = betaPosNr(q);
     if((GOAE_OHNE_WEGEGELD.includes(nr) && istWegegeld(qn)) || (GOAE_OHNE_WEGEGELD.includes(qn) && istWegegeld(nr))) return true;
+    if(nr3Konflikt(nr, qn) || nr3Konflikt(qn, nr)) return true;
     return aus.includes(qn) || goaeAusschluesse(qn).includes(nr);
   });
 }
@@ -8232,7 +8500,11 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   const festVon = (id)=> fest.find(p=> p.ziffer === id);
   const grundStd = [...(katalog.grundleistung||[]).filter(p=> p.ziffer !== 'E').map(p=> ({ ...p, automatisch: false })),
                     ...fest.filter(p=> p.gruppe === 'grund')];
-  const geordnet = betaGruppenOrdnen(art, grundStd, betaEigene(art).map(betaEigenePositionAlsAuswahl));
+  const geordnet0 = betaGruppenOrdnen(art, grundStd, betaEigene(art).map(betaEigenePositionAlsAuswahl));
+  // im aktiven Profil entfernte Positionen nicht zeigen (ausser sie sind gewaehlt)
+  const profilAus = new Set((betaProfilAktiv(art) || {}).ausgeblendet || []);
+  const sichtbar = (p)=> !profilAus.has(p.ziffer) || (ausgewaehlteZiffern && ausgewaehlteZiffern.has(p.ziffer));
+  const geordnet = { grund: geordnet0.grund.filter(sichtbar), eigene: geordnet0.eigene.filter(sichtbar) };
   const manuellJetzt = new Set(Array.from(ausgewaehlteZiffern || []).filter(z=> !AUTO_SCHL(z)));
   const familie = betaZuschlagFamilie(art, manuellJetzt);
   const besuch = betaBesuchDabei(art, manuellJetzt);
@@ -8245,16 +8517,30 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     ...(art === 'ls' ? [] : [{titel:'Eigene Positionen', liste: geordnet.eigene, automatisch:false, eigene:true, drag:'eigene'}]),
     {titel:'Zeitzuschläge', liste: zuschlagListe, automatisch:true,
      hinweis: art === 'ls' ? '' : familie === 'AD' ? 'Beratung/Untersuchung ohne Besuch: A–D' : (familie === 'EH' ? 'mit Besuch: E–H' : '')},
-    {titel:'Wegegeld', liste: [...WEGEGELD_TAG, ...WEGEGELD_NACHT, {ziffer:'REISE', bez:reiseBez, betrag:reise.gesamt}], automatisch:true,
-     hinweis: besuch ? '' : 'nur zusammen mit einem Besuch'}
+    // Wegegeld gibt es nur mit Besuch -- ohne Besuch (Sitzdienst, Telefon) gar nicht zeigen
+    ...(besuch ? [{titel:'Wegegeld', liste: [...WEGEGELD_TAG, ...WEGEGELD_NACHT, {ziffer:'REISE', bez:reiseBez, betrag:reise.gesamt}], automatisch:true, hinweis: ''}] : [])
   ];
   const alle = [].concat(...gruppen.map(g=> g.liste));
   const posVon = (z)=> alle.find(p=> p.ziffer === z);
   // Details (Faktor/Begruendung) -- auch fuer gerade nicht gewaehlte
   // Positionen merken, damit ein Ab- und wieder Anhaken nichts verliert
   const det = { faktoren: {}, begruendungen: {}, ...JSON.parse(JSON.stringify((ausgewaehlteZiffern && ausgewaehlteZiffern.details) || {})) };
+  // neue Rechnung (noch keine Details): Vorgaben des aktiven Profils
+  if(ausgewaehlteZiffern && !ausgewaehlteZiffern.details && !ausgewaehlteZiffern.legacy) betaProfilDetailsAnwenden(art, det, betaProfilAktiv(art));
   det.faktoren = det.faktoren || {}; det.begruendungen = det.begruendungen || {};
   det.anzahl = det.anzahl || {}; det.abgewaehlt = (det.abgewaehlt || []).map(goaeNorm); det.behalten = (det.behalten || []).map(goaeNorm);
+  // 56: Uhrzeit des Besuchs in der Maske geaendert -> Beginn nachziehen und
+  // das Ende um dieselbe Zeit verschieben (Dauer und Anzahl bleiben)
+  const start56 = betaBesuchUhrzeit();
+  if(start56) Object.keys(det.begruendungen || {}).forEach(k=>{
+    const p = posVon(k); if(!p || !betaBegrImmer(p)) return;
+    const zt = betaZeitAusBegr(det.begruendungen[k]);
+    if(!zt || zt.von === start56) return;
+    const dauer = betaZeitMinuten(zt.von, zt.bis);
+    if(isNaN(dauer)) return;
+    const [sh, sm] = start56.split(':').map(Number), e = (sh * 60 + sm + dauer) % 1440;
+    det.begruendungen[k] = 'von ' + start56 + ' bis ' + zz2(Math.floor(e / 60)) + ':' + zz2(e % 60) + ' Uhr';
+  });
   // automatische Position bewusst abgewaehlt (GOÄ-Ausschluss) -> bleibt aus
   const abgewaehlt = (p)=> det.abgewaehlt.includes(goaeNorm(p.ziffer));
   const faktorVon = (p)=>{ const k = betaPosSchluessel(p); return det.faktoren[k] !== undefined ? betaFaktorLesen(det.faktoren[k]) : betaPosStandardFaktor(p); };
@@ -8302,7 +8588,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       const r = betaPosRahmen(p), f = faktorVon(p), b = String(begrVon(p) || '').trim(), n = anzahlVon(p);
       const pflicht = f > r.schwelle + 1e-9 || betaBegrImmer(p);
       el.innerHTML = `<button type="button" class="faktor-chip${pflicht ? ' hoch' : ''}">${n > 1 ? n + ' &times; &middot; ' : ''}Faktor ${betaFaktorText(f)} &#9998;</button>` +
-        (pflicht ? (b ? `<span class="beg-text">Begründung: ${htmlEsc(b)}</span>` : `<span class="beg-text fehlt">Begründung fehlt – antippen</span>`) : '');
+        (pflicht ? (b ? `<span class="beg-text">${betaBegrImmer(p) ? 'Verweilen ' : 'Begründung: '}${htmlEsc(b)}</span>` : `<span class="beg-text fehlt">${betaBegrImmer(p) ? 'Ende des Verweilens fehlt – antippen' : 'Begründung fehlt – antippen'}</span>`) : '');
       const zeile = el.closest('.position-zeile');
       zeile.querySelector('.betrag').innerHTML = betragVon(p).toFixed(2).replace('.',',') + ' &euro;';
       cb.dataset.betrag = betragVon(p);
@@ -8433,6 +8719,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     const p = betaProfile(art).find(x=> x.id === b.dataset.profil); if(!p) return;
     betaProfilWaehlen(art, p.id);
     det.abgewaehlt = []; det.behalten = [];
+    betaProfilDetailsAnwenden(art, det, p, true);
     const neu = new Set(p.vorauswahl); neu.details = det;
     ansichtPositionen(art, neu, betragSchaetzung, weiter, kmFahrstreckeGesamt);
     automatikNachziehen();
@@ -8454,6 +8741,12 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     if(cb.checked && await konfliktPruefen(cb) === 'neu'){ neuZeichnen(); return; }
     if(cb.dataset.auto !== '1' && automatikNachziehen()) return;
     positionAktualisieren();
+    // 56 angehakt: gleich nach dem Ende des Verweilens fragen
+    const p56 = cb.checked && posVon(cb.dataset.ziffer);
+    if(p56 && betaBegrImmer(p56) && !String(begrVon(p56) || '').trim()){
+      const el = cb.closest('.position-zeile').querySelector('.pos-zusatz');
+      if(el) el.click();
+    }
   }));
   positionAktualisieren();
   betaEigenePositionenVerdrahten(art, (neuId, entferntId)=>{
@@ -8490,7 +8783,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       const p = alle.find(x=> betaPosSchluessel(x) === k), r = p && betaPosRahmen(p);
       if(!r || !(voll.faktoren[k] > r.schwelle + 1e-9 || betaBegrImmer(p))) return;
       let t = String(voll.begruendungen[k] || '').trim();
-      if(betaBegrImmer(p)) t = t.replace(/^Verweilen von \S+ bis \S+ Uhr(?:[;,.]\s*)?/, '').trim();
+      if(betaBegrImmer(p)) return; // 56: nur Uhrzeit
       if(t) kat.push({ schl: k, text: t });
     });
     betaBegrKatalogAendern(art, kat);
@@ -8808,14 +9101,36 @@ function betaZusatzZusammenfuehren(a, b){
   return out;
 }
 
+// ---------- Profil-Vorgaben (Faktor/Begruendung) auf eine Rechnung anwenden ----------
+// neu = true beim Profilwechsel: bisherige Vorgaben verwerfen
+function betaProfilDetailsAnwenden(art, det, profil, neu){
+  const d = (profil && profil.details) || {};
+  ['faktoren', 'begruendungen', 'varianten'].forEach(f=>{
+    if(neu) det[f] = {};
+    const q = d[f] || {};
+    det[f] = det[f] || {};
+    Object.keys(q).forEach(k=>{ if(neu || det[f][k] === undefined) det[f][k] = q[k]; });
+  });
+  if(neu) det.anzahl = {};
+}
+
 // ---------- Einstellungen: Profile verwalten ----------
+function betaProfilKurz(art, p){
+  const t = [];
+  t.push(p.vorauswahl.length ? 'vorausgewählt: ' + p.vorauswahl.map(z=> betaNrVonSchluessel(art, z) || z).join(', ') : 'nichts vorausgewählt');
+  const nf = Object.keys((p.details || {}).faktoren || {}).length;
+  if(nf) t.push(nf + (nf === 1 ? ' eigener Faktor' : ' eigene Faktoren'));
+  const na = (p.ausgeblendet || []).length;
+  if(na) t.push(na + ' ausgeblendet');
+  return t.join(' · ');
+}
 function betaProfileHtml(){
   const block = (art, titel)=> `
       <div class="sync-unter-titel">${titel}</div>
       <div class="profil-liste" data-art="${art}">${betaProfile(art).map(p=> `
         <button type="button" class="profil-zeile" data-art="${art}" data-id="${htmlEsc(p.id)}">
           <span class="profil-name">${htmlEsc(p.name)}${betaProfilAktivId(art) === p.id ? ' <span class="profil-aktiv">aktiv</span>' : ''}</span>
-          <span class="profil-vor">${p.vorauswahl.length ? 'vorausgewählt: ' + htmlEsc(p.vorauswahl.map(z=> betaNrVonSchluessel(art, z) || z).join(', ')) : 'nichts vorausgewählt'}</span>
+          <span class="profil-vor">${htmlEsc(betaProfilKurz(art, p))}</span>
         </button>`).join('')}
       </div>
       <button type="button" class="btn-sekundaer profil-neu" data-art="${art}" style="margin-top:6px;">+ Neues Profil</button>`;
@@ -8823,54 +9138,162 @@ function betaProfileHtml(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Profile (Rechnungspositionen)</div>
       <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-        Ein Profil legt fest, welche Positionen bei einer neuen Rechnung schon angehakt sind. Wechseln geht oben in den
-        Rechnungspositionen; das zuletzt gewählte bleibt aktiv. Zeitzuschläge und Wegegeld kommen immer automatisch dazu
-        (bei Beratung ohne Besuch B/C/D statt F/G/H).</div>
+        Ein Profil legt fest, welche Positionen in der Liste stehen, welche bei einer neuen Rechnung schon angehakt sind und
+        mit welchem Faktor/welcher Begründung. Wechseln geht oben in den Rechnungspositionen; das zuletzt gewählte bleibt aktiv.
+        Zeitzuschläge kommen automatisch dazu, Wegegeld nur bei einem Besuch.</div>
       ${block('pt', 'Privatrechnung')}
       <div class="sync-trenner"></div>
       ${block('ls', 'Leichenschau')}
-    </div>`;
+    </div>
+    ${betaBegrKatalogHtml()}`;
 }
 async function betaProfilBearbeiten(art, id){
   const vorhanden = betaProfile(art).find(p=> p.id === id);
-  const profil = vorhanden ? { ...vorhanden, vorauswahl: [...vorhanden.vorauswahl] } : { id: 'P' + Date.now().toString(36), name: '', vorauswahl: [] };
+  const profil = vorhanden ? JSON.parse(JSON.stringify(vorhanden)) : { id: 'P' + Date.now().toString(36), name: '', vorauswahl: [] };
+  profil.ausgeblendet = profil.ausgeblendet || [];
+  profil.details = profil.details || {};
+  ['faktoren', 'begruendungen', 'varianten'].forEach(f=> profil.details[f] = profil.details[f] || {});
   const katalog = art === 'ls' ? POSITIONEN_LS : POSITIONEN_PT;
-  const waehlbar = [
+  const alleWaehlbar = ()=> [
     ...(katalog.grundleistung || []).filter(p=> p.ziffer !== 'E'),
     ...betaFestPositionen(art).filter(p=> p.gruppe === 'grund' || p.manuell).map(betaEigenePositionAlsAuswahl),
     ...betaEigene(art).map(betaEigenePositionAlsAuswahl)
   ];
-  let fehler = '';
+  const nrText = (p)=> p.anzeigeZiffer !== undefined ? (p.anzeigeZiffer || '–') : p.ziffer;
+  const bezText = (p)=> String(p.eigeneBez || p.bez).replace(/<[^>]+>/g, '');
+  let fehler = '', ausOffen = false;
   for(;;){
+    const alle = alleWaehlbar();
+    const drin = alle.filter(p=> !profil.ausgeblendet.includes(p.ziffer));
+    const weg = alle.filter(p=> profil.ausgeblendet.includes(p.ziffer));
+    const zeile = (p)=>{
+      const k = betaPosSchluessel(p);
+      const mitFaktor = betaPosFaktorEditierbar(p);
+      const f = profil.details.faktoren[k] !== undefined ? betaFaktorLesen(profil.details.faktoren[k]) : (mitFaktor ? betaPosStandardFaktor(p) : NaN);
+      const b = String(profil.details.begruendungen[k] || '').trim();
+      return '<div class="profil-pos">' +
+        '<label class="profil-pos-haken"><input type="checkbox" data-z="' + htmlEsc(p.ziffer) + '"' + (profil.vorauswahl.includes(p.ziffer) ? ' checked' : '') + '>' +
+        '<span><b>' + htmlEsc(nrText(p)) + '</b> ' + htmlEsc(bezText(p)) + '</span></label>' +
+        '<div class="profil-pos-knoepfe">' +
+          (mitFaktor ? '<button type="button" class="profil-faktor' + (profil.details.faktoren[k] !== undefined ? ' eigen' : '') + '" data-akt="faktor:' + htmlEsc(p.ziffer) + '">Faktor ' + betaFaktorText(f) + ' &#9998;</button>' : '') +
+          '<button type="button" class="profil-weg" data-akt="weg:' + htmlEsc(p.ziffer) + '" title="aus diesem Profil entfernen">&times;</button>' +
+        '</div>' +
+        (b ? '<div class="profil-pos-beg">Begründung: ' + htmlEsc(b) + '</div>' : '') + '</div>';
+    };
     const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="beta-form"><label>Name<input id="prName" value="' + htmlEsc(profil.name) + '" autocomplete="off"></label></div>' +
-      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Vorausgewählt bei einer neuen Rechnung:</div>' +
-      '<div class="profil-auswahl">' + waehlbar.map(p=> '<label class="profil-pos"><input type="checkbox" data-z="' + htmlEsc(p.ziffer) + '"' + (profil.vorauswahl.includes(p.ziffer) ? ' checked' : '') + '>' +
-        '<span><b>' + htmlEsc(p.anzeigeZiffer !== undefined ? p.anzeigeZiffer : p.ziffer) + '</b> ' + htmlEsc(String(p.eigeneBez || p.bez).replace(/<[^>]+>/g, '')) + '</span></label>').join('') + '</div>';
+      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Haken = bei einer neuen Rechnung schon angehakt · Faktor antippen = Faktor und Begründung für dieses Profil vorgeben · &times; = in diesem Profil nicht anzeigen</div>' +
+      '<div class="profil-auswahl">' + drin.map(zeile).join('') + '</div>' +
+      (art === 'pt' ? '<button type="button" class="btn-sekundaer profil-eigene" data-akt="eigene" style="margin-top:8px;">+ Eigene Position anlegen</button>' : '') +
+      (weg.length ? '<button type="button" class="profil-aus-titel" data-akt="ausklappen">' + (ausOffen ? '&#9662;' : '&#9656;') + ' Entfernt (' + weg.length + ') – antippen zum Zurückholen</button>' +
+        (ausOffen ? '<div class="profil-ausgeblendet">' + weg.map(p=> '<button type="button" class="profil-zurueck" data-akt="zurueck:' + htmlEsc(p.ziffer) + '"><b>' + htmlEsc(nrText(p)) + '</b> ' + htmlEsc(bezText(p)) + ' <span>＋</span></button>').join('') + '</div>' : '') : '');
     const knoepfe = [{ label:'Abbrechen', akt:'nein' }];
-    if(vorhanden && betaProfile(art).length > 1) knoepfe.push({ label:'Löschen', akt:'weg' });
+    if(vorhanden && betaProfile(art).length > 1) knoepfe.push({ label:'Löschen', akt:'loeschen' });
     knoepfe.push({ label:'Speichern', akt:'ja', primaer:true });
-    const akt = await betaOverlay.ergebnis(vorhanden ? 'Profil bearbeiten' : 'Neues Profil', html, knoepfe);
-    const name = (document.getElementById('prName') || {}).value || '';
-    const gewaehlt = Array.from(document.querySelectorAll('.profil-auswahl input:checked')).map(c=> c.dataset.z);
+    const warte = betaOverlay.ergebnis(vorhanden ? 'Profil bearbeiten' : 'Neues Profil', html, knoepfe);
+    document.querySelectorAll('.beta-overlay [data-akt]').forEach(b=>{
+      if(b.closest('.beta-overlay-knoepfe')) return;
+      b.onclick = (ev)=>{ ev.preventDefault(); betaOverlay.loesen && betaOverlay.loesen(b.dataset.akt); };
+    });
+    const akt = await warte;
+    // Stand des Formulars uebernehmen (auch bei Zwischenschritten)
+    const nameEl = document.getElementById('prName');
+    if(nameEl) profil.name = nameEl.value;
+    const sichtbarZ = new Set(drin.map(p=> p.ziffer));
+    profil.vorauswahl = [
+      ...profil.vorauswahl.filter(z=> !sichtbarZ.has(z) && !profil.ausgeblendet.includes(z)),
+      ...Array.from(document.querySelectorAll('.profil-auswahl input:checked')).map(c=> c.dataset.z)
+    ];
+    fehler = '';
     if(akt === 'nein'){ betaOverlay.schliessen(); return false; }
-    if(akt === 'weg'){
+    if(akt === 'loeschen'){
       betaOverlay.schliessen();
       if(!await betaFrage('Profil „' + profil.name + '“ löschen?', 'Löschen', 'Abbrechen')) return false;
       await betaProfilSpeichern(art, { ...profil, geloescht: true });
       if(betaProfilAktivId(art) === profil.id) betaProfilWaehlen(art, betaProfile(art)[0].id);
       return true;
     }
-    profil.name = name.trim(); profil.vorauswahl = gewaehlt;
+    if(akt === 'ausklappen'){ ausOffen = !ausOffen; continue; }
+    if(akt === 'eigene'){
+      const neu = await betaEigenePositionDialog(art);
+      if(neu){
+        // in diesem Profil gleich anhaken, in den anderen Profilen nicht anzeigen
+        const id_ = neu.id;
+        if(!profil.vorauswahl.includes(id_)) profil.vorauswahl.push(id_);
+        for(const q of betaProfile(art)){
+          if(q.id === profil.id) continue;
+          const aus = q.ausgeblendet || [];
+          if(!aus.includes(id_)) await betaProfilSpeichern(art, { ...q, ausgeblendet: [...aus, id_] });
+        }
+      }
+      continue;
+    }
+    if(/^weg:/.test(akt)){
+      const z = akt.slice(4);
+      if(!profil.ausgeblendet.includes(z)) profil.ausgeblendet.push(z);
+      profil.vorauswahl = profil.vorauswahl.filter(x=> x !== z);
+      continue;
+    }
+    if(/^zurueck:/.test(akt)){ const z = akt.slice(8); profil.ausgeblendet = profil.ausgeblendet.filter(x=> x !== z); continue; }
+    if(/^faktor:/.test(akt)){
+      const z = akt.slice(7);
+      const p = alle.find(x=> x.ziffer === z);
+      if(p){
+        const k = betaPosSchluessel(p);
+        const f0 = profil.details.faktoren[k] !== undefined ? betaFaktorLesen(profil.details.faktoren[k]) : betaPosStandardFaktor(p);
+        const b0 = profil.details.begruendungen[k] !== undefined ? profil.details.begruendungen[k] : betaPosStandardBegruendung(art, p, false);
+        const erg = await betaFaktorDialog(art, p, f0, b0, 1, profil.details.varianten[k] || '', { profil: true });
+        if(erg){
+          profil.details.faktoren[k] = erg.faktor;
+          if(erg.begruendung) profil.details.begruendungen[k] = erg.begruendung; else delete profil.details.begruendungen[k];
+          if(erg.variante) profil.details.varianten[k] = erg.variante; else delete profil.details.varianten[k];
+          // Standardfaktor ohne Begruendung = keine Vorgabe
+          if(Math.abs(erg.faktor - betaPosStandardFaktor(p)) < 1e-9 && !erg.begruendung && !erg.variante) delete profil.details.faktoren[k];
+        }
+      }
+      continue;
+    }
+    // Speichern
+    profil.name = profil.name.trim();
     if(!profil.name){ fehler = 'Bitte einen Namen eintragen.'; continue; }
     betaOverlay.schliessen();
-    await betaProfilSpeichern(art, { id: profil.id, name: profil.name, vorauswahl: profil.vorauswahl });
+    await betaProfilSpeichern(art, { id: profil.id, name: profil.name, vorauswahl: profil.vorauswahl, ausgeblendet: profil.ausgeblendet, details: profil.details });
     return true;
   }
+}
+
+// ---------- Einstellungen: Katalog frueherer Begruendungen ----------
+function betaBegrKatalogHtml(){
+  const d = (LS.get(EIGENE_POS_CACHE, null) || {}).begrKatalog || {};
+  const schl = Object.keys(d).filter(k=> (d[k] || []).some(x=> x && x.text && !x.geloescht))
+    .sort((a, b)=> a.localeCompare(b, 'de', { numeric: true }));
+  const anzeige = (k)=>{
+    const [art, z] = k.split(':');
+    const p = /^EIG/i.test(z) ? betaEigeneAlle(art).find(x=> x.id === z) : null;
+    return (art === 'ls' ? 'Leichenschau' : 'Privat') + ' · Ziffer ' + (p ? (p.ziffer || p.id) : z);
+  };
+  return `
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Begründungen (Katalog)</div>
+      <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
+        Jede Begründung, die Sie im Faktor-Fenster einer Position mit „Übernehmen“ bestätigen, wird hier je Ziffer gesammelt
+        und dort unter „Frühere Begründungen“ zum Antippen angeboten.</div>
+      ${schl.length ? schl.map(k=> `
+        <div class="sync-unter-titel">${htmlEsc(anzeige(k))}</div>
+        ${(d[k] || []).filter(x=> x && x.text && !x.geloescht).map(x=> `
+          <div class="begr-eintrag"><span class="begr-text nur">${htmlEsc(x.text)}</span>
+            <button type="button" class="begr-weg begr-kat-weg" data-k="${htmlEsc(k)}" data-t="${htmlEsc(x.text)}" title="entfernen">&times;</button></div>`).join('')}`).join('')
+        : '<div class="hinweis" style="font-size:13px;">Noch keine Begründungen gesammelt.</div>'}
+    </div>`;
 }
 function betaProfileWiring(neuZeichnen){
   document.querySelectorAll('.profil-zeile').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, b.dataset.id)) neuZeichnen(); });
   document.querySelectorAll('.profil-neu').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, null)) neuZeichnen(); });
+  document.querySelectorAll('.begr-kat-weg').forEach(b=> b.onclick = ()=>{
+    const [art, z] = b.dataset.k.split(':');
+    betaBegrKatalogAendern(art, [{ schl: z, text: b.dataset.t, weg: true }]);
+    b.closest('.begr-eintrag').remove();
+  });
 }
 
 // ---------- Datenschutz & Haftung (Einstellungen, spaeter Einrichtung) ----------
