@@ -21,7 +21,8 @@
 //   - alles andere (ICD-Katalog, Icons, MSAL-Bibliothek): cache-first
 // v116: Hauptversion (vorher Beta) -- zusaetzlich GOÄ-Katalog; Dateien einzeln
 // cachen, damit eine fehlende Datei nicht die ganze Installation verhindert
-const CACHE_NAME = 'rechnungserfassung-v116';
+// v117: Tabellenhoehe aus der Word-Vorlage (PT-Vorlage angeglichen)
+const CACHE_NAME = 'rechnungserfassung-v117';
 const NETZWERK_ZUERST = ['./Rechnungserfassung_Mobil.html', './manifest.json', './'];
 const CACHE_ZUERST = ['./icd_katalog.js', './goae_katalog.js', './icon-192.png', './icon-512.png', './icon-192-maskable.png', './icon-512-maskable.png', './apple-touch-icon.png'];
 const NIE_CACHEN = ['nominatim.openstreetmap.org', 'project-osrm.org', 'graph.microsoft.com', 'login.microsoftonline.com', 'login.live.com'];

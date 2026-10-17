@@ -4126,7 +4126,7 @@ function rdTabelleBauen(vorlage, fall){
 }
 
 // ---------- Word-XML der Tabelle ----------
-function rdTabelleXml(kopf, tab, art, gesamtLabel){
+function rdTabelleXml(kopf, tab, art, gesamtLabel, zeilenGesamt){
   const L = RECHNUNG_LAYOUT[art];
   const tw = L.cols.map(w=> Math.round(w * 20));
   const linie = (an)=> an ? 'w:val="single" w:sz="6" w:space="0" w:color="000000"' : 'w:val="nil"';
@@ -4213,7 +4213,8 @@ function rdTabelleXml(kopf, tab, art, gesamtLabel){
   ]));
   // Auffuellen auf die bisherige Bildhoehe (unsichtbare Leerzeilen)
   const belegt = tab.zeilen.length + 2;
-  for(let i = belegt; i < L.zeilenGesamt; i++){
+  const zielZeilen = zeilenGesamt || L.zeilenGesamt;
+  for(let i = belegt; i < zielZeilen; i++){
     xml.push(zeileXml(tw.map(w=> zelleXml('', w, 'left', {}))));
   }
   const grid = tw.map(w=> `<w:gridCol w:w="${w}"/>`).join('');
@@ -4274,7 +4275,15 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
     throw new Error('Diese Positionen fehlen in der Excel-Vorlage: ' + tab.fehlend.join(', '));
   }
   const gesamtLabel = daten.art === 'ls' ? 'Gesamt:' : 'Gesamt';
-  const tabelleXml = rdTabelleXml(vorlage.kopf, tab, daten.art, gesamtLabel);
+  // Hoehe des Excel-Bildes aus dem Verknuepfungsbereich der Vorlage
+  // (z. B. Tabelle1!Z1S1:Z21S5 = 21 Zeilen), damit App und PC gleich aussehen
+  let zeilenAusVorlage = 0;
+  try {
+    const rels = await zip.file('word/_rels/document.xml.rels').async('string');
+    const m = rels.match(/oleObject"[^>]*Target="[^"]*![^"!]*!Z(\d+)S\d+:Z(\d+)S\d+"/) || rels.match(/Target="[^"]*![^"!]*!Z(\d+)S\d+:Z(\d+)S\d+"/);
+    if(m) zeilenAusVorlage = Math.max(0, parseInt(m[2], 10) - parseInt(m[1], 10) + 1);
+  } catch(e){}
+  const tabelleXml = rdTabelleXml(vorlage.kopf, tab, daten.art, gesamtLabel, zeilenAusVorlage);
 
   const a = daten.arzt || {};
   const platzhalterKoerper = [
