@@ -20,7 +20,7 @@
 //   - nur GET-Anfragen werden ueberhaupt behandelt
 //   - App-Seite/Manifest/Startadresse: network-first
 //   - alles andere (ICD-Katalog, Icons, MSAL-Bibliothek): cache-first
-const CACHE_NAME = 'rechnungserfassung-beta-v2';
+const CACHE_NAME = 'rechnungserfassung-beta-v3';
 const NETZWERK_ZUERST = ['./Rechnungserfassung_Beta.html', './manifest.json', './'];
 const CACHE_ZUERST = ['../icd_katalog.js', '../goae_katalog.js', '../icon-192.png', '../icon-512.png', '../icon-192-maskable.png', '../icon-512-maskable.png', '../apple-touch-icon.png'];
 const NIE_CACHEN = ['nominatim.openstreetmap.org', 'project-osrm.org', 'graph.microsoft.com', 'login.microsoftonline.com', 'login.live.com'];
