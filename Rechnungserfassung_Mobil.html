@@ -187,6 +187,8 @@
   .anzahl-reihe{display:flex; align-items:center; gap:6px; margin-top:4px;}
   .anzahl-reihe input{width:70px !important; display:inline-block !important; margin-top:0 !important; text-align:center;}
   .anzahl-reihe button{width:40px; height:38px; padding:0; margin:0; font-size:20px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .ini-status{font-size:12.5px; color:var(--text-schwach); margin-top:10px;}
+  .ini-status:empty{display:none;}
   .beta-badge{display:inline-block; background:#c0392b; color:#fff; font-size:10.5px; font-weight:700;
     letter-spacing:.5px; border-radius:4px; padding:1px 6px; vertical-align:middle; margin-left:6px;}
   .ini-titel-reihe{display:flex; flex-wrap:wrap; gap:0 14px;}
@@ -5436,8 +5438,11 @@ async function iniAenderungenSchreiben(aenderungen, basisWerte){
                        '\n\nTrotzdem mit den Werten aus der App überschreiben?', 'Überschreiben', 'Abbrechen');
     if(!ok) return {abgebrochen:true};
   }
-  // Sicherung des bisherigen Stands
-  if(frisch.vorhanden && frisch.buffer){
+  // Sicherung des bisherigen Stands (seit dem automatischen Speichern
+  // hoechstens alle 30 Minuten, sonst entstuende je Feld eine Sicherung)
+  const letzteSicherung = Number(LS.get('ini_sicherung_am', 0)) || 0;
+  if(frisch.vorhanden && frisch.buffer && Date.now() - letzteSicherung > 30 * 60 * 1000){
+    LS.set('ini_sicherung_am', Date.now());
     const d = new Date(), p2 = n=>String(n).padStart(2,'0');
     const stempel = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'_'+p2(d.getHours())+'-'+p2(d.getMinutes())+'-'+p2(d.getSeconds());
     await msGraphOrdnerSicherstellen(token, MSGRAPH_PFAD_INI_BACKUPS);
@@ -5557,7 +5562,7 @@ async function oneDriveVerbindungstest(ausgabe){
   try{
     const ausgeblendet = await uebersichtAusgeblendet(token, MSGRAPH_PFAD_UEBERSICHT);
     zeilen.push(ausgeblendet
-      ? '✗ <b>Übersicht ist mit ausgeblendetem Fenster gespeichert</b> – Microsoft kann sie so nicht öffnen. Reparieren: Einstellungen > OneDrive > „Echte Übersicht reparieren“.'
+      ? '✗ <b>Übersicht ist mit ausgeblendetem Fenster gespeichert</b> – Microsoft kann sie so nicht öffnen. Die Rechnungsverwaltung bietet das Reparieren beim Öffnen an.'
       : '✓ Übersicht nicht ausgeblendet');
   }catch(e){ zeilen.push('✗ <b>Übersicht (Datei prüfen)</b>: ' + htmlEsc(e.message || String(e))); }
   zeilen.push('<span style="font-size:12px;">Bitte davon einen Screenshot schicken.</span>');
@@ -5605,24 +5610,25 @@ function betaEinstellungenHtml(){
   const gruppe = (titel)=>{ const g = INI_GRUPPEN.find(x=> x.titel === titel); return `
         <div class="sync-unter-titel">${g.titel}</div>
         <div class="${g.nebeneinander?'ini-titel-reihe':''}">${g.keys.map(feld).join('')}</div>`; };
+  const status = '<div class="ini-status">' + htmlEsc(stand) + '</div><div class="warnhinweis ini-meldung"></div>';
   return `
     <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">Arzt &amp; Bankverbindung</div>
+      <div class="trennlinie">Arzt</div>
       <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-        Gemeinsam mit dem PC: diese Angaben stehen in der <b>einstellungen.ini</b> in OneDrive. Gespeichert wird erst mit
-        „In einstellungen.ini speichern“ -- und dann nur, was geändert wurde. Der vorherige Stand wird vorher in
-        „Einstellungen-Backups“ gesichert.</div>
-      <div class="hinweis" id="iniStatus" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">${stand}</div>
-      ${gruppe('Titel')}${gruppe('Arzt')}${gruppe('Bankverbindung')}
-      <button type="button" class="btn-primaer" id="btnIniSpeichern" style="margin-top:12px;">In einstellungen.ini speichern</button>
-      <button type="button" class="btn-sekundaer" id="btnIniLaden" style="margin-top:8px;">Vom PC neu laden (einstellungen.ini lesen)</button>
-      <div class="warnhinweis ini-meldung" id="iniMeldung"></div>
+        Steht in der <b>einstellungen.ini</b> in OneDrive (gemeinsam mit dem PC) und wird bei jeder Änderung
+        automatisch gespeichert.</div>
+      ${gruppe('Titel')}${gruppe('Arzt').replace('<div class="sync-unter-titel">Arzt</div>', '<div class="sync-unter-titel">Name &amp; Anschrift</div>')}
+      ${status}
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Bankverbindung</div>
+      ${gruppe('Bankverbindung').replace('<div class="sync-unter-titel">Bankverbindung</div>', '')}
+      ${status}
     </div>
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Briefversand (LetterXpress)</div>
       ${gruppe('LetterXpress').replace('<div class="sync-unter-titel">LetterXpress</div>', '')}
-      <button type="button" class="btn-primaer" id="btnIniSpeichernLxp" style="margin-top:12px;">In einstellungen.ini speichern</button>
-      <div class="warnhinweis ini-meldung"></div>
+      ${status}
       <button type="button" class="btn-sekundaer" id="btnTestLxp" style="margin-top:8px;"><span class="btn-titel">Verbindung testen</span><span class="unter">es wird nichts verschickt</span></button>
       <div class="hinweis ini-testergebnis" id="testErgebnisLxp"></div>
     </div>`;
@@ -5655,10 +5661,10 @@ function betaOneDriveTestHtml(){
   return `
       <button type="button" class="btn-sekundaer" id="btnTestOneDrive" style="margin-top:10px;"><span class="btn-titel">Verbindungstest</span><span class="unter">jeden Zugriff einzeln, mit Fehlercode</span></button>
       <div class="hinweis ini-testergebnis" id="testErgebnisOd"></div>
-      <button type="button" class="btn-sekundaer" id="btnUebersichtEinblenden" style="margin-top:8px;"><span class="btn-titel">Echte Übersicht reparieren</span><span class="unter">wenn sie am PC ausgeblendet gespeichert wurde</span></button>
-      <div class="hinweis ini-testergebnis" id="reparaturErgebnis"></div>`;
+`;
 }
 function betaDebugTestHtml(){
+  return ''; // PDF-Test nicht mehr noetig
   return `
       <div class="sync-unter-titel">Tests</div>
       <button type="button" class="btn-sekundaer" id="btnTestPdf"><span class="btn-titel">PDF-Umwandlung</span><span class="unter">letzte Rechnung testen</span></button>
@@ -5725,9 +5731,10 @@ function betaEinstellungenWiring(){
       el.style.color = gut ? 'var(--text)' : '';
     });
   };
+  const statusText = (t)=> document.querySelectorAll('.ini-status').forEach(el=> el.textContent = t);
   const statusSetzen = ()=>{
-    const c = iniCacheLaden(); const el = document.getElementById('iniStatus');
-    if(el && c) el.textContent = 'Zuletzt aus OneDrive geladen: ' + new Date(c.geladenAm).toLocaleString('de-DE');
+    const c = iniCacheLaden();
+    if(c) statusText('Stand aus OneDrive: ' + new Date(c.geladenAm).toLocaleString('de-DE'));
   };
   const cache = iniCacheLaden();
   betaIniBasis = cache ? {...cache.werte} : null;
@@ -5758,7 +5765,7 @@ function betaEinstellungenWiring(){
     echtSetzen(!document.getElementById('chkBetaEchtbetrieb').checked);
   };
   }
-  document.getElementById('btnUebersichtEinblenden').onclick = async ()=>{
+  if(document.getElementById('btnUebersichtEinblenden')) document.getElementById('btnUebersichtEinblenden').onclick = async ()=>{
     const ablageErgebnis = (html)=>{ const el=document.getElementById('reparaturErgebnis'); if(el){ el.innerHTML = html; el.style.display = html?'block':'none'; } };
     const btn = document.getElementById('btnUebersichtEinblenden');
     const token = await msGraphTokenHolen();
@@ -5807,19 +5814,21 @@ function betaEinstellungenWiring(){
       if(!stumm) meldung(ini.vorhanden ? 'Geladen.' : 'Es gibt noch keine einstellungen.ini in OneDrive -- sie wird beim Speichern angelegt.', true);
     }catch(e){ if(!stumm) meldung(htmlEsc(e.message || String(e))); }
   };
-  document.getElementById('btnIniLaden').onclick = async ()=>{
+  if(document.getElementById('btnIniLaden')) document.getElementById('btnIniLaden').onclick = async ()=>{
     if(betaIniBearbeitet && !await betaFrage('Ungespeicherte Änderungen hier gehen verloren. Trotzdem neu laden?', 'Neu laden', 'Abbrechen')) return;
     betaIniBearbeitet = false; laden(false);
   };
-  const lxpSpeichern = document.getElementById('btnIniSpeichernLxp');
-  if(lxpSpeichern) lxpSpeichern.onclick = ()=> document.getElementById('btnIniSpeichern').click();
-  document.getElementById('btnIniSpeichern').onclick = async ()=>{
-    const btn = document.getElementById('btnIniSpeichern');
+
+  // Automatisch speichern: kurz nach jeder Aenderung (Feld verlassen, Haken
+  // setzen) werden nur die geaenderten Eintraege in die ini geschrieben.
+  let speichertGerade = false, nochmal = false, timer = null, stand = null;
+  const speichern = async ()=>{
+    if(speichertGerade){ nochmal = true; return; }
+    speichertGerade = true;
     try{
-      btn.disabled = true;
-      meldung('Speichere ...', true);
+      if(msGraphStatus !== 'angemeldet'){ meldung('Nicht bei Microsoft/OneDrive angemeldet – Änderungen werden noch nicht gespeichert.'); return; }
       if(!betaIniBasis){ const ini = await iniVonOneDriveLaden(); betaIniBasis = {...ini.werte}; }
-      const neu = betaIniWerteAusFormular();
+      const neu = stand || betaIniWerteAusFormular();
       const aenderungen = {};
       Object.keys(neu).forEach(k=>{
         const f = INI_FELDER.find(x=>x.k===k);
@@ -5827,17 +5836,39 @@ function betaEinstellungenWiring(){
         const altVergleich = (f && f.typ==='bool') || k==='REISE_BASIS_LUFTLINIE' ? (String(alt).trim()==='1'?'1':'0') : alt;
         if(neu[k] !== altVergleich) aenderungen[k] = neu[k];
       });
-      if(!Object.keys(aenderungen).length){ meldung('Keine Änderungen zu speichern.', true); return; }
+      if(!Object.keys(aenderungen).length){ betaIniBearbeitet = false; return; }
+      statusText('Speichere …');
       const erg = await iniAenderungenSchreiben(aenderungen, betaIniBasis);
-      if(erg.abgebrochen){ meldung('Nicht gespeichert.'); return; }
+      if(erg.abgebrochen){ meldung('Nicht gespeichert (am PC zwischenzeitlich geändert).'); statusSetzen(); return; }
       const c = iniCacheLaden(); betaIniBasis = c ? {...c.werte} : betaIniBasis;
       betaIniBearbeitet = false;
-      statusSetzen();
-      meldung('Gespeichert: ' + Object.keys(aenderungen).join(', ') + '. Der PC verwendet die neuen Werte ab der nächsten Rechnung.', true);
+      meldung('');
+      statusText('✓ Gespeichert ' + new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}));
     }catch(e){
-      meldung(htmlEsc(e.message || String(e)));
-    }finally{ btn.disabled = false; }
+      meldung('Nicht gespeichert: ' + htmlEsc(e.message || String(e)));
+      statusSetzen();
+    }finally{
+      speichertGerade = false;
+      if(nochmal){ nochmal = false; speichern(); }
+    }
   };
+  // Werte gleich beim Aendern festhalten -- falls die Seite verlassen wird,
+  // bevor gespeichert ist, sind die Felder sonst schon weg
+  const spaeter = (ms)=>{ if(document.getElementById('btnTestLxp')) stand = betaIniWerteAusFormular(); clearTimeout(timer); timer = setTimeout(()=>{ timer = null; speichern(); }, ms); };
+  document.querySelectorAll('[id^="ini_"]').forEach(el=>{
+    el.addEventListener('change', ()=> spaeter(400));
+    if(el.type !== 'checkbox') el.addEventListener('input', ()=> spaeter(2500));
+  });
+  document.querySelectorAll('.ini-bool').forEach(z=> z.addEventListener('click', ()=> spaeter(400)));
+  // Startadresse und Wegegeld-Regel (Abschnitt oben) kennt der PC ebenfalls
+  ['chkReiseBasisLuftlinie', 'txtPraxisadresse'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener(id === 'txtPraxisadresse' ? 'blur' : 'change', ()=> setTimeout(()=> spaeter(400), 0));
+  });
+  // beim Verlassen der Seite / App noch schnell sichern
+  const sofort = ()=>{ if(timer && document.getElementById('btnTestLxp')){ clearTimeout(timer); timer = null; speichern(); } };
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') sofort(); });
+  window.betaIniSofortSpeichern = sofort;
 
   // ---- Funktionstests ----
   const ergebnisIn = (id)=> (html)=>{ const el=document.getElementById(id); if(el){ el.innerHTML = html; el.style.display = html?'block':'none'; } };
@@ -5874,7 +5905,7 @@ function betaEinstellungenWiring(){
         '<br><span style="font-size:12px;">' + htmlEsc(e.message||String(e)) + '</span>');
     }
   };
-  document.getElementById('btnTestPdf').onclick = async ()=>{
+  if(document.getElementById('btnTestPdf')) document.getElementById('btnTestPdf').onclick = async ()=>{
     const ergebnis = ergebnisIn('testErgebnisPdf');
     const token = await msGraphTokenHolen();
     if(!token){ ergebnis('Bitte zuerst bei Microsoft/OneDrive anmelden (Abschnitt OneDrive).'); return; }
@@ -8167,11 +8198,7 @@ function ansichtEinstellungen(){
   const syncInfo = syncButtonInfo();
   app.innerHTML = `
     <div class="abschnitt start-abschnitt">
-      <div class="trennlinie">Allgemein</div>
-      <div class="einstellung-zeile" id="zDunkel">
-        <input type="checkbox" id="chkDunkel" ${e.dunkel?'checked':''}>
-        <div class="txt">Dunkelmodus<span class="hinweis">Dunkles Farbschema für schlechte Lichtverhältnisse</span></div>
-      </div>
+      <div class="trennlinie">Fahrten &amp; Wegegeld</div>
       <div class="einstellung-zeile" id="zReise">
         <input type="checkbox" id="chkReiseBasisLuftlinie" ${!e.reiseBasisLuftlinie?'checked':''}>
         <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br><span style="display:block; margin-top:5px;">Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></span></div>
@@ -8191,9 +8218,8 @@ function ansichtEinstellungen(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Debugging</div>
       <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-        Ältere Wege und Tests -- im normalen Betrieb nicht nötig.</div>
+        Ältere Wege zum Sichern und Übertragen von Fällen – im normalen Betrieb nicht nötig.</div>
       ${betaDebugTestHtml()}
-      <div class="sync-trenner"></div>
       <div class="sync-unter-titel">Fälle als Datei sichern / übertragen</div>
       <div class="datensicherung-reihe" style="margin-bottom:6px;">
         <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span><span class="btn-titel">Importieren</span>
@@ -8233,12 +8259,12 @@ function ansichtEinstellungen(){
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
   // "Speichern"-Schritt.
   const anwenden = ()=>{
-    e.dunkel = document.getElementById('chkDunkel').checked;
+    if(document.getElementById('chkDunkel')) e.dunkel = document.getElementById('chkDunkel').checked;
     // Sobald der Dunkelmodus hier ODER ueber den Sonne/Mond-Kurzschalter
     // manuell gesetzt wurde, folgt die App nicht mehr automatisch dem
     // System-/Browser-Farbschema (siehe dunkelModusAutoSyncEinrichten) --
     // sonst wuerde ein spaeterer OS-Wechsel die bewusste Wahl ueberschreiben.
-    e.dunkelManuell = true;
+    if(document.getElementById('chkDunkel')) e.dunkelManuell = true;
     // Checkbox-Beschriftung/-Haken wie am PC ("Im Grenzbereich
     // Reiseentschaedigung priorisieren", angehakt = Standard) -- invertiert
     // zum intern gespeicherten Flag reiseBasisLuftlinie (True = Luftlinie
@@ -8248,10 +8274,10 @@ function ansichtEinstellungen(){
     e.praxisadresse = document.getElementById('txtPraxisadresse').value.trim();
     speichereEinstellungen(e); themaAnwenden();
   };
-  document.getElementById('chkDunkel').onchange = anwenden;
+  if(document.getElementById('chkDunkel')) document.getElementById('chkDunkel').onchange = anwenden;
   document.getElementById('chkReiseBasisLuftlinie').onchange = anwenden;
   document.getElementById('txtPraxisadresse').addEventListener('blur', anwenden);
-  document.getElementById('zDunkel').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkDunkel').click(); } };
+
   document.getElementById('zReise').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkReiseBasisLuftlinie').click(); } };
   // Ausgelagert (siehe rnLetzteFeldEinrichten oben) -- dieselbe Logik wird
   // jetzt auch fuer das gleichnamige Feld auf der Rechnungsuebersicht
