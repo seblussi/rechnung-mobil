@@ -124,7 +124,7 @@
   .gesamt-aktionen.aktiv{transform:none;}
   .gesamt-aktionen-kopf{display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; margin-bottom:6px;}
   .gesamt-aktionen-kopf button{width:auto; padding:4px 10px; font-size:12.5px; border-radius:6px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
-  .gesamt-aktionen-knoepfe{display:grid; grid-template-columns:repeat(6, 1fr); gap:4px;}
+  .gesamt-aktionen-knoepfe{display:grid; grid-template-columns:repeat(7, 1fr); gap:2px;}
   .gesamt-aktionen-knoepfe button{display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 2px; font-size:11px; border:none; background:none; color:var(--text); width:auto;}
   .gesamt-aktionen-knoepfe button .sym{font-size:22px; line-height:1;}
   .gesamt-aktionen-knoepfe button:disabled{opacity:.3;}
@@ -189,6 +189,47 @@
   .anzahl-reihe button{width:40px; height:38px; padding:0; margin:0; font-size:20px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .ini-status{font-size:12.5px; color:var(--text-schwach); margin-top:10px;}
   .ini-status:empty{display:none;}
+  /* Profile, Ziehen, Faktor-Fenster */
+  .profil-leiste{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px;}
+  .profil-chip{width:auto; margin:0; padding:6px 12px; font-size:13.5px; font-weight:600; border-radius:16px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .profil-chip.aktiv{background:#2f6fed; border-color:#2f6fed; color:#fff;}
+  .pos-gruppe{min-height:14px;}
+  .pos-item{touch-action:pan-y; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
+  .pos-item.pos-gezogen{display:none;}
+  .pos-platz{border:2px dashed #2f6fed; border-radius:10px; margin:4px 0; background:rgba(47,111,237,.06);}
+  .pos-geist{position:fixed; z-index:12000; pointer-events:none; opacity:.95; box-shadow:0 10px 24px rgba(0,0,0,.3); border-radius:10px; background:var(--karte); transform:scale(1.02);}
+  body.pos-zieht{overflow:hidden;}
+  .faktor-stufen button.eigen{border-style:dashed;}
+  .faktor-stufen button .weg{margin-left:4px; font-weight:700; opacity:.7;}
+  .faktor-stufen button.neu{border-style:dashed; color:var(--text-schwach);}
+  .faktor-eigen{display:flex; gap:6px; margin-top:6px;}
+  .faktor-eigen[hidden]{display:none;}
+  .faktor-eigen input{flex:1; margin-top:0 !important;}
+  .faktor-eigen button{width:auto; padding:6px 12px; margin:0; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .zeit-reihe{display:flex; gap:10px;}
+  .zeit-reihe label{flex:1;}
+  .beta-form select{display:block; width:100%; box-sizing:border-box; margin-top:4px; font:inherit; font-size:15px; padding:9px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
+  .begr-katalog{margin-top:8px; max-height:190px; overflow:auto;}
+  .begr-eintrag{display:flex; gap:4px; margin-top:4px;}
+  .begr-eintrag .begr-text{flex:1; text-align:left; width:auto; margin:0; padding:6px 9px; font-size:12.5px; line-height:1.3; border-radius:8px; border:1px dashed var(--rand); background:none; color:var(--text);}
+  .begr-eintrag .begr-weg{width:34px; margin:0; padding:0; border-radius:8px; border:1px solid var(--rand); background:none; color:var(--text-schwach); font-size:16px;}
+  /* Einstellungen: Profile, Haftung */
+  .profil-liste{display:flex; flex-direction:column; gap:6px;}
+  .profil-zeile{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; padding:9px 11px; margin:0; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .profil-name{font-weight:600;}
+  .profil-aktiv{font-size:11px; font-weight:700; color:#fff; background:#2f6fed; border-radius:4px; padding:0 5px; margin-left:4px;}
+  .profil-vor{font-size:12.5px; color:var(--text-schwach);}
+  .profil-auswahl{max-height:46vh; overflow:auto; border:1px solid var(--rand); border-radius:8px; padding:4px 8px;}
+  .profil-pos{display:flex; gap:8px; align-items:flex-start; padding:6px 0; border-bottom:1px solid var(--rand); font-size:13.5px;}
+  .profil-pos:last-child{border-bottom:none;}
+  .profil-pos input{margin-top:2px;}
+  .haftung-text{font-size:13.5px; line-height:1.5;}
+  .haftung-text p{margin:0 0 8px;}
+  .haftung-text ul{margin:0 0 8px; padding-left:18px;}
+  .haftung-text a{color:#2f6fed;}
+  .fall-zeile .info.zahlung.bezahlt{color:#1f8a4c; font-weight:600;}
+  .fall-zeile .info.zahlung.offen{color:var(--text-schwach);}
+  .fall-zeile .info.zahlung.verzug{color:#c0392b; font-weight:600;}
   .beta-badge{display:inline-block; background:#c0392b; color:#fff; font-size:10.5px; font-weight:700;
     letter-spacing:.5px; border-radius:4px; padding:1px 6px; vertical-align:middle; margin-left:6px;}
   .ini-titel-reihe{display:flex; flex-wrap:wrap; gap:0 14px;}
@@ -2640,7 +2681,17 @@ const ZIFFER_AUSSCHLUESSE = {
 //                    bei einer Luftlinie >25 km greift dann NICHT automatisch
 //                    die Reiseentschädigung, sondern weiterhin die oberste
 //                    Wegegeld-Staffel (WT25/WN25) -- exakt wie am PC.
+// Vorauswahl kommt aus dem aktiven Profil (statt fest 50 bzw. 101), die
+// Zeitzuschlaege richten sich nach der Leistung (A-D ohne Besuch, sonst E-H),
+// Wegegeld nur mit Besuch -- siehe betaAutoAnpassen
 function automatischeAuswahl(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftlinie, modus){
+  const art = katalog === POSITIONEN_LS ? 'ls' : 'pt';
+  const basis = new Set(betaProfilVorauswahl(art));
+  const auto = Array.from(automatischeAuswahlRoh(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftlinie, modus))
+    .filter(z=> ['F','G','H'].includes(z) || /^W[TN]\d/.test(z) || z === 'REISE');
+  return betaAutoAnpassen(art, new Set([...basis, ...auto]), basis);
+}
+function automatischeAuswahlRoh(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuftlinie, modus){
   const ausgewaehlt = new Set();
   (katalog.grundleistung||[]).forEach(p=>{ if(p.standard) ausgewaehlt.add(p.ziffer); });
 
@@ -3954,7 +4005,7 @@ function rdEigeneBloecke(eigene, art, begruendungen){
     });
     const schl = String(p.schluessel || p.id);
     if(begruendungen) zeilen.push(...rdBegruendungsBlock(L, rdBegruendungZeilen(begruendungen[schl.toUpperCase()], art)));
-    return { ziffer: schl, typ: 'pos', eigene: true, zeilen };
+    return { ziffer: schl, nr: String(p.ziffer || ''), typ: 'pos', eigene: true, zeilen };
   });
 }
 // Faktor/Betrag und Begruendung je Fall in die Bloecke der Vorlage einsetzen.
@@ -3962,6 +4013,7 @@ function rdEigeneBloecke(eigene, art, begruendungen){
 // begruendungen: {ZIFFER: text} -- ist das Objekt vorhanden, gilt es fuer
 // alle Positionen (fehlender Eintrag = keine Begruendung). Ohne Objekt
 // (aeltere Faelle) bleibt die Vorlage unveraendert.
+const RD_VARIANTEN = { '7': ['Brustorganen', 'Bauchorganen', 'Stütz- und Bewegungsorganen', 'Hautorgan'] };
 function rdBloeckeAnpassen(bloecke, fall){
   const L = RECHNUNG_LAYOUT[fall.art], S = L.sp;
   const det = fall.posDetails || {}, beg = fall.begruendungen;
@@ -3970,6 +4022,11 @@ function rdBloeckeAnpassen(bloecke, fall){
     const z = b.ziffer.toUpperCase();
     let zeilen = b.zeilen.map(r=> r.slice());
     const d = det[z];
+    // Ziffer 7: gewaehltes Organsystem statt des Textes aus der Vorlage
+    const vari = (fall.varianten || {})[z];
+    if(vari && RD_VARIANTEN[z]){
+      zeilen = zeilen.map(r=>{ const t = String(r[S.bez] || ''); const alt = RD_VARIANTEN[z].find(v=> t.indexOf(v) >= 0); if(!alt) return r; const n = r.slice(); n[S.bez] = t.replace(alt, vari); return n; });
+    }
     if(d && d.faktor !== undefined && d.faktor !== null && d.faktor !== ''){
       zeilen[0][S.faktor] = Number(d.faktor);
       zeilen[0][S.betrag] = Math.round(Number(d.betrag) * 100) / 100;
@@ -4003,7 +4060,21 @@ function rdTabelleBauen(vorlage, fall){
     const bl = vorlage.bloecke.slice();
     let pos = bl.findIndex(b=> b.typ !== 'pos' || /^W[TN]\d/i.test(b.ziffer));
     if(pos < 0) pos = bl.length;
-    bl.splice(pos, 0, ...eigene);
+    // eingebaute Zuschlaege (A-E) "unmittelbar im Anschluss an die
+    // zugrundeliegende Leistung" (GOÄ), die uebrigen vor dem Wegegeld
+    const zuschlaege = eigene.filter(b=> /^EIGZ/i.test(b.ziffer)), sonst = eigene.filter(b=> !/^EIGZ/i.test(b.ziffer));
+    bl.splice(pos, 0, ...sonst);
+    const nrVon = (b)=> String(b.nr || b.ziffer).toUpperCase();
+    const istGrund = (b, z)=> {
+      const n = nrVon(b), zahl = /^\d+$/.test(n) ? Number(n) : NaN;
+      return /^EIGZE$/i.test(z.ziffer) ? ((zahl >= 45 && zahl <= 62) || n === '100' || n === '101') : ['1','3','4','5','6','7','8'].includes(n);
+    };
+    let nach = -1;
+    zuschlaege.forEach(z=>{
+      let i = nach >= 0 ? nach : bl.findIndex(b=> b.typ === 'pos' && gewaehlt.has(String(b.ziffer).toUpperCase()) && istGrund(b, z));
+      if(i < 0){ i = bl.findIndex(b=> b.typ !== 'pos' || /^W[TN]\d/i.test(b.ziffer)); if(i < 0) i = bl.length; bl.splice(i, 0, z); nach = i; return; }
+      bl.splice(i + 1, 0, z); nach = i + 1;
+    });
     vorlage = { kopf: vorlage.kopf, bloecke: bl };
   }
   // Pruefen, ob jede gewaehlte Ziffer in der Vorlage vorkommt
@@ -4413,7 +4484,7 @@ function fallRechnungsdaten(f, arzt){
   // Faktoren und Begruendungen des Falls
   if(typeof betaDetailsFuerGenerator === 'function'){
     const g = betaDetailsFuerGenerator(f);
-    daten.posDetails = g.posDetails; daten.begruendungen = g.begruendungen; daten.anzahl = g.anzahl || {};
+    daten.posDetails = g.posDetails; daten.begruendungen = g.begruendungen; daten.anzahl = g.anzahl || {}; daten.varianten = g.varianten || {};
     daten.eigene = betaEigeneMitDetails(f, daten.eigene);
   }
   if(!daten.datum) throw new Error('Datum der Leichenschau bzw. des Hausbesuchs fehlt.');
@@ -6054,11 +6125,13 @@ const betaOverlay = (()=>{
       const k = t('.beta-overlay-knoepfe');
       k.innerHTML = '';
       return new Promise(res=>{
+        // von aussen aufloesbar (z.B. Fenster mit neuem Inhalt neu aufbauen)
+        this.loesen = (akt)=>{ this.loesen = null; res(akt); };
         (knoepfe && knoepfe.length ? knoepfe : [{label:'OK', akt:'ok', primaer:true}]).forEach(kn=>{
           const b = document.createElement('button'); b.type = 'button';
           b.className = kn.primaer ? 'btn-primaer' : 'btn-sekundaer';
           b.textContent = kn.label;
-          b.onclick = ()=> res(kn.akt);
+          b.onclick = ()=>{ this.loesen = null; res(kn.akt); };
           k.appendChild(b);
         });
       });
@@ -6390,14 +6463,16 @@ const EIGENE_POS_PFAD = 'KVBW Onedrive/eigene_positionen.json';
 const EIGENE_POS_CACHE = 'eigene_positionen';
 function betaEigeneDaten(){ const d = LS.get(EIGENE_POS_CACHE, null) || {}; return { ls: d.ls || [], pt: d.pt || [] }; }
 // inkl. der zuletzt verwendeten Begruendungen je Position ("art:ZIFFER" -> {text, am})
-function betaEigeneDatenVoll(){ const d = LS.get(EIGENE_POS_CACHE, null) || {}; return { ls: d.ls || [], pt: d.pt || [], begruendungen: d.begruendungen || {} }; }
+// (plus Profile, Anordnung, eigene Faktoren, Begruendungskatalog -- siehe beta_profile)
+function betaEigeneDatenVoll(){ const d = LS.get(EIGENE_POS_CACHE, null) || {}; return { ...d, ls: d.ls || [], pt: d.pt || [], begruendungen: d.begruendungen || {} }; }
 function betaBegrZusammenfuehren(a, b){
   const m = { ...(a || {}) };
   Object.keys(b || {}).forEach(k=>{ if(!m[k] || String(b[k].am || '') > String(m[k].am || '')) m[k] = b[k]; });
   return m;
 }
-function betaEigeneAlle(art){ return betaEigeneDaten()[art] || []; }
-function betaEigene(art){ return betaEigeneAlle(art).filter(p=> !p.geloescht); }
+// inkl. der eingebauten Zusatzpositionen (B/C/D, 100, ... -- siehe GOAE_FEST)
+function betaEigeneAlle(art){ return [...(betaEigeneDaten()[art] || []), ...betaFestPositionen(art)]; }
+function betaEigene(art){ return (betaEigeneDaten()[art] || []).filter(p=> !p.geloescht); }
 function betaEigeneZusammenfuehren(a, b){
   const m = new Map();
   [...(a || []), ...(b || [])].forEach(p=>{
@@ -6420,11 +6495,14 @@ async function betaEigeneAbgleichen(aenderung){
   }
   const lokal = betaEigeneDatenVoll();
   const neu = { ls: betaEigeneZusammenfuehren(lokal.ls, fern && fern.ls), pt: betaEigeneZusammenfuehren(lokal.pt, fern && fern.pt),
-                begruendungen: betaBegrZusammenfuehren(lokal.begruendungen, fern && fern.begruendungen) };
+                begruendungen: betaBegrZusammenfuehren(lokal.begruendungen, fern && fern.begruendungen),
+                ...betaZusatzZusammenfuehren(lokal, fern) };
   if(aenderung) aenderung(neu);
   LS.set(EIGENE_POS_CACHE, neu);
-  const text = JSON.stringify({ version: 1, ls: neu.ls, pt: neu.pt, begruendungen: neu.begruendungen });
-  if(token && (aenderung || !fern || JSON.stringify({ version: 1, ls: fern.ls || [], pt: fern.pt || [], begruendungen: fern.begruendungen || {} }) !== text)){
+  const inhalt = (d)=> JSON.stringify({ version: 1, ls: d.ls || [], pt: d.pt || [], begruendungen: d.begruendungen || {},
+    profile: d.profile || {}, anordnung: d.anordnung || {}, faktoren: d.faktoren || [], begrKatalog: d.begrKatalog || {} });
+  const text = inhalt(neu);
+  if(token && (aenderung || !fern || inhalt(fern) !== text)){
     try{ await msGraphDateiHochladen(token, EIGENE_POS_PFAD, new Blob([text], { type:'application/json' }), 'application/json'); }
     catch(e){ if(aenderung) throw e; }
   }
@@ -6519,7 +6597,7 @@ async function betaEigenePositionDialog(art){
     const betrag = betaBetragLesen(w.betrag);
     // gleiche Ziffer gibt es schon? -> keine Doppel-Position, sondern Anzahl
     const nrNeu = goaeNorm(w.ziffer);
-    const schonDa = nrNeu ? [...betaEigene(art).map(p=> ({ nr: goaeNorm(p.ziffer), bez: p.bez })),
+    const schonDa = nrNeu ? [...betaEigene(art).map(p=> ({ nr: goaeNorm(p.ziffer), bez: p.bez })), ...betaFestPositionen(art).map(p=> ({ nr: goaeNorm(p.ziffer), bez: p.bez })),
       ...betaKatalogFlach(art).filter(p=> !p.eigene).map(p=> ({ nr: goaeNorm(p.ziffer), bez: String(p.bez).replace(/<[^>]+>/g, '') }))].find(x=> x.nr === nrNeu) : null;
     if(!w.bez) fehler = 'Bitte eine Bezeichnung eintragen.';
     else if(isNaN(betrag) || betrag <= 0) fehler = 'Bitte einen gültigen Betrag eintragen (z.B. 12,34).';
@@ -6716,7 +6794,7 @@ function docxAbsatzMitText(p, text){
 // Wie MahnungZahlungstext am PC
 function betaMahnungZahlungstext(nr, origDatum, vorige){
   let satz;
-  const liste = (vorige || []).filter(Boolean).map(d=> 'der Mahnung vom ' + d).join(' und ');
+  const liste = (vorige || []).filter(Boolean).map(d=> 'der Erinnerung vom ' + d).join(' und ');
   if(nr <= 1 || !origDatum || !liste) satz = 'Sie sind der Zahlungsaufforderung vom ' + origDatum + ' nicht nachgekommen.';
   else satz = 'Sie sind der Zahlungsaufforderung vom ' + origDatum + ' sowie ' + liste + ' nicht nachgekommen.';
   return satz + ' Ich bitte Sie den Betrag unter Angabe der Rechnungsnummer innerhalb von 14 Tagen auf mein Konto zu überweisen. Bei Nichtzahlung geraten Sie automatisch in Verzug.';
@@ -6749,9 +6827,14 @@ async function betaDateienAlle(token, ziel){
   return d;
 }
 
+// Erinnerungen (frueher "Mahnung"): neue Dateien heissen "..._Erinnerung n",
+// aeltere "..._Mahnung n" werden weiter erkannt und mitgezaehlt.
+function betaErinnerungDatei(dateien, basis, n, endung){
+  return dateien.get((basis + '_erinnerung ' + n + endung).toLowerCase()) || dateien.get((basis + '_mahnung ' + n + endung).toLowerCase()) || null;
+}
 async function betaMahnungErstellen(e){
   const ziel = betaZiel();
-  betaOverlay.zeigen('Mahnung wird erstellt'); betaOverlay.fortschritt(0.05);
+  betaOverlay.zeigen('Erinnerung wird erstellt'); betaOverlay.fortschritt(0.05);
   try{
     const token = await msGraphTokenHolen();
     if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
@@ -6760,38 +6843,38 @@ async function betaMahnungErstellen(e){
     const dateien = await betaDateienAlle(token, ziel);
     const orig = dateien.get((basis + '.docx').toLowerCase());
     if(!orig) throw new Error('Die Word-Datei der Rechnung (' + basis + '.docx) wurde nicht gefunden.');
-    let nr = 1; while(dateien.has((basis + '_mahnung ' + nr + '.docx').toLowerCase())) nr++;
+    let nr = 1; while(betaErinnerungDatei(dateien, basis, nr, '.docx')) nr++;
     const { zip, xml } = await docxDokumentXml(await graphItemLaden(token, orig.id));
     const origDatum = docxDatumFinden(xml);
     const vorige = [];
     for(let k = 1; k < nr; k++){
-      const it = dateien.get((basis + '_mahnung ' + k + '.docx').toLowerCase());
+      const it = betaErinnerungDatei(dateien, basis, k, '.docx');
       try{ vorige.push(it ? docxDatumFinden((await docxDokumentXml(await graphItemLaden(token, it.id))).xml) : ''); }catch(_){ vorige.push(''); }
     }
-    betaOverlay.fortschritt(0.35); betaOverlay.schritt(nr + '. Mahnung wird geschrieben …');
+    betaOverlay.fortschritt(0.35); betaOverlay.schritt(nr + '. Erinnerung wird geschrieben …');
     const morgen = betaMorgenText();
     const text = betaMahnungZahlungstext(nr, origDatum, vorige);
     const warnungen = [];
-    let neu = rdPlatzhalterInXml(xml, [['Privatrechnung', nr + '. Mahnung']]);
+    let neu = rdPlatzhalterInXml(xml, [['Privatrechnung', nr + '. Erinnerung']]);
     if(neu === xml) warnungen.push('Die Überschrift „Privatrechnung“ wurde nicht gefunden.');
     const vorZahlung = neu;
     neu = rdPlatzhalterInXml(neu, [[ZAHLUNGSTEXT_PT, text], [ZAHLUNGSTEXT_LS, text]]);
-    if(neu === vorZahlung) warnungen.push('Der Zahlungstext wurde nicht im erwarteten Wortlaut gefunden – bitte in der Mahnung prüfen.');
+    if(neu === vorZahlung) warnungen.push('Der Zahlungstext wurde nicht im erwarteten Wortlaut gefunden – bitte in der Erinnerung prüfen.');
     if(origDatum) neu = rdPlatzhalterInXml(neu, [['Datum: ' + origDatum, 'Datum: ' + morgen]]);
     else warnungen.push('Das Rechnungsdatum („Datum:“) wurde nicht gefunden.');
     zip.file('word/document.xml', neu);
     const blob = await zip.generateAsync({ type:'blob', compression:'DEFLATE', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-    const name = basis + '_Mahnung ' + nr;
+    const name = basis + '_Erinnerung ' + nr;
     if(!ziel.echt){ await msGraphOrdnerSicherstellen(token, 'KVBW Onedrive/Beta-Test'); await msGraphOrdnerSicherstellen(token, BETA_ZIEL_ORDNER); }
     betaOverlay.fortschritt(0.55); betaOverlay.schritt('Word-Datei wird hochgeladen …');
     const { pdfBlob, pdfItem } = await docxHochladenMitPdf(token, ziel.ordner, name, blob, t=>{ betaOverlay.fortschritt(0.7); betaOverlay.schritt(t); });
     betaOverlay.fortschritt(0.9); betaOverlay.schritt('Datum wird in die Übersicht eingetragen …');
     const spalte = nr === 1 ? 'V' : (nr === 2 ? 'X' : '');
     if(spalte) await betaUebersichtDatumSetzen(token, ziel, e.renu, spalte, morgen, betaFrage);
-    else warnungen.push('Für die ' + nr + '. Mahnung gibt es keine Spalte in der Übersicht – Datum bitte von Hand eintragen.');
-    return await betaDokumentFertig(nr + '. Mahnung erstellt', { renu: e.renu, name, ziel, typ: 'M' + nr, pdfBlob, pdfItemId: pdfItem && pdfItem.id }, warnungen);
+    else warnungen.push('Für die ' + nr + '. Erinnerung gibt es keine Spalte in der Übersicht – Datum bitte von Hand eintragen.');
+    return await betaDokumentFertig(nr + '. Erinnerung erstellt', { renu: e.renu, name, ziel, typ: 'M' + nr, pdfBlob, pdfItemId: pdfItem && pdfItem.id }, warnungen);
   }catch(err){
-    await betaOverlay.ergebnis('Mahnung nicht erstellt', '✗ ' + htmlEsc(err.message || String(err)));
+    await betaOverlay.ergebnis('Erinnerung nicht erstellt', '✗ ' + htmlEsc(err.message || String(err)));
     betaOverlay.schliessen();
     return false;
   }
@@ -6876,6 +6959,58 @@ async function betaDokumentFertig(titel, e, hinweise){
   }
   betaOverlay.schliessen();
   return true;
+}
+
+// ---------- Zahlung: bezahlt am / offen seit (Spalte S "Zahlung erhalten") ----------
+// Verzug beginnt (§ 286 Abs. 3 BGB) 30 Tage nach Zugang der Rechnung; gezaehlt
+// wird ab dem Datum in Spalte R (Brief abgeschickt bzw. Rechnungsdatum).
+function betaTageSeit(datumText){
+  const s = xlDatumSerial(datumText); if(!s) return NaN;
+  const h = xlDatumSerial(heuteText());
+  return h - s;
+}
+function betaZahlungInfo(e){
+  if(e.bezahlt) return '<div class="info zahlung bezahlt">&#10003; bezahlt am ' + htmlEsc(e.bezahlt) + '</div>';
+  const t = betaTageSeit(e.abgeschickt);
+  if(isNaN(t) || t < 0 || e.geplant) return '';
+  if(t > 30) return '<div class="info zahlung verzug">offen seit ' + t + ' Tagen · im Verzug seit ' + (t - 30) + (t - 30 === 1 ? ' Tag' : ' Tagen') + '</div>';
+  return '<div class="info zahlung offen">offen seit ' + t + (t === 1 ? ' Tag' : ' Tagen') + '</div>';
+}
+async function betaAktionBezahlt(eintraege){
+  const ziel = betaZiel();
+  const orig = eintraege.filter(e=> e.typ === 'ORIG');
+  if(!orig.length){ await betaOverlay.meldung('Bitte die Rechnung selbst auswählen (nicht Erinnerung oder 2. Adresse).'); return false; }
+  const alleBezahlt = orig.every(e=> e.bezahlt);
+  const heute = heuteIso();
+  const akt = await betaOverlay.ergebnis(alleBezahlt ? 'Zahlung' : 'Als bezahlt markieren',
+    (orig.length === 1 ? htmlEsc(orig[0].name) + ' · Nr. ' + htmlEsc(orig[0].renu) : orig.length + ' Rechnungen') +
+    '<div class="beta-form"><label>Zahlung erhalten am<input type="date" id="betaBezahltAm" max="' + heute + '" value="' + heute + '"></label></div>' +
+    '<div class="beta-erg-klein" style="margin-top:6px;">Wird in der Übersicht in Spalte S („Zahlung erhalten“) eingetragen.</div>',
+    [{ label:'Abbrechen', akt:'nein' }, ...(orig.some(e=> e.bezahlt) ? [{ label:'Zahlung entfernen', akt:'weg' }] : []), { label:'Speichern', akt:'ja', primaer:true }]);
+  const am = (document.getElementById('betaBezahltAm') || {}).value || '';
+  if(akt === 'nein'){ betaOverlay.schliessen(); return false; }
+  if(akt === 'ja' && (!am || am > heute)){ await betaOverlay.meldung('Bitte ein Datum bis heute wählen.'); return false; }
+  betaOverlay.zeigen(akt === 'weg' ? 'Zahlung wird entfernt' : 'Zahlung wird eingetragen'); betaOverlay.fortschritt(null);
+  try{
+    const token = await msGraphTokenHolen();
+    if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+    const ue = await uebersichtLadenRepariert(token, ziel, betaFrage);
+    const ana = uebersichtAuswerten(ue);
+    const sid = await xlSitzung(token, ue.basis);
+    try{
+      const schutz = await blattSchutzAufheben(token, ue, sid);
+      try{
+        for(const e of orig){
+          const z = ana.nachRenu.get(e.renu); if(!z) continue;
+          if(akt === 'weg') await gx(token, 'PATCH', zelle(ue, 'S' + z.nr), { values: [['']] }, sid);
+          else await gx(token, 'PATCH', zelle(ue, 'S' + z.nr), { values: [[xlDatumSerial(isoDe(am))]], numberFormat: [[XL_FORMAT_DATUM]] }, sid);
+        }
+      } finally { await blattSchutzWiederherstellen(token, ue, schutz, sid); }
+    } finally { await xlSitzungEnde(token, ue.basis, sid); }
+    betaOverlay.schliessen();
+    appToastAnzeigen(akt === 'weg' ? 'Zahlung entfernt.' : (orig.length === 1 ? 'Als bezahlt eingetragen.' : orig.length + ' als bezahlt eingetragen.'), 2200);
+    return true;
+  }catch(err){ await betaOverlay.ergebnis('Nicht eingetragen', '✗ ' + htmlEsc(err.message || String(err))); betaOverlay.schliessen(); return false; }
 }
 
 // Versendet-Symbol (wie die anderen Symbole der Liste als Farb-Emoji)
@@ -7028,7 +7163,7 @@ async function betaAktionLoeschen(eintraege){
   let mitZeile = false;
   if(orig.length){
     const akt = await betaOverlay.ergebnis('Endgültig löschen?', htmlEsc('Die erzeugten Dokumente (Word + PDF) wirklich löschen?\n\n' + liste).replace(/\n/g, '<br>') +
-      (orig.length < eintraege.length ? '<br><br><span class="beta-erg-klein">Für Mahnungen/2. Adresse gibt es keine eigene Zeile – dort werden nur die Dateien gelöscht.</span>' : ''),
+      (orig.length < eintraege.length ? '<br><br><span class="beta-erg-klein">Für Erinnerungen/2. Adresse gibt es keine eigene Zeile – dort werden nur die Dateien gelöscht.</span>' : ''),
       [{ label:'Abbrechen', akt:'nein' }, { label:'Nur Dateien', akt:'dateien' }, { label:'Dateien + Zeile', akt:'zeile', primaer:true }]);
     if(akt === 'nein'){ betaOverlay.schliessen(); return false; }
     mitZeile = akt === 'zeile';
@@ -7162,16 +7297,18 @@ function betaEintraegeBauen(c){
     const betrag = typeof v[15] === 'number' ? v[15].toFixed(2).replace('.', ',') : t(v[15]);
     const datei = (n)=> ({ pdf: dateien.get((n + '.pdf').toLowerCase()) || null, docx: dateien.get((n + '.docx').toLowerCase()) || null });
     eintraege.push({ key: z.nr + '|ORIG', typ: 'ORIG', z, renu, art, name, datum, sort, betrag, datei: basis || ('Zeile ' + z.nr), ...(basis ? datei(basis) : { pdf:null, docx:null }),
-                     versendet: lxpFlagVorhanden(u, 'LXP:1'), geplant: lxpFlagVorhanden(u, 'LXP:1') ? versandGeplant(u, 'ORIG') : null });
+                     versendet: lxpFlagVorhanden(u, 'LXP:1'), geplant: lxpFlagVorhanden(u, 'LXP:1') ? versandGeplant(u, 'ORIG') : null,
+                     bezahlt: xlDatumText(v[18]), abgeschickt: xlDatumText(v[17]) });
     if(!basis) continue;
     if(art === 'ls'){
       const d2 = datei(basis + '_2. Adresse');
       if(d2.pdf || d2.docx) eintraege.push({ key: z.nr + '|2A', typ: '2A', z, renu, art, name: name + ' (2. Adresse)', datum, sort, betrag:'', datei: basis + '_2. Adresse', ...d2, versendet: lxpFlagVorhanden(u, 'LXP:2A'), geplant: lxpFlagVorhanden(u, 'LXP:2A') ? versandGeplant(u, '2A') : null, unter: true });
     }
     for(let n = 1; n < 20; n++){
-      const dm = datei(basis + '_Mahnung ' + n);
+      let mname = basis + '_Erinnerung ' + n, dm = datei(mname);
+      if(!dm.pdf && !dm.docx){ mname = basis + '_Mahnung ' + n; dm = datei(mname); }
       if(!dm.pdf && !dm.docx) break;
-      eintraege.push({ key: z.nr + '|M' + n, typ: 'M' + n, z, renu, art, name: name + ' (' + n + '. Mahnung)', datum, sort, betrag:'', datei: basis + '_Mahnung ' + n, ...dm, versendet: lxpFlagVorhanden(u, 'LXP:M' + n), geplant: lxpFlagVorhanden(u, 'LXP:M' + n) ? versandGeplant(u, 'M' + n) : null, unter: true });
+      eintraege.push({ key: z.nr + '|M' + n, typ: 'M' + n, z, renu, art, name: name + ' (' + n + '. Erinnerung)', datum, sort, betrag:'', datei: mname, ...dm, versendet: lxpFlagVorhanden(u, 'LXP:M' + n), geplant: lxpFlagVorhanden(u, 'LXP:M' + n) ? versandGeplant(u, 'M' + n) : null, unter: true });
     }
   }
   // neueste zuerst (Datum, dann Zeile), Unterpositionen bleiben unter ihrer Rechnung
@@ -7292,6 +7429,7 @@ function betaGesamtZeichnen(suchtext, ziel){
           <div class="name">${e.unter ? '' : '<span class="badge-neu ' + e.art + '">' + (e.art === 'ls' ? 'L' : 'P') + '</span>'}${htmlEsc(e.name)}</div>
           <div class="info">${e.unter ? htmlEsc(e.datei) : (htmlEsc(e.datum) + (e.betrag ? ' &middot; ' + htmlEsc(e.betrag) + ' €' : '') + (e.renu ? ' &middot; Nr. ' + htmlEsc(e.renu) : ' &middot; ohne Rechnungsnummer'))}</div>
           ${e.geplant ? '<div class="info termin-text">Versand geplant am ' + htmlEsc(isoDe(e.geplant.datum)) + (e.geplant.modus === 'test' ? ' (Testmodus)' : '') + '</div>' : ''}
+          ${!e.unter ? betaZahlungInfo(e) : ''}
         </div>
         <div class="fall-icons">${e.geplant ? '<span class="badge-termin" data-akt="termin" title="Versand geplant – antippen zum Ändern">&#9203;</span>' : (e.versendet ? BRIEF_SYMBOL : '')}${symbol}</div>
       </div></div>`;
@@ -7414,12 +7552,13 @@ function betaAktionsleisteAktualisieren(nachKey, ziel){
     termin: gewaehlt.some(e=> !e.versendet),
     adresse: einOrig && orig[0].art === 'ls' && !!orig[0].docx,
     mahnung: einOrig && !!orig[0].docx,
+    bezahlt: orig.length > 0,
     frei: gewaehlt.some(e=> e.versendet),
     weg: true
   };
   const k = (id, sym, label)=> `<button type="button" data-a="${id}" ${kann[id] ? '' : 'disabled'}><span class="sym">${sym}</span><span>${label}</span></button>`;
   leiste.innerHTML = `<div class="gesamt-aktionen-kopf"><span>${gewaehlt.length} ausgewählt</span><button type="button" data-a="leer">Auswahl aufheben</button></div>
-    <div class="gesamt-aktionen-knoepfe">${k('senden', '&#9993;', 'Senden')}${k('termin', '&#8987;', 'Termin')}${k('adresse', '&#128205;', '2. Adresse')}${k('mahnung', '&#128231;', 'Mahnung')}${k('frei', '&#128275;', 'Freigeben')}${k('weg', '&#128465;', 'Löschen')}</div>`;
+    <div class="gesamt-aktionen-knoepfe">${k('senden', '&#9993;', 'Senden')}${k('termin', '&#8987;', 'Termin')}${k('adresse', '&#128205;', '2. Adresse')}${k('mahnung', '&#128231;', 'Erinnerung')}${k('bezahlt', '&#128182;', 'Bezahlt')}${k('frei', '&#128275;', 'Freigeben')}${k('weg', '&#128465;', 'Löschen')}</div>`;
   leiste.classList.add('aktiv');
   const fertig = async (veraendert)=>{ if(veraendert){ betaAuswahl.clear(); await ansichtRechnungenGesamt(true); } };
   leiste.querySelector('[data-a="leer"]').onclick = ()=>{ betaAuswahl.clear(); betaGesamtZeichnen(document.getElementById('txtGesamtSuche').value, ziel); };
@@ -7428,6 +7567,7 @@ function betaAktionsleisteAktualisieren(nachKey, ziel){
   leiste.querySelector('[data-a="adresse"]').onclick = async ()=> fertig(await betaZweiteAdresseErstellen(orig[0]));
   leiste.querySelector('[data-a="mahnung"]').onclick = async ()=> fertig(await betaMahnungErstellen(orig[0]));
   leiste.querySelector('[data-a="frei"]').onclick = async ()=> fertig(await betaAktionFreigeben(gewaehlt));
+  leiste.querySelector('[data-a="bezahlt"]').onclick = async ()=> fertig(await betaAktionBezahlt(gewaehlt));
   leiste.querySelector('[data-a="weg"]').onclick = async ()=> fertig(await betaAktionLoeschen(gewaehlt));
 }
 
@@ -7561,8 +7701,8 @@ function betaMaskeErweitern(art, korrekturIdx, vorbelegt, holen, geaendert){
 const GOAE_PW = (typeof GOAE_PUNKTWERT !== 'undefined') ? GOAE_PUNKTWERT : 0.0582873;
 // Rahmen: Schwellenwert, Hoechstsatz, Schnellwahl
 const GOAE_RAHMEN = {
-  n: { schwelle: 2.3,  max: 3.5, stufen: [1, 1.8, 2.3, 2.5, 3, 3.5] },
-  t: { schwelle: 1.8,  max: 2.5, stufen: [1, 1.3, 1.8, 2, 2.5] },
+  n: { schwelle: 2.3,  max: 3.5, stufen: [1, 2.3, 3.5] },
+  t: { schwelle: 1.8,  max: 2.5, stufen: [1, 1.8, 2.5] },
   l: { schwelle: 1.15, max: 1.3, stufen: [1, 1.15, 1.3] },
   f: { schwelle: 1,    max: 1,   stufen: [1] }
 };
@@ -7665,6 +7805,36 @@ function betaAnzahlVon(details, k){
   return n >= 2 ? Math.min(n, 99) : 1;
 }
 
+// ---------- Begruendung immer Pflicht (unabhaengig vom Faktor) ----------
+// 56 (Verweilen, je angefangene halbe Stunde): Uhrzeit "von bis" muss in
+// der Rechnung stehen; die Anzahl ergibt sich daraus.
+const GOAE_BEGR_IMMER = { '56': 'zeit' };
+function betaBegrImmer(p){ return !!(p && GOAE_BEGR_IMMER[betaPosNr(p)]); }
+function betaZeitAusBegr(t){
+  const m = /(\d{1,2})[:.](\d{2})\s*(?:Uhr)?\s*(?:bis|-|–)\s*(\d{1,2})[:.](\d{2})/i.exec(String(t || ''));
+  return m ? { von: zz2(+m[1]) + ':' + m[2], bis: zz2(+m[3]) + ':' + m[4] } : null;
+}
+function betaZeitMinuten(von, bis){
+  const a = /^(\d{1,2}):(\d{2})$/.exec(von || ''), b = /^(\d{1,2}):(\d{2})$/.exec(bis || '');
+  if(!a || !b) return NaN;
+  let d = (+b[1] * 60 + +b[2]) - (+a[1] * 60 + +a[2]);
+  if(d <= 0) d += 24 * 60;
+  return d;
+}
+// ---------- Ziffer 7: Organsystem (wie am PC) ----------
+const GOAE_VARIANTEN = { '7': ['Brustorganen', 'Bauchorganen', 'Stütz- und Bewegungsorganen', 'Hautorgan'] };
+function betaVarianten(p){ return (p && !p.eigene && GOAE_VARIANTEN[betaPosNr(p)]) || null; }
+function betaVarianteErsetzen(text, liste, neu){
+  let t = String(text || '');
+  for(const v of liste){ if(t.indexOf(v) >= 0) return t.replace(v, neu); }
+  return t;
+}
+function betaBezMitVariante(p, det){
+  const liste = betaVarianten(p);
+  const v = liste && det && det.varianten ? det.varianten[betaPosSchluessel(p)] : '';
+  return v ? betaVarianteErsetzen(p.bez, liste, v) : p.bez;
+}
+
 // ---------- Begruendungs-Vorlagen (zuletzt verwendet) ----------
 // Liegen zusaetzlich in eigene_positionen.json (Feld "begruendungen"),
 // Schluessel "art:ZIFFER" -> {text, am}
@@ -7730,6 +7900,9 @@ function betaDetailsVervollstaendigen(art, auswahl, details, alle, legacy){
   const gewaehlt = new Set(liste.map(goaeNorm));
   d.abgewaehlt = (alt.abgewaehlt || []).map(goaeNorm).filter(z=> z && !gewaehlt.has(z));
   d.behalten = (alt.behalten || []).map(goaeNorm).filter(z=> z && gewaehlt.has(z));
+  const varianten = {};
+  Object.keys(alt.varianten || {}).forEach(k=>{ if(gewaehlt.has(goaeNorm(k)) && alt.varianten[k]) varianten[goaeNorm(k)] = alt.varianten[k]; });
+  if(Object.keys(varianten).length) d.varianten = varianten;
   return d;
 }
 function betaEffektivBetrag(art, p, details){
@@ -7747,7 +7920,7 @@ function betaBegruendungFehlt(art, auswahl, details, alle){
   Object.keys(d.faktoren).forEach(k=>{
     const p = alle.find(x=> betaPosSchluessel(x) === k);
     const r = p && betaPosRahmen(p);
-    if(r && d.faktoren[k] > r.schwelle + 1e-9 && !String(d.begruendungen[k] || '').trim()) fehlt.push({ p, faktor: d.faktoren[k] });
+    if(r && (d.faktoren[k] > r.schwelle + 1e-9 || betaBegrImmer(p)) && !String(d.begruendungen[k] || '').trim()) fehlt.push({ p, faktor: d.faktoren[k] });
   });
   return fehlt;
 }
@@ -7767,7 +7940,7 @@ function betaDetailsFuerSpeichern(art, auswahl){
 // leere Objekte fuer aeltere Faelle ohne Details.
 function betaDetailsFuerGenerator(f){
   const det = f.positionsDetails;
-  if(!det) return { posDetails: {}, begruendungen: undefined, anzahl: {} };
+  if(!det) return { posDetails: {}, begruendungen: undefined, anzahl: {}, varianten: {} };
   const alle = betaKatalogFlach(f.art);
   const posDetails = {}, begruendungen = {}, anzahl = {};
   Object.keys(det.anzahl || {}).forEach(k=>{ const n = betaAnzahlVon(det, k); if(n > 1) anzahl[goaeNorm(k)] = n; });
@@ -7786,9 +7959,11 @@ function betaDetailsFuerGenerator(f){
     const r = p && betaPosRahmen(p);
     const fak = det.faktoren && det.faktoren[k] !== undefined ? betaFaktorLesen(det.faktoren[k]) : (p ? betaPosStandardFaktor(p) : NaN);
     const t = String(det.begruendungen[k] || '').trim();
-    begruendungen[k] = (r && !isNaN(fak) && fak > r.schwelle + 1e-9) ? t : '';
+    begruendungen[k] = (r && !isNaN(fak) && (fak > r.schwelle + 1e-9 || betaBegrImmer(p))) ? t : '';
   });
-  return { posDetails, begruendungen, anzahl };
+  const varianten = {};
+  Object.keys(det.varianten || {}).forEach(k=>{ if(det.varianten[k]) varianten[goaeNorm(k)] = det.varianten[k]; });
+  return { posDetails, begruendungen, anzahl, varianten };
 }
 // eigene Positionen des Falls mit dem Faktor aus den Details
 function betaEigeneMitDetails(f, eigene){
@@ -7824,6 +7999,8 @@ function betaUSegmente(f){
   }
   const anz = Object.keys(gen.anzahl || {}).map(k=> betaUKodieren(k) + '=' + gen.anzahl[k]);
   if(anz.length) teile.push('ANZ:' + anz.join(';'));
+  const vari = Object.keys(gen.varianten || {}).map(k=> betaUKodieren(k) + '=' + betaUKodieren(gen.varianten[k]));
+  if(vari.length) teile.push('VAR:' + vari.join(';'));
   const abw = ((f.positionsDetails || {}).abgewaehlt || []).map(goaeNorm).filter(Boolean);
   if(abw.length) teile.push('ABW:' + abw.map(betaUKodieren).join(','));
   let eigene = [];
@@ -7839,12 +8016,13 @@ function betaUSegmente(f){
 function betaUSegmenteLesen(u){
   const teil = (key)=>{ const m = new RegExp('(?:^|\\|)\\s*' + key + ':([^|]*)', 'i').exec(u); return m ? m[1].trim() : null; };
   const eintraege = (s)=> (s || '').split(';').map(x=> x.trim()).filter(Boolean).map(x=>{ const i = x.indexOf('='); return i < 0 ? [x, ''] : [x.slice(0, i), x.slice(i + 1)]; });
-  const fak = teil('FAK'), beg = teil('BEG'), eig = teil('EIG'), anz = teil('ANZ'), abw = teil('ABW');
+  const fak = teil('FAK'), beg = teil('BEG'), eig = teil('EIG'), anz = teil('ANZ'), abw = teil('ABW'), vari = teil('VAR');
   const out = { details: null, eigene: {} };
-  if(fak !== null || beg !== null || anz !== null || abw !== null){
+  if(fak !== null || beg !== null || anz !== null || abw !== null || vari !== null){
     out.details = { faktoren: {}, begruendungen: beg !== null ? {} : undefined };
     eintraege(anz).forEach(([k, v])=>{ const n = Math.floor(Number(v)); if(n > 1) (out.details.anzahl = out.details.anzahl || {})[goaeNorm(betaUDekodieren(k))] = n; });
     if(abw) out.details.abgewaehlt = abw.split(',').map(x=> goaeNorm(betaUDekodieren(x))).filter(Boolean);
+    eintraege(vari).forEach(([k, v])=>{ (out.details.varianten = out.details.varianten || {})[goaeNorm(betaUDekodieren(k))] = betaUDekodieren(v); });
     eintraege(fak).forEach(([k, v])=>{ const f = betaFaktorLesen(v.split('/')[0]); if(!isNaN(f)) out.details.faktoren[goaeNorm(betaUDekodieren(k))] = f; });
     if(beg !== null) eintraege(beg).forEach(([k, v])=>{ out.details.begruendungen[goaeNorm(betaUDekodieren(k))] = betaUDekodieren(v).split('\n').join(' ').trim(); });
   }
@@ -7864,67 +8042,123 @@ function betaUSegmenteLesen(u){
 }
 
 // ---------- Dialog: Faktor und Begruendung ----------
-async function betaFaktorDialog(art, p, faktor, begruendung, anzahl){
+async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante){
   const r = betaPosRahmen(p);
   const regel = betaPosAnzahlRegel(p);
+  const zeitModus = GOAE_BEGR_IMMER[betaPosNr(p)] === 'zeit';
+  const varListe = betaVarianten(p);
   const einfach = betaPosEinfachsatz(p);
   const pk = betaPosPunkte(p);
   const nr = p.anzeigeZiffer !== undefined ? p.anzeigeZiffer : p.ziffer;
-  const vorlage = betaBegrVorlage(art, betaPosSchluessel(p));
-  let w = { faktor: betaFaktorText(faktor), beg: begruendung || '', anzahl: String(anzahl > 1 ? anzahl : 1) }, fehler = '';
+  const schl = betaPosSchluessel(p);
+  const vorlage = betaBegrVorlage(art, schl);
+  const zeit0 = betaZeitAusBegr(begruendung) || { von: '', bis: '' };
+  let w = { faktor: Number(faktor), beg: begruendung || '', anzahl: String(anzahl > 1 ? anzahl : 1), von: zeit0.von, bis: zeit0.bis,
+            variante: variante || (varListe ? (varListe.find(v=> String(p.bez).indexOf(v) >= 0) || varListe[0]) : '') }, fehler = '';
+  // Begruendungstext bei 56: "Verweilen von 10:15 bis 11:20 Uhr" + Zusatz
+  const zeitText = (von, bis)=> 'Verweilen von ' + von + ' bis ' + bis + ' Uhr';
+  const ZEIT_RE = /^Verweilen von \S+ bis \S+ Uhr(?:[;,.]\s*)?/;
   for(;;){
+    const stufen = Array.from(new Set([...r.stufen, ...betaEigeneFaktoren().filter(f=> f >= 1 && f <= r.max + 1e-9), w.faktor].filter(f=> !isNaN(f) && f >= 1)))
+      .sort((a, b)=> a - b);
+    const eigen = new Set(betaEigeneFaktoren());
+    const katalog = betaBegrKatalog(art, schl).filter(x=> x.text !== w.beg).slice(0, 12);
     const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
-      '<div class="beta-erg-klein">' + htmlEsc(p.eigene ? p.bez : String(p.bez).replace(/<[^>]+>/g, '')) + '</div>' +
+      '<div class="beta-erg-klein">' + htmlEsc(p.eigene ? (p.eigeneBez || p.bez) : String(p.bez).replace(/<[^>]+>/g, '')) + '</div>' +
       '<div class="beta-erg-klein" style="margin-top:4px;">Einfachsatz ' + betaEuro(einfach) + (pk ? ' (' + pk + ' Punkte)' : '') +
       ' · Schwellenwert ' + betaFaktorText(r.schwelle) + ' · Höchstsatz ' + betaFaktorText(r.max) + '</div>' +
       '<div class="beta-form">' +
-      (regel ? '<label>Anzahl<span class="anzahl-reihe"><button type="button" data-d="-1">&minus;</button><input id="fdAnzahl" value="' + htmlEsc(w.anzahl) + '" inputmode="numeric" autocomplete="off"><button type="button" data-d="1">+</button></span></label>' +
-        '<div class="beta-erg-klein">' + (regel.je ? 'Laut GOÄ „' + htmlEsc(regel.je) + '“ – mehrfach berechnungsfähig.' : 'Nur wenn die Leistung tatsächlich mehrfach erbracht wurde (z.B. zwei Injektionen).') + ' Steht dann entsprechend oft in der Rechnung.</div>' : '') +
-      '<label>Faktor<input id="fdFaktor" value="' + htmlEsc(w.faktor) + '" inputmode="decimal" autocomplete="off"></label>' +
-      '<div class="faktor-stufen">' + r.stufen.map(s=> '<button type="button" data-f="' + s + '">' + betaFaktorText(s) + '</button>').join('') + '</div>' +
+      (varListe ? '<label>Untersuchung von<select id="fdVariante">' + varListe.map(v=> '<option' + (v === w.variante ? ' selected' : '') + '>' + htmlEsc(v) + '</option>').join('') + '</select></label>' : '') +
+      (zeitModus ? '<div class="zeit-reihe"><label>von<input type="time" id="fdVon" value="' + htmlEsc(w.von) + '"></label><label>bis<input type="time" id="fdBis" value="' + htmlEsc(w.bis) + '"></label></div>' +
+        '<div class="beta-erg-klein" id="fdZeitInfo"></div>' : '') +
+      (regel ? '<label>Anzahl<span class="anzahl-reihe"><button type="button" data-d="-1"' + (zeitModus ? ' disabled' : '') + '>&minus;</button><input id="fdAnzahl" value="' + htmlEsc(w.anzahl) + '" inputmode="numeric" autocomplete="off"' + (zeitModus ? ' readonly' : '') + '><button type="button" data-d="1"' + (zeitModus ? ' disabled' : '') + '>+</button></span></label>' +
+        '<div class="beta-erg-klein">' + (zeitModus ? 'Ergibt sich aus der Uhrzeit (je angefangene halbe Stunde).' : (regel.je ? 'Laut GOÄ „' + htmlEsc(regel.je) + '“ – mehrfach berechnungsfähig.' : 'Nur wenn die Leistung tatsächlich mehrfach erbracht wurde (z.B. zwei Injektionen).') + ' Steht dann entsprechend oft in der Rechnung.') + '</div>' : '') +
+      '<label>Faktor</label><input type="hidden" id="fdFaktor" value="' + htmlEsc(betaFaktorText(w.faktor)) + '">' +
+      '<div class="faktor-stufen">' + stufen.map(s=> '<button type="button" data-f="' + s + '"' + (eigen.has(s) && !r.stufen.includes(s) ? ' class="eigen"' : '') + '>' + betaFaktorText(s) +
+        (eigen.has(s) && !r.stufen.includes(s) ? ' <span class="weg" data-weg="' + s + '" title="eigenen Faktor entfernen">&times;</span>' : '') + '</button>').join('') +
+        '<button type="button" id="fdFaktorNeu" class="neu">+ eigener</button></div>' +
+      '<div class="faktor-eigen" id="fdEigenZeile" hidden><input id="fdEigenWert" inputmode="decimal" placeholder="z.B. 2,8" autocomplete="off"><button type="button" id="fdEigenOk">Übernehmen</button></div>' +
       '<div class="faktor-betrag" id="fdBetrag"></div>' +
       '<label id="fdBegLabel">Begründung<textarea id="fdBeg" rows="3">' + htmlEsc(w.beg) + '</textarea></label>' +
-      (vorlage && vorlage.text && vorlage.text !== w.beg ? '<button type="button" class="faktor-vorlage" id="fdVorlage">Zuletzt verwendet einsetzen: „' + htmlEsc(vorlage.text.length > 60 ? vorlage.text.slice(0, 60) + '…' : vorlage.text) + '“</button>' : '') +
+      (katalog.length ? '<div class="begr-katalog"><div class="beta-erg-klein">Frühere Begründungen – antippen zum Einsetzen:</div>' +
+        katalog.map((x, i)=> '<div class="begr-eintrag"><button type="button" class="begr-text" data-i="' + i + '">' + htmlEsc(x.text) + '</button><button type="button" class="begr-weg" data-i="' + i + '" title="aus der Liste entfernen">&times;</button></div>').join('') + '</div>' : '') +
       '</div><div class="beta-erg-klein" id="fdHinweis"></div>';
     const warte = betaOverlay.ergebnis('Ziffer ' + nr, html, [{ label:'Abbrechen', akt:'nein' }, { label:'Übernehmen', akt:'ja', primaer:true }]);
-    const fEl = document.getElementById('fdFaktor'), bEl = document.getElementById('fdBeg'), aEl = document.getElementById('fdAnzahl');
+    const $ = (id)=> document.getElementById(id);
+    const fEl = $('fdFaktor'), bEl = $('fdBeg'), aEl = $('fdAnzahl'), vonEl = $('fdVon'), bisEl = $('fdBis');
     let warPflicht = null;
     const anzahlJetzt = ()=>{ const n = aEl ? Math.floor(Number(aEl.value)) : 1; return n >= 1 && n <= 99 ? n : NaN; };
+    const zeitAktual = ()=>{
+      if(!zeitModus) return;
+      const min = betaZeitMinuten(vonEl.value, bisEl.value);
+      const info = $('fdZeitInfo');
+      if(isNaN(min)){ info.textContent = 'Uhrzeit von–bis eintragen (Pflicht, steht in der Rechnung).'; return; }
+      const n = Math.max(1, Math.ceil(min / 30));
+      info.textContent = min + ' Minuten = ' + n + (n === 1 ? ' angefangene halbe Stunde' : ' angefangene halbe Stunden');
+      if(aEl) aEl.value = String(n);
+      const rest = bEl.value.replace(ZEIT_RE, '').trim();
+      bEl.value = zeitText(vonEl.value, bisEl.value) + (rest ? '; ' + rest : '');
+    };
     const aktual = ()=>{
       const f = betaFaktorLesen(fEl.value);
       const ok = !isNaN(f) && f >= 1 && f <= r.max + 1e-9;
       const n = anzahlJetzt();
-      document.getElementById('fdBetrag').textContent = !ok ? 'Faktor zwischen 1 und ' + betaFaktorText(r.max)
+      $('fdBetrag').textContent = !ok ? 'Faktor zwischen 1 und ' + betaFaktorText(r.max)
         : isNaN(n) ? 'Anzahl zwischen 1 und 99'
         : n > 1 ? 'Betrag: ' + n + ' × ' + betaEuro(betaPosBetrag(p, f)) + ' = ' + betaEuro(betaRund2(betaPosBetrag(p, f) * n)) : 'Betrag: ' + betaEuro(betaPosBetrag(p, f));
-      const pflicht = ok && f > r.schwelle + 1e-9;
+      const pflicht = ok && (f > r.schwelle + 1e-9 || zeitModus);
       // ueber den Schwellenwert gegangen und noch leer -> Vorschlag einsetzen
       const vorschlag = (vorlage && vorlage.text) || String(p.begruendung || '');
-      if(pflicht && warPflicht === false && !bEl.value.trim() && vorschlag){ bEl.value = vorschlag; if(vEl) vEl.remove(); }
+      if(pflicht && !zeitModus && warPflicht === false && !bEl.value.trim() && vorschlag) bEl.value = vorschlag;
       warPflicht = pflicht;
-      document.getElementById('fdBegLabel').firstChild.textContent = pflicht ? 'Begründung (Pflicht über ' + betaFaktorText(r.schwelle) + ')' : 'Begründung (wird erst über ' + betaFaktorText(r.schwelle) + ' gedruckt – bleibt als Vorlage gespeichert)';
+      $('fdBegLabel').firstChild.textContent = zeitModus ? 'Begründung (Pflicht, mit Uhrzeit)' : pflicht ? 'Begründung (Pflicht über ' + betaFaktorText(r.schwelle) + ')' : 'Begründung (wird erst über ' + betaFaktorText(r.schwelle) + ' gedruckt – bleibt als Vorlage gespeichert)';
       bEl.classList.toggle('pflichtfeld-fehlt', pflicht && !bEl.value.trim());
-      document.querySelectorAll('.faktor-stufen button').forEach(b=> b.classList.toggle('aktiv', ok && Math.abs(Number(b.dataset.f) - f) < 1e-9));
+      document.querySelectorAll('.faktor-stufen button[data-f]').forEach(b=> b.classList.toggle('aktiv', ok && Math.abs(Number(b.dataset.f) - f) < 1e-9));
     };
-    const vEl = document.getElementById('fdVorlage');
-    fEl.addEventListener('input', aktual); bEl.addEventListener('input', aktual);
-    if(aEl){
+    bEl.addEventListener('input', aktual);
+    if(vonEl){ vonEl.addEventListener('input', ()=>{ zeitAktual(); aktual(); }); bisEl.addEventListener('input', ()=>{ zeitAktual(); aktual(); }); }
+    if(aEl && !zeitModus){
       aEl.addEventListener('input', aktual);
       document.querySelectorAll('.anzahl-reihe button').forEach(b=> b.onclick = ()=>{ const n = anzahlJetzt(); aEl.value = String(Math.max(1, Math.min(99, (isNaN(n) ? 1 : n) + Number(b.dataset.d)))); aktual(); });
     }
-    document.querySelectorAll('.faktor-stufen button').forEach(b=> b.onclick = ()=>{ fEl.value = betaFaktorText(b.dataset.f); aktual(); });
-    if(vEl) vEl.onclick = ()=>{ bEl.value = vorlage.text; vEl.remove(); aktual(); };
+    const merken = ()=> ({ faktor: betaFaktorLesen(fEl.value), beg: bEl.value, anzahl: aEl ? aEl.value : '1', von: vonEl ? vonEl.value : '', bis: bisEl ? bisEl.value : '', variante: $('fdVariante') ? $('fdVariante').value : '' });
+    let neuAufbauen = false;
+    document.querySelectorAll('.faktor-stufen button[data-f]').forEach(b=> b.onclick = (ev)=>{
+      const weg = ev.target.closest('[data-weg]');
+      if(weg){ ev.stopPropagation(); betaEigenerFaktorAendern(Number(weg.dataset.weg), true); w = merken(); if(Math.abs(w.faktor - Number(weg.dataset.weg)) < 1e-9) w.faktor = betaPosStandardFaktor(p); neuAufbauen = true; betaOverlay.loesen && betaOverlay.loesen('neu'); return; }
+      fEl.value = betaFaktorText(b.dataset.f); aktual();
+    });
+    $('fdFaktorNeu').onclick = ()=>{ $('fdEigenZeile').hidden = false; $('fdEigenWert').focus(); };
+    $('fdEigenOk').onclick = ()=>{
+      const f = betaFaktorLesen($('fdEigenWert').value);
+      if(isNaN(f) || f < 1 || f > r.max + 1e-9){ $('fdHinweis').textContent = 'Eigener Faktor: zwischen 1 und ' + betaFaktorText(r.max) + '.'; return; }
+      betaEigenerFaktorAendern(f, false);
+      w = merken(); w.faktor = f; neuAufbauen = true; betaOverlay.loesen && betaOverlay.loesen('neu');
+    };
+    document.querySelectorAll('.begr-text').forEach(b=> b.onclick = ()=>{
+      const t = katalog[+b.dataset.i].text;
+      if(zeitModus && vonEl.value && bisEl.value) bEl.value = zeitText(vonEl.value, bisEl.value) + '; ' + t.replace(ZEIT_RE, '');
+      else bEl.value = t;
+      aktual();
+    });
+    document.querySelectorAll('.begr-weg').forEach(b=> b.onclick = ()=>{
+      betaBegrKatalogAendern(art, [{ schl, text: katalog[+b.dataset.i].text, weg: true }]);
+      b.closest('.begr-eintrag').remove();
+    });
+    if(zeitModus) zeitAktual();
     aktual();
     const akt = await warte;
-    w = { faktor: fEl.value.trim(), beg: bEl.value.replace(/\s+/g, ' ').trim(), anzahl: aEl ? aEl.value.trim() : '1' };
+    if(akt === 'neu' || neuAufbauen){ fehler = ''; continue; }
+    w = { ...merken(), beg: bEl.value.replace(/\s+/g, ' ').trim() };
     if(akt !== 'ja'){ betaOverlay.schliessen(); return null; }
-    const f = betaFaktorLesen(w.faktor);
+    const f = w.faktor;
     const n = anzahlJetzt();
-    if(isNaN(n)) fehler = 'Bitte eine Anzahl zwischen 1 und 99 eintragen.';
-    else if(isNaN(f) || f < 1) fehler = 'Bitte einen gültigen Faktor eintragen (z.B. 2,3).';
+    if(zeitModus && isNaN(betaZeitMinuten(w.von, w.bis))) fehler = 'Bitte die Uhrzeit von–bis eintragen – sie muss in der Rechnung stehen.';
+    else if(isNaN(n)) fehler = 'Bitte eine Anzahl zwischen 1 und 99 eintragen.';
+    else if(isNaN(f) || f < 1) fehler = 'Bitte einen Faktor wählen.';
     else if(f > r.max + 1e-9) fehler = 'Höchstens ' + betaFaktorText(r.max) + ' – darüber nur mit schriftlicher Honorarvereinbarung (§ 2 GOÄ).';
     else if(f > r.schwelle + 1e-9 && !w.beg) fehler = 'Über dem ' + betaFaktorText(r.schwelle) + '-fachen ist eine Begründung Pflicht (§ 12 Abs. 3 GOÄ).';
-    else { betaOverlay.schliessen(); return { faktor: f, begruendung: w.beg, anzahl: n }; }
+    else { betaOverlay.schliessen(); return { faktor: f, begruendung: w.beg, anzahl: n, variante: varListe ? w.variante : undefined }; }
   }
 }
 
@@ -7981,14 +8215,29 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   const reiseBez = reise.kmGerundet>0
     ? `${REISEENTSCHAEDIGUNG.bez} (${reise.basis.toFixed(2).replace('.',',')} &euro;) + Wegstrecke ${reise.kmGerundet} km &times; 0,26 &euro;/km (${reise.kmZeile.toFixed(2).replace('.',',')} &euro;)`
     : `${REISEENTSCHAEDIGUNG.bez} (zzgl. 0,26 &euro;/km Wegstrecke, sobald km bekannt)`;
-  const eEintrag = (katalog.grundleistung||[]).find(p=>p.ziffer==='E');
-  const grundOhneE = (katalog.grundleistung||[]).filter(p=>p.ziffer!=='E')
-    .map(p=> p.standard ? {...p, automatisch:true} : p);
+  // Gruppen: waehlbare Positionen (Grundpauschalen/Eigene, per Ziehen
+  // umsortierbar), Zeitzuschlaege (Familie A-D oder E-H je nach gewaehlter
+  // Leistung), Wegegeld (nur mit Besuch)
+  const AUTO_SCHL = (z)=> betaIstZuschlagsSchluessel(z) || /^W[TN]\d/.test(z) || z === 'REISE';
+  const fest = betaFestPositionen(art).map(p=> ({ ...betaEigenePositionAlsAuswahl(p), fest: true, gruppe: p.gruppe, familie: p.familie, manuell: p.manuell }));
+  const festVon = (id)=> fest.find(p=> p.ziffer === id);
+  const grundStd = [...(katalog.grundleistung||[]).filter(p=> p.ziffer !== 'E').map(p=> ({ ...p, automatisch: false })),
+                    ...fest.filter(p=> p.gruppe === 'grund')];
+  const geordnet = betaGruppenOrdnen(art, grundStd, betaEigene(art).map(betaEigenePositionAlsAuswahl));
+  const manuellJetzt = new Set(Array.from(ausgewaehlteZiffern || []).filter(z=> !AUTO_SCHL(z)));
+  const familie = betaZuschlagFamilie(art, manuellJetzt);
+  const besuch = betaBesuchDabei(art, manuellJetzt);
+  const zuschlagListe = art === 'ls' ? ZUSCHLAEGE_ZEIT
+    : familie === 'AD' ? ['EIGZA','EIGZB','EIGZC','EIGZD'].map(id=> ({ ...festVon(id), automatisch: true }))
+    : [{ ...festVon('EIGZE'), automatisch: false }, ...ZUSCHLAEGE_ZEIT];
   const gruppen = [
-    {titel:'Grundpauschalen', liste: grundOhneE, automatisch:false},
-    {titel:'Eigene Positionen', liste: betaEigene(art).map(betaEigenePositionAlsAuswahl), automatisch:false, eigene:true},
-    {titel:'Zeitzuschläge', liste: eEintrag ? [{...eEintrag, automatisch:false}, ...ZUSCHLAEGE_ZEIT] : ZUSCHLAEGE_ZEIT, automatisch:true},
-    {titel:'Wegegeld', liste: [...WEGEGELD_TAG, ...WEGEGELD_NACHT, {ziffer:'REISE', bez:reiseBez, betrag:reise.gesamt}], automatisch:true}
+    {titel:'Grundpauschalen', liste: geordnet.grund, automatisch:false, drag:'grund'},
+    // Leichenschau: keine eigenen Positionen (die moeglichen Ziffern sind alle da)
+    ...(art === 'ls' ? [] : [{titel:'Eigene Positionen', liste: geordnet.eigene, automatisch:false, eigene:true, drag:'eigene'}]),
+    {titel:'Zeitzuschläge', liste: zuschlagListe, automatisch:true,
+     hinweis: art === 'ls' ? '' : familie === 'AD' ? 'Beratung/Untersuchung ohne Besuch: A–D' : (familie === 'EH' ? 'mit Besuch: E–H' : '')},
+    {titel:'Wegegeld', liste: [...WEGEGELD_TAG, ...WEGEGELD_NACHT, {ziffer:'REISE', bez:reiseBez, betrag:reise.gesamt}], automatisch:true,
+     hinweis: besuch ? '' : 'nur zusammen mit einem Besuch'}
   ];
   const alle = [].concat(...gruppen.map(g=> g.liste));
   const posVon = (z)=> alle.find(p=> p.ziffer === z);
@@ -8005,22 +8254,30 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   const anzahlVon = (p)=> betaPosAnzahlRegel(p) ? betaAnzahlVon(det, betaPosSchluessel(p)) : 1;
   const betragVon = (p)=> betaPosFaktorEditierbar(p) ? betaRund2(betaPosBetrag(p, faktorVon(p)) * anzahlVon(p)) : Number(p.betrag);
 
+  const profile = betaProfile(art), profilId = betaProfilAktivId(art);
   let html = `<div class="maske ${art}">`;
-  gruppen.forEach(g=>{
-    const gemischt = g.liste.some(p => typeof p.automatisch==='boolean' && p.automatisch!==g.automatisch);
-    html += `<div class="positionen-gruppe-titel">${g.titel}${(g.automatisch && !gemischt)?' <span class="auto-hinweis">automatisch</span>':''}</div>`;
-    g.liste.forEach(p=>{
-      const istAuto = (typeof p.automatisch==='boolean') ? p.automatisch : g.automatisch;
-      const aus = istAuto && abgewaehlt(p);
-      const checked = ausgewaehlteZiffern.has(p.ziffer) && !aus ? 'checked' : '';
-      const gesperrt = istAuto && !aus ? 'disabled' : '';
-      const mitFaktor = betaPosFaktorEditierbar(p);
-      html += `${p.eigene ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>` : ''}<label class="position-zeile${istAuto && !aus?' auto-gesperrt':''}${aus?' auto-aus':''}${mitFaktor?' mit-faktor':''}" data-auto-aus="${aus?'1':'0'}">
+  if(profile.length > 1) html += `<div class="profil-leiste">${profile.map(p=> `<button type="button" class="profil-chip${p.id === profilId ? ' aktiv' : ''}" data-profil="${htmlEsc(p.id)}">${htmlEsc(p.name)}</button>`).join('')}</div>`;
+  html += `<div class="eigene-hinweis" style="margin-top:2px;">${art === 'ls' ? 'Lang drücken und ziehen: Reihenfolge ändern.' : 'Lang drücken und ziehen: Reihenfolge ändern oder zwischen Grundpauschalen und eigenen Positionen verschieben.'}</div>`;
+  const zeileHtml = (p, g)=>{
+    const istAuto = (typeof p.automatisch==='boolean') ? p.automatisch : g.automatisch;
+    const aus = istAuto && abgewaehlt(p);
+    const checked = ausgewaehlteZiffern.has(p.ziffer) && !aus ? 'checked' : '';
+    const gesperrt = istAuto && !aus ? 'disabled' : '';
+    const mitFaktor = betaPosFaktorEditierbar(p);
+    const loeschbar = p.eigene && !p.fest;
+    const label = `<label class="position-zeile${istAuto && !aus?' auto-gesperrt':''}${aus?' auto-aus':''}${mitFaktor?' mit-faktor':''}" data-auto-aus="${aus?'1':'0'}">
         <input type="checkbox" data-ziffer="${htmlEsc(p.ziffer)}" data-betrag="${betragVon(p)}" data-auto="${istAuto?'1':'0'}" ${checked} ${gesperrt}>
-        <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> ${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : p.bez) : p.bez}${gemischt&&istAuto?' <span class="auto-hinweis">automatisch</span>':''}</span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (antippen = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
+        <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (antippen = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
         <div class="betrag">${betragVon(p).toFixed(2).replace('.',',')} &euro;</div>
-      </label>${p.eigene ? '</div>' : ''}`;
-    });
+      </label>`;
+    const innen = loeschbar ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>${label}</div>` : label;
+    return g.drag ? `<div class="pos-item" data-key="${htmlEsc(p.ziffer)}" data-drag="1">${innen}</div>` : innen;
+  };
+  gruppen.forEach(g=>{
+    html += `<div class="positionen-gruppe-titel">${g.titel}${g.automatisch ? ' <span class="auto-hinweis">automatisch' + (g.hinweis ? ' · ' + g.hinweis : '') + '</span>' : ''}</div>`;
+    if(g.drag) html += `<div class="pos-gruppe" data-gruppe="${g.drag}">`;
+    g.liste.forEach(p=>{ html += zeileHtml(p, g); });
+    if(g.drag) html += `<div class="pos-gruppe-ende"></div></div>`;
     if(g.eigene) html += `<button type="button" class="btn-sekundaer" id="btnEigenePosNeu" style="margin:8px 0 4px;">+ Eigene Position hinzufügen</button>${g.liste.length ? '<div class="eigene-hinweis">Zum Löschen nach links wischen.</div>' : ''}`;
   });
   html += `<div class="pos-fuss-platz"></div></div>`;
@@ -8034,7 +8291,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       const cb = el.closest('.position-zeile').querySelector('input');
       if(!cb.checked){ el.innerHTML = ''; return; }
       const r = betaPosRahmen(p), f = faktorVon(p), b = String(begrVon(p) || '').trim(), n = anzahlVon(p);
-      const pflicht = f > r.schwelle + 1e-9;
+      const pflicht = f > r.schwelle + 1e-9 || betaBegrImmer(p);
       el.innerHTML = `<button type="button" class="faktor-chip${pflicht ? ' hoch' : ''}">${n > 1 ? n + ' &times; &middot; ' : ''}Faktor ${betaFaktorText(f)} &#9998;</button>` +
         (pflicht ? (b ? `<span class="beg-text">Begründung: ${htmlEsc(b)}</span>` : `<span class="beg-text fehlt">Begründung fehlt – antippen</span>`) : '');
       const zeile = el.closest('.position-zeile');
@@ -8042,11 +8299,17 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       cb.dataset.betrag = betragVon(p);
       el.onclick = async (ev)=>{
         ev.preventDefault(); ev.stopPropagation();
-        const erg = await betaFaktorDialog(art, p, faktorVon(p), begrVon(p), anzahlVon(p));
+        const k0 = betaPosSchluessel(p);
+        const erg = await betaFaktorDialog(art, p, faktorVon(p), begrVon(p), anzahlVon(p), ((det.varianten || {})[k0]) || '');
         if(!erg) return;
         const k = betaPosSchluessel(p);
         det.faktoren[k] = erg.faktor; det.begruendungen[k] = erg.begruendung;
         if(erg.anzahl > 1) det.anzahl[k] = erg.anzahl; else delete det.anzahl[k];
+        if(erg.variante !== undefined){
+          det.varianten = det.varianten || {};
+          if(erg.variante) det.varianten[k] = erg.variante; else delete det.varianten[k];
+          const bt = el.closest('.position-zeile').querySelector('.bez-text'); if(bt) bt.innerHTML = betaBezMitVariante(p, det);
+        }
         zusatzZeichnen(); summeBerechnen();
       };
     });
@@ -8058,6 +8321,9 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     return summe;
   }
   function ausschluesseAktualisieren(){
+    // Die frueheren festen Sperren (ZIFFER_AUSSCHLUESSE) entfallen: Ausschluesse
+    // laut GOÄ werden jetzt ausgegraut und beim Anhaken nachgefragt.
+    return;
     if(art!=='pt') return;
     const boxen = Array.from(app.querySelectorAll('.position-zeile input'));
     const aktive = new Set(boxen.filter(cb=>cb.checked).map(cb=>cb.dataset.ziffer));
@@ -8134,7 +8400,38 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     const set = new Set(Array.from(app.querySelectorAll('.position-zeile input:checked')).map(cb=> cb.dataset.ziffer));
     set.details = det; return set;
   };
-  const neuZeichnen = ()=>{ const y = window.scrollY; ansichtPositionen(art, gewaehltJetzt(), betragSchaetzung, weiter, kmFahrstreckeGesamt); window.scrollTo(0, y); };
+  const neuZeichnen = (set)=>{ const y = window.scrollY; ansichtPositionen(art, set || gewaehltJetzt(), betragSchaetzung, weiter, kmFahrstreckeGesamt); window.scrollTo(0, y); };
+  // Nach Aenderung der gewaehlten Leistungen: Zeitzuschlaege (A-D/E-H) und
+  // Wegegeld neu bestimmen -- wie die Automatik in der Maske
+  const automatikNachziehen = ()=>{
+    const kx = window.betaPosKontext;
+    const jetzt = gewaehltJetzt();
+    const manuell = new Set(Array.from(jetzt).filter(z=> !AUTO_SCHL(z)));
+    let auto;
+    if(kx){
+      const roh = automatischeAuswahlRoh(katalog, kx.datum, kx.zeit, kx.kmFahrstrecke, kx.kmLuftlinie, kx.modus);
+      auto = Array.from(betaAutoAnpassen(art, roh, manuell)).filter(z=> AUTO_SCHL(z) && !det.abgewaehlt.includes(goaeNorm(z)));
+    } else {
+      // ohne Maskenwerte: vorhandene Automatik in die passende Familie umsetzen
+      auto = Array.from(betaAutoAnpassen(art, new Set(Array.from(jetzt).filter(z=> AUTO_SCHL(z) && z !== 'EIGZA').map(z=> ({EIGZB:'F', EIGZC:'G', EIGZD:'H'})[z] || z)), manuell)).filter(AUTO_SCHL);
+    }
+    const neu = new Set([...manuell, ...auto]); neu.details = det;
+    const gleich = neu.size === jetzt.size && [...neu].every(z=> jetzt.has(z));
+    if(!gleich || betaZuschlagFamilie(art, manuell) !== familie || betaBesuchDabei(art, manuell) !== besuch){ neuZeichnen(neu); return true; }
+    return false;
+  };
+  app.querySelectorAll('.profil-chip').forEach(b=> b.onclick = ()=>{
+    const p = betaProfile(art).find(x=> x.id === b.dataset.profil); if(!p) return;
+    betaProfilWaehlen(art, p.id);
+    det.abgewaehlt = []; det.behalten = [];
+    const neu = new Set(p.vorauswahl); neu.details = det;
+    ansichtPositionen(art, neu, betragSchaetzung, weiter, kmFahrstreckeGesamt);
+    automatikNachziehen();
+  });
+  betaPosZiehen(app, (gr)=>{
+    betaAnordnungSpeichern(art, { grund: gr.grund || [], eigene: gr.eigene || [] });
+    neuZeichnen();
+  });
   app.querySelectorAll('.position-zeile input').forEach(cb=> cb.addEventListener('change', async ()=>{
     const zeile = cb.closest('.position-zeile');
     // bewusst abgewaehlte Automatik-Position wieder angehakt -> wieder automatisch
@@ -8146,6 +8443,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       neuZeichnen(); return;
     }
     if(cb.checked && await konfliktPruefen(cb) === 'neu'){ neuZeichnen(); return; }
+    if(cb.dataset.auto !== '1' && automatikNachziehen()) return;
     positionAktualisieren();
   }));
   positionAktualisieren();
@@ -8177,11 +8475,423 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       if(r && voll.faktoren[k] > r.schwelle + 1e-9 && String(voll.begruendungen[k] || '').trim()) vorl[k] = voll.begruendungen[k];
     });
     betaBegrVorlagenSpeichern(art, vorl);
+    // ... und im Katalog frueherer Begruendungen sammeln (bei 56 ohne die Uhrzeit)
+    const kat = [];
+    Object.keys(voll.begruendungen).forEach(k=>{
+      const p = alle.find(x=> betaPosSchluessel(x) === k), r = p && betaPosRahmen(p);
+      if(!r || !(voll.faktoren[k] > r.schwelle + 1e-9 || betaBegrImmer(p))) return;
+      let t = String(voll.begruendungen[k] || '').trim();
+      if(betaBegrImmer(p)) t = t.replace(/^Verweilen von \S+ bis \S+ Uhr(?:[;,.]\s*)?/, '').trim();
+      if(t) kat.push({ schl: k, text: t });
+    });
+    betaBegrKatalogAendern(art, kat);
     gewaehlt.details = voll;
     let summe=0;
     Array.from(gewaehlt).forEach(z=>{ const p = posVon(z); if(p) summe += betragVon(p); });
     weiter(gewaehlt, Math.round(summe * 100) / 100);
   };
+}
+
+// =====================================================================
+// Rechnungspositionen: eingebaute Zusatzpositionen, Profile mit
+// Vorauswahl, Anordnung (Ziehen), Zuschlagsfamilien, eigene Faktoren,
+// Katalog frueherer Begruendungen
+// =====================================================================
+// Alles, was geraeteuebergreifend gleich sein soll, liegt zusaetzlich in
+// eigene_positionen.json (Felder profile, anordnung, faktoren, begrKatalog).
+
+// ---------- Eingebaute Zusatzpositionen ----------
+// Stehen nicht in der Excel-Vorlage. Sie werden wie eigene Positionen
+// behandelt (Kennung EIG...), damit Word-Erzeugung und PC sie genauso
+// einfuegen wie von Hand angelegte. Betrag = Punkte x Punktwert x Faktor.
+const GOAE_FEST = {
+  pt: [
+    { id:'EIGP3',  ziffer:'3', bez:'Eingehende, das gewöhnliche Maß übersteigende Beratung (mind. 10 Minuten)', gruppe:'grund' },
+    { id:'EIGZA', ziffer:'A', bez:'Zuschlag für außerhalb der Sprechstunde erbrachte Leistungen', gruppe:'zuschlag', familie:'AD' },
+    { id:'EIGZB', ziffer:'B', bez:'Zuschlag für zwischen 20 und 22 Uhr oder 6 und 8 Uhr außerhalb der Sprechstunde erbrachte Leistungen', gruppe:'zuschlag', familie:'AD' },
+    { id:'EIGZC', ziffer:'C', bez:'Zuschlag für zwischen 22 und 6 Uhr erbrachte Leistungen', gruppe:'zuschlag', familie:'AD' },
+    { id:'EIGZD', ziffer:'D', bez:'Zuschlag für an Samstagen, Sonn- oder Feiertagen erbrachte Leistungen', gruppe:'zuschlag', familie:'AD' },
+    { id:'EIGZE', ziffer:'E', bez:'Zuschlag für dringend angeforderte und unverzüglich erfolgte Ausführung', gruppe:'zuschlag', familie:'EH', manuell:true }
+  ],
+  ls: [
+    { id:'EIGL100', ziffer:'100', bez:'Untersuchung eines Toten und Ausstellung einer vorläufigen Todesbescheinigung (vorläufige Leichenschau)', gruppe:'grund' },
+  ]
+};
+// automatisch gesetzte Zuschlaege der Familie A-D (entsprechen F/G/H)
+const ZUSCHLAG_AD = { F:'EIGZB', G:'EIGZC', H:'EIGZD' };
+function betaFestPositionen(art){
+  return (GOAE_FEST[art] || []).map(f=>{
+    const e = goaeEintrag(f.ziffer) || { punkte: 0, typ: 'f' };
+    const faktor = e.typ === 'n' ? 2.3 : e.typ === 't' ? 1.8 : e.typ === 'l' ? 1.15 : 1;
+    return { id: f.id, ziffer: f.ziffer, faktor: String(faktor).replace('.', ','), bez: f.bez, punkte: e.punkte || null,
+             betrag: betaRund2((e.punkte || 0) * GOAE_PW * faktor), fest: true, gruppe: f.gruppe, familie: f.familie || null, manuell: !!f.manuell,
+             angelegt: '', geaendert: '' };
+  });
+}
+function betaFestPos(art, id){ return betaFestPositionen(art).find(p=> p.id === id) || null; }
+
+// ---------- Zuschlagsfamilie ----------
+// GOÄ: Zuschlaege A-D (und K1) gehoeren zu Beratungen/Untersuchungen nach
+// 1, 3, 4, 5, 6, 7, 8; E-H (J, K2) zu den Besuchen 45-62 und zur
+// Leichenschau 100/101. Neben E-J duerfen A-D nicht berechnet werden --
+// sobald ein Besuch dabei ist, gelten also E-H.
+function betaNrVonSchluessel(art, z){
+  const k = String(z || '');
+  if(/^EIG/i.test(k)){
+    const p = betaEigeneAlle(art).find(x=> x.id === k);
+    return p ? goaeNorm(p.ziffer) : '';
+  }
+  return goaeNorm(k);
+}
+function betaIstZuschlagsSchluessel(z){ return ['F','G','H','EIGZA','EIGZB','EIGZC','EIGZD'].includes(String(z)); }
+function betaZuschlagFamilie(art, auswahl){
+  const nrs = Array.from(auswahl || []).filter(z=> !betaIstZuschlagsSchluessel(z)).map(z=> betaNrVonSchluessel(art, z));
+  const zahl = (n)=> /^\d+$/.test(n) ? Number(n) : NaN;
+  if(nrs.some(n=> (zahl(n) >= 45 && zahl(n) <= 62) || n === '100' || n === '101')) return 'EH';
+  if(nrs.some(n=> ['1','3','4','5','6','7','8'].includes(n))) return 'AD';
+  return null;
+}
+// Wegegeld/Reiseentschaedigung nur bei einem Besuch bzw. einer Leichenschau
+function betaBesuchDabei(art, auswahl){
+  return Array.from(auswahl || []).some(z=> ['48','50','51','55','100','101'].includes(betaNrVonSchluessel(art, z)));
+}
+// roh: Ergebnis der Automatik (F/G/H, Wegegeld, ...); basis: die gewaehlten
+// Positionen, nach denen sich die Familie richtet
+function betaAutoAnpassen(art, roh, basis){
+  const fam = betaZuschlagFamilie(art, basis);
+  const besuch = betaBesuchDabei(art, basis);
+  const out = new Set();
+  // A (ausserhalb der Sprechstunde) nur, wenn B, C und D nicht zutreffen --
+  // im Bereitschaftsdienst also werktags tagsueber
+  const zeitZuschlag = Array.from(roh || []).some(z=> ['F','G','H'].includes(z));
+  if(fam === 'AD' && art === 'pt' && !zeitZuschlag) out.add('EIGZA');
+  Array.from(roh || []).forEach(z=>{
+    if(['F','G','H'].includes(z)){
+      if(fam === 'EH') out.add(z);
+      else if(fam === 'AD' && art === 'pt') out.add(ZUSCHLAG_AD[z]);
+      return;
+    }
+    if(/^W[TN]\d/.test(z) || z === 'REISE'){ if(besuch) out.add(z); return; }
+    out.add(z);
+  });
+  return out;
+}
+
+// ---------- Profile (Vorauswahl) ----------
+const PROFILE_STANDARD = {
+  pt: [ { id:'fahrdienst', name:'Fahrdienst', vorauswahl:['50'] },
+        { id:'sitzdienst', name:'Sitzdienst', vorauswahl:['1','5'] },
+        { id:'telefon',    name:'Telefonische Beratung', vorauswahl:['1'] } ],
+  ls: [ { id:'leichenschau', name:'Leichenschau', vorauswahl:['101','102'] } ]
+};
+function betaProfileDaten(){ const d = LS.get(EIGENE_POS_CACHE, null) || {}; return d.profile || {}; }
+function betaProfile(art){
+  const eigene = (betaProfileDaten()[art] || []);
+  const m = new Map();
+  PROFILE_STANDARD[art].forEach(p=> m.set(p.id, { ...p, standard: true }));
+  eigene.forEach(p=>{ if(p && p.id) m.set(p.id, { ...(m.get(p.id) || {}), ...p }); });
+  return [...m.values()].filter(p=> !p.geloescht);
+}
+function betaProfilAktivId(art){
+  const e = ladeEinstellungen();
+  const id = (e.profilAktiv || {})[art];
+  const liste = betaProfile(art);
+  return liste.some(p=> p.id === id) ? id : (liste[0] ? liste[0].id : null);
+}
+function betaProfilAktiv(art){ const id = betaProfilAktivId(art); return betaProfile(art).find(p=> p.id === id) || null; }
+function betaProfilWaehlen(art, id){ const e = ladeEinstellungen(); e.profilAktiv = { ...(e.profilAktiv || {}), [art]: id }; speichereEinstellungen(e); }
+function betaProfilVorauswahl(art){
+  const p = betaProfilAktiv(art);
+  const gibt = new Set(betaKatalogFlach(art).map(x=> x.ziffer));
+  return (p ? p.vorauswahl : []).filter(z=> gibt.has(z));
+}
+async function betaProfilSpeichern(art, profil){
+  const jetzt = new Date().toISOString();
+  const anwenden = d=>{
+    d.profile = d.profile || {};
+    const liste = (d.profile[art] || []).filter(x=> x.id !== profil.id);
+    liste.push({ ...profil, geaendert: jetzt });
+    d.profile[art] = liste;
+  };
+  try{ await betaEigeneAbgleichen(anwenden); }
+  catch(e){ const d = betaEigeneDatenVoll(); anwenden(d); LS.set(EIGENE_POS_CACHE, d); }
+}
+
+// ---------- Anordnung (lang druecken + ziehen) ----------
+// {pt: {grund:[...], eigene:[...], am}, ls: {...}} -- nur die Reihenfolge
+// und Gruppe der waehlbaren Positionen; Zuschlaege/Wegegeld bleiben fest.
+function betaAnordnung(art){ const d = LS.get(EIGENE_POS_CACHE, null) || {}; return (d.anordnung || {})[art] || null; }
+async function betaAnordnungSpeichern(art, gruppen){
+  const neu = { ...gruppen, am: new Date().toISOString() };
+  const anwenden = d=>{ d.anordnung = { ...(d.anordnung || {}), [art]: neu }; };
+  const lokal = betaEigeneDatenVoll(); anwenden(lokal); LS.set(EIGENE_POS_CACHE, lokal);
+  if(msGraphStatus === 'angemeldet') betaEigeneAbgleichen(anwenden).catch(()=>{});
+}
+// Verteilt die Positionen auf "grund" und "eigene" -- in der gemerkten
+// Reihenfolge; Neues landet am Ende seiner ueblichen Gruppe.
+function betaGruppenOrdnen(art, grundStandard, eigeneStandard){
+  const alle = new Map([...grundStandard, ...eigeneStandard].map(p=> [p.ziffer, p]));
+  const lay = betaAnordnung(art);
+  const out = { grund: [], eigene: [] };
+  const genutzt = new Set();
+  if(lay){
+    ['grund', 'eigene'].forEach(g=> (lay[g] || []).forEach(k=>{ if(alle.has(k) && !genutzt.has(k)){ out[g].push(alle.get(k)); genutzt.add(k); } }));
+  }
+  grundStandard.forEach(p=>{ if(!genutzt.has(p.ziffer)){ out.grund.push(p); genutzt.add(p.ziffer); } });
+  eigeneStandard.forEach(p=>{ if(!genutzt.has(p.ziffer)){ out.eigene.push(p); genutzt.add(p.ziffer); } });
+  return out;
+}
+// Lang druecken -> Zeile anheben und an eine andere Stelle oder in die
+// andere Gruppe ziehen. Finger (Touch) und Maus.
+function betaPosZiehen(wurzel, beimAblegen){
+  const items = ()=> Array.from(wurzel.querySelectorAll('.pos-item[data-drag]'));
+  let aktiv = null;
+  const beginnen = (item, x, y)=>{
+    const r = item.getBoundingClientRect();
+    const geist = item.cloneNode(true);
+    geist.classList.add('pos-geist');
+    geist.style.width = r.width + 'px'; geist.style.left = r.left + 'px'; geist.style.top = r.top + 'px';
+    document.body.appendChild(geist);
+    const platz = document.createElement('div');
+    platz.className = 'pos-platz'; platz.style.height = r.height + 'px';
+    item.parentNode.insertBefore(platz, item);
+    item.classList.add('pos-gezogen');
+    aktiv = { item, geist, platz, dy: y - r.top, x0: x };
+    document.body.classList.add('pos-zieht');
+    try{ navigator.vibrate && navigator.vibrate(15); }catch(_){}
+  };
+  const bewegen = (y)=>{
+    if(!aktiv) return;
+    aktiv.geist.style.top = (y - aktiv.dy) + 'px';
+    // Ziel: vor der ersten Zeile, deren Mitte unter dem Finger liegt
+    const kandidaten = items().filter(i=> i !== aktiv.item);
+    let vor = null;
+    for(const i of kandidaten){ const r = i.getBoundingClientRect(); if(y < r.top + r.height / 2){ vor = i; break; } }
+    const gruppen = Array.from(wurzel.querySelectorAll('.pos-gruppe[data-gruppe]'));
+    let gruppe = null;
+    for(const g of gruppen){ const r = g.getBoundingClientRect(); if(y >= r.top - 20 && y <= r.bottom + 20) gruppe = g; }
+    if(vor && (!gruppe || vor.closest('.pos-gruppe') === gruppe)) vor.parentNode.insertBefore(aktiv.platz, vor);
+    else if(gruppe){
+      const ende = gruppe.querySelector(':scope > .pos-gruppe-ende');
+      gruppe.insertBefore(aktiv.platz, ende);
+    }
+    // am Rand mitscrollen
+    const h = window.innerHeight;
+    if(y < 80) window.scrollBy(0, -12); else if(y > h - 140) window.scrollBy(0, 12);
+  };
+  const ablegen = ()=>{
+    if(!aktiv) return;
+    const { item, geist, platz } = aktiv;
+    platz.parentNode.insertBefore(item, platz);
+    platz.remove(); geist.remove();
+    item.classList.remove('pos-gezogen');
+    document.body.classList.remove('pos-zieht');
+    item.__klickSperre = Date.now();
+    aktiv = null;
+    const gruppen = {};
+    wurzel.querySelectorAll('.pos-gruppe[data-gruppe]').forEach(g=>{
+      gruppen[g.dataset.gruppe] = Array.from(g.querySelectorAll(':scope > .pos-item[data-drag]')).map(i=> i.dataset.key);
+    });
+    beimAblegen(gruppen, item.dataset.key);
+  };
+  items().forEach(item=>{
+    let timer = null, start = null;
+    const abbrechen = ()=>{ clearTimeout(timer); timer = null; start = null; };
+    item.addEventListener('touchstart', ev=>{
+      if(ev.touches.length !== 1) return;
+      const t = ev.touches[0]; start = { x: t.clientX, y: t.clientY };
+      timer = setTimeout(()=>{ timer = null; if(start) beginnen(item, start.x, start.y); }, 450);
+    }, { passive: true });
+    item.addEventListener('touchmove', ev=>{
+      const t = ev.touches[0];
+      if(aktiv && aktiv.item === item){ if(ev.cancelable) ev.preventDefault(); bewegen(t.clientY); return; }
+      if(start && (Math.abs(t.clientX - start.x) > 8 || Math.abs(t.clientY - start.y) > 8)) abbrechen();
+    }, { passive: false });
+    item.addEventListener('touchend', ev=>{ abbrechen(); if(aktiv && aktiv.item === item){ if(ev.cancelable) ev.preventDefault(); ablegen(); } });
+    item.addEventListener('touchcancel', ()=>{ abbrechen(); if(aktiv && aktiv.item === item) ablegen(); });
+    item.addEventListener('mousedown', ev=>{
+      if(ev.button !== 0) return;
+      start = { x: ev.clientX, y: ev.clientY };
+      timer = setTimeout(()=>{ timer = null; if(start) beginnen(item, start.x, start.y); }, 450);
+      const weg = (e2)=>{ if(aktiv && aktiv.item === item) bewegen(e2.clientY); else if(start && (Math.abs(e2.clientX - start.x) > 8 || Math.abs(e2.clientY - start.y) > 8)) abbrechen(); };
+      const hoch = ()=>{ document.removeEventListener('mousemove', weg); document.removeEventListener('mouseup', hoch); abbrechen(); if(aktiv && aktiv.item === item) ablegen(); };
+      document.addEventListener('mousemove', weg); document.addEventListener('mouseup', hoch);
+    });
+    item.addEventListener('contextmenu', ev=> ev.preventDefault());
+    // Antippen direkt nach dem Ablegen nicht als Haken werten
+    item.addEventListener('click', ev=>{ if(item.__klickSperre && Date.now() - item.__klickSperre < 500){ ev.preventDefault(); ev.stopPropagation(); } }, true);
+  });
+}
+
+// ---------- Eigene Faktoren ----------
+// Liste in eigene_positionen.json: [{wert, am, geloescht?}]
+function betaEigeneFaktoren(){
+  const d = LS.get(EIGENE_POS_CACHE, null) || {};
+  return (d.faktoren || []).filter(f=> f && !f.geloescht && Number(f.wert) >= 1).map(f=> Math.round(Number(f.wert) * 100) / 100).sort((a, b)=> a - b);
+}
+async function betaEigenerFaktorAendern(wert, weg){
+  const w = Math.round(Number(wert) * 100) / 100;
+  const anwenden = d=>{ d.faktoren = [...(d.faktoren || []).filter(f=> Math.round(Number(f.wert) * 100) / 100 !== w), { wert: w, am: new Date().toISOString(), geloescht: !!weg }]; };
+  const lokal = betaEigeneDatenVoll(); anwenden(lokal); LS.set(EIGENE_POS_CACHE, lokal);
+  if(msGraphStatus === 'angemeldet') betaEigeneAbgleichen(anwenden).catch(()=>{});
+}
+
+// ---------- Katalog frueherer Begruendungen ----------
+// "art:ZIFFER" -> [{text, am, geloescht?}] (neueste zuerst)
+function betaBegrKatalog(art, schl){
+  const d = LS.get(EIGENE_POS_CACHE, null) || {};
+  const k = art + ':' + goaeNorm(schl);
+  const liste = ((d.begrKatalog || {})[k] || []).slice();
+  // bisherige "zuletzt verwendet"-Vorlage mit aufnehmen
+  const v = (d.begruendungen || {})[k];
+  if(v && v.text && !liste.some(x=> x.text === v.text)) liste.push({ text: v.text, am: v.am || '' });
+  return liste.filter(x=> x && x.text && !x.geloescht).sort((a, b)=> String(b.am || '').localeCompare(String(a.am || '')));
+}
+function betaBegrKatalogAendern(art, eintraege){
+  // eintraege: [{schl, text, weg?}]
+  if(!eintraege.length) return;
+  const jetzt = new Date().toISOString();
+  const anwenden = d=>{
+    d.begrKatalog = d.begrKatalog || {};
+    eintraege.forEach(({ schl, text, weg })=>{
+      const t = String(text || '').trim(); if(!t) return;
+      const k = art + ':' + goaeNorm(schl);
+      const liste = (d.begrKatalog[k] || []).filter(x=> x.text !== t);
+      liste.push({ text: t, am: jetzt, geloescht: !!weg });
+      d.begrKatalog[k] = liste.sort((a, b)=> String(b.am).localeCompare(String(a.am))).slice(0, 40);
+    });
+  };
+  const lokal = betaEigeneDatenVoll(); anwenden(lokal); LS.set(EIGENE_POS_CACHE, lokal);
+  if(msGraphStatus === 'angemeldet') betaEigeneAbgleichen(anwenden).catch(()=>{});
+}
+
+// ---------- Zusammenfuehren mit OneDrive (fuer betaEigeneAbgleichen) ----------
+function betaListeNachSchluessel(a, b, schl, zeit){
+  const m = new Map();
+  [...(a || []), ...(b || [])].forEach(x=>{
+    if(!x) return; const k = schl(x); const alt = m.get(k);
+    if(!alt || String(zeit(x) || '') > String(zeit(alt) || '')) m.set(k, x);
+  });
+  return [...m.values()];
+}
+function betaZusatzZusammenfuehren(a, b){
+  a = a || {}; b = b || {};
+  const out = {};
+  // Profile je Art (nach id, neueste Aenderung gewinnt)
+  out.profile = {};
+  ['pt', 'ls'].forEach(art=>{
+    const l = betaListeNachSchluessel((a.profile || {})[art], (b.profile || {})[art], x=> x.id, x=> x.geaendert);
+    if(l.length) out.profile[art] = l;
+  });
+  // Anordnung je Art (neueste gewinnt)
+  out.anordnung = {};
+  ['pt', 'ls'].forEach(art=>{
+    const x = (a.anordnung || {})[art], y = (b.anordnung || {})[art];
+    const w = !x ? y : !y ? x : (String(y.am || '') > String(x.am || '') ? y : x);
+    if(w) out.anordnung[art] = w;
+  });
+  out.faktoren = betaListeNachSchluessel(a.faktoren, b.faktoren, x=> String(Math.round(Number(x.wert) * 100)), x=> x.am);
+  out.begrKatalog = {};
+  new Set([...Object.keys(a.begrKatalog || {}), ...Object.keys(b.begrKatalog || {})]).forEach(k=>{
+    out.begrKatalog[k] = betaListeNachSchluessel((a.begrKatalog || {})[k], (b.begrKatalog || {})[k], x=> x.text, x=> x.am)
+      .sort((p, q)=> String(q.am).localeCompare(String(p.am))).slice(0, 40);
+  });
+  return out;
+}
+
+// ---------- Einstellungen: Profile verwalten ----------
+function betaProfileHtml(){
+  const block = (art, titel)=> `
+      <div class="sync-unter-titel">${titel}</div>
+      <div class="profil-liste" data-art="${art}">${betaProfile(art).map(p=> `
+        <button type="button" class="profil-zeile" data-art="${art}" data-id="${htmlEsc(p.id)}">
+          <span class="profil-name">${htmlEsc(p.name)}${betaProfilAktivId(art) === p.id ? ' <span class="profil-aktiv">aktiv</span>' : ''}</span>
+          <span class="profil-vor">${p.vorauswahl.length ? 'vorausgewählt: ' + htmlEsc(p.vorauswahl.map(z=> betaNrVonSchluessel(art, z) || z).join(', ')) : 'nichts vorausgewählt'}</span>
+        </button>`).join('')}
+      </div>
+      <button type="button" class="btn-sekundaer profil-neu" data-art="${art}" style="margin-top:6px;">+ Neues Profil</button>`;
+  return `
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Profile (Rechnungspositionen)</div>
+      <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
+        Ein Profil legt fest, welche Positionen bei einer neuen Rechnung schon angehakt sind. Wechseln geht oben in den
+        Rechnungspositionen; das zuletzt gewählte bleibt aktiv. Zeitzuschläge und Wegegeld kommen immer automatisch dazu
+        (bei Beratung ohne Besuch B/C/D statt F/G/H).</div>
+      ${block('pt', 'Privatrechnung')}
+      <div class="sync-trenner"></div>
+      ${block('ls', 'Leichenschau')}
+    </div>`;
+}
+async function betaProfilBearbeiten(art, id){
+  const vorhanden = betaProfile(art).find(p=> p.id === id);
+  const profil = vorhanden ? { ...vorhanden, vorauswahl: [...vorhanden.vorauswahl] } : { id: 'P' + Date.now().toString(36), name: '', vorauswahl: [] };
+  const katalog = art === 'ls' ? POSITIONEN_LS : POSITIONEN_PT;
+  const waehlbar = [
+    ...(katalog.grundleistung || []).filter(p=> p.ziffer !== 'E'),
+    ...betaFestPositionen(art).filter(p=> p.gruppe === 'grund' || p.manuell).map(betaEigenePositionAlsAuswahl),
+    ...betaEigene(art).map(betaEigenePositionAlsAuswahl)
+  ];
+  let fehler = '';
+  for(;;){
+    const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<div class="beta-form"><label>Name<input id="prName" value="' + htmlEsc(profil.name) + '" autocomplete="off"></label></div>' +
+      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Vorausgewählt bei einer neuen Rechnung:</div>' +
+      '<div class="profil-auswahl">' + waehlbar.map(p=> '<label class="profil-pos"><input type="checkbox" data-z="' + htmlEsc(p.ziffer) + '"' + (profil.vorauswahl.includes(p.ziffer) ? ' checked' : '') + '>' +
+        '<span><b>' + htmlEsc(p.anzeigeZiffer !== undefined ? p.anzeigeZiffer : p.ziffer) + '</b> ' + htmlEsc(String(p.eigeneBez || p.bez).replace(/<[^>]+>/g, '')) + '</span></label>').join('') + '</div>';
+    const knoepfe = [{ label:'Abbrechen', akt:'nein' }];
+    if(vorhanden && betaProfile(art).length > 1) knoepfe.push({ label:'Löschen', akt:'weg' });
+    knoepfe.push({ label:'Speichern', akt:'ja', primaer:true });
+    const akt = await betaOverlay.ergebnis(vorhanden ? 'Profil bearbeiten' : 'Neues Profil', html, knoepfe);
+    const name = (document.getElementById('prName') || {}).value || '';
+    const gewaehlt = Array.from(document.querySelectorAll('.profil-auswahl input:checked')).map(c=> c.dataset.z);
+    if(akt === 'nein'){ betaOverlay.schliessen(); return false; }
+    if(akt === 'weg'){
+      betaOverlay.schliessen();
+      if(!await betaFrage('Profil „' + profil.name + '“ löschen?', 'Löschen', 'Abbrechen')) return false;
+      await betaProfilSpeichern(art, { ...profil, geloescht: true });
+      if(betaProfilAktivId(art) === profil.id) betaProfilWaehlen(art, betaProfile(art)[0].id);
+      return true;
+    }
+    profil.name = name.trim(); profil.vorauswahl = gewaehlt;
+    if(!profil.name){ fehler = 'Bitte einen Namen eintragen.'; continue; }
+    betaOverlay.schliessen();
+    await betaProfilSpeichern(art, { id: profil.id, name: profil.name, vorauswahl: profil.vorauswahl });
+    return true;
+  }
+}
+function betaProfileWiring(neuZeichnen){
+  document.querySelectorAll('.profil-zeile').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, b.dataset.id)) neuZeichnen(); });
+  document.querySelectorAll('.profil-neu').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, null)) neuZeichnen(); });
+}
+
+// ---------- Datenschutz & Haftung (Einstellungen, spaeter Einrichtung) ----------
+const LXP_AVV_LINK = 'https://www.letterxpress.de/storage/downloads/Auftragsverarbeitung.pdf';
+const MS_DPA_LINK = 'https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA';
+function betaHaftungHtml(){
+  return `
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Datenschutz &amp; Haftung</div>
+      <div class="haftung-text">
+        <p><b>Privates, unentgeltliches Programmierprojekt.</b> Die App wird ohne jede Gewähr bereitgestellt – für
+        Richtigkeit, Vollständigkeit und ständige Verfügbarkeit wird nicht garantiert. Eine Haftung für Schäden aus
+        der Nutzung ist ausgeschlossen, soweit das gesetzlich zulässig ist.</p>
+        <p><b>Abrechnung:</b> Beträge, Faktoren, Begründungen und die angezeigten GOÄ-Ausschlüsse sind Hilfen. Jede
+        Rechnung ist vor dem Versand selbst zu prüfen; verantwortlich für die korrekte Abrechnung ist der
+        abrechnende Arzt.</p>
+        <p><b>Datenschutz:</b> Wer die App nutzt, ist für die Patientendaten selbst verantwortlich (Verantwortlicher
+        nach Art. 4 Nr. 7 DSGVO) und an die ärztliche Schweigepflicht gebunden (§ 203 StGB). Die Daten liegen im
+        eigenen OneDrive und werden für den Briefversand an LetterXpress übermittelt. Für jeden Dienstleister,
+        der Patientendaten verarbeitet, ist ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO) nötig und der
+        Dienstleister zur Verschwiegenheit zu verpflichten:</p>
+        <ul>
+          <li><b>LetterXpress:</b> <a href="${LXP_AVV_LINK}" target="_blank" rel="noopener">AVV als PDF</a> – ausfüllen, unterschreiben und an LetterXpress schicken.</li>
+          <li><b>Microsoft (OneDrive):</b> Einen Vertrag zur Auftragsverarbeitung gibt es nur für geschäftliche Konten (Microsoft 365 Business) – <a href="${MS_DPA_LINK}" target="_blank" rel="noopener">Microsoft-DPA</a>. Für private Microsoft-Konten gibt es keinen.</li>
+          <li><b>Weiterleitung für den Briefversand (Azure):</b> Wer die Weiterleitung eines anderen benutzt, braucht mit diesem einen AVV – oder richtet sich eine eigene ein.</li>
+        </ul>
+        <p>Vor dem Einsatz mit echten Patientendaten wird eine rechtliche bzw. datenschutzrechtliche Beratung
+        empfohlen (z. B. Datenschutzbeauftragter, Landesärztekammer).</p>
+      </div>
+    </div>`;
 }
 
 
@@ -8214,7 +8924,9 @@ function ansichtEinstellungen(){
       ${msGraphAbschnittHtml()}
       ${betaOneDriveTestHtml()}
     </div>
+    ${betaProfileHtml()}
     ${betaAbschnittHtml()}
+    ${betaHaftungHtml()}
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Debugging</div>
       <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
@@ -8317,6 +9029,7 @@ function ansichtEinstellungen(){
   autoSyncAbschnittWiring();
   msGraphAbschnittWiring();
   betaEinstellungenWiring();
+  betaProfileWiring(()=>{ const y = window.scrollY; ansichtEinstellungen(); window.scrollTo(0, y); });
   betaEinstellungenEinklappen();
 }
 
@@ -9484,10 +10197,18 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       try{ text = await navigator.clipboard.readText(); }
       catch(e){ zeigeHinweis('Zwischenablage konnte nicht gelesen werden. Bitte Berechtigung erteilen oder Text manuell einfügen.'); return; }
       if(!text || !text.trim()){ zeigeHinweis('Die Zwischenablage ist leer.'); return; }
-      const erg = adressZeileTrennen(text);
+      // Steht vor der Adresse ein Name (z.B. aus Google Maps kopiert:
+      // "Bestattungen Heck\nHauptstr. 5, 76571 Gaggenau"), wird er mit uebernommen.
+      // Bereits ausgefuellte Felder werden immer ueberschrieben.
+      const teileRoh = text.trim().replace(/\r/g, '').split(/\n|,/).map(x=> x.trim()).filter(Boolean);
+      let name = '';
+      if(teileRoh.length >= 3 && !/\d/.test(teileRoh[0]) && /\d/.test(teileRoh[1])){ name = teileRoh.shift(); }
+      const erg = adressZeileTrennen(teileRoh.join(', '));
       if(!erg){ zeigeHinweis('Die Zwischenablage enthält keine erkennbare Adresse (erwartet: "Straße Hausnummer, PLZ Ort").'); return; }
-      document.getElementById('txtAdresse1').value = grossKleinNormalisieren(erg.strasse);
+      if(name) document.getElementById('txtBName').value = name;
+      document.getElementById('txtAdresse1').value = grossKleinNormalisieren(strasseAusschreiben(erg.strasse));
       document.getElementById('txtAdresse2').value = grossKleinNormalisieren(erg.plzOrt);
+      ['txtBName', 'txtAdresse1', 'txtAdresse2'].forEach(id=>{ const el = document.getElementById(id); if(el) el.dispatchEvent(new Event('change', { bubbles: true })); });
       strasseFeldBlur('txtAdresse1');
       await plzOrtPruefen('txtAdresse1','txtAdresse2');
       zeigeHinweis('Adresse übernommen -- bitte kurz prüfen.');
@@ -9811,11 +10532,11 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     if(!positionenAuswahl) return;
     const katalog = art==='ls' ? POSITIONEN_LS : POSITIONEN_PT;
     const AUTO_ZIFFERN = new Set([
-      ...ZUSCHLAEGE_ZEIT.map(z=>z.ziffer),
+      ...ZUSCHLAEGE_ZEIT.map(z=>z.ziffer), 'EIGZA', 'EIGZB', 'EIGZC', 'EIGZD',
       ...WEGEGELD_TAG.map(z=>z.ziffer), ...WEGEGELD_NACHT.map(z=>z.ziffer),
       'REISE'
     ]);
-    const neueAuto = automatischeAuswahl(katalog, datum, zeit, kmFahrstrecke, kmLuftlinie, manuellerModus);
+    const neueAuto = betaAutoAnpassen(art, automatischeAuswahlRoh(katalog, datum, zeit, kmFahrstrecke, kmLuftlinie, manuellerModus), positionenAuswahl);
     const vorher = new Set(positionenAuswahl);
     AUTO_ZIFFERN.forEach(z=> positionenAuswahl.delete(z));
     // bewusst abgewaehlte (GOÄ-Ausschluss) bleiben draussen; neu hinzukommende,
@@ -10267,6 +10988,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const kmFahrstrecke = document.getElementById('txtKmFahrstrecke').value;
     const kmLuftlinie = document.getElementById('txtKmLuftlinie').value;
     const basis = positionenAuswahl || automatischeAuswahl(art==='ls'?POSITIONEN_LS:POSITIONEN_PT, datum, zeit, kmFahrstrecke, kmLuftlinie, manuellerModus);
+    // fuer die Automatik in den Rechnungspositionen (Zuschlaege A-D/E-H, Wegegeld)
+    window.betaPosKontext = { datum, zeit, kmFahrstrecke, kmLuftlinie, modus: manuellerModus };
     // Schnappschuss der Maskenwerte JETZT nehmen (Maske ist noch im DOM),
     // damit ein Zahnrad-Klick auf der Rechnungspositionen-Unteransicht
     // korrekt hierher zurückfindet, statt aus dem falschen DOM zu lesen.
@@ -10340,9 +11063,11 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     // Uhrzeit Hausbesuch und ohne Geburtsdatum gespeichert werden konnte.
     let ersteFehlendeId = null;
     const fehlendeLabels = [];
+    const ohneBesuch = !betaBesuchDabei(art, positionenAuswahl || new Set(betaProfilVorauswahl(art)));
     pflichtfelderKonfig.forEach(({id, label})=>{
       const el = document.getElementById(id);
       if(!el) return;
+      if(id === 'txtKm' && ohneBesuch){ el.classList.remove('pflichtfeld-fehlt'); return; }
       const fehlt = !el.value.trim();
       el.classList.toggle('pflichtfeld-fehlt', fehlt);
       if(fehlt){
