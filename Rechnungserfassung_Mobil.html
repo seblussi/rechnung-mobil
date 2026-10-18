@@ -262,6 +262,14 @@
   /* fruehere verschickte Fassung */
   .fall-zeile .info.fassungen-text{font-size:12px; color:var(--text-schwach);}
   .fassung-link{color:#2f6fed; text-decoration:underline; cursor:pointer;}
+  .luft-maps-icon.luft-karte{background:var(--karte);}
+  .begr-katalog-wahl select{font-size:14px;}
+  .begr-neu{display:flex; gap:6px; align-items:flex-end; margin-top:8px;}
+  .begr-neu textarea{flex:1; font:inherit; font-size:14px; padding:8px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text); box-sizing:border-box;}
+  .begr-neu button{width:auto; margin:0; padding:9px 12px;}
+  .profil-gruppe-titel{font-size:11.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text-schwach); padding:8px 0 2px;}
+  .profil-leer{padding:8px 0; font-style:italic;}
+  .profil-auswahl .pos-item{background:var(--karte);}
   .haftung-text{font-size:13.5px; line-height:1.5;}
   .haftung-text p{margin:0 0 8px;}
   .haftung-text ul{margin:0 0 8px; padding-left:18px;}
@@ -3143,11 +3151,20 @@ function ansichtLuftlinienTool(){
   }
   html += `
       <div class="luft-zwischenablage-reihe">
-        <span class="luft-maps-icon" id="btnLuftMapsOeffnen" title="Google Maps öffnen"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <span class="luft-maps-icon" id="btnLuftPosition" title="Mit aktueller Position berechnen"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M19 1c-3.17 0-5.75 2.58-5.75 5.75 0 4.31 5.75 10.47 5.75 10.47s5.75-6.16 5.75-10.47C24.75 3.58 22.17 1 19 1z" fill="#e0303f" transform="translate(-7,2.89)"/>
           <circle cx="19" cy="6.75" r="2.15" fill="#fff" transform="translate(-7,2.89)"/>
         </svg></span>
         <button class="btn-primaer blass" id="btnLuftZwischenablage">Aus Zwischenablage einfügen</button>
+        <span class="luft-maps-icon luft-karte" id="btnLuftMapsOeffnen" title="Google Maps öffnen"><svg width="46" height="46" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 12l11-4 14 4 11-4v28l-11 4-14-4-11 4z" fill="#e8f0fe"/>
+          <path d="M17 8v28l14 4V12z" fill="#cfe3d2"/>
+          <path d="M6 12l11-4v28l-11 4z" fill="#d6e4fb"/>
+          <path d="M31 12l11-4v28l-11 4z" fill="#fbe9b5"/>
+          <path d="M6 12l11-4 14 4 11-4v28l-11 4-14-4-11 4z" fill="none" stroke="#5f7da8" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M24 13c-4.4 0-8 3.4-8 7.8 0 5.8 8 14.2 8 14.2s8-8.4 8-14.2c0-4.4-3.6-7.8-8-7.8z" fill="#e0303f"/>
+          <circle cx="24" cy="20.8" r="3" fill="#fff"/>
+        </svg></span>
       </div>
       <div class="feld">
         <label for="txtLuftAdresse">Adresse</label>
@@ -3165,11 +3182,12 @@ function ansichtLuftlinienTool(){
   // setzen (garantiert quadratisch, unabhaengig vom Textumbruch im Button).
   requestAnimationFrame(()=>{
     const btnZw = document.getElementById('btnLuftZwischenablage');
-    const iconEl = document.getElementById('btnLuftMapsOeffnen');
-    if(btnZw && iconEl && btnZw.offsetHeight){
-      iconEl.style.width = btnZw.offsetHeight + 'px';
-      iconEl.style.height = btnZw.offsetHeight + 'px';
-    }
+    document.querySelectorAll('.luft-zwischenablage-reihe .luft-maps-icon').forEach(iconEl=>{
+      if(btnZw && btnZw.offsetHeight){
+        iconEl.style.width = btnZw.offsetHeight + 'px';
+        iconEl.style.height = btnZw.offsetHeight + 'px';
+      }
+    });
   });
 
   const ergebnisEl = document.getElementById('luftErgebnis');
@@ -3188,6 +3206,33 @@ function ansichtLuftlinienTool(){
   // Google Maps leer oeffnen, ohne Start-/Zieladresse vorzubelegen).
   document.getElementById('btnLuftMapsOeffnen').onclick = ()=>{
     window.open('https://www.google.com/maps', '_blank');
+  };
+  // Pin: aktuelle Position (GPS) als Ziel -- Adresse wird per Kartendienst
+  // ermittelt und eingetragen, gerechnet wird mit den genauen Koordinaten
+  let luftPos = null;
+  document.getElementById('btnLuftPosition').onclick = async ()=>{
+    if(!navigator.geolocation){ zeigeErgebnis('Dieses Gerät kann die Position nicht ermitteln.', true); return; }
+    zeigeErgebnis('Aktuelle Position wird ermittelt …', true);
+    let pos;
+    try{
+      pos = await new Promise((ok, fehler)=> navigator.geolocation.getCurrentPosition(ok, fehler, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }));
+    }catch(err){
+      zeigeErgebnis(err && err.code === 1 ? 'Standortzugriff wurde nicht erlaubt (Browser-/App-Einstellungen).' : 'Position konnte nicht ermittelt werden (GPS/Empfang?).', true);
+      return;
+    }
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    let adresse = '';
+    try{
+      const r = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&zoom=18&lat=' + lat + '&lon=' + lon, { headers:{ 'Accept':'application/json' } });
+      const d = await r.json(); const a = (d && d.address) || {};
+      const strasse = [a.road || a.pedestrian || a.footway || '', a.house_number || ''].join(' ').trim();
+      const ort = [a.postcode || '', a.city || a.town || a.village || a.municipality || ''].join(' ').trim();
+      adresse = [strasse, ort].filter(Boolean).join(', ') || (d && d.display_name) || '';
+    }catch(_){}
+    if(!adresse) adresse = 'Aktuelle Position (' + lat.toFixed(5) + ', ' + lon.toFixed(5) + ')';
+    luftPos = { lat, lon, adresse };
+    document.getElementById('txtLuftAdresse').value = adresse;
+    document.getElementById('btnLuftBerechnen').click();
   };
 
   document.getElementById('btnLuftZwischenablage').onclick = async ()=>{
@@ -3208,7 +3253,7 @@ function ansichtLuftlinienTool(){
     try{
       const start = await geocode(eCur.praxisadresse);
       if(!start){ zeigeErgebnis('Praxisadresse nicht auffindbar -- bitte in den Einstellungen prüfen.', true); return; }
-      const ziel = await geocode(adresse);
+      const ziel = (luftPos && luftPos.adresse === adresse) ? luftPos : await geocode(adresse);
       if(!ziel){ zeigeErgebnis('Die Adresse "'+adresse+'" konnte nicht gefunden werden. Bitte prüfen.', true); return; }
       const luft = kmLuftlinieEinfach(start, ziel);
       let zeile2;
@@ -7257,7 +7302,7 @@ let betaAuswahl = new Set();
 
 async function betaAktionSenden(eintraege, mitTermin){
   const ziel = betaZiel();
-  const offen = eintraege.filter(e=> !e.versendet);
+  const offen = eintraege.filter(e=> !e.versendet && !e.fassung);
   if(!offen.length){ await betaOverlay.meldung('Alle ausgewählten sind bereits verschickt.'); return false; }
   const ohnePdf = offen.filter(e=> !e.pdf);
   if(ohnePdf.length){ await betaOverlay.meldung('Für ' + ohnePdf.map(e=> e.datei).join(', ') + ' gibt es noch keine PDF.'); return false; }
@@ -7471,10 +7516,18 @@ function betaEintraegeBauen(c){
     const datei = (n)=> ({ pdf: dateien.get((n + '.pdf').toLowerCase()) || null, docx: dateien.get((n + '.docx').toLowerCase()) || null });
     eintraege.push({ key: z.nr + '|ORIG', typ: 'ORIG', z, renu, art, name, datum, sort, betrag, datei: basis || ('Zeile ' + z.nr), ...(basis ? datei(basis) : { pdf:null, docx:null }),
                      versendet: lxpFlagVorhanden(u, 'LXP:1'), geplant: lxpFlagVorhanden(u, 'LXP:1') ? versandGeplant(u, 'ORIG') : null,
-                     bezahlt: xlDatumText(v[18]), abgeschickt: xlDatumText(v[17]),
-                     fassungen: basis ? [...dateien.entries()].filter(([k])=> k.startsWith((basis + '_verschickte Fassung ').toLowerCase()) && k.endsWith('.pdf'))
-                                          .map(([, it])=> it).sort((a, b)=> String(a.name).localeCompare(String(b.name), 'de', { numeric: true })) : [] });
+                     bezahlt: xlDatumText(v[18]), abgeschickt: xlDatumText(v[17]) });
     if(!basis) continue;
+    // fruehere verschickte Fassungen (beim Aendern einer verschickten Rechnung gesichert)
+    [...dateien.entries()].filter(([k])=> k.startsWith((basis + '_verschickte Fassung ').toLowerCase()) && k.endsWith('.pdf'))
+      .map(([, it])=> it).sort((a, b)=> String(a.name).localeCompare(String(b.name), 'de', { numeric: true }))
+      .forEach((it, i)=>{
+        const nm = String(it.name).replace(/\.pdf$/i, '');
+        const m = /_verschickte Fassung (\d+)(?: \(([^)]*)\))?$/i.exec(nm);
+        const n = m ? m[1] : String(i + 1);
+        eintraege.push({ key: z.nr + '|FS' + n, typ: 'FS' + n, z, renu, art, name: name + ' (verschickte Fassung ' + n + (m && m[2] ? ' vom ' + m[2] : '') + ')',
+                         datum, sort, betrag:'', datei: nm, pdf: it, docx: null, versendet: false, geplant: null, unter: true, fassung: true });
+      });
     if(art === 'ls'){
       const d2 = datei(basis + '_2. Adresse');
       if(d2.pdf || d2.docx) eintraege.push({ key: z.nr + '|2A', typ: '2A', z, renu, art, name: name + ' (2. Adresse)', datum, sort, betrag:'', datei: basis + '_2. Adresse', ...d2, versendet: lxpFlagVorhanden(u, 'LXP:2A'), geplant: lxpFlagVorhanden(u, 'LXP:2A') ? versandGeplant(u, '2A') : null, unter: true });
@@ -7620,7 +7673,6 @@ function betaGesamtZeichnen(suchtext, ziel){
           <div class="info">${e.unter ? htmlEsc(e.datei) : (htmlEsc(e.datum) + (e.betrag ? ' &middot; ' + htmlEsc(e.betrag) + ' €' : '') + (e.renu ? ' &middot; Nr. ' + htmlEsc(e.renu) : ' &middot; ohne Rechnungsnummer'))}</div>
           ${e.geplant ? '<div class="info termin-text">Versand geplant am ' + htmlEsc(isoDe(e.geplant.datum)) + (e.geplant.modus === 'test' ? ' (Testmodus)' : '') + '</div>' : ''}
           ${!e.unter ? betaZahlungInfo(e) : ''}
-          ${(e.fassungen || []).length ? '<div class="info fassungen-text">Frühere verschickte Fassung: ' + e.fassungen.map((it, i)=> '<span class="fassung-link" data-fassung="' + i + '">' + htmlEsc((/\(([^)]*)\)\.pdf$/i.exec(it.name) || [, String(i + 1)])[1]) + '</span>').join(', ') + '</div>' : ''}
         </div>
         <div class="fall-icons">${e.geplant ? '<span class="badge-termin" data-akt="termin" title="Versand geplant – antippen zum Ändern">&#9203;</span>' : (e.versendet ? BRIEF_SYMBOL : '')}${symbol}</div>
       </div></div>`;
@@ -7701,10 +7753,6 @@ function betaGesamtZeichnen(suchtext, ziel){
     chk.onclick = (ev)=>{ ev.stopPropagation(); if(chk.checked) betaAuswahl.add(e.key); else betaAuswahl.delete(e.key); zeileEl.classList.toggle('gewaehlt', chk.checked); auswahlGeaendert(); };
     const pdfEl = zeileEl.querySelector('[data-akt="pdf"]');
     if(pdfEl) pdfEl.onclick = (ev)=>{ ev.stopPropagation(); betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl }); };
-    zeileEl.querySelectorAll('[data-fassung]').forEach(el=> el.onclick = (ev)=>{
-      ev.stopPropagation(); const it = e.fassungen[+el.dataset.fassung];
-      betaPdfAnzeigen({ titel: it.name.replace(/\.pdf$/i, ''), itemId: it.id, webUrl: it.webUrl });
-    });
     const terminEl = zeileEl.querySelector('[data-akt="termin"]');
     if(terminEl) terminEl.onclick = async (ev)=>{ ev.stopPropagation(); if(await betaTerminBearbeiten(e, ziel)) ansichtRechnungenGesamt(true); };
     zeileEl.querySelector('.inhalt').onclick = ()=>{
@@ -7743,12 +7791,12 @@ function betaAktionsleisteAktualisieren(nachKey, ziel){
   const orig = gewaehlt.filter(e=> e.typ === 'ORIG');
   const einOrig = gewaehlt.length === 1 && orig.length === 1;
   const kann = {
-    senden: gewaehlt.some(e=> !e.versendet),
-    termin: gewaehlt.some(e=> !e.versendet),
+    senden: gewaehlt.some(e=> !e.versendet && !e.fassung),
+    termin: gewaehlt.some(e=> !e.versendet && !e.fassung),
     adresse: einOrig && orig[0].art === 'ls' && !!orig[0].docx,
     mahnung: einOrig && !!orig[0].docx,
     bezahlt: orig.length > 0,
-    frei: gewaehlt.some(e=> e.versendet),
+    frei: gewaehlt.some(e=> e.versendet && !e.fassung),
     weg: true
   };
   const k = (id, sym, label)=> `<button type="button" data-a="${id}" ${kann[id] ? '' : 'disabled'}><span class="sym">${sym}</span><span>${label}</span></button>`;
@@ -8323,12 +8371,14 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
         '<button type="button" id="fdFaktorNeu" class="neu">+ eigener</button></div>' +
       '<div class="faktor-eigen" id="fdEigenZeile" hidden><input id="fdEigenWert" inputmode="decimal" placeholder="z.B. 2,8" autocomplete="off"><button type="button" id="fdEigenOk">Übernehmen</button></div>' +
       '<div class="faktor-betrag" id="fdBetrag"></div>' +
+      (zeitModus ? '' : '<label class="begr-katalog-wahl">Frühere Begründungen zu Ziffer ' + htmlEsc(nr) +
+        '<select id="fdKatalog"' + (katalog.length ? '' : ' disabled') + '>' +
+        (katalog.length
+          ? '<option value="">– auswählen (' + katalog.length + ') –</option>' + katalog.map((x, i)=> '<option value="' + i + '"' + (x.text === w.beg ? ' selected' : '') + '>' +
+              htmlEsc((x.standard ? '(Standard) ' : '') + x.text) + '</option>').join('')
+          : '<option>noch keine – jede übernommene Begründung wird gesammelt</option>') +
+        '</select></label>') +
       '<label id="fdBegLabel">Begründung<textarea id="fdBeg" rows="' + (zeitModus ? 1 : 3) + '"' + (zeitModus ? ' readonly class="nur-lesen" tabindex="-1"' : '') + '>' + htmlEsc(w.beg) + '</textarea></label>' +
-      (zeitModus ? '' : '<div class="begr-katalog"><div class="beta-erg-klein">Frühere Begründungen zu Ziffer ' + htmlEsc(nr) + ' – antippen zum Einsetzen:</div>' +
-        (katalog.length ? katalog.map((x, i)=> '<div class="begr-eintrag"><button type="button" class="begr-text' + (x.text === w.beg ? ' aktiv' : '') + '" data-i="' + i + '">' + htmlEsc(x.text) +
-            (x.standard ? ' <span class="begr-std">Standard</span>' : '') + '</button>' +
-            (x.standard ? '' : '<button type="button" class="begr-weg" data-i="' + i + '" title="aus der Liste entfernen">&times;</button>') + '</div>').join('')
-          : '<div class="beta-erg-klein begr-leer">Noch keine. Jede Begründung, die Sie hier mit „Übernehmen“ bestätigen, wird gesammelt und steht dann zur Auswahl (alle Geräte).</div>') + '</div>') +
       '</div><div class="beta-erg-klein" id="fdHinweis"></div>';
     const warte = betaOverlay.ergebnis('Ziffer ' + nr, html, [{ label:'Abbrechen', akt:'nein' }, { label:'Übernehmen', akt:'ja', primaer:true }]);
     const $ = (id)=> document.getElementById(id);
@@ -8366,7 +8416,7 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       bEl.classList.toggle('pflichtfeld-fehlt', pflicht && !zeitModus && !bEl.value.trim());
       document.querySelectorAll('.faktor-stufen button[data-f]').forEach(b=> b.classList.toggle('aktiv', ok && Math.abs(Number(b.dataset.f) - f) < 1e-9));
     };
-    bEl.addEventListener('input', ()=>{ aktual(); document.querySelectorAll('.begr-text').forEach(b=> b.classList.toggle('aktiv', katalog[+b.dataset.i] && katalog[+b.dataset.i].text === bEl.value.trim())); });
+    bEl.addEventListener('input', ()=>{ aktual(); const sel = $('fdKatalog'); if(sel && !sel.disabled){ const i = katalog.findIndex(x=> x.text === bEl.value.trim()); sel.value = i >= 0 ? String(i) : ''; } });
     if(zeitModus){
       [vonEl, bisEl].forEach(el=>{
         el.addEventListener('input', ()=>{ zeitAktual(); aktual(); });
@@ -8393,15 +8443,10 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       betaEigenerFaktorAendern(f, false);
       w = merken(); w.faktor = f; neuAufbauen = true; betaOverlay.loesen && betaOverlay.loesen('neu');
     };
-    document.querySelectorAll('.begr-text').forEach(b=> b.onclick = ()=>{
-      bEl.value = katalog[+b.dataset.i].text;
-      document.querySelectorAll('.begr-text').forEach(x=> x.classList.toggle('aktiv', x === b));
-      aktual();
-    });
-    document.querySelectorAll('.begr-weg').forEach(b=> b.onclick = ()=>{
-      betaBegrKatalogAendern(art, [{ schl, text: katalog[+b.dataset.i].text, weg: true }]);
-      b.closest('.begr-eintrag').remove();
-    });
+    if($('fdKatalog')) $('fdKatalog').onchange = ()=>{
+      const v = $('fdKatalog').value, x = v === '' ? null : katalog[+v];
+      if(x){ bEl.value = x.text; aktual(); }
+    };
     if(zeitModus) zeitAktual();
     aktual();
     const akt = await warte;
@@ -8910,25 +8955,34 @@ async function betaProfilSpeichern(art, profil){
     liste.push({ ...profil, geaendert: jetzt });
     d.profile[art] = liste;
   };
-  try{ await betaEigeneAbgleichen(anwenden); }
-  catch(e){ const d = betaEigeneDatenVoll(); anwenden(d); LS.set(EIGENE_POS_CACHE, d); }
+  // erst lokal (sofort sichtbar), dann im Hintergrund mit OneDrive abgleichen
+  const d = betaEigeneDatenVoll(); anwenden(d); LS.set(EIGENE_POS_CACHE, d);
+  if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') betaEigeneAbgleichen(anwenden).catch(()=>{});
 }
 
 // ---------- Anordnung (lang druecken + ziehen) ----------
 // {pt: {grund:[...], eigene:[...], am}, ls: {...}} -- nur die Reihenfolge
 // und Gruppe der waehlbaren Positionen; Zuschlaege/Wegegeld bleiben fest.
-function betaAnordnung(art){ const d = LS.get(EIGENE_POS_CACHE, null) || {}; return (d.anordnung || {})[art] || null; }
+// Jedes Profil kann seine eigene Reihenfolge haben; sonst gilt die allgemeine.
+function betaAnordnung(art){
+  const pr = typeof betaProfilAktiv === 'function' ? betaProfilAktiv(art) : null;
+  if(pr && pr.anordnung) return pr.anordnung;
+  const d = LS.get(EIGENE_POS_CACHE, null) || {}; return (d.anordnung || {})[art] || null;
+}
 async function betaAnordnungSpeichern(art, gruppen){
   const neu = { ...gruppen, am: new Date().toISOString() };
+  // Ziehen in den Rechnungspositionen gilt fuer das aktive Profil
+  const pr = typeof betaProfilAktiv === 'function' ? betaProfilAktiv(art) : null;
+  if(pr){ const { standard, ...rest } = pr; await betaProfilSpeichern(art, { ...rest, anordnung: neu }); return; }
   const anwenden = d=>{ d.anordnung = { ...(d.anordnung || {}), [art]: neu }; };
   const lokal = betaEigeneDatenVoll(); anwenden(lokal); LS.set(EIGENE_POS_CACHE, lokal);
   if(msGraphStatus === 'angemeldet') betaEigeneAbgleichen(anwenden).catch(()=>{});
 }
 // Verteilt die Positionen auf "grund" und "eigene" -- in der gemerkten
 // Reihenfolge; Neues landet am Ende seiner ueblichen Gruppe.
-function betaGruppenOrdnen(art, grundStandard, eigeneStandard){
+function betaGruppenOrdnen(art, grundStandard, eigeneStandard, layVorgabe){
   const alle = new Map([...grundStandard, ...eigeneStandard].map(p=> [p.ziffer, p]));
-  const lay = betaAnordnung(art);
+  const lay = layVorgabe !== undefined ? layVorgabe : betaAnordnung(art);
   const out = { grund: [], eigene: [] };
   const genutzt = new Set();
   if(lay){
@@ -8940,7 +8994,7 @@ function betaGruppenOrdnen(art, grundStandard, eigeneStandard){
 }
 // Lang druecken -> Zeile anheben und an eine andere Stelle oder in die
 // andere Gruppe ziehen. Finger (Touch) und Maus.
-function betaPosZiehen(wurzel, beimAblegen){
+function betaPosZiehen(wurzel, beimAblegen, scroller){
   const items = ()=> Array.from(wurzel.querySelectorAll('.pos-item[data-drag]'));
   let aktiv = null;
   const beginnen = (item, x, y)=>{
@@ -8973,8 +9027,13 @@ function betaPosZiehen(wurzel, beimAblegen){
       gruppe.insertBefore(aktiv.platz, ende);
     }
     // am Rand mitscrollen
-    const h = window.innerHeight;
-    if(y < 80) window.scrollBy(0, -12); else if(y > h - 140) window.scrollBy(0, 12);
+    if(scroller){
+      const r = scroller.getBoundingClientRect();
+      if(y < r.top + 40) scroller.scrollTop -= 10; else if(y > r.bottom - 40) scroller.scrollTop += 10;
+    } else {
+      const h = window.innerHeight;
+      if(y < 80) window.scrollBy(0, -12); else if(y > h - 140) window.scrollBy(0, 12);
+    }
   };
   const ablegen = ()=>{
     if(!aktiv) return;
@@ -9149,24 +9208,35 @@ async function betaProfilBearbeiten(art, id){
   profil.details = profil.details || {};
   ['faktoren', 'begruendungen', 'varianten'].forEach(f=> profil.details[f] = profil.details[f] || {});
   const katalog = art === 'ls' ? POSITIONEN_LS : POSITIONEN_PT;
-  const alleWaehlbar = ()=> [
+  const grundStd = ()=> [
     ...(katalog.grundleistung || []).filter(p=> p.ziffer !== 'E'),
-    ...betaFestPositionen(art).filter(p=> p.gruppe === 'grund' || p.manuell).map(betaEigenePositionAlsAuswahl),
-    ...betaEigene(art).map(betaEigenePositionAlsAuswahl)
+    ...betaFestPositionen(art).filter(p=> p.gruppe === 'grund' || p.manuell).map(betaEigenePositionAlsAuswahl)
   ];
+  const eigeneStd = ()=> betaEigene(art).map(betaEigenePositionAlsAuswahl);
+  const alleWaehlbar = ()=> [...grundStd(), ...eigeneStd()];
+  // Reihenfolge dieses Profils (sonst die allgemeine)
+  if(!profil.anordnung){
+    const d = LS.get(EIGENE_POS_CACHE, null) || {};
+    const allg = (d.anordnung || {})[art];
+    if(allg) profil.anordnung = JSON.parse(JSON.stringify(allg));
+  }
   const nrText = (p)=> p.anzeigeZiffer !== undefined ? (p.anzeigeZiffer || '–') : p.ziffer;
   const bezText = (p)=> String(p.eigeneBez || p.bez).replace(/<[^>]+>/g, '');
   let fehler = '', ausOffen = false;
   for(;;){
     const alle = alleWaehlbar();
-    const drin = alle.filter(p=> !profil.ausgeblendet.includes(p.ziffer));
+    const geordnet = betaGruppenOrdnen(art, grundStd(), eigeneStd(), profil.anordnung || null);
+    const drinG = geordnet.grund.filter(p=> !profil.ausgeblendet.includes(p.ziffer));
+    const drinE = art === 'ls' ? [] : geordnet.eigene.filter(p=> !profil.ausgeblendet.includes(p.ziffer));
+    if(art === 'ls') drinG.push(...geordnet.eigene.filter(p=> !profil.ausgeblendet.includes(p.ziffer)));
+    const drin = [...drinG, ...drinE];
     const weg = alle.filter(p=> profil.ausgeblendet.includes(p.ziffer));
     const zeile = (p)=>{
       const k = betaPosSchluessel(p);
       const mitFaktor = betaPosFaktorEditierbar(p);
       const f = profil.details.faktoren[k] !== undefined ? betaFaktorLesen(profil.details.faktoren[k]) : (mitFaktor ? betaPosStandardFaktor(p) : NaN);
       const b = String(profil.details.begruendungen[k] || '').trim();
-      return '<div class="profil-pos">' +
+      return '<div class="pos-item profil-pos" data-key="' + htmlEsc(p.ziffer) + '" data-drag="1">' +
         '<label class="profil-pos-haken"><input type="checkbox" data-z="' + htmlEsc(p.ziffer) + '"' + (profil.vorauswahl.includes(p.ziffer) ? ' checked' : '') + '>' +
         '<span><b>' + htmlEsc(nrText(p)) + '</b> ' + htmlEsc(bezText(p)) + '</span></label>' +
         '<div class="profil-pos-knoepfe">' +
@@ -9177,8 +9247,13 @@ async function betaProfilBearbeiten(art, id){
     };
     const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="beta-form"><label>Name<input id="prName" value="' + htmlEsc(profil.name) + '" autocomplete="off"></label></div>' +
-      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Haken = bei einer neuen Rechnung schon angehakt · Faktor antippen = Faktor und Begründung für dieses Profil vorgeben · &times; = in diesem Profil nicht anzeigen</div>' +
-      '<div class="profil-auswahl">' + drin.map(zeile).join('') + '</div>' +
+      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Haken = bei einer neuen Rechnung schon angehakt · Faktor antippen = Faktor und Begründung für dieses Profil vorgeben · &times; = in diesem Profil nicht anzeigen · lang drücken und ziehen = Reihenfolge</div>' +
+      '<div class="profil-auswahl">' +
+        (art === 'pt' ? '<div class="profil-gruppe-titel">Grundpauschalen</div>' : '') +
+        '<div class="pos-gruppe" data-gruppe="grund">' + drinG.map(zeile).join('') + '<div class="pos-gruppe-ende"></div></div>' +
+        (art === 'pt' ? '<div class="profil-gruppe-titel">Eigene Positionen</div><div class="pos-gruppe" data-gruppe="eigene">' + drinE.map(zeile).join('') +
+          (drinE.length ? '' : '<div class="beta-erg-klein profil-leer">hierher ziehen oder unten anlegen</div>') + '<div class="pos-gruppe-ende"></div></div>' : '') +
+      '</div>' +
       (art === 'pt' ? '<button type="button" class="btn-sekundaer profil-eigene" data-akt="eigene" style="margin-top:8px;">+ Eigene Position anlegen</button>' : '') +
       (weg.length ? '<button type="button" class="profil-aus-titel" data-akt="ausklappen">' + (ausOffen ? '&#9662;' : '&#9656;') + ' Entfernt (' + weg.length + ') – antippen zum Zurückholen</button>' +
         (ausOffen ? '<div class="profil-ausgeblendet">' + weg.map(p=> '<button type="button" class="profil-zurueck" data-akt="zurueck:' + htmlEsc(p.ziffer) + '"><b>' + htmlEsc(nrText(p)) + '</b> ' + htmlEsc(bezText(p)) + ' <span>＋</span></button>').join('') + '</div>' : '') : '');
@@ -9190,6 +9265,11 @@ async function betaProfilBearbeiten(art, id){
       if(b.closest('.beta-overlay-knoepfe')) return;
       b.onclick = (ev)=>{ ev.preventDefault(); betaOverlay.loesen && betaOverlay.loesen(b.dataset.akt); };
     });
+    // Reihenfolge per langem Druecken + Ziehen (wie in den Rechnungspositionen)
+    const auswahlEl = document.querySelector('.beta-overlay .profil-auswahl');
+    if(auswahlEl) betaPosZiehen(auswahlEl, (gr)=>{
+      profil.anordnung = { grund: gr.grund || [], eigene: gr.eigene || [], am: new Date().toISOString() };
+    }, auswahlEl);
     const akt = await warte;
     // Stand des Formulars uebernehmen (auch bei Zwischenschritten)
     const nameEl = document.getElementById('prName');
@@ -9252,43 +9332,84 @@ async function betaProfilBearbeiten(art, id){
     profil.name = profil.name.trim();
     if(!profil.name){ fehler = 'Bitte einen Namen eintragen.'; continue; }
     betaOverlay.schliessen();
-    await betaProfilSpeichern(art, { id: profil.id, name: profil.name, vorauswahl: profil.vorauswahl, ausgeblendet: profil.ausgeblendet, details: profil.details });
+    await betaProfilSpeichern(art, { id: profil.id, name: profil.name, vorauswahl: profil.vorauswahl, ausgeblendet: profil.ausgeblendet, details: profil.details,
+                                     ...(profil.anordnung ? { anordnung: profil.anordnung } : {}) });
     return true;
   }
 }
 
 // ---------- Einstellungen: Katalog frueherer Begruendungen ----------
-function betaBegrKatalogHtml(){
+// Auswahl der Ziffer per Dropdown, darunter ihre Texte (loeschen, neu anlegen)
+let betaBegrKatalogWahl = '';
+function betaBegrKatalogZiffern(){
   const d = (LS.get(EIGENE_POS_CACHE, null) || {}).begrKatalog || {};
-  const schl = Object.keys(d).filter(k=> (d[k] || []).some(x=> x && x.text && !x.geloescht))
-    .sort((a, b)=> a.localeCompare(b, 'de', { numeric: true }));
-  const anzeige = (k)=>{
-    const [art, z] = k.split(':');
-    const p = /^EIG/i.test(z) ? betaEigeneAlle(art).find(x=> x.id === z) : null;
-    return (art === 'ls' ? 'Leichenschau' : 'Privat') + ' · Ziffer ' + (p ? (p.ziffer || p.id) : z);
-  };
+  const anzahl = (k)=> ((d[k] || []).filter(x=> x && x.text && !x.geloescht)).length;
+  const out = [];
+  ['pt', 'ls'].forEach(art=>{
+    const kat = art === 'ls' ? POSITIONEN_LS : POSITIONEN_PT;
+    const pos = [
+      ...(kat.grundleistung || []).filter(p=> p.ziffer !== 'E'),
+      ...betaFestPositionen(art).filter(p=> p.gruppe === 'grund').map(betaEigenePositionAlsAuswahl),
+      ...(art === 'pt' ? betaEigene(art).map(betaEigenePositionAlsAuswahl) : [])
+    ].filter(p=> betaPosFaktorEditierbar(p) && !betaBegrImmer(p));
+    pos.forEach(p=>{
+      const k = art + ':' + goaeNorm(betaPosSchluessel(p));
+      const nr = p.anzeigeZiffer !== undefined ? p.anzeigeZiffer : p.ziffer;
+      out.push({ k, art, schl: betaPosSchluessel(p), n: anzahl(k),
+                 label: (art === 'ls' ? 'Leichenschau' : 'Privat') + ' · ' + nr + ' ' + String(p.eigeneBez || p.bez).replace(/<[^>]+>/g, '').slice(0, 40) });
+    });
+  });
+  return out;
+}
+function betaBegrKatalogInhalt(){
+  const z = betaBegrKatalogZiffern();
+  if(!betaBegrKatalogWahl || !z.some(x=> x.k === betaBegrKatalogWahl)){
+    const mit = z.find(x=> x.n > 0); betaBegrKatalogWahl = (mit || z[0] || {}).k || '';
+  }
+  const akt = z.find(x=> x.k === betaBegrKatalogWahl);
+  const [art, schl] = betaBegrKatalogWahl.split(':');
+  const liste = akt ? betaBegrKatalog(art, akt.schl) : [];
+  return '<div class="feld" style="margin-bottom:8px;"><select id="begrKatZiffer">' +
+      z.map(x=> '<option value="' + htmlEsc(x.k) + '"' + (x.k === betaBegrKatalogWahl ? ' selected' : '') + '>' + htmlEsc(x.label) + (x.n ? ' (' + x.n + ')' : '') + '</option>').join('') +
+    '</select></div>' +
+    (liste.length ? liste.map(x=> '<div class="begr-eintrag"><span class="begr-text nur">' + htmlEsc(x.text) + '</span>' +
+        '<button type="button" class="begr-weg begr-kat-weg" data-t="' + htmlEsc(x.text) + '" title="entfernen">&times;</button></div>').join('')
+      : '<div class="hinweis" style="font-size:13px;">Für diese Ziffer noch keine Begründungen.</div>') +
+    '<div class="begr-neu"><textarea id="begrKatNeu" rows="2" placeholder="Neue Begründung für diese Ziffer …"></textarea>' +
+    '<button type="button" class="btn-sekundaer" id="begrKatNeuOk">Hinzufügen</button></div>';
+}
+function betaBegrKatalogHtml(){
   return `
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Begründungen (Katalog)</div>
       <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-        Jede Begründung, die Sie im Faktor-Fenster einer Position mit „Übernehmen“ bestätigen, wird hier je Ziffer gesammelt
-        und dort unter „Frühere Begründungen“ zum Antippen angeboten.</div>
-      ${schl.length ? schl.map(k=> `
-        <div class="sync-unter-titel">${htmlEsc(anzeige(k))}</div>
-        ${(d[k] || []).filter(x=> x && x.text && !x.geloescht).map(x=> `
-          <div class="begr-eintrag"><span class="begr-text nur">${htmlEsc(x.text)}</span>
-            <button type="button" class="begr-weg begr-kat-weg" data-k="${htmlEsc(k)}" data-t="${htmlEsc(x.text)}" title="entfernen">&times;</button></div>`).join('')}`).join('')
-        : '<div class="hinweis" style="font-size:13px;">Noch keine Begründungen gesammelt.</div>'}
+        Jede Begründung, die im Faktor-Fenster mit „Übernehmen“ bestätigt wird, landet hier bei ihrer Ziffer und steht dort im
+        Auswahlfeld „Frühere Begründungen“. Hier lassen sich Texte entfernen oder vorab anlegen.</div>
+      <div id="begrKatalogInhalt">${betaBegrKatalogInhalt()}</div>
     </div>`;
+}
+function betaBegrKatalogWiring(){
+  const el = document.getElementById('begrKatalogInhalt'); if(!el) return;
+  const neu = ()=>{ el.innerHTML = betaBegrKatalogInhalt(); betaBegrKatalogWiring(); };
+  const sel = document.getElementById('begrKatZiffer');
+  if(sel) sel.onchange = ()=>{ betaBegrKatalogWahl = sel.value; neu(); };
+  const [art] = betaBegrKatalogWahl.split(':');
+  const akt = betaBegrKatalogZiffern().find(x=> x.k === betaBegrKatalogWahl);
+  el.querySelectorAll('.begr-kat-weg').forEach(b=> b.onclick = ()=>{
+    if(!akt) return;
+    betaBegrKatalogAendern(art, [{ schl: akt.schl, text: b.dataset.t, weg: true }]); neu();
+  });
+  const ok = document.getElementById('begrKatNeuOk');
+  if(ok) ok.onclick = ()=>{
+    const t = String(document.getElementById('begrKatNeu').value || '').replace(/\s+/g, ' ').trim();
+    if(!t || !akt) return;
+    betaBegrKatalogAendern(art, [{ schl: akt.schl, text: t }]); neu();
+  };
 }
 function betaProfileWiring(neuZeichnen){
   document.querySelectorAll('.profil-zeile').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, b.dataset.id)) neuZeichnen(); });
   document.querySelectorAll('.profil-neu').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, null)) neuZeichnen(); });
-  document.querySelectorAll('.begr-kat-weg').forEach(b=> b.onclick = ()=>{
-    const [art, z] = b.dataset.k.split(':');
-    betaBegrKatalogAendern(art, [{ schl: z, text: b.dataset.t, weg: true }]);
-    b.closest('.begr-eintrag').remove();
-  });
+  betaBegrKatalogWiring();
 }
 
 // ---------- Datenschutz & Haftung (Einstellungen, spaeter Einrichtung) ----------
