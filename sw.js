@@ -26,7 +26,8 @@
 // v119: 56 mit eigener Uhr, Profile individuell, Fassungen, Termin = stornieren + neu
 // v120: 56 wieder mit den gewohnten Uhrzeitfeldern, Anzahl je volle halbe Stunde
 // v121: GOÄ-Häufigkeitsregeln (Behandlungsfall, mehrfach am Tag, Höchstanzahl)
-const CACHE_NAME = 'rechnungserfassung-v121';
+// v122: Behandlungsfall-Pruefung wieder entfernt (im Notdienst nicht relevant)
+const CACHE_NAME = 'rechnungserfassung-v122';
 const NETZWERK_ZUERST = ['./Rechnungserfassung_Mobil.html', './manifest.json', './'];
 const CACHE_ZUERST = ['./icd_katalog.js', './goae_katalog.js', './icon-192.png', './icon-512.png', './icon-192-maskable.png', './icon-512-maskable.png', './apple-touch-icon.png'];
 const NIE_CACHEN = ['nominatim.openstreetmap.org', 'project-osrm.org', 'graph.microsoft.com', 'login.microsoftonline.com', 'login.live.com'];

@@ -262,9 +262,6 @@
   /* fruehere verschickte Fassung */
   .fall-zeile .info.fassungen-text{font-size:12px; color:var(--text-schwach);}
   .fassung-link{color:#2f6fed; text-decoration:underline; cursor:pointer;}
-  .pos-haeufig{display:block; font-size:12px; color:#2f6fed; margin-top:2px;}
-  .pos-haeufig:empty{display:none;}
-  .pos-haeufig.warn{color:#b9770e; font-weight:600;}
   .haftung-text{font-size:13.5px; line-height:1.5;}
   .haftung-text p{margin:0 0 8px;}
   .haftung-text ul{margin:0 0 8px; padding-left:18px;}
@@ -5111,30 +5108,6 @@ async function betaRechnungErstellen(f, meldung, frage, kontext){
     }
   }
 
-  // 2b. Haeufigkeit laut GOÄ ueber fruehere Rechnungen desselben Patienten
-  //     (z.B. Nr. 3 mehr als einmal im Behandlungsfall nur mit Begruendung)
-  if(f.art === 'pt' && typeof betaHaeufigkeitPruefen === 'function'){
-    const det0 = f.positionsDetails || {};
-    const nrVon = (z)=> /^EIG/i.test(z) && f.eigenePositionen && f.eigenePositionen[z] ? goaeNorm(f.eigenePositionen[z].ziffer) : betaNrVonSchluessel(f.art, z);
-    const akt = {};
-    (f.positionen || []).forEach(z=>{ const nr = nrVon(z); if(nr && /^\d+$/.test(nr)) akt[nr] = (akt[nr] || 0) + betaAnzahlVon(det0, goaeNorm(z)); });
-    const hist = betaPatientHistorie(ue, f.art, w.txtName, w.txtGeda, treffer ? { nr: treffer.nr } : { datum: w.txtDatumExcel, zeit: w.txtZeitLS });
-    const befunde = betaHaeufigkeitPruefen(f.art, akt, w.txtDatumExcel, hist);
-    const pg = {};
-    for(const b of befunde.filter(x=> x.typ === 'begr')){
-      for(const z of (f.positionen || []).filter(z=> nrVon(z) === b.nr)){
-        const k = goaeNorm(z);
-        if(!String((det0.begruendungen || {})[k] || '').trim())
-          throw new Error(b.grund + '. Eine mehrfache Berechnung im Behandlungsfall braucht laut GOÄ eine besondere Begründung – bitte in den Rechnungspositionen über den Faktor-Knopf von Ziffer ' + b.nr + ' eintragen.');
-        pg[k] = b.grund;
-      }
-    }
-    if(Object.keys(pg).length) f.positionsDetails = { ...det0, pflichtGrund: { ...(det0.pflichtGrund || {}), ...pg } };
-    const warn = befunde.filter(x=> x.typ === 'warn' && !(det0.haeufigOk || []).includes(x.schl));
-    if(warn.length && !await frage('Hinweis laut GOÄ für ' + anzeige + ':\n\n' + warn.map(x=> '• Ziffer ' + x.nr + ': ' + x.kurz).join('\n') + '\n\nTrotzdem erstellen?', 'Trotzdem erstellen', 'Abbrechen'))
-      return { uebersprungen: true, grund: 'Hinweis laut GOÄ', renu, name };
-  }
-
   // 3. Rechnung schon im Ordner (vom PC oder vom Handy)?
   const [vPdf, vDocx] = await schritt('Ordner prüfen', ()=> Promise.all([
     dateiInfo(token, ziel.ordner + '/' + name + '.pdf'), dateiInfo(token, ziel.ordner + '/' + name + '.docx')]));
@@ -8161,7 +8134,6 @@ function betaDetailsVervollstaendigen(art, auswahl, details, alle, legacy){
   const pg = {};
   Object.keys(alt.pflichtGrund || {}).forEach(k=>{ if(gewaehlt.has(goaeNorm(k)) && alt.pflichtGrund[k]) pg[goaeNorm(k)] = alt.pflichtGrund[k]; });
   if(Object.keys(pg).length) d.pflichtGrund = pg;
-  if(alt.haeufigOk && alt.haeufigOk.length) d.haeufigOk = alt.haeufigOk.slice();
   return d;
 }
 function betaEffektivBetrag(art, p, details){
@@ -8298,122 +8270,6 @@ function betaUSegmenteLesen(u){
     }
   });
   return out;
-}
-
-// ---------- Haeufigkeit ueber mehrere Rechnungen (GOÄ-Anmerkungen) ----------
-// Behandlungsfall = derselben Erkrankung, ein Monat ab der ersten
-// Inanspruchnahme (Allg. Best. 1 zu Abschnitt B). Quelle der frueheren
-// Rechnungen ist die Rechnungsuebersicht (gleicher Name + Geburtsdatum).
-const GOAE_HAEUFIG = {
-  '3':   { fall: 'begr' },                  // mehr als einmal im Behandlungsfall: besondere Begruendung
-  '4':   { fall: 1 }, '807': { fall: 1 }, '842': { fall: 1 }, '860': { fall: 1 },
-  '15':  { kalenderjahr: 1 }, '26': { kalenderjahr: 1 },
-  '30':  { monate: 12, max: 1 }, '31': { monate: 6, max: 3 }, '33': { monate: 12, max: 3 }, '34': { monate: 6, max: 2 }
-};
-function betaMonatePlus(serial, m){
-  const d = new Date(XL_EPOCHE + serial * 86400000); d.setUTCMonth(d.getUTCMonth() + m);
-  return Math.round((d.getTime() - XL_EPOCHE) / 86400000);
-}
-function betaZeitNorm(t){ const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '').trim()); return m ? zz2(+m[1]) + ':' + m[2] : ''; }
-// fruehere Rechnungen desselben Patienten: [{datum, serial, renu, zaehl:{nr: anzahl}}]
-// ausschluss: {nr} (Zeile der bearbeiteten Rechnung) oder {datum, zeit}
-function betaPatientHistorie(ue, art, name, geda, ausschluss){
-  if(!ue || !ue.zeilen) return null;
-  const t = (x)=> String(x == null ? '' : x).trim();
-  const { nachname, vorname } = nameAufteilen(name);
-  if(!nachname) return null;
-  const schl = [nachname, vorname, fpDatum(geda)].map(x=> t(x).toUpperCase()).join('|');
-  const A = art === 'ls' ? 'L' : 'P';
-  const out = [];
-  ue.zeilen.forEach(z=>{
-    if(z.nr < 2) return;
-    const v = z.v;
-    if(t(v[0]).toUpperCase() !== A) return;
-    if([t(v[5]), t(v[6]), fpDatum(xlDatumText(v[7]))].map(x=> x.toUpperCase()).join('|') !== schl) return;
-    if(ausschluss && ausschluss.nr && z.nr === ausschluss.nr) return;
-    const datum = fpDatum(xlDatumText(v[1])), serial = xlDatumSerial(datum);
-    if(serial == null) return;
-    if(ausschluss && !ausschluss.nr && datum === fpDatum(ausschluss.datum) && betaZeitNorm(xlZeitText(v[2])) === betaZeitNorm(ausschluss.zeit)) return;
-    const u = t(v[20]);
-    const pos = ((/(?:^|\|)\s*POS:([^|]*)/i.exec(u) || [])[1] || '').split(',').map(x=> x.trim()).filter(Boolean);
-    const seg = betaUSegmenteLesen(u);
-    const zaehl = {};
-    pos.forEach(k=>{
-      const nr = /^EIG/i.test(k) ? goaeNorm((seg.eigene[k] || {}).ziffer || betaNrVonSchluessel(art, k)) : goaeNorm(k);
-      if(!nr) return;
-      zaehl[nr] = (zaehl[nr] || 0) + (((seg.details || {}).anzahl || {})[goaeNorm(k)] || 1);
-    });
-    out.push({ datum, serial, renu: t(v[16]), zaehl });
-  });
-  return out;
-}
-// aktuell: {nr: anzahl} der Rechnung; -> [{nr, typ:'begr'|'warn', kurz, grund, schl}]
-function betaHaeufigkeitPruefen(art, aktuell, datumText, historie){
-  const out = [];
-  if(!historie || art !== 'pt') return out;
-  const s0 = xlDatumSerial(fpDatum(datumText));
-  if(s0 == null) return out;
-  const frueher = historie.filter(h=> h.serial <= s0).sort((a, b)=> a.serial - b.serial);
-  let start = null;
-  frueher.forEach(h=>{ if(start === null || h.serial > betaMonatePlus(start, 1)) start = h.serial; });
-  if(start === null || s0 > betaMonatePlus(start, 1)) start = s0;
-  const imFall = frueher.filter(h=> h.serial >= start);
-  const am = (liste, nr)=> liste.filter(h=> h.zaehl[nr]).map(h=> h.datum);
-  const add = (nr, typ, kurz, grund, daten)=> out.push({ nr, typ, kurz, grund: grund || kurz, schl: nr + '@' + (daten || []).join(',') + '@' + typ });
-  Object.keys(aktuell).forEach(nr=>{
-    const r = GOAE_HAEUFIG[nr]; if(!r) return;
-    if(r.fall){
-      const d = am(imFall, nr);
-      if(d.length){
-        const wann = 'schon am ' + d.join(', ') + ' berechnet';
-        if(r.fall === 'begr') add(nr, 'begr', wann + ' (Behandlungsfall) – mehrfache Berechnung braucht laut GOÄ eine besondere Begründung',
-                                  'Ziffer ' + nr + ' im Behandlungsfall ' + wann, d);
-        else add(nr, 'warn', wann + ' – laut GOÄ im Behandlungsfall nur einmal berechnungsfähig (bei derselben Erkrankung)', '', d);
-      } else if(r.fall === 1 && aktuell[nr] > 1) add(nr, 'warn', 'laut GOÄ im Behandlungsfall nur einmal berechnungsfähig', '', []);
-    }
-    if(r.kalenderjahr){
-      const jahr = (s)=> new Date(XL_EPOCHE + s * 86400000).getUTCFullYear();
-      const d = am(frueher.filter(h=> jahr(h.serial) === jahr(s0)), nr);
-      if(d.length + aktuell[nr] > r.kalenderjahr) add(nr, 'warn', (d.length ? 'schon am ' + d.join(', ') + ' berechnet – ' : '') + 'laut GOÄ nur einmal im Kalenderjahr', '', d);
-    }
-    if(r.monate){
-      const ab = betaMonatePlus(s0, -r.monate);
-      const im = frueher.filter(h=> h.serial > ab && h.zaehl[nr]);
-      const bisher = im.reduce((a, h)=> a + h.zaehl[nr], 0);
-      if(bisher + aktuell[nr] > r.max) add(nr, 'warn', 'laut GOÄ innerhalb von ' + (r.monate === 12 ? 'einem Jahr' : r.monate + ' Monaten') + ' höchstens ' + (r.max === 1 ? 'einmal' : r.max + '-mal') +
-        (im.length ? ' (bisher: ' + im.map(h=> h.datum).join(', ') + ')' : ''), '', im.map(h=> h.datum));
-    }
-  });
-  // Allg. Best. 2: 1 und/oder 5 neben Leistungen der Abschnitte C bis O im Behandlungsfall nur einmal
-  const mitCO = (z)=> Object.keys(z).some(n=> /^\d+$/.test(n) && +n >= 200);
-  ['1', '5'].forEach(nr=>{
-    if(!aktuell[nr]) return;
-    const d = imFall.filter(h=> h.zaehl['1'] || h.zaehl['5']).map(h=> h.datum);
-    if(d.length && (mitCO(aktuell) || imFall.some(h=> mitCO(h.zaehl))))
-      add(nr, 'warn', '1/5 schon am ' + d.join(', ') + ' berechnet – neben Leistungen der Abschnitte C bis O (z. B. Injektion, EKG) laut GOÄ im Behandlungsfall nur einmal', '', d);
-  });
-  return out;
-}
-// Uebersicht fuer die Pruefung: aus der Rechnungsverwaltung oder im Hintergrund geladen
-let betaHistorieCache = null, betaHistorieLaeuft = null;
-function betaHistorieUe(){
-  if(typeof betaGesamtCache !== 'undefined' && betaGesamtCache && betaGesamtCache.ue && betaGesamtCache.zielKey === betaZielKey()) return betaGesamtCache.ue;
-  if(betaHistorieCache && Date.now() - betaHistorieCache.am < 15 * 60000) return betaHistorieCache.ue;
-  return null;
-}
-function betaHistorieNachladen(){
-  if(betaHistorieLaeuft) return betaHistorieLaeuft;
-  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return Promise.resolve(null);
-  betaHistorieLaeuft = (async()=>{
-    try{
-      const token = await msGraphTokenHolen(); if(!token) return null;
-      const ue = await uebersichtLaden(token, betaZiel().uebersicht);
-      betaHistorieCache = { ue, am: Date.now() };
-      return ue;
-    }catch(e){ return null; }
-    finally{ setTimeout(()=>{ betaHistorieLaeuft = null; }, 0); }
-  })();
-  return betaHistorieLaeuft;
 }
 
 // ---------- Dialog: Faktor und Begruendung ----------
@@ -8701,7 +8557,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     const loeschbar = p.eigene && !p.fest;
     const label = `<label class="position-zeile${istAuto && !aus?' auto-gesperrt':''}${aus?' auto-aus':''}${mitFaktor?' mit-faktor':''}" data-auto-aus="${aus?'1':'0'}">
         <input type="checkbox" data-ziffer="${htmlEsc(p.ziffer)}" data-betrag="${betragVon(p)}" data-auto="${istAuto?'1':'0'}" ${checked} ${gesperrt}>
-        <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span><span class="pos-haeufig" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (antippen = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
+        <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (antippen = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
         <div class="betrag">${betragVon(p).toFixed(2).replace('.',',')} &euro;</div>
       </label>`;
     const innen = loeschbar ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>${label}</div>` : label;
@@ -8829,34 +8685,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       if(automatisch.length) return 'neu';
     }
   }
-  // Haeufigkeit laut GOÄ (fruehere Rechnungen desselben Patienten)
-  const kxH = window.betaPosKontext || {};
-  const haeufigBerechnen = ()=>{
-    const ue = betaHistorieUe();
-    if(!ue || !kxH.name || art !== 'pt') return null;
-    const hist = betaPatientHistorie(ue, art, kxH.name, kxH.geda, { datum: kxH.datum, zeit: kxH.zeit });
-    const akt = {};
-    gewaehltePositionen().forEach(p=>{ const nr = betaPosNr(p); if(nr && /^\d+$/.test(nr)) akt[nr] = (akt[nr] || 0) + anzahlVon(p); });
-    return betaHaeufigkeitPruefen(art, akt, kxH.datum, hist);
-  };
-  function haeufigZeichnen(){
-    const befunde = haeufigBerechnen();
-    if(befunde){
-      det.pflichtGrund = {};
-      befunde.filter(x=> x.typ === 'begr').forEach(x=> gewaehltePositionen().filter(p=> betaPosNr(p) === x.nr).forEach(p=>{ det.pflichtGrund[betaPosSchluessel(p)] = x.grund; }));
-    }
-    app.querySelectorAll('.pos-haeufig').forEach(el=>{
-      const p = posVon(el.dataset.z), cb = el.closest('.position-zeile').querySelector('input');
-      const t = befunde && p && cb.checked ? befunde.filter(x=> x.nr === betaPosNr(p)) : [];
-      el.textContent = t.map(x=> (x.typ === 'begr' ? 'ℹ ' : '⚠ ') + x.kurz).join(' · ');
-      el.classList.toggle('warn', t.some(x=> x.typ === 'warn'));
-    });
-  }
-  function positionAktualisieren(){ ausschluesseAktualisieren(); haeufigZeichnen(); zusatzZeichnen(); konflikteZeichnen(); summeBerechnen(); }
-  // Uebersicht noch nicht da -> im Hintergrund laden und dann neu pruefen
-  if(art === 'pt' && kxH.name && !betaHistorieUe()){
-    betaHistorieNachladen().then(ue=>{ if(ue && document.getElementById('btnPositionenFertig') && app.contains(document.getElementById('btnPositionenFertig'))) positionAktualisieren(); });
-  }
+  function positionAktualisieren(){ ausschluesseAktualisieren(); zusatzZeichnen(); konflikteZeichnen(); summeBerechnen(); }
   const gewaehltJetzt = ()=>{
     const set = new Set(Array.from(app.querySelectorAll('.position-zeile input:checked')).map(cb=> cb.dataset.ziffer));
     set.details = det; return set;
@@ -8928,19 +8757,12 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   }
 
   document.getElementById('btnPositionenFertig').onclick = async ()=>{
-    // Hinweise laut GOÄ (nur einmal im Behandlungsfall usw.) einmal bestaetigen lassen
-    haeufigZeichnen();
-    const warn = (haeufigBerechnen() || []).filter(x=> x.typ === 'warn' && !(det.haeufigOk || []).includes(x.schl));
-    if(warn.length){
-      if(!await betaFrage('Hinweis laut GOÄ:\n\n' + warn.map(x=> '• Ziffer ' + x.nr + ': ' + x.kurz).join('\n') + '\n\nTrotzdem so übernehmen?', 'Übernehmen', 'Zurück')) return;
-      det.haeufigOk = [...(det.haeufigOk || []), ...warn.map(x=> x.schl)];
-    }
     const gewaehlt = gewaehltJetzt();
     const voll = betaDetailsVervollstaendigen(art, gewaehlt, det, alle, legacy);
     const fehlt = betaBegruendungFehlt(art, gewaehlt, voll, alle);
     if(fehlt.length){
       app.querySelectorAll('.beg-text.fehlt').forEach(el=> el.closest('.position-zeile').scrollIntoView({behavior:'smooth', block:'center'}));
-      await betaOverlay.meldung('Bitte noch eine Begründung eintragen für: ' + betaFehltText(fehlt) + '.\n\nPflicht über dem Schwellenwert (§ 12 Abs. 3 GOÄ) und laut GOÄ bei mehrfacher Berechnung (z. B. Ziffer 3 im Behandlungsfall, 1/3/5–8 mehrmals am selben Tag).', 'Begründung fehlt');
+      await betaOverlay.meldung('Bitte noch eine Begründung eintragen für: ' + betaFehltText(fehlt) + '.\n\nPflicht über dem Schwellenwert (§ 12 Abs. 3 GOÄ) und laut GOÄ bei mehrfacher Berechnung (1, 3, 5–8 mehrmals am selben Tag).', 'Begründung fehlt');
       return;
     }
     // zuletzt verwendete Begruendungen als Vorlage merken (nur wo sie gedruckt werden)
