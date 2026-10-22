@@ -428,6 +428,7 @@
   .gkv-summe-leiste #gkvSumme{flex:1; font-size:16px;}
   .gkv-summe-leiste #gkvSumme small{font-size:12px; color:var(--text-schwach);}
   .gkv-summe-leiste .btn-primaer{width:auto; margin:0; padding:11px 16px;}
+  .fall-zeile.gkv-verlauf{display:block;}
   .gkv-verlauf .gkv-v-unter{font-size:12.5px; color:var(--text-schwach); margin-top:2px;}
   .gkv-verlauf .gkv-v-status{font-size:12.5px; margin-top:3px;}
   .gkv-verlauf .aktionen{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
@@ -450,6 +451,12 @@
   .fb-chip.arzt button{width:auto; margin:0; border:none; background:none; color:inherit; font:inherit; padding:5px 10px;}
   .fb-chip.arzt button.x{padding:5px 9px; border-left:1px solid var(--rand); opacity:.7;}
   .fb-chip.arzt + input, .fb-chips + input{margin-top:8px;}
+  .gkv-stand a{color:inherit;}
+  .ebm-tab{width:100%; border-collapse:collapse; font-size:13.5px;}
+  .ebm-tab th, .ebm-tab td{text-align:left; padding:4px 6px; border-bottom:1px solid var(--rand);}
+  .ebm-tab td:nth-child(n+2), .ebm-tab th:nth-child(n+2){text-align:right; white-space:nowrap;}
+  .ebm-wege-raster{display:grid; grid-template-columns:1fr 1fr; gap:0 10px;}
+  .ebm-wege-raster .fb-lbl{font-size:11.5px;}
   .karte .icon{font-size:46px; display:block; margin-bottom:12px;}
   .karte .unter{font-size:12.5px; font-weight:400; opacity:.9; margin-top:4px;}
 
@@ -9521,6 +9528,22 @@ async function fahrdienstStatistikSchreiben(meldung){
     const aq = '=IF(AP' + R + '="","",IFERROR(AP' + R + '/AN' + R + '-1,""))';
     if(fahrdienstFormelNorm(aq) !== fahrdienstFormelNorm(zelle(R, 'AQ'))) schreiben.push({ adresse: 'AQ' + R, formeln: [[aq]] });
   });
+  // Euro-Zeile 3 (F..AF) auf die aktuell gueltigen Betraege setzen -- Ziffer
+  // aus Zeile 2; Spalten ohne bekannte EBM-Ziffer bleiben, wie sie sind.
+  if(typeof ebmEintrag === 'function'){
+    const kopf2 = werte[1] || [], z3 = formeln[2] || [];
+    const neu = []; let anders = false;
+    for(let c = 5; c <= 31; c++){
+      const alt = z3[c] == null ? '' : z3[c];
+      const g = (String(kopf2[c] == null ? '' : kopf2[c]).match(/\d{3,5}/) || [''])[0].padStart(5, '0');
+      if(g !== '00000' && ebmEintrag(g)){
+        const v = ebmEuro(g, new Date());
+        neu.push(v);
+        if(Math.abs((Number(String(alt).replace(',', '.')) || 0) - v) > 0.004) anders = true;
+      } else neu.push(alt);
+    }
+    if(anders) schreiben.push({ adresse: 'F3:AF3', formeln: [neu] });
+  }
   // Veraltete Statistik (Blockende/Quartalsende hat sich durch neue Zeilen
   // verschoben): alte Formeln leeren, manuell eingetragene Auszahlung (AP)
   // wandert mit ans neue Quartalsende.
@@ -9576,8 +9599,37 @@ async function fahrdienstOeffnenMitStatistik(){
 // Die App kennt die Ziffern selbst (wie den GOÄ-Katalog) und schreibt nur:
 // je Fall eine Zeile in den Block des Diensts (D = Name, E = ''/P/LS,
 // Anzahl unter der passenden Ziffernspalte aus Zeile 2, AG = Euro).
-const EBM_ORIENTIERUNGSWERT = 0.127404; // Euro je Punkt (2026)
-const EBM_STAND = 'EBM 4/2026 · Orientierungswert 12,7404 Cent · regionale Wegepauschalen KVBW (Stand 10/2026)';
+// Euro-Werte mit Gueltigkeit: Orientierungswert (Euro je Punkt) und die
+// regionalen Wegepauschalen der KVBW. Massgeblich ist der Tag des Falls.
+// Neue Werte findet die App selbst (ebmWerteAutomatisch, ueber die Azure-
+// Weiterleitung) oder sie werden von Hand eingetragen -- beides landet als
+// weiterer Eintrag in localStorage 'ebm_werte'.
+const EBM_WEGE_GOPS = ['40220', '40222', '40224', '40190', '40226', '40228', '40230', '40192'];
+const EBM_WERTE_STANDARD = [
+  { ab: '2025-01-01', ow: 0.123934, quelle: 'Orientierungswert 2025, KVBW Regionale GOP 4/2025',
+    wege: { '40190': 15.87, '40192': 21.80, '40220': 4.61, '40222': 9.25, '40224': 13.21, '40226': 9.25, '40228': 14.53, '40230': 19.82 } },
+  { ab: '2026-01-01', ow: 0.127404, quelle: 'Orientierungswert 2026, KVBW Regionale GOP 1–3/2026',
+    wege: { '40190': 16.31, '40192': 22.41, '40220': 4.74, '40222': 9.51, '40224': 13.58, '40226': 9.51, '40228': 14.94, '40230': 20.37 } }
+];
+function ebmIso(d){ d = d || new Date(); return d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate()); }
+function ebmWerteListe(){
+  let eig = LS.get('ebm_werte', []);
+  if(!Array.isArray(eig)) eig = [];
+  const m = new Map();
+  EBM_WERTE_STANDARD.concat(eig).forEach(w=>{ if(w && /^\d{4}-\d{2}-\d{2}$/.test(w.ab) && w.ow > 0) m.set(w.ab, w); });
+  return [...m.values()].sort((a, b)=> a.ab < b.ab ? -1 : a.ab > b.ab ? 1 : 0);
+}
+function ebmWerteFuer(datum){
+  const iso = ebmIso(datum), l = ebmWerteListe();
+  let w = l[0];
+  l.forEach(x=>{ if(x.ab <= iso) w = x; });
+  return w;
+}
+function ebmCent(ow){ return String(Math.round(ow * 1e6) / 1e4).replace('.', ','); }
+function ebmStandText(datum){
+  const w = ebmWerteFuer(datum);
+  return 'Orientierungswert ' + ebmCent(w.ow) + ' Cent · Wegepauschalen KVBW · gültig ab ' + isoDe(w.ab);
+}
 // [GOP, Punkte (null = fester Eurobetrag), Kurzlegende, Euro fest, Hinweis]
 const EBM_KATALOG = [
   ['01100',196,'Unvorhergesehene Inanspruchnahme I',null,'Nicht im organisierten Not-/Bereitschaftsdienst'],
@@ -9642,11 +9694,136 @@ function ebmEintrag(gop){
   const e = ebmEintrag.m.get(ebmNorm(gop));
   return e ? { gop: e[0], punkte: e[1], text: e[2], euroFest: e[3], hinweis: e[4] } : null;
 }
-function ebmEuro(gop){
+function ebmEuro(gop, datum){
   const e = ebmEintrag(gop);
   if(!e) return 0;
-  return e.punkte != null ? betaRund2(e.punkte * EBM_ORIENTIERUNGSWERT) : Number(e.euroFest) || 0;
+  const w = ebmWerteFuer(datum);
+  if(e.punkte != null) return betaRund2(e.punkte * w.ow);
+  if(w.wege && Number(w.wege[e.gop]) > 0) return Number(w.wege[e.gop]);
+  return Number(e.euroFest) || 0;
 }
+
+// ---------- Neue Werte online pruefen (Azure-Weiterleitung /ebm/werte) ----------
+// Die Weiterleitung liest die aktuelle EBM-Uebersicht (Orientierungswert) und
+// die neueste Liste "Regionale GOP" der KVBW (Wegepauschalen). Uebernommen wird
+// nur nach Rueckfrage und nur, was alle Plausibilitaetspruefungen besteht.
+const EBM_PRUEF_ABSTAND_TAGE = 7;
+function ebmQuartalsbeginn(d){ d = d || new Date(); return new Date(d.getFullYear(), Math.floor(d.getMonth() / 3) * 3, 1); }
+function ebmVorschlagBilden(j){
+  const akt = ebmWerteFuer(new Date());
+  const v = { ow: null, wege: null, hinweise: [] };
+  const ow = Number(j && j.ow);
+  if(ow > 0.08 && ow < 0.25 && Math.abs(ow / akt.ow - 1) <= 0.15){
+    const k = Number(j.kontrolle01418);
+    if(k > 0 && Math.abs(778 * ow - k) > 0.02) v.hinweise.push('Orientierungswert unstimmig (Kontrolle mit 01418) – nicht übernommen.');
+    else v.ow = Math.round(ow * 1e6) / 1e6;
+  } else if(j && j.ow != null) v.hinweise.push('Orientierungswert ' + j.ow + ' unplausibel – nicht übernommen.');
+  const w = (j && j.wege) || {};
+  const n = (g)=> Number(w[g]);
+  const alleDa = EBM_WEGE_GOPS.every(g=> n(g) >= 1 && n(g) <= 80 && Math.abs(n(g) / (akt.wege[g] || n(g)) - 1) <= 0.3);
+  const stimmig = alleDa && n('40220') < n('40222') && n('40222') < n('40224') && n('40224') < n('40190') &&
+    n('40226') < n('40228') && n('40228') < n('40230') && n('40230') < n('40192') &&
+    n('40226') > n('40220') && n('40228') > n('40222') && n('40230') > n('40224') && n('40192') > n('40190');
+  if(stimmig){ v.wege = {}; EBM_WEGE_GOPS.forEach(g=> v.wege[g] = Math.round(n(g) * 100) / 100); }
+  else if(Object.keys(w).length) v.hinweise.push('Wegepauschalen nicht vollständig/stimmig gelesen – nicht übernommen.');
+  v.owNeu = v.ow != null && Math.abs(v.ow - akt.ow) > 5e-7;
+  v.wegeNeu = !!v.wege && EBM_WEGE_GOPS.some(g=> Math.abs(v.wege[g] - (akt.wege[g] || 0)) > 0.004);
+  v.neu = v.owNeu || v.wegeNeu;
+  // gueltig ab: Datum aus der Quelle, sonst Beginn des laufenden Quartals
+  const daten = [v.owNeu && j.owAb, v.wegeNeu && j.wegeAb].filter(x=> /^\d{4}-\d{2}-\d{2}$/.test(x || '')).sort();
+  v.ab = daten.length ? daten[daten.length - 1] : ebmIso(ebmQuartalsbeginn());
+  v.quelle = [v.owNeu ? (j.owQuelle || 'EBM-Übersicht') : '', v.wegeNeu ? (j.wegeQuelle || 'KVBW Regionale GOP') : ''].filter(Boolean).join(', ');
+  return v;
+}
+async function ebmWerteOnlineHolen(){
+  let r;
+  try{ r = await fetch(lxpBasisUrl() + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
+  catch(e){ throw new Error('Keine Verbindung zur Azure-Weiterleitung (Internet?).'); }
+  if(r.status === 404) throw new Error('Die Azure-Weiterleitung kennt die Werte-Prüfung noch nicht – bitte einmal das neue Azure-Skript ausführen.');
+  const j = await r.json().catch(()=> null);
+  if(!r.ok || !j) throw new Error('Werte-Prüfung fehlgeschlagen (HTTP ' + r.status + ').');
+  return j;
+}
+function ebmWerteUebernehmen(v){
+  const akt = ebmWerteFuer(new Date(v.ab + 'T12:00:00'));
+  const eintrag = { ab: v.ab, ow: v.owNeu ? v.ow : akt.ow, wege: v.wegeNeu ? v.wege : Object.assign({}, akt.wege), quelle: v.quelle || 'von Hand' };
+  const eig = (LS.get('ebm_werte', []) || []).filter(x=> x && x.ab !== eintrag.ab);
+  eig.push(eintrag);
+  LS.set('ebm_werte', eig);
+  LS.set('ebm_vorschlag', null);
+}
+async function ebmVorschlagFragen(v){
+  const akt = ebmWerteFuer(new Date());
+  const z = (a, b)=> '<tr><td>' + a + '</td><td>' + b + '</td></tr>';
+  let html = '<div class="fb-dialog"><div class="fb-info">Gültig ab ' + htmlEsc(isoDe(v.ab)) + ' · Quelle: ' + htmlEsc(v.quelle) + '</div><table class="ebm-tab"><tr><th></th><th>bisher</th><th>neu</th></tr>';
+  if(v.owNeu) html += '<tr><td>Orientierungswert</td><td>' + ebmCent(akt.ow) + ' Ct</td><td><b>' + ebmCent(v.ow) + ' Ct</b></td></tr>';
+  if(v.wegeNeu) EBM_WEGE_GOPS.forEach(g=>{ if(Math.abs(v.wege[g] - (akt.wege[g] || 0)) > 0.004) html += '<tr><td>' + g + '</td><td>' + betaEuro(akt.wege[g] || 0) + '</td><td><b>' + betaEuro(v.wege[g]) + '</b></td></tr>'; });
+  html += '</table><div class="fb-info" style="margin-top:8px;">Fälle ab diesem Tag werden mit den neuen Beträgen eingetragen, die Euro-Zeile im Fahrtenbuch wird beim nächsten Öffnen angepasst.</div></div>';
+  const akt2 = await betaOverlay.ergebnis('Neue EBM-Werte gefunden', html, [{ label: 'Später', akt: 'nein' }, { label: 'Übernehmen', akt: 'ok', primaer: true }]);
+  betaOverlay.schliessen();
+  if(akt2 === 'ok'){ ebmWerteUebernehmen(v); return true; }
+  return false;
+}
+// manuell=true: Ergebnis immer melden; sonst still (hoechstens Rueckfrage bei neuen Werten)
+async function ebmWertePruefen(manuell){
+  const vorher = LS.get('ebm_pruefung', {}) || {};
+  try{
+    const j = await ebmWerteOnlineHolen();
+    const v = ebmVorschlagBilden(j);
+    if(v.ow == null && !v.wege) throw new Error('Werte konnten nicht gelesen werden. ' + v.hinweise.concat(j.fehler || []).join(' '));
+    LS.set('ebm_pruefung', { am: new Date().toISOString(), ok: true, hinweise: v.hinweise.concat(j.fehler || []) });
+    if(v.neu){
+      if(manuell || aktuelleAnsichtIstHauptbildschirm) return await ebmVorschlagFragen(v) ? 'übernommen' : 'später';
+      LS.set('ebm_vorschlag', v); return 'vorgemerkt';
+    }
+    LS.set('ebm_vorschlag', null);
+    if(manuell) await betaOverlay.meldung('Die Werte sind aktuell (' + ebmStandText(new Date()) + ').' + (v.hinweise.length || (j.fehler || []).length ? '\n\nHinweis: ' + v.hinweise.concat(j.fehler || []).join(' ') : ''), 'EBM-Werte');
+    return 'aktuell';
+  }catch(e){
+    LS.set('ebm_pruefung', { am: vorher.am || null, versuch: new Date().toISOString(), ok: false, fehler: e.message || String(e) });
+    if(manuell) await betaOverlay.meldung(e.message || String(e), 'EBM-Werte');
+    return 'fehler';
+  }
+}
+// beim App-Start: hoechstens einmal pro Woche (letzter Versuch zaehlt), still
+async function ebmWerteAutomatisch(){
+  try{
+    const p = LS.get('ebm_pruefung', {}) || {};
+    const vm = LS.get('ebm_vorschlag', null);
+    if(vm && vm.neu && aktuelleAnsichtIstHauptbildschirm){ if(await ebmVorschlagFragen(vm)) return; }
+    const zuletzt = Date.parse(p.versuch || p.am || '') || 0;
+    if(Date.now() - zuletzt < EBM_PRUEF_ABSTAND_TAGE * 86400000) return;
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    await ebmWertePruefen(false);
+  }catch(e){}
+}
+setTimeout(()=>{ ebmWerteAutomatisch(); }, 5000);
+
+// Werte von Hand eintragen (falls die automatische Pruefung nicht klappt)
+async function ebmWerteVonHand(){
+  const akt = ebmWerteFuer(new Date());
+  let fehler = '';
+  while(true){
+    const feld = (id, label, wert)=> '<label class="fb-lbl">' + label + '<input type="text" inputmode="decimal" id="' + id + '" value="' + htmlEsc(wert) + '"></label>';
+    const html = '<div class="fb-dialog">' + (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<label class="fb-lbl">Gültig ab<input type="date" id="ebmAb" value="' + ebmIso(ebmQuartalsbeginn()) + '"></label>' +
+      feld('ebmOw', 'Orientierungswert (Cent je Punkt)', ebmCent(akt.ow)) +
+      '<div class="ebm-wege-raster">' + EBM_WEGE_GOPS.map(g=> feld('ebmW' + g, g + ' ' + (ebmEintrag(g).text.replace(/^Wegepauschale\s*/, '')), String(akt.wege[g]).replace('.', ','))).join('') + '</div></div>';
+    const a = await betaOverlay.ergebnis('EBM-Werte von Hand', html, [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Speichern', akt: 'ok', primaer: true }]);
+    if(a !== 'ok'){ betaOverlay.schliessen(); return false; }
+    const zahl = (id)=> Number(String((document.getElementById(id) || {}).value || '').trim().replace(',', '.'));
+    const ab = (document.getElementById('ebmAb') || {}).value || '';
+    const ow = zahl('ebmOw') / 100;
+    const wege = {}; EBM_WEGE_GOPS.forEach(g=> wege[g] = zahl('ebmW' + g));
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(ab)){ fehler = 'Bitte das Datum „gültig ab“ wählen.'; continue; }
+    if(!(ow > 0.05 && ow < 0.5)){ fehler = 'Orientierungswert bitte in Cent, z.B. 12,7404.'; continue; }
+    if(EBM_WEGE_GOPS.some(g=> !(wege[g] > 0 && wege[g] < 100))){ fehler = 'Bitte alle Wegepauschalen als Euro-Betrag eintragen.'; continue; }
+    ebmWerteUebernehmen({ ab, ow, wege, owNeu: true, wegeNeu: true, quelle: 'von Hand' });
+    betaOverlay.schliessen();
+    return true;
+  }
+}
+
 function ebmSuchen(text, max){
   const s = String(text || '').trim().toLowerCase();
   if(!s) return [];
@@ -9715,7 +9892,7 @@ function gkvPositionen(auswahl, dt){
     const g = EBM_GRUPPEN[k];
     const gop = g ? g.waehle(dt, a.stufe) : k;
     const anz = Math.max(1, Number(a.anz) || 1);
-    out.push({ gop, anz, euro: betaRund2(ebmEuro(gop) * anz) });
+    out.push({ gop, anz, euro: betaRund2(ebmEuro(gop, dt) * anz) });
   });
   return out;
 }
@@ -10042,7 +10219,9 @@ function ansichtGkv(bearbeitenId){
       <input type="search" id="gkvSuche" placeholder="EBM-Position hinzufügen (Ziffer oder Text)" autocomplete="off">
       <div id="gkvTreffer"></div>
     </div>
-    <div class="gkv-stand">${htmlEsc(EBM_STAND)} · <a href="#" id="gkvStandard">Standardliste</a></div>
+    <div class="gkv-stand"><span id="gkvStandText"></span><br>
+      <a href="#" id="gkvPruefen">Werte online prüfen</a> · <a href="#" id="gkvVonHand">von Hand ändern</a> · <a href="#" id="gkvStandard">Standardliste</a></div>
+    <div id="gkvWerteHinweis"></div>
     <div id="gkvHinweise"></div>
     <div class="gkv-summe-leiste"><span id="gkvSumme"></span>
       <button type="button" class="btn-primaer" id="gkvSpeichern">${st.id ? 'Fahrtenbuch aktualisieren' : 'Ins Fahrtenbuch'}</button></div>
@@ -10068,7 +10247,7 @@ function ansichtGkv(bearbeitenId){
       return '<div class="gkv-pos' + (a ? ' an' : '') + '" data-k="' + k + '">' +
         '<div class="gkv-pos-haupt" data-tipp="' + k + '"><span class="gkv-gop">' + gop + '</span>' +
         '<span class="gkv-txt">' + htmlEsc(titel) + (unter ? '<small>' + htmlEsc(unter) + '</small>' : '') + '</span>' +
-        '<span class="gkv-eur">' + betaEuro(ebmEuro(gop) * (a ? anz : 1)) + '</span></div>' +
+        '<span class="gkv-eur">' + betaEuro(ebmEuro(gop, dt) * (a ? anz : 1)) + '</span></div>' +
         (k === 'weg' ? '<div class="gkv-stufen">' + g.stufen.map(s=> '<button type="button" data-stufe="' + s.k + '" class="' + (a && a.stufe === s.k ? 'an' : '') + '">' + s.label + '</button>').join('') + '</div>' : '') +
         (mehr ? '<div class="gkv-anz"><button type="button" data-minus="' + k + '">−</button><b>' + anz + '×</b><button type="button" data-plus="' + k + '">+</button></div>' : '') +
         '<button type="button" class="gkv-weg" data-weg="' + k + '" aria-label="aus der Liste entfernen">×</button></div>';
@@ -10115,11 +10294,11 @@ function ansichtGkv(bearbeitenId){
     });
   }
   el('gkvName').oninput = ()=>{ st.name = el('gkvName').value; el('gkvName').classList.remove('pflichtfeld-fehlt'); };
-  el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); };
+  el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); werteZeichnen(); };
   el('gkvZeit').onchange = ()=>{ st.zeit = el('gkvZeit').value; zeichnen(); };
   el('gkvSuche').oninput = ()=>{
     const t = ebmSuchen(el('gkvSuche').value, 25);
-    el('gkvTreffer').innerHTML = t.map(e=> '<div class="gkv-treffer" data-gop="' + e.gop + '"><span class="gkv-gop">' + e.gop + '</span><span class="gkv-txt">' + htmlEsc(e.text) + (e.hinweis ? '<small>' + htmlEsc(e.hinweis) + '</small>' : '') + '</span><span class="gkv-eur">' + betaEuro(ebmEuro(e.gop)) + '</span></div>').join('') ||
+    el('gkvTreffer').innerHTML = t.map(e=> '<div class="gkv-treffer" data-gop="' + e.gop + '"><span class="gkv-gop">' + e.gop + '</span><span class="gkv-txt">' + htmlEsc(e.text) + (e.hinweis ? '<small>' + htmlEsc(e.hinweis) + '</small>' : '') + '</span><span class="gkv-eur">' + betaEuro(ebmEuro(e.gop, dtVon())) + '</span></div>').join('') ||
       (el('gkvSuche').value.trim() ? '<div class="leer-hinweis">Keine passende Ziffer im Notdienst-Katalog.</div>' : '');
     el('gkvTreffer').querySelectorAll('[data-gop]').forEach(d=> d.onclick = ()=>{
       const gop = d.dataset.gop, g = ebmGruppeVon(gop), k = g || gop;
@@ -10131,6 +10310,18 @@ function ansichtGkv(bearbeitenId){
       const z = el('gkvListe').querySelector('[data-k="' + k + '"]'); if(z) z.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   };
+  function werteZeichnen(){
+    const p = LS.get('ebm_pruefung', {}) || {};
+    el('gkvStandText').textContent = ebmStandText(dtVon()) + (p.am ? ' · online geprüft ' + isoDe(String(p.am).slice(0, 10)) : '');
+    const vm = LS.get('ebm_vorschlag', null);
+    el('gkvWerteHinweis').innerHTML = vm && vm.neu ? '<div class="gkv-warn">Neue EBM-Werte gefunden (gültig ab ' + htmlEsc(isoDe(vm.ab)) + '). <a href="#" id="gkvVorschlag">Ansehen</a></div>'
+      : (p.ok === false && p.fehler ? '<div class="gkv-warn">Letzte Online-Prüfung: ' + htmlEsc(p.fehler) + '</div>'
+      : (p.hinweise && p.hinweise.length ? '<div class="gkv-warn">Online-Prüfung nur teilweise: ' + htmlEsc(p.hinweise.join(' ')) + '</div>' : ''));
+    const vb = document.getElementById('gkvVorschlag');
+    if(vb) vb.onclick = async (ev)=>{ ev.preventDefault(); await ebmVorschlagFragen(vm); werteZeichnen(); zeichnen(); };
+  }
+  el('gkvPruefen').onclick = async (ev)=>{ ev.preventDefault(); betaOverlay.zeigen('EBM-Werte'); betaOverlay.fortschritt(null); betaOverlay.schritt('Aktuelle Werte werden online geprüft …'); await ebmWertePruefen(true); betaOverlay.schliessen(); werteZeichnen(); zeichnen(); };
+  el('gkvVonHand').onclick = async (ev)=>{ ev.preventDefault(); if(await ebmWerteVonHand()){ werteZeichnen(); zeichnen(); } };
   el('gkvStandard').onclick = (ev)=>{ ev.preventDefault(); liste = GKV_LISTE_STANDARD.slice(); gkvListeSpeichern(liste); zeichnen(); };
   el('gkvSpeichern').onclick = async ()=>{
     st.name = el('gkvName').value.trim();
@@ -10181,7 +10372,7 @@ function ansichtGkv(bearbeitenId){
     el('gkvMeldung').innerHTML = '<div class="gkv-warn">' + htmlEsc(text) + '</div>';
     verlaufZeichnen();
   }
-  zeichnen(); verlaufZeichnen();
+  zeichnen(); verlaufZeichnen(); werteZeichnen();
 }
 
 
