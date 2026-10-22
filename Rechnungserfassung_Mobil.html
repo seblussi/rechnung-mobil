@@ -263,6 +263,15 @@
   .fall-zeile .info.fassungen-text{font-size:12px; color:var(--text-schwach);}
   .fassung-link{color:#2f6fed; text-decoration:underline; cursor:pointer;}
   .luft-maps-icon.luft-karte{background:var(--karte);}
+  .fd-gp{display:inline-block; margin-left:4px; font-size:10px; font-weight:700; color:#fff; background:#b9770e; border-radius:4px; padding:0 4px; vertical-align:1px;}
+  .luft-start-liste{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+  .luft-start-liste:empty{display:none;}
+  .luft-start-chip{display:inline-flex; align-items:stretch; border:1px solid var(--rand); border-radius:16px; overflow:hidden; max-width:100%;}
+  .luft-start-chip button{width:auto; margin:0; padding:5px 10px; border:none; background:var(--karte); color:var(--text); font-size:12.5px; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;}
+  .luft-start-chip.standard button{color:#2f6fed; font-weight:600;}
+  .luft-start-chip button.weg{padding:5px 9px; color:var(--text-schwach); border-left:1px solid var(--rand); font-size:15px;}
+  .luft-bis-titel{font-size:13px; font-weight:600; color:var(--text-schwach); margin:2px 0 6px;}
+  .luft-von-bis{font-size:13px !important; font-weight:400; color:var(--text-schwach);}
   .begr-katalog-wahl select{font-size:14px;}
   .begr-neu{display:flex; gap:6px; align-items:flex-end; margin-top:8px;}
   .begr-neu textarea{flex:1; font:inherit; font-size:14px; padding:8px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text); box-sizing:border-box;}
@@ -384,6 +393,63 @@
   .karte:active{filter:brightness(1.08);}
   .karte.ls{background:var(--ls-farbe);}
   .karte.pt{background:var(--pt-farbe);}
+  .karte.gkv{background:#7d4e9e;}
+  .kachelreihe.drei{gap:10px;}
+  .kachelreihe.drei .karte{font-size:16px; border-radius:14px;}
+  .kachelreihe.drei .karte .icon{font-size:34px; margin-bottom:8px;}
+  /* GKV-Patient */
+  .gkv-kopf{background:var(--karte); border:1px solid var(--rand); border-radius:12px; padding:10px 12px; margin-bottom:6px;}
+  .gkv-feld{display:block; font-size:12.5px; color:var(--text-schwach); margin-bottom:8px; flex:1; min-width:0;}
+  .gkv-feld input{display:block; width:100%; box-sizing:border-box; margin-top:3px; font:inherit; font-size:16px; padding:9px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
+  .gkv-feld input.pflichtfeld-fehlt{border:2px solid var(--fehler, #c0392b);}
+  .gkv-zeile{display:flex; gap:10px;}
+  .gkv-zeitinfo{font-size:12px; color:var(--text-schwach);}
+  .gkv-pos{position:relative; background:var(--karte); border:1px solid var(--rand); border-radius:10px; margin-bottom:6px; padding:8px 34px 8px 10px;}
+  .gkv-pos.an{border-color:#7d4e9e; box-shadow:inset 4px 0 0 #7d4e9e;}
+  .gkv-pos:not(.an){opacity:.78;}
+  .gkv-pos-haupt, .gkv-treffer{display:flex; gap:8px; align-items:baseline; cursor:pointer;}
+  .gkv-gop{font-weight:700; font-variant-numeric:tabular-nums; min-width:46px;}
+  .gkv-txt{flex:1; min-width:0; font-size:14px;}
+  .gkv-txt small{display:block; font-size:11.5px; color:var(--text-schwach);}
+  .gkv-eur{font-size:13.5px; white-space:nowrap; font-variant-numeric:tabular-nums;}
+  .gkv-weg{position:absolute; top:4px; right:4px; width:26px; height:26px; padding:0; margin:0; border:none; background:none; color:var(--text-schwach); font-size:18px; line-height:1;}
+  .gkv-stufen{display:flex; gap:6px; flex-wrap:wrap; margin:7px 0 0 54px;}
+  .gkv-stufen button, .gkv-anz button{width:auto; margin:0; padding:5px 10px; font-size:13px; border-radius:14px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .gkv-stufen button.an{background:#7d4e9e; border-color:#7d4e9e; color:#fff; font-weight:600;}
+  .gkv-anz{display:flex; gap:8px; align-items:center; margin:6px 0 0 54px; font-size:14px;}
+  .gkv-anz button{min-width:34px;}
+  .gkv-suche{margin:10px 0 4px;}
+  .gkv-suche input{width:100%; box-sizing:border-box; font:inherit; font-size:15px; padding:9px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
+  .gkv-treffer{padding:8px 10px; border-bottom:1px solid var(--rand); background:var(--karte);}
+  .gkv-stand{font-size:11.5px; color:var(--text-schwach); margin:4px 2px 8px;}
+  .gkv-warn{background:var(--warnung-bg); border:1px solid var(--warnung-rand); color:var(--warnung-text); border-radius:8px; padding:8px 10px; font-size:13px; margin:6px 0;}
+  .gkv-ok{background:rgba(31,138,76,.1); border:1px solid rgba(31,138,76,.45); border-radius:8px; padding:8px 10px; font-size:13px; margin:6px 0;}
+  .gkv-summe-leiste{position:sticky; bottom:0; z-index:5; display:flex; gap:10px; align-items:center; background:var(--bg); border-top:1px solid var(--rand); padding:10px 0; margin-top:6px;}
+  .gkv-summe-leiste #gkvSumme{flex:1; font-size:16px;}
+  .gkv-summe-leiste #gkvSumme small{font-size:12px; color:var(--text-schwach);}
+  .gkv-summe-leiste .btn-primaer{width:auto; margin:0; padding:11px 16px;}
+  .gkv-verlauf .gkv-v-unter{font-size:12.5px; color:var(--text-schwach); margin-top:2px;}
+  .gkv-verlauf .gkv-v-status{font-size:12.5px; margin-top:3px;}
+  .gkv-verlauf .aktionen{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+  .gkv-verlauf .aktionen button{width:auto; margin:0; padding:6px 10px; font-size:13px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .gkv-platz{height:40px;}
+  /* Rueckfrage "Neuer Dienst" */
+  .fb-dialog{text-align:left; font-size:14px;}
+  .fb-fall{font-weight:600; margin-bottom:4px;}
+  .fb-info{font-size:13px; color:var(--text-schwach); margin-bottom:8px;}
+  .fb-fehler{color:#c0392b; font-weight:600; font-size:13px; margin-bottom:6px;}
+  .fb-lbl{display:block; font-size:12.5px; color:var(--text-schwach); margin:8px 0 4px;}
+  .fb-dialog input{display:block; width:100%; box-sizing:border-box; margin-top:3px; font:inherit; font-size:16px; padding:8px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
+  .fb-zeile{display:flex; gap:8px; align-items:flex-end; margin-top:6px;}
+  .fb-zeile label{flex:1; font-size:12.5px; color:var(--text-schwach);}
+  .fb-uhr{padding-bottom:10px; font-size:14px;}
+  .fb-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .fb-chip{width:auto; margin:0; padding:5px 11px; font-size:13.5px; border-radius:14px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .fb-chip.an{background:#7d4e9e; border-color:#7d4e9e; color:#fff; font-weight:600;}
+  .fb-chip.arzt{display:inline-flex; padding:0; overflow:hidden;}
+  .fb-chip.arzt button{width:auto; margin:0; border:none; background:none; color:inherit; font:inherit; padding:5px 10px;}
+  .fb-chip.arzt button.x{padding:5px 9px; border-left:1px solid var(--rand); opacity:.7;}
+  .fb-chip.arzt + input, .fb-chips + input{margin-top:8px;}
   .karte .icon{font-size:46px; display:block; margin-bottom:12px;}
   .karte .unter{font-size:12.5px; font-weight:400; opacity:.9; margin-top:4px;}
 
@@ -1650,7 +1716,8 @@ function fahrdienstZeitInfo(wert){
   if(treffer){
     const start = parseFloat(treffer[1].replace(',','.'));
     const ende = parseFloat(treffer[2].replace(',','.'));
-    const stunden = (isFinite(start) && isFinite(ende)) ? (ende - start) : 0;
+    // Dienst ueber Mitternacht (z.B. 18-8): 24 Stunden dazurechnen
+    const stunden = (isFinite(start) && isFinite(ende)) ? (ende - start + (ende <= start ? 24 : 0)) : 0;
     return {stunden, label: treffer[1] + '-' + treffer[2] + ' Uhr'};
   }
   const zahl = Number(text.replace(',','.'));
@@ -1709,12 +1776,20 @@ function fahrdienstZeilenAuswerten(zeilen){
         else gkv += wert;
       }
     }
+    // Grundpauschale: GKV-Anteil mindestens Stunden x 25 € (werktags) bzw.
+    // x 50 € (Samstag, Sonntag, Feiertag) -- nach dem Tag des Dienstbeginns
+    const satz = fahrdienstPauschaleSatz(r[COL_B]);
+    const gkvRoh = gkv;
+    const pauschale = dienststunden > 0 && dienststunden * satz > gkvRoh + 0.005;
+    if(pauschale){ gkv = dienststunden * satz; gesamt = gkv + ls + pt; }
     const stundenlohn = dienststunden ? gesamt/dienststunden : 0;
     const zeitLabel = zeitInfo.label;
 
     bloecke.push({
       quartal, quartalKey, datumText, zeitLabel,
-      arzt, gesamt, stundenlohn, gkv, ls, pt
+      arzt, gesamt, stundenlohn, gkv, ls, pt,
+      gkvRoh, pauschale, satz, satzGrund: fahrdienstSatzGrund(r[COL_B]), dienststunden,
+      zeileStart: blockStart + 1, zeileEnde: blockEnde + 1, zeitRoh: r[COL_C]
     });
 
     zeile = blockEnde + 1;
@@ -1744,16 +1819,21 @@ let fahrdienstAuswertungCache = null;
 async function ansichtFahrdienstAuswertung(){
   setzeTitel('Fahrdienst-Auswertung', ansichtStart);
   app.innerHTML = `
-    <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Reine Ansicht -- geschrieben wird in die Excel-Datei weiterhin nur am PC über "Fahrtenbuch öffnen" in der Rechnungssoftware.</div>
+    <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Grundpauschale (GKV-Anteil mindestens 25 €/h werktags, 50 €/h an Wochenenden und Feiertagen).</div>
     <div style="display:flex; gap:8px; margin-bottom:12px;">
       <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="flex:1; margin-bottom:0;">Neu laden</button>
       <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">Fahrtenbuch öffnen</button>
     </div>
     <div id="fahrdienstInhalt"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>`;
 
+  // Laden = auswerten UND Statistik rechts eintragen (bei Fehler nur lesen)
+  const ladenMitStatistik = async ()=>{
+    try{ return await fahrdienstStatistikSchreiben(t=>{ const el = document.getElementById('fahrdienstInhalt'); if(el) el.innerHTML = '<div class="leer-hinweis">' + htmlEsc(t) + '</div>'; }); }
+    catch(e){ return await msGraphFahrdienstAuswertungLaden(); }
+  };
   document.getElementById('btnFahrdienstNeuLaden').onclick = async ()=>{
     document.getElementById('fahrdienstInhalt').innerHTML = '<div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div>';
-    fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
+    fahrdienstAuswertungCache = await ladenMitStatistik();
     fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
   };
   document.getElementById('btnFahrdienstExcelOeffnen').onclick = ()=>{
@@ -1761,7 +1841,7 @@ async function ansichtFahrdienstAuswertung(){
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
   };
 
-  fahrdienstAuswertungCache = await msGraphFahrdienstAuswertungLaden();
+  fahrdienstAuswertungCache = await ladenMitStatistik();
   fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
 }
 
@@ -1784,7 +1864,7 @@ function fahrdienstAuswertungRendern(daten){
     '<th>Datum</th><th>Arzt</th><th>Zeit</th><th>Gesamt</th><th>Std.-Lohn</th><th>gesetzl.</th><th>LS+PT</th><th>LS</th><th>PT</th></tr>' +
     daten.bloecke.map(b=>`<tr>
       <td>${b.datumText}</td><td>${b.arzt}</td><td>${b.zeitLabel}</td>
-      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}</td>
+      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}${b.pauschale ? '<span class="fd-gp" title="Grundpauschale ' + b.satz + ' €/h (' + b.satzGrund + ') statt ' + euro(b.gkvRoh) + '">GP</span>' : ''}</td>
       <td>${euro(b.ls+b.pt)}</td><td>${euro(b.ls)}</td><td>${euro(b.pt)}</td>
     </tr>`).join('') + '</table></div></div>';
 
@@ -1967,88 +2047,9 @@ function synchronisiereAlle(){
   backupVorSyncAnlegen();
   if(msGraphStatus === 'angemeldet'){
     msGraphSyncSchreiben();
-  } else if(autoSyncStatus === 'verbunden' && autoSyncOrdnerHandle){
-    autoSyncSchreiben();
   }
 }
 
-function autoSyncVerfuegbar(){ return autoSyncStatus==='verbunden'; }
-
-// Liefert Beschriftung/Symbolfarbe/Aktion für den EINEN festen Sync-Button
-// auf der Startseite -- je nach aktuellem autoSyncStatus. Das Pfeil-Symbol
-// (zwei gegenläufige Pfeile, siehe HTML) bleibt dabei immer gleich, nur
-// Text/Farbe/Klick-Aktion wechseln.
-function syncButtonInfo(){
-  // Hoechste Prioritaet (siehe synchronisiereAlle): Microsoft/Graph-Sync --
-  // eigene, klar unterscheidbare Beschriftung "OneDrive", damit auf einen
-  // Blick klar ist, WELCHER der beiden automatischen Wege gerade aktiv ist,
-  // statt beide unter demselben "Verbunden" zu zeigen.
-  if(msGraphStatus==='angemeldet'){
-    return {
-      klasse:'sync-verbunden', text:'OneDrive',
-      unter:'Auto-Sync aktiv',
-      aktion: async ()=>{ appToastAnzeigen('Direkter OneDrive-Sync ist aktiv -- Änderungen werden automatisch hochgeladen.', 2200); }
-    };
-  }
-  if(autoSyncStatus==='verbunden'){
-    return {
-      klasse:'sync-verbunden', text:'Ordner',
-      unter:'Auto-Sync aktiv',
-      aktion: async ()=>{ appToastAnzeigen('Sync-Ordner ist verbunden -- Änderungen werden automatisch gesichert. (Hinweis: mit Microsoft-Anmeldung gäbe es den robusteren direkten OneDrive-Sync, siehe Einstellungen.)', 3200); }
-    };
-  }
-  if(autoSyncStatus==='berechtigung_fehlt'){
-    return {
-      klasse:'sync-rot', text:'Erneut verbinden',
-      unter:'Kurz bestätigen',
-      aktion: async ()=>{
-        const ok = await autoSyncBerechtigungErneuern();
-        appToastAnzeigen(ok ? 'Sync-Ordner wieder verbunden -- Auto-Sync läuft.' : 'Berechtigung wurde nicht erteilt.', 2500);
-        ansichtStart();
-      }
-    };
-  }
-  if(autoSyncStatus==='nicht_unterstuetzt'){
-    return {
-      klasse:'sync-rot', text:'Nicht verfügbar',
-      unter:'Kein Auto-Sync',
-      aktion: async ()=>{ appToastAnzeigen('Auto-Sync wird von diesem Browser nicht unterstützt. Bitte Export/Import verwenden.', 2800); }
-    };
-  }
-  // 'nicht_verbunden' oder 'unbekannt' (siehe autoSyncInitialisieren) --
-  // noch gar kein Sync eingerichtet: als Standard-Weg direkt den robusteren
-  // OneDrive-Sync (Microsoft-Anmeldung) anstossen, statt zuerst den
-  // Ordner-Auto-Sync anzubieten. Nur wenn OneDrive-Anmeldung technisch gar
-  // nicht verfuegbar ist (z.B. MSAL konnte nicht laden), auf den
-  // Ordner-Auto-Sync zurueckfallen.
-  if(msGraphVerfuegbar()){
-    return {
-      klasse:'sync-rot', text:'Sync einrichten',
-      unter:'Mit OneDrive anmelden',
-      aktion: async ()=>{ await msGraphAnmelden(); } // Redirect -- Seite laedt danach neu
-    };
-  }
-  return {
-    klasse:'sync-rot', text:'Sync einrichten',
-    unter:'Ordner auswählen',
-    aktion: async ()=>{
-      const ok = await autoSyncOrdnerWaehlen();
-      appToastAnzeigen(ok ? 'Sync-Ordner verbunden -- Auto-Sync läuft.' : 'Kein Ordner ausgewählt.', 2200);
-      ansichtStart();
-    }
-  };
-}
-
-function bestatterEintragen(name, adr1, adr2){
-  if(!name || !name.trim()) return;
-  const k = ladeKatalog();
-  const existiert = k.some(b => b.name.trim().toLowerCase()===name.trim().toLowerCase()
-                              && (b.adr1||'').trim().toLowerCase()===(adr1||'').trim().toLowerCase()
-                              && (b.adr2||'').trim().toLowerCase()===(adr2||'').trim().toLowerCase());
-  if(existiert) return;
-  k.push({name:name.trim(), adr1:(adr1||'').trim(), adr2:(adr2||'').trim(), herkunft:'handy', zeitstempel:new Date().toISOString()});
-  speichereKatalog(k);
-}
 
 /* ==========================================================
    Datum / Zeit Hilfsfunktionen
@@ -2964,9 +2965,10 @@ function ansichtStart(){
   const faelleLS = ladeFaelle('ls').length, faellePT = ladeFaelle('pt').length;
   const gesamtOffen = faelleLS+faellePT;
   let html = `
-    <div class="kachelreihe">
+    <div class="kachelreihe drei">
       <button class="karte ls" id="kLS"><span class="icon">&#9760;</span>Leichen-<br>schau</button>
       <button class="karte pt" id="kPT"><span class="icon">&#9877;</span>Privat-<br>rechnung</button>
+      <button class="karte gkv" id="kGKV"><span class="icon">&#127973;</span>GKV-<br>Patient</button>
     </div>
     <div class="uebersicht-reihe">
       <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Rechnungs&shy;verwaltung
@@ -3021,16 +3023,13 @@ function ansichtStart(){
   app.innerHTML = html;
   document.getElementById('kLS').onclick = ()=> betaNeueRechnung('ls');
   document.getElementById('kPT').onclick = ()=> betaNeueRechnung('pt');
+  document.getElementById('kGKV').onclick = ()=> ansichtGkv();
   document.getElementById('btnKorrigieren').onclick = ()=> betaGesamtAktiv() ? ansichtRechnungenGesamt() : ansichtKorrigieren();
   document.getElementById('btnOeffneUebersicht').onclick = ()=>{
     excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
   };
-  document.getElementById('btnOeffneFahrtenbuch').onclick = ()=>{
-    excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_FAHRTENBUCH,
-      'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
-    // BETA: Auswertung hat jetzt einen eigenen Knopf (Fahrtenbuch-Auswertung)
-  };
+  document.getElementById('btnOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
   document.getElementById('btnLuftlinienTool').onclick = ansichtLuftlinienTool;
   document.getElementById('btnNotapotheke').onclick = notapothekenSucheOeffnen;
   // "Rechnungsverwaltung" ist jetzt IMMER sichtbar (nicht mehr nur bei
@@ -3146,10 +3145,13 @@ function ansichtLuftlinienTool(){
   setzeTitel('Luftlinie berechnen', ansichtStart);
   const e = ladeEinstellungen();
   let html = `<div class="abschnitt">`;
-  if(!e.praxisadresse){
-    html += `<div class="warnhinweis aktiv">Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen). Ohne Praxisadresse kann keine Entfernung berechnet werden.</div>`;
-  }
   html += `
+      <div class="feld">
+        <label for="txtLuftVon">Von</label>
+        <input type="text" id="txtLuftVon" autocomplete="off" placeholder="Startadresse (Straße Hausnummer, PLZ Ort)" value="${htmlEsc(e.praxisadresse || '')}">
+        <div class="luft-start-liste" id="luftStartListe"></div>
+      </div>
+      <div class="luft-bis-titel">Bis</div>
       <div class="luft-zwischenablage-reihe">
         <span class="luft-maps-icon" id="btnLuftPosition" title="Mit aktueller Position berechnen"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M19 1c-3.17 0-5.75 2.58-5.75 5.75 0 4.31 5.75 10.47 5.75 10.47s5.75-6.16 5.75-10.47C24.75 3.58 22.17 1 19 1z" fill="#e0303f" transform="translate(-7,2.89)"/>
@@ -3167,8 +3169,7 @@ function ansichtLuftlinienTool(){
         </svg></span>
       </div>
       <div class="feld">
-        <label for="txtLuftAdresse">Adresse</label>
-        <input type="text" id="txtLuftAdresse" autocomplete="off" placeholder="Straße Hausnummer, PLZ Ort">
+        <input type="text" id="txtLuftAdresse" autocomplete="off" placeholder="Zieladresse (Straße Hausnummer, PLZ Ort)">
       </div>
       <button class="btn-primaer" id="btnLuftBerechnen" style="margin-bottom:14px;">Luftlinie &amp; Fahrstrecke berechnen</button>
       <div id="luftErgebnis" class="luft-ergebnis"></div>
@@ -3207,6 +3208,24 @@ function ansichtLuftlinienTool(){
   document.getElementById('btnLuftMapsOeffnen').onclick = ()=>{
     window.open('https://www.google.com/maps', '_blank');
   };
+  // Fruehere Startadressen (nur auf diesem Geraet), antippen = uebernehmen, x = loeschen
+  const startListeZeichnen = ()=>{
+    const el = document.getElementById('luftStartListe'); if(!el) return;
+    const eL = ladeEinstellungen();
+    const liste = (eL.luftStartAdressen || []).filter(a=> a && a !== eL.praxisadresse);
+    const vonJetzt = document.getElementById('txtLuftVon').value.trim();
+    el.innerHTML = (eL.praxisadresse && vonJetzt !== eL.praxisadresse
+        ? `<span class="luft-start-chip standard"><button type="button" data-adr="${htmlEsc(eL.praxisadresse)}">&#8962; ${htmlEsc(eL.praxisadresse)}</button></span>` : '') +
+      liste.map(a=> `<span class="luft-start-chip"><button type="button" data-adr="${htmlEsc(a)}">${htmlEsc(a)}</button><button type="button" class="weg" data-weg="${htmlEsc(a)}" title="Adresse entfernen">&times;</button></span>`).join('');
+    el.querySelectorAll('[data-adr]').forEach(b=> b.onclick = ()=>{ document.getElementById('txtLuftVon').value = b.dataset.adr; startListeZeichnen(); });
+    el.querySelectorAll('[data-weg]').forEach(b=> b.onclick = ()=>{
+      const e2 = ladeEinstellungen();
+      e2.luftStartAdressen = (e2.luftStartAdressen || []).filter(a=> a !== b.dataset.weg);
+      speichereEinstellungen(e2); startListeZeichnen();
+    });
+  };
+  document.getElementById('txtLuftVon').addEventListener('input', startListeZeichnen);
+  startListeZeichnen();
   // Pin: aktuelle Position (GPS) als Ziel -- Adresse wird per Kartendienst
   // ermittelt und eingetragen, gerechnet wird mit den genauen Koordinaten
   let luftPos = null;
@@ -3246,13 +3265,20 @@ function ansichtLuftlinienTool(){
 
   document.getElementById('btnLuftBerechnen').onclick = async ()=>{
     const eCur = ladeEinstellungen();
-    if(!eCur.praxisadresse){ zeigeErgebnis('Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).', true); return; }
+    const vonAdresse = document.getElementById('txtLuftVon').value.trim();
+    if(!vonAdresse){ zeigeErgebnis('Bitte eine Startadresse (Von) eintragen – vorbelegt wird die Adresse aus den Einstellungen.', true); return; }
     const adresse = document.getElementById('txtLuftAdresse').value.trim();
     if(!adresse){ zeigeErgebnis('Bitte zuerst eine Adresse eintragen oder aus der Zwischenablage einfügen.', true); return; }
     zeigeErgebnis('Wird berechnet …', true);
     try{
-      const start = await geocode(eCur.praxisadresse);
-      if(!start){ zeigeErgebnis('Praxisadresse nicht auffindbar -- bitte in den Einstellungen prüfen.', true); return; }
+      const start = await geocode(vonAdresse);
+      if(!start){ zeigeErgebnis('Die Startadresse "'+vonAdresse+'" konnte nicht gefunden werden. Bitte prüfen.', true); return; }
+      // genutzte Startadresse merken (ausser der aus den Einstellungen)
+      if(vonAdresse !== eCur.praxisadresse){
+        const e3 = ladeEinstellungen();
+        e3.luftStartAdressen = [vonAdresse, ...(e3.luftStartAdressen || []).filter(a=> a !== vonAdresse)].slice(0, 10);
+        speichereEinstellungen(e3); startListeZeichnen();
+      }
       const ziel = (luftPos && luftPos.adresse === adresse) ? luftPos : await geocode(adresse);
       if(!ziel){ zeigeErgebnis('Die Adresse "'+adresse+'" konnte nicht gefunden werden. Bitte prüfen.', true); return; }
       const luft = kmLuftlinieEinfach(start, ziel);
@@ -3273,7 +3299,8 @@ function ansichtLuftlinienTool(){
       }catch(routenErr){
         zeile2 = `<span class="luft-ergebnis-hinweis">Fahrstrecke konnte nicht berechnet werden.${keinInternetHinweisText()} Nur die Luftlinie steht zur Verfügung.</span>`;
       }
-      zeigeErgebnis(`<div class="luft-ergebnis-zeile"><strong>Luftlinie (einfach):</strong> ${luft.toFixed(1).replace('.',',')} km</div>
+      zeigeErgebnis(`<div class="luft-ergebnis-zeile luft-von-bis">${htmlEsc(vonAdresse)} &rarr; ${htmlEsc(adresse)}</div>
+        <div class="luft-ergebnis-zeile"><strong>Luftlinie (einfach):</strong> ${luft.toFixed(1).replace('.',',')} km</div>
         <div class="luft-ergebnis-zeile">${zeile2}</div>`, false);
     }catch(err){
       zeigeErgebnis('Berechnung fehlgeschlagen.'+keinInternetHinweisText(), true);
@@ -6451,6 +6478,11 @@ async function betaFaelleHochladen(faelle, titel){
       const e = await betaRechnungErstellen(fall, meldung, betaFrage, kontext);
       e.anzeige = name;
       ergebnisse.push(e);
+      // Fall auch ins Fahrtenbuch (Block des Diensts; ohne Dienst wird nachgefragt)
+      if(!e.uebersprungen && ziel.echt && typeof fahrtenbuchAusRechnung === 'function'){
+        try{ const t = await fahrtenbuchAusRechnung(fall, e, meldung); if(t) (e.hinweise = e.hinweise || []).push(t); }
+        catch(err){ (e.hinweise = e.hinweise || []).push('⚠ Fahrtenbuch: ' + (err.message || String(err))); }
+      }
       if(!e.uebersprungen){
         betaFallAendern(f.art, f.zeitstempel, x=>{
           x.hochgeladen = { renu: e.renu, ziel: zk, am: new Date().toISOString() };
@@ -8371,14 +8403,12 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
         '<button type="button" id="fdFaktorNeu" class="neu">+ eigener</button></div>' +
       '<div class="faktor-eigen" id="fdEigenZeile" hidden><input id="fdEigenWert" inputmode="decimal" placeholder="z.B. 2,8" autocomplete="off"><button type="button" id="fdEigenOk">Übernehmen</button></div>' +
       '<div class="faktor-betrag" id="fdBetrag"></div>' +
-      (zeitModus ? '' : '<label class="begr-katalog-wahl">Frühere Begründungen zu Ziffer ' + htmlEsc(nr) +
-        '<select id="fdKatalog"' + (katalog.length ? '' : ' disabled') + '>' +
-        (katalog.length
-          ? '<option value="">– auswählen (' + katalog.length + ') –</option>' + katalog.map((x, i)=> '<option value="' + i + '"' + (x.text === w.beg ? ' selected' : '') + '>' +
-              htmlEsc((x.standard ? '(Standard) ' : '') + x.text) + '</option>').join('')
-          : '<option>noch keine – jede übernommene Begründung wird gesammelt</option>') +
-        '</select></label>') +
       '<label id="fdBegLabel">Begründung<textarea id="fdBeg" rows="' + (zeitModus ? 1 : 3) + '"' + (zeitModus ? ' readonly class="nur-lesen" tabindex="-1"' : '') + '>' + htmlEsc(w.beg) + '</textarea></label>' +
+      (zeitModus ? '' : '<div class="begr-katalog"><div class="beta-erg-klein">Frühere Begründungen zu Ziffer ' + htmlEsc(nr) + ' – antippen zum Einsetzen:</div>' +
+        (katalog.length ? katalog.map((x, i)=> '<div class="begr-eintrag"><button type="button" class="begr-text' + (x.text === w.beg ? ' aktiv' : '') + '" data-i="' + i + '">' + htmlEsc(x.text) +
+            (x.standard ? ' <span class="begr-std">Standard</span>' : '') + '</button>' +
+            (x.standard ? '' : '<button type="button" class="begr-weg" data-i="' + i + '" title="aus der Liste entfernen">&times;</button>') + '</div>').join('')
+          : '<div class="beta-erg-klein begr-leer">Noch keine. Jede Begründung, die Sie hier mit „Übernehmen“ bestätigen, wird gesammelt und steht dann zur Auswahl (alle Geräte).</div>') + '</div>') +
       '</div><div class="beta-erg-klein" id="fdHinweis"></div>';
     const warte = betaOverlay.ergebnis('Ziffer ' + nr, html, [{ label:'Abbrechen', akt:'nein' }, { label:'Übernehmen', akt:'ja', primaer:true }]);
     const $ = (id)=> document.getElementById(id);
@@ -8416,7 +8446,7 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       bEl.classList.toggle('pflichtfeld-fehlt', pflicht && !zeitModus && !bEl.value.trim());
       document.querySelectorAll('.faktor-stufen button[data-f]').forEach(b=> b.classList.toggle('aktiv', ok && Math.abs(Number(b.dataset.f) - f) < 1e-9));
     };
-    bEl.addEventListener('input', ()=>{ aktual(); const sel = $('fdKatalog'); if(sel && !sel.disabled){ const i = katalog.findIndex(x=> x.text === bEl.value.trim()); sel.value = i >= 0 ? String(i) : ''; } });
+    bEl.addEventListener('input', ()=>{ aktual(); document.querySelectorAll('.begr-text').forEach(b=> b.classList.toggle('aktiv', katalog[+b.dataset.i] && katalog[+b.dataset.i].text === bEl.value.trim())); });
     if(zeitModus){
       [vonEl, bisEl].forEach(el=>{
         el.addEventListener('input', ()=>{ zeitAktual(); aktual(); });
@@ -8443,10 +8473,15 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       betaEigenerFaktorAendern(f, false);
       w = merken(); w.faktor = f; neuAufbauen = true; betaOverlay.loesen && betaOverlay.loesen('neu');
     };
-    if($('fdKatalog')) $('fdKatalog').onchange = ()=>{
-      const v = $('fdKatalog').value, x = v === '' ? null : katalog[+v];
-      if(x){ bEl.value = x.text; aktual(); }
-    };
+    document.querySelectorAll('.begr-text').forEach(b=> b.onclick = ()=>{
+      bEl.value = katalog[+b.dataset.i].text;
+      document.querySelectorAll('.begr-text').forEach(x=> x.classList.toggle('aktiv', x === b));
+      aktual();
+    });
+    document.querySelectorAll('.begr-weg').forEach(b=> b.onclick = ()=>{
+      betaBegrKatalogAendern(art, [{ schl, text: katalog[+b.dataset.i].text, weg: true }]);
+      b.closest('.begr-eintrag').remove();
+    });
     if(zeitModus) zeitAktual();
     aktual();
     const akt = await warte;
@@ -9198,8 +9233,7 @@ function betaProfileHtml(){
       ${block('pt', 'Privatrechnung')}
       <div class="sync-trenner"></div>
       ${block('ls', 'Leichenschau')}
-    </div>
-    ${betaBegrKatalogHtml()}`;
+    </div>`;
 }
 async function betaProfilBearbeiten(art, id){
   const vorhanden = betaProfile(art).find(p=> p.id === id);
@@ -9338,78 +9372,9 @@ async function betaProfilBearbeiten(art, id){
   }
 }
 
-// ---------- Einstellungen: Katalog frueherer Begruendungen ----------
-// Auswahl der Ziffer per Dropdown, darunter ihre Texte (loeschen, neu anlegen)
-let betaBegrKatalogWahl = '';
-function betaBegrKatalogZiffern(){
-  const d = (LS.get(EIGENE_POS_CACHE, null) || {}).begrKatalog || {};
-  const anzahl = (k)=> ((d[k] || []).filter(x=> x && x.text && !x.geloescht)).length;
-  const out = [];
-  ['pt', 'ls'].forEach(art=>{
-    const kat = art === 'ls' ? POSITIONEN_LS : POSITIONEN_PT;
-    const pos = [
-      ...(kat.grundleistung || []).filter(p=> p.ziffer !== 'E'),
-      ...betaFestPositionen(art).filter(p=> p.gruppe === 'grund').map(betaEigenePositionAlsAuswahl),
-      ...(art === 'pt' ? betaEigene(art).map(betaEigenePositionAlsAuswahl) : [])
-    ].filter(p=> betaPosFaktorEditierbar(p) && !betaBegrImmer(p));
-    pos.forEach(p=>{
-      const k = art + ':' + goaeNorm(betaPosSchluessel(p));
-      const nr = p.anzeigeZiffer !== undefined ? p.anzeigeZiffer : p.ziffer;
-      out.push({ k, art, schl: betaPosSchluessel(p), n: anzahl(k),
-                 label: (art === 'ls' ? 'Leichenschau' : 'Privat') + ' · ' + nr + ' ' + String(p.eigeneBez || p.bez).replace(/<[^>]+>/g, '').slice(0, 40) });
-    });
-  });
-  return out;
-}
-function betaBegrKatalogInhalt(){
-  const z = betaBegrKatalogZiffern();
-  if(!betaBegrKatalogWahl || !z.some(x=> x.k === betaBegrKatalogWahl)){
-    const mit = z.find(x=> x.n > 0); betaBegrKatalogWahl = (mit || z[0] || {}).k || '';
-  }
-  const akt = z.find(x=> x.k === betaBegrKatalogWahl);
-  const [art, schl] = betaBegrKatalogWahl.split(':');
-  const liste = akt ? betaBegrKatalog(art, akt.schl) : [];
-  return '<div class="feld" style="margin-bottom:8px;"><select id="begrKatZiffer">' +
-      z.map(x=> '<option value="' + htmlEsc(x.k) + '"' + (x.k === betaBegrKatalogWahl ? ' selected' : '') + '>' + htmlEsc(x.label) + (x.n ? ' (' + x.n + ')' : '') + '</option>').join('') +
-    '</select></div>' +
-    (liste.length ? liste.map(x=> '<div class="begr-eintrag"><span class="begr-text nur">' + htmlEsc(x.text) + '</span>' +
-        '<button type="button" class="begr-weg begr-kat-weg" data-t="' + htmlEsc(x.text) + '" title="entfernen">&times;</button></div>').join('')
-      : '<div class="hinweis" style="font-size:13px;">Für diese Ziffer noch keine Begründungen.</div>') +
-    '<div class="begr-neu"><textarea id="begrKatNeu" rows="2" placeholder="Neue Begründung für diese Ziffer …"></textarea>' +
-    '<button type="button" class="btn-sekundaer" id="begrKatNeuOk">Hinzufügen</button></div>';
-}
-function betaBegrKatalogHtml(){
-  return `
-    <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">Begründungen (Katalog)</div>
-      <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-        Jede Begründung, die im Faktor-Fenster mit „Übernehmen“ bestätigt wird, landet hier bei ihrer Ziffer und steht dort im
-        Auswahlfeld „Frühere Begründungen“. Hier lassen sich Texte entfernen oder vorab anlegen.</div>
-      <div id="begrKatalogInhalt">${betaBegrKatalogInhalt()}</div>
-    </div>`;
-}
-function betaBegrKatalogWiring(){
-  const el = document.getElementById('begrKatalogInhalt'); if(!el) return;
-  const neu = ()=>{ el.innerHTML = betaBegrKatalogInhalt(); betaBegrKatalogWiring(); };
-  const sel = document.getElementById('begrKatZiffer');
-  if(sel) sel.onchange = ()=>{ betaBegrKatalogWahl = sel.value; neu(); };
-  const [art] = betaBegrKatalogWahl.split(':');
-  const akt = betaBegrKatalogZiffern().find(x=> x.k === betaBegrKatalogWahl);
-  el.querySelectorAll('.begr-kat-weg').forEach(b=> b.onclick = ()=>{
-    if(!akt) return;
-    betaBegrKatalogAendern(art, [{ schl: akt.schl, text: b.dataset.t, weg: true }]); neu();
-  });
-  const ok = document.getElementById('begrKatNeuOk');
-  if(ok) ok.onclick = ()=>{
-    const t = String(document.getElementById('begrKatNeu').value || '').replace(/\s+/g, ' ').trim();
-    if(!t || !akt) return;
-    betaBegrKatalogAendern(art, [{ schl: akt.schl, text: t }]); neu();
-  };
-}
 function betaProfileWiring(neuZeichnen){
   document.querySelectorAll('.profil-zeile').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, b.dataset.id)) neuZeichnen(); });
   document.querySelectorAll('.profil-neu').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, null)) neuZeichnen(); });
-  betaBegrKatalogWiring();
 }
 
 // ---------- Datenschutz & Haftung (Einstellungen, spaeter Einrichtung) ----------
@@ -9442,6 +9407,783 @@ function betaHaftungHtml(){
     </div>`;
 }
 
+// =====================================================================
+// Fahrtenbuch: Statistik rechts in die Excel-Datei schreiben (wie die HTA
+// am PC beim "Fahrtenbuch öffnen") + Grundpauschale im Bereitschaftsdienst
+// =====================================================================
+// Je Diensttag (letzte Zeile des Blocks):
+//   AH = Gesamt (GKV inkl. Grundpauschale + LS + PT)
+//   AI = Stundenlohn (AH / Dienststunden)
+//   AJ = GKV-Anteil – mindestens Grundpauschale (Stunden x 25 € werktags,
+//        x 50 € an Samstagen, Sonn- und Feiertagen)
+//   AK = LS + PT, AL = LS, AM = PT
+// Je Quartal (letzter Diensttag): AN = Summe GKV, AO = abzgl. Gebühr,
+//   AQ = Abweichung zur manuell eingetragenen Auszahlung in AP.
+// Alles als Excel-Formeln (wie in der HTA), geschrieben wird nur, was sich
+// geändert hat.
+const FAHRDIENST_PAUSCHALE_WERKTAG = 25;
+const FAHRDIENST_PAUSCHALE_WOCHENENDE = 50;
+
+function fahrdienstDatumAusWert(wert){
+  const n = Number(wert);
+  if(isFinite(n) && n > 0){
+    const d = new Date(Math.round((n - 25569) * 86400000));
+    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  }
+  const m = /^(\d{1,2})\.(\d{1,2})\.(\d{2,4})/.exec(String(wert || '').trim());
+  if(m){ const j = +m[3] < 100 ? 2000 + +m[3] : +m[3]; return new Date(j, +m[2] - 1, +m[1]); }
+  return null;
+}
+// Stundensatz der Grundpauschale nach dem Tag des Dienstbeginns
+function fahrdienstPauschaleSatz(datumWert){
+  const d = fahrdienstDatumAusWert(datumWert);
+  if(!d) return FAHRDIENST_PAUSCHALE_WERKTAG;
+  const wt = d.getDay();
+  return (wt === 0 || wt === 6 || istFeiertagBW(d)) ? FAHRDIENST_PAUSCHALE_WOCHENENDE : FAHRDIENST_PAUSCHALE_WERKTAG;
+}
+function fahrdienstSatzGrund(datumWert){
+  const d = fahrdienstDatumAusWert(datumWert);
+  if(!d) return '';
+  const f = istFeiertagBW(d);
+  return f ? f : d.getDay() === 0 ? 'Sonntag' : d.getDay() === 6 ? 'Samstag' : 'Werktag';
+}
+
+// Excel-Ausdruck fuer die Dienststunden aus Spalte C der Blockstart-Zeile
+// ("18-23" als Text; ueber Mitternacht, z.B. "18-8", werden 24 h addiert)
+function fahrdienstStundenFormel(zeitWert, zeile){
+  const c = 'C' + zeile;
+  if(typeof zeitWert === 'number') return c;
+  if(/^\s*\d{1,2}(?:[.,]\d+)?\s*-\s*\d{1,2}(?:[.,]\d+)?\s*$/.test(String(zeitWert || ''))){
+    const s = 'VALUE(TRIM(LEFT(' + c + ',FIND("-",' + c + ')-1)))';
+    const e = 'VALUE(TRIM(MID(' + c + ',FIND("-",' + c + ')+1,10)))';
+    return '(' + e + '-' + s + '+IF(' + e + '<=' + s + ',24,0))';
+  }
+  return '0';
+}
+function fahrdienstGebuehrText(){ return String(FAHRDIENST_GEBUEHR_SATZ).replace(',', '.'); }
+
+// Erwartete Formeln je Diensttag-Block (Excel-Zeilen 1-basiert)
+function fahrdienstBlockFormeln(b){
+  const R = b.zeileEnde, a = b.zeileStart;
+  const AG = 'AG' + a + ':AG' + R, D = 'D' + a + ':D' + R, E = 'E' + a + ':E' + R;
+  const std = fahrdienstStundenFormel(b.zeitRoh, a);
+  return [
+    '=AJ' + R + '+AL' + R + '+AM' + R,                                                     // AH
+    '=IFERROR(AH' + R + '/' + std + ',0)',                                                 // AI
+    '=MAX(SUMIFS(' + AG + ',' + D + ',"<>")-AL' + R + '-AM' + R + ',IFERROR(' + std + ',0)*' + b.satz + ')', // AJ
+    '=AL' + R + '+AM' + R,                                                                 // AK
+    '=SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"L")+SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"LS")', // AL
+    '=SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"P")+SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"PT")'  // AM
+  ];
+}
+const fahrdienstFormelNorm = (f)=> String(f == null ? '' : f).replace(/\s+/g, '').replace(/\$/g, '').toUpperCase();
+
+// Liest die Datei, schreibt geaenderte Formeln, liefert die Auswertung
+// (wie fahrdienstZeilenAuswerten) oder wirft einen Fehler.
+async function fahrdienstStatistikSchreiben(meldung){
+  const token = await msGraphTokenHolen();
+  if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+  const basis = msGraphPfadUrl(MSGRAPH_PFAD_FAHRTENBUCH);
+  meldung && meldung('Fahrtenbuch wird gelesen …');
+  const ws = await gx(token, 'GET', basis + '/workbook/worksheets?$select=name,position');
+  const blatt = (((ws && ws.value) || []).slice().sort((x, y)=> (x.position || 0) - (y.position || 0))[0] || {}).name;
+  if(!blatt) throw new Error('Das Fahrtenbuch enthält kein Tabellenblatt.');
+  const blattUrl = basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')";
+  const ur = await gx(token, 'GET', blattUrl + '/usedRange?$select=address,values,formulas');
+  const st = xlAdresseStart(ur && ur.address);
+  // auf Zeile 1 / Spalte A ausrichten (die Auswertung erwartet A1 als Ursprung)
+  const ausrichten = (m)=> {
+    const leerZeile = ()=> [];
+    const out = [];
+    for(let i = 1; i < st.zeile; i++) out.push(leerZeile());
+    (m || []).forEach(r=> out.push(new Array(st.spalte).fill('').concat(r)));
+    return out;
+  };
+  const werte = ausrichten(ur.values), formeln = ausrichten(ur.formulas);
+  const daten = fahrdienstZeilenAuswerten(werte);
+  const COL = (b)=> { let n = 0; for(const ch of b) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; };
+  const zelle = (z, b)=> ((formeln[z - 1] || [])[COL(b)]);
+  const schreiben = [];
+  daten.bloecke.forEach(b=>{
+    const soll = fahrdienstBlockFormeln(b);
+    const ist = ['AH', 'AI', 'AJ', 'AK', 'AL', 'AM'].map(sp=> zelle(b.zeileEnde, sp));
+    if(soll.some((f, i)=> fahrdienstFormelNorm(f) !== fahrdienstFormelNorm(ist[i])))
+      schreiben.push({ adresse: 'AH' + b.zeileEnde + ':AM' + b.zeileEnde, formeln: [soll] });
+  });
+  // Quartale: AN/AO/AQ auf dem letzten Diensttag
+  const quartale = new Map();
+  daten.bloecke.forEach(b=>{ const q = quartale.get(b.quartalKey) || []; q.push(b.zeileEnde); quartale.set(b.quartalKey, q); });
+  quartale.forEach(zeilen=>{
+    const R = zeilen[zeilen.length - 1];
+    const soll = ['=' + zeilen.map(z=> 'AJ' + z).join('+'), '=AN' + R + '*(1-' + fahrdienstGebuehrText() + ')'];
+    if(soll.some((f, i)=> fahrdienstFormelNorm(f) !== fahrdienstFormelNorm(zelle(R, i ? 'AO' : 'AN'))))
+      schreiben.push({ adresse: 'AN' + R + ':AO' + R, formeln: [soll] });
+    const aq = '=IF(AP' + R + '="","",IFERROR(AP' + R + '/AN' + R + '-1,""))';
+    if(fahrdienstFormelNorm(aq) !== fahrdienstFormelNorm(zelle(R, 'AQ'))) schreiben.push({ adresse: 'AQ' + R, formeln: [[aq]] });
+  });
+  // Veraltete Statistik (Blockende/Quartalsende hat sich durch neue Zeilen
+  // verschoben): alte Formeln leeren, manuell eingetragene Auszahlung (AP)
+  // wandert mit ans neue Quartalsende.
+  const enden = new Set(daten.bloecke.map(b=> b.zeileEnde));
+  const qEnde = new Map(); quartale.forEach((zeilen, k)=> qEnde.set(k, zeilen[zeilen.length - 1]));
+  const qEnden = new Set(qEnde.values());
+  const txt = (r, b)=> String(zelle(r, b) == null ? '' : zelle(r, b)).trim();
+  const istF = (r, b)=> txt(r, b).charAt(0) === '=';
+  for(let r = 5; r <= formeln.length; r++){
+    if(!enden.has(r) && ['AH', 'AI', 'AJ', 'AK', 'AL', 'AM'].some(b=> istF(r, b)))
+      schreiben.push({ adresse: 'AH' + r + ':AM' + r, werte: [['', '', '', '', '', '']] });
+    if(!qEnden.has(r) && (istF(r, 'AN') || istF(r, 'AO') || istF(r, 'AQ'))){
+      schreiben.push({ adresse: 'AN' + r + ':AO' + r, werte: [['', '']] }, { adresse: 'AQ' + r, werte: [['']] });
+      const ap = zelle(r, 'AP');
+      const blk = daten.bloecke.find(b=> b.zeileStart <= r && r <= b.zeileEnde) || daten.bloecke.filter(b=> b.zeileEnde < r).pop();
+      const neu = blk && qEnde.get(blk.quartalKey);
+      if(ap !== '' && ap != null && neu && neu !== r && txt(neu, 'AP') === '')
+        schreiben.push({ adresse: 'AP' + neu, werte: [[ap]] }, { adresse: 'AP' + r, werte: [['']] });
+    }
+  }
+  if(schreiben.length){
+    if(String(zelle(3, 'AL') || '') !== 'LS (intern, Cache)' || String(zelle(3, 'AM') || '') !== 'PT (intern, Cache)')
+      schreiben.push({ adresse: 'AL3:AM3', werte: [['LS (intern, Cache)', 'PT (intern, Cache)']] });
+    for(let i = 0; i < schreiben.length; i++){
+      meldung && meldung('Statistik wird eingetragen … ' + (i + 1) + '/' + schreiben.length);
+      const w = schreiben[i];
+      await gx(token, 'PATCH', blattUrl + "/range(address='" + w.adresse + "')", w.werte ? { values: w.werte } : { formulas: w.formeln });
+    }
+  }
+  daten.geschrieben = schreiben.length;
+  return daten;
+}
+
+// Startseite "Fahrtenbuch": erst Statistik eintragen, dann Excel oeffnen
+async function fahrdienstOeffnenMitStatistik(){
+  if(msGraphStatus === 'angemeldet'){
+    betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
+    try{ await fahrdienstStatistikSchreiben(t=> betaOverlay.schritt(t)); }
+    catch(e){
+      betaOverlay.schliessen();
+      if(!await betaFrage('Die Statistik konnte nicht eingetragen werden:\n' + (e.message || e) + '\n\nFahrtenbuch trotzdem öffnen?', 'Öffnen', 'Abbrechen')) return;
+    }
+    betaOverlay.schliessen();
+  }
+  excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_FAHRTENBUCH,
+    'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
+}
+
+// =====================================================================
+// EBM-Katalog (Bereitschafts-/Notdienst) + GKV-Fälle + Eintrag ins
+// Fahrtenbuch ("KVBW Onedrive/Fahrdienst Dokumentation.xlsx")
+// =====================================================================
+// Die App kennt die Ziffern selbst (wie den GOÄ-Katalog) und schreibt nur:
+// je Fall eine Zeile in den Block des Diensts (D = Name, E = ''/P/LS,
+// Anzahl unter der passenden Ziffernspalte aus Zeile 2, AG = Euro).
+const EBM_ORIENTIERUNGSWERT = 0.127404; // Euro je Punkt (2026)
+const EBM_STAND = 'EBM 4/2026 · Orientierungswert 12,7404 Cent · regionale Wegepauschalen KVBW (Stand 10/2026)';
+// [GOP, Punkte (null = fester Eurobetrag), Kurzlegende, Euro fest, Hinweis]
+const EBM_KATALOG = [
+  ['01100',196,'Unvorhergesehene Inanspruchnahme I',null,'Nicht im organisierten Not-/Bereitschaftsdienst'],
+  ['01101',313,'Unvorhergesehene Inanspruchnahme II',null,'Nicht im organisierten Not-/Bereitschaftsdienst'],
+  ['01102',101,'Inanspruchnahme an Samstagen 7–14 Uhr',null,'Nicht im organisierten Not-/Bereitschaftsdienst'],
+  ['01205',45,'Notfallpauschale Abklärung (Mo–Fr 7–19 Uhr)',null,'Abklärung der Behandlungsnotwendigkeit, Weiterleitung'],
+  ['01207',80,'Notfallpauschale Abklärung (Mo–Fr 19–7 Uhr, Sa/So/Feiertag, 24./31.12.)',null,'Abklärung der Behandlungsnotwendigkeit, Weiterleitung'],
+  ['01210',120,'Notfallpauschale (Mo–Fr 7–19 Uhr)',null,'Erster Kontakt im Behandlungsfall'],
+  ['01212',195,'Notfallpauschale (Mo–Fr 19–7 Uhr, Sa/So/Feiertag, 24./31.12.)',null,'Erster Kontakt im Behandlungsfall'],
+  ['01214',50,'Notfallkonsultationspauschale I (Mo–Fr 7–19 Uhr)',null,'Weiterer oder telefonischer Kontakt'],
+  ['01216',140,'Notfallkonsultationspauschale II (Mo–Fr 19–22 Uhr, Sa/So/Feiertag 7–19 Uhr)',null,'Weiterer oder telefonischer Kontakt'],
+  ['01218',170,'Notfallkonsultationspauschale III (Mo–Fr 22–7 Uhr, Sa/So/Feiertag 19–7 Uhr)',null,'Weiterer oder telefonischer Kontakt'],
+  ['01220',1027,'Reanimationskomplex',null,''],
+  ['01221',203,'Zuschlag Beatmung zu 01220',null,''],
+  ['01222',288,'Zuschlag Defibrillation zu 01220',null,''],
+  ['01223',128,'Schweregradzuschlag zu 01210',null,'Nur bei den Diagnosen bzw. Begründung lt. Präambel 1.2'],
+  ['01224',195,'Schweregradzuschlag zu 01212',null,'Nur bei den Diagnosen bzw. Begründung lt. Präambel 1.2'],
+  ['01226',90,'Zuschlag zu 01212 (Kinder bis 3 J., Pat. mit besonderen Einschränkungen)',null,'Nur zusammen mit 01212'],
+  ['01410',212,'Besuch',null,''],
+  ['01411',469,'Dringender Besuch I',null,''],
+  ['01412',626,'Dringender Besuch II',null,''],
+  ['01413',106,'Besuch eines weiteren Kranken (Mitbesuch)',null,'In derselben häuslichen Gemeinschaft/Einrichtung'],
+  ['01415',546,'Dringender Besuch in einer Pflegeeinrichtung',null,''],
+  ['01416',117,'Begleitung eines Kranken beim Transport',null,''],
+  ['01418',778,'Besuch im organisierten Not(-fall)dienst',null,'Unabhängig von der Uhrzeit'],
+  ['01430',12,'Verwaltungskomplex',null,''],
+  ['01440',352,'Verweilen außerhalb der Praxis ohne Leistungserbringung, je vollendete 30 Min.',null,''],
+  ['02100',67,'Infusion (mind. 10 Min.)',null,''],
+  ['02101',165,'Infusion (mind. 60 Min.)',null,''],
+  ['02300',68,'Kleinchirurgischer Eingriff I / primäre Wundversorgung',null,''],
+  ['02301',133,'Kleinchirurgischer Eingriff II / primäre Wundversorgung mit Naht',null,''],
+  ['02302',230,'Kleinchirurgischer Eingriff III / Wundversorgung bei Säuglingen, Kleinkindern',null,''],
+  ['02320',48,'Einführung einer Magenverweilsonde',null,''],
+  ['02321',125,'Legen eines suprapubischen Harnblasenkatheters',null,''],
+  ['02322',53,'Wechsel/Entfernung eines suprapubischen Harnblasenkatheters',null,''],
+  ['02323',68,'Legen/Wechsel eines transurethralen Dauerkatheters',null,''],
+  ['02330',49,'Arterienpunktion zur Blutentnahme',null,''],
+  ['02331',62,'Intraarterielle Injektion',null,''],
+  ['02340',45,'Punktion I',null,''],
+  ['02341',137,'Punktion II',null,''],
+  ['02343',260,'Entlastungspunktion des Pleuraraums / Pleuradrainage',null,''],
+  ['02350',144,'Fixierender Verband',null,''],
+  ['02360',94,'Anwendung von Lokalanästhetika',null,''],
+  ['03330',53,'Spirographie',null,''],
+  ['30200',48,'Chirotherapeutischer Eingriff',null,'Nur mit Qualifikation'],
+  ['30201',71,'Chirotherapeutischer Eingriff an der Wirbelsäule',null,'Nur mit Qualifikation'],
+  ['32025',null,'Glukose (Blutzucker, Sofortdiagnostik)',1.60,''],
+  ['32033',null,'Urinuntersuchung mit Teststreifen',0.50,''],
+  ['40190',null,'Wegepauschale über 10 km Radius, Tag (7–19 Uhr)',16.31,'KVBW regional'],
+  ['40192',null,'Wegepauschale über 10 km Radius, Nacht (19–7 Uhr)',22.41,'KVBW regional'],
+  ['40220',null,'Wegepauschale Kernbereich bis 2 km, Tag (7–19 Uhr)',4.74,'KVBW regional'],
+  ['40222',null,'Wegepauschale Randbereich 2–5 km, Tag (7–19 Uhr)',9.51,'KVBW regional'],
+  ['40224',null,'Wegepauschale Fernbereich über 5 km, Tag (7–19 Uhr)',13.58,'KVBW regional'],
+  ['40226',null,'Wegepauschale Kernbereich bis 2 km, Nacht (19–7 Uhr)',9.51,'KVBW regional'],
+  ['40228',null,'Wegepauschale Randbereich 2–5 km, Nacht (19–7 Uhr)',14.94,'KVBW regional'],
+  ['40230',null,'Wegepauschale Fernbereich über 5 km, Nacht (19–7 Uhr)',20.37,'KVBW regional']
+];
+
+function ebmNorm(z){ return String(z == null ? '' : z).trim().toUpperCase().replace(/\s+/g, ''); }
+function ebmEintrag(gop){
+  if(!ebmEintrag.m){ ebmEintrag.m = new Map(); EBM_KATALOG.forEach(e=> ebmEintrag.m.set(e[0], e)); }
+  const e = ebmEintrag.m.get(ebmNorm(gop));
+  return e ? { gop: e[0], punkte: e[1], text: e[2], euroFest: e[3], hinweis: e[4] } : null;
+}
+function ebmEuro(gop){
+  const e = ebmEintrag(gop);
+  if(!e) return 0;
+  return e.punkte != null ? betaRund2(e.punkte * EBM_ORIENTIERUNGSWERT) : Number(e.euroFest) || 0;
+}
+function ebmSuchen(text, max){
+  const s = String(text || '').trim().toLowerCase();
+  if(!s) return [];
+  const treffer = [];
+  EBM_KATALOG.forEach(e=>{
+    let rang = -1;
+    if(e[0] === s) rang = 0;
+    else if(e[0].indexOf(s) === 0 || e[0].replace(/^0+/, '').indexOf(s.replace(/^0+/, '')) === 0) rang = 1;
+    else if(s.length >= 3){ const p = e[2].toLowerCase().indexOf(s); if(p >= 0) rang = 2 + p / 1000; }
+    if(rang >= 0) treffer.push({ e, rang });
+  });
+  treffer.sort((a, b)=> a.rang - b.rang || a.e[0].localeCompare(b.e[0]));
+  return treffer.slice(0, max || 30).map(t=> ebmEintrag(t.e[0]));
+}
+
+// ---------- Tageszeit-abhängige Ziffern ----------
+// "Unzeit" im Sinne des EBM: Mo-Fr 19-7 Uhr, Sa, So, Feiertage, 24.12., 31.12.
+function ebmWochenendeOderFeiertag(d){
+  const wt = d.getDay();
+  return wt === 0 || wt === 6 || !!istFeiertagBW(d) || (d.getMonth() === 11 && (d.getDate() === 24 || d.getDate() === 31));
+}
+function ebmStunde(dt){ return dt.getHours() + dt.getMinutes() / 60; }
+const EBM_GRUPPEN = {
+  nfp:   { titel: 'Notfallpauschale', gops: ['01210', '01212'],
+           waehle: (dt)=> (!ebmWochenendeOderFeiertag(dt) && ebmStunde(dt) >= 7 && ebmStunde(dt) < 19) ? '01210' : '01212' },
+  abk:   { titel: 'Notfallpauschale Abklärung', gops: ['01205', '01207'],
+           waehle: (dt)=> (!ebmWochenendeOderFeiertag(dt) && ebmStunde(dt) >= 7 && ebmStunde(dt) < 19) ? '01205' : '01207' },
+  schwer:{ titel: 'Schweregradzuschlag', gops: ['01223', '01224'],
+           waehle: (dt)=> EBM_GRUPPEN.nfp.waehle(dt) === '01210' ? '01223' : '01224' },
+  kons:  { titel: 'Notfallkonsultationspauschale', gops: ['01214', '01216', '01218'], mehrfach: true,
+           waehle: (dt)=>{
+             const h = ebmStunde(dt);
+             if(ebmWochenendeOderFeiertag(dt)) return (h >= 7 && h < 19) ? '01216' : '01218';
+             return (h >= 7 && h < 19) ? '01214' : (h >= 19 && h < 22) ? '01216' : '01218';
+           } },
+  weg:   { titel: 'Wegepauschale', gops: ['40220', '40226', '40222', '40228', '40224', '40230', '40190', '40192'], stufen: [
+             { k: '2',  label: 'bis 2 km',  tag: '40220', nacht: '40226' },
+             { k: '5',  label: '2–5 km',    tag: '40222', nacht: '40228' },
+             { k: '10', label: '5–10 km',   tag: '40224', nacht: '40230' },
+             { k: '10+', label: 'über 10 km', tag: '40190', nacht: '40192' }],
+           waehle: (dt, stufe)=>{
+             const s = EBM_GRUPPEN.weg.stufen.find(x=> x.k === stufe) || EBM_GRUPPEN.weg.stufen[0];
+             const h = ebmStunde(dt);
+             return (h >= 7 && h < 19) ? s.tag : s.nacht;
+           } }
+};
+function ebmGruppeVon(gop){
+  const g = ebmNorm(gop);
+  return Object.keys(EBM_GRUPPEN).find(k=> EBM_GRUPPEN[k].gops.includes(g)) || null;
+}
+// Ziffern, die mehrfach je Patient vorkommen können (Stepper)
+const EBM_MEHRFACH = ['01214', '01216', '01218', '01440', '02100', '02300', '02301', '02302', '02340', '02341', '02350', '02360', '32025', '32033'];
+const GKV_LISTE_STANDARD = ['nfp', 'schwer', '01226', 'kons', '01418', '01413', '01440', 'weg', '01220', '02100', '02300', '02301', '02302', '02323', '32025', '32033'];
+
+function gkvListeLaden(){
+  const e = ladeEinstellungen() || {};
+  return Array.isArray(e.gkvListe) && e.gkvListe.length ? e.gkvListe.slice() : GKV_LISTE_STANDARD.slice();
+}
+function gkvListeSpeichern(liste){ const e = ladeEinstellungen() || {}; e.gkvListe = liste; speichereEinstellungen(e); }
+
+// Auswahl {schluessel: {anz, stufe?}} -> konkrete Positionen [{gop, anz, euro}]
+function gkvPositionen(auswahl, dt){
+  const out = [];
+  Object.keys(auswahl || {}).forEach(k=>{
+    const a = auswahl[k]; if(!a) return;
+    const g = EBM_GRUPPEN[k];
+    const gop = g ? g.waehle(dt, a.stufe) : k;
+    const anz = Math.max(1, Number(a.anz) || 1);
+    out.push({ gop, anz, euro: betaRund2(ebmEuro(gop) * anz) });
+  });
+  return out;
+}
+function gkvHinweise(pos){
+  const hat = (g)=> pos.some(p=> p.gop === g);
+  const h = [];
+  if((hat('01210') || hat('01212')) && pos.some(p=> /^0121[468]$/.test(p.gop))) h.push('Notfallpauschale und Konsultationspauschale nicht beim selben Kontakt – die Konsultationspauschale gilt für weitere Kontakte.');
+  if((hat('01223') || hat('01224')) && !(hat('01210') || hat('01212'))) h.push('Der Schweregradzuschlag gilt nur zusammen mit der Notfallpauschale.');
+  if(hat('01226') && !hat('01212')) h.push('01226 gibt es nur zusammen mit 01212 (Unzeit).');
+  if(hat('01418') && hat('01413')) h.push('01413 ist der Mitbesuch eines weiteren Kranken – beim selben Patienten nicht neben 01418.');
+  if((hat('01205') || hat('01207')) && (hat('01210') || hat('01212'))) h.push('Abklärungspauschale und Notfallpauschale nicht nebeneinander.');
+  return h;
+}
+
+// =====================================================================
+// Fahrtenbuch lesen / Dienst finden / schreiben
+// =====================================================================
+const FB_COL = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, AF: 31, AG: 32 };
+function fbSpalte(i){ let s = '', n = i + 1; while(n > 0){ const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); } return s; }
+function fbSerial(d){ return Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(1899, 11, 30)) / 86400000); }
+function fbDatumAusText(t){ const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(String(t || '').trim()); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; }
+function fbDatumText(d){ return zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' + d.getFullYear(); }
+function fbZeitParsen(t){
+  const m = /^\s*(\d{1,2})(?:[.,:](\d{1,2}))?\s*-\s*(\d{1,2})(?:[.,:](\d{1,2}))?\s*$/.exec(String(t == null ? '' : t));
+  if(!m) return null;
+  const s = +m[1] + (m[2] ? +m[2] / (m[2].length === 1 ? 10 : 60) : 0);
+  const e = +m[3] + (m[4] ? +m[4] / (m[4].length === 1 ? 10 : 60) : 0);
+  if(s > 24 || e > 24) return null;
+  return { s, e };
+}
+function fbZeitText(z){ const f = (h)=> Number.isInteger(h) ? String(h) : String(Math.floor(h)) + ':' + zz2(Math.round((h % 1) * 60)); return f(z.s) + '-' + f(z.e); }
+// Zeitraum eines Dienstblocks als Date-Paar (Dienst ueber Mitternacht: Ende am Folgetag)
+function fbBlockZeitraum(b){
+  const d = fbDatumAusText(b.datumText); if(!d) return null;
+  const z = fbZeitParsen(b.zeitRoh);
+  if(!z) return { von: d, bis: new Date(d.getTime() + 24 * 3600000), nurTag: true };
+  const von = new Date(d.getTime() + z.s * 3600000);
+  const bis = new Date(d.getTime() + (z.e + (z.e <= z.s ? 24 : 0)) * 3600000);
+  return { von, bis };
+}
+function fbGopNorm(g){ return String(g == null ? '' : g).replace(/^0+/, ''); }
+
+async function fbLesen(meldung){
+  const token = await msGraphTokenHolen();
+  if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+  const basis = msGraphPfadUrl(MSGRAPH_PFAD_FAHRTENBUCH);
+  meldung && meldung('Fahrtenbuch wird gelesen …');
+  const ws = await gx(token, 'GET', basis + '/workbook/worksheets?$select=name,position');
+  const blatt = (((ws && ws.value) || []).slice().sort((x, y)=> (x.position || 0) - (y.position || 0))[0] || {}).name;
+  if(!blatt) throw new Error('Das Fahrtenbuch enthält kein Tabellenblatt.');
+  const blattUrl = basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')";
+  const ur = await gx(token, 'GET', blattUrl + '/usedRange?$select=address,values');
+  const st = xlAdresseStart(ur && ur.address);
+  const werte = [];
+  for(let i = 1; i < st.zeile; i++) werte.push([]);
+  (ur.values || []).forEach(r=> werte.push(new Array(st.spalte).fill('').concat(r)));
+  const daten = fahrdienstZeilenAuswerten(werte);
+  // Ziffernspalten aus Zeile 2 (F..AF): "01418", 1418, "40220/40226" ...
+  const spalten = new Map();
+  const kopf = werte[1] || [];
+  for(let c = FB_COL.F; c <= FB_COL.AF; c++){
+    (String(kopf[c] == null ? '' : kopf[c]).match(/\d{3,5}/g) || []).forEach(g=>{ if(!spalten.has(fbGopNorm(g))) spalten.set(fbGopNorm(g), c); });
+  }
+  return { token, blattUrl, werte, daten, spalten };
+}
+
+function fbDienstFinden(fb, dt){
+  let best = null, bestAbstand = Infinity;
+  fb.daten.bloecke.forEach(b=>{
+    const z = fbBlockZeitraum(b); if(!z) return;
+    const t = dt.getTime();
+    // Toleranz: 1 h vor Beginn, 3 h nach Ende (Nachdokumentation)
+    if(t < z.von.getTime() - 3600000 || t > z.bis.getTime() + 3 * 3600000) return;
+    const abstand = t < z.von.getTime() ? z.von.getTime() - t : t > z.bis.getTime() ? t - z.bis.getTime() : 0;
+    if(abstand < bestAbstand){ best = b; bestAbstand = abstand; }
+  });
+  return best;
+}
+
+// Vorauswahl fuer "von-bis": in der Datei haeufige Zeiten zuerst
+function fbZeitVorschlaege(fb, datum){
+  const zaehl = new Map(), zaehlTyp = new Map();
+  const typ = (d)=> d && ebmWochenendeOderFeiertag(d) ? 'we' : 'wt';
+  const zielTyp = typ(datum);
+  fb.daten.bloecke.forEach(b=>{
+    const z = fbZeitParsen(b.zeitRoh); if(!z) return;
+    const t = fbZeitText(z);
+    zaehl.set(t, (zaehl.get(t) || 0) + 1);
+    if(typ(fbDatumAusText(b.datumText)) === zielTyp) zaehlTyp.set(t, (zaehlTyp.get(t) || 0) + 1);
+  });
+  const liste = [...zaehl.keys()].sort((a, b)=> (zaehlTyp.get(b) || 0) - (zaehlTyp.get(a) || 0) || zaehl.get(b) - zaehl.get(a));
+  (zielTyp === 'we' ? ['8-20', '20-8', '8-8', '8-16', '16-24'] : ['18-23', '19-7', '16-24', '8-16', '18-8'])
+    .forEach(t=>{ if(!liste.includes(t)) liste.push(t); });
+  return liste.slice(0, 8);
+}
+// Katalog der Vertretungsaerzte: aus der Datei (zuletzt vertretene zuerst) + lokal ergaenzte
+function fbAerzte(fb){
+  const e = ladeEinstellungen() || {};
+  const aus = new Set((e.fbAerzteAus || []).map(x=> x.toLowerCase()));
+  const liste = [];
+  const dazu = (n)=>{ n = String(n || '').trim(); if(n && !aus.has(n.toLowerCase()) && !liste.some(x=> x.toLowerCase() === n.toLowerCase())) liste.push(n); };
+  (e.fbAerzte || []).slice().reverse().forEach(dazu);
+  fb.daten.bloecke.slice().reverse().forEach(b=> dazu(b.arzt));
+  return liste;
+}
+function fbArztMerken(name){
+  const e = ladeEinstellungen() || {};
+  const n = String(name || '').trim(); if(!n) return;
+  e.fbAerzte = (e.fbAerzte || []).filter(x=> x.toLowerCase() !== n.toLowerCase()).concat([n]).slice(-40);
+  e.fbAerzteAus = (e.fbAerzteAus || []).filter(x=> x.toLowerCase() !== n.toLowerCase());
+  speichereEinstellungen(e);
+}
+function fbArztAusblenden(name){
+  const e = ladeEinstellungen() || {};
+  e.fbAerzte = (e.fbAerzte || []).filter(x=> x.toLowerCase() !== String(name).toLowerCase());
+  e.fbAerzteAus = (e.fbAerzteAus || []).concat([String(name)]);
+  speichereEinstellungen(e);
+}
+
+// Rueckfrage "Neuer Dienst" -> {datum, zeit:{s,e}, arzt} oder null (nicht eintragen)
+async function fbDienstAbfragen(fb, dt, fallText){
+  let datum = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  if(ebmStunde(dt) < 7) datum = new Date(datum.getTime() - 86400000); // Nacht: Dienst hat am Vortag begonnen
+  const vorschlaege = fbZeitVorschlaege(fb, datum);
+  let zeit = fbZeitParsen(vorschlaege[0]);
+  // Vorauswahl: erster Vorschlag, der die Uhrzeit des Falls enthaelt
+  for(const v of vorschlaege){
+    const z = fbZeitParsen(v); if(!z) continue;
+    const von = datum.getTime() + z.s * 3600000, bis = datum.getTime() + (z.e + (z.e <= z.s ? 24 : 0)) * 3600000;
+    if(dt.getTime() >= von && dt.getTime() <= bis){ zeit = z; break; }
+  }
+  let aerzte = fbAerzte(fb);
+  let arzt = aerzte[0] || '';
+  let fehler = '';
+  const iso = (d)=> d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate());
+  while(true){
+    const html =
+      '<div class="fb-dialog">' +
+      '<div class="fb-fall">' + htmlEsc(fallText) + '</div>' +
+      '<div class="fb-info">Für diesen Zeitpunkt steht noch kein Dienst im Fahrtenbuch.</div>' +
+      (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="fbDatum" value="' + iso(datum) + '"></label>' +
+      '<div class="fb-lbl">Dienstzeit</div>' +
+      '<div class="fb-chips" id="fbZeitChips">' + vorschlaege.map(v=> '<button type="button" class="fb-chip' + (zeit && fbZeitText(zeit) === v ? ' an' : '') + '" data-zeit="' + htmlEsc(v) + '">' + htmlEsc(v) + '</button>').join('') + '</div>' +
+      '<div class="fb-zeile"><label>von<input type="text" inputmode="decimal" id="fbVon" value="' + (zeit ? htmlEsc(fbZeitText(zeit).split('-')[0]) : '') + '"></label>' +
+      '<label>bis<input type="text" inputmode="decimal" id="fbBis" value="' + (zeit ? htmlEsc(fbZeitText(zeit).split('-')[1]) : '') + '"></label><span class="fb-uhr">Uhr</span></div>' +
+      '<div class="fb-lbl">Vertretener Arzt (Dienstinhaber)</div>' +
+      '<div class="fb-chips" id="fbArztChips">' + aerzte.map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-arzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-weg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>' +
+      '<input type="text" id="fbArzt" placeholder="Name (neu eintippen oder oben wählen)" value="' + htmlEsc(arzt) + '">' +
+      '</div>';
+    const p = betaOverlay.ergebnis('Neuer Dienst', html, [
+      { label: 'Nicht eintragen', akt: 'nein' }, { label: 'Dienst anlegen', akt: 'ok', primaer: true }]);
+    // Bedienung im Fenster
+    const wurzel = document.querySelector('.beta-overlay .fb-dialog');
+    if(wurzel){
+      wurzel.querySelectorAll('[data-zeit]').forEach(b=> b.onclick = ()=>{
+        const z = fbZeitParsen(b.dataset.zeit); if(!z) return;
+        const [v, bi] = fbZeitText(z).split('-');
+        wurzel.querySelector('#fbVon').value = v; wurzel.querySelector('#fbBis').value = bi;
+        wurzel.querySelectorAll('[data-zeit]').forEach(x=> x.classList.toggle('an', x === b));
+      });
+      wurzel.querySelectorAll('[data-arzt]').forEach(b=> b.onclick = ()=>{
+        wurzel.querySelector('#fbArzt').value = b.dataset.arzt;
+        wurzel.querySelectorAll('.fb-chip.arzt').forEach(x=> x.classList.toggle('an', x.contains(b)));
+      });
+      wurzel.querySelectorAll('[data-weg]').forEach(b=> b.onclick = ()=>{
+        fbArztAusblenden(b.dataset.weg);
+        const chip = b.closest('.fb-chip'); if(chip) chip.remove();
+        if(wurzel.querySelector('#fbArzt').value === b.dataset.weg) wurzel.querySelector('#fbArzt').value = '';
+      });
+    }
+    const akt = await p;
+    if(akt !== 'ok') return null;
+    const dW = (document.getElementById('fbDatum') || {}).value || '';
+    const von = (document.getElementById('fbVon') || {}).value || '', bis = (document.getElementById('fbBis') || {}).value || '';
+    arzt = String((document.getElementById('fbArzt') || {}).value || '').trim();
+    const dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dW);
+    if(dm) datum = new Date(+dm[1], +dm[2] - 1, +dm[3]);
+    zeit = fbZeitParsen(von.trim() + '-' + bis.trim());
+    aerzte = fbAerzte(fb);
+    if(!dm){ fehler = 'Bitte das Datum des Dienstbeginns wählen.'; continue; }
+    if(!zeit){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen (z.B. 18 und 23).'; continue; }
+    if(!arzt){ fehler = 'Bitte den vertretenen Arzt eintragen.'; continue; }
+    fbArztMerken(arzt);
+    return { datum, zeit, arzt };
+  }
+}
+
+// Leere/geaenderte Ganzzeilen einfuegen (Formeln darunter verschieben sich mit)
+async function fbZeilenEinfuegen(fb, zeile, anzahl){
+  await gx(fb.token, 'POST', fb.blattUrl + "/range(address='" + zeile + ':' + (zeile + anzahl - 1) + "')/insert", { shift: 'Down' });
+}
+
+// Haupteinstieg: Fall ins Fahrtenbuch eintragen.
+// fall: {kat:''|'P'|'LS', name, datum: Date, zeit:'HH:MM'|'' , euro, positionen?:[{gop, anz}], namen?: [Varianten zum Wiederfinden]}
+// opt.fragen=false -> ohne passenden Dienst nichts anlegen (nur Hinweis)
+// -> {zeile, neuerDienst, aktualisiert, ohneSpalte:[], dienst:'14.10.2026 18-23'} oder {uebersprungen:true, grund}
+async function fahrtenbuchEintragen(fall, meldung, opt){
+  opt = opt || {};
+  const fb = await fbLesen(meldung);
+  const zm = /^(\d{1,2}):(\d{2})/.exec(String(fall.zeit || ''));
+  const dt = new Date(fall.datum.getFullYear(), fall.datum.getMonth(), fall.datum.getDate(), zm ? +zm[1] : 12, zm ? +zm[2] : 0);
+  let block = fbDienstFinden(fb, dt);
+  let neuerDienst = false;
+  if(!block){
+    if(opt.fragen === false) return { uebersprungen: true, grund: 'kein Dienst am ' + fbDatumText(fall.datum) + ' im Fahrtenbuch' };
+    const d = await fbDienstAbfragen(fb, dt, (fall.kat === 'LS' ? 'Leichenschau' : fall.kat === 'P' ? 'Privatpatient' : 'GKV') + ': ' + fall.name + ' · ' + fbDatumText(fall.datum) + (zm ? ', ' + zm[0] + ' Uhr' : ''));
+    if(!d) return { uebersprungen: true, grund: 'nicht eingetragen (kein Dienst gewählt)', abgelehnt: true };
+    meldung && meldung('Neuer Dienst wird angelegt …');
+    // chronologisch einsortieren
+    const neuStart = d.datum.getTime() + d.zeit.s * 3600000;
+    const danach = fb.daten.bloecke.find(b=>{ const z = fbBlockZeitraum(b); return z && z.von.getTime() > neuStart; });
+    const letzte = fb.daten.bloecke.length ? fb.daten.bloecke[fb.daten.bloecke.length - 1].zeileEnde : 4;
+    const z1 = danach ? danach.zeileStart : letzte + 1;
+    await fbZeilenEinfuegen(fb, z1, 2);
+    await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='A" + z1 + ':C' + (z1 + 1) + "')", {
+      numberFormat: [['0', 'dd.mm.yyyy', '@'], ['General', '@', '@']],
+      values: [[Math.floor(d.datum.getMonth() / 3) + 1, fbSerial(d.datum), fbZeitText(d.zeit)], ['', 'Fahrdienst', d.arzt]]
+    });
+    block = { zeileStart: z1, zeileEnde: z1 + 1, datumText: fbDatumText(d.datum), zeitRoh: fbZeitText(d.zeit), arzt: d.arzt, frisch: true };
+    neuerDienst = true;
+  }
+  // Zielzeile: derselbe Patient schon im Block? -> aktualisieren; sonst erste Zeile ohne Namen; sonst neue Zeile
+  const norm = (t)=> String(t == null ? '' : t).trim().toLowerCase().replace(/\s+/g, ' ');
+  const namen = [fall.name].concat(fall.namen || []).map(norm).filter(Boolean);
+  let ziel = 0, aktualisiert = false;
+  if(!block.frisch){
+    for(let r = block.zeileStart; r <= block.zeileEnde; r++){
+      const zr = fb.werte[r - 1] || [];
+      const kat = String(zr[FB_COL.E] == null ? '' : zr[FB_COL.E]).trim().toUpperCase();
+      const katGleich = (fall.kat === 'LS' ? (kat === 'L' || kat === 'LS') : fall.kat === 'P' ? (kat === 'P' || kat === 'PT') : kat === '');
+      if(katGleich && namen.includes(norm(zr[FB_COL.D]))){ ziel = r; aktualisiert = true; break; }
+    }
+    if(!ziel){
+      for(let r = block.zeileStart; r <= block.zeileEnde; r++){
+        const zr = fb.werte[r - 1] || [];
+        if(norm(zr[FB_COL.D]) === '' && norm(zr[FB_COL.E]) === '' && norm(zr[FB_COL.AG]) === ''){ ziel = r; break; }
+      }
+    }
+    if(!ziel){
+      ziel = block.zeileEnde + 1;
+      meldung && meldung('Zeile wird eingefügt …');
+      await fbZeilenEinfuegen(fb, ziel, 1);
+    }
+  } else ziel = block.zeileStart;
+  // Zeile D..AG
+  const zeile = new Array(FB_COL.AG - FB_COL.D + 1).fill('');
+  zeile[0] = fall.name; zeile[1] = fall.kat || '';
+  const ohneSpalte = [];
+  (fall.positionen || []).forEach(p=>{
+    const c = fb.spalten.get(fbGopNorm(p.gop));
+    if(c == null){ ohneSpalte.push(p.gop); return; }
+    const i = c - FB_COL.D;
+    zeile[i] = (Number(zeile[i]) || 0) + (Number(p.anz) || 1);
+  });
+  zeile[zeile.length - 1] = betaRund2(Number(fall.euro) || 0);
+  if(aktualisiert){
+    // vorhandene Zaehlungen nur bei GKV ersetzen; bei P/LS stehen dort keine
+    const alt = fb.werte[ziel - 1] || [];
+    for(let i = 2; i < zeile.length - 1; i++) if(zeile[i] === '' && fall.kat && alt[FB_COL.D + i] != null) zeile[i] = alt[FB_COL.D + i];
+  }
+  meldung && meldung('Fahrtenbuch: Zeile ' + ziel + ' wird geschrieben …');
+  await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='D" + ziel + ':AG' + ziel + "')", { values: [zeile] });
+  // Statistik rechts nachziehen (verschobene Blockenden, Quartalssummen)
+  try{ await fahrdienstStatistikSchreiben(meldung); }catch(e){}
+  return { zeile: ziel, neuerDienst, aktualisiert, ohneSpalte,
+           dienst: block.datumText + ' ' + (fbZeitParsen(block.zeitRoh) ? fbZeitText(fbZeitParsen(block.zeitRoh)) : String(block.zeitRoh || '')) + (block.arzt ? ' · ' + block.arzt : '') };
+}
+function fahrtenbuchErgebnisText(r){
+  if(!r) return '';
+  if(r.uebersprungen) return '– Fahrtenbuch: ' + r.grund;
+  return '✓ Fahrtenbuch: ' + (r.aktualisiert ? 'Zeile ' + r.zeile + ' aktualisiert' : 'Zeile ' + r.zeile + ' eingetragen') +
+    ' (Dienst ' + r.dienst + (r.neuerDienst ? ', neu angelegt' : '') + ')' +
+    (r.ohneSpalte && r.ohneSpalte.length ? ' · ohne eigene Spalte, nur im Betrag: ' + r.ohneSpalte.join(', ') : '');
+}
+
+// PT/LS nach dem Erstellen der Rechnung (aus betaFaelleHochladen)
+async function fahrtenbuchAusRechnung(fall, erg, meldung){
+  if(fall.fahrtenbuch === 'nein') return '';
+  const w = fall.werte || {};
+  const d = fbDatumAusText(normalisiereDatum(w.txtDatumExcel || '') || '');
+  if(!d) return '';
+  const { nachname, vorname } = nameAufteilen(w.txtName);
+  const alter = (Date.now() - d.getTime()) / 86400000;
+  const r = await fahrtenbuchEintragen({
+    kat: fall.art === 'ls' ? 'LS' : 'P', name: nachname + ', ' + vorname,
+    namen: [vorname + ' ' + nachname, nachname], datum: d, zeit: normalisiereZeit(w.txtZeitLS || '') || String(w.txtZeitLS || ''),
+    euro: erg.summe
+  }, meldung, { fragen: alter < 14 });
+  if(r.abgelehnt && fall.zeitstempel && typeof betaFallAendern === 'function') betaFallAendern(fall.art, fall.zeitstempel, x=>{ x.fahrtenbuch = 'nein'; });
+  return fahrtenbuchErgebnisText(r);
+}
+
+// =====================================================================
+// Ansicht "GKV-Patient"
+// =====================================================================
+function gkvFaelleLaden(){ return LS.get('gkv_faelle', []); }
+function gkvFaelleSpeichern(a){ LS.set('gkv_faelle', a.slice(-200)); }
+let gkvEntwurf = null;
+
+function ansichtGkv(bearbeitenId){
+  setzeTitel('GKV-Patient', ansichtStart);
+  const jetzt = new Date();
+  const alle = gkvFaelleLaden();
+  let f = bearbeitenId ? alle.find(x=> x.id === bearbeitenId) : null;
+  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})) }
+    : (gkvEntwurf || { id: '', name: '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()), auswahl: { nfp: { anz: 1 }, '01418': { anz: 1 } } });
+  gkvEntwurf = st.id ? null : st;
+  let liste = gkvListeLaden();
+  const dtVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(st.datum || ''), z = /^(\d{1,2}):(\d{2})/.exec(st.zeit || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3], z ? +z[1] : 12, z ? +z[2] : 0) : new Date(); };
+
+  app.innerHTML = `
+    <div class="gkv-kopf">
+      <label class="gkv-feld">Name<input type="text" id="gkvName" autocomplete="off" placeholder="Nachname, Vorname" value="${htmlEsc(st.name)}"></label>
+      <div class="gkv-zeile">
+        <label class="gkv-feld">Datum<input type="date" id="gkvDatum" value="${htmlEsc(st.datum)}"></label>
+        <label class="gkv-feld">Uhrzeit<input type="time" id="gkvZeit" value="${htmlEsc(st.zeit)}"></label>
+      </div>
+      <div class="gkv-zeitinfo" id="gkvZeitInfo"></div>
+    </div>
+    <div class="gesamt-abschnitt">EBM-Positionen</div>
+    <div id="gkvListe"></div>
+    <div class="gkv-suche">
+      <input type="search" id="gkvSuche" placeholder="EBM-Position hinzufügen (Ziffer oder Text)" autocomplete="off">
+      <div id="gkvTreffer"></div>
+    </div>
+    <div class="gkv-stand">${htmlEsc(EBM_STAND)} · <a href="#" id="gkvStandard">Standardliste</a></div>
+    <div id="gkvHinweise"></div>
+    <div class="gkv-summe-leiste"><span id="gkvSumme"></span>
+      <button type="button" class="btn-primaer" id="gkvSpeichern">${st.id ? 'Fahrtenbuch aktualisieren' : 'Ins Fahrtenbuch'}</button></div>
+    <div id="gkvMeldung"></div>
+    <div class="gesamt-abschnitt">Zuletzt erfasst</div>
+    <div id="gkvVerlauf"></div>
+    <div class="gkv-platz"></div>`;
+
+  const el = (id)=> document.getElementById(id);
+  function zeichnen(){
+    const dt = dtVon();
+    const nacht = ebmWochenendeOderFeiertag(dt) ? (istFeiertagBW(dt) || (dt.getDay() === 0 ? 'Sonntag' : dt.getDay() === 6 ? 'Samstag' : 'Feiertag')) : (ebmStunde(dt) >= 7 && ebmStunde(dt) < 19 ? 'Werktag, 7–19 Uhr' : 'Werktag, Unzeit');
+    el('gkvZeitInfo').textContent = 'Ziffern nach Zeitpunkt: ' + nacht;
+    el('gkvListe').innerHTML = liste.map(k=>{
+      const g = EBM_GRUPPEN[k], a = st.auswahl[k];
+      const gop = g ? g.waehle(dt, a && a.stufe) : k;
+      const e = ebmEintrag(gop);
+      if(!e) return '';
+      const titel = g ? g.titel : e.text;
+      const unter = g ? e.text.replace(/^[^(]*\(?/, '').replace(/\)$/, '') : (e.hinweis || '');
+      const mehr = a && (g ? g.mehrfach : EBM_MEHRFACH.includes(gop));
+      const anz = a ? Math.max(1, Number(a.anz) || 1) : 1;
+      return '<div class="gkv-pos' + (a ? ' an' : '') + '" data-k="' + k + '">' +
+        '<div class="gkv-pos-haupt" data-tipp="' + k + '"><span class="gkv-gop">' + gop + '</span>' +
+        '<span class="gkv-txt">' + htmlEsc(titel) + (unter ? '<small>' + htmlEsc(unter) + '</small>' : '') + '</span>' +
+        '<span class="gkv-eur">' + betaEuro(ebmEuro(gop) * (a ? anz : 1)) + '</span></div>' +
+        (k === 'weg' ? '<div class="gkv-stufen">' + g.stufen.map(s=> '<button type="button" data-stufe="' + s.k + '" class="' + (a && a.stufe === s.k ? 'an' : '') + '">' + s.label + '</button>').join('') + '</div>' : '') +
+        (mehr ? '<div class="gkv-anz"><button type="button" data-minus="' + k + '">−</button><b>' + anz + '×</b><button type="button" data-plus="' + k + '">+</button></div>' : '') +
+        '<button type="button" class="gkv-weg" data-weg="' + k + '" aria-label="aus der Liste entfernen">×</button></div>';
+    }).join('');
+    const pos = gkvPositionen(st.auswahl, dt);
+    const summe = pos.reduce((s, p)=> s + p.euro, 0);
+    el('gkvSumme').innerHTML = '<b>' + betaEuro(summe) + '</b> <small>' + pos.length + ' Position' + (pos.length === 1 ? '' : 'en') + '</small>';
+    el('gkvHinweise').innerHTML = gkvHinweise(pos).map(h=> '<div class="gkv-warn">' + htmlEsc(h) + '</div>').join('');
+    el('gkvListe').querySelectorAll('[data-tipp]').forEach(b=> b.onclick = ()=>{
+      const k = b.dataset.tipp;
+      if(st.auswahl[k]) delete st.auswahl[k];
+      else st.auswahl[k] = k === 'weg' ? { anz: 1, stufe: '2' } : { anz: 1 };
+      zeichnen();
+    });
+    el('gkvListe').querySelectorAll('[data-stufe]').forEach(b=> b.onclick = (ev)=>{
+      ev.stopPropagation();
+      const a = st.auswahl.weg;
+      if(a && a.stufe === b.dataset.stufe) delete st.auswahl.weg;
+      else st.auswahl.weg = { anz: 1, stufe: b.dataset.stufe };
+      zeichnen();
+    });
+    el('gkvListe').querySelectorAll('[data-plus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.plus]; a.anz = Math.min(20, (Number(a.anz) || 1) + 1); zeichnen(); });
+    el('gkvListe').querySelectorAll('[data-minus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.minus]; a.anz = Math.max(1, (Number(a.anz) || 1) - 1); zeichnen(); });
+    el('gkvListe').querySelectorAll('[data-weg]').forEach(b=> b.onclick = ()=>{
+      liste = liste.filter(x=> x !== b.dataset.weg); delete st.auswahl[b.dataset.weg];
+      gkvListeSpeichern(liste); zeichnen();
+    });
+  }
+  function verlaufZeichnen(){
+    const a = gkvFaelleLaden().slice().reverse().slice(0, 25);
+    el('gkvVerlauf').innerHTML = a.length ? a.map(x=>
+      '<div class="fall-zeile gkv-verlauf' + (x.status === 'eingetragen' ? '' : ' offen') + '" data-id="' + htmlEsc(x.id) + '">' +
+      '<div class="name">' + htmlEsc(x.name) + '</div>' +
+      '<div class="gkv-v-unter">' + htmlEsc(isoDe(x.datum)) + ', ' + htmlEsc(x.zeit || '') + ' · ' + x.positionen.map(p=> p.gop + (p.anz > 1 ? '×' + p.anz : '')).join(' ') + ' · ' + betaEuro(x.euro) + '</div>' +
+      '<div class="gkv-v-status">' + (x.status === 'eingetragen' ? '✓ Fahrtenbuch Zeile ' + x.zeile : '<span class="offen-text">noch nicht im Fahrtenbuch' + (x.fehler ? ': ' + htmlEsc(x.fehler) : '') + '</span>') + '</div>' +
+      '<div class="aktionen">' + (x.status === 'eingetragen' ? '' : '<button type="button" data-nochmal="' + htmlEsc(x.id) + '">Jetzt eintragen</button>') +
+      '<button type="button" data-bearb="' + htmlEsc(x.id) + '">Bearbeiten</button><button type="button" data-loesch="' + htmlEsc(x.id) + '">Aus Liste löschen</button></div></div>').join('')
+      : '<div class="leer-hinweis">Noch keine GKV-Patienten erfasst.</div>';
+    el('gkvVerlauf').querySelectorAll('[data-bearb]').forEach(b=> b.onclick = ()=> ansichtGkv(b.dataset.bearb));
+    el('gkvVerlauf').querySelectorAll('[data-nochmal]').forEach(b=> b.onclick = ()=> gkvEintragen(b.dataset.nochmal));
+    el('gkvVerlauf').querySelectorAll('[data-loesch]').forEach(b=> b.onclick = async ()=>{
+      if(!await betaFrage('Nur aus dieser Liste in der App löschen?\n\nEine schon geschriebene Zeile im Fahrtenbuch bleibt stehen.', 'Löschen', 'Abbrechen')) return;
+      gkvFaelleSpeichern(gkvFaelleLaden().filter(x=> x.id !== b.dataset.loesch)); verlaufZeichnen();
+    });
+  }
+  el('gkvName').oninput = ()=>{ st.name = el('gkvName').value; el('gkvName').classList.remove('pflichtfeld-fehlt'); };
+  el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); };
+  el('gkvZeit').onchange = ()=>{ st.zeit = el('gkvZeit').value; zeichnen(); };
+  el('gkvSuche').oninput = ()=>{
+    const t = ebmSuchen(el('gkvSuche').value, 25);
+    el('gkvTreffer').innerHTML = t.map(e=> '<div class="gkv-treffer" data-gop="' + e.gop + '"><span class="gkv-gop">' + e.gop + '</span><span class="gkv-txt">' + htmlEsc(e.text) + (e.hinweis ? '<small>' + htmlEsc(e.hinweis) + '</small>' : '') + '</span><span class="gkv-eur">' + betaEuro(ebmEuro(e.gop)) + '</span></div>').join('') ||
+      (el('gkvSuche').value.trim() ? '<div class="leer-hinweis">Keine passende Ziffer im Notdienst-Katalog.</div>' : '');
+    el('gkvTreffer').querySelectorAll('[data-gop]').forEach(d=> d.onclick = ()=>{
+      const gop = d.dataset.gop, g = ebmGruppeVon(gop), k = g || gop;
+      if(!liste.includes(k)){ liste.push(k); gkvListeSpeichern(liste); }
+      if(g === 'weg'){ const s = EBM_GRUPPEN.weg.stufen.find(x=> x.tag === gop || x.nacht === gop); st.auswahl.weg = { anz: 1, stufe: s ? s.k : '2' }; }
+      else if(!st.auswahl[k]) st.auswahl[k] = { anz: 1 };
+      el('gkvSuche').value = ''; el('gkvTreffer').innerHTML = '';
+      zeichnen();
+      const z = el('gkvListe').querySelector('[data-k="' + k + '"]'); if(z) z.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  };
+  el('gkvStandard').onclick = (ev)=>{ ev.preventDefault(); liste = GKV_LISTE_STANDARD.slice(); gkvListeSpeichern(liste); zeichnen(); };
+  el('gkvSpeichern').onclick = async ()=>{
+    st.name = el('gkvName').value.trim();
+    if(!st.name){ el('gkvName').classList.add('pflichtfeld-fehlt'); el('gkvName').focus(); return; }
+    const dt = dtVon();
+    const pos = gkvPositionen(st.auswahl, dt);
+    if(!pos.length){ el('gkvMeldung').innerHTML = '<div class="gkv-warn">Bitte mindestens eine Position wählen.</div>'; return; }
+    const arr = gkvFaelleLaden();
+    const eintrag = { id: st.id || ('g' + Date.now().toString(36)), name: st.name, datum: st.datum, zeit: st.zeit,
+      auswahl: JSON.parse(JSON.stringify(st.auswahl)), positionen: pos.map(p=> ({ gop: p.gop, anz: p.anz })),
+      euro: betaRund2(pos.reduce((s, p)=> s + p.euro, 0)), status: 'offen', alterName: null };
+    const i = arr.findIndex(x=> x.id === eintrag.id);
+    if(i >= 0){ eintrag.alterName = arr[i].name !== eintrag.name ? arr[i].name : (arr[i].alterName || null); eintrag.zeile = arr[i].zeile; arr[i] = eintrag; }
+    else arr.push(eintrag);
+    gkvFaelleSpeichern(arr);
+    gkvEntwurf = null;
+    await gkvEintragen(eintrag.id);
+  };
+  async function gkvEintragen(id){
+    const arr = gkvFaelleLaden(), x = arr.find(y=> y.id === id);
+    if(!x) return;
+    if(msGraphStatus !== 'angemeldet'){
+      x.fehler = 'OneDrive-Anmeldung nötig'; gkvFaelleSpeichern(arr);
+      el('gkvMeldung').innerHTML = '<div class="gkv-warn">Gespeichert – ins Fahrtenbuch, sobald die OneDrive-Anmeldung aktiv ist („Jetzt eintragen“).</div>';
+      verlaufZeichnen(); return;
+    }
+    betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
+    let text = '';
+    try{
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(x.datum);
+      const r = await fahrtenbuchEintragen({ kat: '', name: x.name, namen: x.alterName ? [x.alterName] : [], datum: new Date(+m[1], +m[2] - 1, +m[3]),
+        zeit: x.zeit, euro: x.euro, positionen: x.positionen }, t=> betaOverlay.schritt(t));
+      text = fahrtenbuchErgebnisText(r);
+      const a2 = gkvFaelleLaden(), y = a2.find(z=> z.id === id);
+      if(y){
+        if(r.uebersprungen){ y.fehler = r.grund; }
+        else { y.status = 'eingetragen'; y.zeile = r.zeile; delete y.fehler; delete y.alterName; }
+        gkvFaelleSpeichern(a2);
+      }
+      betaOverlay.schliessen();
+      if(!r.uebersprungen){ ansichtGkv(); setTimeout(()=>{ const mm = document.getElementById('gkvMeldung'); if(mm) mm.innerHTML = '<div class="gkv-ok">' + htmlEsc(text) + '</div>'; }, 0); return; }
+    }catch(err){
+      betaOverlay.schliessen();
+      const a2 = gkvFaelleLaden(), y = a2.find(z=> z.id === id);
+      if(y){ y.fehler = err.message || String(err); gkvFaelleSpeichern(a2); }
+      text = '⚠ ' + (err.message || String(err)) + ' – der Fall bleibt gespeichert („Jetzt eintragen“).';
+    }
+    el('gkvMeldung').innerHTML = '<div class="gkv-warn">' + htmlEsc(text) + '</div>';
+    verlaufZeichnen();
+  }
+  zeichnen(); verlaufZeichnen();
+}
+
 
 function ansichtEinstellungen(){
   einstellungenOffen = true;
@@ -9453,7 +10195,6 @@ function ansichtEinstellungen(){
   // ohnehin im Hintergrund), waehrend "Lokale Rechnungen"/
   // "Rechnungsverwaltung" und die Werkzeuge auf der Startseite deutlich
   // haeufiger gebraucht werden.
-  const syncInfo = syncButtonInfo();
   app.innerHTML = `
     <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Fahrten &amp; Wegegeld</div>
@@ -9475,46 +10216,6 @@ function ansichtEinstellungen(){
     ${betaProfileHtml()}
     ${betaAbschnittHtml()}
     ${betaHaftungHtml()}
-    <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">Debugging</div>
-      <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-        Ältere Wege zum Sichern und Übertragen von Fällen – im normalen Betrieb nicht nötig.</div>
-      ${betaDebugTestHtml()}
-      <div class="sync-unter-titel">Fälle als Datei sichern / übertragen</div>
-      <div class="datensicherung-reihe" style="margin-bottom:6px;">
-        <button class="btn-sekundaer btn-import" id="btnJsonImport"><span class="icon-pfeil">&#8595;</span><span class="btn-titel">Importieren</span>
-          <span class="unter">Datei laden</span>
-        </button>
-        <input type="file" id="jsonImportInput" accept="application/json,.json" style="display:none">
-        <button class="btn-sekundaer btn-export" id="btnJsonExport"><span class="icon-pfeil">&#8593;</span><span class="btn-titel">Exportieren</span>
-          <span class="unter">Als Datei sichern</span>
-        </button>
-        <button class="btn-sekundaer btn-sync ${syncInfo.klasse}" id="btnSync"><span class="icon-pfeil">&#8644;</span><span class="btn-titel">${syncInfo.text}</span>
-          <span class="unter">${syncInfo.unter}</span>
-        </button>
-      </div>
-      <div class="warnhinweis" id="einstellungenSyncHinweis"></div>
-      <div class="sync-trenner"></div>
-      <div class="sync-unter-titel">Ordner-Sync</div>
-      ${autoSyncAbschnittHtml()}
-      ${msGraphStatus==='angemeldet' ? '' : `
-      <div class="sync-trenner"></div>
-      <div class="sync-unter-titel">Rechnungsnummern-Zähler <span class="sync-empfehlung">(nur beim manuellen Copy-Paste-Weg nötig -- geringste Zuverlässigkeit)</span></div>
-      <div class="feld">
-        <label for="txtRnLetzte">Laufende Nummer der letzten Rechnung in der Übersicht (nur die 3 Ziffern, Spalte Q)</label>
-        <input type="text" id="txtRnLetzte" inputmode="numeric" maxlength="3" value="${(e.rnLetzte||'').replace(/"/g,'&quot;')}" placeholder="z.B. 003">
-        <div class="warnhinweis" id="txtRnLetzte_warn"></div>
-      </div>
-      <div class="hinweis" id="rnZaehlerStand" style="font-size:13px; color:var(--text-schwach); margin-top:4px;">${rnZaehlerStandText(e)}</div>
-      <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-top:8px;">
-        Damit "In Zwischenablage kopieren" die Rechnungsnummer (Spalte Q) gleich mit ausfüllen kann, hier einmalig die
-        laufende Nummer (die letzten 3 Ziffern) der zuletzt in der Übersicht vergebenen Rechnungsnummer eintragen --
-        Initialen und Datum ermittelt die App für jeden Fall selbst. Danach zählt das Handy bei jedem neuen, kopierten
-        Fall selbstständig weiter. Falls zwischendurch auch direkt am PC eine Rechnung angelegt wurde (ohne über das
-        Handy zu laufen), bitte die aktuell letzte laufende Nummer aus der Übersicht hier erneut eintragen, um den
-        Zähler abzugleichen.
-      </div>`}
-    </div>
   `;
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
   // "Speichern"-Schritt.
@@ -9539,42 +10240,6 @@ function ansichtEinstellungen(){
   document.getElementById('txtPraxisadresse').addEventListener('blur', anwenden);
 
   document.getElementById('zReise').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkReiseBasisLuftlinie').click(); } };
-  // Ausgelagert (siehe rnLetzteFeldEinrichten oben) -- dieselbe Logik wird
-  // jetzt auch fuer das gleichnamige Feld auf der Rechnungsuebersicht
-  // benutzt, damit beide Stellen garantiert gleich funktionieren.
-  rnLetzteFeldEinrichten(document.getElementById('txtRnLetzte'), {
-    warnEl: document.getElementById('txtRnLetzte_warn'),
-    standEl: document.getElementById('rnZaehlerStand')
-  });
-  document.getElementById('btnJsonExport').onclick = jsonExport;
-  document.getElementById('btnSync').onclick = syncInfo.aktion;
-  const einstellungenSyncHinweis = (txt)=>{
-    const el = document.getElementById('einstellungenSyncHinweis');
-    if(!el) return;
-    if(!txt){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
-    el.innerHTML = txt; el.classList.add('aktiv');
-  };
-  document.getElementById('btnJsonImport').onclick = ()=>{
-    einstellungenSyncHinweis('');
-    document.getElementById('jsonImportInput').click();
-  };
-  document.getElementById('jsonImportInput').onchange = async (ev)=>{
-    const datei = ev.target.files && ev.target.files[0];
-    ev.target.value = ''; // erlaubt erneutes Auswaehlen derselben Datei
-    if(!datei) return;
-    try{
-      const text = await datei.text();
-      const ergebnis = jsonImportVerarbeiten(text);
-      einstellungenSyncHinweis(ergebnis.html);
-      // Nach erfolgreichem Import zurueck zur Startseite, damit die dort
-      // angezeigte Anzahl "noch nicht am PC uebernommen" sofort den neuen
-      // Stand zeigt (Import wirkt sich nur dort sichtbar aus).
-      if(ergebnis.geaendert){ setTimeout(schliesseEinstellungen, 1600); }
-    }catch(e){
-      einstellungenSyncHinweis('Die Datei "'+datei.name+'" konnte nicht gelesen werden. Bitte die zuvor exportierte JSON-Datei unverändert auswählen.');
-    }
-  };
-  autoSyncAbschnittWiring();
   msGraphAbschnittWiring();
   betaEinstellungenWiring();
   betaProfileWiring(()=>{ const y = window.scrollY; ansichtEinstellungen(); window.scrollTo(0, y); });
@@ -9585,54 +10250,7 @@ function ansichtEinstellungen(){
 // autoSyncStatus -- eigene Funktion, weil dieselbe Logik nach jeder Aktion
 // (verbinden/trennen/erneut bestätigen) erneut aufgebaut werden muss, um den
 // neuen Status anzuzeigen.
-function autoSyncAbschnittHtml(){
-  if(autoSyncStatus==='nicht_unterstuetzt'){
-    return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach);">
-      Dieses Gerät/dieser Browser unterstützt den automatischen Ordner-Sync nicht.
-      Bitte weiterhin über "Fälle für den PC exportieren" auf der Startseite manuell exportieren.
-    </div>`;
-  }
-  if(autoSyncStatus==='verbunden'){
-    const nachrangig = msGraphStatus==='angemeldet';
-    return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-      ✓ Verbunden${nachrangig ? ' (aktuell inaktiv -- siehe Hinweis oben)' : ''} -- ${nachrangig ? 'würde, falls keine Microsoft-Anmeldung besteht, ' : ''}jede Änderung automatisch in "rechnungserfassung_sync.json" im gewählten Ordner speichern.
-      ${nachrangig ? '<br><br>Da die Microsoft-Anmeldung (Abschnitt oben) aktiv ist, hat diese Vorrang -- der Ordner-Sync läuft dann nicht zusätzlich mit, bleibt aber als Rückfallebene eingerichtet, falls die Anmeldung mal wegfällt.' : ''}
-    </div>
-    <button type="button" class="btn-sekundaer" id="btnAutoSyncTrennen">Verbindung trennen</button>`;
-  }
-  if(autoSyncStatus==='berechtigung_fehlt'){
-    return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-      Die Berechtigung für den zuvor gewählten Ordner ist abgelaufen bzw. wurde nicht erteilt -- bitte erneut bestätigen.
-    </div>
-    <button type="button" class="btn-primaer blass" id="btnAutoSyncErneuern">Erneut verbinden</button>`;
-  }
-  // 'nicht_verbunden' (Standard) oder 'unbekannt' (kurz nach dem Start)
-  return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-    Einmal den OneDrive-Sync-Ordner auswählen -- danach wird bei jeder Änderung automatisch die aktuelle Datei
-    "rechnungserfassung_sync.json" dort aktualisiert, ohne dass manuell exportiert werden muss.
-  </div>
-  <button type="button" class="btn-primaer blass" id="btnAutoSyncWaehlen">Sync-Ordner auswählen</button>`;
-}
 
-function autoSyncAbschnittWiring(){
-  const btnWaehlen = document.getElementById('btnAutoSyncWaehlen');
-  if(btnWaehlen) btnWaehlen.onclick = async ()=>{
-    const ok = await autoSyncOrdnerWaehlen();
-    if(!ok) appToastAnzeigen('Ordnerauswahl abgebrochen oder Berechtigung nicht erteilt.');
-    ansichtEinstellungen();
-  };
-  const btnTrennen = document.getElementById('btnAutoSyncTrennen');
-  if(btnTrennen) btnTrennen.onclick = async ()=>{
-    await autoSyncOrdnerTrennen();
-    ansichtEinstellungen();
-  };
-  const btnErneuern = document.getElementById('btnAutoSyncErneuern');
-  if(btnErneuern) btnErneuern.onclick = async ()=>{
-    const ok = await autoSyncBerechtigungErneuern();
-    if(!ok) appToastAnzeigen('Berechtigung wurde nicht erteilt.');
-    ansichtEinstellungen();
-  };
-}
 
 // KORREKTUR (Rueckmeldung: ueber OneDrive/Ordner synchronisierte Faelle
 // bekamen NIE automatisch eine Rechnungsnummer -- die automatische Vergabe
@@ -9702,52 +10320,6 @@ async function exportDatenBauen(){
 //     auftreten, mangels besserer, tatsächlich funktionierender Alternative.
 //     Der zuverlässige Weg dagegen bleibt der Auto-Sync.
 const EXPORT_DATEINAME = 'rechnungserfassung_export.json';
-async function jsonExport(){
-  const daten = await exportDatenBauen();
-  const inhalt = JSON.stringify(daten,null,2);
-
-  if(autoSyncStatus==='verbunden' && autoSyncOrdnerHandle){
-    try{
-      const dateiHandle = await autoSyncOrdnerHandle.getFileHandle(EXPORT_DATEINAME, {create:true});
-      const schreibbar = await dateiHandle.createWritable();
-      await schreibbar.write(inhalt);
-      await schreibbar.close();
-      appToastAnzeigen('Export im Sync-Ordner gespeichert ("'+EXPORT_DATEINAME+'").', 2500);
-      return;
-    }catch(e){
-      // Berechtigung zwischenzeitlich entzogen o.ä. -- normal weiter unten
-      // versuchen (eigener Export-Ordner bzw. Rückfallebene).
-    }
-  }
-
-  // KORREKTUR (auf Nutzerwunsch zurückgebaut): der Ordner-Auswahl-Dialog
-  // (showDirectoryPicker) sollte das seit Anfang an bekannte
-  // "immer neue Datei mit fortlaufender Zahl statt Überschreiben"-Problem
-  // lösen -- tut es auf dem tatsächlich genutzten Gerät aber nachweislich
-  // NICHT (vermutlich eine Android/Storage-Access-Framework-Eigenheit, die
-  // auch einen "echten" Ordner-Handle beim Schreiben wie einen Download
-  // behandelt). Der zusätzliche Dialog brachte also nur eine weitere
-  // Bestätigung ohne jeden Nutzen -- daher wieder die einfache, direkte
-  // Rückfallebene ohne Ordnerauswahl: natives Teilen-Menü, sonst klassischer
-  // Download. Das bereits bekannte Duplikat-Verhalten (fortlaufende Zahl)
-  // kann dabei mangels besserer, tatsächlich funktionierender Alternative
-  // auf diesem Gerät weiterhin auftreten -- der zuverlässige Weg dagegen
-  // bleibt der oben bereits vorhandene Auto-Sync ("Weg A").
-  const blob = new Blob([inhalt], {type:'application/json'});
-  const datei = new File([blob], EXPORT_DATEINAME, {type:'application/json'});
-  if(navigator.canShare && navigator.canShare({files:[datei]})){
-    try{
-      await navigator.share({files:[datei], title:'Rechnungserfassung Export'});
-      return;
-    }catch(e){
-      // Abgebrochen oder fehlgeschlagen -- auf normalen Download zurückfallen.
-    }
-  }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = EXPORT_DATEINAME;
-  a.click();
-}
 
 // Gegenstück zu exportDatenBauen()/jsonExport(): liest eine zuvor mit
 // "Fälle für den PC exportieren" (oder dem Auto-Sync) erzeugte JSON-Datei
@@ -9822,28 +10394,7 @@ function jsonImportVerarbeiten(text){
   return {geaendert:true, html};
 }
 
-/* ==========================================================
-   Automatischer Ordner-Sync ("Weg A", siehe Besprechung) -- File System
-   Access API: einmalig den OneDrive-Sync-Ordner auswählen, danach wird bei
-   JEDER Änderung (jedes Speichern eines Falls, jeder neue Bestatter)
-   automatisch dieselbe Datei "rechnungserfassung_sync.json" überschrieben.
-   Dadurch: kein manueller Klick mehr nötig, keine mehrfachen Export-
-   Dateien/Duplikate, und selbst bei leerem Akku geht höchstens der letzte,
-   noch nicht geschriebene Vorgang verloren (nicht der ganze Tag).
-   Nicht auf jedem Gerät/Browser unterstützt (v.a. auf manchen Android-
-   Chrome-Versionen) -- dann bleibt der manuelle Export-Button die
-   Rückfallebene (siehe autoSyncVerfuegbar()).
-   ========================================================== */
-let autoSyncOrdnerHandle = null;
-// 'unbekannt' (direkt nach Laden, bevor autoSyncInitialisieren fertig ist),
-// 'nicht_unterstuetzt', 'nicht_verbunden', 'verbunden', 'berechtigung_fehlt'
-let autoSyncStatus = 'unbekannt';
-let autoSyncSchreibtGerade = false;
-let autoSyncErneutNoetig = false;
 
-function fileSystemAccessVerfuegbar(){
-  return typeof window.showDirectoryPicker === 'function';
-}
 
 /* ==========================================================
    OneDrive-Anmeldung (Microsoft/MSAL) -- perspektivisch als robusterer
@@ -9985,115 +10536,19 @@ function msGraphAbschnittWiring(){
 
 const AUTOSYNC_DB_NAME = 'rechnungserfassung_sync_db';
 const AUTOSYNC_STORE = 'handles';
-function autoSyncDbOeffnen(){
-  return new Promise((resolve, reject)=>{
-    const req = indexedDB.open(AUTOSYNC_DB_NAME, 1);
-    req.onupgradeneeded = ()=> req.result.createObjectStore(AUTOSYNC_STORE);
-    req.onsuccess = ()=> resolve(req.result);
-    req.onerror = ()=> reject(req.error);
-  });
-}
-async function autoSyncHandleSpeichern(handle){
-  const db = await autoSyncDbOeffnen();
-  return new Promise((resolve, reject)=>{
-    const tx = db.transaction(AUTOSYNC_STORE, 'readwrite');
-    tx.objectStore(AUTOSYNC_STORE).put(handle, 'ordner');
-    tx.oncomplete = ()=> resolve();
-    tx.onerror = ()=> reject(tx.error);
-  });
-}
-async function autoSyncHandleLaden(){
-  try{
-    const db = await autoSyncDbOeffnen();
-    return await new Promise((resolve, reject)=>{
-      const tx = db.transaction(AUTOSYNC_STORE, 'readonly');
-      const req = tx.objectStore(AUTOSYNC_STORE).get('ordner');
-      req.onsuccess = ()=> resolve(req.result || null);
-      req.onerror = ()=> reject(req.error);
-    });
-  }catch(e){ return null; }
-}
-async function autoSyncHandleLoeschen(){
-  try{
-    const db = await autoSyncDbOeffnen();
-    const tx = db.transaction(AUTOSYNC_STORE, 'readwrite');
-    tx.objectStore(AUTOSYNC_STORE).delete('ordner');
-  }catch(e){}
-}
 
 // Schreibt die IMMER GLEICHE Datei mit dem aktuellen Gesamtstand -- läuft
 // eine Schreibaktion noch, wird die naechste nur vorgemerkt (statt parallel
 // zu schreiben) und läuft danach automatisch noch einmal, damit der
 // allerletzte Stand nie verloren geht.
-async function autoSyncSchreiben(){
-  if(autoSyncStatus!=='verbunden' || !autoSyncOrdnerHandle) return;
-  if(autoSyncSchreibtGerade){ autoSyncErneutNoetig = true; return; }
-  autoSyncSchreibtGerade = true;
-  try{
-    const daten = await exportDatenBauen();
-    const istLeer = daten.faelle.length===0 && (!daten.bestatterAenderungen || daten.bestatterAenderungen.length===0);
-    // SCHUTZ VOR DATENVERLUST: steht hier aktuell NICHTS Lokales an (z.B.
-    // weil der lokale Speicher unerwartet leer ist -- etwa nach Cache-
-    // Löschung oder einem App-/Browser-Wechsel), aber die Sync-Datei enthält
-    // noch Fälle, NICHT einfach leer drüberschreiben. Sonst geht beim
-    // naechsten "stillen" Aufruf (z.B. direkt beim App-Start ueber
-    // autoSyncInitialisieren) der komplette bisherige Stand verloren.
-    if(istLeer && await autoSyncDateiHatBereitsDaten()){
-      autoSyncStatus = 'verbunden';
-      appToastAnzeigen('WARNUNG: Lokal sind aktuell keine Fälle gespeichert, die Sync-Datei enthält aber noch welche -- zum Schutz vor Datenverlust wurde NICHT überschrieben. Falls die lokalen Daten unerwartet verschwunden sind, bitte zuerst über "Fälle importieren" die Sync-Datei wiederherstellen.', 7000);
-      return;
-    }
-    const dateiHandle = await autoSyncOrdnerHandle.getFileHandle('rechnungserfassung_sync.json', {create:true});
-    const schreibbar = await dateiHandle.createWritable();
-    await schreibbar.write(JSON.stringify(daten, null, 2));
-    await schreibbar.close();
-  }catch(e){
-    // z.B. Berechtigung zwischenzeitlich entzogen -- der Status zeigt das
-    // beim naechsten Aufruf der Einstellungen an, der manuelle Export-Button
-    // erscheint automatisch wieder (siehe autoSyncVerfuegbar()).
-    autoSyncStatus = 'berechtigung_fehlt';
-  } finally {
-    autoSyncSchreibtGerade = false;
-    if(autoSyncErneutNoetig){ autoSyncErneutNoetig = false; autoSyncSchreiben(); }
-  }
-}
 
 // Prüft (lesend, ohne etwas zu verändern), ob die Sync-Datei im gewählten
 // Ordner aktuell noch mindestens einen Fall enthält -- Grundlage für den
 // Datenverlust-Schutz oben.
-async function autoSyncDateiHatBereitsDaten(){
-  try{
-    const dateiHandle = await autoSyncOrdnerHandle.getFileHandle('rechnungserfassung_sync.json', {create:false});
-    const datei = await dateiHandle.getFile();
-    const inhalt = await datei.text();
-    const vorhandeneDaten = JSON.parse(inhalt);
-    return !!(vorhandeneDaten && Array.isArray(vorhandeneDaten.faelle) && vorhandeneDaten.faelle.length>0);
-  }catch(e){
-    return false; // z.B. Datei existiert noch gar nicht -- dann gibt es nichts zu schuetzen
-  }
-}
 
 // Nutzer wählt (per Tap in den Einstellungen, also mit Nutzer-Geste -- nur
 // dann erlauben Browser den Berechtigungsdialog) einmalig den Sync-Ordner.
-async function autoSyncOrdnerWaehlen(){
-  if(!fileSystemAccessVerfuegbar()) return false;
-  try{
-    const handle = await window.showDirectoryPicker({id:'rechnungserfassung-sync', mode:'readwrite'});
-    const berechtigt = await handle.requestPermission({mode:'readwrite'});
-    if(berechtigt!=='granted') return false;
-    await autoSyncHandleSpeichern(handle);
-    autoSyncOrdnerHandle = handle;
-    autoSyncStatus = 'verbunden';
-    await autoSyncSchreiben();
-    return true;
-  }catch(e){ return false; } // z.B. Nutzer hat den Auswahldialog abgebrochen
-}
 
-async function autoSyncOrdnerTrennen(){
-  await autoSyncHandleLoeschen();
-  autoSyncOrdnerHandle = null;
-  autoSyncStatus = 'nicht_verbunden';
-}
 
 // Nach erneutem Öffnen der App die zuvor gewählte Ordner-Berechtigung ohne
 // weiteren Dialog PRÜFEN (requestPermission bräuchte eine Nutzer-Geste,
@@ -10101,36 +10556,9 @@ async function autoSyncOrdnerTrennen(){
 // schreiben, damit ein evtl. seit dem letzten Mal geänderter Stand (z.B.
 // falls ein Schreibvorgang durch geschlossene App/leeren Akku nicht mehr
 // zum Zug kam) nachgeholt wird.
-async function autoSyncInitialisieren(){
-  if(!fileSystemAccessVerfuegbar()){ autoSyncStatus = 'nicht_unterstuetzt'; return; }
-  const handle = await autoSyncHandleLaden();
-  if(!handle){ autoSyncStatus = 'nicht_verbunden'; return; }
-  autoSyncOrdnerHandle = handle;
-  try{
-    const berechtigung = await handle.queryPermission({mode:'readwrite'});
-    if(berechtigung==='granted'){
-      autoSyncStatus = 'verbunden';
-      await autoSyncSchreiben();
-    } else {
-      autoSyncStatus = 'berechtigung_fehlt';
-    }
-  }catch(e){ autoSyncStatus = 'nicht_verbunden'; }
-}
 
 // Erneutes Bestätigen (Nutzer-Geste vorhanden -- z.B. Tap auf "Erneut
 // verbinden" in den Einstellungen), falls die Berechtigung abgelaufen ist.
-async function autoSyncBerechtigungErneuern(){
-  if(!autoSyncOrdnerHandle) return false;
-  try{
-    const berechtigt = await autoSyncOrdnerHandle.requestPermission({mode:'readwrite'});
-    if(berechtigt==='granted'){
-      autoSyncStatus = 'verbunden';
-      await autoSyncSchreiben();
-      return true;
-    }
-  }catch(e){}
-  return false;
-}
 
 function themaAnwenden(){
   const e = ladeEinstellungen();
@@ -11826,11 +12254,7 @@ try{ ansichtStart(); }catch(e){}
 // autoSyncStatus 'unbekannt', weil diese Prüfung hier async läuft --
 // deshalb hier nach dem Auflösen die Startseite (falls man noch/wieder
 // dort ist) einmal neu rendern, damit der Button den echten Status zeigt.
-try{
-  autoSyncInitialisieren().then(()=>{
-    if(aktuelleAnsichtIstHauptbildschirm) ansichtStart();
-  }).catch(()=>{});
-}catch(e){}
+
 
 // Analog zu autoSyncInitialisieren oben: ohne await gestartet, damit der
 // erste Bildschirmaufbau nicht auf die (async) MSAL-Initialisierung warten
