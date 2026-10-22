@@ -452,6 +452,11 @@
   .fb-chip.arzt button.x{padding:5px 9px; border-left:1px solid var(--rand); opacity:.7;}
   .fb-chip.arzt + input, .fb-chips + input{margin-top:8px;}
   .gkv-stand a{color:inherit;}
+  .fd-jahre{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 8px;}
+  .fd-jahr-summe{font-size:13px; background:var(--karte); border:1px solid var(--rand); border-radius:10px; padding:8px 10px; margin-bottom:10px; line-height:1.5;}
+  .gkv-profile{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px;}
+  .gkv-profil-hinweis{flex-basis:100%; font-size:12.5px; color:var(--text-schwach); margin-top:2px;}
+  .gkv-profil-hinweis a{color:inherit;}
   .ebm-tab{width:100%; border-collapse:collapse; font-size:13.5px;}
   .ebm-tab th, .ebm-tab td{text-align:left; padding:4px 6px; border-bottom:1px solid var(--rand);}
   .ebm-tab td:nth-child(n+2), .ebm-tab th:nth-child(n+2){text-align:right; white-space:nowrap;}
@@ -1643,7 +1648,7 @@ const FAHRDIENST_GEBUEHR_SATZ = 0.087904;
 // Excel-API (usedRange, nur Werte -- keine Formeln, siehe fahrdienstZeitLabel
 // weiter unten) und wertet sie clientseitig aus. Liefert null bei jedem
 // Fehler (kein Login, kein Netz, Datei nicht erreichbar).
-async function msGraphFahrdienstAuswertungLaden(){
+async function msGraphFahrdienstAuswertungLadenAlt(){
   if(msGraphStatus!=='angemeldet') return null;
   const token = await msGraphTokenHolen();
   if(!token) return null;
@@ -1852,7 +1857,29 @@ async function ansichtFahrdienstAuswertung(){
   fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
 }
 
+let fahrdienstJahrWahl = null; // null = aktuelles Jahr (bzw. neuestes vorhandenes), 'alle' = alle Jahre
+function fahrdienstJahrVon(b){ const m = /(\d{4})$/.exec(String(b.datumText || '')); return m ? m[1] : '?'; }
 function fahrdienstAuswertungRendern(daten){
+  const zielEl = document.getElementById('fahrdienstInhalt');
+  if(!zielEl || !daten || !daten.bloecke || !daten.bloecke.length) return fahrdienstAuswertungRendernBasis(daten);
+  const jahre = [...new Set(daten.bloecke.map(fahrdienstJahrVon))].sort().reverse();
+  const heute = String(new Date().getFullYear());
+  let wahl = fahrdienstJahrWahl;
+  if(wahl !== 'alle' && !jahre.includes(wahl)) wahl = jahre.includes(heute) ? heute : jahre[0];
+  const bl = wahl === 'alle' ? daten.bloecke : daten.bloecke.filter(b=> fahrdienstJahrVon(b) === wahl);
+  const qu = wahl === 'alle' ? daten.quartale : daten.quartale.filter(q=> String(q.quartal).slice(-4) === wahl);
+  fahrdienstAuswertungRendernBasis({ bloecke: bl, quartale: qu });
+  const euro = (w)=> (Number(w)||0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+  const s = bl.reduce((a, b)=>{ a.g += b.gesamt; a.k += b.gkv; a.l += b.ls; a.p += b.pt; a.h += (b.dienststunden || 0); return a; }, {g:0, k:0, l:0, p:0, h:0});
+  const kopf = document.createElement('div');
+  kopf.innerHTML = '<div class="fd-jahre">' + jahre.map(j=> '<button type="button" class="fb-chip' + (j === wahl ? ' an' : '') + '" data-jahr="' + j + '">' + j + '</button>').join('') +
+    '<button type="button" class="fb-chip' + (wahl === 'alle' ? ' an' : '') + '" data-jahr="alle">Alle</button></div>' +
+    '<div class="fd-jahr-summe"><b>' + (wahl === 'alle' ? 'Alle Jahre' : wahl) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
+    (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>GKV ' + euro(s.k) + ' · LS ' + euro(s.l) + ' · PT ' + euro(s.p) + '</div>';
+  zielEl.insertBefore(kopf, zielEl.firstChild);
+  kopf.querySelectorAll('[data-jahr]').forEach(b=> b.onclick = ()=>{ fahrdienstJahrWahl = b.dataset.jahr; fahrdienstAuswertungRendern(daten); });
+}
+function fahrdienstAuswertungRendernBasis(daten){
   const zielEl = document.getElementById('fahrdienstInhalt');
   if(!zielEl) return;
   if(!daten){
@@ -9177,13 +9204,13 @@ function betaZusatzZusammenfuehren(a, b){
   const out = {};
   // Profile je Art (nach id, neueste Aenderung gewinnt)
   out.profile = {};
-  ['pt', 'ls'].forEach(art=>{
+  ['pt', 'ls', 'gkv'].forEach(art=>{
     const l = betaListeNachSchluessel((a.profile || {})[art], (b.profile || {})[art], x=> x.id, x=> x.geaendert);
     if(l.length) out.profile[art] = l;
   });
   // Anordnung je Art (neueste gewinnt)
   out.anordnung = {};
-  ['pt', 'ls'].forEach(art=>{
+  ['pt', 'ls', 'gkv'].forEach(art=>{
     const x = (a.anordnung || {})[art], y = (b.anordnung || {})[art];
     const w = !x ? y : !y ? x : (String(y.am || '') > String(x.am || '') ? y : x);
     if(w) out.anordnung[art] = w;
@@ -9428,6 +9455,12 @@ function betaHaftungHtml(){
 //   AQ = Abweichung zur manuell eingetragenen Auszahlung in AP.
 // Alles als Excel-Formeln (wie in der HTA), geschrieben wird nur, was sich
 // geändert hat.
+// Euro-Zeile 3 des Fahrtenbuchs, wie sie bis Oktober 2026 von Hand gepflegt war
+// (fuer das Festschreiben alter Betraege, siehe fahrdienstStatistikSchreiben)
+const FAHRDIENST_EURO_ZEILE_ALT = { '01212': 24.16, '01216': 17.35, '01218': 21.06, '01418': 96.42, '01224': 24.16, '01226': 11.15,
+  '01440': 43.62, '40190': 14.71, '40224': 12.01, '40222': 8.41, '40220': 4.2, '40192': 20.21, '40230': 18.02, '40228': 13.21,
+  '40226': 8.41, '01413': 13.14, '01210': 14.87, '01214': 6.19, '01223': 15.86, '01220': 127.26, '02100': 8.30, '02300': 8.43,
+  '02301': 16.48, '02302': 28.50, '02323': 8.43, '32025': 1.6, '32033': 0.5 };
 const FAHRDIENST_PAUSCHALE_WERKTAG = 25;
 const FAHRDIENST_PAUSCHALE_WOCHENENDE = 50;
 
@@ -9485,17 +9518,48 @@ function fahrdienstBlockFormeln(b){
 }
 const fahrdienstFormelNorm = (f)=> String(f == null ? '' : f).replace(/\s+/g, '').replace(/\$/g, '').toUpperCase();
 
+// Tabellenblaetter: ein Blatt je Jahr ("2025", "2026", ...). Solange die
+// Datei noch nicht nach Jahren aufgeteilt ist (macht die HTA am PC), gilt
+// wie bisher nur das erste Blatt.
+const fahrdienstIstJahresblatt = (n)=> /^\d{4}$/.test(String(n == null ? '' : n).trim());
+async function fahrdienstBlaetter(token, basis){
+  const ws = await gx(token, 'GET', basis + '/workbook/worksheets?$select=name,position');
+  const alle = ((ws && ws.value) || []).slice().sort((x, y)=> (x.position || 0) - (y.position || 0));
+  const jahre = alle.map(w=> String(w.name).trim()).filter(fahrdienstIstJahresblatt).sort();
+  if(jahre.length) return { jahresModus: true, blaetter: jahre };
+  if(!alle.length) throw new Error('Das Fahrtenbuch enthält kein Tabellenblatt.');
+  return { jahresModus: false, blaetter: [String(alle[0].name)] };
+}
+function fahrdienstBlattUrl(basis, blatt){ return basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')"; }
+
 // Liest die Datei, schreibt geaenderte Formeln, liefert die Auswertung
-// (wie fahrdienstZeilenAuswerten) oder wirft einen Fehler.
-async function fahrdienstStatistikSchreiben(meldung){
+// (wie fahrdienstZeilenAuswerten, ueber alle Jahresblaetter) oder wirft
+// einen Fehler. opt.blatt: nur dieses Blatt bearbeiten.
+async function fahrdienstStatistikSchreiben(meldung, opt){
+  opt = opt || {};
   const token = await msGraphTokenHolen();
   if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
   const basis = msGraphPfadUrl(MSGRAPH_PFAD_FAHRTENBUCH);
   meldung && meldung('Fahrtenbuch wird gelesen …');
-  const ws = await gx(token, 'GET', basis + '/workbook/worksheets?$select=name,position');
-  const blatt = (((ws && ws.value) || []).slice().sort((x, y)=> (x.position || 0) - (y.position || 0))[0] || {}).name;
-  if(!blatt) throw new Error('Das Fahrtenbuch enthält kein Tabellenblatt.');
-  const blattUrl = basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')";
+  const info = await fahrdienstBlaetter(token, basis);
+  const gesamt = { bloecke: [], quartale: [], geschrieben: 0, jahresModus: info.jahresModus };
+  for(const blatt of info.blaetter){
+    if(opt.blatt && blatt !== opt.blatt) continue;
+    if(info.blaetter.length > 1) meldung && meldung('Fahrtenbuch ' + blatt + ' wird gelesen …');
+    const d = await fahrdienstBlattStatistik(token, basis, blatt, info, meldung);
+    d.bloecke.forEach(b=> b.blatt = blatt);
+    gesamt.bloecke.push(...d.bloecke); gesamt.quartale.push(...d.quartale); gesamt.geschrieben += d.geschrieben;
+  }
+  // Neu berechnen lassen: steht die Datei auf "manuelle Berechnung", zeigen
+  // frisch geschriebene Formeln sonst 0 (z.B. AH, das vor AJ berechnet wurde)
+  try{ await gx(token, 'POST', basis + '/workbook/application/calculate', { calculationType: 'Full' }); }catch(e){}
+  return gesamt;
+}
+async function fahrdienstBlattStatistik(token, basis, blatt, info, meldung){
+  const blattUrl = fahrdienstBlattUrl(basis, blatt);
+  // Euro-Zeile 3 pflegt die App nur im Blatt des laufenden Jahres (bzw. im
+  // einzigen Blatt, solange nicht nach Jahren aufgeteilt)
+  const z3Aktiv = !info.jahresModus || blatt === String(new Date().getFullYear());
   const ur = await gx(token, 'GET', blattUrl + '/usedRange?$select=address,values,formulas');
   const st = xlAdresseStart(ur && ur.address);
   // auf Zeile 1 / Spalte A ausrichten (die Auswertung erwartet A1 als Ursprung)
@@ -9528,9 +9592,49 @@ async function fahrdienstStatistikSchreiben(meldung){
     const aq = '=IF(AP' + R + '="","",IFERROR(AP' + R + '/AN' + R + '-1,""))';
     if(fahrdienstFormelNorm(aq) !== fahrdienstFormelNorm(zelle(R, 'AQ'))) schreiben.push({ adresse: 'AQ' + R, formeln: [[aq]] });
   });
+  // Betraege frueherer Zeitraeume festschreiben: Rechnet AG per Formel mit
+  // der Euro-Zeile 3, wuerde deren Aktualisierung (neuer Orientierungswert,
+  // neue Wegepauschalen) alle alten Dienste mit den neuen Werten
+  // nachrechnen. Deshalb werden die AG-Formeln aller Dienste VOR Beginn der
+  // aktuell gueltigen Werte in feste Zahlen umgewandelt -- mit dem Betrag,
+  // den sie bisher hatten. Dienste im laufenden Zeitraum rechnen weiter mit
+  // Zeile 3.
+  if(z3Aktiv && typeof ebmWerteFuer === 'function'){
+    const ab = ebmWerteFuer(new Date()).ab;
+    const kopf2 = werte[1] || [];
+    const gopVon = (c)=> (String(kopf2[c] == null ? '' : kopf2[c]).match(/\d{3,5}/) || [''])[0].padStart(5, '0');
+    // Stand der Euro-Zeile vor der ersten Aktualisierung durch die App
+    const ALT = FAHRDIENST_EURO_ZEILE_ALT;
+    const z3 = formeln[2] || [];
+    const z3SchonNeu = !info.jahresModus && [...Array(27).keys()].map(i=> i + 5).every(c=>{
+      const g = gopVon(c); if(g === '00000' || !ebmEintrag(g)) return true;
+      return Math.abs((Number(String(z3[c]).replace(',', '.')) || 0) - ebmEuro(g, new Date())) <= 0.004;
+    });
+    const bezugZ3 = /(^|[^A-Z0-9$])\$?[A-Z]{1,3}\$?3(?![0-9])/;
+    daten.bloecke.forEach(b=>{
+      const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(b.datumText || ''); if(!m) return;
+      if(m[3] + '-' + m[2] + '-' + m[1] >= ab) return;
+      const spalte = []; let anders = false;
+      for(let r = b.zeileStart; r <= b.zeileEnde; r++){
+        const f = zelle(r, 'AG');
+        if(typeof f === 'string' && f.charAt(0) === '=' && bezugZ3.test(f)){
+          let v = Number(((werte[r - 1] || [])[32])) || 0;
+          if(z3SchonNeu){
+            // Zeile 3 wurde schon umgestellt (und neu berechnet): Betrag mit
+            // der bisherigen Euro-Zeile wiederherstellen
+            v = 0;
+            for(let c = 5; c <= 31; c++){ const n = Number(((werte[r - 1] || [])[c])) || 0; if(n) v += n * (ALT[gopVon(c)] || 0); }
+            v = Math.round(v * 100) / 100;
+          }
+          spalte.push([v]); anders = true;
+        } else spalte.push([f == null ? '' : f]);
+      }
+      if(anders) schreiben.push({ adresse: 'AG' + b.zeileStart + ':AG' + b.zeileEnde, formeln: spalte });
+    });
+  }
   // Euro-Zeile 3 (F..AF) auf die aktuell gueltigen Betraege setzen -- Ziffer
   // aus Zeile 2; Spalten ohne bekannte EBM-Ziffer bleiben, wie sie sind.
-  if(typeof ebmEintrag === 'function'){
+  if(z3Aktiv && typeof ebmEintrag === 'function'){
     const kopf2 = werte[1] || [], z3 = formeln[2] || [];
     const neu = []; let anders = false;
     for(let c = 5; c <= 31; c++){
@@ -9552,7 +9656,11 @@ async function fahrdienstStatistikSchreiben(meldung){
   const qEnden = new Set(qEnde.values());
   const txt = (r, b)=> String(zelle(r, b) == null ? '' : zelle(r, b)).trim();
   const istF = (r, b)=> txt(r, b).charAt(0) === '=';
+  // nur innerhalb der Dienstbloecke -- darunter stehen Gesamtauswertung und
+  // Erinnerungstext, die bleiben unberuehrt
+  const inBlock = (r)=> daten.bloecke.some(b=> b.zeileStart <= r && r <= b.zeileEnde);
   for(let r = 5; r <= formeln.length; r++){
+    if(!inBlock(r)) continue;
     if(!enden.has(r) && ['AH', 'AI', 'AJ', 'AK', 'AL', 'AM'].some(b=> istF(r, b)))
       schreiben.push({ adresse: 'AH' + r + ':AM' + r, werte: [['', '', '', '', '', '']] });
     if(!qEnden.has(r) && (istF(r, 'AN') || istF(r, 'AO') || istF(r, 'AQ'))){
@@ -9590,6 +9698,28 @@ async function fahrdienstOeffnenMitStatistik(){
   }
   excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_FAHRTENBUCH,
     'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
+}
+
+// Reine Ansicht (Rueckfall, wenn das Schreiben nicht klappt): alle Jahresblaetter lesen
+async function msGraphFahrdienstAuswertungLaden(){
+  if(msGraphStatus !== 'angemeldet') return null;
+  try{
+    const token = await msGraphTokenHolen(); if(!token) return null;
+    const basis = msGraphPfadUrl(MSGRAPH_PFAD_FAHRTENBUCH);
+    const info = await fahrdienstBlaetter(token, basis);
+    const gesamt = { bloecke: [], quartale: [] };
+    for(const blatt of info.blaetter){
+      const r = await gx(token, 'GET', fahrdienstBlattUrl(basis, blatt) + '/usedRange(valuesOnly=true)?$select=address,values');
+      const st = xlAdresseStart(r && r.address);
+      const werte = [];
+      for(let i = 1; i < st.zeile; i++) werte.push([]);
+      ((r && r.values) || []).forEach(z=> werte.push(new Array(st.spalte).fill('').concat(z)));
+      const d = fahrdienstZeilenAuswerten(werte);
+      d.bloecke.forEach(b=> b.blatt = blatt);
+      gesamt.bloecke.push(...d.bloecke); gesamt.quartale.push(...d.quartale);
+    }
+    return gesamt;
+  }catch(e){ return null; }
 }
 
 // =====================================================================
@@ -9878,11 +10008,78 @@ function ebmGruppeVon(gop){
 const EBM_MEHRFACH = ['01214', '01216', '01218', '01440', '02100', '02300', '02301', '02302', '02340', '02341', '02350', '02360', '32025', '32033'];
 const GKV_LISTE_STANDARD = ['nfp', 'schwer', '01226', 'kons', '01418', '01413', '01440', 'weg', '01220', '02100', '02300', '02301', '02302', '02323', '32025', '32033'];
 
-function gkvListeLaden(){
-  const e = ladeEinstellungen() || {};
-  return Array.isArray(e.gkvListe) && e.gkvListe.length ? e.gkvListe.slice() : GKV_LISTE_STANDARD.slice();
+// ---------- Schnellwahl-Profile (wie bei PT: Hausbesuch / Telefon + eigene) ----------
+const GKV_PROFILE_STANDARD = [
+  { id: 'hb', name: 'Hausbesuch', auswahl: { nfp: { anz: 1 }, '01418': { anz: 1 }, weg: { anz: 1, stufe: '2' } } },
+  { id: 'tel', name: 'Tel. Konsultation', auswahl: { kons: { anz: 1 } } }
+];
+// Gespeichert wie die PT/LS-Profile in "KVBW Onedrive/eigene_positionen.json"
+// (profile.gkv; Liste der angezeigten Positionen unter anordnung.gkv) --
+// damit auf allen Geraeten gleich.
+function gkvProfileLaden(){
+  gkvAltMigrieren();
+  const eigene = (betaProfileDaten().gkv || []);
+  const m = new Map();
+  GKV_PROFILE_STANDARD.forEach(p=> m.set(p.id, JSON.parse(JSON.stringify(p))));
+  eigene.forEach(p=>{ if(p && p.id) m.set(p.id, { ...(m.get(p.id) || {}), ...p }); });
+  return [...m.values()].filter(p=> !p.geloescht);
 }
-function gkvListeSpeichern(liste){ const e = ladeEinstellungen() || {}; e.gkvListe = liste; speichereEinstellungen(e); }
+function gkvProfilSichern(p){ const { standard, ...rest } = p; return betaProfilSpeichern('gkv', rest); }
+function gkvProfilLoeschen(id){ const p = gkvProfileLaden().find(x=> x.id === id) || { id }; return gkvProfilSichern({ ...p, geloescht: true }); }
+// Profile/Liste aus der ersten Fassung (nur auf dem Handy) einmalig uebernehmen
+function gkvAltMigrieren(){
+  if(gkvAltMigrieren.fertig) return; gkvAltMigrieren.fertig = true;
+  try{
+    const alt = LS.get('gkv_profile', null);
+    if(Array.isArray(alt)){
+      LS.set('gkv_profile', null);
+      alt.forEach(p=> gkvProfilSichern(p));
+      GKV_PROFILE_STANDARD.forEach(s=>{ if(!alt.some(p=> p.id === s.id)) gkvProfilSichern({ ...s, geloescht: true }); });
+    }
+    const e = ladeEinstellungen() || {};
+    if(Array.isArray(e.gkvListe)){ const l = e.gkvListe; delete e.gkvListe; speichereEinstellungen(e); gkvListeSpeichern(l); }
+  }catch(_){}
+}
+// Hintergrund-Abgleich mit OneDrive, danach neu zeichnen
+function gkvAbgleichen(danach){
+  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return;
+  betaEigeneAbgleichen().then(()=>{ if(danach) danach(); }).catch(()=>{});
+}
+function gkvAuswahlNorm(a){
+  const o = {}; Object.keys(a || {}).sort().forEach(k=>{ if(a[k]) o[k] = { anz: Math.max(1, Number(a[k].anz) || 1), stufe: a[k].stufe || '' }; });
+  return JSON.stringify(o);
+}
+function gkvStartAuswahl(){
+  const p = gkvProfileLaden(), id = LS.get('gkv_profil_letztes', 'hb');
+  const pr = p.find(x=> x.id === id) || p[0];
+  return { profil: pr ? pr.id : '', auswahl: pr ? JSON.parse(JSON.stringify(pr.auswahl)) : {} };
+}
+async function gkvNameFragen(titel, vorgabe, hinweis){
+  let fehler = '';
+  while(true){
+    const a = await betaOverlay.ergebnis(titel, '<div class="fb-dialog">' + (hinweis ? '<div class="fb-info">' + htmlEsc(hinweis) + '</div>' : '') +
+      (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<input type="text" id="gkvProfilName" maxlength="30" placeholder="z.B. Geriatrie, Infusion" value="' + htmlEsc(vorgabe || '') + '"></div>',
+      [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Speichern', akt: 'ok', primaer: true }]);
+    const n = String((document.getElementById('gkvProfilName') || {}).value || '').trim();
+    if(a !== 'ok'){ betaOverlay.schliessen(); return null; }
+    if(!n){ fehler = 'Bitte einen Namen eintragen.'; continue; }
+    betaOverlay.schliessen(); return n;
+  }
+}
+
+function gkvListeLaden(){
+  gkvAltMigrieren();
+  const d = LS.get(EIGENE_POS_CACHE, null) || {};
+  const a = (d.anordnung || {}).gkv;
+  if(a && Array.isArray(a.liste) && a.liste.length) return a.liste.slice();
+  return GKV_LISTE_STANDARD.slice();
+}
+function gkvListeSpeichern(liste){
+  const anwenden = (d)=>{ d.anordnung = d.anordnung || {}; d.anordnung.gkv = { liste: liste.slice(), am: new Date().toISOString() }; };
+  const d = betaEigeneDatenVoll(); anwenden(d); LS.set(EIGENE_POS_CACHE, d);
+  if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') betaEigeneAbgleichen(anwenden).catch(()=>{});
+}
 
 // Auswahl {schluessel: {anz, stufe?}} -> konkrete Positionen [{gop, anz, euro}]
 function gkvPositionen(auswahl, dt){
@@ -9935,15 +10132,18 @@ function fbBlockZeitraum(b){
 }
 function fbGopNorm(g){ return String(g == null ? '' : g).replace(/^0+/, ''); }
 
-async function fbLesen(meldung){
+async function fbKontext(meldung){
   const token = await msGraphTokenHolen();
   if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
   const basis = msGraphPfadUrl(MSGRAPH_PFAD_FAHRTENBUCH);
   meldung && meldung('Fahrtenbuch wird gelesen …');
-  const ws = await gx(token, 'GET', basis + '/workbook/worksheets?$select=name,position');
-  const blatt = (((ws && ws.value) || []).slice().sort((x, y)=> (x.position || 0) - (y.position || 0))[0] || {}).name;
-  if(!blatt) throw new Error('Das Fahrtenbuch enthält kein Tabellenblatt.');
-  const blattUrl = basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')";
+  return { token, basis, info: await fahrdienstBlaetter(token, basis) };
+}
+async function fbLesen(meldung, kx, blatt){
+  kx = kx || await fbKontext(meldung);
+  blatt = blatt || kx.info.blaetter[kx.info.blaetter.length - 1];
+  const token = kx.token;
+  const blattUrl = fahrdienstBlattUrl(kx.basis, blatt);
   const ur = await gx(token, 'GET', blattUrl + '/usedRange?$select=address,values');
   const st = xlAdresseStart(ur && ur.address);
   const werte = [];
@@ -9956,7 +10156,68 @@ async function fbLesen(meldung){
   for(let c = FB_COL.F; c <= FB_COL.AF; c++){
     (String(kopf[c] == null ? '' : kopf[c]).match(/\d{3,5}/g) || []).forEach(g=>{ if(!spalten.has(fbGopNorm(g))) spalten.set(fbGopNorm(g), c); });
   }
-  return { token, blattUrl, werte, daten, spalten };
+  return { token, blattUrl, blatt, werte, daten, spalten, kx };
+}
+
+// Neues Jahresblatt anlegen (am Handy, wenn die HTA es noch nicht vorbereitet
+// hat): Kopfzeilen 1-4, Zahlenformate, Spaltenbreiten und die Gesamtauswertung
+// samt Erinnerungstext aus dem Vorjahresblatt; Zeile 3 mit den Betraegen des
+// neuen Jahres. Zeilen 5-6 bleiben frei fuer den ersten Dienst, die Summen
+// der Gesamtauswertung zeigen auf sie. Schrift, Rahmen und Farben ergaenzt
+// die HTA beim naechsten Oeffnen am PC (Kennzeichen in AR1).
+async function fbJahresblattAnlegen(kx, jahr, meldung){
+  const vorlage = kx.info.blaetter.filter(n=> n < jahr).pop() || kx.info.blaetter[kx.info.blaetter.length - 1];
+  meldung && meldung('Neues Tabellenblatt ' + jahr + ' wird angelegt …');
+  const vUrl = fahrdienstBlattUrl(kx.basis, vorlage);
+  const ur = await gx(kx.token, 'GET', vUrl + '/usedRange?$select=address,values,formulas,numberFormat');
+  const st = xlAdresseStart(ur && ur.address);
+  const ausr = (m)=>{ const o = []; for(let i = 1; i < st.zeile; i++) o.push([]); (m || []).forEach(r=> o.push(new Array(st.spalte).fill('').concat(r))); return o; };
+  const W = ausr(ur.values), F = ausr(ur.formulas), N = ausr(ur.numberFormat);
+  const d = fahrdienstZeilenAuswerten(W);
+  const lastEnd = d.bloecke.length ? d.bloecke[d.bloecke.length - 1].zeileEnde : 4;
+  const breite = 43; // A..AQ
+  const zeileAus = (m, i, leer)=>{ const r = (m[i] || []).slice(0, breite); while(r.length < breite) r.push(leer); return r.map(v=> v == null ? leer : v); };
+  // Bezuege der Gesamtauswertung umsetzen: Datenbereich -> Zeilen 5-6,
+  // Zeilen der Gesamtauswertung -> ab Zeile 7, Kopfzeilen bleiben
+  const fussStart = lastEnd + 1;
+  const zeileNeu = (r, rolle)=> r < 5 ? r : r >= fussStart ? r - fussStart + 7 : (rolle === 'ende' ? 6 : 5);
+  const umsetzen = (f)=> typeof f !== 'string' || f.charAt(0) !== '=' ? f :
+    f.replace(/(?<![A-Za-z0-9_.!'])(\$?[A-Z]{1,3}\$?)(\d+)(?::(\$?[A-Z]{1,3}\$?)(\d+))?(?![A-Za-z0-9_(])/g, (m, s1, r1, s2, r2)=>
+      s2 ? s1 + zeileNeu(+r1, 'start') + ':' + s2 + zeileNeu(+r2, 'ende') : s1 + zeileNeu(+r1, 'einzeln'));
+  await gx(kx.token, 'POST', kx.basis + '/workbook/worksheets/add', { name: jahr });
+  const nUrl = fahrdienstBlattUrl(kx.basis, jahr);
+  // Kopf
+  const kopf = [0, 1, 2, 3].map(i=> zeileAus(F, i, ''));
+  const kopf2 = W[1] || [];
+  const stichtag = new Date(+jahr, 0, 1);
+  for(let c = 5; c <= 31; c++){
+    const g = (String(kopf2[c] == null ? '' : kopf2[c]).match(/\d{3,5}/) || [''])[0].padStart(5, '0');
+    if(g !== '00000' && ebmEintrag(g)) kopf[2][c] = ebmEuro(g, stichtag);
+  }
+  await gx(kx.token, 'PATCH', nUrl + "/range(address='A1:AQ4')", { formulas: kopf, numberFormat: [0, 1, 2, 3].map(i=> zeileAus(N, i, 'General')) });
+  await gx(kx.token, 'PATCH', nUrl + "/range(address='A5:AQ6')", { numberFormat: [zeileAus(N, 4, 'General'), zeileAus(N, 5, 'General')] });
+  // Gesamtauswertung + Erinnerungstext
+  const fuss = [], fussNf = [];
+  for(let i = fussStart - 1; i < F.length; i++){ fuss.push(zeileAus(F, i, '').map(umsetzen)); fussNf.push(zeileAus(N, i, 'General')); }
+  if(fuss.length) await gx(kx.token, 'PATCH', nUrl + "/range(address='A7:AQ" + (6 + fuss.length) + "')", { formulas: fuss, numberFormat: fussNf });
+  // Spaltenbreiten und Hoehe der Kopfzeilen
+  meldung && meldung('Neues Tabellenblatt ' + jahr + ': Spaltenbreiten …');
+  for(let c = 0; c < breite; c += 6){
+    await Promise.all([...Array(Math.min(6, breite - c)).keys()].map(async k=>{
+      const sp = fbSpalte(c + k);
+      try{
+        const f = await gx(kx.token, 'GET', vUrl + "/range(address='" + sp + ':' + sp + "')/format?$select=columnWidth");
+        if(f && f.columnWidth) await gx(kx.token, 'PATCH', nUrl + "/range(address='" + sp + ':' + sp + "')/format", { columnWidth: f.columnWidth });
+      }catch(e){}
+    }));
+  }
+  for(let r = 1; r <= 4; r++){
+    try{
+      const f = await gx(kx.token, 'GET', vUrl + "/range(address='" + r + ':' + r + "')/format?$select=rowHeight,wrapText");
+      if(f) await gx(kx.token, 'PATCH', nUrl + "/range(address='" + r + ':' + r + "')/format", { rowHeight: f.rowHeight, wrapText: !!f.wrapText });
+    }catch(e){}
+  }
+  await gx(kx.token, 'PATCH', nUrl + "/range(address='AR1')", { values: [['App-angelegt']] });
 }
 
 function fbDienstFinden(fb, dt){
@@ -10086,28 +10347,78 @@ async function fbZeilenEinfuegen(fb, zeile, anzahl){
   await gx(fb.token, 'POST', fb.blattUrl + "/range(address='" + zeile + ':' + (zeile + anzahl - 1) + "')/insert", { shift: 'Down' });
 }
 
+// Unter den Dienstbloecken stehen Gesamtauswertung und Erinnerungstext. Wird
+// direkt nach dem letzten Dienst eingefuegt, wachsen deren Summenbereiche
+// (z.B. AH5:AH310) in Excel nicht mit -- deshalb hier nachziehen: Bereiche,
+// die genau an der bisher letzten Datenzeile enden, bis zur neuen verlaengern.
+async function fbFussAnpassen(fb, alteLetzte, n){
+  try{
+    const von = alteLetzte + n + 1, bis = alteLetzte + n + 25;
+    const r = await gx(fb.token, 'GET', fb.blattUrl + "/range(address='A" + von + ':AQ' + bis + "')?$select=formulas");
+    const f = (r && r.formulas) || [];
+    for(let i = 0; i < f.length; i++){
+      for(let j = 0; j < (f[i] || []).length; j++){
+        const alt = f[i][j];
+        if(typeof alt !== 'string' || alt.charAt(0) !== '=') continue;
+        const neu = alt.replace(/(\$?[A-Z]{1,3}\$?)(\d+):(\$?[A-Z]{1,3}\$?)(\d+)/g, (m, s1, r1, s2, r2)=>
+          (+r2 === alteLetzte && +r1 <= alteLetzte) ? s1 + r1 + ':' + s2 + (alteLetzte + n) : m);
+        if(neu !== alt) await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='" + fbSpalte(j) + (von + i) + "')", { formulas: [[neu]] });
+      }
+    }
+  }catch(e){}
+}
+
 // Haupteinstieg: Fall ins Fahrtenbuch eintragen.
 // fall: {kat:''|'P'|'LS', name, datum: Date, zeit:'HH:MM'|'' , euro, positionen?:[{gop, anz}], namen?: [Varianten zum Wiederfinden]}
 // opt.fragen=false -> ohne passenden Dienst nichts anlegen (nur Hinweis)
 // -> {zeile, neuerDienst, aktualisiert, ohneSpalte:[], dienst:'14.10.2026 18-23'} oder {uebersprungen:true, grund}
 async function fahrtenbuchEintragen(fall, meldung, opt){
   opt = opt || {};
-  const fb = await fbLesen(meldung);
+  const kx = await fbKontext(meldung);
   const zm = /^(\d{1,2}):(\d{2})/.exec(String(fall.zeit || ''));
   const dt = new Date(fall.datum.getFullYear(), fall.datum.getMonth(), fall.datum.getDate(), zm ? +zm[1] : 12, zm ? +zm[2] : 0);
-  let block = fbDienstFinden(fb, dt);
+  // Jahresblatt des Falls; Anfang Januar auch das Vorjahr (Dienst ueber Silvester)
+  let kandidaten = [kx.info.blaetter[0]];
+  if(kx.info.jahresModus){
+    const y = dt.getFullYear();
+    kandidaten = [String(y)].concat(dt.getMonth() === 0 && dt.getDate() <= 2 ? [String(y - 1)] : []).filter(n=> kx.info.blaetter.includes(n));
+  }
+  let fb = null, block = null;
+  for(const n of kandidaten){
+    const f = await fbLesen(meldung, kx, n);
+    const b = fbDienstFinden(f, dt);
+    if(b){ fb = f; block = b; break; }
+    if(!fb) fb = f;
+  }
+  if(!fb) fb = await fbLesen(meldung, kx); // Jahresblatt fehlt noch: Vorschlaege aus dem neuesten Blatt
   let neuerDienst = false;
   if(!block){
     if(opt.fragen === false) return { uebersprungen: true, grund: 'kein Dienst am ' + fbDatumText(fall.datum) + ' im Fahrtenbuch' };
     const d = await fbDienstAbfragen(fb, dt, (fall.kat === 'LS' ? 'Leichenschau' : fall.kat === 'P' ? 'Privatpatient' : 'GKV') + ': ' + fall.name + ' · ' + fbDatumText(fall.datum) + (zm ? ', ' + zm[0] + ' Uhr' : ''));
     if(!d) return { uebersprungen: true, grund: 'nicht eingetragen (kein Dienst gewählt)', abgelehnt: true };
     meldung && meldung('Neuer Dienst wird angelegt …');
+    if(kx.info.jahresModus){
+      const zielJahr = String(d.datum.getFullYear());
+      if(fb.blatt !== zielJahr){
+        if(!kx.info.blaetter.includes(zielJahr)){
+          await fbJahresblattAnlegen(kx, zielJahr, meldung);
+          kx.info.blaetter.push(zielJahr); kx.info.blaetter.sort();
+        }
+        fb = await fbLesen(meldung, kx, zielJahr);
+      }
+    }
+    // leeres Jahresblatt (Zeilen 5-6 frei): direkt dort, ohne Einfuegen
+    const zeileLeer = (i)=> !(fb.werte[i] || []).some(v=> String(v == null ? '' : v).trim() !== '');
+    const blattLeer = !fb.daten.bloecke.length && zeileLeer(4) && zeileLeer(5);
     // chronologisch einsortieren
     const neuStart = d.datum.getTime() + d.zeit.s * 3600000;
     const danach = fb.daten.bloecke.find(b=>{ const z = fbBlockZeitraum(b); return z && z.von.getTime() > neuStart; });
     const letzte = fb.daten.bloecke.length ? fb.daten.bloecke[fb.daten.bloecke.length - 1].zeileEnde : 4;
-    const z1 = danach ? danach.zeileStart : letzte + 1;
-    await fbZeilenEinfuegen(fb, z1, 2);
+    const z1 = blattLeer ? 5 : danach ? danach.zeileStart : letzte + 1;
+    if(!blattLeer){
+      await fbZeilenEinfuegen(fb, z1, 2);
+      if(!danach) await fbFussAnpassen(fb, letzte, 2);
+    }
     await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='A" + z1 + ':C' + (z1 + 1) + "')", {
       numberFormat: [['0', 'dd.mm.yyyy', '@'], ['General', '@', '@']],
       values: [[Math.floor(d.datum.getMonth() / 3) + 1, fbSerial(d.datum), fbZeitText(d.zeit)], ['', 'Fahrdienst', d.arzt]]
@@ -10136,6 +10447,8 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
       ziel = block.zeileEnde + 1;
       meldung && meldung('Zeile wird eingefügt …');
       await fbZeilenEinfuegen(fb, ziel, 1);
+      const letzteZeile = fb.daten.bloecke.length ? fb.daten.bloecke[fb.daten.bloecke.length - 1].zeileEnde : 0;
+      if(block.zeileEnde === letzteZeile) await fbFussAnpassen(fb, block.zeileEnde, 1);
     }
   } else ziel = block.zeileStart;
   // Zeile D..AG
@@ -10157,14 +10470,14 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   meldung && meldung('Fahrtenbuch: Zeile ' + ziel + ' wird geschrieben …');
   await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='D" + ziel + ':AG' + ziel + "')", { values: [zeile] });
   // Statistik rechts nachziehen (verschobene Blockenden, Quartalssummen)
-  try{ await fahrdienstStatistikSchreiben(meldung); }catch(e){}
-  return { zeile: ziel, neuerDienst, aktualisiert, ohneSpalte,
+  try{ await fahrdienstStatistikSchreiben(meldung, { blatt: fb.blatt }); }catch(e){}
+  return { zeile: ziel, blatt: kx.info.jahresModus ? fb.blatt : '', neuerDienst, aktualisiert, ohneSpalte,
            dienst: block.datumText + ' ' + (fbZeitParsen(block.zeitRoh) ? fbZeitText(fbZeitParsen(block.zeitRoh)) : String(block.zeitRoh || '')) + (block.arzt ? ' · ' + block.arzt : '') };
 }
 function fahrtenbuchErgebnisText(r){
   if(!r) return '';
   if(r.uebersprungen) return '– Fahrtenbuch: ' + r.grund;
-  return '✓ Fahrtenbuch: ' + (r.aktualisiert ? 'Zeile ' + r.zeile + ' aktualisiert' : 'Zeile ' + r.zeile + ' eingetragen') +
+  return '✓ Fahrtenbuch: ' + (r.blatt ? 'Blatt ' + r.blatt + ', ' : '') + (r.aktualisiert ? 'Zeile ' + r.zeile + ' aktualisiert' : 'Zeile ' + r.zeile + ' eingetragen') +
     ' (Dienst ' + r.dienst + (r.neuerDienst ? ', neu angelegt' : '') + ')' +
     (r.ohneSpalte && r.ohneSpalte.length ? ' · ohne eigene Spalte, nur im Betrag: ' + r.ohneSpalte.join(', ') : '');
 }
@@ -10198,8 +10511,8 @@ function ansichtGkv(bearbeitenId){
   const jetzt = new Date();
   const alle = gkvFaelleLaden();
   let f = bearbeitenId ? alle.find(x=> x.id === bearbeitenId) : null;
-  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})) }
-    : (gkvEntwurf || { id: '', name: '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()), auswahl: { nfp: { anz: 1 }, '01418': { anz: 1 } } });
+  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '' }
+    : (gkvEntwurf || Object.assign({ id: '', name: '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()) }, gkvStartAuswahl()));
   gkvEntwurf = st.id ? null : st;
   let liste = gkvListeLaden();
   const dtVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(st.datum || ''), z = /^(\d{1,2}):(\d{2})/.exec(st.zeit || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3], z ? +z[1] : 12, z ? +z[2] : 0) : new Date(); };
@@ -10213,6 +10526,8 @@ function ansichtGkv(bearbeitenId){
       </div>
       <div class="gkv-zeitinfo" id="gkvZeitInfo"></div>
     </div>
+    <div class="gesamt-abschnitt">Schnellwahl</div>
+    <div class="gkv-profile" id="gkvProfile"></div>
     <div class="gesamt-abschnitt">EBM-Positionen</div>
     <div id="gkvListe"></div>
     <div class="gkv-suche">
@@ -10256,6 +10571,7 @@ function ansichtGkv(bearbeitenId){
     const summe = pos.reduce((s, p)=> s + p.euro, 0);
     el('gkvSumme').innerHTML = '<b>' + betaEuro(summe) + '</b> <small>' + pos.length + ' Position' + (pos.length === 1 ? '' : 'en') + '</small>';
     el('gkvHinweise').innerHTML = gkvHinweise(pos).map(h=> '<div class="gkv-warn">' + htmlEsc(h) + '</div>').join('');
+    profileZeichnen();
     el('gkvListe').querySelectorAll('[data-tipp]').forEach(b=> b.onclick = ()=>{
       const k = b.dataset.tipp;
       if(st.auswahl[k]) delete st.auswahl[k];
@@ -10276,13 +10592,52 @@ function ansichtGkv(bearbeitenId){
       gkvListeSpeichern(liste); zeichnen();
     });
   }
+  function profileZeichnen(){
+    const pr = gkvProfileLaden();
+    const akt = pr.find(p=> p.id === st.profil);
+    const geaendert = akt && gkvAuswahlNorm(akt.auswahl) !== gkvAuswahlNorm(st.auswahl);
+    el('gkvProfile').innerHTML = pr.map(p=> '<span class="fb-chip arzt' + (p.id === st.profil && !geaendert ? ' an' : '') + '"><button type="button" class="w" data-profil="' + htmlEsc(p.id) + '">' + htmlEsc(p.name) + '</button><button type="button" class="x" data-profilweg="' + htmlEsc(p.id) + '" aria-label="Profil löschen">×</button></span>').join('') +
+      '<button type="button" class="fb-chip" id="gkvProfilNeu">+ Profil</button>' +
+      (geaendert ? '<div class="gkv-profil-hinweis">Auswahl weicht von „' + htmlEsc(akt.name) + '“ ab · <a href="#" id="gkvProfilUeber">Profil damit überschreiben</a></div>' : '');
+    el('gkvProfile').querySelectorAll('[data-profil]').forEach(b=> b.onclick = ()=>{
+      const p = gkvProfileLaden().find(x=> x.id === b.dataset.profil); if(!p) return;
+      st.auswahl = JSON.parse(JSON.stringify(p.auswahl)); st.profil = p.id;
+      LS.set('gkv_profil_letztes', p.id);
+      let neu = false;
+      Object.keys(st.auswahl).forEach(k=>{ if(!liste.includes(k) && (EBM_GRUPPEN[k] || ebmEintrag(k))){ liste.push(k); neu = true; } });
+      if(neu) gkvListeSpeichern(liste);
+      zeichnen();
+    });
+    el('gkvProfile').querySelectorAll('[data-profilweg]').forEach(b=> b.onclick = async ()=>{
+      const p = gkvProfileLaden().find(x=> x.id === b.dataset.profilweg); if(!p) return;
+      if(!await betaFrage('Profil „' + p.name + '“ löschen?', 'Löschen', 'Abbrechen')) return;
+      gkvProfilLoeschen(p.id);
+      if(st.profil === p.id) st.profil = '';
+      profileZeichnen();
+    });
+    el('gkvProfilNeu').onclick = async ()=>{
+      if(!Object.keys(st.auswahl).length){ el('gkvMeldung').innerHTML = '<div class="gkv-warn">Erst die Positionen wählen, dann als Profil speichern.</div>'; return; }
+      const n = await gkvNameFragen('Neues Profil', '', 'Die aktuell gewählten Positionen werden als Schnellwahl gespeichert.');
+      if(!n) return;
+      const p = { id: 'p' + Date.now().toString(36), name: n, auswahl: JSON.parse(JSON.stringify(st.auswahl)) };
+      gkvProfilSichern(p);
+      st.profil = p.id; LS.set('gkv_profil_letztes', p.id);
+      profileZeichnen();
+    };
+    const ue = document.getElementById('gkvProfilUeber');
+    if(ue) ue.onclick = (ev)=>{
+      ev.preventDefault();
+      const p = gkvProfileLaden().find(x=> x.id === st.profil); if(!p) return;
+      p.auswahl = JSON.parse(JSON.stringify(st.auswahl)); gkvProfilSichern(p); profileZeichnen();
+    };
+  }
   function verlaufZeichnen(){
     const a = gkvFaelleLaden().slice().reverse().slice(0, 25);
     el('gkvVerlauf').innerHTML = a.length ? a.map(x=>
       '<div class="fall-zeile gkv-verlauf' + (x.status === 'eingetragen' ? '' : ' offen') + '" data-id="' + htmlEsc(x.id) + '">' +
       '<div class="name">' + htmlEsc(x.name) + '</div>' +
       '<div class="gkv-v-unter">' + htmlEsc(isoDe(x.datum)) + ', ' + htmlEsc(x.zeit || '') + ' · ' + x.positionen.map(p=> p.gop + (p.anz > 1 ? '×' + p.anz : '')).join(' ') + ' · ' + betaEuro(x.euro) + '</div>' +
-      '<div class="gkv-v-status">' + (x.status === 'eingetragen' ? '✓ Fahrtenbuch Zeile ' + x.zeile : '<span class="offen-text">noch nicht im Fahrtenbuch' + (x.fehler ? ': ' + htmlEsc(x.fehler) : '') + '</span>') + '</div>' +
+      '<div class="gkv-v-status">' + (x.status === 'eingetragen' ? '✓ Fahrtenbuch ' + (x.blatt ? x.blatt + ', ' : '') + 'Zeile ' + x.zeile : '<span class="offen-text">noch nicht im Fahrtenbuch' + (x.fehler ? ': ' + htmlEsc(x.fehler) : '') + '</span>') + '</div>' +
       '<div class="aktionen">' + (x.status === 'eingetragen' ? '' : '<button type="button" data-nochmal="' + htmlEsc(x.id) + '">Jetzt eintragen</button>') +
       '<button type="button" data-bearb="' + htmlEsc(x.id) + '">Bearbeiten</button><button type="button" data-loesch="' + htmlEsc(x.id) + '">Aus Liste löschen</button></div></div>').join('')
       : '<div class="leer-hinweis">Noch keine GKV-Patienten erfasst.</div>';
@@ -10331,7 +10686,7 @@ function ansichtGkv(bearbeitenId){
     if(!pos.length){ el('gkvMeldung').innerHTML = '<div class="gkv-warn">Bitte mindestens eine Position wählen.</div>'; return; }
     const arr = gkvFaelleLaden();
     const eintrag = { id: st.id || ('g' + Date.now().toString(36)), name: st.name, datum: st.datum, zeit: st.zeit,
-      auswahl: JSON.parse(JSON.stringify(st.auswahl)), positionen: pos.map(p=> ({ gop: p.gop, anz: p.anz })),
+      auswahl: JSON.parse(JSON.stringify(st.auswahl)), profil: st.profil || '', positionen: pos.map(p=> ({ gop: p.gop, anz: p.anz })),
       euro: betaRund2(pos.reduce((s, p)=> s + p.euro, 0)), status: 'offen', alterName: null };
     const i = arr.findIndex(x=> x.id === eintrag.id);
     if(i >= 0){ eintrag.alterName = arr[i].name !== eintrag.name ? arr[i].name : (arr[i].alterName || null); eintrag.zeile = arr[i].zeile; arr[i] = eintrag; }
@@ -10358,7 +10713,7 @@ function ansichtGkv(bearbeitenId){
       const a2 = gkvFaelleLaden(), y = a2.find(z=> z.id === id);
       if(y){
         if(r.uebersprungen){ y.fehler = r.grund; }
-        else { y.status = 'eingetragen'; y.zeile = r.zeile; delete y.fehler; delete y.alterName; }
+        else { y.status = 'eingetragen'; y.zeile = r.zeile; y.blatt = r.blatt || ''; delete y.fehler; delete y.alterName; }
         gkvFaelleSpeichern(a2);
       }
       betaOverlay.schliessen();
@@ -10373,6 +10728,8 @@ function ansichtGkv(bearbeitenId){
     verlaufZeichnen();
   }
   zeichnen(); verlaufZeichnen(); werteZeichnen();
+  // Profile/Liste von anderen Geraeten holen
+  gkvAbgleichen(()=>{ if(document.getElementById('gkvProfile')){ liste = gkvListeLaden(); zeichnen(); } });
 }
 
 
