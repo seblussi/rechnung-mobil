@@ -429,7 +429,11 @@
   .gkv-km-fehler{color:#b9770e;}
   .nfp-overlay{position:fixed; inset:0; z-index:3000; background:var(--bg); color:var(--text); display:flex; flex-direction:column;}
   .nfp-kopf{display:flex; align-items:center; justify-content:space-between; padding:10px 14px; padding-top:calc(10px + env(safe-area-inset-top)); border-bottom:1px solid var(--rand); background:var(--karte);}
-  .nfp-suche{display:flex; gap:6px; padding:8px 14px; background:var(--karte); border-bottom:1px solid var(--rand);}
+  .nfp-suche{display:flex; flex-wrap:wrap; gap:6px; padding:8px 14px; background:var(--karte); border-bottom:1px solid var(--rand);}
+  .nfp-suche #nfpStrasse{flex:1 1 100%;}
+  #gkvZeitInfo{margin-bottom:10px;}
+  .gkv-plz-info{font-size:12px; color:var(--text-schwach); min-height:0; margin-top:3px;}
+  .gkv-feld > input + input{margin-top:6px;}
   .nfp-suche input{flex:1; min-width:0; font:inherit; font-size:16px; padding:8px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--bg); color:var(--text);}
   .nfp-suche button{width:auto; margin:0; padding:8px 12px;}
   .nfp-zu{width:auto; margin:0; padding:2px 12px; font-size:24px; background:none; border:none; color:var(--text);}
@@ -1125,7 +1129,7 @@ const LS = {
   }
 };
 function ladeFaelle(art){ return LS.get('faelle_'+art, []); }
-function speichereFaelle(art, arr){ LS.set('faelle_'+art, arr); synchronisiereAlle(); }
+function speichereFaelle(art, arr){ if(typeof faelleMetaNachfuehren === 'function') faelleMetaNachfuehren(art, ladeFaelle(art), arr); LS.set('faelle_'+art, arr); synchronisiereAlle(); }
 
 // Startbestückung des Bestatter-Katalogs (Stand PC-Liste). Wird nur EINMAL
 // beim allerersten Aufruf eingespielt (Flag 'bestatter_katalog_seed_v1'),
@@ -1869,7 +1873,8 @@ function fahrdienstZeilenAuswerten(zeilen){
     // (Fahrdienst Mo-Fr, 300 € je 14 h) bzw. x 50 € (Sa, So, Feiertag,
     // 24.12., 31.12.) -- nach dem Tag des Dienstbeginns; am 24.12./31.12.
     // zusaetzlich 500 € je 24 h
-    const satz = fahrdienstPauschaleSatz(r[COL_B]), satzFormel = fahrdienstSatzFormel(r[COL_B]), zusatz = fahrdienstZusatzSatz(r[COL_B]);
+    const dienstart = String(arztZeile[COL_B] == null ? '' : arztZeile[COL_B]).trim() || 'Fahrdienst';
+    const satz = fahrdienstPauschaleSatz(r[COL_B], dienstart), satzFormel = fahrdienstSatzFormel(r[COL_B], dienstart), zusatz = fahrdienstZusatzSatz(r[COL_B]);
     const gkvRoh = gkv;
     const pauschale = dienststunden > 0 && dienststunden * satz > gkvRoh + 0.005;
     if(pauschale){ gkv = dienststunden * satz; }
@@ -1881,7 +1886,7 @@ function fahrdienstZeilenAuswerten(zeilen){
     bloecke.push({
       quartal, quartalKey, datumText, zeitLabel,
       arzt, gesamt, stundenlohn, gkv, ls, pt,
-      gkvRoh, pauschale, satz, satzFormel, zusatz, pseudo, satzGrund: fahrdienstSatzGrund(r[COL_B]), dienststunden,
+      gkvRoh, pauschale, satz, satzFormel, zusatz, pseudo, dienstart, satzGrund: fahrdienstSatzGrund(r[COL_B], dienstart), dienststunden,
       zeileStart: blockStart + 1, zeileEnde: blockEnde + 1, zeitRoh: r[COL_C]
     });
 
@@ -1912,7 +1917,7 @@ let fahrdienstAuswertungCache = null;
 async function ansichtFahrdienstAuswertung(){
   setzeTitel('Fahrdienst-Auswertung', ansichtStart);
   app.innerHTML = `
-    <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Förderung der KVBW greift (GKV-Anteil mindestens 21,43 €/h im Fahrdienst Mo–Fr = 300 € je 14-h-Dienst, 50 €/h an Wochenenden, Feiertagen, 24.12. und 31.12.).</div>
+    <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Förderung der KVBW greift (GKV-Anteil mindestens 21,43 €/h im Fahrdienst Mo–Fr = 300 € je 14-h-Dienst, 50 €/h an Wochenenden, Feiertagen, 24.12. und 31.12. sowie immer im Sitzdienst). Die Dienstart steht im Fahrtenbuch in Spalte B unter dem Datum.</div>
     <div style="display:flex; gap:8px; margin-bottom:12px;">
       <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="flex:1; margin-bottom:0;">Neu laden</button>
       <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">Fahrtenbuch öffnen</button>
@@ -2059,7 +2064,7 @@ async function msGraphSyncDateiHatBereitsDaten(token){
 // Schreibt die IMMER GLEICHE Sync-Datei direkt nach OneDrive -- Aufbau/
 // Warteschlangen-Logik (schreibtGerade/erneutNoetig) 1:1 uebernommen von
 // autoSyncSchreiben, damit sich beide Wege gleich verhalten.
-async function msGraphSyncSchreiben(){
+async function msGraphSyncSchreibenAlt(){
   if(msGraphStatus !== 'angemeldet') return;
   if(msGraphSyncSchreibtGerade){ msGraphSyncErneutNoetig = true; return; }
   msGraphSyncSchreibtGerade = true;
@@ -2101,7 +2106,7 @@ async function msGraphSyncSchreiben(){
 // lokal Vorhandenes, egal wie oft sie laeuft. Gibt true zurueck, wenn
 // dadurch etwas Neues uebernommen wurde (fuer die Aufrufstelle, um bei
 // Bedarf die aktuell sichtbare Ansicht neu aufzubauen).
-async function msGraphSyncAutomatischEinlesen(){
+async function msGraphSyncAutomatischEinlesenAlt(){
   if(msGraphStatus !== 'angemeldet') return false;
   try{
     const token = await msGraphTokenHolen();
@@ -3086,7 +3091,6 @@ function ansichtStart(){
       <button class="karte pt" id="kPT"><span class="icon">&#9877;</span>Privat-<br>rechnung</button>
       <button class="karte gkv" id="kGKV"><span class="icon">&#127973;</span>GKV-<br>Patient</button>
     </div>
-    <button type="button" class="btn-sekundaer dienst-beginnen" id="btnDienstBeginnen">&#9654; Dienst beginnen <span>(Pseudo-Fall 99999 gleich mit anlegen)</span></button>
     <div id="pseudoHinweis"></div>
     <div class="uebersicht-reihe">
       <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Rechnungs&shy;verwaltung
@@ -3142,7 +3146,6 @@ function ansichtStart(){
   document.getElementById('kLS').onclick = ()=> betaNeueRechnung('ls');
   document.getElementById('kPT').onclick = ()=> betaNeueRechnung('pt');
   document.getElementById('kGKV').onclick = ()=> ansichtGkv();
-  document.getElementById('btnDienstBeginnen').onclick = ()=> dienstBeginnen();
   pseudoHinweisZeichnen(document.getElementById('pseudoHinweis'));
   document.getElementById('btnKorrigieren').onclick = ()=> betaGesamtAktiv() ? ansichtRechnungenGesamt() : ansichtKorrigieren();
   document.getElementById('btnOeffneUebersicht').onclick = ()=>{
@@ -9636,20 +9639,25 @@ function fahrdienstDatumAusWert(wert){
 // Stundensatz der Grundpauschale nach dem Tag des Dienstbeginns
 function fahrdienstSilvesterHeiligabend(d){ return !!d && d.getMonth() === 11 && (d.getDate() === 24 || d.getDate() === 31); }
 function fahrdienstWochenendSatz(d){ return !!d && (d.getDay() === 0 || d.getDay() === 6 || !!istFeiertagBW(d) || fahrdienstSilvesterHeiligabend(d)); }
-function fahrdienstPauschaleSatz(datumWert){
+// Sitzdienst und telemedizinischer Dienst: an allen Tagen 50 EUR/h
+function fahrdienstIstSitz(art){ return /sitz|tele/i.test(String(art || '')); }
+function fahrdienstPauschaleSatz(datumWert, art){
+  if(fahrdienstIstSitz(art)) return FAHRDIENST_PAUSCHALE_WOCHENENDE;
   const d = fahrdienstDatumAusWert(datumWert);
   return fahrdienstWochenendSatz(d) ? FAHRDIENST_PAUSCHALE_WOCHENENDE : FAHRDIENST_PAUSCHALE_WERKTAG;
 }
 // dieselbe Zahl als Excel-Ausdruck (300/14 exakt statt gerundet)
-function fahrdienstSatzFormel(datumWert){
+function fahrdienstSatzFormel(datumWert, art){
+  if(fahrdienstIstSitz(art)) return String(FAHRDIENST_PAUSCHALE_WOCHENENDE);
   return fahrdienstWochenendSatz(fahrdienstDatumAusWert(datumWert)) ? String(FAHRDIENST_PAUSCHALE_WOCHENENDE) : FAHRDIENST_PAUSCHALE_WERKTAG_FORMEL;
 }
 // Zusatzfoerderung 24.12./31.12. je Stunde (sonst 0)
 function fahrdienstZusatzSatz(datumWert){ return fahrdienstSilvesterHeiligabend(fahrdienstDatumAusWert(datumWert)) ? FAHRDIENST_ZUSATZ_2412_3112 : 0; }
 function fahrdienstSatzText(satz){ return String(Math.round(satz * 100) / 100).replace('.', ','); }
-function fahrdienstSatzGrund(datumWert){
+function fahrdienstSatzGrund(datumWert, art){
   const d = fahrdienstDatumAusWert(datumWert);
   if(!d) return '';
+  if(fahrdienstIstSitz(art)) return String(art).trim();
   if(fahrdienstSilvesterHeiligabend(d)) return d.getDate() === 24 ? 'Heiligabend' : 'Silvester';
   const f = istFeiertagBW(d);
   return f ? f : d.getDay() === 0 ? 'Sonntag' : d.getDay() === 6 ? 'Samstag' : 'Fahrdienst Mo–Fr';
@@ -9949,14 +9957,15 @@ const EBM_KATALOG = [
   ['01223',128,'Schweregradzuschlag zu 01210',null,'Nur bei den Diagnosen bzw. Begründung lt. Präambel 1.2'],
   ['01224',195,'Schweregradzuschlag zu 01212',null,'Nur bei den Diagnosen bzw. Begründung lt. Präambel 1.2'],
   ['01226',90,'Zuschlag zu 01212 (Kinder bis 3 J., Pat. mit besonderen Einschränkungen)',null,'Nur zusammen mit 01212'],
-  ['01410',212,'Besuch',null,''],
-  ['01411',469,'Dringender Besuch I',null,''],
-  ['01412',626,'Dringender Besuch II',null,''],
+  ['01410',212,'Besuch',null,'Nicht im organisierten Not-/Bereitschaftsdienst (dort 01418)'],
+  ['01411',469,'Dringender Besuch I',null,'Nicht im organisierten Not-/Bereitschaftsdienst (dort 01418)'],
+  ['01412',626,'Dringender Besuch II',null,'Nicht im organisierten Not-/Bereitschaftsdienst (dort 01418)'],
   ['01413',106,'Besuch eines weiteren Kranken (Mitbesuch)',null,'In derselben häuslichen Gemeinschaft/Einrichtung'],
   ['01415',546,'Dringender Besuch in einer Pflegeeinrichtung',null,''],
   ['01416',117,'Begleitung eines Kranken beim Transport',null,''],
   ['01418',778,'Besuch im organisierten Not(-fall)dienst',null,'Unabhängig von der Uhrzeit'],
   ['01430',12,'Verwaltungskomplex',null,''],
+  ['01450',40,'Technikzuschlag Videosprechstunde, je Kontakt',null,'Nur zusammen mit Video-Kontakt (01210/01212/01214–01218), höchstens 1.899 Punkte; dazu Kennzeichen 88220'],
   ['01440',352,'Verweilen außerhalb der Praxis ohne Leistungserbringung, je vollendete 30 Min.',null,''],
   ['02100',67,'Infusion (mind. 10 Min.)',null,''],
   ['02101',165,'Infusion (mind. 60 Min.)',null,''],
@@ -9974,11 +9983,14 @@ const EBM_KATALOG = [
   ['02343',260,'Entlastungspunktion des Pleuraraums / Pleuradrainage',null,''],
   ['02350',144,'Fixierender Verband',null,''],
   ['02360',94,'Anwendung von Lokalanästhetika',null,''],
-  ['03330',53,'Spirographie',null,''],
+  ['03330',53,'Spirographie',null,'Kap. 3 – im Ärztlichen Bereitschaftsdienst nicht berechnungsfähig'],
   ['30200',48,'Chirotherapeutischer Eingriff',null,'Nur mit Qualifikation'],
   ['30201',71,'Chirotherapeutischer Eingriff an der Wirbelsäule',null,'Nur mit Qualifikation'],
   ['32025',null,'Glukose (Blutzucker, Sofortdiagnostik)',1.60,''],
   ['32033',null,'Urinuntersuchung mit Teststreifen',0.50,''],
+  ['88220',null,'Kennzeichnung: ausschließlich Videosprechstunde',0,'Pseudoziffer ohne Vergütung'],
+  ['99999',null,'Pseudo-Abrechnungsfall (kein GKV-Patient im Dienst)',0,'Pseudoziffer ohne Vergütung – Voraussetzung für die Förderung; ICD Z02, Uhrzeit Dienstbeginn'],
+  ['99909',null,'Pseudoziffer Privat-/BG-Patient (Sprechstundenbedarf)',0,'Je Privat-/BG-Patient im Dienst einmal, auch auf dem Pseudo-Fall 99999'],
   ['40190',null,'Wegepauschale über 10 km Radius, Tag (7–19 Uhr)',16.31,'KVBW regional'],
   ['40192',null,'Wegepauschale über 10 km Radius, Nacht (19–7 Uhr)',22.41,'KVBW regional'],
   ['40220',null,'Wegepauschale Kernbereich bis 2 km, Tag (7–19 Uhr)',4.74,'KVBW regional'],
@@ -10193,7 +10205,8 @@ const GKV_LISTE_STANDARD = ['nfp', 'schwer', '01226', 'kons', '01418', '01413', 
 // ---------- Schnellwahl-Profile (wie bei PT: Hausbesuch / Telefon + eigene) ----------
 const GKV_PROFILE_STANDARD = [
   { id: 'hb', name: 'Hausbesuch', auswahl: { nfp: { anz: 1 }, '01418': { anz: 1 }, weg: { anz: 1, stufe: '2' } } },
-  { id: 'tel', name: 'Tel. Konsultation', auswahl: { kons: { anz: 1 } } }
+  { id: 'tel', name: 'Tel. Konsultation', auswahl: { kons: { anz: 1 } } },
+  { id: 'sitz', name: 'Sitzdienst', auswahl: { nfp: { anz: 1 } } }
 ];
 // Gespeichert wie die PT/LS-Profile in "KVBW Onedrive/eigene_positionen.json"
 // (profile.gkv; Liste der angezeigten Positionen unter anordnung.gkv) --
@@ -10314,6 +10327,34 @@ function gkvStartAdresse(){
   const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {};
   return String(w.GKV_STARTADRESSE || w.PRAXISADRESSE || (ladeEinstellungen() || {}).praxisadresse || '').trim();
 }
+// Adresse als "Strasse, PLZ Ort" <-> zwei Felder
+function gkvAdrTeile(a){
+  a = String(a || '').trim(); const i = a.lastIndexOf(',');
+  if(i < 0) return /\b\d{5}\b/.test(a) ? { strasse: '', plzOrt: a } : { strasse: a, plzOrt: '' };
+  return { strasse: a.slice(0, i).trim(), plzOrt: a.slice(i + 1).trim() };
+}
+function gkvAdrZusammen(s, p){ s = String(s || '').trim(); p = String(p || '').trim(); return s && p ? s + ', ' + p : (s || p); }
+// Wie in der Rechnungsmaske: nur PLZ -> Ort ergaenzen, nur Ort -> PLZ ergaenzen
+async function gkvPlzOrtErgaenzen(strFeld, feld, infoEl){
+  const setzeInfo = (t)=>{ if(infoEl) infoEl.textContent = t || ''; };
+  const eingabe = String(feld.value || '').trim(); if(!eingabe){ setzeInfo(''); return; }
+  const plz = plzAusText(eingabe), ort = plz ? eingabe.replace(plz, '').trim() : eingabe;
+  if(plz && ort){ setzeInfo(''); return; }
+  if(plz){
+    setzeInfo('Ort wird gesucht …');
+    const o = await ortErmitteln(plz);
+    if(String(feld.value).trim() !== eingabe) return;
+    if(o){ feld.value = plz + ' ' + o; setzeInfo(''); feld.dispatchEvent(new Event('input')); }
+    else setzeInfo(o === null ? 'Keine Verbindung – Ort bitte selbst ergänzen.' : 'Zur PLZ ' + plz + ' wurde kein Ort gefunden.');
+    return;
+  }
+  setzeInfo('PLZ wird gesucht …');
+  const s = String((strFeld && strFeld.value) || '').trim();
+  const p = await plzErmitteln((s ? s + ', ' : '') + ort);
+  if(String(feld.value).trim() !== eingabe) return;
+  if(p){ feld.value = p + ' ' + ort; setzeInfo(''); feld.dispatchEvent(new Event('input')); }
+  else setzeInfo(p === null ? 'Keine Verbindung – PLZ bitte selbst ergänzen.' : 'Zu „' + ort + '“ wurde keine PLZ gefunden.');
+}
 function gkvStufeFuerKm(km){ return km <= 2 ? '2' : km <= 5 ? '5' : km <= 10 ? '10' : km <= 20 ? '10+' : km <= 30 ? '20+' : km <= 50 ? '30+' : '50+'; }
 async function gkvLuftlinie(adresse){
   const startAdr = gkvStartAdresse();
@@ -10410,14 +10451,6 @@ async function pseudoHinweisZeichnen(el){
     pseudoHinweisZeichnen(el);
   });
 }
-// "Dienst beginnen" (Startseite): wie von der KVBW empfohlen gleich zu
-// Dienstbeginn den Pseudo-Fall anlegen -- dann kann er nicht vergessen werden
-async function dienstBeginnen(){
-  const j = new Date();
-  const r = await gkvPseudoEintragen(new Date(j.getFullYear(), j.getMonth(), j.getDate()), zz2(j.getHours()) + ':' + zz2(j.getMinutes()),
-    { titel: 'Dienst beginnen?\n\nDie KVBW empfiehlt, gleich zu Beginn jedes Dienstes den Pseudo-Fall anzulegen – er schadet auch nicht, wenn danach GKV-Patienten kommen.' });
-  if(r){ const el = document.getElementById('pseudoHinweis'); if(el){ el.innerHTML = '<div class="' + (r.ok ? 'gkv-ok' : 'gkv-warn') + '">' + htmlEsc(r.text) + '</div>'; } }
-}
 function gkvListeLaden(){
   gkvAltMigrieren();
   const d = LS.get(EIGENE_POS_CACHE, null) || {};
@@ -10453,6 +10486,9 @@ function gkvHinweise(pos){
   if(hat('01418') && hat('01413')) h.push('01413 ist der Mitbesuch eines weiteren Kranken – beim selben Patienten nicht neben 01418.');
   if((hat('01205') || hat('01207')) && (hat('01210') || hat('01212'))) h.push('Abklärungspauschale und Notfallpauschale nicht nebeneinander.');
   if(hat('01224') && hat('01226')) h.push('01224 und 01226 nicht nebeneinander (Leitfaden KVBW).');
+  if((hat('01205') || hat('01207')) && pos.some(p=> /^3[345]\d{3}$/.test(p.gop))) h.push('Abklärungspauschale 01205/01207 nicht neben Leistungen der Kapitel 33, 34, 35.');
+  if(pos.some(p=> /^0[34]\d{3}$/.test(p.gop))) h.push('Leistungen aus Kapitel 3 und 4 sind im Ärztlichen Bereitschaftsdienst nicht berechnungsfähig.');
+  if(hat('01450') && !hat('88220')) h.push('Videosprechstunde: zusätzlich Kennzeichen 88220 angeben.');
   if(hat('01223') || hat('01224')) h.push('Schweregradzuschlag nur bei gesicherter Diagnose: Fraktur proximal Metacarpus/-tarsus, SHT mit Bewusstlosigkeit < 30 Min., akute TVT, hypertensive Krise, Angina pectoris (nicht I20.9), Pneumonie, akute Divertikulitis – sonst ausführliche schriftliche Begründung.');
   if(hat('01226')) h.push('01226 nur bei: Kind vor dem 3. Geburtstag, erheblichen kognitiven/emotionalen/Verhaltens-Beeinträchtigungen, ab 70 J. mit geriatrischem Bedarf und Frailty oder Demenz (F00–F02), Alzheimer (G30), Parkinson G20.1/G20.2.');
   return h;
@@ -10627,7 +10663,10 @@ function fbArztAusblenden(name){
   speichereEinstellungen(e);
 }
 
-// Rueckfrage "Neuer Dienst" -> {datum, zeit:{s,e}, arzt} oder null (nicht eintragen)
+// Dienstart steht in Spalte B unter dem Datum (bisher immer "Fahrdienst");
+// sie bestimmt den Foerdersatz (Sitzdienst/Telemedizin immer 50 EUR/h)
+const FB_DIENSTARTEN = ['Fahrdienst', 'Sitzdienst', 'Telemedizin'];
+// Rueckfrage "Neuer Dienst" -> {datum, zeit:{s,e}, arzt, art} oder null (nicht eintragen)
 async function fbDienstAbfragen(fb, dt, fallText){
   let datum = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
   if(ebmStunde(dt) < 7) datum = new Date(datum.getTime() - 86400000); // Nacht: Dienst hat am Vortag begonnen
@@ -10641,6 +10680,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
   }
   let aerzte = fbAerzte(fb);
   let arzt = aerzte[0] || '';
+  let art = LS.get('fb_dienstart', 'Fahrdienst');
   let fehler = '';
   const iso = (d)=> d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate());
   while(true){
@@ -10654,6 +10694,8 @@ async function fbDienstAbfragen(fb, dt, fallText){
       '<div class="fb-chips" id="fbZeitChips">' + vorschlaege.map(v=> '<button type="button" class="fb-chip' + (zeit && fbZeitText(zeit) === v ? ' an' : '') + '" data-zeit="' + htmlEsc(v) + '">' + htmlEsc(v) + '</button>').join('') + '</div>' +
       '<div class="fb-zeile"><label>von<input type="text" inputmode="decimal" id="fbVon" value="' + (zeit ? htmlEsc(fbZeitText(zeit).split('-')[0]) : '') + '"></label>' +
       '<label>bis<input type="text" inputmode="decimal" id="fbBis" value="' + (zeit ? htmlEsc(fbZeitText(zeit).split('-')[1]) : '') + '"></label><span class="fb-uhr">Uhr</span></div>' +
+      '<div class="fb-lbl">Dienstart</div>' +
+      '<div class="fb-chips" id="fbArtChips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-art="' + a + '">' + a + '</button>').join('') + '</div>' +
       '<div class="fb-lbl">Vertretener Arzt (Dienstinhaber)</div>' +
       '<div class="fb-chips" id="fbArztChips">' + aerzte.map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-arzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-weg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>' +
       '<input type="text" id="fbArzt" placeholder="Name (neu eintippen oder oben wählen)" value="' + htmlEsc(arzt) + '">' +
@@ -10668,6 +10710,9 @@ async function fbDienstAbfragen(fb, dt, fallText){
         const [v, bi] = fbZeitText(z).split('-');
         wurzel.querySelector('#fbVon').value = v; wurzel.querySelector('#fbBis').value = bi;
         wurzel.querySelectorAll('[data-zeit]').forEach(x=> x.classList.toggle('an', x === b));
+      });
+      wurzel.querySelectorAll('[data-art]').forEach(b=> b.onclick = ()=>{
+        art = b.dataset.art; wurzel.querySelectorAll('[data-art]').forEach(x=> x.classList.toggle('an', x === b));
       });
       wurzel.querySelectorAll('[data-arzt]').forEach(b=> b.onclick = ()=>{
         wurzel.querySelector('#fbArzt').value = b.dataset.arzt;
@@ -10692,7 +10737,8 @@ async function fbDienstAbfragen(fb, dt, fallText){
     if(!zeit){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen (z.B. 18 und 23).'; continue; }
     if(!arzt){ fehler = 'Bitte den vertretenen Arzt eintragen.'; continue; }
     fbArztMerken(arzt);
-    return { datum, zeit, arzt };
+    LS.set('fb_dienstart', art);
+    return { datum, zeit, arzt, art };
   }
 }
 
@@ -10775,7 +10821,7 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
     }
     await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='A" + z1 + ':C' + (z1 + 1) + "')", {
       numberFormat: [['0', 'dd.mm.yyyy', '@'], ['General', '@', '@']],
-      values: [[Math.floor(d.datum.getMonth() / 3) + 1, fbSerial(d.datum), fbZeitText(d.zeit)], ['', 'Fahrdienst', d.arzt]]
+      values: [[Math.floor(d.datum.getMonth() / 3) + 1, fbSerial(d.datum), fbZeitText(d.zeit)], ['', d.art || 'Fahrdienst', d.arzt]]
     });
     block = { zeileStart: z1, zeileEnde: z1 + 1, datumText: fbDatumText(d.datum), zeitRoh: fbZeitText(d.zeit), arzt: d.arzt, frisch: true };
     neuerDienst = true;
@@ -10861,7 +10907,7 @@ async function fahrtenbuchAusRechnung(fall, erg, meldung){
 // Ansicht "GKV-Patient"
 // =====================================================================
 function gkvFaelleLaden(){ return LS.get('gkv_faelle', []); }
-function gkvFaelleSpeichern(a){ LS.set('gkv_faelle', a.slice(-200)); }
+function gkvFaelleSpeichern(a){ const neu = a.slice(-200); if(typeof faelleMetaNachfuehren === 'function') faelleMetaNachfuehren('gkv', gkvFaelleLaden(), neu); LS.set('gkv_faelle', neu); if(typeof synchronisiereAlle === 'function') synchronisiereAlle(); }
 let gkvEntwurf = null;
 
 function ansichtGkv(bearbeitenId){
@@ -10877,14 +10923,16 @@ function ansichtGkv(bearbeitenId){
 
   app.innerHTML = `
     <div class="gkv-kopf">
-      <label class="gkv-feld">Name<input type="text" id="gkvName" autocomplete="off" placeholder="Nachname, Vorname" value="${htmlEsc(st.name)}"></label>
       <div class="gkv-zeile">
         <label class="gkv-feld">Datum<input type="date" id="gkvDatum" value="${htmlEsc(st.datum)}"></label>
         <label class="gkv-feld">Uhrzeit<input type="time" id="gkvZeit" value="${htmlEsc(st.zeit)}"></label>
       </div>
       <div class="gkv-zeitinfo" id="gkvZeitInfo"></div>
-      <label class="gkv-feld">Adresse <span class="gkv-optional">(optional – für die Wegepauschale)</span>
-        <input type="text" id="gkvAdresse" autocomplete="off" enterkeyhint="search" placeholder="Straße Nr., PLZ Ort" value="${htmlEsc(st.adresse || '')}"></label>
+      <label class="gkv-feld">Name<input type="text" id="gkvName" autocomplete="off" placeholder="Nachname, Vorname" value="${htmlEsc(st.name)}"></label>
+      <div class="gkv-feld">Adresse <span class="gkv-optional">(optional – für die Wegepauschale)</span>
+        <input type="text" id="gkvAdresse" autocomplete="off" placeholder="Straße Nr." value="${htmlEsc(gkvAdrTeile(st.adresse).strasse)}" aria-label="Straße und Hausnummer">
+        <input type="text" id="gkvPlzOrt" autocomplete="off" enterkeyhint="search" placeholder="PLZ Ort (PLZ oder Ort genügt)" value="${htmlEsc(gkvAdrTeile(st.adresse).plzOrt)}" aria-label="PLZ und Ort" style="margin-top:6px;">
+        <div class="gkv-plz-info" id="gkvPlzInfo"></div></div>
       <div class="gkv-adr-knoepfe"><button type="button" class="btn-sekundaer" id="gkvKmBtn">Wegegeld ermitteln</button><button type="button" class="btn-sekundaer" id="gkvKarteBtn" title="Wegegeld-Karte NFP Offenburg">🗺 Karte</button></div>
       <div class="gkv-zeitinfo" id="gkvKmInfo">${st.kmInfo || ''}</div>
     </div>
@@ -11013,10 +11061,15 @@ function ansichtGkv(bearbeitenId){
       gkvFaelleSpeichern(gkvFaelleLaden().filter(x=> x.id !== b.dataset.loesch)); verlaufZeichnen();
     });
   }
-  el('gkvAdresse').oninput = ()=>{ st.adresse = el('gkvAdresse').value; if(st.kmInfo){ st.kmInfo = ''; st.kmStufe = ''; st.kmGeo = null; el('gkvKmInfo').textContent = 'Adresse geändert – „Luftlinie“ erneut tippen.'; } };
-  el('gkvAdresse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); el('gkvKmBtn').click(); } };
+  const adrLesen = ()=> gkvAdrZusammen(el('gkvAdresse').value, el('gkvPlzOrt').value);
+  el('gkvPlzOrt').oninput = ()=> el('gkvAdresse').oninput();
+  el('gkvPlzOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(el('gkvAdresse'), el('gkvPlzOrt'), el('gkvPlzInfo')).then(()=>{ st.adresse = adrLesen(); }));
+  el('gkvPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); el('gkvKmBtn').click(); } };
+  el('gkvAdresse').oninput = ()=>{ st.adresse = adrLesen(); if(st.kmInfo){ st.kmInfo = ''; st.kmStufe = ''; st.kmGeo = null; el('gkvKmInfo').textContent = 'Adresse geändert – „Luftlinie“ erneut tippen.'; } };
+  el('gkvAdresse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); el('gkvPlzOrt').focus(); } };
   el('gkvKmBtn').onclick = async ()=>{
-    const adr = el('gkvAdresse').value.trim(), info = el('gkvKmInfo');
+    await gkvPlzOrtErgaenzen(el('gkvAdresse'), el('gkvPlzOrt'), el('gkvPlzInfo'));
+    const adr = adrLesen(), info = el('gkvKmInfo');
     st.adresse = adr;
     if(!adr){ info.textContent = 'Bitte eine Adresse eintragen – oder die Stufe der Wegepauschale unten von Hand wählen.'; return; }
     info.textContent = 'Luftlinie wird berechnet …';
@@ -11045,9 +11098,9 @@ function ansichtGkv(bearbeitenId){
   }
   el('gkvKmInfo').addEventListener('click', (ev)=>{ if(ev.target.classList.contains('gkv-karte-link')){ ev.preventDefault(); el('gkvKarteBtn').click(); } });
   el('gkvKarteBtn').onclick = async ()=>{
-    const erg = await nfpKarteOeffnen({ adresse: st.kmGeo || null, adresseText: el('gkvAdresse').value.trim(), gps: !st.kmGeo });
+    const erg = await nfpKarteOeffnen({ adresse: st.kmGeo || null, adresseText: adrLesen(), gps: !st.kmGeo });
     if(!erg) return;
-    if(erg.adresseText){ st.adresse = erg.adresseText; el('gkvAdresse').value = erg.adresseText; }
+    if(erg.adresseText){ st.adresse = erg.adresseText; const tl = gkvAdrTeile(erg.adresseText); el('gkvAdresse').value = tl.strasse; el('gkvPlzOrt').value = tl.plzOrt; }
     if(erg.geo) st.kmGeo = erg.geo;
     kmUebernehmen(erg.stufe, (erg.woher ? htmlEsc(erg.woher) + ' · ' : '') + 'Karte NFP: <b>' + htmlEsc(erg.text) + '</b> → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(erg.stufe)) + '</b> · ' + htmlEsc(erg.kmText || ''));
   };
@@ -11254,7 +11307,8 @@ async function nfpKarteOeffnen(opt){
   ov.className = 'nfp-overlay';
   ov.innerHTML =
     '<div class="nfp-kopf"><b>Wegegeld-Karte NFP Offenburg</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
-    '<div class="nfp-suche"><input type="search" id="nfpAdresse" enterkeyhint="search" autocomplete="off" placeholder="Adresse der Einsatzstelle" value="' + htmlEsc(opt.adresseText || '') + '">' +
+    '<div class="nfp-suche"><input type="text" id="nfpStrasse" autocomplete="off" placeholder="Straße Nr." value="' + htmlEsc(gkvAdrTeile(opt.adresseText).strasse) + '">' +
+      '<input type="search" id="nfpPlzOrt" enterkeyhint="search" autocomplete="off" placeholder="PLZ Ort" value="' + htmlEsc(gkvAdrTeile(opt.adresseText).plzOrt) + '">' +
       '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
     (bildUrl ? '' : '<div class="nfp-hinweis">Kartenbild nicht gefunden – es werden nur die ausgelesenen Zonen gezeigt. Für die echte Karte die Datei <b>Karte_NFP_Offenburg.jpg</b> in den OneDrive-Ordner <b>KVBW Onedrive/Karten</b> legen.</div>') +
     '<div class="nfp-scroll"><div class="nfp-flaeche"><img alt="Karte" draggable="false">' +
@@ -11319,7 +11373,8 @@ async function nfpKarteOeffnen(opt){
   sc.addEventListener('wheel', (ev)=>{ if(ev.ctrlKey){ ev.preventDefault(); setzeZoom(zoom * (ev.deltaY < 0 ? 1.15 : 1 / 1.15)); } }, { passive: false });
   ov.querySelectorAll('[data-zoom]').forEach(b=> b.onclick = ()=> setzeZoom(zoom + Number(b.dataset.zoom)));
   const suchen = async ()=>{
-    const a = ov.querySelector('#nfpAdresse').value.trim();
+    await gkvPlzOrtErgaenzen(ov.querySelector('#nfpStrasse'), ov.querySelector('#nfpPlzOrt'), info);
+    const a = gkvAdrZusammen(ov.querySelector('#nfpStrasse').value, ov.querySelector('#nfpPlzOrt').value);
     if(!a){ info.textContent = 'Bitte eine Adresse eintragen.'; return; }
     info.textContent = 'Adresse wird gesucht …';
     let g = null;
@@ -11335,7 +11390,9 @@ async function nfpKarteOeffnen(opt){
     waehlen(p, 'Adresse', g, a); zentrieren(p);
   };
   ov.querySelector('.nfp-such-knopf').onclick = suchen;
-  ov.querySelector('#nfpAdresse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); suchen(); } };
+  ov.querySelector('#nfpPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); suchen(); } };
+  ov.querySelector('#nfpStrasse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); ov.querySelector('#nfpPlzOrt').focus(); } };
+  ov.querySelector('#nfpPlzOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(ov.querySelector('#nfpStrasse'), ov.querySelector('#nfpPlzOrt'), null));
   const gps = ()=>{
     if(!navigator.geolocation){ info.textContent = 'Standort wird von diesem Gerät nicht unterstützt.'; return; }
     info.textContent = 'Standort wird ermittelt …';
@@ -11785,6 +11842,164 @@ function aerzteKnoepfeEinfuegen(zielEl, bloecke, quartale){
     msGraphTokenHolen().then(token=> token && aerzteAltUebernehmen(token, namen)).then(neu=>{ if(neu) neuZeichnen(); }).catch(()=>{});
   }
 }
+
+// =====================================================================
+// Geraeteuebergreifender Stand der lokalen Faelle (LS, PT, GKV)
+// ---------------------------------------------------------------------
+// Bisher: jede Aenderung wurde als Sicherung nach OneDrive geschrieben und
+// beim Start nur ADDITIV eingelesen -- Aenderungen an einem Fall kamen auf
+// dem anderen Geraet als Doppel an, geloeschte/erledigte Faelle kamen zurueck.
+// Jetzt: jeder Fall traegt intern einen Aenderungszeitpunkt, Loeschungen
+// werden als "geloescht am" vermerkt. Abgleich in beide Richtungen ueber
+// dieselbe Datei (KVBW Onedrive/rechnungserfassung_app_sicherung.json):
+// neuester Stand je Fall gewinnt, Loeschungen gelten auch auf dem anderen
+// Geraet. Abgleich beim Start, beim Zurueckwechseln in die App/den Tab,
+// jede Minute im Vordergrund und nach jeder Aenderung (erst lesen und
+// zusammenfuehren, dann schreiben -- mit ETag, damit sich zwei Geraete nicht
+// gegenseitig ueberschreiben).
+// =====================================================================
+const SYNC_META = 'faelle_meta';          // { 'ls|<zeitstempel>': {h, t} }
+const SYNC_GELOESCHT = 'faelle_geloescht'; // { 'ls|<zeitstempel>': ms }
+const SYNC_ARTEN = ['ls', 'pt', 'gkv'];
+function syncListeLaden(art){ return art === 'gkv' ? LS.get('gkv_faelle', []) : LS.get('faelle_' + art, []); }
+function syncListeSetzen(art, arr){ if(art === 'gkv') LS.set('gkv_faelle', arr); else LS.set('faelle_' + art, arr); }
+function syncId(art, f){ return art + '|' + (art === 'gkv' ? f.id : f.zeitstempel); }
+function syncHash(f){
+  const s = JSON.stringify(f); let h = 0;
+  for(let i = 0; i < s.length; i++){ h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+  return h + ':' + s.length;
+}
+// Vor jedem lokalen Speichern: geaenderte Faelle bekommen "jetzt", entfernte einen Loeschvermerk
+function faelleMetaNachfuehren(art, alt, neu){
+  try{
+    const meta = LS.get(SYNC_META, {}), weg = LS.get(SYNC_GELOESCHT, {}), jetzt = Date.now();
+    const neuIds = new Set();
+    (neu || []).forEach(f=>{
+      if(!f) return;
+      const id = syncId(art, f), h = syncHash(f); neuIds.add(id);
+      if(!meta[id] || meta[id].h !== h) meta[id] = { h, t: jetzt };
+      if(weg[id]) delete weg[id];
+    });
+    (alt || []).forEach(f=>{
+      if(!f) return;
+      const id = syncId(art, f);
+      if(!neuIds.has(id)){ weg[id] = jetzt; delete meta[id]; }
+    });
+    LS.set(SYNC_META, meta); LS.set(SYNC_GELOESCHT, weg);
+  }catch(_){}
+}
+// Faelle ohne Zeitpunkt (Bestand von vor diesem Update) gelten als "alt"
+function syncMetaFuer(art, f, meta){
+  const id = syncId(art, f), h = syncHash(f);
+  if(!meta[id]) meta[id] = { h, t: 1 };
+  else if(meta[id].h !== h) meta[id] = { h, t: Date.now() };   // ausserhalb von speichereFaelle geaendert
+  return meta[id];
+}
+// Lokal + entfernt zusammenfuehren -> {geaendert, daten (fuer die Datei)}
+function syncZusammenfuehren(entfernt){
+  const meta = LS.get(SYNC_META, {}), weg = LS.get(SYNC_GELOESCHT, {});
+  const rWeg = (entfernt && entfernt.geloescht) || {};
+  Object.keys(rWeg).forEach(id=>{ if(!weg[id] || rWeg[id] > weg[id]) weg[id] = rWeg[id]; });
+  const grenze = Date.now() - 120 * 86400000;
+  Object.keys(weg).forEach(id=>{ if(weg[id] < grenze) delete weg[id]; });
+  let geaendert = false;
+  const raus = { version: 2, am: new Date().toISOString(), faelle: [], gkv: [], geloescht: weg };
+  SYNC_ARTEN.forEach(art=>{
+    const lokal = syncListeLaden(art), m = new Map(); let gA = false;
+    lokal.forEach(f=>{ if(f){ const mm = syncMetaFuer(art, f, meta); m.set(syncId(art, f), { f, t: mm.t, lokal: true }); } });
+    const rListe = art === 'gkv' ? ((entfernt && entfernt.gkv) || []) : ((entfernt && entfernt.faelle) || []).filter(x=> x && x.art === art);
+    rListe.forEach(x=>{
+      if(!x) return;
+      const { art: _a, _t, ...f } = x;
+      if(art !== 'gkv' && !f.werte) return;
+      if(art === 'gkv' && !f.id) return;
+      const id = syncId(art, f), t = Number(_t) || 0, da = m.get(id);
+      if(!da || t > da.t) m.set(id, { f, t, lokal: false, ersetzt: !!da });
+    });
+    const neu = [];
+    m.forEach((e, id)=>{
+      if(weg[id] && weg[id] >= e.t){ if(e.lokal || e.ersetzt) gA = true; delete meta[id]; return; }
+      if(!e.lokal){ gA = true; meta[id] = { h: syncHash(e.f), t: e.t }; }
+      neu.push(e.f);
+      if(art === 'gkv') raus.gkv.push({ ...e.f, _t: e.t });
+      else raus.faelle.push({ ...e.f, art, _t: e.t });
+    });
+    // Reihenfolge wie bisher: nach Anlage
+    neu.sort((a, b)=> art === 'gkv' ? String(a.id).localeCompare(String(b.id)) : String(a.zeitstempel).localeCompare(String(b.zeitstempel)));
+    if(gA){ geaendert = true; syncListeSetzen(art, neu); }
+  });
+  LS.set(SYNC_META, meta); LS.set(SYNC_GELOESCHT, weg);
+  return { geaendert, daten: raus };
+}
+
+let syncLaeuft = null, syncNochmal = false, syncTimer = null, syncZuletzt = 0;
+async function syncDateiLesen(token){
+  const url = msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON);
+  const m = await fetch(url + '?$select=eTag,size', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+  if(m.status === 404) return { etag: null, daten: null };
+  if(!m.ok) throw new Error('OneDrive ' + m.status);
+  const etag = (await m.json()).eTag;
+  const c = await fetch(url + '/content', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+  if(!c.ok) throw new Error('OneDrive ' + c.status);
+  let daten = null; try{ daten = JSON.parse(await c.text()); }catch(_){}
+  return { etag, daten };
+}
+// Ein Abgleich: lesen, zusammenfuehren, (nur wenn noetig) schreiben
+async function faelleAbgleichen(schreiben){
+  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return false;
+  if(syncLaeuft){ if(schreiben) syncNochmal = true; return syncLaeuft; }
+  syncLaeuft = (async ()=>{
+    let geaendertGesamt = false;
+    try{
+      const token = await msGraphTokenHolen(); if(!token) return false;
+      if(schreiben && typeof rechnungsnummernVorSyncVergeben === 'function'){ try{ await rechnungsnummernVorSyncVergeben(); }catch(_){} }
+      for(let versuch = 0; versuch < 3; versuch++){
+        const { etag, daten } = await syncDateiLesen(token);
+        // Bestatter aus der Datei (wie bisher additiv)
+        if(daten && Array.isArray(daten.bestatterAenderungen)) daten.bestatterAenderungen.forEach(b=>{ if(b && b.name) try{ bestatterEintragen(b.name, b.adr1, b.adr2); }catch(_){} });
+        const { geaendert, daten: raus } = syncZusammenfuehren(daten);
+        if(geaendert) geaendertGesamt = true;
+        raus.bestatterAenderungen = ladeKatalog().filter(b=> b.herkunft === 'handy');
+        const vorher = daten ? JSON.stringify({ f: daten.faelle, g: daten.gkv, w: daten.geloescht }) : '';
+        const nachher = JSON.stringify({ f: raus.faelle, g: raus.gkv, w: raus.geloescht });
+        if(vorher === nachher && !(schreiben && !daten)) break;   // Datei ist schon aktuell
+        const kopf = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
+        if(etag) kopf['If-Match'] = etag; else kopf['If-None-Match'] = '*';
+        const r = await fetch(msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON) + '/content', { method: 'PUT', headers: kopf, body: JSON.stringify(raus, null, 1) });
+        if(r.status === 412 || r.status === 409) continue;   // anderes Geraet war schneller -> neu lesen
+        break;
+      }
+      syncZuletzt = Date.now();
+    }catch(_){ /* still -- naechster Versuch beim naechsten Anlass */ }
+    finally{
+      syncLaeuft = null;
+      if(syncNochmal){ syncNochmal = false; setTimeout(()=> faelleAbgleichen(true), 50); }
+    }
+    if(geaendertGesamt) syncAnsichtAuffrischen();
+    return geaendertGesamt;
+  })();
+  return syncLaeuft;
+}
+function syncAnsichtAuffrischen(){
+  try{
+    if(typeof appToastAnzeigen === 'function') appToastAnzeigen('Fälle von einem anderen Gerät übernommen.', 2600);
+    if(typeof einstellungenOffen !== 'undefined' && einstellungenOffen) return;
+    if(typeof aktuelleAnsichtIstHauptbildschirm !== 'undefined' && aktuelleAnsichtIstHauptbildschirm) ansichtStart();
+  }catch(_){}
+}
+
+// Ersetzt die alten Funktionen (gleiche Namen, damit alle Aufrufstellen greifen)
+async function msGraphSyncSchreiben(){
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=> faelleAbgleichen(true), 700);
+}
+async function msGraphSyncAutomatischEinlesen(){ return await faelleAbgleichen(false); }
+
+// Beim Zurueckwechseln in App/Tab und jede Minute im Vordergrund
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible' && Date.now() - syncZuletzt > 15000) faelleAbgleichen(false);
+});
+setInterval(()=>{ if(document.visibilityState === 'visible' && Date.now() - syncZuletzt > 55000) faelleAbgleichen(false); }, 60000);
 
 
 function ansichtEinstellungen(){
