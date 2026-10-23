@@ -456,6 +456,8 @@
   .ar-knoepfe button{width:auto; margin:0; padding:6px 12px; font-size:13px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .ar-knoepfe button[data-ar-neu]{background:#7d4e9e; border-color:#7d4e9e; color:#fff; font-weight:600;}
   .ar-renu{font-size:12.5px; font-weight:600; margin-right:auto;}
+  .ar-renu small{display:block; font-weight:400; color:var(--text-schwach);}
+  .ar-renu small.ar-abw{color:#b9770e; font-weight:600;}
   .ar-dienst{display:flex; align-items:center; gap:8px; margin:4px 0; font-size:13.5px;}
   .ar-dienst span{flex:1; min-width:0;}
   .ar-dienst small{display:block; font-size:11.5px; color:var(--text-schwach);}
@@ -10807,14 +10809,28 @@ function aerzteBetragVorschlag(b){ return betaRund2((Number(b.gkv) || 0) * (1 - 
 function aerzteZahl(t){ const n = Number(String(t == null ? '' : t).trim().replace(/\./g, '').replace(',', '.')); return isFinite(n) ? n : NaN; }
 function aerzteZahlText(v){ return (Math.round(Number(v) * 100) / 100).toFixed(2).replace('.', ','); }
 
+// Dateiname = Rechnungsnummer umgedreht ("AH-002" -> "002-AH"), damit der
+// Ordner nach Nummer sortiert
+function aerzteDateiName(renu){
+  const m = /^([A-Za-zÄÖÜäöü]+)-(\d+)$/.exec(String(renu || '').trim());
+  return m ? m[2] + '-' + m[1].toUpperCase() : String(renu || '').replace(/[\\/:*?"<>|]+/g, ' ').trim();
+}
 // naechste freie Nummer zum Kuerzel aus den Dateinamen im Ordner
-async function aerzteNaechsteRenu(token, kuerzel, ausser){
+// (neu "002-AH", bisher "AH-002") und den gespeicherten Rechnungen
+async function aerzteNaechsteRenu(token, kuerzel){
   const dateien = await ordnerDateien(token, AERZTE_ORDNER);
-  const re = new RegExp('(^|[^A-Za-z])' + kuerzel.replace(/[^A-Za-z]/g, '') + '-(\\d+)', 'i');
+  const k = kuerzel.replace(/[^A-Za-zÄÖÜäöü]/g, '');
+  const reA = new RegExp('(^|[^A-Za-z])' + k + '-(\\d+)', 'i'), reB = new RegExp('(^|[^0-9])(\\d+)-' + k + '(?![A-Za-z])', 'i');
   let max = 0, breite = 3;
-  dateien.forEach(it=>{ const m = re.exec(it.name); if(m && m[2] + '' !== String(ausser || '')){ max = Math.max(max, +m[2]); breite = Math.max(breite, m[2].length); } });
-  (aerzteDaten().aerzteRechnungen || []).forEach(x=>{ const m = re.exec(x.renu || ''); if(m) max = Math.max(max, +m[2]); });
+  const pruefen = (name)=>{ [reA, reB].forEach(re=>{ const m = re.exec(name); if(m){ max = Math.max(max, +m[2]); breite = Math.max(breite, m[2].length); } }); };
+  dateien.forEach(it=> pruefen(it.name));
+  (aerzteDaten().aerzteRechnungen || []).forEach(x=> pruefen(x.renu || ''));
   return kuerzel.toUpperCase() + '-' + String(max + 1).padStart(breite, '0');
+}
+function aerzteAbweichungText(ist, soll){
+  const d = betaRund2(ist - soll);
+  if(Math.abs(d) < 0.005) return 'keine Abweichung';
+  return 'Abweichung ' + (d > 0 ? '+' : '−') + aerzteZahlText(Math.abs(d)) + ' €' + (soll ? ' (' + (d > 0 ? '+' : '−') + String(Math.round(Math.abs(d / soll) * 1000) / 10).replace('.', ',') + ' %)' : '');
 }
 
 // ---------- Word-Datei aus der Vorlage ----------
@@ -10909,15 +10925,22 @@ async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
       '<div class="fb-zeile"><label>Kürzel<input type="text" id="arKuerzel" value="' + htmlEsc(st.kuerzel) + '"></label>' +
       '<label>Rechnungsnr.<input type="text" id="arRenu" placeholder="automatisch" value="' + htmlEsc(st.renu) + '"></label>' +
       '<label>Datum<input type="text" id="arDatum" value="' + htmlEsc(st.datum) + '"></label></div>' +
-      '<div class="fb-lbl">Dienste (Betrag nach Abzug der KV-Gebühr, änderbar)</div>' +
-      st.dienste.map((d, i)=> '<div class="ar-dienst"><span>' + htmlEsc(d.text) + '<small>berechnet ' + aerzteZahlText(d.vorschlag) + ' €</small></span>' +
+      '<div class="fb-lbl">Auszahlung der KVBW je Dienst (vorbelegt mit dem berechneten Betrag)</div>' +
+      st.dienste.map((d, i)=> '<div class="ar-dienst"><span>' + htmlEsc(d.text) + '<small>berechnet ' + aerzteZahlText(d.vorschlag) + ' € · <i data-ar-abw="' + i + '">' + htmlEsc(aerzteAbweichungText(d.betrag, d.vorschlag)) + '</i></small></span>' +
         '<input type="text" inputmode="decimal" data-ar="' + i + '" value="' + aerzteZahlText(d.betrag) + '"> €</div>').join('') +
-      '<div class="ar-summe">Summe: <b id="arSumme">' + aerzteZahlText(summe) + ' €</b></div></div>';
+      '<div class="ar-summe">Summe: <b id="arSumme">' + aerzteZahlText(summe) + ' €</b><br><small id="arAbw">berechnet ' +
+        aerzteZahlText(st.dienste.reduce((s, d)=> s + d.vorschlag, 0)) + ' € · ' + htmlEsc(aerzteAbweichungText(summe, st.dienste.reduce((s, d)=> s + d.vorschlag, 0))) + '</small></div></div>';
     const p = betaOverlay.ergebnis('Rechnung an ' + arzt, html, [{ label: 'Abbrechen', akt: 'nein' }, { label: alt ? 'Neu erstellen' : 'Rechnung erstellen', akt: 'ok', primaer: true }]);
     const w = document.querySelector('.beta-overlay .fb-dialog');
     if(w) w.querySelectorAll('[data-ar]').forEach(inp=> inp.oninput = ()=>{
-      let s = 0; w.querySelectorAll('[data-ar]').forEach(x=>{ const n = aerzteZahl(x.value); if(!isNaN(n)) s += n; });
+      let s = 0, soll = 0;
+      w.querySelectorAll('[data-ar]').forEach(x=>{
+        const i = +x.dataset.ar, n = aerzteZahl(x.value), v = st.dienste[i].vorschlag;
+        soll += v; if(!isNaN(n)) s += n;
+        const a = w.querySelector('[data-ar-abw="' + i + '"]'); if(a) a.textContent = isNaN(n) ? '' : aerzteAbweichungText(n, v);
+      });
       const el = document.getElementById('arSumme'); if(el) el.textContent = aerzteZahlText(s) + ' €';
+      const ab = document.getElementById('arAbw'); if(ab) ab.textContent = 'berechnet ' + aerzteZahlText(soll) + ' € · ' + aerzteAbweichungText(s, soll);
     });
     const akt = await p;
     const wert = (id)=> String((document.getElementById(id) || {}).value || '').trim();
@@ -10947,8 +10970,8 @@ async function aerzteRechnungErstellen(arzt, quartalKey, bloecke){
     const vorlage = await graphDateiLaden(token, AERZTE_VORLAGE);
     const renu = st.renu || await aerzteNaechsteRenu(token, st.kuerzel);
     const summe = betaRund2(st.dienste.reduce((s, d)=> s + d.betrag, 0));
-    const q = /Quartal\s*(\d)\s*\/\s*(\d{4})/.exec(quartalKey) || [];
-    const datei = (renu + ' ' + st.vname + (q[1] ? ' Q' + q[1] + '-' + q[2] : '')).replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const datei = aerzteDateiName(renu);
+    const summeBerechnet = betaRund2(st.dienste.reduce((s, d)=> s + d.vorschlag, 0));
     betaOverlay.schritt('Word-Datei wird erstellt …');
     const blob = await aerzteDocxErzeugen(vorlage, { arzt: eigene, vname: st.vname, adr1: st.adr1, adr2: st.adr2, datum: st.datum, renu,
       quartalText: aerzteQuartalText(quartalKey), dienste: st.dienste, summe });
@@ -10964,7 +10987,7 @@ async function aerzteRechnungErstellen(arzt, quartalKey, bloecke){
         .concat([{ arzt, vname: st.vname, adr1: st.adr1, adr2: st.adr2, kuerzel: st.kuerzel, am: jetzt }]);
       d.aerzteRechnungen = (d.aerzteRechnungen || []).filter(x=> x.renu !== renu && !(st.alt && x.renu === st.alt.renu))
         .concat([{ renu, arzt, quartal: quartalKey, datum: st.datum, vname: st.vname, adr1: st.adr1, adr2: st.adr2,
-                   dienste: st.dienste.map(x=> ({ text: x.text, betrag: x.betrag })), summe, datei, pdfUrl: (pdfItem && pdfItem.webUrl) || '', am: jetzt }]);
+                   dienste: st.dienste.map(x=> ({ text: x.text, betrag: x.betrag, berechnet: x.vorschlag })), summe, summeBerechnet, datei, pdfUrl: (pdfItem && pdfItem.webUrl) || '', am: jetzt }]);
     }).catch(()=>{});
     const a = await betaOverlay.ergebnis('Rechnung erstellt', '✓ <b>' + htmlEsc(renu) + '</b> an ' + htmlEsc(st.vname) + '<br><span class="beta-erg-klein">' +
       aerzteZahlText(summe) + ' € · ' + st.dienste.length + ' Dienst' + (st.dienste.length === 1 ? '' : 'e') + ' · Word + PDF in „fertige Rechnungen Vertretungsärzte“</span>',
@@ -10985,13 +11008,28 @@ function aerzteKnoepfeEinfuegen(zielEl, bloecke, quartale){
     const bl = bloecke.filter(b=> b.quartalKey === q.quartal && b.arzt === a.arzt);
     const r = aerzteRechnungFinden(a.arzt, q.quartal);
     const box = document.createElement('div'); box.className = 'ar-knoepfe';
-    box.innerHTML = (r ? '<span class="ar-renu">Rechnung ' + htmlEsc(r.renu) + ' · ' + aerzteZahlText(r.summe) + ' €</span>' : '') +
-      (r && r.pdfUrl ? '<button type="button" data-ar-pdf>PDF</button>' : '') +
+    const soll = r ? (r.summeBerechnet != null ? r.summeBerechnet : bl.reduce((s, b)=> s + aerzteBetragVorschlag(b), 0)) : 0;
+    const abw = r ? betaRund2(r.summe - soll) : 0;
+    box.innerHTML = (r ? '<span class="ar-renu">Rechnung ' + htmlEsc(r.renu) + ' · ' + aerzteZahlText(r.summe) + ' €' +
+        '<small class="' + (Math.abs(abw) >= 0.005 ? 'ar-abw' : '') + '">berechnet ' + aerzteZahlText(soll) + ' € · ' + htmlEsc(aerzteAbweichungText(r.summe, soll)) + '</small></span>' : '') +
+      (r && (r.datei || r.pdfUrl) ? '<button type="button" data-ar-pdf>PDF</button>' : '') +
       '<button type="button" data-ar-neu>' + (r ? 'Bearbeiten' : 'Rechnung erstellen') + '</button>';
     karte.appendChild(box);
     const neu = box.querySelector('[data-ar-neu]');
     neu.onclick = async ()=>{ await aerzteRechnungErstellen(a.arzt, q.quartal, bl); if(typeof fahrdienstAuswertungCache !== 'undefined' && fahrdienstAuswertungCache) fahrdienstAuswertungRendern(fahrdienstAuswertungCache); };
-    const pdf = box.querySelector('[data-ar-pdf]'); if(pdf) pdf.onclick = ()=> window.open(r.pdfUrl, '_blank');
+    // PDF aus dem gemeinsamen OneDrive-Ordner (egal ob am PC oder in der App erstellt)
+    const pdf = box.querySelector('[data-ar-pdf]');
+    if(pdf) pdf.onclick = async ()=>{
+      const fenster = window.open('', '_blank');
+      try{
+        const token = await msGraphTokenHolen();
+        const it = await gx(token, 'GET', msGraphPfadUrl(AERZTE_ORDNER + '/' + r.datei + '.pdf') + '?$select=webUrl');
+        if(fenster) fenster.location = it.webUrl; else window.open(it.webUrl, '_blank');
+      }catch(e){
+        if(fenster) fenster.close();
+        betaOverlay.meldung('Die PDF „' + r.datei + '.pdf“ wurde im Ordner „fertige Rechnungen Vertretungsärzte“ nicht gefunden.', 'PDF');
+      }
+    };
   }));
 }
 
