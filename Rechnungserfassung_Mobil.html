@@ -458,6 +458,20 @@
   .ar-renu{font-size:12.5px; font-weight:600; margin-right:auto;}
   .ar-renu small{display:block; font-weight:400; color:var(--text-schwach);}
   .ar-renu small.ar-abw{color:#b9770e; font-weight:600;}
+  .ar-renu small.ar-bezahlt{color:#1f8a4c; font-weight:600;}
+  .ar-renu small.ar-offen{color:var(--text-schwach);}
+  .ar-knoepfe button[data-ar-erh].an{background:#1f8a4c; border-color:#1f8a4c; color:#fff;}
+  .ar-knoepfe button.ar-weg{background:#c0392b; border-color:#c0392b; color:#fff; padding:6px 10px;}
+  .ar-liste{margin:2px 0 8px; padding-left:18px; font-size:13.5px;}
+  /* Am PC: Inhalt mittig in Handybreite, Maus statt Wischen */
+  @media (min-width: 760px){
+    main{max-width:680px; margin-left:auto; margin-right:auto;}
+    header{padding-left:max(16px, calc(50% - 340px)); padding-right:max(16px, calc(50% - 340px));}
+    .gesamt-aktionen{max-width:680px; margin-left:auto; margin-right:auto; border-left:1px solid var(--rand); border-right:1px solid var(--rand);}
+  }
+  @media (hover: hover) and (pointer: fine){
+    .wisch-huelle > .fall-zeile, .wisch-huelle > .position-zeile{cursor:pointer; user-select:none;}
+  }
   .ar-dienst{display:flex; align-items:center; gap:8px; margin:4px 0; font-size:13.5px;}
   .ar-dienst span{flex:1; min-width:0;}
   .ar-dienst small{display:block; font-size:11.5px; color:var(--text-schwach);}
@@ -5651,6 +5665,10 @@ const INI_FELDER = [
   {k:'ARZTBANKNAME',     typ:'text', label:'Bank'},
   {k:'ARZTIBAN',         typ:'text', label:'IBAN'},
   {k:'ARZTBIC',          typ:'text', label:'BIC'},
+  {k:'AERZTE_KONTOINHABER', typ:'text', label:'Kontoinhaber (Empfänger)'},
+  {k:'AERZTE_BANKNAME',  typ:'text', label:'Bank'},
+  {k:'AERZTE_IBAN',      typ:'text', label:'IBAN'},
+  {k:'AERZTE_BIC',       typ:'text', label:'BIC'},
   {k:'BRIEF_AKTIVIERT',  typ:'bool', label:'Briefversand über LetterXpress aktiviert'},
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
@@ -5660,6 +5678,7 @@ const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
   {titel:'Arzt', keys:['ARZTNAME','ARZTFUNKTION','ARZTADRESSE1','ARZTADRESSE2','ARZTEMAIL']},
   {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTBANKNAME','ARZTIBAN','ARZTBIC']},
+  {titel:'Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)', keys:['AERZTE_KONTOINHABER','AERZTE_BANKNAME','AERZTE_IBAN','AERZTE_BIC']},
   {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_TESTMODUS']}
 ];
 
@@ -6979,6 +6998,47 @@ function betaWischen(el, beimLoeschen){
     } else zurueck();
     aktiv = false;
   });
+  // Am PC (Maus): nach links ziehen wie beim Wischen, lange gedrueckt halten
+  // oder Rechtsklick -- jeweils mit derselben Rueckfrage zum Loeschen
+  const loeschenAusloesen = async ()=>{
+    zuletzt = Date.now();
+    el.style.transition = 'transform .18s ease'; el.style.transform = 'translateX(-100%)';
+    el.parentElement && el.parentElement.classList.add('wisch-bereit');
+    let ok = false;
+    try{ ok = await beimLoeschen(); }catch(e){ ok = false; }
+    if(!ok) zurueck();
+  };
+  if(!el.title) el.title = 'Löschen: nach links ziehen, lange gedrückt halten oder Rechtsklick';
+  el.addEventListener('mousedown', ev=>{
+    if(ev.button !== 0 || ev.target.closest('input, textarea, select')) return;
+    let mx0 = ev.clientX, my0 = ev.clientY, mdx = 0, maktiv = false;
+    el.style.transition = 'none';
+    let halte = setTimeout(()=>{ halte = null; if(!maktiv && mx0 !== null){ mx0 = null; loeschenAusloesen(); } }, 700);
+    const mm = (e)=>{
+      if(mx0 === null) return;
+      const ddx = e.clientX - mx0, ddy = e.clientY - my0;
+      if(halte && (Math.abs(ddx) > 5 || Math.abs(ddy) > 5)){ clearTimeout(halte); halte = null; }
+      if(!maktiv){
+        if(ddx < -14 && Math.abs(ddx) > Math.abs(ddy) * 1.6) maktiv = true;
+        else if(Math.abs(ddy) > 12 || ddx > 14){ mx0 = null; return; }
+      }
+      if(maktiv){
+        mdx = Math.min(0, ddx);
+        el.style.transform = 'translateX(' + mdx + 'px)';
+        el.parentElement.classList.toggle('wisch-bereit', mdx < -90);
+        e.preventDefault();
+      }
+    };
+    const mu = ()=>{
+      document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu);
+      if(halte){ clearTimeout(halte); halte = null; }
+      if(!maktiv){ mx0 = null; return; }
+      maktiv = false; mx0 = null; zuletzt = Date.now();
+      if(mdx < -90) loeschenAusloesen(); else zurueck();
+    };
+    document.addEventListener('mousemove', mm); document.addEventListener('mouseup', mu);
+  });
+  el.addEventListener('contextmenu', ev=>{ if(ev.target.closest('input, textarea, select')) return; ev.preventDefault(); loeschenAusloesen(); });
   // Klick direkt nach einer Wischbewegung nicht als Antippen werten
   el.addEventListener('click', ev=>{ if(Date.now() - zuletzt < 450){ ev.stopPropagation(); ev.preventDefault(); } }, true);
 }
@@ -10856,7 +10916,7 @@ async function aerzteDocxErzeugen(vorlage, daten){
     const zellen = zeile.match(/<w:tc>[\s\S]*?<\/w:tc>/g) || [];
     let z = zeile;
     if(zellen[0]) z = z.replace(zellen[0], zellen[0].replace(/<w:p(?:\s[^>]*?)?>[\s\S]*?<\/w:p>|<w:p(?:\s[^>]*?)?\/>/, (p)=> rdPlatzhalterInXml(p.indexOf('DIENSTDAT') >= 0 ? p : p, [['DIENSTDAT', text]])));
-    if(zellen[1]){
+    if(zellen[1] && betrag != null){
       const neuP = (p)=>{
         const kopf = p.match(/^<w:p(?:\s[^>]*?)?>/)[0];
         let pPr = (p.match(/<w:pPr>[\s\S]*?<\/w:pPr>/) || ['<w:pPr></w:pPr>'])[0];
@@ -10867,7 +10927,7 @@ async function aerzteDocxErzeugen(vorlage, daten){
     }
     return z;
   };
-  const neueZeilen = daten.dienste.map(d=> zelleFuellen(muster, d.text, d.betrag));
+  const neueZeilen = daten.dienste.map(d=> zelleFuellen(muster, d.text, null));
   const vorher = zeilen.slice(0, iD), nachher = zeilen.slice(iS);
   const tabKopf = tab.slice(0, tab.indexOf(zeilen[0]));
   const tabFuss = tab.slice(tab.lastIndexOf(zeilen[zeilen.length - 1]) + zeilen[zeilen.length - 1].length);
@@ -10898,24 +10958,24 @@ async function aerzteDocxErzeugen(vorlage, daten){
   return zip.generateAsync({ type: 'blob', compression: 'DEFLATE', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
 
-// ---------- Dialog: Empfaenger, Nummer, Betraege ----------
+// ---------- Dialog: Empfaenger, Nummer, Auszahlung (nur Gesamtbetrag) ----------
+// Die Einzeldienste stehen ohne Betrag auf der Rechnung; angepasst wird nur
+// der Gesamtbetrag (= tatsaechliche Auszahlung der KVBW). Die Abweichung zum
+// berechneten Betrag zeigt, ob sich eine Reklamation lohnt.
 async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
   const alt = aerzteRechnungFinden(arzt, quartalKey);
   const adr = aerzteAdresse(arzt) || {};
   const heute = new Date();
+  const berechnet = betaRund2(bloecke.reduce((s, b)=> s + aerzteBetragVorschlag(b), 0));
   let st = {
     vname: (alt && alt.vname) || adr.vname || arzt, adr1: (alt && alt.adr1) || adr.adr1 || '', adr2: (alt && alt.adr2) || adr.adr2 || '',
-    kuerzel: adr.kuerzel || aerzteKuerzel(arzt), renu: (alt && alt.renu) || '',
-    datum: zz2(heute.getDate()) + '.' + zz2(heute.getMonth() + 1) + '.' + heute.getFullYear(),
-    dienste: bloecke.map(b=>{
-      const text = aerzteDienstText(b);
-      const altD = alt && (alt.dienste || []).find(x=> x.text === text);
-      return { text, betrag: altD ? altD.betrag : aerzteBetragVorschlag(b), vorschlag: aerzteBetragVorschlag(b) };
-    })
+    kuerzel: adr.kuerzel || (alt && /^([A-ZÄÖÜ]+)-/.test(alt.renu || '') ? alt.renu.split('-')[0] : aerzteKuerzel(arzt)), renu: (alt && alt.renu) || '',
+    datum: (alt && alt.datum) || (zz2(heute.getDate()) + '.' + zz2(heute.getMonth() + 1) + '.' + heute.getFullYear()),
+    dienste: bloecke.map(b=> ({ text: aerzteDienstText(b) })),
+    summe: alt && alt.summe != null ? alt.summe : berechnet, berechnet
   };
   let fehler = '';
   while(true){
-    const summe = st.dienste.reduce((s, d)=> s + (Number(d.betrag) || 0), 0);
     const html = '<div class="fb-dialog">' +
       '<div class="fb-info">' + htmlEsc(aerzteQuartalText(quartalKey)) + (alt ? ' · bisherige Rechnung ' + htmlEsc(alt.renu) + ' wird ersetzt' : '') + '</div>' +
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
@@ -10925,37 +10985,34 @@ async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
       '<div class="fb-zeile"><label>Kürzel<input type="text" id="arKuerzel" value="' + htmlEsc(st.kuerzel) + '"></label>' +
       '<label>Rechnungsnr.<input type="text" id="arRenu" placeholder="automatisch" value="' + htmlEsc(st.renu) + '"></label>' +
       '<label>Datum<input type="text" id="arDatum" value="' + htmlEsc(st.datum) + '"></label></div>' +
-      '<div class="fb-lbl">Auszahlung der KVBW je Dienst (vorbelegt mit dem berechneten Betrag)</div>' +
-      st.dienste.map((d, i)=> '<div class="ar-dienst"><span>' + htmlEsc(d.text) + '<small>berechnet ' + aerzteZahlText(d.vorschlag) + ' € · <i data-ar-abw="' + i + '">' + htmlEsc(aerzteAbweichungText(d.betrag, d.vorschlag)) + '</i></small></span>' +
-        '<input type="text" inputmode="decimal" data-ar="' + i + '" value="' + aerzteZahlText(d.betrag) + '"> €</div>').join('') +
-      '<div class="ar-summe">Summe: <b id="arSumme">' + aerzteZahlText(summe) + ' €</b><br><small id="arAbw">berechnet ' +
-        aerzteZahlText(st.dienste.reduce((s, d)=> s + d.vorschlag, 0)) + ' € · ' + htmlEsc(aerzteAbweichungText(summe, st.dienste.reduce((s, d)=> s + d.vorschlag, 0))) + '</small></div></div>';
+      '<div class="fb-lbl">Dienste</div><ul class="ar-liste">' + st.dienste.map(d=> '<li>' + htmlEsc(d.text) + '</li>').join('') + '</ul>' +
+      '<div class="ar-dienst"><span>Auszahlung der KVBW gesamt<small>berechnet ' + aerzteZahlText(st.berechnet) + ' € (GKV inkl. Grundpauschale abzgl. KV-Gebühr)</small></span>' +
+        '<input type="text" inputmode="decimal" id="arSummeEin" value="' + aerzteZahlText(st.summe) + '"> €</div>' +
+      '<div class="ar-summe"><small id="arAbw">' + htmlEsc(aerzteAbweichungText(st.summe, st.berechnet)) + '</small></div></div>';
     const p = betaOverlay.ergebnis('Rechnung an ' + arzt, html, [{ label: 'Abbrechen', akt: 'nein' }, { label: alt ? 'Neu erstellen' : 'Rechnung erstellen', akt: 'ok', primaer: true }]);
-    const w = document.querySelector('.beta-overlay .fb-dialog');
-    if(w) w.querySelectorAll('[data-ar]').forEach(inp=> inp.oninput = ()=>{
-      let s = 0, soll = 0;
-      w.querySelectorAll('[data-ar]').forEach(x=>{
-        const i = +x.dataset.ar, n = aerzteZahl(x.value), v = st.dienste[i].vorschlag;
-        soll += v; if(!isNaN(n)) s += n;
-        const a = w.querySelector('[data-ar-abw="' + i + '"]'); if(a) a.textContent = isNaN(n) ? '' : aerzteAbweichungText(n, v);
-      });
-      const el = document.getElementById('arSumme'); if(el) el.textContent = aerzteZahlText(s) + ' €';
-      const ab = document.getElementById('arAbw'); if(ab) ab.textContent = 'berechnet ' + aerzteZahlText(soll) + ' € · ' + aerzteAbweichungText(s, soll);
-    });
+    const ein = document.getElementById('arSummeEin');
+    if(ein) ein.oninput = ()=>{ const n = aerzteZahl(ein.value); const a = document.getElementById('arAbw'); if(a) a.textContent = isNaN(n) ? '' : aerzteAbweichungText(n, st.berechnet); };
     const akt = await p;
     const wert = (id)=> String((document.getElementById(id) || {}).value || '').trim();
     st.vname = wert('arVname'); st.adr1 = wert('arAdr1'); st.adr2 = wert('arAdr2');
     st.kuerzel = wert('arKuerzel').toUpperCase(); st.renu = wert('arRenu'); st.datum = wert('arDatum');
-    let ok = true;
-    document.querySelectorAll('.beta-overlay [data-ar]').forEach(x=>{ const n = aerzteZahl(x.value); if(isNaN(n)) ok = false; else st.dienste[+x.dataset.ar].betrag = betaRund2(n); });
+    const n = aerzteZahl(wert('arSummeEin'));
     if(akt !== 'ok'){ betaOverlay.schliessen(); return null; }
     if(!st.vname){ fehler = 'Bitte den Namen des Empfängers eintragen.'; continue; }
     if(!/^[A-ZÄÖÜ]{1,4}$/.test(st.kuerzel)){ fehler = 'Kürzel bitte aus 1–4 Buchstaben (z.B. AH).'; continue; }
     if(!/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(st.datum)){ fehler = 'Datum bitte als TT.MM.JJJJ.'; continue; }
-    if(!ok){ fehler = 'Bitte alle Beträge als Zahl eintragen (z.B. 412,50).'; continue; }
+    if(isNaN(n)){ fehler = 'Bitte den Gesamtbetrag als Zahl eintragen (z.B. 1.412,50).'; continue; }
+    st.summe = betaRund2(n);
     st.alt = alt;
     return st;
   }
+}
+
+// eigene Arztdaten; fuer Arztrechnungen ggf. eigenes Konto (Einstellungen)
+function aerzteKontoAnwenden(arzt, ini){
+  const k = ['AERZTE_KONTOINHABER', 'AERZTE_BANKNAME', 'AERZTE_IBAN', 'AERZTE_BIC'];
+  if(!k.some(x=> String((ini || {})[x] || '').trim())) return arzt;
+  return Object.assign({}, arzt, { kontoinhaber: ini.AERZTE_KONTOINHABER || '', bank: ini.AERZTE_BANKNAME || '', iban: ini.AERZTE_IBAN || '', bic: ini.AERZTE_BIC || '' });
 }
 
 async function aerzteRechnungErstellen(arzt, quartalKey, bloecke){
@@ -10966,17 +11023,15 @@ async function aerzteRechnungErstellen(arzt, quartalKey, bloecke){
     const token = await msGraphTokenHolen();
     if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
     betaOverlay.schritt('Arztdaten und Vorlage …');
-    const { arzt: eigene } = await arztdatenLaden();
+    const { arzt: eigene0, ini } = await arztdatenLaden();
+    const eigene = aerzteKontoAnwenden(eigene0, ini);
     const vorlage = await graphDateiLaden(token, AERZTE_VORLAGE);
     const renu = st.renu || await aerzteNaechsteRenu(token, st.kuerzel);
-    const summe = betaRund2(st.dienste.reduce((s, d)=> s + d.betrag, 0));
     const datei = aerzteDateiName(renu);
-    const summeBerechnet = betaRund2(st.dienste.reduce((s, d)=> s + d.vorschlag, 0));
     betaOverlay.schritt('Word-Datei wird erstellt …');
     const blob = await aerzteDocxErzeugen(vorlage, { arzt: eigene, vname: st.vname, adr1: st.adr1, adr2: st.adr2, datum: st.datum, renu,
-      quartalText: aerzteQuartalText(quartalKey), dienste: st.dienste, summe });
+      quartalText: aerzteQuartalText(quartalKey), dienste: st.dienste, summe: st.summe });
     const { pdfItem } = await docxHochladenMitPdf(token, AERZTE_ORDNER, datei, blob, t=> betaOverlay.schritt(t));
-    // alte Fassung unter anderem Dateinamen entfernen (gleiche Nummer, z.B. geaenderter Name)
     if(st.alt && st.alt.datei && st.alt.datei !== datei){
       for(const end of ['.docx', '.pdf']){ try{ await gx(token, 'DELETE', msGraphPfadUrl(AERZTE_ORDNER + '/' + st.alt.datei + end)); }catch(e){} }
     }
@@ -10987,10 +11042,11 @@ async function aerzteRechnungErstellen(arzt, quartalKey, bloecke){
         .concat([{ arzt, vname: st.vname, adr1: st.adr1, adr2: st.adr2, kuerzel: st.kuerzel, am: jetzt }]);
       d.aerzteRechnungen = (d.aerzteRechnungen || []).filter(x=> x.renu !== renu && !(st.alt && x.renu === st.alt.renu))
         .concat([{ renu, arzt, quartal: quartalKey, datum: st.datum, vname: st.vname, adr1: st.adr1, adr2: st.adr2,
-                   dienste: st.dienste.map(x=> ({ text: x.text, betrag: x.betrag, berechnet: x.vorschlag })), summe, summeBerechnet, datei, pdfUrl: (pdfItem && pdfItem.webUrl) || '', am: jetzt }]);
+                   dienste: st.dienste.map(x=> ({ text: x.text })), summe: st.summe, summeBerechnet: st.berechnet, datei,
+                   bezahlt: (st.alt && st.alt.bezahlt) || '', pdfUrl: (pdfItem && pdfItem.webUrl) || '', am: jetzt }]);
     }).catch(()=>{});
     const a = await betaOverlay.ergebnis('Rechnung erstellt', '✓ <b>' + htmlEsc(renu) + '</b> an ' + htmlEsc(st.vname) + '<br><span class="beta-erg-klein">' +
-      aerzteZahlText(summe) + ' € · ' + st.dienste.length + ' Dienst' + (st.dienste.length === 1 ? '' : 'e') + ' · Word + PDF in „fertige Rechnungen Vertretungsärzte“</span>',
+      aerzteZahlText(st.summe) + ' € · ' + htmlEsc(aerzteAbweichungText(st.summe, st.berechnet)) + ' · Word + PDF als „' + htmlEsc(datei) + '“</span>',
       [{ label: 'Schließen', akt: 'zu' }, { label: 'PDF ansehen', akt: 'pdf', primaer: true }]);
     betaOverlay.schliessen();
     if(a === 'pdf' && pdfItem && pdfItem.webUrl) window.open(pdfItem.webUrl, '_blank');
@@ -10999,24 +11055,167 @@ async function aerzteRechnungErstellen(arzt, quartalKey, bloecke){
   }
 }
 
+async function aerzteRechnungLoeschen(r){
+  if(!await betaFrage('Rechnung ' + r.renu + ' an ' + (r.vname || r.arzt) + ' löschen?\n\nWord-Datei und PDF werden aus dem Ordner „fertige Rechnungen Vertretungsärzte“ entfernt.', 'Löschen', 'Abbrechen')) return false;
+  betaOverlay.zeigen('Rechnung löschen'); betaOverlay.fortschritt(null); betaOverlay.schritt('Dateien werden gelöscht …');
+  try{
+    const token = await msGraphTokenHolen();
+    if(r.datei) for(const end of ['.docx', '.pdf']){ try{ await gx(token, 'DELETE', msGraphPfadUrl(AERZTE_ORDNER + '/' + r.datei + end)); }catch(e){ if(e.status !== 404) throw e; } }
+    const jetzt = new Date().toISOString();
+    await aerzteDatenSichern((d)=>{ d.aerzteRechnungen = (d.aerzteRechnungen || []).map(x=> x.renu === r.renu ? Object.assign({}, x, { geloescht: true, am: jetzt }) : x); });
+    betaOverlay.schliessen();
+    return true;
+  }catch(e){ await betaOverlay.meldung(e.message || String(e), 'Nicht gelöscht'); return false; }
+}
+async function aerzteErhaltenUmschalten(r){
+  let neu = '';
+  if(r.bezahlt){ if(!await betaFrage('Zahlungseingang für ' + r.renu + ' zurücknehmen?', 'Zurücknehmen', 'Abbrechen')) return false; }
+  else neu = new Date().toISOString().slice(0, 10);
+  const jetzt = new Date().toISOString();
+  await aerzteDatenSichern((d)=>{ d.aerzteRechnungen = (d.aerzteRechnungen || []).map(x=> x.renu === r.renu ? Object.assign({}, x, { bezahlt: neu, am: jetzt }) : x); }).catch(()=>{});
+  return true;
+}
+
+// ---------- einmalig: bisherige Rechnungen im Ordner uebernehmen ----------
+// "AH-002.docx/.pdf" -> "002-AH.docx/.pdf"; aus der Word-Datei Empfaenger,
+// Adresse, Datum, Quartal und Summe auslesen (Adresse fuer die naechste
+// Rechnung, Rechnung erscheint beim Arzt in der Auswertung).
+async function aerzteAltUebernehmen(token, aerzteNamen){
+  try{ await betaEigeneAbgleichen(); }catch(e){}
+  const d0 = aerzteDaten();
+  if(d0.aerzteMigration === 'v1') return false;
+  const dateien = await ordnerDateien(token, AERZTE_ORDNER);
+  const gruppen = new Map();
+  dateien.forEach(it=>{
+    const m = /^([A-Za-zÄÖÜ]{1,4})-(\d+)(?:\s.*)?\.(docx|pdf)$/i.exec(it.name);
+    if(!m) return;
+    const renu = m[1].toUpperCase() + '-' + m[2];
+    const g = gruppen.get(renu) || {}; g[m[3].toLowerCase()] = it; gruppen.set(renu, g);
+  });
+  // auch eigene Rechnungen aus der ersten Fassung ("AH-003 Anette Holm Q3-2026")
+  const neueRechnungen = [], neueAdressen = [];
+  let bankNeu = null;
+  const vorhanden = new Map((d0.aerzteRechnungen || []).map(x=> [x.renu, x]));
+  const arztZu = (kuerzel, vname)=>{
+    const passt = aerzteNamen.filter(n=> aerzteKuerzel(n) === kuerzel);
+    if(passt.length === 1) return passt[0];
+    const nachname = (n)=> String(n).trim().split(/\s+/).pop().toLowerCase();
+    const p2 = aerzteNamen.filter(n=> String(vname || '').toLowerCase().indexOf(nachname(n)) >= 0);
+    if(p2.length === 1) return p2[0];
+    return String(vname || kuerzel).replace(/\b(Dr|med|Prof|Priv|Doz)\.?\s*/gi, '').trim();
+  };
+  for(const [renu, g] of gruppen){
+    const neuBasis = aerzteDateiName(renu);
+    let info = {};
+    if(g.docx){
+      try{
+        const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + g.docx.id + '/content', { headers: { Authorization: 'Bearer ' + token } });
+        if(r.ok) info = await aerzteAltLesen(await r.arrayBuffer());
+      }catch(e){}
+    }
+    for(const end of ['docx', 'pdf']){
+      const it = g[end]; if(!it) continue;
+      const ziel = neuBasis + '.' + end;
+      if(dateien.has(ziel.toLowerCase())) continue;
+      try{ await gx(token, 'PATCH', 'https://graph.microsoft.com/v1.0/me/drive/items/' + it.id, { name: ziel }); }catch(e){}
+    }
+    const kuerzel = renu.split('-')[0];
+    const arzt = arztZu(kuerzel, info.vname);
+    const am = (g.docx || g.pdf).lastModifiedDateTime || new Date().toISOString();
+    const alt = vorhanden.get(renu);
+    if(alt) neueRechnungen.push(Object.assign({}, alt, { datei: neuBasis, am: new Date().toISOString() }));
+    else neueRechnungen.push({ renu, arzt, quartal: info.quartal || '', datum: info.datum || '', vname: info.vname || '', adr1: info.adr1 || '', adr2: info.adr2 || '',
+      dienste: [], summe: info.summe != null ? info.summe : null, datei: neuBasis, importiert: true, am });
+    if(info.vname) neueAdressen.push({ arzt, vname: info.vname, adr1: info.adr1 || '', adr2: info.adr2 || '', kuerzel, am });
+    if(info.bank && (!bankNeu || String(am) > String(bankNeu.am))) bankNeu = Object.assign({ am }, info.bank);
+  }
+  await aerzteDatenSichern((d)=>{
+    const r = (d.aerzteRechnungen || []).filter(x=> !neueRechnungen.some(n=> n.renu === x.renu));
+    d.aerzteRechnungen = r.concat(neueRechnungen);
+    // Adresse: je Arzt die juengste; vorhandene (in der App gepflegte) haben Vorrang
+    const adr = d.aerzteAdressen || [];
+    neueAdressen.sort((a, b)=> String(a.am).localeCompare(String(b.am))).forEach(n=>{
+      const k = n.arzt.trim().toLowerCase(), i = adr.findIndex(x=> String(x.arzt || '').trim().toLowerCase() === k);
+      if(i < 0) adr.push(n); else if(adr[i].importiert && String(n.am) > String(adr[i].am)) adr[i] = Object.assign(n, { importiert: true });
+      if(i < 0) adr[adr.length - 1].importiert = true;
+    });
+    d.aerzteAdressen = adr;
+    d.aerzteMigration = 'v1';
+  });
+  // Konto fuer Arztrechnungen einmalig aus der juengsten bisherigen Rechnung
+  // vorbelegen (Einstellungen > Arztinfos), wenn dort noch nichts steht
+  if(bankNeu){
+    try{
+      const ini = await iniHerunterladen(token);
+      const w = ini.werte || {};
+      if(!['AERZTE_KONTOINHABER', 'AERZTE_BANKNAME', 'AERZTE_IBAN', 'AERZTE_BIC'].some(k=> String(w[k] || '').trim())){
+        await iniAenderungenSchreiben({ AERZTE_KONTOINHABER: bankNeu.kontoinhaber || '', AERZTE_BANKNAME: bankNeu.bank || '',
+          AERZTE_IBAN: bankNeu.iban || '', AERZTE_BIC: bankNeu.bic || '' }, w);
+        try{ iniCacheSpeichern(Object.assign({}, w, { AERZTE_KONTOINHABER: bankNeu.kontoinhaber || '', AERZTE_BANKNAME: bankNeu.bank || '', AERZTE_IBAN: bankNeu.iban || '', AERZTE_BIC: bankNeu.bic || '' })); }catch(e){}
+      }
+    }catch(e){}
+  }
+  return true;
+}
+// Empfaenger, Datum, Quartal und Summe aus einer bisherigen Rechnung
+async function aerzteAltLesen(buf){
+  const zip = await JSZip.loadAsync(buf);
+  const doc = await zip.file('word/document.xml').async('string');
+  const ergebnis = {};
+  const tab = (doc.match(/<w:tbl>[\s\S]*?<\/w:tbl>/) || [''])[0];
+  const zelle = (tab.match(/<w:tc>[\s\S]*?<\/w:tc>/) || [''])[0];
+  const zeilen = (zelle.match(RD_ABSATZ_RE) || []).map(p=> rdAbsatzText(p).trim()).filter(Boolean)
+    .filter(z=> !/^(privat)?rechnung$/i.test(z));
+  if(zeilen.length){ ergebnis.vname = zeilen[0]; ergebnis.adr1 = zeilen[1] || ''; ergebnis.adr2 = zeilen[2] || ''; }
+  const text = (doc.match(RD_ABSATZ_RE) || []).map(p=> rdAbsatzText(p)).join('\n');
+  const dm = /Datum:\s*(\d{1,2}\.\d{1,2}\.\d{2,4})/.exec(text); if(dm) ergebnis.datum = dm[1];
+  const qm = /(\d)\.\s*Quartal\w*\s*(\d{4})/i.exec(text);
+  if(qm) ergebnis.quartal = 'Quartal ' + qm[1] + ' / ' + qm[2];
+  else { const dd = /(\d{1,2})\.(\d{1,2})\.(\d{4})/.exec(text.slice(text.indexOf('Dienste'))); if(dd) ergebnis.quartal = 'Quartal ' + (Math.floor((+dd[2] - 1) / 3) + 1) + ' / ' + dd[3]; }
+  const sm = /SUMME:?\s*\n?\s*([\d.]+,\d{2})/i.exec(text); if(sm) ergebnis.summe = aerzteZahl(sm[1]);
+  // Bankverbindung aus der Fusszeile (Bankname/BIC/IBAN/Empfaenger)
+  for(const name of Object.keys(zip.files)){
+    if(!/^word\/footer\d+\.xml$/.test(name)) continue;
+    const absaetze = ((await zip.file(name).async('string')).match(RD_ABSATZ_RE) || []).map(p=> rdAbsatzText(p).trim()).filter(Boolean);
+    const alles = absaetze.join('\n');
+    const iban = /\b([A-Z]{2}\d{2}(?:\s?[A-Z0-9]{4}){3,7}(?:\s?[A-Z0-9]{1,3})?)\b/.exec(alles);
+    if(!iban) continue;
+    const bank = { iban: iban[1].replace(/\s+/g, ' ').trim() };
+    const bic = absaetze.map(z=> z.replace(/^BIC:\s*/i, '')).find(z=> /^[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?$/.test(z.replace(/\s/g, '')) && z.indexOf(bank.iban) < 0);
+    if(bic) bank.bic = bic.replace(/\s/g, '');
+    const em = /Empf(?:ä|ae)nger:\s*(.+)/i.exec(alles); if(em && !/ENAME/.test(em[1])) bank.kontoinhaber = em[1].trim();
+    const labels = /^(Bankname|BIC|IBAN|Empf(?:ä|ae)nger):?/i;
+    const bn = absaetze.map(z=> z.replace(/^Bankname:\s*/i, '')).find(z=> z && !labels.test(z) && z.indexOf(bank.iban) < 0 && z !== bank.bic && z !== bank.kontoinhaber && !/^[A-Z]{6}[A-Z0-9]{2}/.test(z));
+    if(bn) bank.bank = bn;
+    ergebnis.bank = bank;
+    break;
+  }
+  return ergebnis;
+}
+
 // Knoepfe in der Fahrtenbuch-Auswertung (je Arzt und Quartal)
 function aerzteKnoepfeEinfuegen(zielEl, bloecke, quartale){
   const karten = zielEl.querySelectorAll('.fahrdienst-arzt-karte');
+  const neuZeichnen = ()=>{ if(typeof fahrdienstAuswertungCache !== 'undefined' && fahrdienstAuswertungCache) fahrdienstAuswertungRendern(fahrdienstAuswertungCache); };
   let i = 0;
   quartale.forEach(q=> q.aerzte.forEach(a=>{
     const karte = karten[i++]; if(!karte) return;
     const bl = bloecke.filter(b=> b.quartalKey === q.quartal && b.arzt === a.arzt);
     const r = aerzteRechnungFinden(a.arzt, q.quartal);
     const box = document.createElement('div'); box.className = 'ar-knoepfe';
-    const soll = r ? (r.summeBerechnet != null ? r.summeBerechnet : bl.reduce((s, b)=> s + aerzteBetragVorschlag(b), 0)) : 0;
-    const abw = r ? betaRund2(r.summe - soll) : 0;
-    box.innerHTML = (r ? '<span class="ar-renu">Rechnung ' + htmlEsc(r.renu) + ' · ' + aerzteZahlText(r.summe) + ' €' +
-        '<small class="' + (Math.abs(abw) >= 0.005 ? 'ar-abw' : '') + '">berechnet ' + aerzteZahlText(soll) + ' € · ' + htmlEsc(aerzteAbweichungText(r.summe, soll)) + '</small></span>' : '') +
+    const soll = r ? (r.summeBerechnet != null ? r.summeBerechnet : betaRund2(bl.reduce((s, b)=> s + aerzteBetragVorschlag(b), 0))) : 0;
+    const abw = r && r.summe != null ? betaRund2(r.summe - soll) : 0;
+    box.innerHTML = (r ? '<span class="ar-renu">Rechnung ' + htmlEsc(r.renu) + (r.summe != null ? ' · ' + aerzteZahlText(r.summe) + ' €' : '') +
+        (r.summe != null ? '<small class="' + (Math.abs(abw) >= 0.005 ? 'ar-abw' : '') + '">berechnet ' + aerzteZahlText(soll) + ' € · ' + htmlEsc(aerzteAbweichungText(r.summe, soll)) + '</small>' : '') +
+        (r.bezahlt ? '<small class="ar-bezahlt">✓ erhalten am ' + htmlEsc(isoDe(r.bezahlt)) + '</small>' : '<small class="ar-offen">Zahlung offen</small>') + '</span>' : '') +
       (r && (r.datei || r.pdfUrl) ? '<button type="button" data-ar-pdf>PDF</button>' : '') +
-      '<button type="button" data-ar-neu>' + (r ? 'Bearbeiten' : 'Rechnung erstellen') + '</button>';
+      (r ? '<button type="button" data-ar-erh class="' + (r.bezahlt ? 'an' : '') + '">' + (r.bezahlt ? '✓ Erhalten' : 'Erhalten') + '</button>' : '') +
+      '<button type="button" data-ar-neu>' + (r ? 'Bearbeiten' : 'Rechnung erstellen') + '</button>' +
+      (r ? '<button type="button" data-ar-weg class="ar-weg" title="Rechnung löschen" aria-label="Rechnung löschen">🗑</button>' : '');
     karte.appendChild(box);
-    const neu = box.querySelector('[data-ar-neu]');
-    neu.onclick = async ()=>{ await aerzteRechnungErstellen(a.arzt, q.quartal, bl); if(typeof fahrdienstAuswertungCache !== 'undefined' && fahrdienstAuswertungCache) fahrdienstAuswertungRendern(fahrdienstAuswertungCache); };
+    box.querySelector('[data-ar-neu]').onclick = async ()=>{ await aerzteRechnungErstellen(a.arzt, q.quartal, bl); neuZeichnen(); };
+    const erh = box.querySelector('[data-ar-erh]'); if(erh) erh.onclick = async ()=>{ if(await aerzteErhaltenUmschalten(r)) neuZeichnen(); };
+    const weg = box.querySelector('[data-ar-weg]'); if(weg) weg.onclick = async ()=>{ if(await aerzteRechnungLoeschen(r)) neuZeichnen(); };
     // PDF aus dem gemeinsamen OneDrive-Ordner (egal ob am PC oder in der App erstellt)
     const pdf = box.querySelector('[data-ar-pdf]');
     if(pdf) pdf.onclick = async ()=>{
@@ -11031,6 +11230,12 @@ function aerzteKnoepfeEinfuegen(zielEl, bloecke, quartale){
       }
     };
   }));
+  // einmalig die bisherigen Rechnungen im Ordner uebernehmen
+  if(!aerzteKnoepfeEinfuegen.migration && aerzteDaten().aerzteMigration !== 'v1'){
+    aerzteKnoepfeEinfuegen.migration = true;
+    const namen = [...new Set(((typeof fahrdienstAuswertungCache !== 'undefined' && fahrdienstAuswertungCache && fahrdienstAuswertungCache.bloecke) || bloecke).map(b=> b.arzt).filter(Boolean))];
+    msGraphTokenHolen().then(token=> token && aerzteAltUebernehmen(token, namen)).then(neu=>{ if(neu) neuZeichnen(); }).catch(()=>{});
+  }
 }
 
 
