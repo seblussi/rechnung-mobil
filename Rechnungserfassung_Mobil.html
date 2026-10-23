@@ -221,6 +221,14 @@
   .profil-vor{font-size:12.5px; color:var(--text-schwach);}
   .fd-gp.fd-pseudo{background:#c0392b;}
   .beta-overlay-text{white-space:pre-line;}
+  .dienst-beginnen{display:block; width:100%; margin:10px 0 0; padding:10px; font-weight:600;}
+  .dienst-beginnen span{font-weight:400; font-size:12px; color:var(--text-schwach);}
+  .pseudo-hinweis{margin:10px 0 0; padding:10px 12px; border-radius:10px; border:1px solid var(--warnung-rand); background:var(--warnung-bg); color:var(--warnung-text); font-size:13.5px;}
+  .pseudo-zeile{display:flex; align-items:center; gap:6px; margin-top:8px;}
+  .pseudo-zeile span{flex:1;}
+  .pseudo-zeile button{width:auto; margin:0; padding:6px 10px; font-size:13px; border-radius:8px; border:1px solid var(--warnung-rand); background:var(--karte); color:var(--text);}
+  .pseudo-zeile button.weg{padding:6px 10px;}
+  #pseudoHinweis .gkv-ok, #pseudoHinweis .gkv-warn{margin-top:10px;}
   .gkv-pseudo-knopf{display:block; width:100%; margin:6px 0 4px; font-size:13.5px; padding:9px 10px;}
   .profil-block{border:1px solid var(--rand); border-left:5px solid var(--b-farbe,#888); border-radius:10px; padding:10px 12px 12px; margin:0 0 14px; background:color-mix(in srgb, var(--b-farbe,#888) 6%, transparent);}
   .profil-block.ls{--b-farbe:var(--ls-farbe);} .profil-block.pt{--b-farbe:var(--pt-farbe);} .profil-block.gkv{--b-farbe:#7d4e9e;}
@@ -3078,6 +3086,8 @@ function ansichtStart(){
       <button class="karte pt" id="kPT"><span class="icon">&#9877;</span>Privat-<br>rechnung</button>
       <button class="karte gkv" id="kGKV"><span class="icon">&#127973;</span>GKV-<br>Patient</button>
     </div>
+    <button type="button" class="btn-sekundaer dienst-beginnen" id="btnDienstBeginnen">&#9654; Dienst beginnen <span>(Pseudo-Fall 99999 gleich mit anlegen)</span></button>
+    <div id="pseudoHinweis"></div>
     <div class="uebersicht-reihe">
       <button class="btn-sekundaer btn-uebersicht" id="btnKorrigieren">Rechnungs&shy;verwaltung
         <span class="unter">${betaGesamtAktiv()
@@ -3132,6 +3142,8 @@ function ansichtStart(){
   document.getElementById('kLS').onclick = ()=> betaNeueRechnung('ls');
   document.getElementById('kPT').onclick = ()=> betaNeueRechnung('pt');
   document.getElementById('kGKV').onclick = ()=> ansichtGkv();
+  document.getElementById('btnDienstBeginnen').onclick = ()=> dienstBeginnen();
+  pseudoHinweisZeichnen(document.getElementById('pseudoHinweis'));
   document.getElementById('btnKorrigieren').onclick = ()=> betaGesamtAktiv() ? ansichtRechnungenGesamt() : ansichtKorrigieren();
   document.getElementById('btnOeffneUebersicht').onclick = ()=>{
     excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
@@ -10323,6 +10335,89 @@ async function gkvLuftlinie(adresse){
 }
 
 const GKV_PSEUDO_NAME = 'Pseudo-Fall 99999 (kein GKV-Patient)';
+const GKV_PSEUDO_KV_TEXT = 'In der KV-Abrechnung den Pseudo-Fall anlegen: AOK BW, „Ärztlicher Bereitschaftsdienst Arzt 1“, Notfallstr. 1, 12345 Notfallstadt, geb. 01.01.2020, GOP 99999, ICD Z02, Uhrzeit des Dienstbeginns (bei Privat-/BG-Patienten zusätzlich 99909 × Anzahl).';
+// Pseudo-Fall-Zeile ins Fahrtenbuch (legt bei Bedarf den Dienst an).
+// -> {ok, text} | null (abgebrochen)
+async function gkvPseudoEintragen(datum, zeit, opt){
+  opt = opt || {};
+  if(!opt.ohneFrage && !await betaFrage((opt.titel || 'Dienst ohne GKV-Patient ins Fahrtenbuch eintragen?') + '\n\nEs wird eine Merkzeile „Pseudo-Fall 99999“ mit 0 € angelegt; fehlt der Dienst noch, wird er angelegt. Die Förderung rechnet die App dann aus den Dienststunden.\n\nWichtig für die Förderung: ' + GKV_PSEUDO_KV_TEXT, 'Eintragen', 'Abbrechen')) return null;
+  if(msGraphStatus !== 'angemeldet') return { ok: false, text: 'Dafür ist die OneDrive-Anmeldung nötig.' };
+  betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
+  try{
+    const r = await fahrtenbuchEintragen({ kat: '', name: GKV_PSEUDO_NAME, datum, zeit, euro: 0, positionen: [] }, t=> betaOverlay.schritt(t));
+    betaOverlay.schliessen();
+    if(!r.uebersprungen) pseudoPruefungVergessen();
+    return { ok: !r.uebersprungen, text: fahrtenbuchErgebnisText(r) + (r.uebersprungen ? '' : ' · Pseudo-Fall 99999 auch in der KV-Abrechnung anlegen!') };
+  }catch(err){
+    betaOverlay.schliessen();
+    return { ok: false, text: '⚠ ' + (err.message || String(err)) };
+  }
+}
+
+// ---------- Erinnerung: Dienste ohne GKV-Patient und ohne Pseudo-Fall ----------
+// Liest beim Start (hoechstens alle 3 h) das aktuelle Jahresblatt und meldet
+// beendete Dienste der letzten 60 Tage, in denen weder ein GKV-Patient noch
+// eine Pseudo-Zeile steht. "Erledigt" traegt die Pseudo-Zeile nach.
+function pseudoPruefungVergessen(){ LS.set('pseudo_pruefung', null); }
+async function pseudoOffeneDienste(neu){
+  const c = LS.get('pseudo_pruefung', null);
+  if(!neu && c && Date.now() - c.am < 3 * 3600000) return c.offen;
+  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return c ? c.offen : [];
+  try{
+    const token = await msGraphTokenHolen(); if(!token) return c ? c.offen : [];
+    const basis = msGraphPfadUrl(MSGRAPH_PFAD_FAHRTENBUCH);
+    const info = await fahrdienstBlaetter(token, basis);
+    const jetzt = new Date(), grenze = Date.now() - 60 * 86400000, y = jetzt.getFullYear();
+    const blaetter = info.jahresModus ? info.blaetter.filter(n=> n === String(y) || (n === String(y - 1) && jetzt.getMonth() < 2)) : info.blaetter.slice(0, 1);
+    const weg = new Set(LS.get('pseudo_ignoriert', []));
+    const offen = [];
+    for(const blatt of blaetter){
+      const r = await gx(token, 'GET', fahrdienstBlattUrl(basis, blatt) + '/usedRange(valuesOnly=true)?$select=address,values');
+      const s = xlAdresseStart(r && r.address), werte = [];
+      for(let i = 1; i < s.zeile; i++) werte.push([]);
+      ((r && r.values) || []).forEach(z=> werte.push(new Array(s.spalte).fill('').concat(z)));
+      fahrdienstZeilenAuswerten(werte).bloecke.forEach(b=>{
+        const z = fbBlockZeitraum({ datumText: b.datumText, zeitRoh: b.zeitRoh });
+        if(!z || z.bis.getTime() > Date.now() || z.von.getTime() < grenze) return;
+        if(b.gkvRoh > 0 || b.pseudo) return;
+        const key = b.datumText + ' ' + String(b.zeitRoh || '');
+        if(weg.has(key)) return;
+        offen.push({ key, datumText: b.datumText, zeit: String(b.zeitRoh || ''), arzt: b.arzt || '', von: z.von.getTime() });
+      });
+    }
+    LS.set('pseudo_pruefung', { am: Date.now(), offen });
+    return offen;
+  }catch(e){ return c ? c.offen : []; }
+}
+async function pseudoHinweisZeichnen(el){
+  if(!el) return;
+  const offen = await pseudoOffeneDienste();
+  if(!document.body.contains(el)) return;
+  if(!offen.length){ el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="pseudo-hinweis"><b>Pseudo-Fall 99999 vergessen?</b> In diesen Diensten steht kein GKV-Patient – ohne Pseudo-Fall in der KV-Abrechnung keine Förderung:' +
+    offen.map(o=> '<div class="pseudo-zeile"><span>' + htmlEsc(o.datumText + ' · ' + o.zeit + ' Uhr' + (o.arzt ? ' · ' + o.arzt : '')) + '</span>' +
+      '<button type="button" data-pseudo-ok="' + htmlEsc(o.key) + '">In KV angelegt ✓</button><button type="button" class="weg" data-pseudo-weg="' + htmlEsc(o.key) + '" title="kein Dienst / nicht nötig">×</button></div>').join('') + '</div>';
+  el.querySelectorAll('[data-pseudo-ok]').forEach(b=> b.onclick = async ()=>{
+    const o = offen.find(x=> x.key === b.dataset.pseudoOk); if(!o) return;
+    const d = new Date(o.von);
+    const r = await gkvPseudoEintragen(new Date(d.getFullYear(), d.getMonth(), d.getDate()), zz2(d.getHours()) + ':' + zz2(d.getMinutes()), { ohneFrage: true });
+    if(r && !r.ok){ alertBanner ? alertBanner(r.text) : alert(r.text); }
+    pseudoPruefungVergessen(); pseudoHinweisZeichnen(el);
+  });
+  el.querySelectorAll('[data-pseudo-weg]').forEach(b=> b.onclick = ()=>{
+    const l = LS.get('pseudo_ignoriert', []); l.push(b.dataset.pseudoWeg); LS.set('pseudo_ignoriert', l.slice(-200));
+    const c = LS.get('pseudo_pruefung', null); if(c){ c.offen = c.offen.filter(x=> x.key !== b.dataset.pseudoWeg); LS.set('pseudo_pruefung', c); }
+    pseudoHinweisZeichnen(el);
+  });
+}
+// "Dienst beginnen" (Startseite): wie von der KVBW empfohlen gleich zu
+// Dienstbeginn den Pseudo-Fall anlegen -- dann kann er nicht vergessen werden
+async function dienstBeginnen(){
+  const j = new Date();
+  const r = await gkvPseudoEintragen(new Date(j.getFullYear(), j.getMonth(), j.getDate()), zz2(j.getHours()) + ':' + zz2(j.getMinutes()),
+    { titel: 'Dienst beginnen?\n\nDie KVBW empfiehlt, gleich zu Beginn jedes Dienstes den Pseudo-Fall anzulegen – er schadet auch nicht, wenn danach GKV-Patienten kommen.' });
+  if(r){ const el = document.getElementById('pseudoHinweis'); if(el){ el.innerHTML = '<div class="' + (r.ok ? 'gkv-ok' : 'gkv-warn') + '">' + htmlEsc(r.text) + '</div>'; } }
+}
 function gkvListeLaden(){
   gkvAltMigrieren();
   const d = LS.get(EIGENE_POS_CACHE, null) || {};
@@ -11035,24 +11130,12 @@ function ansichtGkv(bearbeitenId){
     el('gkvMeldung').innerHTML = '<div class="gkv-warn">' + htmlEsc(text) + '</div>';
     verlaufZeichnen();
   }
-  // Dienst ganz ohne GKV-Patient: Merkzeile "Pseudo-Fall 99999" mit 0 € --
-  // damit steht der Dienst im Fahrtenbuch (Foerderung, Arztrechnung)
+  // Dienst ganz ohne GKV-Patient: Merkzeile "Pseudo-Fall 99999" mit 0 €
   el('gkvPseudo').onclick = async ()=>{
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(el('gkvDatum').value || st.datum || '');
     if(!m){ el('gkvMeldung').innerHTML = '<div class="gkv-warn">Bitte oben Datum und Uhrzeit (Dienstbeginn) eintragen.</div>'; return; }
-    if(!await betaFrage('Dienst ohne GKV-Patient ins Fahrtenbuch eintragen?\n\nEs wird eine Merkzeile „Pseudo-Fall 99999“ mit 0 € angelegt (Datum/Uhrzeit von oben = Dienst). Die Förderung rechnet die App dann aus den Dienststunden.\n\nWichtig: Für die Förderung zusätzlich in der KV-Abrechnung den Pseudo-Fall anlegen (AOK BW, „Ärztlicher Bereitschaftsdienst Arzt 1“, Notfallstr. 1, 12345 Notfallstadt, geb. 01.01.2020, GOP 99999, ICD Z02, Uhrzeit Dienstbeginn; bei Privat-/BG-Patienten zusätzlich 99909 × Anzahl).', 'Eintragen', 'Abbrechen')) return;
-    if(msGraphStatus !== 'angemeldet'){ el('gkvMeldung').innerHTML = '<div class="gkv-warn">Dafür ist die OneDrive-Anmeldung nötig.</div>'; return; }
-    betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
-    try{
-      const r = await fahrtenbuchEintragen({ kat: '', name: GKV_PSEUDO_NAME, datum: new Date(+m[1], +m[2] - 1, +m[3]), zeit: el('gkvZeit').value || st.zeit, euro: 0, positionen: [] },
-        t=> betaOverlay.schritt(t));
-      betaOverlay.schliessen();
-      el('gkvMeldung').innerHTML = '<div class="' + (r.uebersprungen ? 'gkv-warn' : 'gkv-ok') + '">' + htmlEsc(fahrtenbuchErgebnisText(r)) +
-        (r.uebersprungen ? '' : ' · Pseudo-Fall 99999 auch in der KV-Abrechnung anlegen!') + '</div>';
-    }catch(err){
-      betaOverlay.schliessen();
-      el('gkvMeldung').innerHTML = '<div class="gkv-warn">⚠ ' + htmlEsc(err.message || String(err)) + '</div>';
-    }
+    const r = await gkvPseudoEintragen(new Date(+m[1], +m[2] - 1, +m[3]), el('gkvZeit').value || st.zeit);
+    if(r) el('gkvMeldung').innerHTML = '<div class="' + (r.ok ? 'gkv-ok' : 'gkv-warn') + '">' + htmlEsc(r.text) + '</div>';
   };
   zeichnen(); verlaufZeichnen(); werteZeichnen();
   // Profile/Liste von anderen Geraeten holen
@@ -11277,6 +11360,15 @@ async function nfpKarteOeffnen(opt){
     ov.querySelector('.nfp-ok').onclick = ()=> zu(wahl);
   });
 }
+
+// Klick in ein Uhrzeit-Feld oeffnet gleich die Auswahl (statt nur das
+// Stunden-Segment zu markieren und auf das Uhrsymbol zu warten)
+document.addEventListener('click', (ev)=>{
+  const t = ev.target;
+  if(t && t.tagName === 'INPUT' && t.type === 'time' && typeof t.showPicker === 'function'){
+    try{ t.showPicker(); }catch(_){}
+  }
+});
 
 // =====================================================================
 // Rechnungen an die vertretenen Aerzte (je Quartal, aus dem Fahrtenbuch)
