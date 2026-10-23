@@ -10327,6 +10327,25 @@ function gkvStartAdresse(){
   const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {};
   return String(w.GKV_STARTADRESSE || w.PRAXISADRESSE || (ladeEinstellungen() || {}).praxisadresse || '').trim();
 }
+// Suche in der Region zuerst (Ortenau und Umgebung), damit auch ein reiner
+// Ortsteil ohne Strasse/PLZ ("Riedle", "Ulm", "Bühl") den richtigen Ort trifft;
+// erst wenn dort nichts gefunden wird, deutschlandweit.
+const GKV_REGION_VIEWBOX = '7.55,48.80,8.55,48.15';
+async function gkvOrtSuchen(q){
+  q = String(q || '').trim(); if(!q) return null;
+  const basis = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&countrycodes=de&q=' + encodeURIComponent(q);
+  for(const zusatz of ['&viewbox=' + GKV_REGION_VIEWBOX + '&bounded=1', '']){
+    const r = await fetch(basis + zusatz, { headers: { 'Accept': 'application/json' } });
+    const d = await r.json();
+    if(d && d.length){
+      const a = d[0].address || {};
+      const ort = a.village || a.town || a.city || a.hamlet || a.suburb || a.municipality || '';
+      const teil = (a.suburb || a.hamlet || a.village) && (a.town || a.city) && (a.suburb || a.hamlet || a.village) !== (a.town || a.city) ? (a.suburb || a.hamlet || a.village) + ', ' + (a.town || a.city) : ort;
+      return { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon), plz: a.postcode || '', ort, gefunden: [a.road ? a.road + (a.house_number ? ' ' + a.house_number : '') : '', [a.postcode, teil].filter(Boolean).join(' ')].filter(Boolean).join(', ') };
+    }
+  }
+  return null;
+}
 // Adresse als "Strasse, PLZ Ort" <-> zwei Felder
 function gkvAdrTeile(a){
   a = String(a || '').trim(); const i = a.lastIndexOf(',');
@@ -10350,16 +10369,17 @@ async function gkvPlzOrtErgaenzen(strFeld, feld, infoEl){
   }
   setzeInfo('PLZ wird gesucht …');
   const s = String((strFeld && strFeld.value) || '').trim();
-  const p = await plzErmitteln((s ? s + ', ' : '') + ort);
+  let p = null;
+  try{ const g = await gkvOrtSuchen((s ? s + ', ' : '') + ort); p = g ? g.plz : ''; }catch(_){ p = null; }
   if(String(feld.value).trim() !== eingabe) return;
   if(p){ feld.value = p + ' ' + ort; setzeInfo(''); feld.dispatchEvent(new Event('input')); }
-  else setzeInfo(p === null ? 'Keine Verbindung – PLZ bitte selbst ergänzen.' : 'Zu „' + ort + '“ wurde keine PLZ gefunden.');
+  else setzeInfo(p === null ? 'Keine Verbindung – PLZ bitte selbst ergänzen.' : '');   // reiner Ort ohne eindeutige PLZ: Suche klappt trotzdem
 }
 function gkvStufeFuerKm(km){ return km <= 2 ? '2' : km <= 5 ? '5' : km <= 10 ? '10' : km <= 20 ? '10+' : km <= 30 ? '20+' : km <= 50 ? '30+' : '50+'; }
 async function gkvLuftlinie(adresse){
   const startAdr = gkvStartAdresse();
   try{
-    const z = await geocode(adresse);
+    const z = await gkvOrtSuchen(adresse);
     if(!z) return { fehler: 'Adresse nicht gefunden – bitte prüfen oder die Stufe der Wegepauschale unten von Hand wählen.' };
     if(!startAdr) return { km: null, ziel: z, start: '' };
     let s = LS.get('gkv_start_geo', null);
@@ -11078,7 +11098,7 @@ function ansichtGkv(bearbeitenId){
     // Vorrang hat die Wegegeld-Karte (Zonen ab NFP Offenburg); ausserhalb der Karte die Luftlinie
     const kp = nfpGeoZuPixel(r.ziel.lat, r.ziel.lon), kb = nfpImBild(kp) ? nfpBewertung(kp) : null;
     st.kmGeo = r.ziel;
-    const llText = r.km == null ? htmlEsc(nfpLuftlinieText(r.ziel, kp)) : 'Luftlinie <b>' + nfpKmText(r.km) + ' km</b> ab ' + htmlEsc(r.start);
+    const llText = (r.ziel.gefunden ? 'gefunden: ' + htmlEsc(r.ziel.gefunden) + ' · ' : '') + (r.km == null ? htmlEsc(nfpLuftlinieText(r.ziel, kp)) : 'Luftlinie <b>' + nfpKmText(r.km) + ' km</b> ab ' + htmlEsc(r.start));
     if(kb && (kb.quelle === 'karte' || r.km == null)){
       // mehr als 50 km Luftlinie: 4x
       const stufe = (r.km != null && r.km > 50) ? '50+' : kb.stufe;
@@ -11378,7 +11398,7 @@ async function nfpKarteOeffnen(opt){
     if(!a){ info.textContent = 'Bitte eine Adresse eintragen.'; return; }
     info.textContent = 'Adresse wird gesucht …';
     let g = null;
-    try{ g = await geocode(a); }catch(_){ info.textContent = 'Keine Verbindung zum Kartendienst – bitte auf die Einsatzstelle tippen.'; return; }
+    try{ g = await gkvOrtSuchen(a); }catch(_){ info.textContent = 'Keine Verbindung zum Kartendienst – bitte auf die Einsatzstelle tippen.'; return; }
     if(!g){ info.textContent = 'Adresse nicht gefunden – bitte prüfen oder auf die Einsatzstelle tippen.'; return; }
     const p = nfpGeoZuPixel(g.lat, g.lon); punkt('nfp-adr', p);
     if(!nfpImBild(p)){
@@ -11387,7 +11407,7 @@ async function nfpKarteOeffnen(opt){
       info.innerHTML = 'Adresse liegt außerhalb der Karte' + (wahl ? ' → nach Luftlinie (' + htmlEsc(nfpKmText(km)) + ' km): <b>' + htmlEsc(nfpStufeLabel(wahl.stufe)) + '</b>' : '.');
       ov.querySelector('.nfp-ok').disabled = !wahl; return;
     }
-    waehlen(p, 'Adresse', g, a); zentrieren(p);
+    waehlen(p, 'Adresse' + (g.gefunden ? ' (' + g.gefunden + ')' : ''), g, a); zentrieren(p);
   };
   ov.querySelector('.nfp-such-knopf').onclick = suchen;
   ov.querySelector('#nfpPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); suchen(); } };
