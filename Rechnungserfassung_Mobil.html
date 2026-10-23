@@ -219,6 +219,16 @@
   .profil-name{font-weight:600;}
   .profil-aktiv{font-size:11px; font-weight:700; color:#fff; background:#2f6fed; border-radius:4px; padding:0 5px; margin-left:4px;}
   .profil-vor{font-size:12.5px; color:var(--text-schwach);}
+  .fd-gp.fd-pseudo{background:#c0392b;}
+  .profil-block{border:1px solid var(--rand); border-left:5px solid var(--b-farbe,#888); border-radius:10px; padding:10px 12px 12px; margin:0 0 14px; background:color-mix(in srgb, var(--b-farbe,#888) 6%, transparent);}
+  .profil-block.ls{--b-farbe:var(--ls-farbe);} .profil-block.pt{--b-farbe:var(--pt-farbe);} .profil-block.gkv{--b-farbe:#7d4e9e;}
+  .profil-block-kopf{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; margin-bottom:8px; color:var(--b-farbe);}
+  .profil-block-marke{display:inline-block; min-width:34px; text-align:center; font-size:11.5px; font-weight:800; color:#fff; background:var(--b-farbe); border-radius:5px; padding:2px 6px; letter-spacing:.5px;}
+  .gkv-pe-liste{display:flex; flex-direction:column; gap:4px; max-height:52vh; overflow-y:auto;}
+  .gkv-pe-zeile{display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid var(--rand); border-radius:8px;}
+  .gkv-pe-zeile.an{border-color:#7d4e9e; box-shadow:inset 4px 0 0 #7d4e9e;}
+  .gkv-pe-zeile label{flex:1; display:flex; gap:8px; align-items:flex-start; font-size:13.5px; margin:0;}
+  .gkv-pe-anz{width:56px; padding:4px 6px;} .gkv-pe-stufe{padding:4px 6px; max-width:120px;}
   .profil-auswahl{max-height:46vh; overflow:auto; border:1px solid var(--rand); border-radius:8px; padding:4px 8px;}
   .profil-pos{display:flex; gap:8px; align-items:flex-start; padding:6px 0; border-bottom:1px solid var(--rand); font-size:13.5px;}
   .profil-pos:last-child{border-bottom:none;}
@@ -266,6 +276,7 @@
   .fd-gp{display:inline-block; margin-left:4px; font-size:10px; font-weight:700; color:#fff; background:#b9770e; border-radius:4px; padding:0 4px; vertical-align:1px;}
   .luft-start-liste{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
   .luft-start-liste:empty{display:none;}
+  .luft-start-titel{font-size:12px; color:var(--text-schwach); align-self:center; margin-right:2px;}
   .luft-start-chip{display:inline-flex; align-items:stretch; border:1px solid var(--rand); border-radius:16px; overflow:hidden; max-width:100%;}
   .luft-start-chip button{width:auto; margin:0; padding:5px 10px; border:none; background:var(--karte); color:var(--text); font-size:12.5px; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px;}
   .luft-start-chip.standard button{color:#2f6fed; font-weight:600;}
@@ -402,6 +413,28 @@
   .gkv-feld{display:block; font-size:12.5px; color:var(--text-schwach); margin-bottom:8px; flex:1; min-width:0;}
   .gkv-feld input{display:block; width:100%; box-sizing:border-box; margin-top:3px; font:inherit; font-size:16px; padding:9px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
   .gkv-feld input.pflichtfeld-fehlt{border:2px solid var(--fehler, #c0392b);}
+  .gkv-optional{font-size:11.5px;}
+  .gkv-adr-zeile{display:flex; gap:6px; align-items:stretch; margin-top:3px;}
+  .gkv-adr-zeile input{margin-top:0 !important; flex:1;}
+  .gkv-adr-zeile button{white-space:nowrap; margin:0; padding:0 12px;}
+  .gkv-km-fehler{color:#b9770e;}
+  .nfp-overlay{position:fixed; inset:0; z-index:3000; background:var(--hintergrund,#fff); display:flex; flex-direction:column;}
+  .nfp-kopf{display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid var(--rand);}
+  .nfp-zu{width:auto; margin:0; padding:2px 12px; font-size:24px; background:none; border:none; color:var(--text);}
+  .nfp-hinweis{font-size:12.5px; padding:8px 14px; background:#fff4e0; color:#7a4b00;}
+  .nfp-scroll{flex:1; overflow:auto; -webkit-overflow-scrolling:touch; background:#ddd; touch-action:pan-x pan-y pinch-zoom;}
+  .nfp-flaeche{position:relative; width:100%; cursor:crosshair;}
+  .nfp-flaeche img{display:block; width:100%; height:auto; image-rendering:auto; user-select:none;}
+  .nfp-punkt{position:absolute; width:18px; height:18px; margin:-9px 0 0 -9px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 2px #000, 0 2px 6px rgba(0,0,0,.5); pointer-events:none;}
+  .nfp-wahl{background:#e0242b; width:22px; height:22px; margin:-11px 0 0 -11px;}
+  .nfp-gps{background:#1a73e8;}
+  .nfp-adr{background:#222;}
+  .nfp-fuss{padding:10px 14px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid var(--rand); background:var(--karte);}
+  .nfp-info{font-size:14px; margin-bottom:8px; min-height:2.6em;}
+  .nfp-knoepfe{display:flex; gap:6px;}
+  .nfp-knoepfe button{width:auto; margin:0; padding:8px 12px;}
+  .nfp-knoepfe .nfp-ok{margin-left:auto;}
+  body.nfp-offen{overflow:hidden;}
   .gkv-zeile{display:flex; gap:10px;}
   .gkv-zeitinfo{font-size:12px; color:var(--text-schwach);}
   .gkv-pos{position:relative; background:var(--karte); border:1px solid var(--rand); border-radius:10px; margin-bottom:6px; padding:8px 34px 8px 10px;}
@@ -1813,19 +1846,23 @@ function fahrdienstZeilenAuswerten(zeilen){
         else gkv += wert;
       }
     }
-    // Grundpauschale: GKV-Anteil mindestens Stunden x 25 € (werktags) bzw.
-    // x 50 € (Samstag, Sonntag, Feiertag) -- nach dem Tag des Dienstbeginns
-    const satz = fahrdienstPauschaleSatz(r[COL_B]);
+    // Foerderung (Mindesthonorar): GKV-Anteil mindestens Stunden x 21,43 €
+    // (Fahrdienst Mo-Fr, 300 € je 14 h) bzw. x 50 € (Sa, So, Feiertag,
+    // 24.12., 31.12.) -- nach dem Tag des Dienstbeginns; am 24.12./31.12.
+    // zusaetzlich 500 € je 24 h
+    const satz = fahrdienstPauschaleSatz(r[COL_B]), satzFormel = fahrdienstSatzFormel(r[COL_B]), zusatz = fahrdienstZusatzSatz(r[COL_B]);
     const gkvRoh = gkv;
     const pauschale = dienststunden > 0 && dienststunden * satz > gkvRoh + 0.005;
-    if(pauschale){ gkv = dienststunden * satz; gesamt = gkv + ls + pt; }
+    if(pauschale){ gkv = dienststunden * satz; }
+    if(zusatz && dienststunden > 0) gkv += dienststunden * zusatz;
+    gesamt = gkv + ls + pt;
     const stundenlohn = dienststunden ? gesamt/dienststunden : 0;
     const zeitLabel = zeitInfo.label;
 
     bloecke.push({
       quartal, quartalKey, datumText, zeitLabel,
       arzt, gesamt, stundenlohn, gkv, ls, pt,
-      gkvRoh, pauschale, satz, satzGrund: fahrdienstSatzGrund(r[COL_B]), dienststunden,
+      gkvRoh, pauschale, satz, satzFormel, zusatz, satzGrund: fahrdienstSatzGrund(r[COL_B]), dienststunden,
       zeileStart: blockStart + 1, zeileEnde: blockEnde + 1, zeitRoh: r[COL_C]
     });
 
@@ -1856,7 +1893,7 @@ let fahrdienstAuswertungCache = null;
 async function ansichtFahrdienstAuswertung(){
   setzeTitel('Fahrdienst-Auswertung', ansichtStart);
   app.innerHTML = `
-    <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Grundpauschale (GKV-Anteil mindestens 25 €/h werktags, 50 €/h an Wochenenden und Feiertagen).</div>
+    <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Förderung der KVBW greift (GKV-Anteil mindestens 21,43 €/h im Fahrdienst Mo–Fr = 300 € je 14-h-Dienst, 50 €/h an Wochenenden, Feiertagen, 24.12. und 31.12.).</div>
     <div style="display:flex; gap:8px; margin-bottom:12px;">
       <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="flex:1; margin-bottom:0;">Neu laden</button>
       <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">Fahrtenbuch öffnen</button>
@@ -1924,7 +1961,7 @@ function fahrdienstAuswertungRendernBasis(daten){
     '<th>Datum</th><th>Arzt</th><th>Zeit</th><th>Gesamt</th><th>Std.-Lohn</th><th>gesetzl.</th><th>LS+PT</th><th>LS</th><th>PT</th></tr>' +
     daten.bloecke.map(b=>`<tr>
       <td>${b.datumText}</td><td>${b.arzt}</td><td>${b.zeitLabel}</td>
-      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}${b.pauschale ? '<span class="fd-gp" title="Grundpauschale ' + b.satz + ' €/h (' + b.satzGrund + ') statt ' + euro(b.gkvRoh) + '">GP</span>' : ''}</td>
+      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}${b.pauschale ? '<span class="fd-gp" title="Förderung ' + fahrdienstSatzText(b.satz) + ' €/h (' + b.satzGrund + ') statt ' + euro(b.gkvRoh) + '">GP</span>' : ''}${b.zusatz ? '<span class="fd-gp" title="Zusatzförderung 24.12./31.12.: 500 € je 24 h">+500</span>' : ''}${!(b.gkvRoh > 0) ? '<span class="fd-gp fd-pseudo" title="Kein GKV-Fall in diesem Dienst: Für die Förderung muss ein Pseudo-Abrechnungsfall (GOP 99999, ICD Z02, Uhrzeit Dienstbeginn) angelegt werden.">99999?</span>' : ''}</td>
       <td>${euro(b.ls+b.pt)}</td><td>${euro(b.ls)}</td><td>${euro(b.pt)}</td>
     </tr>`).join('') + '</table></div></div>';
 
@@ -3274,7 +3311,7 @@ function ansichtLuftlinienTool(){
     const eL = ladeEinstellungen();
     const liste = (eL.luftStartAdressen || []).filter(a=> a && a !== eL.praxisadresse);
     const vonJetzt = document.getElementById('txtLuftVon').value.trim();
-    el.innerHTML = (eL.praxisadresse && vonJetzt !== eL.praxisadresse
+    el.innerHTML = ((eL.praxisadresse && vonJetzt !== eL.praxisadresse) || liste.length ? '<span class="luft-start-titel">Zuletzt genutzt:</span>' : '') + (eL.praxisadresse && vonJetzt !== eL.praxisadresse
         ? `<span class="luft-start-chip standard"><button type="button" data-adr="${htmlEsc(eL.praxisadresse)}">&#8962; ${htmlEsc(eL.praxisadresse)}</button></span>` : '') +
       liste.map(a=> `<span class="luft-start-chip"><button type="button" data-adr="${htmlEsc(a)}">${htmlEsc(a)}</button><button type="button" class="weg" data-weg="${htmlEsc(a)}" title="Adresse entfernen">&times;</button></span>`).join('');
     el.querySelectorAll('[data-adr]').forEach(b=> b.onclick = ()=>{ document.getElementById('txtLuftVon').value = b.dataset.adr; startListeZeichnen(); });
@@ -3359,7 +3396,13 @@ function ansichtLuftlinienTool(){
       }catch(routenErr){
         zeile2 = `<span class="luft-ergebnis-hinweis">Fahrstrecke konnte nicht berechnet werden.${keinInternetHinweisText()} Nur die Luftlinie steht zur Verfügung.</span>`;
       }
-      zeigeErgebnis(`<div class="luft-ergebnis-zeile luft-von-bis">${htmlEsc(vonAdresse)} &rarr; ${htmlEsc(adresse)}</div>
+      // Wegegeld-Karte NFP Offenburg (Zone ab NFP, unabhaengig von der Startadresse)
+      let kartenZeile = '';
+      try{
+        const kp = nfpGeoZuPixel(ziel.lat, ziel.lon);
+        if(nfpImBild(kp)){ const kb = nfpBewertung(kp); kartenZeile = `<div class="luft-ergebnis-zeile"><strong>Wegegeld-Karte NFP:</strong> ${htmlEsc(kb.text)} → ${htmlEsc(nfpStufeLabel(kb.stufe))}</div>`; }
+      }catch(_){}
+      zeigeErgebnis(`<div class="luft-ergebnis-zeile luft-von-bis">Von ${htmlEsc(vonAdresse)}<br>bis ${htmlEsc(adresse)}</div>${kartenZeile}
         <div class="luft-ergebnis-zeile"><strong>Luftlinie (einfach):</strong> ${luft.toFixed(1).replace('.',',')} km</div>
         <div class="luft-ergebnis-zeile">${zeile2}</div>`, false);
     }catch(err){
@@ -5669,6 +5712,7 @@ const INI_FELDER = [
   {k:'AERZTE_BANKNAME',  typ:'text', label:'Bank'},
   {k:'AERZTE_IBAN',      typ:'text', label:'IBAN'},
   {k:'AERZTE_BIC',       typ:'text', label:'BIC'},
+  {k:'GKV_STARTADRESSE', typ:'text', label:'Ausgangspunkt für die Luftlinie (leer = Praxisadresse)'},
   {k:'BRIEF_AKTIVIERT',  typ:'bool', label:'Briefversand über LetterXpress aktiviert'},
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
@@ -5679,6 +5723,7 @@ const INI_GRUPPEN = [
   {titel:'Arzt', keys:['ARZTNAME','ARZTFUNKTION','ARZTADRESSE1','ARZTADRESSE2','ARZTEMAIL']},
   {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTBANKNAME','ARZTIBAN','ARZTBIC']},
   {titel:'Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)', keys:['AERZTE_KONTOINHABER','AERZTE_BANKNAME','AERZTE_IBAN','AERZTE_BIC']},
+  {titel:'GKV-Patient: Wegepauschale', keys:['GKV_STARTADRESSE']},
   {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_TESTMODUS']}
 ];
 
@@ -9324,25 +9369,32 @@ function betaProfilKurz(art, p){
   return t.join(' · ');
 }
 function betaProfileHtml(){
-  const block = (art, titel)=> `
-      <div class="sync-unter-titel">${titel}</div>
-      <div class="profil-liste" data-art="${art}">${betaProfile(art).map(p=> `
+  const zeilen = (art)=> betaProfile(art).map(p=> `
         <button type="button" class="profil-zeile" data-art="${art}" data-id="${htmlEsc(p.id)}">
           <span class="profil-name">${htmlEsc(p.name)}${betaProfilAktivId(art) === p.id ? ' <span class="profil-aktiv">aktiv</span>' : ''}</span>
           <span class="profil-vor">${htmlEsc(betaProfilKurz(art, p))}</span>
-        </button>`).join('')}
-      </div>
-      <button type="button" class="btn-sekundaer profil-neu" data-art="${art}" style="margin-top:6px;">+ Neues Profil</button>`;
+        </button>`).join('');
+  const zeilenGkv = ()=> (typeof gkvProfileLaden === 'function' ? gkvProfileLaden() : []).map(p=> `
+        <button type="button" class="profil-zeile" data-gkvprofil="${htmlEsc(p.id)}">
+          <span class="profil-name">${htmlEsc(p.name)}</span>
+          <span class="profil-vor">${htmlEsc(gkvProfilKurz(p))}</span>
+        </button>`).join('');
+  const block = (art, titel, kurz, liste, neuAttr)=> `
+      <div class="profil-block ${art}">
+        <div class="profil-block-kopf"><span class="profil-block-marke">${kurz}</span>${titel}</div>
+        <div class="profil-liste" data-art="${art}">${liste || '<div class="beta-erg-klein">noch keine Profile</div>'}</div>
+        <button type="button" class="btn-sekundaer ${neuAttr}" data-art="${art}" style="margin-top:8px;">+ Neues Profil</button>
+      </div>`;
   return `
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Profile (Rechnungspositionen)</div>
       <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
         Ein Profil legt fest, welche Positionen in der Liste stehen, welche bei einer neuen Rechnung schon angehakt sind und
         mit welchem Faktor/welcher Begründung. Wechseln geht oben in den Rechnungspositionen; das zuletzt gewählte bleibt aktiv.
-        Zeitzuschläge kommen automatisch dazu, Wegegeld nur bei einem Besuch.</div>
-      ${block('pt', 'Privatrechnung')}
-      <div class="sync-trenner"></div>
-      ${block('ls', 'Leichenschau')}
+        Zeitzuschläge kommen automatisch dazu, Wegegeld nur bei einem Besuch. GKV-Profile sind die Schnellwahl im GKV-Patient.</div>
+      ${block('ls', 'Leichenschau', 'LS', zeilen('ls'), 'profil-neu')}
+      ${block('pt', 'Privatrechnung', 'PT', zeilen('pt'), 'profil-neu')}
+      ${block('gkv', 'GKV-Patient (EBM)', 'GKV', zeilenGkv(), 'gkv-profil-neu')}
     </div>`;
 }
 async function betaProfilBearbeiten(art, id){
@@ -9485,6 +9537,8 @@ async function betaProfilBearbeiten(art, id){
 function betaProfileWiring(neuZeichnen){
   document.querySelectorAll('.profil-zeile').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, b.dataset.id)) neuZeichnen(); });
   document.querySelectorAll('.profil-neu').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, null)) neuZeichnen(); });
+  document.querySelectorAll('[data-gkvprofil]').forEach(b=> b.onclick = async ()=>{ if(await gkvProfilBearbeiten(b.dataset.gkvprofil)) neuZeichnen(); });
+  document.querySelectorAll('.gkv-profil-neu').forEach(b=> b.onclick = async ()=>{ if(await gkvProfilBearbeiten(null)) neuZeichnen(); });
 }
 
 // ---------- Datenschutz & Haftung (Einstellungen, spaeter Einrichtung) ----------
@@ -9524,8 +9578,10 @@ function betaHaftungHtml(){
 // Je Diensttag (letzte Zeile des Blocks):
 //   AH = Gesamt (GKV inkl. Grundpauschale + LS + PT)
 //   AI = Stundenlohn (AH / Dienststunden)
-//   AJ = GKV-Anteil – mindestens Grundpauschale (Stunden x 25 € werktags,
-//        x 50 € an Samstagen, Sonn- und Feiertagen)
+//   AJ = GKV-Anteil – mindestens Förderung der KVBW (Statut NFD-O zu § 10):
+//        Fahrdienst Mo–Fr 300 € je 14-h-Dienst = 21,43 €/h (stundengenau),
+//        Sa/So/Feiertag/24.12./31.12. 50 €/h; am 24.12./31.12. zusätzlich
+//        500 € je 24 h (anteilig)
 //   AK = LS + PT, AL = LS, AM = PT
 // Je Quartal (letzter Diensttag): AN = Summe GKV, AO = abzgl. Gebühr,
 //   AQ = Abweichung zur manuell eingetragenen Auszahlung in AP.
@@ -9537,8 +9593,12 @@ const FAHRDIENST_EURO_ZEILE_ALT = { '01212': 24.16, '01216': 17.35, '01218': 21.
   '01440': 43.62, '40190': 14.71, '40224': 12.01, '40222': 8.41, '40220': 4.2, '40192': 20.21, '40230': 18.02, '40228': 13.21,
   '40226': 8.41, '01413': 13.14, '01210': 14.87, '01214': 6.19, '01223': 15.86, '01220': 127.26, '02100': 8.30, '02300': 8.43,
   '02301': 16.48, '02302': 28.50, '02323': 8.43, '32025': 1.6, '32033': 0.5 };
-const FAHRDIENST_PAUSCHALE_WERKTAG = 25;
+// Mindesthonorar (Foerderung) je Stunde: Fahrdienst Mo-Fr 300 EUR je 14-h-
+// Dienst (18-8 Uhr), Sa/So/Feiertage/24.12./31.12. 50 EUR/h
+const FAHRDIENST_PAUSCHALE_WERKTAG = 300 / 14;
+const FAHRDIENST_PAUSCHALE_WERKTAG_FORMEL = '300/14';
 const FAHRDIENST_PAUSCHALE_WOCHENENDE = 50;
+const FAHRDIENST_ZUSATZ_2412_3112 = 500 / 24;   // zusaetzlich, unabhaengig vom Honorar
 
 function fahrdienstDatumAusWert(wert){
   const n = Number(wert);
@@ -9551,17 +9611,25 @@ function fahrdienstDatumAusWert(wert){
   return null;
 }
 // Stundensatz der Grundpauschale nach dem Tag des Dienstbeginns
+function fahrdienstSilvesterHeiligabend(d){ return !!d && d.getMonth() === 11 && (d.getDate() === 24 || d.getDate() === 31); }
+function fahrdienstWochenendSatz(d){ return !!d && (d.getDay() === 0 || d.getDay() === 6 || !!istFeiertagBW(d) || fahrdienstSilvesterHeiligabend(d)); }
 function fahrdienstPauschaleSatz(datumWert){
   const d = fahrdienstDatumAusWert(datumWert);
-  if(!d) return FAHRDIENST_PAUSCHALE_WERKTAG;
-  const wt = d.getDay();
-  return (wt === 0 || wt === 6 || istFeiertagBW(d)) ? FAHRDIENST_PAUSCHALE_WOCHENENDE : FAHRDIENST_PAUSCHALE_WERKTAG;
+  return fahrdienstWochenendSatz(d) ? FAHRDIENST_PAUSCHALE_WOCHENENDE : FAHRDIENST_PAUSCHALE_WERKTAG;
 }
+// dieselbe Zahl als Excel-Ausdruck (300/14 exakt statt gerundet)
+function fahrdienstSatzFormel(datumWert){
+  return fahrdienstWochenendSatz(fahrdienstDatumAusWert(datumWert)) ? String(FAHRDIENST_PAUSCHALE_WOCHENENDE) : FAHRDIENST_PAUSCHALE_WERKTAG_FORMEL;
+}
+// Zusatzfoerderung 24.12./31.12. je Stunde (sonst 0)
+function fahrdienstZusatzSatz(datumWert){ return fahrdienstSilvesterHeiligabend(fahrdienstDatumAusWert(datumWert)) ? FAHRDIENST_ZUSATZ_2412_3112 : 0; }
+function fahrdienstSatzText(satz){ return String(Math.round(satz * 100) / 100).replace('.', ','); }
 function fahrdienstSatzGrund(datumWert){
   const d = fahrdienstDatumAusWert(datumWert);
   if(!d) return '';
+  if(fahrdienstSilvesterHeiligabend(d)) return d.getDate() === 24 ? 'Heiligabend' : 'Silvester';
   const f = istFeiertagBW(d);
-  return f ? f : d.getDay() === 0 ? 'Sonntag' : d.getDay() === 6 ? 'Samstag' : 'Werktag';
+  return f ? f : d.getDay() === 0 ? 'Sonntag' : d.getDay() === 6 ? 'Samstag' : 'Fahrdienst Mo–Fr';
 }
 
 // Excel-Ausdruck fuer die Dienststunden aus Spalte C der Blockstart-Zeile
@@ -9586,7 +9654,8 @@ function fahrdienstBlockFormeln(b){
   return [
     '=AJ' + R + '+AL' + R + '+AM' + R,                                                     // AH
     '=IFERROR(AH' + R + '/' + std + ',0)',                                                 // AI
-    '=MAX(SUMIFS(' + AG + ',' + D + ',"<>")-AL' + R + '-AM' + R + ',IFERROR(' + std + ',0)*' + b.satz + ')', // AJ
+    '=MAX(SUMIFS(' + AG + ',' + D + ',"<>")-AL' + R + '-AM' + R + ',IFERROR(' + std + ',0)*' + (b.satzFormel || b.satz) + ')' +
+      (b.zusatz ? '+IFERROR(' + std + ',0)*500/24' : ''), // AJ
     '=AL' + R + '+AM' + R,                                                                 // AK
     '=SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"L")+SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"LS")', // AL
     '=SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"P")+SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"PT")'  // AM
@@ -10079,7 +10148,11 @@ const EBM_GRUPPEN = {
              { k: '2',  label: 'bis 2 km',  tag: '40220', nacht: '40226' },
              { k: '5',  label: '2–5 km',    tag: '40222', nacht: '40228' },
              { k: '10', label: '5–10 km',   tag: '40224', nacht: '40230' },
-             { k: '10+', label: 'über 10 km', tag: '40190', nacht: '40192' }],
+             { k: '10+', label: 'über 10 km', tag: '40190', nacht: '40192' },
+             // im Bereitschaftsdienst jenseits 20/30/50 km 2-/3-/4-mal (Merkblatt KVBW)
+             { k: '20+', label: 'über 20 km', tag: '40190', nacht: '40192', anz: 2 },
+             { k: '30+', label: 'über 30 km', tag: '40190', nacht: '40192', anz: 3 },
+             { k: '50+', label: 'über 50 km', tag: '40190', nacht: '40192', anz: 4 }],
            waehle: (dt, stufe)=>{
              const s = EBM_GRUPPEN.weg.stufen.find(x=> x.k === stufe) || EBM_GRUPPEN.weg.stufen[0];
              const h = ebmStunde(dt);
@@ -10154,6 +10227,90 @@ async function gkvNameFragen(titel, vorgabe, hinweis){
   }
 }
 
+// ---------- Einstellungen: GKV-Profile bearbeiten ----------
+function gkvSchluesselText(k, a){
+  const g = EBM_GRUPPEN[k];
+  let t = g ? g.titel : (ebmEintrag(k) ? k + ' ' + ebmEintrag(k).text : k);
+  if(k === 'weg' && a && a.stufe){ const s = g.stufen.find(x=> x.k === a.stufe); if(s) t += ' ' + s.label; }
+  if(a && Number(a.anz) > 1) t += ' ×' + a.anz;
+  return t;
+}
+function gkvProfilKurz(p){
+  const k = Object.keys(p.auswahl || {});
+  return k.length ? k.map(x=> gkvSchluesselText(x, p.auswahl[x]).replace(/^(\d{5}) .*?( ×\d+)?$/, '$1$2')).join(', ') : 'nichts vorausgewählt';
+}
+async function gkvProfilBearbeiten(id){
+  const alt = id ? gkvProfileLaden().find(p=> p.id === id) : null;
+  const pr = alt ? JSON.parse(JSON.stringify(alt)) : { id: 'G' + Date.now().toString(36), name: '', auswahl: {} };
+  pr.auswahl = pr.auswahl || {};
+  let fehler = '';
+  for(;;){
+    const schl = gkvListeLaden(); Object.keys(pr.auswahl).forEach(k=>{ if(!schl.includes(k)) schl.push(k); });
+    const zeile = (k)=>{
+      const a = pr.auswahl[k], g = EBM_GRUPPEN[k], mehr = (g && g.mehrfach) || EBM_MEHRFACH.includes(k);
+      return '<div class="gkv-pe-zeile' + (a ? ' an' : '') + '"><label><input type="checkbox" data-gk="' + htmlEsc(k) + '"' + (a ? ' checked' : '') + '> ' +
+        '<span>' + htmlEsc(gkvSchluesselText(k, null)) + '</span></label>' +
+        (mehr ? '<input type="number" min="1" max="20" class="gkv-pe-anz" data-ganz="' + htmlEsc(k) + '" value="' + htmlEsc(String((a && a.anz) || 1)) + '" title="Anzahl">' : '') +
+        (k === 'weg' ? '<select class="gkv-pe-stufe" data-gstufe="weg">' + g.stufen.map(s=> '<option value="' + s.k + '"' + (((a && a.stufe) || '2') === s.k ? ' selected' : '') + '>' + htmlEsc(s.label) + '</option>').join('') + '</select>' : '') +
+        '</div>';
+    };
+    const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<div class="beta-form"><label>Name<input id="gkvPeName" maxlength="30" value="' + htmlEsc(pr.name) + '" autocomplete="off" placeholder="z.B. Geriatrie, Infusion"></label></div>' +
+      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Haken = beim Wählen des Profils schon ausgewählt. Notfallpauschale/Wegepauschale wählen die passende Ziffer nach Uhrzeit selbst.</div>' +
+      '<div class="gkv-pe-liste">' + schl.map(zeile).join('') + '</div>';
+    const knoepfe = [{ label: 'Abbrechen', akt: 'nein' }];
+    if(alt) knoepfe.push({ label: 'Löschen', akt: 'loeschen' });
+    knoepfe.push({ label: 'Speichern', akt: 'ja', primaer: true });
+    const akt = await betaOverlay.ergebnis(alt ? 'GKV-Profil bearbeiten' : 'Neues GKV-Profil', html, knoepfe);
+    const nameEl = document.getElementById('gkvPeName'); if(nameEl) pr.name = nameEl.value.trim();
+    const neuA = {};
+    document.querySelectorAll('.gkv-pe-liste [data-gk]').forEach(c=>{
+      if(!c.checked) return;
+      const k = c.dataset.gk, o = { anz: 1 };
+      const n = document.querySelector('.gkv-pe-liste [data-ganz="' + k + '"]'); if(n) o.anz = Math.max(1, Math.min(20, parseInt(n.value, 10) || 1));
+      const s = document.querySelector('.gkv-pe-liste [data-gstufe="' + k + '"]'); if(s) o.stufe = s.value;
+      neuA[k] = o;
+    });
+    betaOverlay.schliessen();
+    if(akt === 'nein' || !akt) return false;
+    if(akt === 'loeschen'){
+      if(!await betaFrage('GKV-Profil „' + pr.name + '“ löschen?', 'Löschen', 'Abbrechen')) return false;
+      await gkvProfilLoeschen(pr.id); return true;
+    }
+    pr.auswahl = neuA;
+    if(!pr.name){ fehler = 'Bitte einen Namen eintragen.'; continue; }
+    if(!Object.keys(neuA).length){ fehler = 'Bitte mindestens eine Position anhaken.'; continue; }
+    await gkvProfilSichern(pr); return true;
+  }
+}
+
+// ---------- Luftlinie -> Wegepauschalen-Stufe ----------
+// Ausgangspunkt: GKV_STARTADRESSE aus der einstellungen.ini, sonst die
+// Praxisadresse. Nur die Adresse (ohne Namen) geht an den Kartendienst.
+function gkvStartAdresse(){
+  const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {};
+  return String(w.GKV_STARTADRESSE || w.PRAXISADRESSE || (ladeEinstellungen() || {}).praxisadresse || '').trim();
+}
+function gkvStufeFuerKm(km){ return km <= 2 ? '2' : km <= 5 ? '5' : km <= 10 ? '10' : km <= 20 ? '10+' : km <= 30 ? '20+' : km <= 50 ? '30+' : '50+'; }
+async function gkvLuftlinie(adresse){
+  const startAdr = gkvStartAdresse();
+  try{
+    const z = await geocode(adresse);
+    if(!z) return { fehler: 'Adresse nicht gefunden – bitte prüfen oder die Stufe der Wegepauschale unten von Hand wählen.' };
+    if(!startAdr) return { km: null, ziel: z, start: '' };
+    let s = LS.get('gkv_start_geo', null);
+    if(!s || s.adr !== startAdr){
+      const g = await geocode(startAdr);
+      if(!g) return { km: null, ziel: z, start: '' };
+      s = { adr: startAdr, lat: g.lat, lon: g.lon }; LS.set('gkv_start_geo', s);
+    }
+    const km = kmLuftlinieEinfach(s, z);
+    return { km, stufe: gkvStufeFuerKm(km), start: startAdr, ziel: z };
+  }catch(e){
+    return { fehler: 'Keine Verbindung zum Kartendienst – bitte die Stufe der Wegepauschale unten von Hand wählen.' };
+  }
+}
+
 function gkvListeLaden(){
   gkvAltMigrieren();
   const d = LS.get(EIGENE_POS_CACHE, null) || {};
@@ -10174,7 +10331,8 @@ function gkvPositionen(auswahl, dt){
     const a = auswahl[k]; if(!a) return;
     const g = EBM_GRUPPEN[k];
     const gop = g ? g.waehle(dt, a.stufe) : k;
-    const anz = Math.max(1, Number(a.anz) || 1);
+    const st = k === 'weg' ? EBM_GRUPPEN.weg.stufen.find(x=> x.k === a.stufe) : null;
+    const anz = st && st.anz ? st.anz : Math.max(1, Number(a.anz) || 1);
     out.push({ gop, anz, euro: betaRund2(ebmEuro(gop, dt) * anz) });
   });
   return out;
@@ -10187,6 +10345,9 @@ function gkvHinweise(pos){
   if(hat('01226') && !hat('01212')) h.push('01226 gibt es nur zusammen mit 01212 (Unzeit).');
   if(hat('01418') && hat('01413')) h.push('01413 ist der Mitbesuch eines weiteren Kranken – beim selben Patienten nicht neben 01418.');
   if((hat('01205') || hat('01207')) && (hat('01210') || hat('01212'))) h.push('Abklärungspauschale und Notfallpauschale nicht nebeneinander.');
+  if(hat('01224') && hat('01226')) h.push('01224 und 01226 nicht nebeneinander (Leitfaden KVBW).');
+  if(hat('01223') || hat('01224')) h.push('Schweregradzuschlag nur bei gesicherter Diagnose: Fraktur proximal Metacarpus/-tarsus, SHT mit Bewusstlosigkeit < 30 Min., akute TVT, hypertensive Krise, Angina pectoris (nicht I20.9), Pneumonie, akute Divertikulitis – sonst ausführliche schriftliche Begründung.');
+  if(hat('01226')) h.push('01226 nur bei: Kind vor dem 3. Geburtstag, erheblichen kognitiven/emotionalen/Verhaltens-Beeinträchtigungen, ab 70 J. mit geriatrischem Bedarf und Frailty oder Demenz (F00–F02), Alzheimer (G30), Parkinson G20.1/G20.2.');
   return h;
 }
 
@@ -10615,6 +10776,9 @@ function ansichtGkv(bearbeitenId){
         <label class="gkv-feld">Uhrzeit<input type="time" id="gkvZeit" value="${htmlEsc(st.zeit)}"></label>
       </div>
       <div class="gkv-zeitinfo" id="gkvZeitInfo"></div>
+      <label class="gkv-feld">Adresse <span class="gkv-optional">(optional – berechnet die Wegepauschale per Luftlinie)</span>
+        <div class="gkv-adr-zeile"><input type="text" id="gkvAdresse" autocomplete="off" placeholder="Straße Nr., PLZ Ort" value="${htmlEsc(st.adresse || '')}"><button type="button" class="btn-sekundaer" id="gkvKmBtn">Luftlinie</button><button type="button" class="btn-sekundaer" id="gkvKarteBtn" title="Wegegeld-Karte NFP Offenburg">🗺 Karte</button></div></label>
+      <div class="gkv-zeitinfo" id="gkvKmInfo">${st.kmInfo || ''}</div>
     </div>
     <div class="gesamt-abschnitt">Schnellwahl</div>
     <div class="gkv-profile" id="gkvProfile"></div>
@@ -10648,7 +10812,8 @@ function ansichtGkv(bearbeitenId){
       const titel = g ? g.titel : e.text;
       const unter = g ? e.text.replace(/^[^(]*\(?/, '').replace(/\)$/, '') : (e.hinweis || '');
       const mehr = a && (g ? g.mehrfach : EBM_MEHRFACH.includes(gop));
-      const anz = a ? Math.max(1, Number(a.anz) || 1) : 1;
+      const wst = k === 'weg' && a ? g.stufen.find(x=> x.k === a.stufe) : null;
+      const anz = wst && wst.anz ? wst.anz : a ? Math.max(1, Number(a.anz) || 1) : 1;
       return '<div class="gkv-pos' + (a ? ' an' : '') + '" data-k="' + k + '">' +
         '<div class="gkv-pos-haupt" data-tipp="' + k + '"><span class="gkv-gop">' + gop + '</span>' +
         '<span class="gkv-txt">' + htmlEsc(titel) + (unter ? '<small>' + htmlEsc(unter) + '</small>' : '') + '</span>' +
@@ -10692,6 +10857,7 @@ function ansichtGkv(bearbeitenId){
     el('gkvProfile').querySelectorAll('[data-profil]').forEach(b=> b.onclick = ()=>{
       const p = gkvProfileLaden().find(x=> x.id === b.dataset.profil); if(!p) return;
       st.auswahl = JSON.parse(JSON.stringify(p.auswahl)); st.profil = p.id;
+      if(st.kmStufe && st.auswahl.weg) st.auswahl.weg.stufe = st.kmStufe;
       LS.set('gkv_profil_letztes', p.id);
       let neu = false;
       Object.keys(st.auswahl).forEach(k=>{ if(!liste.includes(k) && (EBM_GRUPPEN[k] || ebmEintrag(k))){ liste.push(k); neu = true; } });
@@ -10738,6 +10904,39 @@ function ansichtGkv(bearbeitenId){
       gkvFaelleSpeichern(gkvFaelleLaden().filter(x=> x.id !== b.dataset.loesch)); verlaufZeichnen();
     });
   }
+  el('gkvAdresse').oninput = ()=>{ st.adresse = el('gkvAdresse').value; if(st.kmInfo){ st.kmInfo = ''; st.kmStufe = ''; st.kmGeo = null; el('gkvKmInfo').textContent = 'Adresse geändert – „Luftlinie“ erneut tippen.'; } };
+  el('gkvAdresse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); el('gkvKmBtn').click(); } };
+  el('gkvKmBtn').onclick = async ()=>{
+    const adr = el('gkvAdresse').value.trim(), info = el('gkvKmInfo');
+    st.adresse = adr;
+    if(!adr){ info.textContent = 'Bitte eine Adresse eintragen – oder die Stufe der Wegepauschale unten von Hand wählen.'; return; }
+    info.textContent = 'Luftlinie wird berechnet …';
+    const r = await gkvLuftlinie(adr);
+    if(r.fehler){ st.kmInfo = ''; info.innerHTML = '<span class="gkv-km-fehler">' + htmlEsc(r.fehler) + '</span>'; return; }
+    // Vorrang hat die Wegegeld-Karte (Zonen ab NFP Offenburg); ausserhalb der Karte die Luftlinie
+    const kp = nfpGeoZuPixel(r.ziel.lat, r.ziel.lon), kb = nfpImBild(kp) ? nfpBewertung(kp) : null;
+    st.kmGeo = r.ziel;
+    const llText = r.km == null ? '' : 'Luftlinie ' + String(Math.round(r.km * 10) / 10).replace('.', ',') + ' km ab ' + htmlEsc(r.start);
+    if(kb && (kb.quelle === 'karte' || r.km == null)){
+      kmUebernehmen(kb.stufe, 'Karte NFP: <b>' + htmlEsc(kb.text) + '</b> → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(kb.stufe)) + '</b>' + (llText ? ' · ' + llText : ''));
+    } else if(r.km == null){
+      st.kmInfo = ''; el('gkvKmInfo').innerHTML = '<span class="gkv-km-fehler">Kein Ausgangspunkt hinterlegt und Adresse außerhalb der Karte – bitte die Stufe unten von Hand wählen.</span>';
+    } else {
+      kmUebernehmen(r.stufe, llText + ' → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(r.stufe)) + '</b>');
+    }
+  };
+  function kmUebernehmen(stufe, text){
+    st.auswahl.weg = { anz: 1, stufe }; st.kmStufe = stufe;
+    if(!liste.includes('weg')){ liste.push('weg'); gkvListeSpeichern(liste); }
+    st.kmInfo = text + ' · <a href="#" class="gkv-karte-link">auf der Karte prüfen</a>';
+    el('gkvKmInfo').innerHTML = st.kmInfo;
+    zeichnen();
+  }
+  el('gkvKmInfo').addEventListener('click', (ev)=>{ if(ev.target.classList.contains('gkv-karte-link')){ ev.preventDefault(); el('gkvKarteBtn').click(); } });
+  el('gkvKarteBtn').onclick = async ()=>{
+    const erg = await nfpKarteOeffnen({ adresse: st.kmGeo || null, gps: !st.kmGeo });
+    if(erg) kmUebernehmen(erg.stufe, 'Karte NFP: <b>' + htmlEsc(erg.text) + '</b> → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(erg.stufe)) + '</b>');
+  };
   el('gkvName').oninput = ()=>{ st.name = el('gkvName').value; el('gkvName').classList.remove('pflichtfeld-fehlt'); };
   el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); werteZeichnen(); };
   el('gkvZeit').onchange = ()=>{ st.zeit = el('gkvZeit').value; zeichnen(); };
@@ -10820,6 +11019,144 @@ function ansichtGkv(bearbeitenId){
   zeichnen(); verlaufZeichnen(); werteZeichnen();
   // Profile/Liste von anderen Geraeten holen
   gkvAbgleichen(()=>{ if(document.getElementById('gkvProfile')){ liste = gkvListeLaden(); zeichnen(); } });
+}
+
+
+// =====================================================================
+// Wegegeld-Karte "NFP Offenburg" (Flaechendeckung 2/5/10/20/30 km)
+// Die Zonen wurden aus der Karte ausgelesen (Raster, je Zelle eine Zone);
+// dazu eine Georeferenz (Ortspunkte der Karte -> Koordinaten, mittlere
+// Abweichung ca. 0,3 km), damit Adresse oder GPS-Position direkt eine Zone
+// ergeben. Das Kartenbild selbst liegt nur im eigenen OneDrive
+// (KVBW Onedrive/Karten/Karte_NFP_Offenburg.jpg), nicht oeffentlich in der App.
+// Zonen: 1 = 2 km, 2 = 5 km, 3 = 10 km, 4 = 20 km, 5 = 30 km, 0 = ausserhalb, 9 = unklar
+// =====================================================================
+const NFP_KARTE = {"w":248,"h":233,"zelle":8,"rle":"a2604fa217f4a5fa20fa216f6a3f2a19f2a216f4a5f2a18f3a215f5a4f3a17f4a215f5a4f2a17f7a205fa7f6a2f4a15f8a204f4a4f14a12f8a205f23a11f9a204f26a7f11a12f4a9f2afa174f27a7f11a11f7a6f3a175f29a5f14a8f16a176f49a5f18a175f51a2f14a2f2a176f67a3f2a175f68a2f4a16f3a154f69a4fa17f3a154f4a2f63a178f5a2f63a176f74a172f77a170f79a168f81a17fa148f82a15f6a145f83a18f4a142f15a3f66a163f85a5f4a2fa149f17af70a5f2a152f18af68afa157f89a158f52a2f38a153f53a4f39a150f55a4f40a149f99a148f101a147f71af32a143f70a3f32a143f70a2f31a145f70a2f29a147f100a147f101a146f58af43a146f48e3a9f42a27fa117f49e4a7e3f40a23f5a117f22e5f2e8f11e5a5e7f38a24f4a116f21e18f10e6ae11f37a24fa119f20e8ae12f2a7e18f37a142f20e6ae42f37a142f12a4fa2e51f37a19f2a119f12ea2e55a2f5a3f27a20f2a118f12e60a8f28a20f3a117f12e9a6e39ae10a2f29a20f5a114f11e12ae2ae51a3f27a20f7a113f7e72a5f25a20f4a114f8e72a6f24a137f8ae42f3e27a2e2a2f24a137f7a2e7a2e32f4e13ae4a3e11f26a135f7a5e39f3e33f26a135fe7a2e77f26a135e87f26a135e86af25a135e8a3e66ae11f24a15f2a118e8ae67a3e10f25a134e6a4e66a4e9f26a133fe5a3e68a2e11f25a132f2e6ae82f28a129f2e66a3e20f28a128f3e66a8e15f27a129f2e68ae3a3e14f28a129fe89af28a129e31aea6e9a2e4a2e34f29a128fe29a3ea5e19ae32f28a129fe36ae54f26a130fe13ae77f26a130e14ae62ae15f27a128e74a7e12f26a128e26a3e30d2e13a8e12f28a126e23a8e27d4e32a2f28a124e24ae4a3e24a3d3ae34f28a122e39a3e11a15e32f27a121e37a5e10d7a9e32f27a121e38a3d2e8d16e5a4e10ae13f27a121e16a2e22d3e7d18e3a5e5a8e12f24a122e43d3ea2d20e2da5e3a10e12f24a122e21a3e21a5d24a2e4a10e12f24a122e45a4d25e11a4e12a2f23a121e46a2d15a5d6e32f21a121e45d29e33f19a122e15a4e11a5e10d29e34f18a122e29a2d2a5e6d30e18a2e14f18a121e30d10ae3d31e18a3e14f16a122e30d11a3d31e19a2e12a5f14a121e30d11a4d30e31a5f16a121e30d11a3d31e31a4f17a120e22ae8d16ad9c3d17e33f18a120e31d26c3d16a2e32f20a118e31d26c4d16ae32f21a116e32d9ad16c4d17e4de21f28a115e32d7ea2d18c2d17ae2d3e19f29a115e32a2d3e3a2d6a3c3d2a3c4d14a6da2e18f29a115e25a2ea8de3ad7a2c4d2a2c8d11a5da3e18f29a115e24ad13e2d8c6d2ac10d11a2d4e19f31a28fa86e23d22c8d3c10d17e19f31a27f2a85e24d15a2d5c8adac10d16e18af33a25f2a85e25d15a2d3c6a7c10d16e19f34a24f2a85e25d15a2c9a7b4c7d15e19f35a20f4a85e26d15a2c9a5b6c8d14e9fe8f36a20f2a87e26d16c11a3b7c8d15e7f2e7f38a108e26d16c9a5b6c9d15e7f2e6f39a108e26a2d14c4a14bc11d15e6f2e6f39a107f2e26a3d11a20c12d14a2e4f2e6f24af13a107f3e29d12a19c12d14a2e4f3e5f38a107f3e29d12a11b9c12d6e13f3e5af37a107f3e10a2e3a5e9ad17a4b10c12d4e24a3f34a106f4e28d24b9c13d2e25a2e2f33a106f3e28d7ad11cd7b6c15e30f32a107f3e27d20c3d6b4c11d3a2e30f32a106f4e26d20c4d10c11d3a2e30f31a107f4e19a2e4a4d18c3d10c10d5ae29f31a108f4e17a11d19a5d9c7d7ae29f30a109f3e18a10d20a8d3ad2c6d9e28f31a108f4e25a2d22a7d3c8d10e27f30a110f4e26ad15a2d7a3cd4c8d10e27f26a114f4e27a6d6a5d16c2dc3d11e26f27a114f3e31a3d6a4d17cd2c3d11e26f27a113f4e33d8a2d22c2d11e26f27a113f4e34d23a3d5ad11e27f27a113f4e35d42e27f20a2f5a113f5e35d41e27f21a2f3a114f5e37d39e27f21a119f6e38d37e27f23a117f6e38d38e26f23a117f6e39d36e28f23a116f6e38a2d21a2d12e27af24a114f7e36a5d20a5d8e28f26a113f7e23ae11a7d18e4a2d8e27f26a114f6e24a2e6a11d17e6d9e27f26a113f7e7a3e27a2e5d16e6d9e27f26a113f7e46a3d10e8d8e27f25a113f8e47ad10e8a9e27f25a113f8e48d8e11a8e27f25a113f9e48d2e2d2e13a7e5a7e14f26a112f11e67a3e12a2e9a2e3f28a111f16e42a2e45a3f29a111f19e39a2e45a3f29a110f20e87a2f29a110f19a2e85a3f29a110f20a3e7a2e75a2f29a110f23e6a2e78f28a111f23e5a3e79f26a112f22e88f27a111f22e88f28a110f22e88f30a108f23e87f13afaf14a108f24e86f30a108f25e84f30a109f24ae83f30a110f26e81f31a111f14a2f3a2f4e81f31a111f26e79f32a111f26e77f33a112f27e75f34a112f28e74f33a114f28e73f33a114f16af12e64f2e6f33a114f29e64f3e6f31a115f29e64f4e4f31a117f28e13a2e49f6ef30a119f29e11ae11f3e37f36a120f29e22f5e36f37a119f30e20f6e36f37a120f32e15f9e35f37a120f34e3f20e4f14e17f35a121f58e2f17e14f35a122f78e13f33a123f80e6f39a123f80e4f40a124f122a125f13a2f107a126f14a2f57a5f44a127f13a3f106a126f13a2f107a128f11a2f107a130f9af108a130f118a130f118a138f109a141f107a141f16af89a140f106a139f109a139f110a138f110a92j2a45f109a140f11a3f93a142f9a8f88a142f100a2f3a143f105a143f105a142f105a143f102a146f99a150f97a155f12a3f76a157f8a8f74a159f5a10f18a5f13a4f23a5f6a160f3a12fa23f9a7f21a8f5a200f6a10f19a8f5a220f5a3f6a9f6a220f3a20f3a223f2a420ja1062ja247j2a9j2a234j4a7j4a1129","nfp":[682,959],"bild":[1985,1865],"pxkm":33.056,"geo":{"lat0":48.45,"lon0":8.0,"kx":73.83559299441971,"ky":110.57,"H":[32.74694180889528,0.7012662332809785,792.3434878131893,0.3287135133597324,-33.598816918168545,1061.9095115829853,-0.00021719766471549448,-0.0004773369338692385,1.0]}};
+const NFP_KARTE_PFAD = 'KVBW Onedrive/Karten/Karte_NFP_Offenburg.jpg';
+const NFP_ZONEN = {
+  1: { label: '2-km-Zone', stufe: '2', farbe: '#e6c800' }, 2: { label: '5-km-Zone', stufe: '5', farbe: '#2f8fd6' },
+  3: { label: '10-km-Zone', stufe: '10', farbe: '#2fa84f' }, 4: { label: '20-km-Zone', stufe: '10+', farbe: '#d9609f' },
+  5: { label: '30-km-Zone', stufe: '20+', farbe: '#4aa6cf' }
+};
+function nfpRaster(){
+  if(nfpRaster.r) return nfpRaster.r;
+  const r = new Uint8Array(NFP_KARTE.w * NFP_KARTE.h); let i = 0;
+  NFP_KARTE.rle.replace(/([a-j])(\d*)/g, (_, z, n)=>{ const v = z.charCodeAt(0) - 97, len = n ? +n : 1; r.fill(v, i, i + len); i += len; return ''; });
+  return (nfpRaster.r = r);
+}
+function nfpZoneAnPixel(x, y){
+  const c = NFP_KARTE.zelle, i = Math.floor(x / c), j = Math.floor(y / c);
+  if(i < 0 || j < 0 || i >= NFP_KARTE.w || j >= NFP_KARTE.h) return null;
+  return nfpRaster()[j * NFP_KARTE.w + i];
+}
+function nfpGeoZuPixel(lat, lon){
+  const g = NFP_KARTE.geo, X = (lon - g.lon0) * g.kx, Y = (lat - g.lat0) * g.ky, H = g.H, d = H[6] * X + H[7] * Y + H[8];
+  return { x: (H[0] * X + H[1] * Y + H[2]) / d, y: (H[3] * X + H[4] * Y + H[5]) / d };
+}
+function nfpImBild(p){ return p && p.x >= 0 && p.y >= 0 && p.x < NFP_KARTE.bild[0] && p.y < NFP_KARTE.bild[1]; }
+// Zone an einem Kartenpunkt -> Stufe der Wegepauschale
+function nfpBewertung(p){
+  const z = nfpZoneAnPixel(p.x, p.y), km = Math.hypot(p.x - NFP_KARTE.nfp[0], p.y - NFP_KARTE.nfp[1]) / NFP_KARTE.pxkm;
+  const kmT = String(Math.round(km * 10) / 10).replace('.', ',');
+  if(z && NFP_ZONEN[z]) return { x: p.x, y: p.y, zone: z, stufe: NFP_ZONEN[z].stufe, text: NFP_ZONEN[z].label, km, quelle: 'karte' };
+  if(z === 0) return { x: p.x, y: p.y, zone: 0, stufe: km > 50 ? '50+' : '30+', text: 'außerhalb der 30-km-Zone (Luftlinie ab NFP ca. ' + kmT + ' km)', km, quelle: 'karte' };
+  return { x: p.x, y: p.y, zone: 9, stufe: gkvStufeFuerKm(km), text: 'Zone hier nicht eindeutig – nach Luftlinie ab NFP ca. ' + kmT + ' km', km, quelle: 'entfernung' };
+}
+function nfpStufeLabel(st){ const s = EBM_GRUPPEN.weg.stufen.find(x=> x.k === st); return s ? s.label + (s.anz ? ' (' + s.anz + '×)' : '') : st; }
+
+// Kartenbild aus OneDrive (einmal geladen, dann im Geraet zwischengespeichert)
+async function nfpKarteBildUrl(neu){
+  if(nfpKarteBildUrl.url && !neu) return nfpKarteBildUrl.url;
+  const SCHL = './__nfp_karte__';
+  try{
+    const cache = ('caches' in window) ? await caches.open('nfp-karte') : null;
+    let res = (cache && !neu) ? await cache.match(SCHL) : null;
+    if(!res && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){
+      const token = await msGraphTokenHolen();
+      const r = await fetch(msGraphPfadUrl(NFP_KARTE_PFAD) + '/content', { headers: { Authorization: 'Bearer ' + token } });
+      if(r.ok){ if(cache) await cache.put(SCHL, r.clone()); res = r; }
+    }
+    if(res){ nfpKarteBildUrl.url = URL.createObjectURL(await res.blob()); return nfpKarteBildUrl.url; }
+  }catch(_){}
+  return null;
+}
+// Ersatz ohne Kartenbild: die ausgelesenen Zonen als Farbflaechen
+function nfpZonenBildUrl(){
+  if(nfpZonenBildUrl.url) return nfpZonenBildUrl.url;
+  const c = document.createElement('canvas'); c.width = NFP_KARTE.w; c.height = NFP_KARTE.h;
+  const g = c.getContext('2d'), img = g.createImageData(c.width, c.height), r = nfpRaster();
+  const rgb = { 0: [245, 245, 245], 9: [220, 220, 220] };
+  Object.keys(NFP_ZONEN).forEach(z=>{ const h = NFP_ZONEN[z].farbe; rgb[z] = [1, 3, 5].map(o=> parseInt(h.substr(o, 2), 16)); });
+  for(let i = 0; i < r.length; i++){ const f = rgb[r[i]] || [255, 255, 255]; img.data.set([f[0], f[1], f[2], 255], i * 4); }
+  g.putImageData(img, 0, 0);
+  return (nfpZonenBildUrl.url = c.toDataURL());
+}
+
+// Karte einblenden: Tippen = Einsatzstelle waehlen; GPS-Position und eine
+// bereits gefundene Adresse werden als Punkte gezeigt. -> Bewertung | null
+async function nfpKarteOeffnen(opt){
+  opt = opt || {};
+  const bildUrl = await nfpKarteBildUrl();
+  const ov = document.createElement('div');
+  ov.className = 'nfp-overlay';
+  ov.innerHTML =
+    '<div class="nfp-kopf"><b>Wegegeld-Karte NFP Offenburg</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
+    (bildUrl ? '' : '<div class="nfp-hinweis">Kartenbild nicht gefunden – es werden nur die ausgelesenen Zonen gezeigt. Für die echte Karte die Datei <b>Karte_NFP_Offenburg.jpg</b> in den OneDrive-Ordner <b>KVBW Onedrive/Karten</b> legen.</div>') +
+    '<div class="nfp-scroll"><div class="nfp-flaeche"><img alt="Karte" draggable="false">' +
+      '<div class="nfp-punkt nfp-adr" hidden></div><div class="nfp-punkt nfp-gps" hidden></div><div class="nfp-punkt nfp-wahl" hidden></div></div></div>' +
+    '<div class="nfp-fuss"><div class="nfp-info" id="nfpInfo">Auf die Einsatzstelle tippen.</div>' +
+      '<div class="nfp-knoepfe"><button type="button" data-zoom="-1">−</button><button type="button" data-zoom="1">+</button>' +
+      '<button type="button" class="nfp-gps-knopf">📍 Standort</button><button type="button" class="btn-primaer nfp-ok" disabled>Übernehmen</button></div></div>';
+  document.body.appendChild(ov);
+  document.body.classList.add('nfp-offen');
+  const img = ov.querySelector('img'), fl = ov.querySelector('.nfp-flaeche'), sc = ov.querySelector('.nfp-scroll'), info = ov.querySelector('#nfpInfo');
+  img.src = bildUrl || nfpZonenBildUrl();
+  let zoom = 1, wahl = null;
+  const setzeZoom = (z, mitte)=>{
+    const alt = { x: (sc.scrollLeft + sc.clientWidth / 2) / fl.clientWidth, y: (sc.scrollTop + sc.clientHeight / 2) / Math.max(1, fl.clientHeight) };
+    zoom = Math.max(1, Math.min(5, z)); fl.style.width = (zoom * 100) + '%';
+    const m = mitte || alt;
+    requestAnimationFrame(()=>{ sc.scrollLeft = m.x * fl.clientWidth - sc.clientWidth / 2; sc.scrollTop = m.y * fl.clientHeight - sc.clientHeight / 2; });
+  };
+  const punkt = (cls, p)=>{
+    const el = ov.querySelector('.' + cls);
+    if(!p || !nfpImBild(p)){ el.hidden = true; return; }
+    el.hidden = false; el.style.left = (p.x / NFP_KARTE.bild[0] * 100) + '%'; el.style.top = (p.y / NFP_KARTE.bild[1] * 100) + '%';
+  };
+  const waehlen = (p, woher)=>{
+    if(!nfpImBild(p)){ info.innerHTML = 'Dieser Ort liegt außerhalb der Karte.'; return; }
+    wahl = nfpBewertung(p); punkt('nfp-wahl', p);
+    const z = NFP_ZONEN[wahl.zone];
+    info.innerHTML = (woher ? htmlEsc(woher) + ': ' : '') + '<b' + (z ? ' style="color:' + z.farbe + '"' : '') + '>' + htmlEsc(wahl.text) + '</b> → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(wahl.stufe)) + '</b>';
+    ov.querySelector('.nfp-ok').disabled = false;
+  };
+  fl.addEventListener('click', (ev)=>{
+    const r = img.getBoundingClientRect();
+    waehlen({ x: (ev.clientX - r.left) / r.width * NFP_KARTE.bild[0], y: (ev.clientY - r.top) / r.height * NFP_KARTE.bild[1] }, 'Gewählt');
+  });
+  ov.querySelectorAll('[data-zoom]').forEach(b=> b.onclick = ()=> setzeZoom(zoom + Number(b.dataset.zoom)));
+  const gps = ()=>{
+    if(!navigator.geolocation){ info.textContent = 'Standort wird von diesem Gerät nicht unterstützt.'; return; }
+    info.textContent = 'Standort wird ermittelt …';
+    navigator.geolocation.getCurrentPosition((pos)=>{
+      const p = nfpGeoZuPixel(pos.coords.latitude, pos.coords.longitude);
+      punkt('nfp-gps', p);
+      if(!nfpImBild(p)){ info.textContent = 'Der aktuelle Standort liegt außerhalb der Karte.'; return; }
+      waehlen(p, 'Standort'); setzeZoom(Math.max(zoom, 2.5), { x: p.x / NFP_KARTE.bild[0], y: p.y / NFP_KARTE.bild[1] });
+    }, (e)=>{ info.textContent = e && e.code === 1 ? 'Standort nicht freigegeben – bitte auf die Einsatzstelle tippen.' : 'Standort nicht verfügbar – bitte auf die Einsatzstelle tippen.'; },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+  };
+  ov.querySelector('.nfp-gps-knopf').onclick = gps;
+  await new Promise(r=> img.complete ? r() : (img.onload = img.onerror = r));
+  if(opt.adresse && opt.adresse.lat){
+    const p = nfpGeoZuPixel(opt.adresse.lat, opt.adresse.lon); punkt('nfp-adr', p);
+    if(nfpImBild(p)){ waehlen(p, 'Adresse'); setzeZoom(2.5, { x: p.x / NFP_KARTE.bild[0], y: p.y / NFP_KARTE.bild[1] }); }
+  } else if(opt.gps) gps();
+  return await new Promise((fertig)=>{
+    const zu = (erg)=>{ ov.remove(); document.body.classList.remove('nfp-offen'); fertig(erg); };
+    ov.querySelector('.nfp-zu').onclick = ()=> zu(null);
+    ov.querySelector('.nfp-ok').onclick = ()=> zu(wahl);
+  });
 }
 
 // =====================================================================
