@@ -12458,8 +12458,6 @@ const OSM_ATTR_HTML = '<span class="osm-attr">© <a href="https://www.openstreet
 async function nfpHintergrund(){
   const eigen = typeof nfpKarteBildUrl === 'function' ? await nfpKarteBildUrl() : null;
   if(eigen) return { url: eigen, eigen: true, osm: false };
-  const osm = await nfpOsmBildUrl();
-  if(osm) return { url: osm, eigen: false, osm: true };
   return { url: nfpZonenBildUrl(), eigen: false, osm: false };
 }
 async function nfpOsmBildUrl(){
@@ -12580,6 +12578,72 @@ function nfpZonenPixelSvg(){
 function nfp50KreisPixelSvg(){
   return '<polyline class="km50" points="' + nfp50Kreis().map(g=>{ const q = nfpGeoZuPixel(g.lat, g.lon); return q.x.toFixed(1) + ',' + q.y.toFixed(1); }).join(' ') + '"/>';
 }
+// ---------- Offline-Grundkarte fuer die OSM-Ansicht ----------
+// Gebiet: Rhein (Westen) bis Hornberg/Ottenhoefen (Osten), Rust/Ettenheim
+// (Sueden) bis Durmersheim (Norden). Ein Bild aus OSM-Kacheln der Zoomstufe 13
+// in Originalgroesse (1 Kachelpixel = 1 Bildpixel), liegt UNTER den Live-Kacheln:
+// online sieht man die scharfen Live-Kacheln, offline das gespeicherte Bild.
+const OSM_OFFLINE = { datei: 'osm_offline_karte.jpg', z: 13, nord: 48.97, sued: 48.18, west: 7.60, ost: 8.32 };
+function osmOfflineKacheln(){
+  const n = Math.pow(2, OSM_OFFLINE.z), tx = (lon)=> Math.floor((lon + 180) / 360 * n);
+  const ty = (lat)=>{ const r = lat * Math.PI / 180; return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n); };
+  return { x0: tx(OSM_OFFLINE.west), x1: tx(OSM_OFFLINE.ost), y0: ty(OSM_OFFLINE.nord), y1: ty(OSM_OFFLINE.sued) };
+}
+let osmOfflineUrl = null;
+async function osmOfflineLaden(neu){
+  if(osmOfflineUrl && !neu) return osmOfflineUrl;
+  const SCHL = './__osm_offline_v1__';
+  try{
+    const cache = ('caches' in window) ? await caches.open('nfp-karte') : null;
+    let res = (cache && !neu) ? await cache.match(SCHL) : null;
+    if(!res){
+      const r = await fetch('./' + OSM_OFFLINE.datei, { cache: 'no-cache' });
+      if(r.ok && /image/.test(r.headers.get('Content-Type') || '')){ res = r; if(cache) await cache.put(SCHL, r.clone()); }
+    }
+    if(res){ osmOfflineUrl = URL.createObjectURL(await res.blob()); return osmOfflineUrl; }
+  }catch(_){}
+  return null;
+}
+setTimeout(()=>{ try{ osmOfflineLaden(); }catch(_){} }, 4000);
+// Bild auf dem Geraet zusammensetzen (Einstellungen), im Geraet speichern und als Datei ausgeben
+async function osmOfflineErzeugen(fortschritt){
+  if(typeof createImageBitmap !== 'function') return null;
+  const k = osmOfflineKacheln(), z = OSM_OFFLINE.z;
+  const bx = k.x1 - k.x0 + 1, by = k.y1 - k.y0 + 1;
+  const c = document.createElement('canvas'); c.width = bx * 256; c.height = by * 256;
+  const g = c.getContext('2d'); g.fillStyle = '#f2efe9'; g.fillRect(0, 0, c.width, c.height);
+  const liste = []; for(let y = k.y0; y <= k.y1; y++) for(let x = k.x0; x <= k.x1; x++) liste.push([x, y]);
+  let idx = 0, fertig = 0, fehler = 0;
+  const arbeiter = async ()=>{
+    while(idx < liste.length){
+      const [x, y] = liste[idx++];
+      try{
+        const r = await fetch('https://tile.openstreetmap.org/' + z + '/' + x + '/' + y + '.png');
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        const bmp = await createImageBitmap(await r.blob());
+        g.drawImage(bmp, (x - k.x0) * 256, (y - k.y0) * 256); if(bmp.close) bmp.close();
+      }catch(_){ fehler++; }
+      if(fortschritt){ try{ fortschritt(++fertig, liste.length); }catch(_){} }
+    }
+  };
+  await Promise.all([1, 2, 3, 4, 5, 6].map(arbeiter));
+  if(fehler > liste.length * 0.1) return null;
+  const t = '© OpenStreetMap-Mitwirkende'; g.font = '600 28px sans-serif';
+  const tw = g.measureText(t).width;
+  g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(c.width - tw - 30, c.height - 48, tw + 20, 38);
+  g.fillStyle = '#333'; g.fillText(t, c.width - tw - 20, c.height - 20);
+  const blob = await new Promise((ok)=> c.toBlob(ok, 'image/jpeg', 0.82));
+  if(blob){ try{ const cache = await caches.open('nfp-karte'); await cache.put('./__osm_offline_v1__', new Response(blob, { headers: { 'Content-Type': 'image/jpeg' } })); }catch(_){} osmOfflineUrl = URL.createObjectURL(blob); }
+  return blob;
+}
+function osmOfflineHtml(z, x0, y0, bw, bh){
+  if(!osmOfflineUrl) return '';
+  const k = osmOfflineKacheln(), s = Math.pow(2, z - OSM_OFFLINE.z);
+  const ox = k.x0 * 256 * s, oy = k.y0 * 256 * s, ow = (k.x1 - k.x0 + 1) * 256 * s, oh = (k.y1 - k.y0 + 1) * 256 * s;
+  if(ox > x0 + bw || oy > y0 + bh || ox + ow < x0 || oy + oh < y0) return '';
+  return '<img alt="" draggable="false" src="' + osmOfflineUrl + '" style="left:' + ((ox - x0) / bw * 100).toFixed(3) + '%; top:' + ((oy - y0) / bh * 100).toFixed(3) +
+    '%; width:' + (ow / bw * 100).toFixed(3) + '%; height:' + (oh / bh * 100).toFixed(3) + '%;">';
+}
 function osmWelt(lat, lon, z){ const n = 256 * Math.pow(2, z), r = lat * Math.PI / 180; return { x: (lon + 180) / 360 * n, y: (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n }; }
 function osmGeo(x, y, z){ const n = 256 * Math.pow(2, z); return { lon: x / n * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI }; }
 function osmGeoListe(d){ const a = (d.pois || []).slice(); (d.weg || []).forEach(c=> a.push({ lat: c[1], lon: c[0] })); return a; }
@@ -12610,7 +12674,7 @@ function osmAusschnitt(d, opt){
     if((x1 - x0) / (y1 - y0) < 0.85) [x0, x1] = wachsen(x0, x1, (y1 - y0) * 0.85);
   }
   const bw = x1 - x0, bh = y1 - y0, r = opt.r || Math.max(bw, bh) / 50, n = Math.pow(2, z);
-  let kacheln = '';
+  let kacheln = osmOfflineHtml(z, x0, y0, bw, bh);
   for(let ty = Math.floor(y0 / 256); ty <= Math.floor((y1 - 1) / 256); ty++){
     if(ty < 0 || ty >= n) continue;
     for(let tx = Math.floor(x0 / 256); tx <= Math.floor((x1 - 1) / 256); tx++){
@@ -12804,7 +12868,7 @@ function osmKarteOverlay(d, text){
     const t = ev.target.closest && ev.target.closest('[data-fall]');
     if(t && d.fallKlick){ zu(); d.fallKlick(+t.dataset.fall); }
   });
-  requestAnimationFrame(alles);
+  osmOfflineLaden().catch(()=>null).then(()=> requestAnimationFrame(alles));
 }
 
 // ---------- Geocoding-Zwischenspeicher (nur im Geraet) ----------
@@ -13640,7 +13704,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v171';
+const APP_VERSION = 'v172';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14273,9 +14337,9 @@ function ansichtEinstellungen(){
       </div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">Ersatzkarte (OpenStreetMap)</div>
-      <div class="design-hinweis">Wird gezeigt, wenn die KVBW-Karte nicht verfügbar ist (ohne Anmeldung, offline). Einmal hier speichern und die Datei <b>nfp_osm_karte.jpg</b> ins GitHub-Repo neben die App-Datei hochladen – dann haben sie alle Geräte sofort.</div>
-      <button type="button" class="btn-sekundaer" id="btnEinstOsmSpeichern" style="margin-top:8px;">Ersatzkarte speichern (für GitHub)</button>
+      <div class="trennlinie">Offline-Karte (OpenStreetMap)</div>
+      <div class="design-hinweis">Für die OSM-Karte ohne Internet: Gebiet vom Rhein bis Hornberg/Ottenhöfen, von Rust/Ettenheim bis Durmersheim. Nach dem Erzeugen sofort auf diesem Gerät offline nutzbar. Die gespeicherte Datei <b>${OSM_OFFLINE.datei}</b> ins GitHub-Repo hochladen, dann haben sie alle Geräte.</div>
+      <button type="button" class="btn-sekundaer" id="btnEinstOsmSpeichern" style="margin-top:8px;">Offline-Karte erzeugen (WLAN, ca. 1–2 Min.)</button>
     </div>
     ${betaProfileHtml()}
     ${betaAbschnittHtml()}
@@ -14285,17 +14349,14 @@ function ansichtEinstellungen(){
     'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
   document.getElementById('btnEinstOsmSpeichern').onclick = async ()=>{
-    // immer frisch zusammensetzen (nicht die Datei aus dem Repo erneut speichern)
-    try{ const cache = await caches.open('nfp-karte'); await cache.delete('./__nfp_osm_v9__'); }catch(_){}
-    nfpOsmBildUrl.url = null; nfpOsmBildUrl.ausRepo = false;
     const knopf = document.getElementById('btnEinstOsmSpeichern'), alt = knopf.textContent;
     knopf.disabled = true;
-    const blob = await nfpOsmZusammensetzen((i, n)=>{ knopf.textContent = 'Kacheln laden … ' + Math.round(i / n * 100) + ' %'; });
+    const blob = await osmOfflineErzeugen((i, n)=>{ knopf.textContent = 'Kacheln laden … ' + Math.round(i / n * 100) + ' %'; });
     knopf.disabled = false; knopf.textContent = alt;
     if(!blob){ appToastAnzeigen('Das hat nicht geklappt (Internet?). Bitte nochmal versuchen.', 3500); return; }
     const url = URL.createObjectURL(blob), a = document.createElement('a');
-    a.href = url; a.download = NFP_OSM_DATEI; document.body.appendChild(a); a.click(); a.remove();
-    appToastAnzeigen('Gespeichert als „' + NFP_OSM_DATEI + '“ (Downloads) – jetzt ins GitHub-Repo hochladen.', 6000);
+    a.href = url; a.download = OSM_OFFLINE.datei; document.body.appendChild(a); a.click(); a.remove();
+    appToastAnzeigen('Offline-Karte ist auf diesem Gerät aktiv. Datei „' + OSM_OFFLINE.datei + '“ (Downloads) für alle Geräte ins GitHub-Repo hochladen.', 7000);
   };
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
   // "Speichern"-Schritt.
