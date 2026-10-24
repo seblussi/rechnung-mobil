@@ -1177,6 +1177,9 @@
   #dsWerkzeugStapel .ws-icon.blau{background:#eaf1fb; border-color:#cfe0f7;} body.dunkel #dsWerkzeugStapel .ws-icon.blau{background:#16243a; border-color:#274469;}
   #dsWerkzeugStapel .ws-icon.rot{background:#fdeaea; border-color:#f3d3d3;} body.dunkel #dsWerkzeugStapel .ws-icon.rot{background:#3a1717; border-color:#5c2828;}
   #dsWerkzeugStapel .ws-icon svg{width:38px; height:38px;}
+  #dsWerkzeugStapel .ws-icon.code{color:#fff; font-family:var(--ds-mono, monospace); font-weight:700; font-size:16px; border-color:transparent;}
+  #dsWerkzeugStapel .ws-icon.code.ls{background:var(--ls-farbe);} #dsWerkzeugStapel .ws-icon.code.pt{background:var(--pt-farbe);} #dsWerkzeugStapel .ws-icon.code.gkv{background:var(--ds-gkv, #7d4e9e);}
+  body.dunkel #dsWerkzeugStapel .ws-icon.code{border-color:transparent;}
   .ds-nav-btn.ws-offen{color:var(--ls-farbe);}
   .ds-live > * + *{margin-top:12px;}
   .ds-ring-knopf, .ds-zeile-live{display:block; width:100%; margin:0; padding:0; border:0; background:none; color:var(--text); font:inherit; text-align:left; cursor:pointer;}
@@ -1443,7 +1446,10 @@
   .ds-weiter-text b{font-size:16px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .ds-neu-titel{margin:22px 2px 8px; font-weight:800;}
   body.design-einhand .ds-nav{position:fixed; left:16px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20; height:66px; border-radius:33px; background:var(--ds-nav);
-    grid-template-columns:repeat(4, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
+    grid-template-columns:repeat(5, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
+  body.design-einhand .ds-nav-btn.gross{justify-self:center; width:70px; height:70px; margin-top:-30px; border-radius:50%; background:#fff; color:#101317;
+    border:4px solid var(--bg); box-shadow:0 6px 16px rgba(0,0,0,.3);}
+  body.design-einhand .ds-nav-btn.gross svg{width:30px; height:30px; stroke-width:2.4;}
   body.design-einhand .ds-nav-btn{display:flex; align-items:center; justify-content:center; gap:6px; height:50px; border:0; background:none; color:var(--ds-nav-text); border-radius:25px; font-size:13px; font-weight:800; padding:0;}
   body.design-einhand .ds-nav-btn svg{width:22px; height:22px; stroke-width:2;}
   body.design-einhand .ds-nav-btn.an{background:#fff; color:#101317;}
@@ -13675,7 +13681,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v173';
+const APP_VERSION = 'v174';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14029,31 +14035,21 @@ async function designNavAktion(k){
     if(!msGraphVerfuegbar() || msGraphStatus === 'nicht_verfuegbar'){ appToastAnzeigen('OneDrive-Anmeldung ist auf diesem Gerät gerade nicht verfügbar.', 3200); return; }
     msGraphAnmelden(); return;
   }
-  if(k === 'neu'){
-    const a = await betaOverlay.ergebnis('Neuer Fall', '<div class="ds-neu-wahl">' +
-      '<button type="button" class="ds-neu-knopf ls" data-neu="ls"><span class="ds-code">LS</span><span><b>Leichenschau</b><small>neue Rechnung</small></span></button>' +
-      '<button type="button" class="ds-neu-knopf pt" data-neu="pt"><span class="ds-code">PT</span><span><b>Privatrechnung</b><small>neue Rechnung</small></span></button>' +
-      '<button type="button" class="ds-neu-knopf gkv" data-neu="gkv"><span class="ds-code">GKV</span><span><b>GKV-Patient</b><small>ins Fahrtenbuch</small></span></button></div>',
-      (function(){ setTimeout(()=> document.querySelectorAll('.beta-overlay [data-neu]').forEach(b=> b.onclick = ()=> betaOverlay.loesen && betaOverlay.loesen(b.dataset.neu)), 0); return [{ label: 'Abbrechen', akt: 'nein' }]; })());
-    betaOverlay.schliessen();
-    if(a !== 'ls' && a !== 'pt' && a !== 'gkv') return;
-    vorbereiteRuecksprung(); einstellungenOffen = false;
-    if(a === 'gkv') ansichtGkv(); else betaNeueRechnung(a);
-  }
+  if(k === 'neu'){ neuStapelUmschalten(); return; }
 }
 // Werkzeuge: Icons gestapelt direkt ueber dem Werkzeug-Knopf der Leiste
 // (wie ein Schnellmenue), mit den eigenen Werkzeug-Icons der Startseite
-function werkzeugStapelUmschalten(){
+// Schnellmenue: Eintraege als Icon-Stapel direkt ueber einem Knopf der Leiste
+// eintraege: [{ k, text, icon (HTML), klasse }] -- oberster zuerst
+function schnellStapel(navKey, eintraege, beiWahl){
   const alt = document.getElementById('dsWerkzeugStapel');
-  if(alt){ werkzeugStapelSchliessen(); return; }
-  const knopf = [...document.querySelectorAll('.ds-nav [data-nav="werkzeuge"]')].find(b=> b.offsetParent !== null);
+  if(alt){ const war = alt.dataset.nav; werkzeugStapelSchliessen(); if(war === navKey) return; }
+  const knopf = [...document.querySelectorAll('.ds-nav [data-nav="' + navKey + '"]')].find(b=> b.offsetParent !== null);
   const r = knopf ? knopf.getBoundingClientRect() : { top: window.innerHeight - 80, left: window.innerWidth - 70, width: 60, right: window.innerWidth - 10 };
   const huelle = document.createElement('div');
-  huelle.id = 'dsWerkzeugStapel';
-  huelle.innerHTML = '<div class="ws-hinter"></div><div class="ws-stapel">' +
-    '<button type="button" class="ws-eintrag" data-ws="apo"><span class="ws-text">Apotheken-Notdienst</span><span class="ws-icon rot">' + SVG_ICON_APOTHEKE + '</span></button>' +
-    '<button type="button" class="ws-eintrag" data-ws="luft"><span class="ws-text">Luftlinie berechnen</span><span class="ws-icon blau">' + SVG_ICON_LUFTLINIE + '</span></button>' +
-    '</div>';
+  huelle.id = 'dsWerkzeugStapel'; huelle.dataset.nav = navKey;
+  huelle.innerHTML = '<div class="ws-hinter"></div><div class="ws-stapel">' + eintraege.map(e=>
+    '<button type="button" class="ws-eintrag" data-ws="' + e.k + '"><span class="ws-text">' + e.text + '</span><span class="ws-icon ' + (e.klasse || '') + '">' + e.icon + '</span></button>').join('') + '</div>';
   document.body.appendChild(huelle);
   const st = huelle.querySelector('.ws-stapel');
   st.style.bottom = (window.innerHeight - r.top + 10) + 'px';
@@ -14061,10 +14057,26 @@ function werkzeugStapelUmschalten(){
   if(knopf) knopf.classList.add('ws-offen');
   requestAnimationFrame(()=> huelle.classList.add('auf'));
   huelle.querySelector('.ws-hinter').onclick = werkzeugStapelSchliessen;
-  huelle.querySelectorAll('[data-ws]').forEach(b=> b.onclick = ()=>{
-    const w = b.dataset.ws; werkzeugStapelSchliessen();
+  huelle.querySelectorAll('[data-ws]').forEach(b=> b.onclick = ()=>{ const w = b.dataset.ws; werkzeugStapelSchliessen(); beiWahl(w); });
+}
+function werkzeugStapelUmschalten(){
+  schnellStapel('werkzeuge', [
+    { k: 'apo', text: 'Apotheken-Notdienst', icon: SVG_ICON_APOTHEKE, klasse: 'rot' },
+    { k: 'luft', text: 'Luftlinie berechnen', icon: SVG_ICON_LUFTLINIE, klasse: 'blau' }
+  ], (w)=>{
     if(w === 'luft'){ vorbereiteRuecksprung(); einstellungenOffen = false; ansichtLuftlinienTool(); }
     else if(w === 'apo') notapothekenSucheOeffnen();
+  });
+}
+// Neuer Fall: LS / PT / GKV als Stapel ueber dem Plus
+function neuStapelUmschalten(){
+  schnellStapel('neu', [
+    { k: 'gkv', text: 'GKV-Patient', icon: 'GKV', klasse: 'code gkv' },
+    { k: 'pt', text: 'Privatrechnung', icon: 'PT', klasse: 'code pt' },
+    { k: 'ls', text: 'Leichenschau', icon: 'LS', klasse: 'code ls' }
+  ], (a)=>{
+    vorbereiteRuecksprung(); einstellungenOffen = false;
+    if(a === 'gkv') ansichtGkv(); else betaNeueRechnung(a);
   });
 }
 function werkzeugStapelSchliessen(){
@@ -14245,7 +14257,7 @@ function designStartErgaenzen(){
     vor('<div class="ds-start ds-einhand"><div class="ds-klein ds-neu-titel">NEUER FALL</div></div>');
     if(w) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand"><button type="button" class="ds-weiter" id="dsWeiter"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten</span><b>' + htmlEsc(w.titel) + '</b></span>' + DS_ICON.pfeil + '</button></div>');
     app.insertAdjacentHTML('beforeend', designNav([
-      { k: 'start', icon: 'start', label: 'Start', an: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen', nurIcon: true },
+      { k: 'start', icon: 'start', label: 'Start', an: true }, { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen', nurIcon: true },
       { k: 'fahrtenbuch', icon: 'auto', label: 'Quartalsübersicht', nurIcon: true }, { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge', nurIcon: true }]));
     if(w) document.getElementById('dsWeiter').onclick = w.oeffnen;
   }
