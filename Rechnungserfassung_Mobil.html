@@ -6576,7 +6576,9 @@ function betaEinstellungenHtml(){
     </div>
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Bankverbindung</div>
-      ${gruppe('Bankverbindung').replace('<div class="sync-unter-titel">Bankverbindung</div>', '')}
+      ${gruppe('Bankverbindung').replace('<div class="sync-unter-titel">Bankverbindung</div>', '<div class="sync-unter-titel">Konto für Leichenschau- und Privatrechnungen</div>')}
+      ${gruppe('Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)').replace('<div class="sync-unter-titel">Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)</div>',
+        '<div class="sync-unter-titel" style="margin-top:14px;">Konto für Rechnungen an Vertretungsärzte</div><div class="hinweis" style="font-size:12.5px; color:var(--text-schwach); margin-bottom:6px;">Leer lassen, wenn dasselbe Konto wie oben gelten soll.</div>')}
       ${status}
     </div>
     <div class="abschnitt" style="margin-top:20px;">
@@ -13613,7 +13615,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v165';
+const APP_VERSION = 'v166';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
