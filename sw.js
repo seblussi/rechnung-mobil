@@ -29,7 +29,7 @@
 // v122: Behandlungsfall-Pruefung wieder entfernt (im Notdienst nicht relevant)
 // v123: Profil-Reihenfolge, Begruendungs-Dropdown, Fassungen als Unterzeilen, Luftlinie mit Standort
 // v124: Fahrtenbuch-Statistik + Grundpauschale, Luftlinie Von/Bis, Debugging entfernt
-const CACHE_NAME = 'rechnungserfassung-v177';
+const CACHE_NAME = 'rechnungserfassung-v178';
 const NETZWERK_ZUERST = ['./Rechnungserfassung_Mobil.html', './manifest.json', './'];
 const CACHE_ZUERST = ['./icd_katalog.js', './nfp_karte_kvbw.jpg', './goae_katalog.js', './icon-192.png', './icon-512.png', './icon-192-maskable.png', './icon-512-maskable.png', './apple-touch-icon.png'];
 const NIE_CACHEN = ['nominatim.openstreetmap.org', 'tile.openstreetmap.org', 'project-osrm.org', 'graph.microsoft.com', 'login.microsoftonline.com', 'login.live.com'];
