@@ -12827,7 +12827,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v153';
+const APP_VERSION = 'v154';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14566,7 +14566,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       const ziel = await geocode(zielAdresse);
       if(!ziel){ box.innerHTML = '<div class="routenoptionen-hinweis warn">Zieladresse nicht gefunden.</div>'; return; }
       const kmLuft = kmLuftlinieEinfach(start, ziel);
-      let routen = await routeAlternativen(start, ziel);
+      // Routen MIT Verlauf (fuer die Routenkarte: gewaehlte Alternative einzeichnen)
+      let routen = await routeMitWeg(start, ziel);
       if(!routen.length){ box.innerHTML = '<div class="routenoptionen-hinweis warn">Route konnte nicht berechnet werden -- km bitte manuell eintragen oder über \'Google Maps Route\' prüfen.</div>'; return; }
       // Wie am PC (RoutenErmitteln liefert Luftlinie als ByRef-Parameter,
       // die erste/beste Route wird -- unabhaengig von einer spaeteren
@@ -14585,7 +14586,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       let html = '';
       routen.forEach((r,i)=>{
         const kmGesamt = r.km*2;
-        html += `<button type="button" data-km="${kmGesamt.toFixed(1)}" data-luft="">Fahrstrecke ${i+1}: ${kmGesamt.toFixed(1).replace('.',',')} km hin&amp;zurück (${Math.round(r.minuten)} min)</button>`;
+        html += `<button type="button" data-km="${kmGesamt.toFixed(1)}" data-luft="" data-idx="${i}">Fahrstrecke ${i+1}: ${kmGesamt.toFixed(1).replace('.',',')} km hin&amp;zurück (${Math.round(r.minuten)} min)</button>`;
       });
       html += `<button type="button" data-km="" data-luft="${kmLuft.toFixed(1)}">Luftlinie (einfach): ${kmLuft.toFixed(1).replace('.',',')} km</button>`;
       box.innerHTML = html;
@@ -14607,6 +14608,9 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
             // gFahrstreckeGesamt auf GENAU diese gewählte Route gesetzt.
             manuellerModus = 'REISE';
             document.getElementById('txtKmFahrstrecke').value = btn.dataset.km;
+            // Routenkarte: genau diese gewaehlte Alternative einzeichnen
+            const gew = routen[parseInt(btn.dataset.idx, 10)];
+            if(gew) routenKarteSetzen('routeKarte', start, ziel, gew.coords, zielAdresse);
           } else {
             // Luftlinie-Kachel: KORREKTUR -- die Wegegeld-Staffel (WT/WN)
             // deckt nur bis 25 km einfach ab; darüber kommt ausschließlich
@@ -14622,6 +14626,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
             // gFahrstreckeGesamt/txtKmFahrstrecke bleibt unangetastet (wurde
             // oben bereits auf die beste automatisch gefundene Route gesetzt).
             manuellerModus = 'LUFTLINIE';
+            // Routenkarte: wieder die beste Route (Route 1) einzeichnen
+            routenKarteSetzen('routeKarte', start, ziel, routen[0].coords, zielAdresse);
           }
           box.classList.remove('aktiv'); box.innerHTML='';
           feldWarnung('txtKm', '');
