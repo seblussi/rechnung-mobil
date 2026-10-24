@@ -1445,6 +1445,32 @@
   .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:#111; border-radius:2px;}
   .luft-karte-legende i.l{height:0; border-radius:0; border-top:2.5px dashed var(--text); width:16px;} .luft-karte-legende i.w{height:4px; border-radius:2px; background:#1a55c9; width:16px;}
   .luft-karte-hinweis{font-size:13px; color:var(--text-schwach); padding:6px 0;}
+  /* Klinik/Einhand: Rechnungsverwaltung + Fahrtenbuch stecken in der Leiste */
+  body.design-klinik #app .uebersicht-reihe, body.design-einhand #app .uebersicht-reihe{display:none;}
+  /* Klinik: Leiste immer und ueberall */
+  body.ds-leiste-global{--ds-leiste-h:calc(70px + env(safe-area-inset-bottom));}
+  body.ds-leiste-global main{padding-bottom:calc(var(--ds-leiste-h) + 20px);}
+  body.ds-leiste-global .gkv-summe-leiste, body.ds-leiste-global .pos-fuss{bottom:var(--ds-leiste-h);}
+  body.ds-leiste-global .pos-fuss{padding-bottom:10px;}
+  body.ds-leiste-global .app-toast{bottom:calc(var(--ds-leiste-h) + 14px);}
+  body.nfp-offen #dsGlobalNav{display:none;}
+  /* Auswahl "Neuer Fall" */
+  .ds-neu-wahl{display:flex; flex-direction:column; gap:8px; margin:4px 0 2px; text-align:left;}
+  .ds-neu-knopf{display:flex; align-items:center; gap:12px; width:100%; margin:0; min-height:60px; padding:10px 14px; border:1px solid var(--rand); border-radius:14px; background:var(--karte); color:var(--text); font:inherit; cursor:pointer; box-sizing:border-box;}
+  .ds-neu-knopf b{display:block; font-size:16px;} .ds-neu-knopf small{display:block; font-size:12.5px; color:var(--text-schwach);}
+  .ds-neu-knopf .ds-code{flex:0 0 46px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:10px; color:#fff; font-family:var(--ds-mono); font-weight:700; font-size:13px; background:var(--ls-farbe);}
+  .ds-neu-knopf.pt .ds-code{background:var(--pt-farbe);} .ds-neu-knopf.gkv .ds-code{background:var(--ds-gkv);}
+  /* Einhand: GKV in einer Reihe mit LS und PT */
+  body.design-einhand #app .kachelreihe.drei{grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px;}
+  body.design-einhand #app .kachelreihe.drei .karte, body.design-einhand #app .kachelreihe.drei .karte.gkv{grid-column:auto; order:0; min-height:150px; padding:14px 12px; border-radius:22px;}
+  body.design-einhand .karte .ds-code, body.design-einhand .karte.gkv .ds-code{font-size:32px;}
+  body.design-einhand .karte .ds-lang{font-size:13px; line-height:1.2;}
+  body.design-einhand .karte .ds-unter{font-size:11.5px;}
+  body.design-einhand .karte.gkv .ds-plus{width:auto; height:auto; background:none; color:#fff; border-radius:0;}
+  body.design-einhand .karte .ds-kt{grid-column:1 / -1;}
+  body.design-einhand .karte .ds-plus{position:absolute; top:12px; right:12px;}
+  body.design-einhand #app .kachelreihe.drei .karte{position:relative;}
+  body.design-einhand .karte .ds-plus{top:auto; bottom:18px; right:12px;}
 </style>
 </head>
 <body>
@@ -3480,21 +3506,6 @@ function ansichtStart(){
   // jetzt ueber den GANZEN Button statt nur ueber das kleine Icon-Badge.
   html += `
     <div class="abschnitt start-abschnitt">
-      <div class="trennlinie">Excel-Dateien öffnen</div>
-      <div class="icon-buttons-2">
-        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnOeffneUebersicht">
-          <span class="btn-icon-symbol">&#128203;</span>
-          <span class="btn-titel">Rechnungsübersicht</span>
-          <span class="unter">Excel-Datei öffnen</span>
-        </button>
-        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnOeffneFahrtenbuch">
-          <span class="btn-icon-symbol">&#128657;</span>
-          <span class="btn-titel">Fahrtenbuch</span>
-          <span class="unter">Excel-Datei öffnen</span>
-        </button>
-      </div>
-    </div>
-    <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Werkzeuge</div>
       <div class="icon-buttons-2">
         <button class="btn-sekundaer btn-icon btn-icon-blau" id="btnLuftlinienTool">
@@ -3506,6 +3517,21 @@ function ansichtStart(){
           <span class="btn-icon-symbol">${SVG_ICON_APOTHEKE}</span>
           <span class="btn-titel">Apotheken-Notdienst</span>
           <span class="unter">Umkreissuche aponet.de</span>
+        </button>
+      </div>
+    </div>
+    <div class="abschnitt start-abschnitt">
+      <div class="trennlinie">Excel-Dateien öffnen</div>
+      <div class="icon-buttons-2">
+        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnOeffneUebersicht">
+          <span class="btn-icon-symbol">&#128203;</span>
+          <span class="btn-titel">Rechnungsübersicht</span>
+          <span class="unter">Excel-Datei öffnen</span>
+        </button>
+        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnOeffneFahrtenbuch">
+          <span class="btn-icon-symbol">&#128657;</span>
+          <span class="btn-titel">Fahrtenbuch</span>
+          <span class="unter">Excel-Datei öffnen</span>
         </button>
       </div>
     </div>`;
@@ -9465,7 +9491,12 @@ function betaZuschlagFamilie(art, auswahl){
   return null;
 }
 // Wegegeld/Reiseentschaedigung nur bei einem Besuch bzw. einer Leichenschau
+// Profil "telefonisch": nie Wegegeld (es wird nicht gefahren)
+function betaProfilOhneFahrt(art){
+  try{ const p = betaProfilAktiv(art); return !!p && (p.id === 'telefon' || /telefon/i.test(String(p.name || ''))); }catch(_){ return false; }
+}
 function betaBesuchDabei(art, auswahl){
+  if(betaProfilOhneFahrt(art)) return false;
   return Array.from(auswahl || []).some(z=> ['48','50','51','55','100','101'].includes(betaNrVonSchluessel(art, z)));
 }
 // roh: Ergebnis der Automatik (F/G/H, Wegegeld, ...); basis: die gewaehlten
@@ -9494,7 +9525,7 @@ function betaAutoAnpassen(art, roh, basis){
 const PROFILE_STANDARD = {
   pt: [ { id:'fahrdienst', name:'Fahrdienst', vorauswahl:['50'] },
         { id:'sitzdienst', name:'Sitzdienst', vorauswahl:['1','5'] },
-        { id:'telefon',    name:'Telefonische Beratung', vorauswahl:['1'] } ],
+        { id:'telefon',    name:'Telefonische Konsultation', vorauswahl:['1'] } ],
   ls: [ { id:'leichenschau', name:'Leichenschau', vorauswahl:['101','102'] } ]
 };
 function betaProfileDaten(){ const d = LS.get(EIGENE_POS_CACHE, null) || {}; return d.profile || {}; }
@@ -9503,6 +9534,7 @@ function betaProfile(art){
   const m = new Map();
   PROFILE_STANDARD[art].forEach(p=> m.set(p.id, { ...p, standard: true }));
   eigene.forEach(p=>{ if(p && p.id) m.set(p.id, { ...(m.get(p.id) || {}), ...p }); });
+  const tel = m.get('telefon'); if(tel && tel.name === 'Telefonische Beratung') tel.name = 'Telefonische Konsultation';
   return [...m.values()].filter(p=> !p.geloescht);
 }
 function betaProfilAktivId(art){
@@ -10609,7 +10641,7 @@ const GKV_LISTE_STANDARD = ['nfp', 'schwer', '01226', 'kons', '01418', '01413', 
 // ---------- Schnellwahl-Profile (wie bei PT: Hausbesuch / Telefon + eigene) ----------
 const GKV_PROFILE_STANDARD = [
   { id: 'hb', name: 'Hausbesuch', auswahl: { nfp: { anz: 1 }, '01418': { anz: 1 }, weg: { anz: 1, stufe: '2' } } },
-  { id: 'tel', name: 'Tel. Konsultation', auswahl: { kons: { anz: 1 } } },
+  { id: 'tel', name: 'Telefonische Konsultation', auswahl: { kons: { anz: 1 } } },
   { id: 'sitz', name: 'Sitzdienst', auswahl: { nfp: { anz: 1 } } }
 ];
 // Gespeichert wie die PT/LS-Profile in "KVBW Onedrive/eigene_positionen.json"
@@ -10621,6 +10653,8 @@ function gkvProfileLaden(){
   const m = new Map();
   GKV_PROFILE_STANDARD.forEach(p=> m.set(p.id, JSON.parse(JSON.stringify(p))));
   eigene.forEach(p=>{ if(p && p.id) m.set(p.id, { ...(m.get(p.id) || {}), ...p }); });
+  // alter Standardname -> neuer
+  const tel = m.get('tel'); if(tel && tel.name === 'Tel. Konsultation') tel.name = 'Telefonische Konsultation';
   return [...m.values()].filter(p=> !p.geloescht);
 }
 function gkvProfilSichern(p){ const { standard, ...rest } = p; return betaProfilSpeichern('gkv', rest); }
@@ -10744,7 +10778,7 @@ async function gkvProfilBearbeiten(id){
       '</div>' +
       '<button type="button" class="btn-sekundaer profil-eigene" data-akt="eigene" style="margin-top:8px;">+ EBM-Position hinzufügen</button>' +
       '<div class="profil-gruppe-titel">Wegepauschale <span class="gkv-pe-hinweis">nur mit Besuch</span></div>' +
-      (sitz ? '<div class="beta-erg-klein profil-leer">Sitzdienst – es wird nicht gefahren, keine Wegepauschale.</div>'
+      (sitz ? '<div class="beta-erg-klein profil-leer">Sitzdienst/telefonisch – es wird nicht gefahren, keine Wegepauschale.</div>'
         : '<div class="gkv-pe-zeile' + (wa ? ' an' : '') + '"><label><input type="checkbox" data-gk="weg"' + (wa ? ' checked' : '') + '> <span>Wegepauschale vorauswählen</span></label>' +
           '<select class="gkv-pe-stufe" data-gstufe="weg">' + EBM_GRUPPEN.weg.stufen.map(x=> '<option value="' + x.k + '"' + (((wa && wa.stufe) || '2') === x.k ? ' selected' : '') + '>' + htmlEsc(x.label) + '</option>').join('') + '</select></div>') +
       (weg.length ? '<button type="button" class="profil-aus-titel" data-akt="ausklappen">' + (ausOffen ? '&#9662;' : '&#9656;') + ' Entfernt (' + weg.length + ') – antippen zum Zurückholen</button>' +
@@ -10972,7 +11006,8 @@ async function pseudoHinweisZeichnen(el){
 // in einer eigenen Gruppe und nur, wenn ein Besuch gewaehlt ist (nie im
 // Sitzdienst).
 const GKV_BESUCH = ['01418', '01413', '01410', '01411', '01412', '01415'];
-function gkvIstSitzProfil(p){ return !!p && (p.id === 'sitz' || /sitz/i.test(String(p.name || ''))); }
+// Profile ohne Fahrt (Sitzdienst, telefonisch): keine Wegepauschale, keine Adresse
+function gkvIstSitzProfil(p){ return !!p && (p.id === 'sitz' || p.id === 'tel' || /sitz|telefon|tel\./i.test(String(p.name || ''))); }
 function gkvBesuchDabei(auswahl){ return Object.keys(auswahl || {}).some(k=> GKV_BESUCH.includes(k)); }
 function gkvWegMoeglich(auswahl, profil){ return gkvBesuchDabei(auswahl) && !gkvIstSitzProfil(profil); }
 function gkvStdSchluessel(){ return GKV_LISTE_STANDARD.filter(k=> k !== 'weg'); }
@@ -11655,7 +11690,7 @@ function ansichtGkv(bearbeitenId){
       const erg = await gkvZifferSuchenDialog(); if(!erg) return;
       const k = erg.schluessel;
       if(k === 'weg'){
-        if(!gkvWegMoeglich(st.auswahl, prof)){ appToastAnzeigen(gkvIstSitzProfil(prof) ? 'Sitzdienst: keine Wegepauschale.' : 'Wegepauschale nur mit einem Besuch (z.B. 01418).', 2800); return; }
+        if(!gkvWegMoeglich(st.auswahl, prof)){ appToastAnzeigen(gkvIstSitzProfil(prof) ? 'In diesem Profil (ohne Fahrt) keine Wegepauschale.' : 'Wegepauschale nur mit einem Besuch (z.B. 01418).', 2800); return; }
         const x = EBM_GRUPPEN.weg.stufen.find(q=> q.tag === erg.gop || q.nacht === erg.gop); st.auswahl.weg = { anz: 1, stufe: x ? x.k : '2' };
       } else {
         gkvGlobalHinzu(k);
@@ -12777,6 +12812,8 @@ const DESIGNS = [
   { k: 'einhand', titel: 'Einhand', text: 'Alles im Daumenbereich: große Kacheln, kräftige Schrift, große Tippflächen.', farben: ['#eceef2', '#101317', '#5b3480', '#17663a'] }
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+// sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
+const APP_VERSION = 'v151';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -12788,6 +12825,7 @@ function designAnwenden(){
     const dunkel = b.classList.contains('dunkel');
     const tc = { standard: '#2b3a55', klinik: dunkel ? '#242b36' : '#ffffff', nacht: '#0b1020', einhand: dunkel ? '#1b2028' : '#eceef2' }[d];
     const m = document.querySelector('meta[name="theme-color"]'); if(m && tc) m.setAttribute('content', tc);
+    if(typeof designGlobalNav === 'function') designGlobalNav();
   }catch(_){}
 }
 // themaAnwenden (Sonne/Mond, Einstellungen) zieht das Design immer mit
@@ -12797,6 +12835,7 @@ if(document.body) designAnwenden(); else document.addEventListener('DOMContentLo
 function designWahlHtml(){
   const akt = designAktuell();
   return `
+      <div class="design-hinweis app-version">App-Version <b>${APP_VERSION}</b></div>
       <div class="sync-unter-titel">Design</div>
       <div class="pos-stil-wahl design-wahl">${DESIGNS.map(x=> `
         <label class="pos-stil-option${x.k === akt ? ' an' : ''}"><input type="radio" name="design" value="${x.k}"${x.k === akt ? ' checked' : ''}>
@@ -12909,6 +12948,28 @@ function designFortschritt(info){
   return Math.max(0, Math.min(1, (info.jetzt - fe.von) / (fe.bis - fe.von)));
 }
 
+// Bisherige vertretene Aerzte: zuletzt benutzte zuerst (Merkliste), dann
+// Fahrtenbuch (zwischengespeichert), dann Aerzte-Rechnungen; ausgeblendete nicht
+function liveAerzteHistorie(){
+  const e = ladeEinstellungen() || {}, aus = new Set((e.fbAerzteAus || []).map(x=> String(x).toLowerCase()));
+  const liste = [];
+  const dazu = (n)=>{ n = String(n || '').trim(); if(n && !aus.has(n.toLowerCase()) && !liste.some(x=> x.toLowerCase() === n.toLowerCase())) liste.push(n); };
+  (e.fbAerzte || []).slice().reverse().forEach(dazu);
+  ((LS.get('fb_aerzte_historie', null) || {}).namen || []).forEach(dazu);
+  try{ const d = LS.get(EIGENE_POS_CACHE, null) || {}; (d.aerzteRechnungen || []).slice().reverse().forEach(r=> dazu(r && r.arzt)); (d.aerzteAdressen || []).forEach(a=> dazu(a && a.arzt)); }catch(_){}
+  return liste;
+}
+async function liveAerzteAusFahrtenbuch(){
+  try{
+    const kx = await fbKontext(null), namen = [];
+    for(const blatt of kx.info.blaetter.slice(-2).reverse()){
+      const fb = await fbLesen(null, kx, blatt);
+      fb.daten.bloecke.slice().reverse().forEach(b=>{ const n = String(b.arzt || '').trim(); if(n && !namen.includes(n)) namen.push(n); });
+    }
+    LS.set('fb_aerzte_historie', { am: Date.now(), namen: namen.slice(0, 40) });
+  }catch(_){}
+}
+
 // Auswahl des Dienstes (Antippen der Live-Anzeige)
 async function liveDienstDialog(){
   const akt = liveDienstLaden(), jetzt = new Date();
@@ -12925,9 +12986,13 @@ async function liveDienstDialog(){
     return l.slice(0, 6);
   };
   if(!von || !bis){ const v = vorschlaege()[0]; if(v){ [von, bis] = v.split('-'); } }
+  // bisherige vertretene Aerzte (Fahrtenbuch, Merkliste, Aerzte-Rechnungen)
+  if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet' && Date.now() - ((LS.get('fb_aerzte_historie', null) || {}).am || 0) > 6 * 3600000){
+    betaOverlay.zeigen('Welcher Dienst?'); betaOverlay.fortschritt(null); betaOverlay.schritt('Bisherige Ärzte werden aus dem Fahrtenbuch gelesen …');
+    await Promise.race([liveAerzteAusFahrtenbuch(), new Promise(r=> setTimeout(r, 8000))]);
+  }
   for(;;){
-    let aerzte = [];
-    try{ const e = ladeEinstellungen() || {}, aus = new Set((e.fbAerzteAus || []).map(x=> x.toLowerCase())); (e.fbAerzte || []).slice().reverse().forEach(n=>{ n = String(n || '').trim(); if(n && !aus.has(n.toLowerCase()) && !aerzte.includes(n)) aerzte.push(n); }); }catch(_){}
+    const aerzte = liveAerzteHistorie();
     const vs = vorschlaege();
     const html = '<div class="fb-dialog">' +
       '<div class="fb-info">Der Dienst steuert die Live-Anzeige und füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.</div>' +
@@ -12938,7 +13003,8 @@ async function liveDienstDialog(){
       (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace('-', ' – ') + '</button>').join('') + '</div>' : '') +
       '<div class="fb-zeile"><label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
       '<div class="fb-lbl">Vertretener Arzt (optional)</div>' +
-      (aerzte.length ? '<div class="fb-chips">' + aerzte.slice(0, 6).map(a=> '<button type="button" class="fb-chip' + (a === arzt ? ' an' : '') + '" data-larzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button>').join('') + '</div>' : '') +
+      (aerzte.length ? '<div class="fb-chips">' + aerzte.slice(0, 12).map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-larzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-larztweg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>'
+        : '<div class="fb-info">Noch keine bisherigen Ärzte bekannt' + ((typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') ? '.' : ' – mit OneDrive-Anmeldung kommen sie aus dem Fahrtenbuch.') + '</div>') +
       '<input type="text" id="liveArzt" placeholder="Name (leer = eigener Dienst)" value="' + htmlEsc(arzt) + '"></div>';
     const kn = [{ label: 'Abbrechen', akt: 'nein' }];
     if(akt) kn.push({ label: 'Dienst beenden', akt: 'ende' });
@@ -12949,7 +13015,12 @@ async function liveDienstDialog(){
     document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(b=> b.onclick = ()=>{ const [v1, b1] = b.dataset.lzeit.split('-'); document.getElementById('liveVon').value = v1; document.getElementById('liveBis').value = b1;
       document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(x=> x.classList.toggle('an', x === b)); });
     document.querySelectorAll('.beta-overlay [data-larzt]').forEach(b=> b.onclick = ()=>{ document.getElementById('liveArzt').value = b.dataset.larzt;
-      document.querySelectorAll('.beta-overlay [data-larzt]').forEach(x=> x.classList.toggle('an', x === b)); });
+      document.querySelectorAll('.beta-overlay .fb-chip.arzt').forEach(x=> x.classList.toggle('an', x.contains(b))); });
+    document.querySelectorAll('.beta-overlay [data-larztweg]').forEach(b=> b.onclick = ()=>{
+      if(typeof fbArztAusblenden === 'function') fbArztAusblenden(b.dataset.larztweg);
+      const chip = b.closest('.fb-chip'); if(chip) chip.remove();
+      if(document.getElementById('liveArzt').value === b.dataset.larztweg) document.getElementById('liveArzt').value = '';
+    });
     const dEl = document.getElementById('liveDatum'); if(dEl) dEl.onchange = ()=>{ lesen(); betaOverlay.loesen && betaOverlay.loesen('neu'); };
     const a = await warte;
     lesen();
@@ -13017,17 +13088,55 @@ function designNav(eintraege){
     '<button type="button" class="ds-nav-btn' + (x.an ? ' an' : '') + (x.gross ? ' gross' : '') + '" data-nav="' + x.k + '"' + (x.gross || x.nurIcon ? ' aria-label="' + x.label + '"' : '') + '>' + DS_ICON[x.icon] +
       (x.gross || x.nurIcon ? '' : '<span>' + x.label + '</span>') + '</button>').join('') + '</nav>';
 }
-function designNavWiring(){
-  const klick = (id)=>{ const b = document.getElementById(id); if(b) b.click(); };
-  document.querySelectorAll('.ds-nav [data-nav]').forEach(b=> b.onclick = ()=>{
-    const k = b.dataset.nav;
-    if(k === 'start') window.scrollTo({ top: 0, behavior: 'smooth' });
-    else if(k === 'verwaltung') klick('btnKorrigieren');
-    else if(k === 'fahrtenbuch') klick('btnAlleRechnungen');
-    else if(k === 'neu') klick('kGKV');
-    else if(k === 'einst') klick('btnEinstellungen');
-  });
+// Ziele der Leiste -- funktionieren aus jeder Ansicht
+async function designNavAktion(k){
+  if(k === 'start'){ if(aktuelleAnsichtIstHauptbildschirm) window.scrollTo({ top: 0, behavior: 'smooth' }); else ansichtStart(); return; }
+  if(k === 'einst'){ if(!einstellungenOffen) document.getElementById('btnEinstellungen').click(); return; }
+  if(k === 'verwaltung'){ vorbereiteRuecksprung(); einstellungenOffen = false; if(betaGesamtAktiv()) ansichtRechnungenGesamt(); else ansichtKorrigieren(); return; }
+  if(k === 'fahrtenbuch'){
+    if(msGraphStatus === 'angemeldet'){ vorbereiteRuecksprung(); einstellungenOffen = false; ansichtFahrdienstAuswertung(); return; }
+    if(!msGraphVerfuegbar() || msGraphStatus === 'nicht_verfuegbar'){ appToastAnzeigen('OneDrive-Anmeldung ist auf diesem Gerät gerade nicht verfügbar.', 3200); return; }
+    msGraphAnmelden(); return;
+  }
+  if(k === 'neu'){
+    const a = await betaOverlay.ergebnis('Neuer Fall', '<div class="ds-neu-wahl">' +
+      '<button type="button" class="ds-neu-knopf ls" data-neu="ls"><span class="ds-code">LS</span><span><b>Leichenschau</b><small>neue Rechnung</small></span></button>' +
+      '<button type="button" class="ds-neu-knopf pt" data-neu="pt"><span class="ds-code">PT</span><span><b>Privatrechnung</b><small>neue Rechnung</small></span></button>' +
+      '<button type="button" class="ds-neu-knopf gkv" data-neu="gkv"><span class="ds-code">GKV</span><span><b>GKV-Patient</b><small>ins Fahrtenbuch</small></span></button></div>',
+      (function(){ setTimeout(()=> document.querySelectorAll('.beta-overlay [data-neu]').forEach(b=> b.onclick = ()=> betaOverlay.loesen && betaOverlay.loesen(b.dataset.neu)), 0); return [{ label: 'Abbrechen', akt: 'nein' }]; })());
+    betaOverlay.schliessen();
+    if(a !== 'ls' && a !== 'pt' && a !== 'gkv') return;
+    vorbereiteRuecksprung(); einstellungenOffen = false;
+    if(a === 'gkv') ansichtGkv(); else betaNeueRechnung(a);
+  }
 }
+function designNavWiring(wurzel){
+  (wurzel || document).querySelectorAll('.ds-nav [data-nav]').forEach(b=> b.onclick = ()=> designNavAktion(b.dataset.nav));
+}
+// Klinik: Leiste unten immer und ueberall (ausserhalb von #app)
+function designGlobalNav(){
+  try{
+    let nav = document.getElementById('dsGlobalNav');
+    const an = designAktuell() === 'klinik';
+    document.body.classList.toggle('ds-leiste-global', an);
+    if(!an){ if(nav) nav.remove(); return; }
+    if(!nav){
+      const h = document.createElement('div');
+      h.innerHTML = designNav([
+        { k: 'start', icon: 'start', label: 'Start' }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen' },
+        { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch' },
+        { k: 'einst', icon: 'regler', label: 'Einstellungen' }]);
+      nav = h.firstElementChild; nav.id = 'dsGlobalNav';
+      document.body.appendChild(nav);
+      designNavWiring(nav.parentNode);
+    }
+    const t = String((document.getElementById('titel') || {}).textContent || '');
+    const akt = einstellungenOffen || /Einstellungen|Backups/.test(t) ? 'einst' : aktuelleAnsichtIstHauptbildschirm ? 'start'
+      : /Rechnungsverwaltung|Lokale Rechnungen/.test(t) ? 'verwaltung' : /Fahrdienst|Fahrtenbuch/.test(t) ? 'fahrtenbuch' : '';
+    nav.querySelectorAll('[data-nav]').forEach(b=> b.classList.toggle('an', b.dataset.nav === akt));
+  }catch(_){}
+}
+setzeTitel = (function(basis){ return function(){ const r = basis.apply(this, arguments); setTimeout(designGlobalNav, 0); return r; }; })(setzeTitel);
 function designKachelnUmbauen(info){
   const anz = { ls: 0, pt: 0 };
   try{ betaEntwuerfe().forEach(e=>{ if(anz[e.art] !== undefined) anz[e.art]++; }); }catch(_){}
@@ -13121,10 +13230,6 @@ function designStartErgaenzen(){
     const offen = designOffeneFaelle().slice(0, 5);
     reihe.insertAdjacentHTML('afterend', '<section class="ds-offen"><div class="ds-abschnitt-kopf"><h2>Offene Fälle</h2>' +
       '<button type="button" class="ds-link" id="dsAlleFaelle">Alle anzeigen</button></div><div class="ds-liste">' + designFallZeilenHtml(offen) + '</div></section>');
-    app.insertAdjacentHTML('beforeend', designNav([
-      { k: 'start', icon: 'start', label: 'Start', an: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen' },
-      { k: 'neu', icon: 'plus', label: 'Neuer GKV-Patient', gross: true }, { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch' },
-      { k: 'einst', icon: 'regler', label: 'Einstellungen' }]));
     app.querySelectorAll('.ds-fall').forEach(b=> b.onclick = ()=> offen[+b.dataset.fall].oeffnen());
     const alle = document.getElementById('dsAlleFaelle'); if(alle) alle.onclick = ()=> document.getElementById('btnKorrigieren').click();
   }
@@ -13146,7 +13251,8 @@ function designStartErgaenzen(){
   }
   app.querySelectorAll('[data-live]').forEach(b=> b.onclick = async ()=>{ if(await liveDienstDialog()) ansichtStart(); });
   app.querySelectorAll('.ds-ein').forEach(b=> b.onclick = ()=> ansichtGkv(b.dataset.gkv));
-  if(app.querySelector('.ds-nav')) designNavWiring();
+  if(app.querySelector('.ds-nav')) designNavWiring(app);
+  designGlobalNav();
   if(document.getElementById('dsRing')) designUhrStarten();
 }
 
@@ -15169,52 +15275,32 @@ function appToastAnzeigen(text, dauerMs){
 }
 
 (function hardwareZurueckEinrichten(){
-  let appBeendenBestaetigt = false;
-
-  function waechterSetzen(){
-    try{ history.pushState({rechnungserfassungWaechter:true}, '', location.href); }catch(e){}
+  const VORRAT = 4;
+  let tiefe = 0, ignorieren = 0, beendenScharf = false, scharfTimer = null;
+  const stand = ()=>{ const st = history.state; return st && st.rWaechter ? st.rWaechter : 0; };
+  function auffuellen(){
+    if(ignorieren) return;
+    tiefe = stand();
+    if(tiefe >= VORRAT) return;
+    try{ while(tiefe < VORRAT){ tiefe++; history.pushState({ rWaechter: tiefe, rechnungserfassungWaechter: true }, '', location.href); } }catch(e){}
   }
-  waechterSetzen();
-
+  // nur bei echter Nutzer-Interaktion (zaehlt als Aktivierung)
+  ['pointerup', 'touchend', 'click', 'keydown'].forEach(t=> window.addEventListener(t, ()=>{
+    if(beendenScharf){ beendenScharf = false; clearTimeout(scharfTimer); }
+    auffuellen();
+  }, true));
   window.addEventListener('popstate', ()=>{
-    if(aktuellerZurueckHandler){
-      // Wie ein Klick auf den Zurück-Pfeil oben -- danach sofort wieder
-      // einen Wächter setzen, damit die NÄCHSTE Zurück-Taste erneut hier
-      // ankommt, statt die App zu verlassen.
-      waechterSetzen();
-      aktuellerZurueckHandler();
-      return;
-    }
-    // WICHTIG (Fix): das "2x Zurück beendet die App"-Verhalten darf
-    // AUSSCHLIESSLICH auf dem Hauptbildschirm greifen -- geprüft über das
-    // explizite aktuelleAnsichtIstHauptbildschirm-Flag, nicht nur implizit
-    // darüber, dass aktuellerZurueckHandler zufällig null ist. Ohne diese
-    // Absicherung konnte auf manchen Geräten (Android-Zurück-Geste/-Taste
-    // feuert dort ggf. anders/schneller als im Test) ein zweiter, sehr
-    // schnell aufeinanderfolgender Zurück-Tastendruck aus einer Maske
-    // heraus die App direkt UND OHNE jeden Hinweis beenden. Sind wir NICHT
-    // auf dem Hauptbildschirm (z.B. weil aktuellerZurueckHandler aus
-    // irgendeinem Grund nicht gesetzt war), wird stattdessen IMMER
-    // sicherheitshalber zur Startseite gesprungen statt die App zu
-    // gefährden.
-    if(!aktuelleAnsichtIstHauptbildschirm){
-      waechterSetzen();
-      appBeendenBestaetigt = false;
-      ansichtStart();
-      return;
-    }
-    // Startseite, zweites "Zurück" (innerhalb von 2,5 s nach dem Hinweis):
-    // diesmal wirklich NICHTS abfangen/erneut bewachen -- die Taste soll
-    // jetzt tatsaechlich wirken und die App verlassen.
-    if(appBeendenBestaetigt){
-      appBeendenBestaetigt = false;
-      return;
-    }
-    // Startseite, erstes "Zurück": nur Hinweis anzeigen, Wächter bewusst
-    // NICHT erneut setzen, damit der naechste Tastendruck direkt wirkt.
-    appBeendenBestaetigt = true;
+    tiefe = stand();
+    if(ignorieren > 0){ ignorieren--; return; }
+    if(aktuellerZurueckHandler){ beendenScharf = false; aktuellerZurueckHandler(); return; }
+    if(!aktuelleAnsichtIstHauptbildschirm){ beendenScharf = false; ansichtStart(); return; }
+    // Startseite: 1. Zurueck -> Hinweis, restliche Waechter abbauen; das
+    // naechste Zurueck verlaesst dann die App
+    beendenScharf = true;
     appToastAnzeigen('Nochmal zurück drücken, um die App zu beenden.', 2500);
-    setTimeout(()=>{ appBeendenBestaetigt = false; }, 2500);
+    clearTimeout(scharfTimer);
+    scharfTimer = setTimeout(()=>{ beendenScharf = false; }, 4000);
+    if(tiefe > 0){ ignorieren = 1; try{ history.go(-tiefe); }catch(e){ ignorieren = 0; } }
   });
 })();
 
