@@ -13696,7 +13696,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v181';
+const APP_VERSION = 'v182';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14098,9 +14098,9 @@ function werkzeugStapelUmschalten(){
 // Neuer Fall: LS / PT / GKV als Stapel ueber dem Plus
 function neuStapelUmschalten(){
   schnellStapel('neu', [
-    { k: 'gkv', text: 'GKV-Patient', icon: 'GKV', klasse: 'code gkv' },
+    { k: 'ls', text: 'Leichenschau', icon: 'LS', klasse: 'code ls' },
     { k: 'pt', text: 'Privatrechnung', icon: 'PT', klasse: 'code pt' },
-    { k: 'ls', text: 'Leichenschau', icon: 'LS', klasse: 'code ls' }
+    { k: 'gkv', text: 'GKV-Patient', icon: 'GKV', klasse: 'code gkv' }
   ], (a)=>{
     vorbereiteRuecksprung(); einstellungenOffen = false;
     if(a === 'gkv') ansichtGkv(); else betaNeueRechnung(a);
