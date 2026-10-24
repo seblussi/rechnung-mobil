@@ -1543,6 +1543,9 @@
   .ze-flaeche{cursor:crosshair;}
   .ze-svg{pointer-events:none;}
   .ze-info{font-size:13px;}
+  .gkv-zwischenablage{margin:0 0 4px; padding:10px;}
+  #gkvZwHinweis:empty{display:none;}
+  #gkvZwHinweis{margin-bottom:8px;}
   .fbx-tabs{display:flex; gap:6px; margin:0 0 10px;}
   .fbx-tabs button{flex:1; margin:0; padding:9px; font-size:14px; font-weight:600; border-radius:10px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .fbx-tabs button.an{background:var(--ls-farbe); border-color:var(--ls-farbe); color:#fff;}
@@ -2524,11 +2527,11 @@ async function fbBuchLaden(blatt, meldung){
         const v = Number(r[c]);
         if(v > 0){ let g = (String(kopf[c] == null ? '' : kopf[c]).match(/\d{3,5}/) || [fbSpalte(c)])[0]; if(/^\d{4}$/.test(g)) g = '0' + g; ziffern.push({ gop: g, anz: v }); }
       }
-      const f = { name, art, euro: Number(r[FB_COL.AG]) || 0, ziffern, zeit: '', pseudo: /^pseudo/i.test(name), zeile: z + 1 };
+      const f = { name, art, euro: Number(r[FB_COL.AG]) || 0, ziffern, zeit: fbZeitAusZelle(r[FB_COL.AS]), pseudo: /^pseudo/i.test(name), zeile: z + 1 };
       const nn = fbNameNorm(name);
       const treffer = tag ? lokal.find(x=> x.art === art && x.n === nn && tage(x.t, tag) <= 1.5) : null;
       if(treffer){
-        f.zeit = treffer.zeit; f.oeffnen = treffer.oeffnen;
+        if(!f.zeit) f.zeit = fbZeitAusZelle(treffer.zeit); f.oeffnen = treffer.oeffnen;
         if(!ziffern.length && treffer.positionen) f.ziffern = treffer.positionen.map(g=> ({ gop: String(g), anz: 1 }));
       }
       faelle.push(f);
@@ -2602,8 +2605,8 @@ function fbGkvAusExcelOeffnen(d, f){
       auswahl[k] = Object.assign({ anz }, g.stufen ? { stufe: g.stufen[0].k } : {});
     } else auswahl[gop] = { anz };
   });
-  // Uhrzeit fehlt in der Excel: Tag- bzw. Nachtzeit so waehlen, dass dieselben Ziffern herauskommen
-  const zeit = nacht ? '20:00' : '12:00';
+  // Uhrzeit aus Spalte AS; fehlt sie (alte Eintraege), Tag- bzw. Nachtzeit passend zu den Ziffern
+  const zeit = f.zeit || (nacht ? '20:00' : '12:00');
   const tag = d.tag, datum = tag.getFullYear() + '-' + zz2(tag.getMonth() + 1) + '-' + zz2(tag.getDate());
   const id = 'g' + Date.now().toString(36);
   const arr = gkvFaelleLaden();
@@ -2612,7 +2615,7 @@ function fbGkvAusExcelOeffnen(d, f){
   gkvFaelleSpeichern(arr);
   fbBuchCache = null;
   ansichtGkv(id);
-  setTimeout(()=>{ const m = document.getElementById('gkvMeldung'); if(m) m.innerHTML = '<div class="gkv-warn">Aus dem Fahrtenbuch übernommen. Die Uhrzeit steht nicht in der Excel – bitte prüfen. „Speichern“ überschreibt die Zeile im Fahrtenbuch.</div>'; }, 0);
+  setTimeout(()=>{ const m = document.getElementById('gkvMeldung'); if(m) m.innerHTML = '<div class="gkv-warn">Aus dem Fahrtenbuch übernommen.' + (f.zeit ? '' : ' Die Uhrzeit stand nicht in der Excel – bitte prüfen.') + ' „Speichern“ überschreibt die Zeile im Fahrtenbuch.</div>'; }, 0);
 }
 // A: Dienst-Karten, neuester offen
 function fbAnsichtA(buch){
@@ -11541,7 +11544,13 @@ function gkvHinweise(pos){
 // =====================================================================
 // Fahrtenbuch lesen / Dienst finden / schreiben
 // =====================================================================
-const FB_COL = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, AF: 31, AG: 32 };
+const FB_COL = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, AF: 31, AG: 32, AS: 44 };   // AS = Uhrzeit des Falls (von der App)
+// Uhrzeit aus Spalte AS: Text "09:12" oder Excel-Zeitwert (Bruchteil eines Tages)
+function fbZeitAusZelle(v){
+  if(v == null || v === '') return '';
+  if(typeof v === 'number' && v >= 0 && v < 1){ const m = Math.round(v * 1440); return zz2(Math.floor(m / 60) % 24) + ':' + zz2(m % 60); }
+  const t = /(\d{1,2}):(\d{2})/.exec(String(v)); return t ? zz2(+t[1]) + ':' + t[2] : '';
+}
 function fbSpalte(i){ let s = '', n = i + 1; while(n > 0){ const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); } return s; }
 function fbSerial(d){ return Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(1899, 11, 30)) / 86400000); }
 function fbDatumAusText(t){ const m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(String(t || '').trim()); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; }
@@ -11825,6 +11834,7 @@ async function fbFussAnpassen(fb, alteLetzte, n){
 // fall: {kat:''|'P'|'LS', name, datum: Date, zeit:'HH:MM'|'' , euro, positionen?:[{gop, anz}], namen?: [Varianten zum Wiederfinden]}
 // opt.fragen=false -> ohne passenden Dienst nichts anlegen (nur Hinweis)
 // -> {zeile, neuerDienst, aktualisiert, ohneSpalte:[], dienst:'14.10.2026 18-23'} oder {uebersprungen:true, grund}
+const fbBuchKopfGeschrieben = {};
 async function fahrtenbuchEintragen(fall, meldung, opt){
   opt = opt || {};
   const kx = await fbKontext(meldung);
@@ -11926,6 +11936,12 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   if(kx.info.jahresModus && !fall.kat && !ohneSpalte.length && (fall.positionen || []).length)
     zeile[zeile.length - 1] = '=SUMPRODUCT($F$3:$AF$3,F' + ziel + ':AF' + ziel + ')';
   await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='D" + ziel + ':AG' + ziel + "')", { formulas: [zeile] });
+  // Uhrzeit des Falls in Spalte AS (als Text), Ueberschrift in AS4
+  try{
+    const zt = fbZeitAusZelle(fall.zeit);
+    if(zt) await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='AS" + ziel + "')", { values: [[zt]], numberFormat: [['@']] });
+    if(!fbBuchKopfGeschrieben[fb.blatt]){ await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='AS4')", { values: [['Uhrzeit']] }); fbBuchKopfGeschrieben[fb.blatt] = true; }
+  }catch(_){}
   // Statistik rechts nachziehen (verschobene Blockenden, Quartalssummen)
   try{ await fahrdienstStatistikSchreiben(meldung, { blatt: fb.blatt }); }catch(e){}
   return { zeile: ziel, blatt: kx.info.jahresModus ? fb.blatt : '', neuerDienst, aktualisiert, ohneSpalte,
@@ -11981,6 +11997,8 @@ function ansichtGkv(bearbeitenId){
         <label class="gkv-feld">Uhrzeit<input type="time" id="gkvZeit" value="${htmlEsc(st.zeit)}"></label>
       </div>
       <div class="gkv-zeitinfo" id="gkvZeitInfo"></div>
+      <button type="button" class="btn-primaer blass gkv-zwischenablage" id="gkvZwischenablage">Aus Zwischenablage einlesen</button>
+      <div class="gkv-zeitinfo" id="gkvZwHinweis"></div>
       <label class="gkv-feld">Name<input type="text" id="gkvName" autocomplete="off" placeholder="Nachname, Vorname" value="${htmlEsc(st.name)}"></label>
       <div id="gkvAdrBlock"><div class="gkv-feld">Adresse <span class="gkv-optional">(optional – für die Wegepauschale)</span>
         <input type="text" id="gkvAdresse" autocomplete="off" placeholder="Straße Nr." value="${htmlEsc(gkvAdrTeile(st.adresse).strasse)}" aria-label="Straße und Hausnummer">
@@ -12200,6 +12218,23 @@ function ansichtGkv(bearbeitenId){
     kmUebernehmen(erg.stufe, (erg.woher ? htmlEsc(erg.woher) + ' · ' : '') + 'Karte NFP: <b>' + htmlEsc(erg.text) + '</b> → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(erg.stufe)) + '</b> · ' + htmlEsc(erg.kmText || ''));
   };
   el('gkvName').oninput = ()=>{ st.name = el('gkvName').value; el('gkvName').classList.remove('pflichtfeld-fehlt'); };
+  // wie bei LS/PT: Einsatzmeldung (Patient:, Strasse:, Ort:) aus der Zwischenablage
+  el('gkvZwischenablage').onclick = async ()=>{
+    const h = el('gkvZwHinweis'); h.textContent = '';
+    let text = '';
+    try{ text = await navigator.clipboard.readText(); }catch(_){ h.textContent = 'Zwischenablage konnte nicht gelesen werden – bitte Berechtigung erteilen.'; return; }
+    if(!text || !text.trim()){ h.textContent = 'Die Zwischenablage ist leer.'; return; }
+    const zeilen = text.split(/\r?\n/);
+    const patient = feldAusNachrichtLesen(zeilen, 'Patient:');
+    const ort = feldAusNachrichtLesen(zeilen, 'Ort:');
+    const strasse = feldAusNachrichtLesen(zeilen, 'Strasse:') || feldAusNachrichtLesen(zeilen, 'Straße:');
+    if(!patient && !ort && !strasse){ h.textContent = 'Kein Patient und keine Adresse im Text erkannt (erwartet z. B. „Patient:“, „Strasse:“, „Ort:“).'; return; }
+    if(patient){ el('gkvName').value = grossKleinNormalisieren(patient); el('gkvName').oninput(); }
+    if(strasse) el('gkvAdresse').value = grossKleinNormalisieren(strasseAusschreiben(strasse));
+    if(ort) el('gkvPlzOrt').value = grossKleinNormalisieren(ort);
+    if(strasse || ort){ el('gkvAdresse').oninput(); el('gkvKmBtn').click(); }
+    h.textContent = 'Eingelesen' + (patient ? ': ' + grossKleinNormalisieren(patient) : '') + '. Bitte prüfen.';
+  };
   el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); werteZeichnen(); };
   el('gkvZeit').onchange = ()=>{ st.zeit = el('gkvZeit').value; zeichnen(); };
   function werteZeichnen(){
@@ -14100,7 +14135,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v186';
+const APP_VERSION = 'v187';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
