@@ -12813,7 +12813,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v151';
+const APP_VERSION = 'v152';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -12847,6 +12847,8 @@ function designWahlHtml(){
       <div class="pos-stil-wahl live-wahl">${LIVE_ANZEIGEN.map(x=> `
         <label class="pos-stil-option${liveEinst()[x.k] ? ' an' : ''}"><input type="checkbox" name="liveAnzeige" value="${x.k}"${liveEinst()[x.k] ? ' checked' : ''}>
           <span><b>${x.titel}</b><small>${x.text}</small></span></label>`).join('')}
+        <label class="pos-stil-option${liveEinst().auto ? ' an' : ''}"><input type="checkbox" name="liveAnzeige" value="auto"${liveEinst().auto ? ' checked' : ''}>
+          <span><b>Dienst automatisch erkennen</b><small>Aus dem Fahrtenbuch (mit OneDrive-Anmeldung) und den GKV-Fällen im üblichen Fahrdienstfenster. Ein von Hand gewählter Dienst hat Vorrang; „Dienst beenden“ schaltet zurück auf automatisch.</small></span></label>
       </div>
       <div class="sync-unter-titel" style="margin-top:14px;">Darstellung der Rechnungspositionen (PT, LS, GKV)</div>`;
 }
@@ -12888,7 +12890,43 @@ const LIVE_ANZEIGEN = [
   { k: 'ring', titel: 'Uhr-Ring mit Zeitleiste', text: 'Uhrzeit und Restzeit im Ring, Einsätze als Punkte und darunter als Liste.' },
   { k: 'zeile', titel: 'Kompakte Zeile', text: 'Status des Dienstes mit Fällen, GKV-Summe und Förderung.' }
 ];
-function liveEinst(){ const l = (ladeEinstellungen() || {}).liveDienst || {}; return { karte: !!l.karte, ring: !!l.ring, zeile: !!l.zeile }; }
+function liveEinst(){ const l = (ladeEinstellungen() || {}).liveDienst || {}; return { karte: !!l.karte, ring: !!l.ring, zeile: !!l.zeile, auto: !!l.auto }; }
+function liveAuto(){ return liveEinst().auto; }
+// Standard-Fahrdienstfenster um einen Zeitpunkt: Werktag 18-08, Wochenende/Feiertag/24.12./31.12. 08-08
+function designDienstFenster(t){
+  const tag = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  if(t.getHours() < 8) tag.setDate(tag.getDate() - 1);
+  const we = fahrdienstWochenendSatz(tag);
+  const von = new Date(tag); von.setHours(we ? 8 : 18, 0, 0, 0);
+  const bis = new Date(tag); bis.setDate(bis.getDate() + 1); bis.setHours(8, 0, 0, 0);
+  return { tag, von, bis };
+}
+// Dienst automatisch erkennen: 1. Fahrtenbuch (zwischengespeichert), 2. GKV-Faelle
+// der letzten Stunden im ueblichen Fahrdienstfenster. Liefert dasselbe Format
+// wie ein gewaehlter Dienst, zusaetzlich auto: 'fahrtenbuch' | 'gkv'.
+function liveDienstAuto(){
+  const jetzt = Date.now(), H = 3600000;
+  const alsDienst = (von, bis, art, arzt, quelle)=>{
+    const v = new Date(von), b = new Date(bis);
+    return { datum: liveIso(v), von: designUhr(v), bis: designUhr(b), art: art || 'Fahrdienst', arzt: arzt || '', auto: quelle };
+  };
+  const c = LS.get('fb_dienste_cache', null), dienste = (c && c.dienste) || [];
+  let d = dienste.find(x=> jetzt >= x.von && jetzt < x.bis)
+       || dienste.filter(x=> jetzt >= x.bis && jetzt < x.bis + 12 * H).sort((a, b)=> b.bis - a.bis)[0]
+       || dienste.filter(x=> jetzt < x.von && x.von - jetzt <= H).sort((a, b)=> a.von - b.von)[0];
+  if(d) return alsDienst(d.von, d.bis, d.art, d.arzt, 'fahrtenbuch');
+  const faelle = (typeof gkvFaelleLaden === 'function' ? gkvFaelleLaden() : [])
+    .filter(f=> f && f.profil !== 'sitz' && f.name !== (typeof GKV_PSEUDO_NAME !== 'undefined' ? GKV_PSEUDO_NAME : ''))
+    .map(f=> designFallZeit(f)).filter(t=> t && t.getTime() <= jetzt + H && t.getTime() > jetzt - 26 * H)
+    .sort((a, b)=> b - a);
+  for(const t of faelle){
+    const fe = designDienstFenster(t);
+    if(t < fe.von || t >= fe.bis) continue;          // werktags tagsueber: kein Fahrdienstfenster
+    if(jetzt >= fe.bis.getTime() + 12 * H) continue;
+    return alsDienst(fe.von.getTime(), fe.bis.getTime(), 'Fahrdienst', '', 'gkv');
+  }
+  return null;
+}
 function liveIso(d){ return d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate()); }
 function liveDienstFenster(d){
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d.datum || ''); if(!m) return null;
@@ -12907,15 +12945,15 @@ function liveDienstLaden(){
 }
 // fuer die Abfrage "Neuer Dienst": gewaehlter Dienst, wenn der Fall hineinfaellt (1 h Spielraum)
 function liveDienstFuer(dt){
-  const d = liveDienstLaden(); if(!d) return null;
+  const d = liveDienstLaden() || (liveAuto() ? liveDienstAuto() : null); if(!d) return null;
   const fe = liveDienstFenster(d);
   if(dt.getTime() < fe.von.getTime() - 3600000 || dt.getTime() > fe.bis.getTime() + 3600000) return null;
   return { ...d, fenster: fe };
 }
 // -> { modus: 'leer'|'geplant'|'laufend'|'vorbei', fenster, faelle:[{f,t}], gkv, pauschale, foerderung, art, arzt }
 function designDienstInfo(){
-  const jetzt = new Date(), d = liveDienstLaden();
-  if(!d) return { modus: 'leer', fenster: null, faelle: [], gkv: 0, pauschale: null, foerderung: null, art: '', arzt: '', jetzt };
+  const jetzt = new Date(), d = liveDienstLaden() || (liveAuto() ? liveDienstAuto() : null);
+  if(!d) return { modus: 'leer', fenster: null, faelle: [], gkv: 0, pauschale: null, foerderung: null, art: '', arzt: '', jetzt, auto: liveAuto() ? 'suche' : '' };
   const fe = liveDienstFenster(d);
   const modus = jetzt < fe.von ? 'geplant' : jetzt < fe.bis ? 'laufend' : 'vorbei';
   const drin = (typeof gkvFaelleLaden === 'function' ? gkvFaelleLaden() : [])
@@ -12927,14 +12965,18 @@ function designDienstInfo(){
   // Foerderung (Statut NFD-O zu § 10): Pauschale je Stunde minus GKV-Einnahmen, 24.12./31.12. zusaetzlich
   const pauschale = betaRund2(fe.stunden * fahrdienstPauschaleSatz(dt, d.art));
   const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fahrdienstZusatzSatz(dt) * fe.stunden);
-  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, arzt: d.arzt || '', jetzt };
+  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, arzt: d.arzt || '', jetzt, auto: d.auto || '' };
 }
 function designDienstTitel(info){ return info.art + ' · ' + designUhr(info.fenster.von) + ' – ' + designUhr(info.fenster.bis); }
 function designDienstUnter(info){
   const fe = info.fenster;
   return DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + (fe.wochenende ? 'Wochenende/Feiertag' : 'Werktag') + (info.arzt ? ' · für ' + info.arzt : '');
 }
-function designUeber(info){ return { laufend: 'Laufender Dienst', geplant: 'Geplanter Dienst', vorbei: 'Dienst beendet', leer: 'Live-Dienst' }[info.modus]; }
+function designUeber(info){
+  return { laufend: 'Laufender Dienst', geplant: 'Geplanter Dienst', vorbei: 'Dienst beendet', leer: 'Live-Dienst' }[info.modus] +
+    (info.auto === 'fahrtenbuch' ? ' · erkannt im Fahrtenbuch' : info.auto === 'gkv' ? ' · erkannt an GKV-Fällen' : '');
+}
+function liveLeerText(info){ return info.auto === 'suche' ? ['Kein Dienst erkannt', 'Antippen und Dienst wählen'] : ['Kein Dienst gewählt', 'Antippen und Dienst wählen']; }
 function designRestText(info){
   if(info.modus === 'geplant'){ const min = Math.round((info.fenster.von - info.jetzt) / 60000); return 'beginnt in ' + Math.floor(min / 60) + ' h ' + zz2(min % 60) + ' min'; }
   const ms = info.fenster.bis - info.jetzt;
@@ -12959,24 +13001,43 @@ function liveAerzteHistorie(){
   try{ const d = LS.get(EIGENE_POS_CACHE, null) || {}; (d.aerzteRechnungen || []).slice().reverse().forEach(r=> dazu(r && r.arzt)); (d.aerzteAdressen || []).forEach(a=> dazu(a && a.arzt)); }catch(_){}
   return liste;
 }
+// Fahrtenbuch einmal lesen: bisherige Aerzte und die Dienste der letzten Tage
 async function liveAerzteAusFahrtenbuch(){
   try{
-    const kx = await fbKontext(null), namen = [];
+    const kx = await fbKontext(null), namen = [], dienste = [], grenze = Date.now() - 3 * 86400000;
     for(const blatt of kx.info.blaetter.slice(-2).reverse()){
       const fb = await fbLesen(null, kx, blatt);
-      fb.daten.bloecke.slice().reverse().forEach(b=>{ const n = String(b.arzt || '').trim(); if(n && !namen.includes(n)) namen.push(n); });
+      fb.daten.bloecke.slice().reverse().forEach(b=>{
+        const n = String(b.arzt || '').trim(); if(n && !namen.includes(n)) namen.push(n);
+        const z = fbBlockZeitraum({ datumText: b.datumText, zeitRoh: b.zeitRoh });
+        if(z && !z.nurTag && z.bis.getTime() > grenze) dienste.push({ von: z.von.getTime(), bis: z.bis.getTime(), art: b.dienstart || 'Fahrdienst', arzt: n });
+      });
     }
     LS.set('fb_aerzte_historie', { am: Date.now(), namen: namen.slice(0, 40) });
+    LS.set('fb_dienste_cache', { am: Date.now(), dienste: dienste.slice(0, 30) });
   }catch(_){}
+}
+let liveFbLaeuft = false;
+function liveAutoAuffrischen(){
+  if(liveFbLaeuft || !liveAuto() || liveDienstLaden()) return;
+  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return;
+  if(Date.now() - ((LS.get('fb_dienste_cache', null) || {}).am || 0) < 15 * 60000) return;
+  liveFbLaeuft = true;
+  const vorher = JSON.stringify(liveDienstAuto());
+  liveAerzteAusFahrtenbuch().finally(()=>{
+    liveFbLaeuft = false;
+    if(JSON.stringify(liveDienstAuto()) !== vorher && aktuelleAnsichtIstHauptbildschirm && document.querySelector('.ds-live')) ansichtStart();
+  });
 }
 
 // Auswahl des Dienstes (Antippen der Live-Anzeige)
 async function liveDienstDialog(){
   const akt = liveDienstLaden(), jetzt = new Date();
+  const vorschlag = akt || (liveAuto() ? liveDienstAuto() : null);
   let datumD = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate()); if(jetzt.getHours() < 8) datumD.setDate(datumD.getDate() - 1);
-  let datum = akt ? akt.datum : liveIso(datumD);
-  let art = akt ? akt.art : LS.get('fb_dienstart', 'Fahrdienst');
-  let von = akt ? akt.von : '', bis = akt ? akt.bis : '', arzt = akt ? (akt.arzt || '') : '';
+  let datum = vorschlag ? vorschlag.datum : liveIso(datumD);
+  let art = vorschlag ? vorschlag.art : LS.get('fb_dienstart', 'Fahrdienst');
+  let von = vorschlag ? vorschlag.von : '', bis = vorschlag ? vorschlag.bis : '', arzt = vorschlag ? (vorschlag.arzt || '') : '';
   let fehler = '';
   const vorschlaege = ()=>{
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum), tag = m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD;
@@ -12995,7 +13056,8 @@ async function liveDienstDialog(){
     const aerzte = liveAerzteHistorie();
     const vs = vorschlaege();
     const html = '<div class="fb-dialog">' +
-      '<div class="fb-info">Der Dienst steuert die Live-Anzeige und füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.</div>' +
+      '<div class="fb-info">Der Dienst steuert die Live-Anzeige und füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.' +
+        (!akt && vorschlag ? ' Vorschlag: automatisch erkannt (' + (vorschlag.auto === 'fahrtenbuch' ? 'Fahrtenbuch' : 'GKV-Fälle') + ').' : '') + (akt && liveAuto() ? ' „Dienst beenden“ schaltet zurück auf automatisch.' : '') + '</div>' +
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
@@ -13149,7 +13211,7 @@ function designKachelnUmbauen(info){
   });
 }
 function designDienstKarteHtml(info){
-  if(info.modus === 'leer') return '<button type="button" class="ds-dienst leer" data-live="1"><span class="ds-ueber">Live-Dienst</span><span class="ds-dienst-titel">Kein Dienst gewählt</span><span class="ds-dienst-unter">Antippen und Dienst wählen</span></button>';
+  if(info.modus === 'leer') return '<button type="button" class="ds-dienst leer" data-live="1"><span class="ds-ueber">Live-Dienst' + (info.auto ? ' · automatisch' : '') + '</span><span class="ds-dienst-titel">' + liveLeerText(info)[0] + '</span><span class="ds-dienst-unter">' + liveLeerText(info)[1] + '</span></button>';
   const p = info.pauschale ? Math.min(100, Math.round(info.gkv / info.pauschale * 1000) / 10) : 0;
   return '<button type="button" class="ds-dienst" data-live="1">' +
     '<span class="ds-dienst-kopf"><span class="ds-dienst-text"><span class="ds-ueber">' + designUeber(info) + '</span>' +
@@ -13161,8 +13223,8 @@ function designDienstKarteHtml(info){
     '</button>';
 }
 function designZeileHtml(info){
-  const status = { leer: 'Kein Dienst gewählt', geplant: info.art + ' ab ' + (info.fenster ? designUhr(info.fenster.von) : ''), laufend: info.art + ' läuft', vorbei: 'Dienst beendet' }[info.modus];
-  const unter = info.modus === 'leer' ? 'Antippen und Dienst wählen' : (info.modus === 'laufend' ? 'bis ' + designUhr(info.fenster.bis) + ' · ' : '') + designDienstUnter(info);
+  const status = { leer: liveLeerText(info)[0], geplant: info.art + ' ab ' + (info.fenster ? designUhr(info.fenster.von) : ''), laufend: info.art + ' läuft', vorbei: 'Dienst beendet' }[info.modus];
+  const unter = info.modus === 'leer' ? liveLeerText(info)[1] : (info.modus === 'laufend' ? 'bis ' + designUhr(info.fenster.bis) + ' · ' : '') + designDienstUnter(info) + (info.auto ? ' · automatisch' : '');
   return '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status">' + htmlEsc(status) + '</span><span class="ds-status-unter">' + htmlEsc(unter) + '</span>' +
     (info.modus === 'leer' ? '' : '<span class="ds-zahlen"><span><span>Fälle</span><b>' + info.faelle.length + '</b></span><span><span>GKV</span><b>' + betaEuro(info.gkv).replace(' €', '') + '</b></span>' +
       '<span><span>Förderung</span><b>' + betaEuro(info.foerderung).replace(' €', '') + '</b></span></span>') + '</button>';
@@ -13225,7 +13287,7 @@ function designStartErgaenzen(){
     vor('<div class="ds-start ds-einhand"><div class="ds-zeile-oben"><span>' + DESIGN_WT[jetzt.getDay()] + ' ' + zz2(jetzt.getDate()) + '.' + zz2(jetzt.getMonth() + 1) + '. · ' + designUhr(jetzt) + '</span>' +
       '<span class="ds-sync' + (anmeldung ? ' an' : '') + '"><i></i>' + (anmeldung ? 'OneDrive' : 'nicht angemeldet') + '</span></div></div>');
   }
-  if(live) vor(live);
+  if(live){ vor(live); liveAutoAuffrischen(); }
   if(d === 'klinik'){
     const offen = designOffeneFaelle().slice(0, 5);
     reihe.insertAdjacentHTML('afterend', '<section class="ds-offen"><div class="ds-abschnitt-kopf"><h2>Offene Fälle</h2>' +
