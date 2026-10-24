@@ -2522,7 +2522,7 @@ async function fbBuchLaden(blatt, meldung){
       const ziffern = [];
       for(let c = FB_COL.F; c <= FB_COL.AF; c++){
         const v = Number(r[c]);
-        if(v > 0){ const g = (String(kopf[c] == null ? '' : kopf[c]).match(/\d{3,5}/) || [fbSpalte(c)])[0]; ziffern.push({ gop: g, anz: v }); }
+        if(v > 0){ let g = (String(kopf[c] == null ? '' : kopf[c]).match(/\d{3,5}/) || [fbSpalte(c)])[0]; if(/^\d{4}$/.test(g)) g = '0' + g; ziffern.push({ gop: g, anz: v }); }
       }
       const f = { name, art, euro: Number(r[FB_COL.AG]) || 0, ziffern, zeit: '', pseudo: /^pseudo/i.test(name), zeile: z + 1 };
       const nn = fbNameNorm(name);
@@ -2575,11 +2575,44 @@ async function ansichtFahrtenbuch(blatt){
     inhalt.querySelectorAll('[data-fbtag]').forEach(k=> k.onclick = ()=>{ LS.set('fb_tag', k.dataset.fbtag); zeichnen(); });
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> z.onclick = ()=>{
       const [di, fi] = z.dataset.fbfall.split('-').map(Number), f = buch.dienste[di] && buch.dienste[di].faelle[fi];
-      if(f && f.oeffnen){ vorbereiteRuecksprung(); f.oeffnen(); } else appToastAnzeigen('Dieser Fall ist auf diesem Gerät nicht gespeichert – nur in der Excel.', 2800);
+      if(f && f.oeffnen){ vorbereiteRuecksprung(); f.oeffnen(); return; }
+      if(f && f.art === 'gkv'){ vorbereiteRuecksprung(); fbGkvAusExcelOeffnen(buch.dienste[di], f); return; }
+      appToastAnzeigen('LS/PT-Rechnungen bitte über „Rechnungen“ bearbeiten – das Fahrtenbuch übernimmt die Änderung.', 3500);
     });
   };
   document.querySelectorAll('[data-fbv]').forEach(b=> b.onclick = ()=>{ ansicht = b.dataset.fbv; LS.set('fb_ansicht', ansicht); zeichnen(); });
   zeichnen();
+}
+// Alter GKV-Eintrag nur in der Excel: daraus einen GKV-Fall auf dem Geraet
+// anlegen (Name, Tag, Ziffern) und in der GKV-Maske oeffnen. Beim Speichern
+// findet das Fahrtenbuch die Zeile ueber den Namen im Dienst und ueberschreibt sie.
+function fbGkvAusExcelOeffnen(d, f){
+  const auswahl = {};
+  let nacht = false;
+  f.ziffern.forEach(z=>{
+    const gop = ebmNorm(z.gop), k = ebmGruppeVon(gop), anz = Number(z.anz) || 1;
+    if(k === 'weg'){
+      const st = EBM_GRUPPEN.weg.stufen.filter(x=> x.tag === gop || x.nacht === gop);
+      if(st.some(x=> x.nacht === gop)) nacht = true;
+      const passend = st.find(x=> (x.anz || 1) === anz) || st[0];
+      if(passend) auswahl.weg = { anz: 1, stufe: passend.k };
+    } else if(k){
+      const g = EBM_GRUPPEN[k];
+      if(k === 'nfp' && gop === '01212') nacht = true;
+      auswahl[k] = Object.assign({ anz }, g.stufen ? { stufe: g.stufen[0].k } : {});
+    } else auswahl[gop] = { anz };
+  });
+  // Uhrzeit fehlt in der Excel: Tag- bzw. Nachtzeit so waehlen, dass dieselben Ziffern herauskommen
+  const zeit = nacht ? '20:00' : '12:00';
+  const tag = d.tag, datum = tag.getFullYear() + '-' + zz2(tag.getMonth() + 1) + '-' + zz2(tag.getDate());
+  const id = 'g' + Date.now().toString(36);
+  const arr = gkvFaelleLaden();
+  arr.push({ id, name: f.name, datum, zeit, auswahl, profil: '', positionen: f.ziffern.map(z=> ({ gop: ebmNorm(z.gop), anz: z.anz })), euro: f.euro,
+    status: 'eingetragen', zeile: f.zeile, blatt: fbBuchCache ? fbBuchCache.blatt : '', alterName: null, ausExcel: true });
+  gkvFaelleSpeichern(arr);
+  fbBuchCache = null;
+  ansichtGkv(id);
+  setTimeout(()=>{ const m = document.getElementById('gkvMeldung'); if(m) m.innerHTML = '<div class="gkv-warn">Aus dem Fahrtenbuch übernommen. Die Uhrzeit steht nicht in der Excel – bitte prüfen. „Speichern“ überschreibt die Zeile im Fahrtenbuch.</div>'; }, 0);
 }
 // A: Dienst-Karten, neuester offen
 function fbAnsichtA(buch){
@@ -14067,7 +14100,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v185';
+const APP_VERSION = 'v186';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
