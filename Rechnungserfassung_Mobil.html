@@ -1126,6 +1126,22 @@
      DESIGNS (Einstellungen > Allgemein > Design)
      Nur Systemschriften -- keine Web-Fonts, kein Abruf bei Dritten.
      ================================================================= */
+  /* Live-Dienst: Grundwerte fuer alle Designs (Designs ueberschreiben sie) */
+  body{--ds-gkv:#7d4e9e; --ds-gkv-hell:#f1ebf6; --ds-gkv-text:#5e3880; --ds-akzent:#d9861a; --ds-ls-hell:#e6effa; --ds-ls-text:#1a4f80; --ds-pt-hell:#e8f4ec; --ds-pt-text:#1a5e37;
+    --ds-mono:ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace; --ds-display:"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Noto Serif", serif;}
+  body.dunkel{--ds-gkv:#9b6cc4; --ds-gkv-hell:#2a2236; --ds-gkv-text:#cfb2ea; --ds-akzent:#ffb547; --ds-ls-hell:#1a2a3d; --ds-ls-text:#9cc4ee; --ds-pt-hell:#173024; --ds-pt-text:#8fd9a8;}
+  .ds-live{margin:0 0 14px;}
+  .ds-live > * + *{margin-top:12px;}
+  .ds-ring-knopf, .ds-zeile-live{display:block; width:100%; margin:0; padding:0; border:0; background:none; color:var(--text); font:inherit; text-align:left; cursor:pointer;}
+  .ds-ring-knopf .ds-ring-grenzen{margin-bottom:2px;}
+  .ds-zeile-live{background:var(--karte); border:1px solid var(--rand); border-radius:16px; padding:14px 14px 12px; box-sizing:border-box;}
+  .ds-live .ds-status{font-size:22px; font-weight:800; letter-spacing:-.01em; line-height:1.15;}
+  .ds-live .ds-status-unter{display:block; font-size:13.5px; margin-top:2px;}
+  .ds-zeile-live .ds-zahlen{display:grid; margin-top:12px;}
+  .ds-zeile-live .ds-zahlen > span{background:var(--bg);}
+  .ds-live .ds-foerd{margin-top:16px;}
+  .ds-live .ds-zeitleiste{margin:14px 0 0;}
+  .design-hinweis{font-size:12.5px; color:var(--text-schwach); margin:-2px 0 8px;}
   .design-muster{display:flex; gap:3px; margin-top:3px; flex:0 0 auto;}
   .design-muster i{display:block; width:13px; height:13px; border-radius:4px; border:1px solid rgba(0,0,0,.18);}
   .ds-nav, .ds-dock, .ds-start{display:none;}
@@ -1187,8 +1203,8 @@
   body.design-klinik .karte .ds-titel{font-size:14px; font-weight:600;}
   body.design-klinik .karte .ds-unter{font-size:12px; font-weight:400; color:var(--text-schwach);}
   /* Dienst-Karte */
-  .ds-klinik .ds-dienst{background:var(--karte); border:1px solid var(--rand); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:14px; margin-bottom:12px;}
-  .ds-klinik .ds-dienst.leer{gap:3px;}
+  .ds-live .ds-dienst{width:100%; box-sizing:border-box; text-align:left; font:inherit; color:var(--text); cursor:pointer; background:var(--karte); border:1px solid var(--rand); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:14px; margin-bottom:12px;}
+  .ds-live .ds-dienst.leer{gap:3px;}
   .ds-dienst-kopf{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
   .ds-dienst-text{display:flex; flex-direction:column; gap:2px;}
   .ds-ueber{display:block; font-size:11px; font-weight:600; color:var(--text-schwach); text-transform:uppercase; letter-spacing:.08em;}
@@ -1268,27 +1284,27 @@
   body.design-nacht .nfp-knoepfe .nfp-ok{background:var(--ds-akzent); border-color:var(--ds-akzent); color:#1a1206; border-radius:22px;}
   body.design-nacht #app .kachelreihe.drei{display:none;}
   /* Start */
-  .ds-nacht .ds-kopfzeile{font-size:12.5px; font-weight:500; letter-spacing:.08em; color:var(--text-schwach); text-align:center; margin:2px 0 4px;}
+  .ds-live .ds-kopfzeile{font-size:12.5px; font-weight:500; letter-spacing:.08em; color:var(--text-schwach); text-align:center; margin:2px 0 4px;}
   .ds-ring{position:relative; width:min(280px, 74vw); aspect-ratio:1/1; margin:6px auto 0;}
   .ds-ring svg{display:block; width:100%; height:100%;}
-  .ds-ring-aussen{fill:none; stroke:#1a2238; stroke-width:1;}
-  .ds-ring-spur{fill:none; stroke:#1c2440; stroke-width:10;}
+  .ds-ring-aussen{fill:none; stroke:var(--rand); stroke-width:1;}
+  .ds-ring-spur{fill:none; stroke:var(--grau-feld); stroke-width:10;}
   .ds-ring-fort{fill:none; stroke:var(--ds-akzent); stroke-width:10; stroke-linecap:round;}
-  .ds-ring-innen{fill:none; stroke:#222c4a; stroke-width:1; stroke-dasharray:1 7;}
+  .ds-ring-innen{fill:none; stroke:var(--rand); stroke-width:1; stroke-dasharray:1 7;}
   .ds-ring-fall{fill:var(--ds-gkv); stroke:var(--bg); stroke-width:2;}
   .ds-ring-mitte{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;}
   .ds-ring-zeit{font-family:var(--ds-display); font-weight:300; font-size:clamp(48px, 18vw, 74px); line-height:1; letter-spacing:-.02em; font-variant-numeric:lining-nums tabular-nums;}
   .ds-ring-rest{font-size:14px; color:var(--text-schwach);}
-  .ds-ring-grenzen{display:flex; justify-content:space-between; width:min(280px, 74vw); margin:2px auto 0; font-size:12px; color:#8f9ab6; letter-spacing:.04em;}
+  .ds-ring-grenzen{display:flex; justify-content:space-between; width:min(280px, 74vw); margin:2px auto 0; font-size:12px; color:var(--text-schwach); letter-spacing:.04em;}
   .ds-foerd{margin:20px 0 0; padding:14px 18px; border:1px solid var(--rand); border-radius:20px; display:flex; align-items:center; gap:14px; justify-content:space-between;}
   .ds-foerd-wert{display:block; font-family:var(--ds-display); font-style:italic; font-weight:400; font-size:32px; line-height:1.15; color:var(--ds-akzent);}
-  .ds-foerd-rechts{display:flex; flex-direction:column; align-items:flex-end; gap:2px; font-size:13px; color:#c9d0e2;}
-  .ds-schwach{color:#8f9ab6;}
+  .ds-foerd-rechts{display:flex; flex-direction:column; align-items:flex-end; gap:2px; font-size:13px; color:var(--text);}
+  .ds-schwach{color:var(--text-schwach);}
   .ds-zeitleiste{margin:20px 0 6px;}
   .ds-zeitleiste h2{margin:0 0 6px;}
   .ds-ein{display:grid; grid-template-columns:50px 14px minmax(0, 1fr) auto; align-items:center; gap:10px; width:100%; min-height:54px; padding:4px 0; border:0; background:none; color:var(--text); text-align:left; position:relative;}
-  .ds-ein + .ds-ein::before{content:''; position:absolute; left:66px; top:-10px; height:20px; border-left:1px solid #263052;}
-  .ds-ein-zeit{font-size:14px; font-weight:500; color:#c9d0e2; font-variant-numeric:tabular-nums;}
+  .ds-ein + .ds-ein::before{content:''; position:absolute; left:66px; top:-10px; height:20px; border-left:1px solid var(--rand);}
+  .ds-ein-zeit{font-size:14px; font-weight:500; color:var(--text); font-variant-numeric:tabular-nums;}
   .ds-ein-punkt{width:10px; height:10px; border-radius:50%; background:var(--ds-gkv); justify-self:center;}
   .ds-ein-text{display:flex; flex-direction:column; min-width:0;}
   .ds-ein-name{font-size:16px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -1365,10 +1381,10 @@
   .ds-sync i{width:8px; height:8px; border-radius:50%; background:#9aa1ad;}
   .ds-sync.an{color:#1a5e37;} .ds-sync.an i{background:#1d7a45;}
   body.dunkel .ds-sync.an{color:#8fd9a8;}
-  .ds-einhand .ds-status{margin:6px 0 0; font-size:30px; font-weight:800; letter-spacing:-.02em; line-height:1.1;}
+  .ds-live .ds-status{display:block; margin:0; font-size:30px; font-weight:800; letter-spacing:-.02em; line-height:1.1;}
   .ds-status-unter{font-size:15px; color:var(--text-schwach); margin-top:2px;}
   .ds-zahlen{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin-top:16px;}
-  .ds-zahlen > div{background:var(--karte); border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:2px; min-width:0;}
+  .ds-zahlen > span{background:var(--karte); border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:2px; min-width:0;}
   .ds-zahlen span{font-size:12px; font-weight:600; color:var(--text-schwach);}
   .ds-zahlen b{font-size:20px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .ds-weiter{display:flex; align-items:center; gap:12px; width:100%; margin-top:12px; min-height:64px; padding:12px 16px; border:0; border-radius:18px; background:var(--ds-primaer); color:var(--ds-primaer-text); text-align:left; box-sizing:border-box;}
@@ -1387,6 +1403,48 @@
   body.design-nacht, body.design-nacht.ziffer-gross{--ziffer-breite:62px;}
   body.design-einhand, body.design-einhand.ziffer-gross{--ziffer-breite:72px;}
   body.design-klinik .gkv-txt, body.design-nacht .gkv-txt, body.design-einhand .gkv-txt{overflow-wrap:anywhere; hyphens:auto;}
+  /* GKV wie PT/LS: Gruppen, Wischen, Profil-Chips */
+  .gkv-item > .wisch-huelle{margin-bottom:6px;}
+  .wisch-huelle > .gkv-pos{margin-bottom:0; position:relative; z-index:1; touch-action:pan-y; background:var(--bg);}
+  body.pos-stil-farbe .wisch-huelle > .gkv-pos{background:var(--karte);}
+  .gkv-eigene-leer{padding:6px 2px;}
+  .gkv-pe-hinweis{font-weight:400; text-transform:none; letter-spacing:0; font-style:italic;}
+  .gkv-pe-anz-lbl{display:flex; align-items:center; gap:4px; font-size:12px; color:var(--text-schwach); margin:0;}
+  .gkv-pe-treffer{max-height:50vh; overflow-y:auto; margin-top:6px;}
+  .gkv-pe-treffer .gkv-treffer{cursor:pointer;}
+  ol.standort-hilfe{margin:6px 0 8px; padding-left:20px; font-size:13.5px; line-height:1.4; text-align:left;}
+  ol.standort-hilfe li{margin-bottom:6px;}
+  body.design-klinik .profil-chip{border-radius:10px; padding:9px 13px;}
+  body.design-klinik .profil-chip.aktiv{background:var(--ds-gkv); border-color:var(--ds-gkv);}
+  body.design-nacht .profil-chip{border-radius:20px; padding:9px 14px; background:transparent;}
+  body.design-nacht .profil-chip.aktiv{background:var(--text); color:var(--bg); border-color:var(--text);}
+  body.design-einhand .profil-chip{border-radius:22px; padding:11px 16px; font-size:15px; font-weight:700; border:0;}
+  body.design-einhand .profil-chip.aktiv{background:var(--ds-gkv); color:#fff;}
+  body .wisch-huelle > .gkv-pos{background:var(--bg);}
+  body.pos-stil-farbe .wisch-huelle > .gkv-pos{background:var(--karte);}
+  body.design-einhand .wisch-huelle > .gkv-pos{background:var(--karte);}
+  .wisch-huelle > .gkv-pos.gkv-aus{opacity:1 !important;}
+  .wisch-huelle > .gkv-pos.gkv-aus > *{opacity:.5;}
+  body.design-einhand .wisch-huelle > .gkv-pos{margin:0;}
+  body.design-einhand .gkv-item > .wisch-huelle{border-radius:18px; margin-bottom:8px;}
+  body.design-nacht .gkv-item > .wisch-huelle, body.design-klinik .gkv-item > .wisch-huelle{border-radius:0;}
+  /* Luftlinie-Werkzeug: Kartenausschnitt */
+  .luft-karte{margin-top:12px;}
+  .luft-karte-kopf{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px; margin-bottom:6px;}
+  .luft-karte-gross{margin:0 0 0 auto; width:auto; padding:7px 12px; font-size:13px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .luft-karte-flaeche{position:relative; width:100%; overflow:hidden; border:1px solid var(--rand); border-radius:10px; background:#d6d9dd;}
+  .luft-karte-flaeche img{position:absolute; max-width:none; height:auto; user-select:none; pointer-events:none;}
+  .luft-karte-flaeche svg{position:absolute; inset:0; width:100%; height:100%;}
+  .luft-weg{fill:none; stroke:#1a55c9; stroke-width:4; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; opacity:.9;}
+  .luft-linie{stroke:#111; stroke-width:2.5; stroke-dasharray:7 6; vector-effect:non-scaling-stroke;}
+  .luft-start{fill:#1a55c9; stroke:#fff; stroke-width:2.5; vector-effect:non-scaling-stroke;}
+  .luft-ziel{fill:#e0242b; stroke:#fff; stroke-width:2.5; vector-effect:non-scaling-stroke;}
+  .luft-nfp{fill:#111; stroke:#fff; stroke-width:2; vector-effect:non-scaling-stroke;}
+  .luft-karte-legende{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--text-schwach); margin-top:6px;}
+  .luft-karte-legende i{display:inline-block; width:12px; height:12px; margin-right:5px; vertical-align:-1px; border-radius:50%;}
+  .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:#111; border-radius:2px;}
+  .luft-karte-legende i.l{height:0; border-radius:0; border-top:2.5px dashed var(--text); width:16px;} .luft-karte-legende i.w{height:4px; border-radius:2px; background:#1a55c9; width:16px;}
+  .luft-karte-hinweis{font-size:13px; color:var(--text-schwach); padding:6px 0;}
 </style>
 </head>
 <body>
@@ -3504,12 +3562,14 @@ async function notapothekenSucheOeffnen(){
     return;
   }
 
+  const gStandort = await standortHolen();
+  if(!gStandort){ appToastAnzeigen('Ohne Standort -- aponet.de wird zum manuellen Suchen geöffnet.', 3200); window.open(APONET_SUCHE, '_blank'); return; }
   if(btn){
     btn.disabled = true;
     btn.innerHTML = 'Standort wird ermittelt…<span class="unter">Bitte kurz warten</span>';
   }
 
-  navigator.geolocation.getCurrentPosition(async (pos)=>{
+  await (async (pos)=>{
     try{
       const {latitude, longitude} = pos.coords;
       const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
@@ -3551,14 +3611,7 @@ async function notapothekenSucheOeffnen(){
     }finally{
       zuruecksetzen();
     }
-  }, (err)=>{
-    const verweigert = err && err.code === err.PERMISSION_DENIED;
-    appToastAnzeigen(verweigert
-      ? 'Standortzugriff wurde verweigert -- aponet.de wird zum manuellen Suchen geöffnet.'
-      : 'Standort konnte nicht ermittelt werden -- aponet.de wird zum manuellen Suchen geöffnet.', 3200);
-    window.open(APONET_SUCHE, '_blank');
-    zuruecksetzen();
-  }, {enableHighAccuracy:true, timeout:10000, maximumAge:300000});
+  })({ coords: { latitude: gStandort.lat, longitude: gStandort.lon } });
 }
 
 // Eigenständiges Werkzeug (Start -> "Luftlinie berechnen"): unabhängig von
@@ -3662,16 +3715,10 @@ function ansichtLuftlinienTool(){
   // ermittelt und eingetragen, gerechnet wird mit den genauen Koordinaten
   let luftPos = null;
   document.getElementById('btnLuftPosition').onclick = async ()=>{
-    if(!navigator.geolocation){ zeigeErgebnis('Dieses Gerät kann die Position nicht ermitteln.', true); return; }
     zeigeErgebnis('Aktuelle Position wird ermittelt …', true);
-    let pos;
-    try{
-      pos = await new Promise((ok, fehler)=> navigator.geolocation.getCurrentPosition(ok, fehler, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }));
-    }catch(err){
-      zeigeErgebnis(err && err.code === 1 ? 'Standortzugriff wurde nicht erlaubt (Browser-/App-Einstellungen).' : 'Position konnte nicht ermittelt werden (GPS/Empfang?).', true);
-      return;
-    }
-    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+    const g = await standortHolen();
+    if(!g){ zeigeErgebnis('Keine Position – Adresse bitte eintippen.', true); return; }
+    const lat = g.lat, lon = g.lon;
     let adresse = '';
     try{
       const r = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&zoom=18&lat=' + lat + '&lon=' + lon, { headers:{ 'Accept':'application/json' } });
@@ -3714,15 +3761,16 @@ function ansichtLuftlinienTool(){
       const ziel = (luftPos && luftPos.adresse === adresse) ? luftPos : await geocode(adresse);
       if(!ziel){ zeigeErgebnis('Die Adresse "'+adresse+'" konnte nicht gefunden werden. Bitte prüfen.', true); return; }
       const luft = kmLuftlinieEinfach(start, ziel);
-      let zeile2;
+      let zeile2, luftWeg = null;
       // Wie bei "Alternativrouten"/der automatischen km-Berechnung: die
       // tatsaechliche Fahrstrecke (nicht nur die verdoppelte Luftlinie als
       // grobe Schaetzung) ueber denselben Routendienst (OSRM) ermitteln --
       // derselbe Code, der auch sonst fuer Hin- und Rueckfahrt verwendet
       // wird (routeAlternativen liefert die Einfachstrecke je Route).
       try{
-        const routen = await routeAlternativen(start, ziel);
+        const routen = await routeMitWeg(start, ziel);
         if(routen && routen.length){
+          luftWeg = routen[0].coords;
           const kmGesamt = routen[0].km*2;
           zeile2 = `<strong>Fahrstrecke (Hin- und Rückfahrt):</strong> ${kmGesamt.toFixed(1).replace('.',',')} km`;
         } else {
@@ -3740,6 +3788,7 @@ function ansichtLuftlinienTool(){
       zeigeErgebnis(`<div class="luft-ergebnis-zeile luft-von-bis">Von ${htmlEsc(vonAdresse)}<br>bis ${htmlEsc(adresse)}</div>${kartenZeile}
         <div class="luft-ergebnis-zeile"><strong>Luftlinie (einfach):</strong> ${luft.toFixed(1).replace('.',',')} km</div>
         <div class="luft-ergebnis-zeile">${zeile2}</div>`, false);
+      try{ await luftKarteZeigen(document.getElementById('luftErgebnis'), start, ziel, luftWeg, adresse); }catch(_){}
     }catch(err){
       zeigeErgebnis('Berechnung fehlgeschlagen.'+keinInternetHinweisText(), true);
     }
@@ -10628,49 +10677,137 @@ function gkvSchluesselText(k, a){
 }
 function gkvProfilKurz(p){
   const k = Object.keys(p.auswahl || {});
-  return k.length ? k.map(x=> gkvSchluesselText(x, p.auswahl[x]).replace(/^(\d{5}) .*?( ×\d+)?$/, '$1$2')).join(', ') : 'nichts vorausgewählt';
+  const t = [k.length ? 'vorausgewählt: ' + k.map(x=> gkvSchluesselText(x, p.auswahl[x]).replace(/^(\d{5}) .*?( ×\d+)?$/, '$1$2')).join(', ') : 'nichts vorausgewählt'];
+  const na = (p.ausgeblendet || []).length;
+  if(na) t.push(na + ' ausgeblendet');
+  if(gkvIstSitzProfil(p)) t.push('ohne Wegepauschale');
+  return t.join(' · ');
 }
+// EBM-Ziffer suchen (fuer "+ EBM-Position hinzufuegen") -> Schluessel oder null
+async function gkvZifferSuchenDialog(){
+  const warte = betaOverlay.ergebnis('EBM-Position hinzufügen',
+    '<div class="beta-form"><input type="search" id="gkvPeSuche" placeholder="Ziffer oder Text" autocomplete="off"></div><div id="gkvPeTreffer" class="gkv-pe-treffer"></div>',
+    [{ label: 'Abbrechen', akt: 'nein' }]);
+  const inp = document.getElementById('gkvPeSuche'), ziel = document.getElementById('gkvPeTreffer');
+  if(inp){
+    inp.focus();
+    inp.oninput = ()=>{
+      const t = ebmSuchen(inp.value, 25);
+      ziel.innerHTML = t.map(e=> '<div class="gkv-treffer" data-gop="' + e.gop + '"><span class="gkv-gop">' + e.gop + '</span><span class="gkv-txt">' + htmlEsc(e.text) +
+        (e.hinweis ? '<small>' + htmlEsc(e.hinweis) + '</small>' : '') + '</span></div>').join('') ||
+        (inp.value.trim() ? '<div class="leer-hinweis">Keine passende Ziffer im Notdienst-Katalog.</div>' : '');
+      ziel.querySelectorAll('[data-gop]').forEach(d=> d.onclick = ()=>{ if(betaOverlay.loesen) betaOverlay.loesen('gop:' + d.dataset.gop); });
+    };
+  }
+  const akt = await warte;
+  betaOverlay.schliessen();
+  if(!akt || !/^gop:/.test(akt)) return null;
+  const gop = akt.slice(4), g = ebmGruppeVon(gop);
+  return { schluessel: g || gop, gop, gruppe: g };
+}
+// Einstellungen: GKV-Profil bearbeiten -- gleicher Aufbau wie bei PT/LS
+// (Haken = Vorauswahl, × = in diesem Profil nicht anzeigen, Entfernt
+// zurueckholen, lang druecken + ziehen = Reihenfolge, eigene Positionen)
 async function gkvProfilBearbeiten(id){
   const alt = id ? gkvProfileLaden().find(p=> p.id === id) : null;
   const pr = alt ? JSON.parse(JSON.stringify(alt)) : { id: 'G' + Date.now().toString(36), name: '', auswahl: {} };
-  pr.auswahl = pr.auswahl || {};
-  let fehler = '';
+  pr.auswahl = pr.auswahl || {}; pr.ausgeblendet = pr.ausgeblendet || [];
+  if(!pr.anordnung){ const g = gkvProfilGruppen(null); pr.anordnung = { grund: g.grund, eigene: g.eigene }; }
+  let fehler = '', ausOffen = false;
+  const mehrfach = (k)=>{ const g = EBM_GRUPPEN[k]; return (g && g.mehrfach) || EBM_MEHRFACH.includes(k); };
+  const nrText = (k)=> EBM_GRUPPEN[k] ? EBM_GRUPPEN[k].gops.join('/') : k;
+  const bezText = (k)=> EBM_GRUPPEN[k] ? EBM_GRUPPEN[k].titel : (ebmEintrag(k) ? ebmEintrag(k).text : k);
   for(;;){
-    const schl = gkvListeLaden(); Object.keys(pr.auswahl).forEach(k=>{ if(!schl.includes(k)) schl.push(k); });
+    const geo = gkvProfilGruppen(pr);
+    const drinG = geo.grund.filter(k=> !pr.ausgeblendet.includes(k)), drinE = geo.eigene.filter(k=> !pr.ausgeblendet.includes(k));
+    const weg = geo.grund.concat(geo.eigene).filter(k=> pr.ausgeblendet.includes(k));
+    const sitz = gkvIstSitzProfil({ id: pr.id, name: (document.getElementById('gkvPeName') || {}).value || pr.name });
     const zeile = (k)=>{
-      const a = pr.auswahl[k], g = EBM_GRUPPEN[k], mehr = (g && g.mehrfach) || EBM_MEHRFACH.includes(k);
-      return '<div class="gkv-pe-zeile' + (a ? ' an' : '') + '"><label><input type="checkbox" data-gk="' + htmlEsc(k) + '"' + (a ? ' checked' : '') + '> ' +
-        '<span>' + htmlEsc(gkvSchluesselText(k, null)) + '</span></label>' +
-        (mehr ? '<input type="number" min="1" max="20" class="gkv-pe-anz" data-ganz="' + htmlEsc(k) + '" value="' + htmlEsc(String((a && a.anz) || 1)) + '" title="Anzahl">' : '') +
-        (k === 'weg' ? '<select class="gkv-pe-stufe" data-gstufe="weg">' + g.stufen.map(s=> '<option value="' + s.k + '"' + (((a && a.stufe) || '2') === s.k ? ' selected' : '') + '>' + htmlEsc(s.label) + '</option>').join('') + '</select>' : '') +
-        '</div>';
+      const a = pr.auswahl[k];
+      return '<div class="pos-item profil-pos" data-key="' + htmlEsc(k) + '" data-drag="1">' +
+        '<label class="profil-pos-haken"><input type="checkbox" data-gk="' + htmlEsc(k) + '"' + (a ? ' checked' : '') + '>' +
+        '<span><b>' + htmlEsc(nrText(k)) + '</b> ' + htmlEsc(bezText(k)) + '</span></label>' +
+        '<div class="profil-pos-knoepfe">' +
+          (mehrfach(k) ? '<label class="gkv-pe-anz-lbl">Anzahl <input type="number" min="1" max="20" class="gkv-pe-anz" data-ganz="' + htmlEsc(k) + '" value="' + htmlEsc(String((a && a.anz) || 1)) + '"></label>' : '') +
+          '<button type="button" class="profil-weg" data-akt="weg:' + htmlEsc(k) + '" title="aus diesem Profil entfernen">&times;</button>' +
+        '</div></div>';
     };
+    const wa = pr.auswahl.weg;
     const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="beta-form"><label>Name<input id="gkvPeName" maxlength="30" value="' + htmlEsc(pr.name) + '" autocomplete="off" placeholder="z.B. Geriatrie, Infusion"></label></div>' +
-      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Haken = beim Wählen des Profils schon ausgewählt. Notfallpauschale/Wegepauschale wählen die passende Ziffer nach Uhrzeit selbst.</div>' +
-      '<div class="gkv-pe-liste">' + schl.map(zeile).join('') + '</div>';
+      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Haken = beim Wählen des Profils schon angehakt · &times; = in diesem Profil nicht anzeigen · lang drücken und ziehen = Reihenfolge. Notfall-, Konsultations- und Wegepauschale wählen die passende Ziffer nach Uhrzeit selbst.</div>' +
+      '<div class="profil-auswahl">' +
+        '<div class="profil-gruppe-titel">EBM-Positionen</div>' +
+        '<div class="pos-gruppe" data-gruppe="grund">' + drinG.map(zeile).join('') + '<div class="pos-gruppe-ende"></div></div>' +
+        '<div class="profil-gruppe-titel">Eigene Positionen</div><div class="pos-gruppe" data-gruppe="eigene">' + drinE.map(zeile).join('') +
+          (drinE.length ? '' : '<div class="beta-erg-klein profil-leer">hierher ziehen oder unten hinzufügen</div>') + '<div class="pos-gruppe-ende"></div></div>' +
+      '</div>' +
+      '<button type="button" class="btn-sekundaer profil-eigene" data-akt="eigene" style="margin-top:8px;">+ EBM-Position hinzufügen</button>' +
+      '<div class="profil-gruppe-titel">Wegepauschale <span class="gkv-pe-hinweis">nur mit Besuch</span></div>' +
+      (sitz ? '<div class="beta-erg-klein profil-leer">Sitzdienst – es wird nicht gefahren, keine Wegepauschale.</div>'
+        : '<div class="gkv-pe-zeile' + (wa ? ' an' : '') + '"><label><input type="checkbox" data-gk="weg"' + (wa ? ' checked' : '') + '> <span>Wegepauschale vorauswählen</span></label>' +
+          '<select class="gkv-pe-stufe" data-gstufe="weg">' + EBM_GRUPPEN.weg.stufen.map(x=> '<option value="' + x.k + '"' + (((wa && wa.stufe) || '2') === x.k ? ' selected' : '') + '>' + htmlEsc(x.label) + '</option>').join('') + '</select></div>') +
+      (weg.length ? '<button type="button" class="profil-aus-titel" data-akt="ausklappen">' + (ausOffen ? '&#9662;' : '&#9656;') + ' Entfernt (' + weg.length + ') – antippen zum Zurückholen</button>' +
+        (ausOffen ? '<div class="profil-ausgeblendet">' + weg.map(k=> '<button type="button" class="profil-zurueck" data-akt="zurueck:' + htmlEsc(k) + '"><b>' + htmlEsc(nrText(k)) + '</b> ' + htmlEsc(bezText(k)) + ' <span>＋</span></button>').join('') + '</div>' : '') : '');
     const knoepfe = [{ label: 'Abbrechen', akt: 'nein' }];
-    if(alt) knoepfe.push({ label: 'Löschen', akt: 'loeschen' });
+    if(alt && gkvProfileLaden().length > 1) knoepfe.push({ label: 'Löschen', akt: 'loeschen' });
     knoepfe.push({ label: 'Speichern', akt: 'ja', primaer: true });
-    const akt = await betaOverlay.ergebnis(alt ? 'GKV-Profil bearbeiten' : 'Neues GKV-Profil', html, knoepfe);
+    const warte = betaOverlay.ergebnis(alt ? 'GKV-Profil bearbeiten' : 'Neues GKV-Profil', html, knoepfe);
+    document.querySelectorAll('.beta-overlay [data-akt]').forEach(b=>{
+      if(b.closest('.beta-overlay-knoepfe')) return;
+      b.onclick = (ev)=>{ ev.preventDefault(); if(betaOverlay.loesen) betaOverlay.loesen(b.dataset.akt); };
+    });
+    const nameEl0 = document.getElementById('gkvPeName');
+    if(nameEl0) nameEl0.onchange = ()=>{ if(gkvIstSitzProfil({ id: pr.id, name: nameEl0.value }) !== sitz && betaOverlay.loesen) betaOverlay.loesen('neu'); };
+    const auswahlEl = document.querySelector('.beta-overlay .profil-auswahl');
+    if(auswahlEl) betaPosZiehen(auswahlEl, (gr)=>{ pr.anordnung = { grund: gr.grund || [], eigene: gr.eigene || [], am: new Date().toISOString() }; }, auswahlEl);
+    const akt = await warte;
+    // Formularstand uebernehmen
     const nameEl = document.getElementById('gkvPeName'); if(nameEl) pr.name = nameEl.value.trim();
+    const sichtbar = new Set(drinG.concat(drinE, sitz ? [] : ['weg']));
     const neuA = {};
-    document.querySelectorAll('.gkv-pe-liste [data-gk]').forEach(c=>{
+    Object.keys(pr.auswahl).forEach(k=>{ if(!sichtbar.has(k) && !pr.ausgeblendet.includes(k)) neuA[k] = pr.auswahl[k]; });
+    document.querySelectorAll('.beta-overlay [data-gk]').forEach(c=>{
       if(!c.checked) return;
       const k = c.dataset.gk, o = { anz: 1 };
-      const n = document.querySelector('.gkv-pe-liste [data-ganz="' + k + '"]'); if(n) o.anz = Math.max(1, Math.min(20, parseInt(n.value, 10) || 1));
-      const s = document.querySelector('.gkv-pe-liste [data-gstufe="' + k + '"]'); if(s) o.stufe = s.value;
+      const n = document.querySelector('.beta-overlay [data-ganz="' + k + '"]'); if(n) o.anz = Math.max(1, Math.min(20, parseInt(n.value, 10) || 1));
+      const st = document.querySelector('.beta-overlay [data-gstufe="' + k + '"]'); if(st) o.stufe = st.value;
       neuA[k] = o;
     });
-    betaOverlay.schliessen();
-    if(akt === 'nein' || !akt) return false;
+    pr.auswahl = neuA;
+    if(gkvIstSitzProfil(pr)) delete pr.auswahl.weg;
+    fehler = '';
+    if(akt === 'nein' || !akt){ betaOverlay.schliessen(); return false; }
+    if(akt === 'neu') continue;
     if(akt === 'loeschen'){
+      betaOverlay.schliessen();
       if(!await betaFrage('GKV-Profil „' + pr.name + '“ löschen?', 'Löschen', 'Abbrechen')) return false;
       await gkvProfilLoeschen(pr.id); return true;
     }
-    pr.auswahl = neuA;
+    if(akt === 'ausklappen'){ ausOffen = !ausOffen; continue; }
+    if(akt === 'eigene'){
+      const erg = await gkvZifferSuchenDialog();
+      if(erg){
+        const k = erg.schluessel;
+        if(k === 'weg'){ if(!gkvIstSitzProfil(pr)){ const x = EBM_GRUPPEN.weg.stufen.find(q=> q.tag === erg.gop || q.nacht === erg.gop); pr.auswahl.weg = { anz: 1, stufe: x ? x.k : '2' }; } continue; }
+        const neuGlobal = !gkvProfilGruppen(null).grund.concat(gkvProfilGruppen(null).eigene).includes(k);
+        gkvGlobalHinzu(k);
+        pr.ausgeblendet = pr.ausgeblendet.filter(x=> x !== k);
+        if(!pr.auswahl[k]) pr.auswahl[k] = { anz: 1 };
+        // wie bei PT: neue eigene Position in den anderen Profilen nicht anzeigen
+        if(neuGlobal) for(const q of gkvProfileLaden()){
+          if(q.id === pr.id) continue;
+          const aus = q.ausgeblendet || [];
+          if(!aus.includes(k)) await gkvProfilSichern({ ...q, ausgeblendet: aus.concat([k]) });
+        }
+      }
+      continue;
+    }
+    if(/^weg:/.test(akt)){ const k = akt.slice(4); if(!pr.ausgeblendet.includes(k)) pr.ausgeblendet.push(k); delete pr.auswahl[k]; continue; }
+    if(/^zurueck:/.test(akt)){ const k = akt.slice(8); pr.ausgeblendet = pr.ausgeblendet.filter(x=> x !== k); continue; }
+    // Speichern
     if(!pr.name){ fehler = 'Bitte einen Namen eintragen.'; continue; }
-    if(!Object.keys(neuA).length){ fehler = 'Bitte mindestens eine Position anhaken.'; continue; }
+    betaOverlay.schliessen();
     await gkvProfilSichern(pr); return true;
   }
 }
@@ -10826,17 +10963,93 @@ async function pseudoHinweisZeichnen(el){
     pseudoHinweisZeichnen(el);
   });
 }
-function gkvListeLaden(){
-  gkvAltMigrieren();
-  const d = LS.get(EIGENE_POS_CACHE, null) || {};
-  const a = (d.anordnung || {}).gkv;
-  if(a && Array.isArray(a.liste) && a.liste.length) return a.liste.slice();
-  return GKV_LISTE_STANDARD.slice();
+// ---------- Positionen, Gruppen, Reihenfolge (wie bei PT/LS) ----------
+// Global (eigene_positionen.json, anordnung.gkv): grund = EBM-Positionen der
+// Standardliste, eigene = per Suche hinzugefuegte Ziffern; liste = alles
+// zusammen (fuer die HTA, inkl. "weg"). Jedes Profil hat wie bei PT/LS seine
+// eigene Reihenfolge (anordnung) und kann Positionen ausblenden
+// (ausgeblendet). Die Wegepauschale steht -- wie das Wegegeld bei PT --
+// in einer eigenen Gruppe und nur, wenn ein Besuch gewaehlt ist (nie im
+// Sitzdienst).
+const GKV_BESUCH = ['01418', '01413', '01410', '01411', '01412', '01415'];
+function gkvIstSitzProfil(p){ return !!p && (p.id === 'sitz' || /sitz/i.test(String(p.name || ''))); }
+function gkvBesuchDabei(auswahl){ return Object.keys(auswahl || {}).some(k=> GKV_BESUCH.includes(k)); }
+function gkvWegMoeglich(auswahl, profil){ return gkvBesuchDabei(auswahl) && !gkvIstSitzProfil(profil); }
+function gkvStdSchluessel(){ return GKV_LISTE_STANDARD.filter(k=> k !== 'weg'); }
+function gkvAnordnungRoh(){ return ((LS.get(EIGENE_POS_CACHE, null) || {}).anordnung || {}).gkv || null; }
+// Einmalig: bisher global entfernte Standard-Positionen werden in allen
+// Profilen ausgeblendet (gleiches Bild wie vorher)
+function gkvAnordnungMigrieren(){
+  if(gkvAnordnungMigrieren.fertig) return; gkvAnordnungMigrieren.fertig = true;
+  try{
+    const a = gkvAnordnungRoh();
+    if(!a || Array.isArray(a.grund) || Array.isArray(a.eigene) || !Array.isArray(a.liste) || !a.liste.length || LS.get('gkv_anordnung_v2', false)) return;
+    LS.set('gkv_anordnung_v2', true);
+    const fehlt = gkvStdSchluessel().filter(k=> !a.liste.includes(k));
+    const std = gkvStdSchluessel();
+    gkvGruppenGlobalSpeichern({ grund: a.liste.filter(k=> std.includes(k)).concat(fehlt), eigene: a.liste.filter(k=> k !== 'weg' && !std.includes(k)) });
+    if(fehlt.length) gkvProfileLaden().forEach(p=>{
+      const aus = (p.ausgeblendet || []).slice(); fehlt.forEach(k=>{ if(!aus.includes(k) && !(p.auswahl || {})[k]) aus.push(k); });
+      gkvProfilSichern({ ...p, ausgeblendet: aus });
+    });
+  }catch(_){}
 }
-function gkvListeSpeichern(liste){
-  const anwenden = (d)=>{ d.anordnung = d.anordnung || {}; d.anordnung.gkv = { liste: liste.slice(), am: new Date().toISOString() }; };
+function gkvGruppenGlobal(){
+  gkvAltMigrieren(); gkvAnordnungMigrieren();
+  const a = gkvAnordnungRoh(), std = gkvStdSchluessel();
+  const grund = [], eigene = [];
+  const dazu = (liste, k)=>{ if(k && k !== 'weg' && !grund.includes(k) && !eigene.includes(k)) liste.push(k); };
+  if(a){
+    (a.grund || []).forEach(k=> dazu(grund, k));
+    (a.eigene || []).forEach(k=> dazu(eigene, k));
+    (a.liste || []).forEach(k=> dazu(std.includes(k) ? grund : eigene, k));
+  }
+  std.forEach(k=> dazu(grund, k));
+  return { grund, eigene };
+}
+function gkvListeMitWeg(grund, eigene){
+  const l = grund.slice(), i = l.indexOf('01418');
+  l.splice(i >= 0 ? i + 1 : l.length, 0, 'weg');
+  return l.concat(eigene);
+}
+function gkvGruppenGlobalSpeichern(gr){
+  const grund = (gr.grund || []).filter(k=> k !== 'weg'), eigene = (gr.eigene || []).filter(k=> k !== 'weg');
+  const anwenden = (d)=>{ d.anordnung = d.anordnung || {}; d.anordnung.gkv = { grund, eigene, liste: gkvListeMitWeg(grund, eigene), am: new Date().toISOString() }; };
   const d = betaEigeneDatenVoll(); anwenden(d); LS.set(EIGENE_POS_CACHE, d);
   if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') betaEigeneAbgleichen(anwenden).catch(()=>{});
+}
+// neue Ziffer (Suche) -> globale "eigene" Positionen
+function gkvGlobalHinzu(k){
+  const g = gkvGruppenGlobal();
+  if(k === 'weg' || g.grund.includes(k) || g.eigene.includes(k)) return;
+  g.eigene.push(k); gkvGruppenGlobalSpeichern(g);
+}
+function gkvGlobalEntfernen(k){
+  const g = gkvGruppenGlobal();
+  gkvGruppenGlobalSpeichern({ grund: g.grund.filter(x=> x !== k), eigene: g.eigene.filter(x=> x !== k) });
+}
+// Reihenfolge fuer ein Profil (ohne Ausblenden): eigene Anordnung, sonst global
+function gkvProfilGruppen(profil){
+  const g = gkvGruppenGlobal(), alle = g.grund.concat(g.eigene);
+  (Object.keys((profil && profil.auswahl) || {})).forEach(k=>{ if(k !== 'weg' && !alle.includes(k)){ g.eigene.push(k); alle.push(k); } });
+  const lay = profil && profil.anordnung, out = { grund: [], eigene: [] }, genutzt = new Set();
+  if(lay) ['grund', 'eigene'].forEach(x=> (lay[x] || []).forEach(k=>{ if(alle.includes(k) && !genutzt.has(k)){ out[x].push(k); genutzt.add(k); } }));
+  g.grund.forEach(k=>{ if(!genutzt.has(k)){ out.grund.push(k); genutzt.add(k); } });
+  g.eigene.forEach(k=>{ if(!genutzt.has(k)){ out.eigene.push(k); genutzt.add(k); } });
+  return out;
+}
+// Ziehen in der Ansicht gilt (wie bei PT/LS) fuer das aktive Profil
+function gkvAnordnungSpeichern(profilId, gr){
+  const p = gkvProfileLaden().find(x=> x.id === profilId);
+  const neu = { grund: (gr.grund || []).slice(), eigene: (gr.eigene || []).slice(), am: new Date().toISOString() };
+  if(p) return gkvProfilSichern({ ...p, anordnung: neu });
+  gkvGruppenGlobalSpeichern(neu);
+}
+// kompatibel: flache Liste (alle Positionen inkl. Wegepauschale)
+function gkvListeLaden(){ const g = gkvGruppenGlobal(); return gkvListeMitWeg(g.grund, g.eigene); }
+function gkvListeSpeichern(liste){
+  const std = gkvStdSchluessel();
+  gkvGruppenGlobalSpeichern({ grund: liste.filter(k=> std.includes(k)), eigene: liste.filter(k=> k !== 'weg' && !std.includes(k)) });
 }
 
 // Auswahl {schluessel: {anz, stufe?}} -> konkrete Positionen [{gop, anz, euro}]
@@ -10871,11 +11084,10 @@ function gkvAusschluesse(auswahl, liste, dt){
     if(c === '01226'){ if(!hat('01212').length) setze('nur zusammen mit 01212 (Mo–Fr 19–7 Uhr, Sa/So/Feiertag)'); else if(hat('01224').length) setze('nicht neben 01224', hat('01224')); }
     if(c === '01223' && !hat('01210').length) setze('nur zusammen mit 01210');
     if(c === '01224'){ if(!hat('01212').length) setze('nur zusammen mit 01212'); else if(hat('01226').length) setze('nicht neben 01226', hat('01226')); }
-    if(/^0121[468]$/.test(c) && hat(/^0121[02]$/).length) setze('nicht beim selben Kontakt wie die Notfallpauschale', hat(/^0121[02]$/));
-    if(/^0121[02]$/.test(c)){
-      if(hat(/^0121[468]$/).length) setze('nicht beim selben Kontakt wie die Konsultationspauschale', hat(/^0121[468]$/));
-      else if(hat(/^0120[57]$/).length) setze('nicht neben der Abklärungspauschale', hat(/^0120[57]$/));
-    }
+    // Notfall- und Konsultationspauschale schliessen sich hier NICHT aus:
+    // 01214/01216/01218 = Anruf vor der Anfahrt, 01210/01212 = Hausbesuch
+    // selbst (zusammen mit 01418) -- zwei Kontakte
+    if(/^0121[02]$/.test(c) && hat(/^0120[57]$/).length) setze('nicht neben der Abklärungspauschale', hat(/^0120[57]$/));
     if(/^0120[57]$/.test(c)){
       if(hat(/^0121[02]$/).length) setze('nicht neben der Notfallpauschale', hat(/^0121[02]$/));
       else if(hat(/^3[345]\d{3}$/).length) setze('nicht neben Leistungen der Kapitel 33–35', hat(/^3[345]\d{3}$/));
@@ -10892,7 +11104,6 @@ function gkvAusschluesse(auswahl, liste, dt){
 function gkvHinweise(pos){
   const hat = (g)=> pos.some(p=> p.gop === g);
   const h = [];
-  if((hat('01210') || hat('01212')) && pos.some(p=> /^0121[468]$/.test(p.gop))) h.push('Notfallpauschale und Konsultationspauschale nicht beim selben Kontakt – die Konsultationspauschale gilt für weitere Kontakte.');
   if((hat('01223') || hat('01224')) && !(hat('01210') || hat('01212'))) h.push('Der Schweregradzuschlag gilt nur zusammen mit der Notfallpauschale.');
   if(hat('01226') && !hat('01212')) h.push('01226 gibt es nur zusammen mit 01212 (Unzeit).');
   if(hat('01418') && hat('01413')) h.push('01413 ist der Mitbesuch eines weiteren Kranken – beim selben Patienten nicht neben 01418.');
@@ -11094,12 +11305,21 @@ async function fbDienstAbfragen(fb, dt, fallText){
   let arzt = aerzte[0] || '';
   let art = LS.get('fb_dienstart', 'Fahrdienst');
   let fehler = '';
+  // gewaehlter Live-Dienst (Startseite) fuellt vor
+  const live = (typeof liveDienstFuer === 'function') ? liveDienstFuer(dt) : null;
+  if(live){
+    datum = new Date(live.fenster.tag);
+    const z = fbZeitParsen(live.von + '-' + live.bis);
+    if(z){ zeit = z; const t = fbZeitText(z); if(!vorschlaege.includes(t)) vorschlaege.unshift(t); }
+    art = live.art || art;
+    if(live.arzt) arzt = live.arzt;
+  }
   const iso = (d)=> d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate());
   while(true){
     const html =
       '<div class="fb-dialog">' +
       '<div class="fb-fall">' + htmlEsc(fallText) + '</div>' +
-      '<div class="fb-info">Für diesen Zeitpunkt steht noch kein Dienst im Fahrtenbuch.</div>' +
+      '<div class="fb-info">Für diesen Zeitpunkt steht noch kein Dienst im Fahrtenbuch.' + (live ? ' Vorausgefüllt aus dem gewählten Dienst – bitte nur bestätigen.' : '') + '</div>' +
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="fbDatum" value="' + iso(datum) + '"></label>' +
       '<div class="fb-lbl">Dienstzeit</div>' +
@@ -11341,23 +11561,17 @@ function ansichtGkv(bearbeitenId){
       </div>
       <div class="gkv-zeitinfo" id="gkvZeitInfo"></div>
       <label class="gkv-feld">Name<input type="text" id="gkvName" autocomplete="off" placeholder="Nachname, Vorname" value="${htmlEsc(st.name)}"></label>
-      <div class="gkv-feld">Adresse <span class="gkv-optional">(optional – für die Wegepauschale)</span>
+      <div id="gkvAdrBlock"><div class="gkv-feld">Adresse <span class="gkv-optional">(optional – für die Wegepauschale)</span>
         <input type="text" id="gkvAdresse" autocomplete="off" placeholder="Straße Nr." value="${htmlEsc(gkvAdrTeile(st.adresse).strasse)}" aria-label="Straße und Hausnummer">
         <input type="text" id="gkvPlzOrt" autocomplete="off" enterkeyhint="search" placeholder="PLZ Ort (PLZ oder Ort genügt)" value="${htmlEsc(gkvAdrTeile(st.adresse).plzOrt)}" aria-label="PLZ und Ort" style="margin-top:6px;">
         <div class="gkv-plz-info" id="gkvPlzInfo"></div></div>
       <div class="gkv-adr-knoepfe"><button type="button" class="btn-sekundaer" id="gkvKmBtn">Wegegeld ermitteln</button><button type="button" class="btn-sekundaer" id="gkvKarteBtn" title="Wegegeld-Karte NFP Offenburg">🗺 Karte</button></div>
-      <div class="gkv-zeitinfo" id="gkvKmInfo">${st.kmInfo || ''}</div>
+      <div class="gkv-zeitinfo" id="gkvKmInfo">${st.kmInfo || ''}</div></div>
     </div>
-    <div class="gesamt-abschnitt">Schnellwahl</div>
-    <div class="gkv-profile" id="gkvProfile"></div>
-    <div class="gesamt-abschnitt">EBM-Positionen</div>
+    <div class="profil-leiste gkv-profile" id="gkvProfile"></div>
     <div id="gkvListe"></div>
-    <div class="gkv-suche">
-      <input type="search" id="gkvSuche" placeholder="EBM-Position hinzufügen (Ziffer oder Text)" autocomplete="off">
-      <div id="gkvTreffer"></div>
-    </div>
     <div class="gkv-stand"><span id="gkvStandText"></span><br>
-      <a href="#" id="gkvPruefen">Werte online prüfen</a> · <a href="#" id="gkvVonHand">von Hand ändern</a> · <a href="#" id="gkvStandard">Standardliste</a></div>
+      <a href="#" id="gkvPruefen">Werte online prüfen</a> · <a href="#" id="gkvVonHand">von Hand ändern</a></div>
     <div id="gkvWerteHinweis"></div>
     <div id="gkvHinweise"></div>
     <div class="gkv-summe-leiste"><span id="gkvSumme"></span>
@@ -11373,8 +11587,19 @@ function ansichtGkv(bearbeitenId){
     const dt = dtVon();
     const nacht = ebmWochenendeOderFeiertag(dt) ? (istFeiertagBW(dt) || (dt.getDay() === 0 ? 'Sonntag' : dt.getDay() === 6 ? 'Samstag' : 'Feiertag')) : (ebmStunde(dt) >= 7 && ebmStunde(dt) < 19 ? 'Werktag, 7–19 Uhr' : 'Werktag, Unzeit');
     el('gkvZeitInfo').textContent = 'Ziffern nach Zeitpunkt: ' + nacht;
+    const prof = gkvProfileLaden().find(p=> p.id === st.profil) || null;
+    const wegOk = gkvWegMoeglich(st.auswahl, prof);
+    if(!wegOk && st.auswahl.weg) delete st.auswahl.weg;
+    el('gkvAdrBlock').style.display = gkvIstSitzProfil(prof) ? 'none' : '';
+    // Gruppen und Reihenfolge des aktiven Profils, ausgeblendete nur wenn gewaehlt
+    const geo = gkvProfilGruppen(prof), ausP = new Set((prof && prof.ausgeblendet) || []);
+    const sicht = (k)=> !ausP.has(k) || !!st.auswahl[k];
+    const gG = geo.grund.filter(sicht), gE = geo.eigene.filter(sicht);
+    Object.keys(st.auswahl).forEach(k=>{ if(k !== 'weg' && !gG.includes(k) && !gE.includes(k)) gE.push(k); });
+    const stdK = gkvStdSchluessel();
+    liste = gG.concat(gE, wegOk ? ['weg'] : []);
     const aus = gkvAusschluesse(st.auswahl, liste, dt);
-    el('gkvListe').innerHTML = '<div class="pos-gruppe" data-gruppe="gkv">' + liste.map(k=>{
+    const zeile = (k, art)=>{
       const g = EBM_GRUPPEN[k], a = st.auswahl[k];
       const gop = g ? g.waehle(dt, a && a.stufe) : k;
       const e = ebmEintrag(gop);
@@ -11385,20 +11610,61 @@ function ansichtGkv(bearbeitenId){
       const wst = k === 'weg' && a ? g.stufen.find(x=> x.k === a.stufe) : null;
       const anz = wst && wst.anz ? wst.anz : a ? Math.max(1, Number(a.anz) || 1) : 1;
       const x = aus[k];
-      return '<div class="gkv-pos pos-item' + (a ? ' an' : '') + (x ? (a ? ' gkv-konflikt' : ' gkv-aus') : '') + '" data-k="' + k + '" data-key="' + k + '" data-drag="1">' +
+      const innen = '<div class="gkv-pos' + (a ? ' an' : '') + (x ? (a ? ' gkv-konflikt' : ' gkv-aus') : '') + '" data-k="' + k + '">' +
         '<div class="gkv-pos-haupt" data-tipp="' + k + '"><span class="gkv-haken" aria-hidden="true"></span><span class="gkv-gop">' + gop + '</span>' +
         '<span class="gkv-txt">' + htmlEsc(titel) + (unter ? '<small>' + htmlEsc(unter) + '</small>' : '') +
           (x ? '<span class="gkv-aus-grund">' + (a ? '⚠ ' : '') + htmlEsc(x.grund) + '</span>' : '') + '</span>' +
         '<span class="gkv-eur">' + betaEuro(ebmEuro(gop, dt) * (a ? anz : 1)) + '</span></div>' +
         (k === 'weg' ? '<div class="gkv-stufen">' + g.stufen.map(s=> '<button type="button" data-stufe="' + s.k + '" class="' + (a && a.stufe === s.k ? 'an' : '') + '">' + s.label + '</button>').join('') + '</div>' : '') +
         (mehr ? '<div class="gkv-anz"><button type="button" data-minus="' + k + '">−</button><b>' + anz + '×</b><button type="button" data-plus="' + k + '">+</button></div>' : '') +
-        '<button type="button" class="gkv-weg" data-weg="' + k + '" aria-label="aus der Liste entfernen">×</button></div>';
-    }).join('') + '<div class="pos-gruppe-ende"></div></div><div class="eigene-hinweis gkv-zieh-hinweis">Lang drücken und ziehen: Reihenfolge ändern.</div>';
-    // Reihenfolge per langem Druecken + Ziehen (wie bei PT/LS)
+        '</div>';
+      if(art === 'fest') return innen;
+      // wie bei PT: eigene Positionen zum Entfernen nach links wischen
+      const huelle = art === 'eigene' ? '<div class="wisch-huelle" data-gkveigene="' + htmlEsc(k) + '"><div class="wisch-hinter">&#128465; Entfernen</div>' + innen + '</div>' : innen;
+      return '<div class="pos-item gkv-item" data-key="' + htmlEsc(k) + '" data-drag="1">' + huelle + '</div>';
+    };
+    el('gkvListe').innerHTML = '<div class="eigene-hinweis gkv-zieh-hinweis">Lang drücken und ziehen: Reihenfolge ändern oder zwischen EBM-Positionen und eigenen Positionen verschieben.</div>' +
+      '<div class="positionen-gruppe-titel">EBM-Positionen</div>' +
+      '<div class="pos-gruppe" data-gruppe="grund">' + gG.map(k=> zeile(k, 'grund')).join('') + '<div class="pos-gruppe-ende"></div></div>' +
+      '<div class="positionen-gruppe-titel">Eigene Positionen</div>' +
+      '<div class="pos-gruppe" data-gruppe="eigene">' + gE.map(k=> zeile(k, 'eigene')).join('') +
+        (gE.length ? '' : '<div class="eigene-hinweis gkv-eigene-leer">hierher ziehen oder unten hinzufügen</div>') + '<div class="pos-gruppe-ende"></div></div>' +
+      '<button type="button" class="btn-sekundaer" id="gkvEigeneNeu" style="margin:8px 0 4px;">+ EBM-Position hinzufügen</button>' +
+      (gE.length ? '<div class="eigene-hinweis">Zum Entfernen nach links wischen.</div>' : '') +
+      (wegOk ? '<div class="positionen-gruppe-titel">Wegepauschale <span class="auto-hinweis">nur mit Besuch</span></div>' + zeile('weg', 'fest') : '');
+    // Reihenfolge per langem Druecken + Ziehen (wie bei PT/LS) -- gilt fuer das aktive Profil
     betaPosZiehen(el('gkvListe'), (gr)=>{
-      if(Array.isArray(gr.gkv) && gr.gkv.length){ liste = gr.gkv.slice(); gkvListeSpeichern(liste); }
+      gkvAnordnungSpeichern(st.profil, { grund: gr.grund || [], eigene: gr.eigene || [] });
       zeichnen();
     });
+    el('gkvListe').querySelectorAll('.wisch-huelle[data-gkveigene]').forEach(h=>{
+      betaWischen(h.querySelector('.gkv-pos'), async ()=>{
+        const k = h.dataset.gkveigene, e = ebmEintrag(EBM_GRUPPEN[k] ? EBM_GRUPPEN[k].waehle(dt, null) : k);
+        const text = (e ? e.gop + ' ' + e.text : k);
+        if(stdK.includes(k)){
+          if(!await betaFrage('„' + text + '“ in diesem Profil nicht mehr anzeigen?\n\nZurückholen: Einstellungen › Profile.', 'Entfernen', 'Abbrechen')) return false;
+          if(prof) await gkvProfilSichern({ ...prof, ausgeblendet: (prof.ausgeblendet || []).concat([k]) });
+        } else {
+          if(!await betaFrage('„' + text + '“ aus den eigenen Positionen entfernen?', 'Entfernen', 'Abbrechen')) return false;
+          gkvGlobalEntfernen(k);
+        }
+        delete st.auswahl[k]; zeichnen(); return true;
+      });
+    });
+    el('gkvEigeneNeu').onclick = async ()=>{
+      const erg = await gkvZifferSuchenDialog(); if(!erg) return;
+      const k = erg.schluessel;
+      if(k === 'weg'){
+        if(!gkvWegMoeglich(st.auswahl, prof)){ appToastAnzeigen(gkvIstSitzProfil(prof) ? 'Sitzdienst: keine Wegepauschale.' : 'Wegepauschale nur mit einem Besuch (z.B. 01418).', 2800); return; }
+        const x = EBM_GRUPPEN.weg.stufen.find(q=> q.tag === erg.gop || q.nacht === erg.gop); st.auswahl.weg = { anz: 1, stufe: x ? x.k : '2' };
+      } else {
+        gkvGlobalHinzu(k);
+        if(prof && (prof.ausgeblendet || []).includes(k)) await gkvProfilSichern({ ...prof, ausgeblendet: prof.ausgeblendet.filter(q=> q !== k) });
+        if(!st.auswahl[k]) st.auswahl[k] = { anz: 1 };
+      }
+      zeichnen();
+      const z = el('gkvListe').querySelector('[data-k="' + k + '"]'); if(z) z.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
     const pos = gkvPositionen(st.auswahl, dt);
     const summe = pos.reduce((s, p)=> s + p.euro, 0);
     el('gkvSumme').innerHTML = '<b>' + betaEuro(summe) + '</b> <small>' + pos.length + ' Position' + (pos.length === 1 ? '' : 'en') + '</small>';
@@ -11420,6 +11686,7 @@ function ansichtGkv(bearbeitenId){
         if(akt === 'tausch') x.partner.forEach(p=> delete st.auswahl[p]);
       }
       st.auswahl[k] = k === 'weg' ? { anz: 1, stufe: st.kmStufe || '2' } : { anz: 1 };
+      if(GKV_BESUCH.includes(k) && st.kmStufe && !st.auswahl.weg && gkvWegMoeglich(st.auswahl, prof)) st.auswahl.weg = { anz: 1, stufe: st.kmStufe };
       zeichnen();
     });
     el('gkvListe').querySelectorAll('[data-stufe]').forEach(b=> b.onclick = (ev)=>{
@@ -11431,25 +11698,18 @@ function ansichtGkv(bearbeitenId){
     });
     el('gkvListe').querySelectorAll('[data-plus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.plus]; a.anz = Math.min(20, (Number(a.anz) || 1) + 1); zeichnen(); });
     el('gkvListe').querySelectorAll('[data-minus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.minus]; a.anz = Math.max(1, (Number(a.anz) || 1) - 1); zeichnen(); });
-    el('gkvListe').querySelectorAll('[data-weg]').forEach(b=> b.onclick = ()=>{
-      liste = liste.filter(x=> x !== b.dataset.weg); delete st.auswahl[b.dataset.weg];
-      gkvListeSpeichern(liste); zeichnen();
-    });
   }
   function profileZeichnen(){
     const pr = gkvProfileLaden();
-    const akt = pr.find(p=> p.id === st.profil);
-    const geaendert = akt && gkvAuswahlNorm(akt.auswahl) !== gkvAuswahlNorm(st.auswahl);
-    // Profile werden nur noch in den Einstellungen angelegt/geaendert/geloescht
-    el('gkvProfile').innerHTML = pr.map(p=> '<button type="button" class="fb-chip' + (p.id === st.profil && !geaendert ? ' an' : '') + '" data-profil="' + htmlEsc(p.id) + '">' + htmlEsc(p.name) + '</button>').join('');
+    // wie bei PT/LS: das gewaehlte Profil bleibt markiert (Reihenfolge/Ausblenden gelten dafuer)
+    el('gkvProfile').innerHTML = pr.map(p=> '<button type="button" class="profil-chip' + (p.id === st.profil ? ' aktiv' : '') + '" data-profil="' + htmlEsc(p.id) + '">' + htmlEsc(p.name) + '</button>').join('');
     el('gkvProfile').querySelectorAll('[data-profil]').forEach(b=> b.onclick = ()=>{
       const p = gkvProfileLaden().find(x=> x.id === b.dataset.profil); if(!p) return;
-      st.auswahl = JSON.parse(JSON.stringify(p.auswahl)); st.profil = p.id;
-      if(st.kmStufe && st.auswahl.weg) st.auswahl.weg.stufe = st.kmStufe;
+      st.auswahl = JSON.parse(JSON.stringify(p.auswahl || {})); st.profil = p.id;
+      if(gkvIstSitzProfil(p)) delete st.auswahl.weg;
+      else if(st.kmStufe && gkvWegMoeglich(st.auswahl, p)) st.auswahl.weg = { anz: 1, stufe: st.kmStufe };
       LS.set('gkv_profil_letztes', p.id);
-      let neu = false;
-      Object.keys(st.auswahl).forEach(k=>{ if(!liste.includes(k) && (EBM_GRUPPEN[k] || ebmEintrag(k))){ liste.push(k); neu = true; } });
-      if(neu) gkvListeSpeichern(liste);
+      Object.keys(st.auswahl).forEach(k=>{ if(k !== 'weg' && (EBM_GRUPPEN[k] || ebmEintrag(k))) gkvGlobalHinzu(k); });
       zeichnen();
     });
   }
@@ -11499,9 +11759,11 @@ function ansichtGkv(bearbeitenId){
     }
   };
   function kmUebernehmen(stufe, text){
-    st.auswahl.weg = { anz: 1, stufe }; st.kmStufe = stufe;
-    if(!liste.includes('weg')){ liste.push('weg'); gkvListeSpeichern(liste); }
-    st.kmInfo = text + ' · <a href="#" class="gkv-karte-link">auf der Karte prüfen</a>';
+    st.kmStufe = stufe;
+    const prof = gkvProfileLaden().find(p=> p.id === st.profil) || null;
+    const ok = gkvWegMoeglich(st.auswahl, prof);
+    if(ok) st.auswahl.weg = { anz: 1, stufe };
+    st.kmInfo = text + (ok ? '' : ' · <i>kommt mit einem Besuch (01418) dazu</i>') + ' · <a href="#" class="gkv-karte-link">auf der Karte prüfen</a>';
     el('gkvKmInfo').innerHTML = st.kmInfo;
     zeichnen();
   }
@@ -11516,20 +11778,6 @@ function ansichtGkv(bearbeitenId){
   el('gkvName').oninput = ()=>{ st.name = el('gkvName').value; el('gkvName').classList.remove('pflichtfeld-fehlt'); };
   el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); werteZeichnen(); };
   el('gkvZeit').onchange = ()=>{ st.zeit = el('gkvZeit').value; zeichnen(); };
-  el('gkvSuche').oninput = ()=>{
-    const t = ebmSuchen(el('gkvSuche').value, 25);
-    el('gkvTreffer').innerHTML = t.map(e=> '<div class="gkv-treffer" data-gop="' + e.gop + '"><span class="gkv-gop">' + e.gop + '</span><span class="gkv-txt">' + htmlEsc(e.text) + (e.hinweis ? '<small>' + htmlEsc(e.hinweis) + '</small>' : '') + '</span><span class="gkv-eur">' + betaEuro(ebmEuro(e.gop, dtVon())) + '</span></div>').join('') ||
-      (el('gkvSuche').value.trim() ? '<div class="leer-hinweis">Keine passende Ziffer im Notdienst-Katalog.</div>' : '');
-    el('gkvTreffer').querySelectorAll('[data-gop]').forEach(d=> d.onclick = ()=>{
-      const gop = d.dataset.gop, g = ebmGruppeVon(gop), k = g || gop;
-      if(!liste.includes(k)){ liste.push(k); gkvListeSpeichern(liste); }
-      if(g === 'weg'){ const s = EBM_GRUPPEN.weg.stufen.find(x=> x.tag === gop || x.nacht === gop); st.auswahl.weg = { anz: 1, stufe: s ? s.k : '2' }; }
-      else if(!st.auswahl[k]) st.auswahl[k] = { anz: 1 };
-      el('gkvSuche').value = ''; el('gkvTreffer').innerHTML = '';
-      zeichnen();
-      const z = el('gkvListe').querySelector('[data-k="' + k + '"]'); if(z) z.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-  };
   function werteZeichnen(){
     const p = LS.get('ebm_pruefung', {}) || {};
     el('gkvStandText').textContent = ebmStandText(dtVon()) + (p.am ? ' · online geprüft ' + isoDe(String(p.am).slice(0, 10)) : '');
@@ -11542,7 +11790,6 @@ function ansichtGkv(bearbeitenId){
   }
   el('gkvPruefen').onclick = async (ev)=>{ ev.preventDefault(); betaOverlay.zeigen('EBM-Werte'); betaOverlay.fortschritt(null); betaOverlay.schritt('Aktuelle Werte werden online geprüft …'); await ebmWertePruefen(true); betaOverlay.schliessen(); werteZeichnen(); zeichnen(); };
   el('gkvVonHand').onclick = async (ev)=>{ ev.preventDefault(); if(await ebmWerteVonHand()){ werteZeichnen(); zeichnen(); } };
-  el('gkvStandard').onclick = (ev)=>{ ev.preventDefault(); liste = GKV_LISTE_STANDARD.slice(); gkvListeSpeichern(liste); zeichnen(); };
   el('gkvSpeichern').onclick = async ()=>{
     st.name = el('gkvName').value.trim();
     if(!st.name){ el('gkvName').classList.add('pflichtfeld-fehlt'); el('gkvName').focus(); return; }
@@ -11601,7 +11848,7 @@ function ansichtGkv(bearbeitenId){
   };
   zeichnen(); verlaufZeichnen(); werteZeichnen();
   // Profile/Liste von anderen Geraeten holen
-  gkvAbgleichen(()=>{ if(document.getElementById('gkvProfile')){ liste = gkvListeLaden(); zeichnen(); } });
+  gkvAbgleichen(()=>{ if(document.getElementById('gkvProfile')) zeichnen(); });
 }
 
 
@@ -11802,29 +12049,128 @@ async function nfpKarteOeffnen(opt){
   ov.querySelector('#nfpPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); suchen(); } };
   ov.querySelector('#nfpStrasse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); ov.querySelector('#nfpPlzOrt').focus(); } };
   ov.querySelector('#nfpPlzOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(ov.querySelector('#nfpStrasse'), ov.querySelector('#nfpPlzOrt'), null));
-  const gps = ()=>{
-    if(!navigator.geolocation){ info.textContent = 'Standort wird von diesem Gerät nicht unterstützt.'; return; }
+  const gps = async (still)=>{
     info.textContent = 'Standort wird ermittelt …';
-    navigator.geolocation.getCurrentPosition((pos)=>{
-      const g = { lat: pos.coords.latitude, lon: pos.coords.longitude }, p = nfpGeoZuPixel(g.lat, g.lon);
-      punkt('nfp-gps', p);
-      if(!nfpImBild(p)){ info.textContent = 'Der aktuelle Standort liegt außerhalb der Karte.'; return; }
-      waehlen(p, 'Standort', g); zentrieren(p);
-    }, (e)=>{ info.textContent = e && e.code === 1 ? 'Standort nicht freigegeben – Adresse suchen oder auf die Einsatzstelle tippen.' : 'Standort nicht verfügbar – Adresse suchen oder auf die Einsatzstelle tippen.'; },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
+    const g = await standortHolen({ still: still === true });
+    if(!g){ info.textContent = 'Kein Standort – Adresse suchen oder auf die Einsatzstelle tippen.'; return; }
+    const p = nfpGeoZuPixel(g.lat, g.lon);
+    punkt('nfp-gps', p);
+    if(!nfpImBild(p)){ info.textContent = 'Der aktuelle Standort liegt außerhalb der Karte.'; return; }
+    waehlen(p, 'Standort', g); zentrieren(p);
   };
-  ov.querySelector('.nfp-gps-knopf').onclick = gps;
+  ov.querySelector('.nfp-gps-knopf').onclick = ()=> gps(false);
   await new Promise(r=> img.complete ? r() : (img.onload = img.onerror = r));
   if(opt.adresse && opt.adresse.lat){
     const p = nfpGeoZuPixel(opt.adresse.lat, opt.adresse.lon); punkt('nfp-adr', p);
     if(nfpImBild(p)){ waehlen(p, 'Adresse', opt.adresse, opt.adresseText || ''); zentrieren(p); }
   } else if(opt.adresseText) suchen();
-  else if(opt.gps) gps();
+  else if(opt.gps) gps(true);   // beim Oeffnen still: nur wenn schon freigegeben
   return await new Promise((fertig)=>{
     const zu = (erg)=>{ ov.remove(); document.body.classList.remove('nfp-offen'); fertig(erg); };
     ov.querySelector('.nfp-zu').onclick = ()=> zu(null);
     ov.querySelector('.nfp-ok').onclick = ()=> zu(wahl);
   });
+}
+
+// ---------- Luftlinie-Werkzeug: Zonenkarte mit Weg ----------
+// Route mit Verlauf (OSRM, nur Koordinaten der Adressen gehen hinaus)
+async function routeMitWeg(start, ziel){
+  const url = 'https://router.project-osrm.org/route/v1/driving/' + start.lon + ',' + start.lat + ';' + ziel.lon + ',' + ziel.lat + '?overview=full&geometries=geojson&alternatives=true';
+  const res = await fetch(url);
+  const data = await res.json();
+  if(!data.routes || !data.routes.length) return [];
+  return data.routes.map(r=> ({ km: r.distance / 1000, minuten: r.duration / 60, coords: (r.geometry && r.geometry.coordinates) || [] }));
+}
+// Ausschnitt der Wegegeld-Karte NFP unter dem Ergebnis: Start, Ziel, NFP,
+// Luftlinie (gestrichelt) und berechnete Fahrstrecke
+async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
+  if(!ziel_el || typeof NFP_KARTE === 'undefined') return;
+  const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1];
+  const pS = nfpGeoZuPixel(start.lat, start.lon), pZ = nfpGeoZuPixel(ziel.lat, ziel.lon), pN = { x: NFP_KARTE.nfp[0], y: NFP_KARTE.nfp[1] };
+  const box = document.createElement('div'); box.className = 'luft-karte'; ziel_el.appendChild(box);
+  if(!nfpImBild(pZ) && !nfpImBild(pS)){ box.innerHTML = '<div class="luft-karte-hinweis">Start und Ziel liegen außerhalb der Wegegeld-Karte NFP.</div>'; return; }
+  const wegP = (weg || []).map(c=> nfpGeoZuPixel(c[1], c[0])).filter(Boolean);
+  const pts = [pS, pZ, pN].concat(wegP).filter(p=> nfpImBild(p));
+  let x0 = Math.min.apply(null, pts.map(p=> p.x)), x1 = Math.max.apply(null, pts.map(p=> p.x));
+  let y0 = Math.min.apply(null, pts.map(p=> p.y)), y1 = Math.max.apply(null, pts.map(p=> p.y));
+  const rand = 70; x0 -= rand; x1 += rand; y0 -= rand; y1 += rand;
+  // Mindestgroesse und ein angenehmes Seitenverhaeltnis (0,8 ... 1,5)
+  const wachsen = (a, b, min)=>{ const m = (a + b) / 2, h = Math.max(b - a, min) / 2; return [m - h, m + h]; };
+  [x0, x1] = wachsen(x0, x1, 420); [y0, y1] = wachsen(y0, y1, 320);
+  if((x1 - x0) / (y1 - y0) > 1.5) [y0, y1] = wachsen(y0, y1, (x1 - x0) / 1.5);
+  if((x1 - x0) / (y1 - y0) < 0.8) [x0, x1] = wachsen(x0, x1, (y1 - y0) * 0.8);
+  const schieben = (a, b, max)=>{ const l = b - a; if(l >= max) return [0, max]; if(a < 0) return [0, l]; if(b > max) return [max - l, max]; return [a, b]; };
+  [x0, x1] = schieben(x0, x1, W); [y0, y1] = schieben(y0, y1, H);
+  const bw = x1 - x0, bh = y1 - y0, r = Math.max(bw, bh) / 55;
+  const url = (typeof nfpKarteBildUrl === 'function' ? await nfpKarteBildUrl() : null) || nfpZonenBildUrl();
+  const punkt = (p, kl)=> nfpImBild(p) ? '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r.toFixed(1) + '" class="' + kl + '"/>' : '';
+  const kb = nfpImBild(pZ) ? nfpBewertung(pZ) : null;
+  box.innerHTML = '<div class="luft-karte-kopf"><b>Wegegeld-Karte NFP</b>' + (kb ? ' · Ziel: ' + htmlEsc(kb.text) : '') +
+      '<button type="button" class="luft-karte-gross">Große Karte</button></div>' +
+    '<div class="luft-karte-flaeche" style="aspect-ratio:' + bw.toFixed(0) + ' / ' + bh.toFixed(0) + ';">' +
+      '<img alt="Wegegeld-Karte" draggable="false" src="' + url + '" style="left:' + (-x0 / bw * 100).toFixed(3) + '%; top:' + (-y0 / bh * 100).toFixed(3) + '%; width:' + (W / bw * 100).toFixed(3) + '%;">' +
+      '<svg viewBox="' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' ' + bw.toFixed(1) + ' ' + bh.toFixed(1) + '" preserveAspectRatio="none" aria-hidden="true">' +
+        (wegP.length > 1 ? '<polyline class="luft-weg" points="' + wegP.map(p=> p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ') + '"/>' : '') +
+        '<line class="luft-linie" x1="' + pS.x.toFixed(1) + '" y1="' + pS.y.toFixed(1) + '" x2="' + pZ.x.toFixed(1) + '" y2="' + pZ.y.toFixed(1) + '"/>' +
+        '<rect class="luft-nfp" x="' + (pN.x - r * 0.8).toFixed(1) + '" y="' + (pN.y - r * 0.8).toFixed(1) + '" width="' + (r * 1.6).toFixed(1) + '" height="' + (r * 1.6).toFixed(1) + '"/>' +
+        punkt(pS, 'luft-start') + punkt(pZ, 'luft-ziel') +
+      '</svg></div>' +
+    '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
+      (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span></div>';
+  box.querySelector('.luft-karte-gross').onclick = ()=> nfpKarteOeffnen({ adresse: { lat: ziel.lat, lon: ziel.lon }, adresseText: zielText || '' });
+}
+
+// ---------- Standort (GPS) mit Freigabe ueber Android ----------
+// Fragt die Freigabe ueber Android an (Systemdialog) und hilft weiter, wenn
+// der Standort gesperrt oder am Handy ausgeschaltet ist. Eine Web-App kann
+// den Standort nicht selbst einschalten -- Android/Chrome bieten das aber
+// beim Abfragen meist von sich aus an.
+// opt.still = true: nur abfragen, wenn schon freigegeben (kein Dialog)
+async function standortHolen(opt){
+  opt = opt || {};
+  if(!navigator.geolocation){ if(!opt.still) await betaOverlay.meldung('Dieses Gerät/dieser Browser kann den Standort nicht ermitteln.', 'Standort'); return null; }
+  let stand = 'prompt';
+  try{ if(navigator.permissions && navigator.permissions.query) stand = (await navigator.permissions.query({ name: 'geolocation' })).state; }catch(_){}
+  if(opt.still && stand !== 'granted') return null;
+  if(stand === 'denied'){ await standortHilfe('gesperrt'); return null; }
+  if(stand === 'prompt'){
+    const ok = await betaOverlay.ergebnis('Standort freigeben',
+      '<div class="fb-info">Für die Position braucht die App den Standort. Android fragt gleich nach – bitte <b>„Bei Nutzung der App zulassen“</b> bzw. <b>„Zulassen“</b> wählen.</div>' +
+      '<div class="fb-info">Ist der Standort am Handy aus, bietet Android an, ihn einzuschalten – dann <b>„OK“</b> bzw. <b>„Einschalten“</b>.</div>',
+      [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Freigeben', akt: 'ja', primaer: true }]);
+    betaOverlay.schliessen();
+    if(ok !== 'ja') return null;
+  }
+  for(let versuch = 0; ; versuch++){
+    try{
+      const pos = await new Promise((ok, fehler)=> navigator.geolocation.getCurrentPosition(ok, fehler, { enableHighAccuracy: true, timeout: 15000, maximumAge: versuch ? 0 : 60000 }));
+      return { lat: pos.coords.latitude, lon: pos.coords.longitude, genau: pos.coords.accuracy };
+    }catch(e){
+      if(opt.still) return null;
+      if(e && e.code === 1){ await standortHilfe('gesperrt'); return null; }
+      if(!await standortHilfe('aus')) return null;
+    }
+  }
+}
+async function standortHilfe(fall){
+  if(fall === 'gesperrt'){
+    await betaOverlay.ergebnis('Standort gesperrt',
+      '<div class="fb-info">Der Standort ist für die App gesperrt. Android fragt dann nicht mehr von selbst – einmal freigeben:</div>' +
+      '<ol class="standort-hilfe">' +
+        '<li><b>Als App installiert:</b> App-Symbol lange drücken › <i>App-Info</i> › <i>Berechtigungen</i> › <i>Standort</i> › <i>Nur bei Nutzung der App zulassen</i>.</li>' +
+        '<li><b>Im Chrome-Browser:</b> Schloss-Symbol links neben der Adresse › <i>Berechtigungen</i> › <i>Standort</i> › <i>Zulassen</i>.</li>' +
+        '<li>Falls Chrome selbst keinen Standort darf: Android-<i>Einstellungen</i> › <i>Apps</i> › <i>Chrome</i> › <i>Berechtigungen</i> › <i>Standort</i> › <i>Bei Nutzung zulassen</i>.</li>' +
+      '</ol><div class="fb-info">Danach den GPS-Knopf noch einmal tippen.</div>',
+      [{ label: 'OK', akt: 'ok', primaer: true }]);
+    betaOverlay.schliessen(); return false;
+  }
+  const a = await betaOverlay.ergebnis('Kein Standort',
+    '<div class="fb-info">Das Handy liefert gerade keinen Standort – meist ist der Standort (GPS) ausgeschaltet.</div>' +
+    '<ol class="standort-hilfe"><li>Vom oberen Rand nach unten wischen › Kachel <b>„Standort“</b> einschalten<br>(oder <i>Einstellungen</i> › <i>Standort</i> › <i>Standort verwenden</i>).</li>' +
+    '<li>Dann <b>„Nochmal“</b> tippen.</li></ol>',
+    [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Nochmal', akt: 'ja', primaer: true }]);
+  betaOverlay.schliessen();
+  return a === 'ja';
 }
 
 // Klick in ein Uhrzeit-Feld oeffnet gleich die Auswahl (statt nur das
@@ -12457,9 +12803,19 @@ function designWahlHtml(){
           <span class="design-muster" aria-hidden="true">${x.farben.map(f=> `<i style="background:${f}"></i>`).join('')}</span>
           <span><b>${x.titel}</b><small>${x.text}</small></span></label>`).join('')}
       </div>
+      <div class="sync-unter-titel" style="margin-top:14px;">Live-Dienst-Anzeige auf der Startseite</div>
+      <div class="design-hinweis">Optional, jede einzeln. Den Dienst wählst du durch Antippen der Anzeige; er füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.</div>
+      <div class="pos-stil-wahl live-wahl">${LIVE_ANZEIGEN.map(x=> `
+        <label class="pos-stil-option${liveEinst()[x.k] ? ' an' : ''}"><input type="checkbox" name="liveAnzeige" value="${x.k}"${liveEinst()[x.k] ? ' checked' : ''}>
+          <span><b>${x.titel}</b><small>${x.text}</small></span></label>`).join('')}
+      </div>
       <div class="sync-unter-titel" style="margin-top:14px;">Darstellung der Rechnungspositionen (PT, LS, GKV)</div>`;
 }
 function designWahlWiring(){
+  document.querySelectorAll('input[name="liveAnzeige"]').forEach(c=> c.onchange = ()=>{
+    const e = ladeEinstellungen(); e.liveDienst = { ...(e.liveDienst || {}), [c.value]: c.checked }; speichereEinstellungen(e);
+    c.closest('.pos-stil-option').classList.toggle('an', c.checked);
+  });
   document.querySelectorAll('input[name="design"]').forEach(r=> r.onchange = ()=>{
     const e = ladeEinstellungen(); e.design = r.value; speichereEinstellungen(e); designAnwenden();
     document.querySelectorAll('input[name="design"]').forEach(x=> x.closest('.pos-stil-option').classList.toggle('an', x.checked));
@@ -12471,77 +12827,148 @@ function designFallZeit(f){
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((f && f.datum) || ''), z = /^(\d{1,2}):(\d{2})/.exec((f && f.zeit) || '');
   return m ? new Date(+m[1], +m[2] - 1, +m[3], z ? +z[1] : 12, z ? +z[2] : 0) : null;
 }
-// Fahrdienst: Werktag 18-08 Uhr, Wochenende/Feiertag/24.12./31.12. 08-08 Uhr
-function designDienstFenster(t){
-  const tag = new Date(t.getFullYear(), t.getMonth(), t.getDate());
-  if(t.getHours() < 8) tag.setDate(tag.getDate() - 1);
-  const we = fahrdienstWochenendSatz(tag);
-  const von = new Date(tag); von.setHours(we ? 8 : 18, 0, 0, 0);
-  const bis = new Date(tag); bis.setDate(bis.getDate() + 1); bis.setHours(8, 0, 0, 0);
-  return { tag, von, bis, stunden: (bis - von) / 3600000, wochenende: we };
-}
 function designDatumDe(d){ return zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' + d.getFullYear(); }
 function designUhr(d){ return zz2(d.getHours()) + ':' + zz2(d.getMinutes()); }
 function designProfilName(id){
   try{ const p = (typeof gkvProfileLaden === 'function' ? gkvProfileLaden() : []).find(x=> x.id === id); if(p) return p.name; }catch(_){}
   return { hb: 'Hausbesuch', tel: 'Telefon', sitz: 'Sitzdienst' }[id] || 'GKV';
 }
-// -> { modus: 'laufend'|'fenster'|'letzter'|'leer', fenster, faelle:[{f,t}], gkv, pauschale, foerderung, art }
+// ---------- Live-Dienst (optional, Einstellungen > Allgemein) ----------
+// Der Dienst wird von Hand gewaehlt (Antippen der Anzeige) und fuellt
+// spaeter die Abfrage "Neuer Dienst" beim Eintragen ins Fahrtenbuch vor.
+// Gespeichert lokal: live_dienst = {datum:'JJJJ-MM-TT', von:'HH:MM', bis:'HH:MM', art, arzt}
+// Uebliche Dienstzeiten je Dienstart (Werktag / Wochenende+Feiertag) --
+// werden zusammen mit den zuletzt benutzten Zeiten als Knoepfe angeboten.
+const LIVE_DIENSTZEITEN = {
+  Fahrdienst:  { werktag: ['18:00-08:00'], wochenende: ['08:00-08:00'] },
+  Sitzdienst:  { werktag: [], wochenende: [] },
+  Telemedizin: { werktag: [], wochenende: [] }
+};
+const LIVE_ANZEIGEN = [
+  { k: 'karte', titel: 'Karte mit Balken', text: 'Dienstart und Zeit, GKV-Summe gegen Pauschale, voraussichtliche Förderung.' },
+  { k: 'ring', titel: 'Uhr-Ring mit Zeitleiste', text: 'Uhrzeit und Restzeit im Ring, Einsätze als Punkte und darunter als Liste.' },
+  { k: 'zeile', titel: 'Kompakte Zeile', text: 'Status des Dienstes mit Fällen, GKV-Summe und Förderung.' }
+];
+function liveEinst(){ const l = (ladeEinstellungen() || {}).liveDienst || {}; return { karte: !!l.karte, ring: !!l.ring, zeile: !!l.zeile }; }
+function liveIso(d){ return d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate()); }
+function liveDienstFenster(d){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d.datum || ''); if(!m) return null;
+  const tag = new Date(+m[1], +m[2] - 1, +m[3]);
+  const zv = /^(\d{1,2}):(\d{2})$/.exec(d.von || ''), zb = /^(\d{1,2}):(\d{2})$/.exec(d.bis || ''); if(!zv || !zb) return null;
+  const von = new Date(tag); von.setHours(+zv[1], +zv[2], 0, 0);
+  const bis = new Date(tag); bis.setHours(+zb[1], +zb[2], 0, 0); if(bis <= von) bis.setDate(bis.getDate() + 1);
+  return { tag, von, bis, stunden: (bis - von) / 3600000, wochenende: fahrdienstWochenendSatz(tag) };
+}
+// gewaehlter Dienst; 12 h nach Dienstende verfaellt er
+function liveDienstLaden(){
+  const d = LS.get('live_dienst', null); if(!d) return null;
+  const fe = liveDienstFenster(d); if(!fe){ LS.set('live_dienst', null); return null; }
+  if(Date.now() > fe.bis.getTime() + 12 * 3600000){ LS.set('live_dienst', null); return null; }
+  return d;
+}
+// fuer die Abfrage "Neuer Dienst": gewaehlter Dienst, wenn der Fall hineinfaellt (1 h Spielraum)
+function liveDienstFuer(dt){
+  const d = liveDienstLaden(); if(!d) return null;
+  const fe = liveDienstFenster(d);
+  if(dt.getTime() < fe.von.getTime() - 3600000 || dt.getTime() > fe.bis.getTime() + 3600000) return null;
+  return { ...d, fenster: fe };
+}
+// -> { modus: 'leer'|'geplant'|'laufend'|'vorbei', fenster, faelle:[{f,t}], gkv, pauschale, foerderung, art, arzt }
 function designDienstInfo(){
-  const jetzt = new Date();
-  const alle = (typeof gkvFaelleLaden === 'function' ? gkvFaelleLaden() : [])
+  const jetzt = new Date(), d = liveDienstLaden();
+  if(!d) return { modus: 'leer', fenster: null, faelle: [], gkv: 0, pauschale: null, foerderung: null, art: '', arzt: '', jetzt };
+  const fe = liveDienstFenster(d);
+  const modus = jetzt < fe.von ? 'geplant' : jetzt < fe.bis ? 'laufend' : 'vorbei';
+  const drin = (typeof gkvFaelleLaden === 'function' ? gkvFaelleLaden() : [])
     .filter(f=> f && f.name !== (typeof GKV_PSEUDO_NAME !== 'undefined' ? GKV_PSEUDO_NAME : ''))
-    .map(f=> ({ f, t: designFallZeit(f) })).filter(x=> x.t);
-  let fe = designDienstFenster(jetzt), modus;
-  const imFenster = jetzt >= fe.von && jetzt < fe.bis;
-  let drin = alle.filter(x=> x.t >= fe.von && x.t < fe.bis);
-  if(imFenster && drin.length) modus = 'laufend';
-  else if(imFenster) modus = 'fenster';
-  else if(alle.length){
-    const letzter = alle.reduce((a, b)=> b.t > a.t ? b : a);
-    fe = designDienstFenster(letzter.t);
-    if(!(letzter.t >= fe.von && letzter.t < fe.bis)){   // Werktag tagsueber -> eigener Tagesblock ohne Pauschale
-      const tag = new Date(letzter.t.getFullYear(), letzter.t.getMonth(), letzter.t.getDate());
-      const von = new Date(tag); von.setHours(8, 0, 0, 0); const bis = new Date(tag); bis.setHours(18, 0, 0, 0);
-      fe = { tag, von, bis, stunden: null, wochenende: false };
-    }
-    drin = alle.filter(x=> x.t >= fe.von && x.t < fe.bis);
-    modus = 'letzter';
-  } else modus = 'leer';
-  drin.sort((a, b)=> b.t - a.t);
-  const sitz = drin.some(x=> x.f.profil === 'sitz');
-  const art = sitz ? 'Sitzdienst' : 'Fahrdienst';
+    .map(f=> ({ f, t: designFallZeit(f) })).filter(x=> x.t && x.t >= fe.von && x.t < fe.bis)
+    .sort((a, b)=> b.t - a.t);
   const gkv = betaRund2(drin.reduce((s, x)=> s + (Number(x.f.euro) || 0), 0));
-  let pauschale = null, foerderung = null;
-  if(!sitz && fe.stunden && modus !== 'fenster'){
-    const dt = designDatumDe(fe.tag);
-    const zusatz = fahrdienstZusatzSatz(dt) * 24;
-    pauschale = betaRund2(fe.stunden * fahrdienstPauschaleSatz(dt, 'Fahrdienst'));
-    foerderung = betaRund2(Math.max(0, pauschale - gkv) + zusatz);
-  }
-  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art, jetzt };
+  const dt = designDatumDe(fe.tag);
+  // Foerderung (Statut NFD-O zu § 10): Pauschale je Stunde minus GKV-Einnahmen, 24.12./31.12. zusaetzlich
+  const pauschale = betaRund2(fe.stunden * fahrdienstPauschaleSatz(dt, d.art));
+  const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fahrdienstZusatzSatz(dt) * fe.stunden);
+  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, arzt: d.arzt || '', jetzt };
 }
-function designDienstTitel(info){
-  const fe = info.fenster;
-  return info.art + ' · ' + designUhr(fe.von) + ' – ' + designUhr(fe.bis);
-}
+function designDienstTitel(info){ return info.art + ' · ' + designUhr(info.fenster.von) + ' – ' + designUhr(info.fenster.bis); }
 function designDienstUnter(info){
   const fe = info.fenster;
-  return DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + (fe.wochenende ? 'Wochenende/Feiertag' : (fe.stunden ? 'Werktag' : 'tagsüber'));
+  return DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + (fe.wochenende ? 'Wochenende/Feiertag' : 'Werktag') + (info.arzt ? ' · für ' + info.arzt : '');
 }
-function designUeber(info){
-  return { laufend: 'Laufender Dienst', fenster: 'Dienstzeit · noch kein Fall', letzter: 'Letzter Dienst', leer: 'Dienst' }[info.modus];
-}
+function designUeber(info){ return { laufend: 'Laufender Dienst', geplant: 'Geplanter Dienst', vorbei: 'Dienst beendet', leer: 'Live-Dienst' }[info.modus]; }
 function designRestText(info){
+  if(info.modus === 'geplant'){ const min = Math.round((info.fenster.von - info.jetzt) / 60000); return 'beginnt in ' + Math.floor(min / 60) + ' h ' + zz2(min % 60) + ' min'; }
   const ms = info.fenster.bis - info.jetzt;
-  if(ms <= 0) return '';
+  if(ms <= 0) return 'Dienst beendet';
   const min = Math.round(ms / 60000);
   return 'noch ' + Math.floor(min / 60) + ' h ' + zz2(min % 60) + ' min';
 }
 function designFortschritt(info){
+  if(!info.fenster || info.modus === 'geplant') return 0;
   const fe = info.fenster;
-  if(info.modus === 'letzter') return 1;
   return Math.max(0, Math.min(1, (info.jetzt - fe.von) / (fe.bis - fe.von)));
+}
+
+// Auswahl des Dienstes (Antippen der Live-Anzeige)
+async function liveDienstDialog(){
+  const akt = liveDienstLaden(), jetzt = new Date();
+  let datumD = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate()); if(jetzt.getHours() < 8) datumD.setDate(datumD.getDate() - 1);
+  let datum = akt ? akt.datum : liveIso(datumD);
+  let art = akt ? akt.art : LS.get('fb_dienstart', 'Fahrdienst');
+  let von = akt ? akt.von : '', bis = akt ? akt.bis : '', arzt = akt ? (akt.arzt || '') : '';
+  let fehler = '';
+  const vorschlaege = ()=>{
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum), tag = m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD;
+    const we = fahrdienstWochenendSatz(tag), std = (LIVE_DIENSTZEITEN[art] || {})[we ? 'wochenende' : 'werktag'] || [];
+    const zuletzt = ((LS.get('live_dienst_zeiten', {}) || {})[art + (we ? '|we' : '|wt')]) || [];
+    const l = []; std.concat(zuletzt).forEach(z=>{ if(z && !l.includes(z)) l.push(z); });
+    return l.slice(0, 6);
+  };
+  if(!von || !bis){ const v = vorschlaege()[0]; if(v){ [von, bis] = v.split('-'); } }
+  for(;;){
+    let aerzte = [];
+    try{ const e = ladeEinstellungen() || {}, aus = new Set((e.fbAerzteAus || []).map(x=> x.toLowerCase())); (e.fbAerzte || []).slice().reverse().forEach(n=>{ n = String(n || '').trim(); if(n && !aus.has(n.toLowerCase()) && !aerzte.includes(n)) aerzte.push(n); }); }catch(_){}
+    const vs = vorschlaege();
+    const html = '<div class="fb-dialog">' +
+      '<div class="fb-info">Der Dienst steuert die Live-Anzeige und füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.</div>' +
+      (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
+      '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
+      '<div class="fb-lbl">Dienstzeit</div>' +
+      (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace('-', ' – ') + '</button>').join('') + '</div>' : '') +
+      '<div class="fb-zeile"><label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
+      '<div class="fb-lbl">Vertretener Arzt (optional)</div>' +
+      (aerzte.length ? '<div class="fb-chips">' + aerzte.slice(0, 6).map(a=> '<button type="button" class="fb-chip' + (a === arzt ? ' an' : '') + '" data-larzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button>').join('') + '</div>' : '') +
+      '<input type="text" id="liveArzt" placeholder="Name (leer = eigener Dienst)" value="' + htmlEsc(arzt) + '"></div>';
+    const kn = [{ label: 'Abbrechen', akt: 'nein' }];
+    if(akt) kn.push({ label: 'Dienst beenden', akt: 'ende' });
+    kn.push({ label: akt ? 'Übernehmen' : 'Dienst starten', akt: 'ok', primaer: true });
+    const warte = betaOverlay.ergebnis(akt ? 'Dienst ändern' : 'Welcher Dienst?', html, kn);
+    const lesen = ()=>{ datum = (document.getElementById('liveDatum') || {}).value || datum; von = (document.getElementById('liveVon') || {}).value || ''; bis = (document.getElementById('liveBis') || {}).value || ''; arzt = String((document.getElementById('liveArzt') || {}).value || '').trim(); };
+    document.querySelectorAll('.beta-overlay [data-lart]').forEach(b=> b.onclick = ()=>{ lesen(); art = b.dataset.lart; const v = vorschlaege()[0]; if(v) [von, bis] = v.split('-'); betaOverlay.loesen && betaOverlay.loesen('neu'); });
+    document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(b=> b.onclick = ()=>{ const [v1, b1] = b.dataset.lzeit.split('-'); document.getElementById('liveVon').value = v1; document.getElementById('liveBis').value = b1;
+      document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(x=> x.classList.toggle('an', x === b)); });
+    document.querySelectorAll('.beta-overlay [data-larzt]').forEach(b=> b.onclick = ()=>{ document.getElementById('liveArzt').value = b.dataset.larzt;
+      document.querySelectorAll('.beta-overlay [data-larzt]').forEach(x=> x.classList.toggle('an', x === b)); });
+    const dEl = document.getElementById('liveDatum'); if(dEl) dEl.onchange = ()=>{ lesen(); betaOverlay.loesen && betaOverlay.loesen('neu'); };
+    const a = await warte;
+    lesen();
+    if(a === 'neu'){ fehler = ''; continue; }
+    if(a === 'ende'){ betaOverlay.schliessen(); LS.set('live_dienst', null); return true; }
+    if(a !== 'ok'){ betaOverlay.schliessen(); return false; }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)){ fehler = 'Bitte den Tag des Dienstbeginns wählen.'; continue; }
+    if(!/^\d{1,2}:\d{2}$/.test(von) || !/^\d{1,2}:\d{2}$/.test(bis)){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen.'; continue; }
+    betaOverlay.schliessen();
+    LS.set('live_dienst', { datum, von, bis, art, arzt, am: new Date().toISOString() });
+    LS.set('fb_dienstart', art);
+    // zuletzt benutzte Zeiten merken (je Dienstart, Werktag/Wochenende)
+    try{
+      const fe = liveDienstFenster({ datum, von, bis }), k = art + (fe.wochenende ? '|we' : '|wt'), z = LS.get('live_dienst_zeiten', {}) || {};
+      z[k] = [von + '-' + bis].concat((z[k] || []).filter(x=> x !== von + '-' + bis)).slice(0, 4); LS.set('live_dienst_zeiten', z);
+    }catch(_){}
+    if(arzt && typeof fbArztMerken === 'function') try{ fbArztMerken(arzt); }catch(_){}
+    return true;
+  }
 }
 
 // ---------- Offene Faelle (unfertige LS/PT + GKV noch nicht im Fahrtenbuch) ----------
@@ -12607,23 +13034,44 @@ function designKachelnUmbauen(info){
   [['kLS', 'ls'], ['kPT', 'pt'], ['kGKV', 'gkv']].forEach(([id, art])=>{
     const b = document.getElementById(id); if(!b) return;
     const k = DS_KACHEL[art];
-    const unter = art === 'gkv' ? (info.modus === 'laufend' ? info.faelle.length + ' in diesem Dienst' : 'neuer Patient') : (anz[art] ? anz[art] + ' unfertig' : 'neue Rechnung');
+    const unter = art === 'gkv' ? (info.modus === 'laufend' && info.faelle.length ? info.faelle.length + ' in diesem Dienst' : 'neuer Patient') : (anz[art] ? anz[art] + ' unfertig' : 'neue Rechnung');
     b.innerHTML = '<span class="ds-code">' + k.code + '</span><span class="ds-kt"><span class="ds-titel">' + k.titel + '</span><span class="ds-lang">' + k.lang + '</span><span class="ds-unter">' + unter + '</span></span>' +
       '<span class="ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span>';
   });
 }
 function designDienstKarteHtml(info){
-  if(info.modus === 'leer') return '<section class="ds-dienst leer"><span class="ds-ueber">Dienst</span><span class="ds-dienst-titel">Noch kein GKV-Fall erfasst</span><span class="ds-dienst-unter">Die Dienst-Karte füllt sich mit dem ersten GKV-Patienten.</span></section>';
+  if(info.modus === 'leer') return '<button type="button" class="ds-dienst leer" data-live="1"><span class="ds-ueber">Live-Dienst</span><span class="ds-dienst-titel">Kein Dienst gewählt</span><span class="ds-dienst-unter">Antippen und Dienst wählen</span></button>';
   const p = info.pauschale ? Math.min(100, Math.round(info.gkv / info.pauschale * 1000) / 10) : 0;
-  return '<section class="ds-dienst">' +
-    '<div class="ds-dienst-kopf"><div class="ds-dienst-text"><span class="ds-ueber">' + designUeber(info) + '</span>' +
-      '<span class="ds-dienst-titel">' + designDienstTitel(info) + '</span><span class="ds-dienst-unter">' + designDienstUnter(info) + '</span></div>' +
-      '<span class="ds-gkv-marke">' + info.faelle.length + ' GKV</span></div>' +
-    (info.pauschale ? '<div class="ds-fort"><div class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + betaEuro(info.gkv).replace(' €', '') + ' / ' + betaEuro(info.pauschale) + '</b></div>' +
-      '<div class="ds-balken"><i style="width:' + p + '%"></i></div>' +
-      '<span class="ds-fort-text">Förderung voraussichtlich <b>' + betaEuro(info.foerderung) + '</b> <small>(ohne Strukturpauschale)</small></span></div>'
-      : '<div class="ds-fort"><div class="ds-fort-zeile"><span>GKV in diesem Dienst</span><b>' + betaEuro(info.gkv) + '</b></div>' + (info.art === 'Sitzdienst' ? '<span class="ds-fort-text">Sitzdienst: Förderung 50 €/h nach Präsenzzeit</span>' : '') + '</div>') +
-    '</section>';
+  return '<button type="button" class="ds-dienst" data-live="1">' +
+    '<span class="ds-dienst-kopf"><span class="ds-dienst-text"><span class="ds-ueber">' + designUeber(info) + '</span>' +
+      '<span class="ds-dienst-titel">' + htmlEsc(designDienstTitel(info)) + '</span><span class="ds-dienst-unter">' + htmlEsc(designDienstUnter(info)) + '</span></span>' +
+      '<span class="ds-gkv-marke">' + info.faelle.length + ' GKV</span></span>' +
+    '<span class="ds-fort"><span class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + betaEuro(info.gkv).replace(' €', '') + ' / ' + betaEuro(info.pauschale) + '</b></span>' +
+      '<span class="ds-balken"><i style="width:' + p + '%"></i></span>' +
+      '<span class="ds-fort-text">Förderung ' + (info.modus === 'vorbei' ? '' : 'voraussichtlich ') + '<b>' + betaEuro(info.foerderung) + '</b> <small>(ohne Strukturpauschale)</small></span></span>' +
+    '</button>';
+}
+function designZeileHtml(info){
+  const status = { leer: 'Kein Dienst gewählt', geplant: info.art + ' ab ' + (info.fenster ? designUhr(info.fenster.von) : ''), laufend: info.art + ' läuft', vorbei: 'Dienst beendet' }[info.modus];
+  const unter = info.modus === 'leer' ? 'Antippen und Dienst wählen' : (info.modus === 'laufend' ? 'bis ' + designUhr(info.fenster.bis) + ' · ' : '') + designDienstUnter(info);
+  return '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status">' + htmlEsc(status) + '</span><span class="ds-status-unter">' + htmlEsc(unter) + '</span>' +
+    (info.modus === 'leer' ? '' : '<span class="ds-zahlen"><span><span>Fälle</span><b>' + info.faelle.length + '</b></span><span><span>GKV</span><b>' + betaEuro(info.gkv).replace(' €', '') + '</b></span>' +
+      '<span><span>Förderung</span><b>' + betaEuro(info.foerderung).replace(' €', '') + '</b></span></span>') + '</button>';
+}
+function designRingBlockHtml(info){
+  const fe = info.fenster;
+  return '<div class="ds-ring-block">' +
+    '<div class="ds-kopfzeile">' + (info.modus === 'leer' ? 'LIVE-DIENST' : (DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + info.art).toUpperCase()) + '</div>' +
+    '<button type="button" class="ds-ring-knopf" data-live="1" aria-label="Dienst wählen oder ändern">' + designRingHtml(info) + '</button>' +
+    (info.modus === 'leer' ? '' : '<section class="ds-foerd"><div><span class="ds-klein">FÖRDERUNG' + (info.modus === 'vorbei' ? '' : ' BISHER') + '</span><span class="ds-foerd-wert">' + betaEuro(info.foerderung) + '</span></div>' +
+      '<div class="ds-foerd-rechts"><span>GKV ' + betaEuro(info.gkv) + '</span><span class="ds-schwach">Pauschale ' + betaEuro(info.pauschale) + '</span></div></section>' +
+      '<section class="ds-zeitleiste"><h2 class="ds-klein">EINSÄTZE IN DIESEM DIENST</h2>' + designZeitleisteHtml(info) + '</section>') +
+    '</div>';
+}
+function liveAnzeigeHtml(info){
+  const l = liveEinst();
+  if(!l.karte && !l.ring && !l.zeile) return '';
+  return '<div class="ds-live">' + (l.ring ? designRingBlockHtml(info) : '') + (l.karte ? designDienstKarteHtml(info) : '') + (l.zeile ? designZeileHtml(info) : '') + '</div>';
 }
 function designFallZeilenHtml(liste){
   if(!liste.length) return '<div class="ds-leer">Keine offenen Fälle.</div>';
@@ -12632,39 +13080,44 @@ function designFallZeilenHtml(liste){
     '<span class="ds-fall-rechts">' + (x.betrag != null ? '<span class="ds-fall-betrag">' + betaEuro(x.betrag) + '</span>' : '') + '<span class="ds-fall-status">' + htmlEsc(x.status) + '</span></span></button>').join('');
 }
 function designZeitleisteHtml(info){
-  if(!info.faelle.length) return '<div class="ds-leer">' + (info.modus === 'fenster' ? 'Noch kein Einsatz in dieser Dienstzeit.' : 'Noch keine GKV-Einsätze erfasst.') + '</div>';
+  if(!info.faelle.length) return '<div class="ds-leer">Noch kein GKV-Einsatz in diesem Dienst.</div>';
   return info.faelle.map(x=> '<button type="button" class="ds-ein" data-gkv="' + htmlEsc(x.f.id) + '"><span class="ds-ein-zeit">' + designUhr(x.t) + '</span><span class="ds-ein-punkt" aria-hidden="true"></span>' +
     '<span class="ds-ein-text"><span class="ds-ein-name">' + htmlEsc(x.f.name || 'ohne Namen') + '</span><span class="ds-ein-unter">' + htmlEsc(designProfilName(x.f.profil)) + (x.f.status === 'eingetragen' ? ' · im Fahrtenbuch' : ' · offen') + '</span></span>' +
     '<span class="ds-ein-betrag">' + betaEuro(x.f.euro).replace(' €', '') + '</span></button>').join('');
 }
 function designRingHtml(info){
   const r = 110, u = 2 * Math.PI * r, p = designFortschritt(info), fe = info.fenster;
-  const punkte = info.faelle.map(x=>{
+  const punkte = !fe ? '' : info.faelle.map(x=>{
     const q = Math.max(0, Math.min(1, (x.t - fe.von) / (fe.bis - fe.von))), w = -Math.PI / 2 + q * 2 * Math.PI;
     return '<circle cx="' + (140 + r * Math.cos(w)).toFixed(1) + '" cy="' + (140 + r * Math.sin(w)).toFixed(1) + '" r="6" class="ds-ring-fall"/>';
   }).join('');
-  const gross = info.modus === 'letzter' ? designDatumDe(fe.tag).slice(0, 6) : designUhr(info.jetzt);
-  const unter = info.modus === 'letzter' ? 'letzter Dienst' : (info.modus === 'leer' ? 'kein Dienst erfasst' : designRestText(info));
+  const gross = designUhr(info.jetzt);
+  const unter = info.modus === 'leer' ? 'Dienst wählen' : designRestText(info);
   return '<div class="ds-ring" id="dsRing"><svg viewBox="0 0 280 280" role="img" aria-label="Dienstzeit ' + Math.round(p * 100) + ' Prozent vorbei">' +
     '<circle cx="140" cy="140" r="126" class="ds-ring-aussen"/><circle cx="140" cy="140" r="' + r + '" class="ds-ring-spur"/>' +
     '<circle cx="140" cy="140" r="' + r + '" class="ds-ring-fort" stroke-dasharray="' + (u * p).toFixed(1) + ' ' + u.toFixed(1) + '" transform="rotate(-90 140 140)"/>' +
     '<circle cx="140" cy="140" r="94" class="ds-ring-innen"/>' + punkte + '</svg>' +
     '<div class="ds-ring-mitte"><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-rest">' + unter + '</span></div></div>' +
-    '<div class="ds-ring-grenzen"><span>' + designUhr(fe.von) + '</span><span>' + designUhr(fe.bis) + '</span></div>';
+    (fe ? '<div class="ds-ring-grenzen"><span>' + designUhr(fe.von) + '</span><span>' + designUhr(fe.bis) + '</span></div>' : '');
 }
 
 function designStartErgaenzen(){
   const d = designAktuell();
-  if(d === 'standard') return;
   const app = document.getElementById('app');
-  const reihe = app.querySelector('.kachelreihe');
+  const reihe = app.querySelector('.kachelreihe'); if(!reihe) return;
   const info = designDienstInfo();
-  designKachelnUmbauen(info);
+  const live = liveAnzeigeHtml(info);
   const vor = (html)=> reihe.insertAdjacentHTML('beforebegin', html);
   const anmeldung = (typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet');
+  if(d !== 'standard') designKachelnUmbauen(info);
 
+  if(d === 'einhand'){
+    const jetzt = info.jetzt;
+    vor('<div class="ds-start ds-einhand"><div class="ds-zeile-oben"><span>' + DESIGN_WT[jetzt.getDay()] + ' ' + zz2(jetzt.getDate()) + '.' + zz2(jetzt.getMonth() + 1) + '. · ' + designUhr(jetzt) + '</span>' +
+      '<span class="ds-sync' + (anmeldung ? ' an' : '') + '"><i></i>' + (anmeldung ? 'OneDrive' : 'nicht angemeldet') + '</span></div></div>');
+  }
+  if(live) vor(live);
   if(d === 'klinik'){
-    vor('<div class="ds-start ds-klinik">' + designDienstKarteHtml(info) + '</div>');
     const offen = designOffeneFaelle().slice(0, 5);
     reihe.insertAdjacentHTML('afterend', '<section class="ds-offen"><div class="ds-abschnitt-kopf"><h2>Offene Fälle</h2>' +
       '<button type="button" class="ds-link" id="dsAlleFaelle">Alle anzeigen</button></div><div class="ds-liste">' + designFallZeilenHtml(offen) + '</div></section>');
@@ -12675,36 +13128,15 @@ function designStartErgaenzen(){
     app.querySelectorAll('.ds-fall').forEach(b=> b.onclick = ()=> offen[+b.dataset.fall].oeffnen());
     const alle = document.getElementById('dsAlleFaelle'); if(alle) alle.onclick = ()=> document.getElementById('btnKorrigieren').click();
   }
-
   if(d === 'nacht'){
-    const fe = info.fenster;
-    vor('<div class="ds-start ds-nacht">' +
-      '<div class="ds-kopfzeile">' + (info.modus === 'leer' ? 'NOCH KEIN DIENST' : (DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + info.art).toUpperCase()) + '</div>' +
-      designRingHtml(info) +
-      (info.pauschale != null ? '<section class="ds-foerd"><div><span class="ds-klein">FÖRDERUNG ' + (info.modus === 'letzter' ? '' : 'BISHER') + '</span><span class="ds-foerd-wert">' + betaEuro(info.foerderung) + '</span></div>' +
-        '<div class="ds-foerd-rechts"><span>GKV ' + betaEuro(info.gkv) + '</span><span class="ds-schwach">Pauschale ' + betaEuro(info.pauschale) + '</span></div></section>'
-        : (info.modus !== 'leer' ? '<section class="ds-foerd"><div><span class="ds-klein">GKV IN DIESEM DIENST</span><span class="ds-foerd-wert">' + betaEuro(info.gkv) + '</span></div></section>' : '')) +
-      '<section class="ds-zeitleiste"><h2 class="ds-klein">' + (info.modus === 'letzter' ? 'LETZTER DIENST' : (fe.wochenende ? 'DIESER DIENST' : 'DIESE NACHT')) + '</h2>' + designZeitleisteHtml(info) + '</section>' +
-      '</div>');
     app.insertAdjacentHTML('beforeend', '<nav class="ds-dock" aria-label="Neuer Fall"><span class="ds-klein">NEUER FALL</span><div class="ds-dock-reihe">' +
       '<button type="button" class="ds-dock-btn ls" data-k="kLS">LS</button><button type="button" class="ds-dock-btn pt" data-k="kPT">PT</button>' +
       '<button type="button" class="ds-dock-btn gkv" data-k="kGKV">GKV</button></div></nav>');
     app.querySelectorAll('.ds-dock-btn').forEach(b=> b.onclick = ()=> document.getElementById(b.dataset.k).click());
-    app.querySelectorAll('.ds-ein').forEach(b=> b.onclick = ()=> ansichtGkv(b.dataset.gkv));
-    designUhrStarten();
   }
-
   if(d === 'einhand'){
-    const jetzt = info.jetzt, w = designWeiterFall();
-    const status = { laufend: info.art + ' läuft', fenster: 'Dienstzeit', letzter: 'Kein laufender Dienst', leer: 'Bereit' }[info.modus];
-    const unter = info.modus === 'laufend' || info.modus === 'fenster' ? 'bis ' + designUhr(info.fenster.bis) + ' · ' + designDienstUnter(info)
-      : (info.modus === 'letzter' ? 'Letzter Dienst ' + designDienstUnter(info) : 'Noch kein GKV-Fall erfasst');
+    const w = designWeiterFall();
     vor('<div class="ds-start ds-einhand">' +
-      '<div class="ds-zeile-oben"><span>' + DESIGN_WT[jetzt.getDay()] + ' ' + zz2(jetzt.getDate()) + '.' + zz2(jetzt.getMonth() + 1) + '. · ' + designUhr(jetzt) + '</span>' +
-        '<span class="ds-sync' + (anmeldung ? ' an' : '') + '"><i></i>' + (anmeldung ? 'OneDrive' : 'nicht angemeldet') + '</span></div>' +
-      '<h2 class="ds-status">' + status + '</h2><div class="ds-status-unter">' + unter + '</div>' +
-      '<div class="ds-zahlen"><div><span>Fälle</span><b>' + info.faelle.length + '</b></div><div><span>GKV</span><b>' + betaEuro(info.gkv).replace(' €', '') + '</b></div>' +
-        '<div><span>Förderung</span><b>' + (info.foerderung != null ? betaEuro(info.foerderung).replace(' €', '') : '–') + '</b></div></div>' +
       (w ? '<button type="button" class="ds-weiter" id="dsWeiter"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten</span><b>' + htmlEsc(w.titel) + '</b></span>' + DS_ICON.pfeil + '</button>' : '') +
       '<div class="ds-klein ds-neu-titel">NEUER FALL</div></div>');
     app.insertAdjacentHTML('beforeend', designNav([
@@ -12712,7 +13144,10 @@ function designStartErgaenzen(){
       { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch', nurIcon: true }, { k: 'einst', icon: 'regler', label: 'Einstellungen', nurIcon: true }]));
     if(w) document.getElementById('dsWeiter').onclick = w.oeffnen;
   }
+  app.querySelectorAll('[data-live]').forEach(b=> b.onclick = async ()=>{ if(await liveDienstDialog()) ansichtStart(); });
+  app.querySelectorAll('.ds-ein').forEach(b=> b.onclick = ()=> ansichtGkv(b.dataset.gkv));
   if(app.querySelector('.ds-nav')) designNavWiring();
+  if(document.getElementById('dsRing')) designUhrStarten();
 }
 
 // Uhr im Ring jede halbe Minute nachfuehren (nur solange die Startseite offen ist)
@@ -12721,7 +13156,7 @@ function designUhrStarten(){
   if(designUhrTimer) return;
   designUhrTimer = setInterval(()=>{
     const ring = document.getElementById('dsRing');
-    if(!ring || designAktuell() !== 'nacht'){ clearInterval(designUhrTimer); designUhrTimer = null; return; }
+    if(!ring){ clearInterval(designUhrTimer); designUhrTimer = null; return; }
     const info = designDienstInfo();
     const neu = document.createElement('div'); neu.innerHTML = designRingHtml(info);
     const grenzen = ring.nextElementSibling;
