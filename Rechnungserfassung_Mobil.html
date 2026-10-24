@@ -1451,6 +1451,18 @@
   .luft-karte-legende i.l{height:0; border-radius:0; border-top:2.5px dashed var(--text); width:16px;} .luft-karte-legende i.w{height:4px; border-radius:2px; background:#1a55c9; width:16px;}
   .luft-karte-hinweis{font-size:13px; color:var(--text-schwach); padding:6px 0;}
   .osm-attr{font-size:11px; color:var(--text-schwach);}
+  .osm-flaeche{background:#f2efe9; max-width:none;}
+  .osm-flaeche img{position:absolute; max-width:none; user-select:none; pointer-events:none;}
+  .osm-rahmen{fill:none; stroke:#555; stroke-width:2; stroke-dasharray:8 6; vector-effect:non-scaling-stroke; opacity:.75;}
+  .luft-karte-legende i.r{height:0; border-radius:0; border-top:2px dashed #777; width:16px;}
+  .osm-scroll{background:#f2efe9;}
+  .osm-scroll .luft-karte-flaeche{border:none; border-radius:0;}
+  .nfp-ueber{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+  .nfp-start{background:#1a55c9;}
+  .nfp-nfp{background:#111; border-radius:3px; width:14px; height:14px; margin:-7px 0 0 -7px;}
+  .nfp-poi{display:flex; align-items:center; justify-content:center; color:#fff; font:700 10px sans-serif; width:20px; height:20px; margin:-10px 0 0 -10px;}
+  .nfp-poi.ls{background:var(--ls-farbe);} .nfp-poi.pt{background:var(--pt-farbe);} .nfp-poi.gkv{background:#7d4e9e;}
+  .nfp-hinweis button{width:auto; margin:6px 0 0; padding:6px 10px; font-size:12.5px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .osm-attr a{color:inherit;}
   .nfp-osm-attr{position:absolute; right:6px; bottom:6px; z-index:3; background:rgba(255,255,255,.85); color:#333; font-size:11px; padding:2px 6px; border-radius:4px;}
   .nfp-osm-attr a{color:#333;}
@@ -3688,8 +3700,10 @@ function ansichtLuftlinienTool(){
   let html = `<div class="abschnitt">`;
   html += `
       <div class="feld">
-        <label for="txtLuftVon">Von</label>
-        <input type="text" id="txtLuftVon" autocomplete="off" placeholder="Startadresse (Straße Hausnummer, PLZ Ort)" value="${htmlEsc(e.praxisadresse || '')}">
+        <label for="txtLuftVonStr">Von</label>
+        <input type="text" id="txtLuftVonStr" autocomplete="off" enterkeyhint="next" placeholder="Straße Nr." value="${htmlEsc(gkvAdrTeile(e.praxisadresse || '').strasse)}">
+        <input type="text" id="txtLuftVonOrt" autocomplete="off" enterkeyhint="next" placeholder="PLZ Ort (PLZ oder Ort genügt)" style="margin-top:6px;" value="${htmlEsc(gkvAdrTeile(e.praxisadresse || '').plzOrt)}">
+        <div class="gkv-plz-info" id="luftVonPlzInfo"></div>
         <div class="luft-start-liste" id="luftStartListe"></div>
       </div>
       <div class="luft-bis-titel">Bis</div>
@@ -3710,7 +3724,9 @@ function ansichtLuftlinienTool(){
         </svg></span>
       </div>
       <div class="feld">
-        <input type="text" id="txtLuftAdresse" autocomplete="off" placeholder="Zieladresse (Straße Hausnummer, PLZ Ort)">
+        <input type="text" id="txtLuftZielStr" autocomplete="off" enterkeyhint="next" placeholder="Zieladresse: Straße Nr.">
+        <input type="text" id="txtLuftZielOrt" autocomplete="off" enterkeyhint="go" placeholder="PLZ Ort (PLZ oder Ort genügt)" style="margin-top:6px;">
+        <div class="gkv-plz-info" id="luftZielPlzInfo"></div>
       </div>
       <button class="btn-primaer" id="btnLuftBerechnen" style="margin-bottom:14px;">Luftlinie &amp; Fahrstrecke berechnen</button>
       <div id="luftErgebnis" class="luft-ergebnis"></div>
@@ -3724,6 +3740,18 @@ function ansichtLuftlinienTool(){
   // setzen (garantiert quadratisch, unabhaengig vom Textumbruch im Button).
 
   const ergebnisEl = document.getElementById('luftErgebnis');
+  // Adressen zweizeilig (Strasse / PLZ Ort) wie in der GKV-Maske, inkl. PLZ-Automatik
+  const elL = (id)=> document.getElementById(id);
+  const luftVonLesen = ()=> gkvAdrZusammen(elL('txtLuftVonStr').value, elL('txtLuftVonOrt').value);
+  const luftVonSetzen = (a)=>{ const t = gkvAdrTeile(a); elL('txtLuftVonStr').value = t.strasse; elL('txtLuftVonOrt').value = t.plzOrt; elL('luftVonPlzInfo').textContent = ''; };
+  const luftZielLesen = ()=> gkvAdrZusammen(elL('txtLuftZielStr').value, elL('txtLuftZielOrt').value);
+  const luftZielSetzen = (a)=>{ const t = gkvAdrTeile(a); elL('txtLuftZielStr').value = t.strasse; elL('txtLuftZielOrt').value = t.plzOrt; elL('luftZielPlzInfo').textContent = ''; };
+  elL('txtLuftVonOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(elL('txtLuftVonStr'), elL('txtLuftVonOrt'), elL('luftVonPlzInfo')));
+  elL('txtLuftZielOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(elL('txtLuftZielStr'), elL('txtLuftZielOrt'), elL('luftZielPlzInfo')));
+  elL('txtLuftVonStr').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); elL('txtLuftVonOrt').focus(); } };
+  elL('txtLuftVonOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); elL('txtLuftZielStr').focus(); } };
+  elL('txtLuftZielStr').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); elL('txtLuftZielOrt').focus(); } };
+  elL('txtLuftZielOrt').onkeydown = async (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); elL('txtLuftZielOrt').blur(); await gkvPlzOrtErgaenzen(elL('txtLuftZielStr'), elL('txtLuftZielOrt'), elL('luftZielPlzInfo')); elL('btnLuftBerechnen').click(); } };
   // Eigene, deutlich groessere/auffaelligere Darstellung fuer das
   // Berechnungsergebnis (statt der kleinen, fuer Warnungen gedachten
   // .warnhinweis-Optik) -- ist ja bewusst DIE Ausgabe, auf die es bei diesem
@@ -3745,18 +3773,19 @@ function ansichtLuftlinienTool(){
     const el = document.getElementById('luftStartListe'); if(!el) return;
     const eL = ladeEinstellungen();
     const liste = (eL.luftStartAdressen || []).filter(a=> a && a !== eL.praxisadresse);
-    const vonJetzt = document.getElementById('txtLuftVon').value.trim();
+    const vonJetzt = luftVonLesen();
     el.innerHTML = ((eL.praxisadresse && vonJetzt !== eL.praxisadresse) || liste.length ? '<span class="luft-start-titel">Zuletzt genutzt:</span>' : '') + (eL.praxisadresse && vonJetzt !== eL.praxisadresse
         ? `<span class="luft-start-chip standard"><button type="button" data-adr="${htmlEsc(eL.praxisadresse)}">&#8962; ${htmlEsc(eL.praxisadresse)}</button></span>` : '') +
       liste.map(a=> `<span class="luft-start-chip"><button type="button" data-adr="${htmlEsc(a)}">${htmlEsc(a)}</button><button type="button" class="weg" data-weg="${htmlEsc(a)}" title="Adresse entfernen">&times;</button></span>`).join('');
-    el.querySelectorAll('[data-adr]').forEach(b=> b.onclick = ()=>{ document.getElementById('txtLuftVon').value = b.dataset.adr; startListeZeichnen(); });
+    el.querySelectorAll('[data-adr]').forEach(b=> b.onclick = ()=>{ luftVonSetzen(b.dataset.adr); startListeZeichnen(); });
     el.querySelectorAll('[data-weg]').forEach(b=> b.onclick = ()=>{
       const e2 = ladeEinstellungen();
       e2.luftStartAdressen = (e2.luftStartAdressen || []).filter(a=> a !== b.dataset.weg);
       speichereEinstellungen(e2); startListeZeichnen();
     });
   };
-  document.getElementById('txtLuftVon').addEventListener('input', startListeZeichnen);
+  elL('txtLuftVonStr').addEventListener('input', startListeZeichnen);
+  elL('txtLuftVonOrt').addEventListener('input', startListeZeichnen);
   startListeZeichnen();
   // Pin: aktuelle Position (GPS) als Ziel -- Adresse wird per Kartendienst
   // ermittelt und eingetragen, gerechnet wird mit den genauen Koordinaten
@@ -3775,8 +3804,8 @@ function ansichtLuftlinienTool(){
       adresse = [strasse, ort].filter(Boolean).join(', ') || (d && d.display_name) || '';
     }catch(_){}
     if(!adresse) adresse = 'Aktuelle Position (' + lat.toFixed(5) + ', ' + lon.toFixed(5) + ')';
-    luftPos = { lat, lon, adresse };
-    document.getElementById('txtLuftAdresse').value = adresse;
+    luftZielSetzen(adresse);
+    luftPos = { lat, lon, adresse: luftZielLesen() };
     document.getElementById('btnLuftBerechnen').click();
   };
 
@@ -3786,14 +3815,22 @@ function ansichtLuftlinienTool(){
     try{ text = await navigator.clipboard.readText(); }
     catch(err){ zeigeErgebnis('Zwischenablage konnte nicht gelesen werden. Bitte Berechtigung erteilen oder Adresse manuell eintragen.', true); return; }
     if(!text || !text.trim()){ zeigeErgebnis('Die Zwischenablage ist leer.', true); return; }
-    document.getElementById('txtLuftAdresse').value = text.trim().replace(/\n/g, ', ');
+    // Zeile mit PLZ = "PLZ Ort", die Zeile davor = Strasse (sonst wie bisher am letzten Komma trennen)
+    const zeilen = text.split(/\r?\n/).map(x=> x.trim()).filter(Boolean);
+    const iPlz = zeilen.findIndex(x=> /\b\d{5}\b/.test(x));
+    if(zeilen.length > 1 && iPlz > 0 && !/,/.test(zeilen[iPlz])){
+      elL('txtLuftZielStr').value = zeilen[iPlz - 1]; elL('txtLuftZielOrt').value = zeilen[iPlz]; elL('luftZielPlzInfo').textContent = '';
+    } else luftZielSetzen(zeilen.join(', '));
+    await gkvPlzOrtErgaenzen(elL('txtLuftZielStr'), elL('txtLuftZielOrt'), elL('luftZielPlzInfo'));
   };
 
   document.getElementById('btnLuftBerechnen').onclick = async ()=>{
     const eCur = ladeEinstellungen();
-    const vonAdresse = document.getElementById('txtLuftVon').value.trim();
+    await gkvPlzOrtErgaenzen(elL('txtLuftVonStr'), elL('txtLuftVonOrt'), elL('luftVonPlzInfo'));
+    await gkvPlzOrtErgaenzen(elL('txtLuftZielStr'), elL('txtLuftZielOrt'), elL('luftZielPlzInfo'));
+    const vonAdresse = luftVonLesen();
     if(!vonAdresse){ zeigeErgebnis('Bitte eine Startadresse (Von) eintragen – vorbelegt wird die Adresse aus den Einstellungen.', true); return; }
-    const adresse = document.getElementById('txtLuftAdresse').value.trim();
+    const adresse = luftZielLesen();
     if(!adresse){ zeigeErgebnis('Bitte zuerst eine Adresse eintragen oder aus der Zwischenablage einfügen.', true); return; }
     zeigeErgebnis('Wird berechnet …', true);
     try{
@@ -12037,6 +12074,28 @@ async function nfpKarteOeffnen(opt){
   document.body.classList.add('nfp-offen');
   const img = ov.querySelector('img'), fl = ov.querySelector('.nfp-flaeche'), sc = ov.querySelector('.nfp-scroll'), info = ov.querySelector('#nfpInfo');
   img.src = bildUrl;
+  // Weg, Luftlinie und Punkte (Start, NFP, Einsatzorte) wie in der kleinen Karte
+  if(opt.weg || opt.start || opt.nfpZeigen || (opt.pois && opt.pois.length)){
+    const W0 = NFP_KARTE.bild[0], H0 = NFP_KARTE.bild[1];
+    const wegP = (opt.weg || []).map(c=> nfpGeoZuPixel(c[1], c[0]));
+    let svg = '<svg class="nfp-ueber" viewBox="0 0 ' + W0 + ' ' + H0 + '" preserveAspectRatio="none" aria-hidden="true">';
+    if(wegP.length > 1) svg += '<polyline class="luft-weg" points="' + wegP.map(p=> p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ') + '"/>';
+    if(opt.start && opt.adresse && opt.adresse.lat){
+      const a = nfpGeoZuPixel(opt.start.lat, opt.start.lon), b = nfpGeoZuPixel(opt.adresse.lat, opt.adresse.lon);
+      svg += '<line class="luft-linie" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) + '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) + '"/>';
+    }
+    svg += '</svg>';
+    const marke = (p, kl, nr)=> nfpImBild(p) ? '<div class="nfp-punkt ' + kl + '" style="left:' + (p.x / W0 * 100) + '%; top:' + (p.y / H0 * 100) + '%;">' + (nr || '') + '</div>' : '';
+    let m = '';
+    if(opt.nfpZeigen) m += marke({ x: NFP_KARTE.nfp[0], y: NFP_KARTE.nfp[1] }, 'nfp-nfp');
+    if(opt.start) m += marke(nfpGeoZuPixel(opt.start.lat, opt.start.lon), 'nfp-start');
+    (opt.pois || []).forEach(q=> m += marke(nfpGeoZuPixel(q.lat, q.lon), q.kl === 'ich' ? 'nfp-gps' : 'nfp-poi ' + q.kl, q.nr));
+    img.insertAdjacentHTML('afterend', svg + m);
+  }
+  if(!hg.eigen && hg.osm && !nfpOsmBildUrl.ausRepo){
+    const h = ov.querySelector('.nfp-hinweis');
+    if(h){ h.insertAdjacentHTML('beforeend', '<br><button type="button" class="nfp-osm-speichern">Ersatzkarte als Datei speichern (für GitHub)</button>'); h.querySelector('.nfp-osm-speichern').onclick = nfpOsmKarteSpeichern; }
+  }
   let zoom = 1, wahl = null;
   const setzeZoom = (z, mitte)=>{
     const alt = { x: (sc.scrollLeft + sc.clientWidth / 2) / fl.clientWidth, y: (sc.scrollTop + sc.clientHeight / 2) / Math.max(1, fl.clientHeight) };
@@ -12164,8 +12223,20 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
   const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1];
   const pS = nfpGeoZuPixel(start.lat, start.lon), pZ = nfpGeoZuPixel(ziel.lat, ziel.lon), pN = { x: NFP_KARTE.nfp[0], y: NFP_KARTE.nfp[1] };
   const box = document.createElement('div'); box.className = 'luft-karte'; ziel_el.appendChild(box);
-  if(!nfpImBild(pZ) && !nfpImBild(pS)){ box.innerHTML = '<div class="luft-karte-hinweis">Start und Ziel liegen außerhalb der Wegegeld-Karte NFP.</div>'; return; }
   const wegP = (weg || []).map(c=> nfpGeoZuPixel(c[1], c[0])).filter(Boolean);
+  // Liegt etwas ausserhalb der Wegegeld-Karte: Karte direkt aus OpenStreetMap
+  // (eigener Massstab, Umriss der Wegegeld-Karte gestrichelt)
+  const osmDaten = { pois: [{ lat: start.lat, lon: start.lon, kl: 'start' }, { lat: ziel.lat, lon: ziel.lon, kl: 'ziel' }], weg: weg || [], linie: [start, ziel], nfp: true, rahmen: true };
+  if(!nfpImBild(pS) || !nfpImBild(pZ) || wegP.some(p=> !nfpImBild(p))){
+    const kbA = nfpImBild(pZ) ? nfpBewertung(pZ) : null;
+    const a = osmAusschnitt(osmDaten, {});
+    box.innerHTML = '<div class="luft-karte-kopf"><b>Karte</b>' + (kbA ? ' · Ziel: ' + htmlEsc(kbA.text) : ' · außerhalb der Wegegeld-Karte NFP') +
+        '<button type="button" class="luft-karte-gross">Große Karte</button></div>' + a.html +
+      '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
+        (weg && weg.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="r"></i>Wegegeld-Karte</span>' + OSM_ATTR_HTML + '</div>';
+    box.querySelector('.luft-karte-gross').onclick = ()=> osmKarteOverlay(osmDaten, zielText);
+    return;
+  }
   const pts = [pS, pZ, pN].concat(wegP).filter(p=> nfpImBild(p));
   let x0 = Math.min.apply(null, pts.map(p=> p.x)), x1 = Math.max.apply(null, pts.map(p=> p.x));
   let y0 = Math.min.apply(null, pts.map(p=> p.y)), y1 = Math.max.apply(null, pts.map(p=> p.y));
@@ -12193,7 +12264,7 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
       '</svg></div>' +
     '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
       (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span>' + (hg.osm ? OSM_ATTR_HTML : '') + '</div>';
-  box.querySelector('.luft-karte-gross').onclick = ()=> nfpKarteOeffnen({ adresse: { lat: ziel.lat, lon: ziel.lon }, adresseText: zielText || '' });
+  box.querySelector('.luft-karte-gross').onclick = ()=> nfpKarteOeffnen({ adresse: { lat: ziel.lat, lon: ziel.lon }, adresseText: zielText || '', start, weg, nfpZeigen: true });
 }
 
 // ---------- Ersatzkarte: OpenStreetMap mit den Zonen der NFP-Karte ----------
@@ -12204,6 +12275,17 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
 // gelegt. Abgerufen wird immer der ganze Kartenausschnitt -- es geht dabei
 // keine Patienten- oder Standortinformation hinaus. Das Ergebnis bleibt im
 // Geraet (Cache), danach funktioniert es offline.
+const NFP_OSM_DATEI = 'nfp_osm_karte.jpg';
+// Selbst zusammengesetzte Ersatzkarte als Datei speichern -> ins GitHub-Repo
+// legen (neben Rechnungserfassung_Mobil.html), dann laden alle Geraete diese.
+async function nfpOsmKarteSpeichern(){
+  appToastAnzeigen('Ersatzkarte wird vorbereitet …', 2500);
+  const url = await nfpOsmBildUrl();
+  if(!url){ appToastAnzeigen('Ersatzkarte konnte nicht erzeugt werden (Internet?).', 3500); return; }
+  const a = document.createElement('a'); a.href = url; a.download = NFP_OSM_DATEI;
+  document.body.appendChild(a); a.click(); a.remove();
+  appToastAnzeigen('Gespeichert als „' + NFP_OSM_DATEI + '“ – bitte ins GitHub-Repo neben die App-Datei hochladen.', 5000);
+}
 const OSM_ATTR_HTML = '<span class="osm-attr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende</span>';
 async function nfpHintergrund(){
   const eigen = typeof nfpKarteBildUrl === 'function' ? await nfpKarteBildUrl() : null;
@@ -12220,6 +12302,15 @@ async function nfpOsmBildUrl(){
     let cache = null;
     try{ cache = ('caches' in window) ? await caches.open('nfp-karte') : null; }catch(_){}
     let res = cache ? await cache.match(SCHL) : null;
+    // 1) fertige Datei aus dem Repo (einmal erzeugt und hochgeladen)
+    if(!res){
+      try{
+        const r = await fetch('./' + NFP_OSM_DATEI, { cache: 'no-cache' });
+        if(r.ok && /image/.test(r.headers.get('Content-Type') || '')){ res = r; nfpOsmBildUrl.ausRepo = true; if(cache){ try{ await cache.put(SCHL, r.clone()); }catch(_){} } }
+      }catch(_){}
+    } else nfpOsmBildUrl.ausRepo = !!LS.get('nfp_osm_aus_repo', false);
+    if(res && nfpOsmBildUrl.ausRepo) LS.set('nfp_osm_aus_repo', true);
+    // 2) sonst einmalig selbst zusammensetzen
     if(!res){
       const blob = await nfpOsmZusammensetzen();
       if(!blob) return null;
@@ -12300,6 +12391,107 @@ async function nfpOsmZusammensetzen(){
   g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(W - tw - 22, H - 38, tw + 16, 30);
   g.fillStyle = '#333'; g.fillText(t, W - tw - 14, H - 15);
   return await new Promise((ok)=> c.toBlob(ok, 'image/jpeg', 0.85));
+}
+
+// ---------- Karte direkt aus OpenStreetMap (fuer alles ausserhalb der Wegegeld-Karte) ----------
+// d = { pois:[{lat,lon,kl,nr}], weg:[[lon,lat]...], linie:[a,b], nfp:true, rahmen:true }
+// Kacheln werden als normale Bilder geladen (Kartenausschnitt, keine Patientendaten).
+function osmWelt(lat, lon, z){ const n = 256 * Math.pow(2, z), r = lat * Math.PI / 180; return { x: (lon + 180) / 360 * n, y: (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n }; }
+function osmGeo(x, y, z){ const n = 256 * Math.pow(2, z); return { lon: x / n * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI }; }
+function osmGeoListe(d){ const a = (d.pois || []).slice(); (d.weg || []).forEach(c=> a.push({ lat: c[1], lon: c[0] })); return a; }
+function osmZoomFuer(d, bw, bh){
+  const g = osmGeoListe(d); if(!g.length) return 12;
+  for(let z = 14; z >= 3; z--){
+    const ps = g.map(p=> osmWelt(p.lat, p.lon, z));
+    const w = Math.max.apply(null, ps.map(p=> p.x)) - Math.min.apply(null, ps.map(p=> p.x));
+    const h = Math.max.apply(null, ps.map(p=> p.y)) - Math.min.apply(null, ps.map(p=> p.y));
+    if(w <= bw && h <= bh) return z;
+  }
+  return 3;
+}
+function osmAusschnitt(d, opt){
+  opt = opt || {};
+  const z = opt.z != null ? opt.z : osmZoomFuer(d, opt.passW || 460, opt.passH || 380);
+  let x0, x1, y0, y1;
+  if(opt.mitte){
+    const m = osmWelt(opt.mitte.lat, opt.mitte.lon, z);
+    x0 = m.x - opt.w / 2; x1 = m.x + opt.w / 2; y0 = m.y - opt.h / 2; y1 = m.y + opt.h / 2;
+  } else {
+    const ps = osmGeoListe(d).map(p=> osmWelt(p.lat, p.lon, z));
+    const wachsen = (a, b, min)=>{ const mm = (a + b) / 2, h = Math.max(b - a, min) / 2; return [mm - h, mm + h]; };
+    x0 = Math.min.apply(null, ps.map(p=> p.x)) - 40; x1 = Math.max.apply(null, ps.map(p=> p.x)) + 40;
+    y0 = Math.min.apply(null, ps.map(p=> p.y)) - 40; y1 = Math.max.apply(null, ps.map(p=> p.y)) + 40;
+    [x0, x1] = wachsen(x0, x1, opt.minW || 380); [y0, y1] = wachsen(y0, y1, opt.minH || 300);
+    if((x1 - x0) / (y1 - y0) > 1.4) [y0, y1] = wachsen(y0, y1, (x1 - x0) / 1.4);
+    if((x1 - x0) / (y1 - y0) < 0.85) [x0, x1] = wachsen(x0, x1, (y1 - y0) * 0.85);
+  }
+  const bw = x1 - x0, bh = y1 - y0, r = opt.r || Math.max(bw, bh) / 50, n = Math.pow(2, z);
+  let kacheln = '';
+  for(let ty = Math.floor(y0 / 256); ty <= Math.floor((y1 - 1) / 256); ty++){
+    if(ty < 0 || ty >= n) continue;
+    for(let tx = Math.floor(x0 / 256); tx <= Math.floor((x1 - 1) / 256); tx++){
+      kacheln += '<img alt="" draggable="false" loading="lazy" src="https://tile.openstreetmap.org/' + z + '/' + (((tx % n) + n) % n) + '/' + ty + '.png" style="left:' +
+        ((tx * 256 - x0) / bw * 100).toFixed(3) + '%; top:' + ((ty * 256 - y0) / bh * 100).toFixed(3) + '%; width:' + (256 / bw * 100 + 0.05).toFixed(3) + '%; height:' + (256 / bh * 100 + 0.05).toFixed(3) + '%;" onerror="this.style.visibility=\'hidden\'">';
+    }
+  }
+  const P = (g)=> osmWelt(g.lat, g.lon, z), f = (v)=> v.toFixed(1);
+  let svg = '<svg viewBox="' + f(x0) + ' ' + f(y0) + ' ' + f(bw) + ' ' + f(bh) + '" preserveAspectRatio="none" aria-hidden="true">';
+  if(d.rahmen && typeof NFP_KARTE !== 'undefined'){
+    const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1], rand = [];
+    for(let i = 0; i <= 8; i++) rand.push([W * i / 8, 0]);
+    for(let i = 0; i <= 8; i++) rand.push([W, H * i / 8]);
+    for(let i = 8; i >= 0; i--) rand.push([W * i / 8, H]);
+    for(let i = 8; i >= 0; i--) rand.push([0, H * i / 8]);
+    svg += '<polygon class="osm-rahmen" points="' + rand.map(([x, y])=>{ const q = P(nfpPixelZuGeo(x, y)); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>';
+  }
+  if(d.weg && d.weg.length > 1) svg += '<polyline class="luft-weg" points="' + d.weg.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>';
+  if(d.linie && d.linie[0] && d.linie[1]){ const a = P(d.linie[0]), b = P(d.linie[1]); svg += '<line class="luft-linie" x1="' + f(a.x) + '" y1="' + f(a.y) + '" x2="' + f(b.x) + '" y2="' + f(b.y) + '"/>'; }
+  if(d.nfp && typeof NFP_KARTE !== 'undefined'){ const q = P(nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1])); svg += '<rect class="luft-nfp" x="' + f(q.x - r * 0.75) + '" y="' + f(q.y - r * 0.75) + '" width="' + f(r * 1.5) + '" height="' + f(r * 1.5) + '"/>'; }
+  const pois = (d.pois || []).slice().sort((a, b)=> (a.kl === 'ich') - (b.kl === 'ich'));
+  pois.forEach(q=>{
+    const p = P(q);
+    if(q.kl === 'ich') svg += '<circle cx="' + f(p.x) + '" cy="' + f(p.y) + '" r="' + f(r * 2.2) + '" class="karte-ich-hof"/><circle cx="' + f(p.x) + '" cy="' + f(p.y) + '" r="' + f(r * 0.9) + '" class="karte-ich"/>';
+    else if(q.kl === 'start' || q.kl === 'ziel') svg += '<circle cx="' + f(p.x) + '" cy="' + f(p.y) + '" r="' + f(r) + '" class="luft-' + q.kl + '"/>';
+    else svg += '<circle cx="' + f(p.x) + '" cy="' + f(p.y) + '" r="' + f(r * 1.15) + '" class="karte-fall ' + q.kl + '"/>' +
+      (q.nr ? '<text x="' + f(p.x) + '" y="' + f(p.y) + '" class="karte-nr" font-size="' + f(r * 1.3) + '">' + q.nr + '</text>' : '');
+  });
+  svg += '</svg>';
+  const html = '<div class="luft-karte-flaeche osm-flaeche" style="aspect-ratio:' + bw.toFixed(0) + ' / ' + bh.toFixed(0) + ';' + (opt.px ? ' width:' + bw.toFixed(0) + 'px;' : '') + '">' + kacheln + svg + '</div>';
+  return { html, z, x0, y0, bw, bh };
+}
+// Vollbild-Karte aus OSM: verschieben per Wischen, Zoom ueber - / +
+function osmKarteOverlay(d, text){
+  const ov = document.createElement('div');
+  ov.className = 'nfp-overlay';
+  ov.innerHTML = '<div class="nfp-kopf"><b>Karte</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
+    '<div class="nfp-scroll osm-scroll"></div>' +
+    '<div class="nfp-fuss"><div class="nfp-info">' + (text ? htmlEsc(text) + '<br>' : '') + OSM_ATTR_HTML + '</div>' +
+      '<div class="nfp-knoepfe"><button type="button" data-zoom="-1">−</button><button type="button" data-zoom="1">+</button><button type="button" class="osm-alles">Alles zeigen</button></div></div>';
+  document.body.appendChild(ov);
+  document.body.classList.add('nfp-offen');
+  const sc = ov.querySelector('.osm-scroll');
+  let z = 12, mitte = null, akt = null;
+  const zeichnen = ()=>{
+    const vw = sc.clientWidth || 360, vh = sc.clientHeight || 500;
+    akt = osmAusschnitt(d, { z, mitte, w: vw * 3, h: vh * 3, px: true, r: 9 });
+    sc.innerHTML = akt.html;
+    const m = osmWelt(mitte.lat, mitte.lon, z);
+    sc.scrollLeft = m.x - akt.x0 - vw / 2; sc.scrollTop = m.y - akt.y0 - vh / 2;
+  };
+  const alles = ()=>{
+    z = osmZoomFuer(d, Math.max(200, sc.clientWidth - 60), Math.max(200, sc.clientHeight - 60));
+    const ps = osmGeoListe(d).map(p=> osmWelt(p.lat, p.lon, z));
+    if(!ps.length){ mitte = osmGeo(0, 0, z); }
+    else mitte = osmGeo((Math.min.apply(null, ps.map(p=> p.x)) + Math.max.apply(null, ps.map(p=> p.x))) / 2, (Math.min.apply(null, ps.map(p=> p.y)) + Math.max.apply(null, ps.map(p=> p.y))) / 2, z);
+    zeichnen();
+  };
+  ov.querySelectorAll('[data-zoom]').forEach(b=> b.onclick = ()=>{
+    if(akt) mitte = osmGeo(akt.x0 + sc.scrollLeft + sc.clientWidth / 2, akt.y0 + sc.scrollTop + sc.clientHeight / 2, z);
+    z = Math.max(3, Math.min(18, z + Number(b.dataset.zoom))); zeichnen();
+  });
+  ov.querySelector('.osm-alles').onclick = alles;
+  ov.querySelector('.nfp-zu').onclick = ()=>{ ov.remove(); document.body.classList.remove('nfp-offen'); };
+  requestAnimationFrame(alles);
 }
 
 // ---------- Geocoding-Zwischenspeicher (nur im Geraet) ----------
@@ -12398,30 +12590,37 @@ let standortKarteLauf = 0;
 async function standortKarteZeichnen(info, mitDialog){
   const box = document.getElementById('skKarte'); if(!box || typeof NFP_KARTE === 'undefined') return;
   const lauf = ++standortKarteLauf, aktuell = ()=> lauf === standortKarteLauf && document.body.contains(box);
-  let auf = !!LS.get('start_karte_auf', false);
+  const auf = !!LS.get('start_karte_auf', false);
   const ohneDienst = !info || !info.fenster;
   box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Standort</b><small>wird ermittelt …</small></span></div>';
   const [hg, pos] = await Promise.all([nfpHintergrund(), standortHolen({ still: !mitDialog })]);
   if(!aktuell()) return;
   const ich = pos ? nfpGeoZuPixel(pos.lat, pos.lon) : null;
+  const ichDrin = !!(ich && nfpImBild(ich));
   let zone = '';
-  if(ich && nfpImBild(ich)){ try{ zone = nfpBewertung(ich).text; }catch(_){} }
+  if(ichDrin){ try{ zone = nfpBewertung(ich).text; }catch(_){} }
   else if(ich) zone = 'außerhalb der Wegegeld-Karte';
   const faelle = standortKarteFaelle(info);
   const kopf = (unter)=> '<div class="sk-kopf"><span class="sk-titel"><b>' + (auf ? 'Einsatzorte ' + (ohneDienst ? '(letzte 24 h)' : 'in diesem Dienst') : 'Standort') + '</b><small>' + htmlEsc(unter) + '</small></span>' +
-    (ich ? '' : '<button type="button" class="sk-pos">📍 Standort</button>') +
+    (pos ? '' : '<button type="button" class="sk-pos">📍 Standort</button>') +
     '<button type="button" class="sk-auf">' + (auf ? 'Einklappen' : 'Ausklappen' + (faelle.length ? ' (' + faelle.length + ')' : '')) + '</button></div>';
+  let gross = null;
   const verdrahten = ()=>{
     const a = box.querySelector('.sk-auf'); if(a) a.onclick = ()=>{ LS.set('start_karte_auf', !auf); standortKarteZeichnen(info); };
     const p = box.querySelector('.sk-pos'); if(p) p.onclick = ()=> standortKarteZeichnen(info, true);
-    const k = box.querySelector('.luft-karte-flaeche'); if(k) k.onclick = ()=> nfpKarteOeffnen(pos ? { adresse: { lat: pos.lat, lon: pos.lon } } : {});
+    const k = box.querySelector('.luft-karte-flaeche'); if(k && gross) k.onclick = gross;
   };
+  const ichPoi = pos ? [{ lat: pos.lat, lon: pos.lon, kl: 'ich' }] : [];
   if(!auf){
-    if(!ich || !nfpImBild(ich)){
-      box.innerHTML = kopf(ich ? zone : 'Standort nicht verfügbar') + '<div class="sk-leer">' + (ich ? 'Du bist außerhalb der Wegegeld-Karte NFP.' : 'Ohne Standortfreigabe keine Anzeige – „📍 Standort“ tippen.') + '</div>';
-      verdrahten(); return;
+    if(!pos){ box.innerHTML = kopf('Standort nicht verfügbar') + '<div class="sk-leer">Ohne Standortfreigabe keine Anzeige – „📍 Standort“ tippen.</div>'; verdrahten(); return; }
+    if(ichDrin){
+      box.innerHTML = kopf(zone) + kartenAusschnittHtml(hg.url, [{ p: ich, kl: 'ich' }], { mitte: ich, breite: 560, hoehe: 330 }) + (hg.osm ? '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>' : '');
+      gross = ()=> nfpKarteOeffnen({ pois: ichPoi, nfpZeigen: true });
+    } else {
+      const d = { pois: ichPoi, nfp: true, rahmen: true };
+      box.innerHTML = kopf(zone) + osmAusschnitt(d, { z: 12, mitte: pos, w: 560, h: 330 }).html + '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>';
+      gross = ()=> osmKarteOverlay(d, 'Dein Standort');
     }
-    box.innerHTML = kopf(zone) + kartenAusschnittHtml(hg.url, [{ p: ich, kl: 'ich' }], { mitte: ich, breite: 560, hoehe: 330 }) + (hg.osm ? '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>' : '');
     verdrahten(); return;
   }
   // ausgeklappt: Einsatzorte ermitteln (GKV mit gespeichertem Ort, LS/PT ueber die Adresse)
@@ -12432,24 +12631,31 @@ async function standortKarteZeichnen(info, mitDialog){
     try{ f.geo = await geocode(f.adr); }catch(_){ f.geo = null; }
     if(!aktuell()) return;
   }
-  const punkte = [], liste = [];
+  const pois = [], liste = [];
   let ohneOrt = 0, nr = 0;
   faelle.forEach(f=>{
-    const p = f.geo ? nfpGeoZuPixel(f.geo.lat, f.geo.lon) : null;
-    if(!p || !nfpImBild(p)){ ohneOrt++; liste.push('<div class="sk-ort"><span class="nr ' + f.art + '">–</span><span class="txt">' + htmlEsc(f.name) + ' <span class="zeit">' + designUhr(f.t) + '</span></span></div>'); return; }
-    nr++; punkte.push({ p, kl: f.art, nr });
+    if(!f.geo){ ohneOrt++; liste.push('<div class="sk-ort"><span class="nr ' + f.art + '">–</span><span class="txt">' + htmlEsc(f.name) + ' <span class="zeit">' + designUhr(f.t) + '</span></span></div>'); return; }
+    nr++; pois.push({ lat: f.geo.lat, lon: f.geo.lon, kl: f.art, nr });
     liste.push('<div class="sk-ort"><span class="nr ' + f.art + '">' + nr + '</span><span class="txt">' + htmlEsc(f.name) + ' <span class="zeit">' + designUhr(f.t) + ' · ' + f.art.toUpperCase() + '</span></span></div>');
   });
-  if(ich && nfpImBild(ich)) punkte.push({ p: ich, kl: 'ich' });
+  const allePois = pois.concat(ichPoi);
   const unter = (zone ? 'Standort: ' + zone : 'ohne Standort') + (ohneDienst ? '' : ' · ' + designDienstTitel(info));
-  if(!punkte.length){
-    box.innerHTML = kopf(unter) + '<div class="sk-leer">' + (faelle.length ? 'Keiner der Einsatzorte liegt auf der Karte.' : 'Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.')) + '</div>' + (liste.length ? '<div class="sk-liste">' + liste.join('') + '</div>' : '');
+  const listeHtml = (liste.length ? '<div class="sk-liste">' + liste.join('') + '</div>' : '') +
+    (ohneOrt ? '<div class="sk-hinweis">' + ohneOrt + ' ohne Ort (keine/unbekannte Adresse – bei GKV erst ab „Wegegeld ermitteln“).</div>' : '');
+  if(!allePois.length){
+    box.innerHTML = kopf(unter) + '<div class="sk-leer">Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.') + '</div>' + listeHtml;
     verdrahten(); return;
   }
-  box.innerHTML = kopf(unter) + kartenAusschnittHtml(hg.url, punkte, { breite: 420, hoehe: 380 }) +
-    (liste.length ? '<div class="sk-liste">' + liste.join('') + '</div>' : '') +
-    (ohneOrt ? '<div class="sk-hinweis">' + ohneOrt + ' ohne Ort (keine/unbekannte Adresse – bei GKV erst ab „Wegegeld ermitteln“).</div>' : '') +
-    (hg.osm ? '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>' : '');
+  const pix = allePois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr }));
+  if(pix.every(q=> nfpImBild(q.p))){
+    box.innerHTML = kopf(unter) + kartenAusschnittHtml(hg.url, pix, { breite: 420, hoehe: 380 }) + listeHtml + (hg.osm ? '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>' : '');
+    gross = ()=> nfpKarteOeffnen({ pois: allePois, nfpZeigen: true });
+  } else {
+    // mind. ein Ort ausserhalb der Wegegeld-Karte -> OSM-Karte
+    const d = { pois: allePois, nfp: true, rahmen: true };
+    box.innerHTML = kopf(unter) + osmAusschnitt(d, {}).html + listeHtml + '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>';
+    gross = ()=> osmKarteOverlay(d, 'Einsatzorte');
+  }
   verdrahten();
 }
 
@@ -13111,7 +13317,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v155';
+const APP_VERSION = 'v156';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
