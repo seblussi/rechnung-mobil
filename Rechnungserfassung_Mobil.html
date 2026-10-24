@@ -1495,6 +1495,9 @@
   .osm-attr{font-size:11px; color:var(--text-schwach);}
   .osm-flaeche{background:#f2efe9; max-width:none;}
   .osm-flaeche img{position:absolute; max-width:none; user-select:none; pointer-events:none;}
+  .km50{fill:none; stroke:#c0392b; stroke-width:2.5; stroke-dasharray:10 7; vector-effect:non-scaling-stroke; opacity:.85; pointer-events:none;}
+  .km50-text{fill:#c0392b; font-weight:700; font-family:sans-serif; text-anchor:middle; paint-order:stroke; stroke:#fff; stroke-width:3px; pointer-events:none;}
+  .luft-karte-legende i.k50{height:0; border-radius:0; border-top:2.5px dashed #c0392b; width:16px;}
   .osm-rahmen{fill:none; stroke:#555; stroke-width:2; stroke-dasharray:8 6; vector-effect:non-scaling-stroke; opacity:.75;}
   .luft-karte-legende i.r{height:0; border-radius:0; border-top:2px dashed #777; width:16px;}
   .osm-scroll{background:#f2efe9;}
@@ -12198,7 +12201,7 @@ async function nfpKarteOeffnen(opt){
   const W0 = NFP_KARTE.bild[0], H0 = NFP_KARTE.bild[1];
   const startGeo = opt.start || gkvStartGeo() || null;
   img.insertAdjacentHTML('afterend', '<svg class="nfp-ueber" viewBox="0 0 ' + W0 + ' ' + H0 + '" preserveAspectRatio="none" aria-hidden="true">' +
-    '<polyline class="luft-weg" points=""/><line class="luft-linie" x1="0" y1="0" x2="0" y2="0" visibility="hidden"/></svg>');
+    nfp50KreisPixelSvg() + '<polyline class="luft-weg" points=""/><line class="luft-linie" x1="0" y1="0" x2="0" y2="0" visibility="hidden"/></svg>');
   const wegEl = ov.querySelector('.nfp-ueber .luft-weg'), linieEl = ov.querySelector('.nfp-ueber .luft-linie');
   let aktWeg = opt.weg || null;
   ebKnopf.onclick = (ev)=>{
@@ -12386,7 +12389,7 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
     box.innerHTML = '<div class="luft-karte-kopf"><b>Karte</b>' + (kbA ? ' · Ziel: ' + htmlEsc(kbA.text) : ' · außerhalb der Wegegeld-Karte NFP') +
         '<button type="button" class="luft-karte-gross">Große Karte</button></div>' + a.html +
       '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
-        (weg && weg.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="r"></i>Wegegeld-Karte</span>' + OSM_ATTR_HTML + '</div>';
+        (weg && weg.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="k50"></i>50 km</span><span><i class="r"></i>Wegegeld-Karte</span>' + OSM_ATTR_HTML + '</div>';
     box.querySelector('.luft-karte-gross').onclick = ()=> osmKarteOverlay(osmDaten, zielText);
     return;
   }
@@ -12412,11 +12415,12 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
       '<svg viewBox="' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' ' + bw.toFixed(1) + ' ' + bh.toFixed(1) + '" preserveAspectRatio="none" aria-hidden="true">' +
         (wegP.length > 1 ? '<polyline class="luft-weg" points="' + wegP.map(p=> p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ') + '"/>' : '') +
         '<line class="luft-linie" x1="' + pS.x.toFixed(1) + '" y1="' + pS.y.toFixed(1) + '" x2="' + pZ.x.toFixed(1) + '" y2="' + pZ.y.toFixed(1) + '"/>' +
+        nfp50KreisPixelSvg() +
         '<rect class="luft-nfp" x="' + (pN.x - r * 0.8).toFixed(1) + '" y="' + (pN.y - r * 0.8).toFixed(1) + '" width="' + (r * 1.6).toFixed(1) + '" height="' + (r * 1.6).toFixed(1) + '"/>' +
         punkt(pS, 'luft-start') + punkt(pZ, 'luft-ziel') +
       '</svg></div>' +
     '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
-      (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span>' + (hg.osm ? OSM_ATTR_HTML : '') + '</div>';
+      (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="k50"></i>50 km</span>' + (hg.osm ? OSM_ATTR_HTML : '') + '</div>';
   box.querySelector('.luft-karte-gross').onclick = ()=> nfpKarteOeffnen({ adresse: { lat: ziel.lat, lon: ziel.lon }, adresseText: zielText || '', start, weg, nfpZeigen: true });
 }
 
@@ -12532,6 +12536,23 @@ async function nfpOsmZusammensetzen(){
 // ---------- Karte direkt aus OpenStreetMap (fuer alles ausserhalb der Wegegeld-Karte) ----------
 // d = { pois:[{lat,lon,kl,nr}], weg:[[lon,lat]...], linie:[a,b], nfp:true, rahmen:true }
 // Kacheln werden als normale Bilder geladen (Kartenausschnitt, keine Patientendaten).
+// 50-km-Kreis um den NFP (Luftlinie; daruber 4x Wegepauschale) als Punktfolge
+function nfp50Kreis(){
+  if(nfp50Kreis.p) return nfp50Kreis.p;
+  const m = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]), R = 50, p = [];
+  const la = m.lat * Math.PI / 180, lo = m.lon * Math.PI / 180, d = R / 6371;
+  for(let i = 0; i <= 180; i++){
+    const t = i / 180 * 2 * Math.PI;
+    const lat2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(t));
+    const lon2 = lo + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(lat2));
+    p.push({ lat: lat2 * 180 / Math.PI, lon: lon2 * 180 / Math.PI });
+  }
+  return (nfp50Kreis.p = p);
+}
+// als SVG-Linie in Kartenpixeln der Wegegeld-Karte
+function nfp50KreisPixelSvg(){
+  return '<polyline class="km50" points="' + nfp50Kreis().map(g=>{ const q = nfpGeoZuPixel(g.lat, g.lon); return q.x.toFixed(1) + ',' + q.y.toFixed(1); }).join(' ') + '"/>';
+}
 function osmWelt(lat, lon, z){ const n = 256 * Math.pow(2, z), r = lat * Math.PI / 180; return { x: (lon + 180) / 360 * n, y: (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n }; }
 function osmGeo(x, y, z){ const n = 256 * Math.pow(2, z); return { lon: x / n * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI }; }
 function osmGeoListe(d){ const a = (d.pois || []).slice(); (d.weg || []).forEach(c=> a.push({ lat: c[1], lon: c[0] })); return a; }
@@ -12583,6 +12604,11 @@ function osmAusschnitt(d, opt){
   }
   if(d.weg && d.weg.length > 1) svg += '<polyline class="luft-weg" points="' + d.weg.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>';
   if(d.linie && d.linie[0] && d.linie[1]){ const a = P(d.linie[0]), b = P(d.linie[1]); svg += '<line class="luft-linie" x1="' + f(a.x) + '" y1="' + f(a.y) + '" x2="' + f(b.x) + '" y2="' + f(b.y) + '"/>'; }
+  if(d.nfp && typeof NFP_KARTE !== 'undefined'){
+    const k = nfp50Kreis().map(P);
+    svg += '<polyline class="km50" points="' + k.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '"/>';
+    const top = k[0]; svg += '<text x="' + f(top.x) + '" y="' + f(top.y - r * 0.6) + '" class="km50-text" font-size="' + f(Math.max(r * 1.3, 11)) + '">50 km</text>';
+  }
   if(d.nfp && typeof NFP_KARTE !== 'undefined'){ const q = P(nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1])); svg += '<rect class="luft-nfp" x="' + f(q.x - r * 0.75) + '" y="' + f(q.y - r * 0.75) + '" width="' + f(r * 1.5) + '" height="' + f(r * 1.5) + '"/>'; }
   const pois = (d.pois || []).slice().sort((a, b)=> (a.kl === 'ich') - (b.kl === 'ich'));
   pois.forEach(q=>{
@@ -12845,6 +12871,7 @@ function kartenAusschnittHtml(url, punkte, opt){
   return '<div class="luft-karte-flaeche" style="aspect-ratio:' + bw.toFixed(0) + ' / ' + bh.toFixed(0) + ';">' +
       '<img alt="Karte" draggable="false" src="' + url + '" style="left:' + (-x0 / bw * 100).toFixed(3) + '%; top:' + (-y0 / bh * 100).toFixed(3) + '%; width:' + (W / bw * 100).toFixed(3) + '%;">' +
       '<svg viewBox="' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' ' + bw.toFixed(1) + ' ' + bh.toFixed(1) + '" preserveAspectRatio="none" aria-hidden="true">' +
+        nfp50KreisPixelSvg() +
         '<rect class="luft-nfp" x="' + (pN.x - r * 0.7).toFixed(1) + '" y="' + (pN.y - r * 0.7).toFixed(1) + '" width="' + (r * 1.4).toFixed(1) + '" height="' + (r * 1.4).toFixed(1) + '"/>' +
         zeichen.join('') + '</svg></div>';
 }
@@ -13586,7 +13613,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v164';
+const APP_VERSION = 'v165';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
