@@ -1450,6 +1450,31 @@
   .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:#111; border-radius:2px;}
   .luft-karte-legende i.l{height:0; border-radius:0; border-top:2.5px dashed var(--text); width:16px;} .luft-karte-legende i.w{height:4px; border-radius:2px; background:#1a55c9; width:16px;}
   .luft-karte-hinweis{font-size:13px; color:var(--text-schwach); padding:6px 0;}
+  .osm-attr{font-size:11px; color:var(--text-schwach);}
+  .osm-attr a{color:inherit;}
+  .nfp-osm-attr{position:absolute; right:6px; bottom:6px; z-index:3; background:rgba(255,255,255,.85); color:#333; font-size:11px; padding:2px 6px; border-radius:4px;}
+  .nfp-osm-attr a{color:#333;}
+  /* Startseite: Standortkarte (optional, Einstellungen > Live-Dienst-Anzeige) */
+  .sk-karte{margin:0 0 12px; padding:10px 12px 12px; border:1px solid var(--rand); border-radius:12px; background:var(--karte);}
+  .sk-kopf{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .sk-titel{flex:1; min-width:0;}
+  .sk-titel b{display:block; font-size:14px;}
+  .sk-titel small{display:block; font-size:12px; color:var(--text-schwach); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .sk-kopf button{width:auto; margin:0; padding:7px 11px; font-size:12.5px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text); white-space:nowrap;}
+  .sk-leer{font-size:13px; color:var(--text-schwach); padding:8px 0 2px;}
+  .sk-leer button{width:auto; margin:8px 0 0; padding:8px 12px; font-size:13px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  .karte-ich{fill:#1a73e8; stroke:#fff; stroke-width:3; vector-effect:non-scaling-stroke;}
+  .karte-ich-hof{fill:#1a73e8; opacity:.18;}
+  .karte-fall{stroke:#fff; stroke-width:2; vector-effect:non-scaling-stroke;}
+  .karte-fall.ls{fill:var(--ls-farbe);} .karte-fall.pt{fill:var(--pt-farbe);} .karte-fall.gkv{fill:#7d4e9e;}
+  .karte-nr{fill:#fff; font-weight:700; font-family:sans-serif; text-anchor:middle; dominant-baseline:central;}
+  .sk-liste{margin-top:8px; display:flex; flex-direction:column; gap:4px;}
+  .sk-ort{display:flex; align-items:center; gap:8px; font-size:13px;}
+  .sk-ort .nr{flex:0 0 22px; height:22px; border-radius:50%; color:#fff; font-size:11.5px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+  .sk-ort .nr.ls{background:var(--ls-farbe);} .sk-ort .nr.pt{background:var(--pt-farbe);} .sk-ort .nr.gkv{background:#7d4e9e;}
+  .sk-ort .txt{flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .sk-ort .zeit{color:var(--text-schwach); font-variant-numeric:tabular-nums;}
+  .sk-hinweis{font-size:12px; color:var(--text-schwach); margin-top:6px;}
   /* Klinik/Einhand: Rechnungsverwaltung + Fahrtenbuch stecken in der Leiste */
   body.design-klinik #app .uebersicht-reihe, body.design-einhand #app .uebersicht-reihe{display:none;}
   /* Klinik: Leiste immer und ueberall */
@@ -11578,7 +11603,7 @@ function ansichtGkv(bearbeitenId){
   const jetzt = new Date();
   const alle = gkvFaelleLaden();
   let f = bearbeitenId ? alle.find(x=> x.id === bearbeitenId) : null;
-  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '' }
+  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null }
     : (gkvEntwurf || Object.assign({ id: '', name: '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()) }, gkvStartAuswahl()));
   gkvEntwurf = st.id ? null : st;
   let liste = gkvListeLaden();
@@ -11833,7 +11858,8 @@ function ansichtGkv(bearbeitenId){
     const arr = gkvFaelleLaden();
     const eintrag = { id: st.id || ('g' + Date.now().toString(36)), name: st.name, datum: st.datum, zeit: st.zeit,
       auswahl: JSON.parse(JSON.stringify(st.auswahl)), profil: st.profil || '', positionen: pos.map(p=> ({ gop: p.gop, anz: p.anz })),
-      euro: betaRund2(pos.reduce((s, p)=> s + p.euro, 0)), status: 'offen', alterName: null };
+      euro: betaRund2(pos.reduce((s, p)=> s + p.euro, 0)), status: 'offen', alterName: null,
+      adresse: st.adresse || '', geo: st.kmGeo && st.kmGeo.lat ? { lat: +(+st.kmGeo.lat).toFixed(5), lon: +(+st.kmGeo.lon).toFixed(5) } : null };
     const i = arr.findIndex(x=> x.id === eintrag.id);
     if(i >= 0){ eintrag.alterName = arr[i].name !== eintrag.name ? arr[i].name : (arr[i].alterName || null); eintrag.zeile = arr[i].zeile; arr[i] = eintrag; }
     else arr.push(eintrag);
@@ -11992,7 +12018,7 @@ function nfpZonenBildUrl(){
 async function nfpKarteOeffnen(opt){
   opt = opt || {};
   await gkvStartGeoHolen();
-  const bildUrl = await nfpKarteBildUrl();
+  const hg = await nfpHintergrund(), bildUrl = hg.url;
   const ov = document.createElement('div');
   ov.className = 'nfp-overlay';
   ov.innerHTML =
@@ -12000,7 +12026,8 @@ async function nfpKarteOeffnen(opt){
     '<div class="nfp-suche"><input type="text" id="nfpStrasse" autocomplete="off" placeholder="Straße Nr." value="' + htmlEsc(gkvAdrTeile(opt.adresseText).strasse) + '">' +
       '<input type="search" id="nfpPlzOrt" enterkeyhint="search" autocomplete="off" placeholder="PLZ Ort" value="' + htmlEsc(gkvAdrTeile(opt.adresseText).plzOrt) + '">' +
       '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
-    (bildUrl ? '' : '<div class="nfp-hinweis">Kartenbild nicht gefunden – es werden nur die ausgelesenen Zonen gezeigt. Für die echte Karte die Datei <b>Karte_NFP_Offenburg.jpg</b> in den OneDrive-Ordner <b>KVBW Onedrive/Karten</b> legen.</div>') +
+    (hg.eigen ? '' : '<div class="nfp-hinweis">' + (hg.osm ? 'Ersatzkarte (OpenStreetMap mit den Zonen der NFP-Karte).' : 'Kartenbild nicht gefunden – es werden nur die ausgelesenen Zonen gezeigt.') + ' Für die echte Karte mit OneDrive anmelden bzw. die Datei <b>Karte_NFP_Offenburg.jpg</b> in den OneDrive-Ordner <b>KVBW Onedrive/Karten</b> legen.</div>') +
+    (hg.osm ? '<div class="nfp-osm-attr">' + OSM_ATTR_HTML + '</div>' : '') +
     '<div class="nfp-scroll"><div class="nfp-flaeche"><img alt="Karte" draggable="false">' +
       '<div class="nfp-punkt nfp-adr" hidden></div><div class="nfp-punkt nfp-gps" hidden></div><div class="nfp-punkt nfp-wahl" hidden></div></div></div>' +
     '<div class="nfp-fuss"><div class="nfp-info" id="nfpInfo">Adresse suchen, Standort holen oder auf die Einsatzstelle tippen.</div>' +
@@ -12009,7 +12036,7 @@ async function nfpKarteOeffnen(opt){
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
   const img = ov.querySelector('img'), fl = ov.querySelector('.nfp-flaeche'), sc = ov.querySelector('.nfp-scroll'), info = ov.querySelector('#nfpInfo');
-  img.src = bildUrl || nfpZonenBildUrl();
+  img.src = bildUrl;
   let zoom = 1, wahl = null;
   const setzeZoom = (z, mitte)=>{
     const alt = { x: (sc.scrollLeft + sc.clientWidth / 2) / fl.clientWidth, y: (sc.scrollTop + sc.clientHeight / 2) / Math.max(1, fl.clientHeight) };
@@ -12151,7 +12178,7 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
   const schieben = (a, b, max)=>{ const l = b - a; if(l >= max) return [0, max]; if(a < 0) return [0, l]; if(b > max) return [max - l, max]; return [a, b]; };
   [x0, x1] = schieben(x0, x1, W); [y0, y1] = schieben(y0, y1, H);
   const bw = x1 - x0, bh = y1 - y0, r = Math.max(bw, bh) / 55;
-  const url = (typeof nfpKarteBildUrl === 'function' ? await nfpKarteBildUrl() : null) || nfpZonenBildUrl();
+  const hg = await nfpHintergrund(), url = hg.url;
   const punkt = (p, kl)=> nfpImBild(p) ? '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r.toFixed(1) + '" class="' + kl + '"/>' : '';
   const kb = nfpImBild(pZ) ? nfpBewertung(pZ) : null;
   box.innerHTML = '<div class="luft-karte-kopf"><b>Wegegeld-Karte NFP</b>' + (kb ? ' · Ziel: ' + htmlEsc(kb.text) : '') +
@@ -12165,8 +12192,265 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
         punkt(pS, 'luft-start') + punkt(pZ, 'luft-ziel') +
       '</svg></div>' +
     '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
-      (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span></div>';
+      (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span>' + (hg.osm ? OSM_ATTR_HTML : '') + '</div>';
   box.querySelector('.luft-karte-gross').onclick = ()=> nfpKarteOeffnen({ adresse: { lat: ziel.lat, lon: ziel.lon }, adresseText: zielText || '' });
+}
+
+// ---------- Ersatzkarte: OpenStreetMap mit den Zonen der NFP-Karte ----------
+// Das echte Kartenbild liegt aus Datenschutzgruenden nur im eigenen OneDrive.
+// Ohne Anmeldung/Bild wird einmalig eine Ersatzkarte im selben Pixelraster
+// zusammengesetzt (ca. 100 OSM-Kacheln, Zoom 12, Homographie wie die NFP-Karte)
+// und darueber die ausgelesenen Zonen halbtransparent in denselben Farben
+// gelegt. Abgerufen wird immer der ganze Kartenausschnitt -- es geht dabei
+// keine Patienten- oder Standortinformation hinaus. Das Ergebnis bleibt im
+// Geraet (Cache), danach funktioniert es offline.
+const OSM_ATTR_HTML = '<span class="osm-attr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende</span>';
+async function nfpHintergrund(){
+  const eigen = typeof nfpKarteBildUrl === 'function' ? await nfpKarteBildUrl() : null;
+  if(eigen) return { url: eigen, eigen: true, osm: false };
+  const osm = await nfpOsmBildUrl();
+  if(osm) return { url: osm, eigen: false, osm: true };
+  return { url: nfpZonenBildUrl(), eigen: false, osm: false };
+}
+async function nfpOsmBildUrl(){
+  if(nfpOsmBildUrl.url) return nfpOsmBildUrl.url;
+  if(nfpOsmBildUrl.laeuft) return nfpOsmBildUrl.laeuft;
+  nfpOsmBildUrl.laeuft = (async ()=>{
+    const SCHL = './__nfp_osm_v1__';
+    let cache = null;
+    try{ cache = ('caches' in window) ? await caches.open('nfp-karte') : null; }catch(_){}
+    let res = cache ? await cache.match(SCHL) : null;
+    if(!res){
+      const blob = await nfpOsmZusammensetzen();
+      if(!blob) return null;
+      res = new Response(blob, { headers: { 'Content-Type': 'image/jpeg' } });
+      if(cache){ try{ await cache.put(SCHL, res.clone()); }catch(_){} }
+    }
+    nfpOsmBildUrl.url = URL.createObjectURL(await res.blob());
+    return nfpOsmBildUrl.url;
+  })().catch(()=> null).finally(()=>{ nfpOsmBildUrl.laeuft = null; });
+  return nfpOsmBildUrl.laeuft;
+}
+async function nfpOsmZusammensetzen(){
+  if(typeof NFP_KARTE === 'undefined' || typeof createImageBitmap !== 'function') return null;
+  if(typeof navigator !== 'undefined' && navigator.onLine === false) return null;
+  const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1], z = 12, n = Math.pow(2, z);
+  const tx = (lon)=> (lon + 180) / 360 * n;
+  const ty = (lat)=>{ const r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n; };
+  const lonT = (x)=> x / n * 360 - 180;
+  const latT = (y)=> Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI;
+  const ecken = [[0, 0], [W, 0], [0, H], [W, H]].map(([x, y])=> nfpPixelZuGeo(x, y));
+  const xs = ecken.map(p=> tx(p.lon)), ys = ecken.map(p=> ty(p.lat));
+  const x0 = Math.floor(Math.min.apply(null, xs)), x1 = Math.floor(Math.max.apply(null, xs));
+  const y0 = Math.floor(Math.min.apply(null, ys)), y1 = Math.floor(Math.max.apply(null, ys));
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f2efe9'; g.fillRect(0, 0, W, H);
+  const kacheln = [];
+  for(let y = y0; y <= y1; y++) for(let x = x0; x <= x1; x++) kacheln.push([x, y]);
+  let fehler = 0, idx = 0;
+  const arbeiter = async ()=>{
+    while(idx < kacheln.length){
+      const [x, y] = kacheln[idx++];
+      try{
+        const r = await fetch('https://tile.openstreetmap.org/' + z + '/' + x + '/' + y + '.png');
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        const bmp = await createImageBitmap(await r.blob());
+        // Kachelecken in Kartenpixel -> affine Abbildung je Kachel (Homographie lokal linear)
+        const p00 = nfpGeoZuPixel(latT(y), lonT(x)), p10 = nfpGeoZuPixel(latT(y), lonT(x + 1)), p01 = nfpGeoZuPixel(latT(y + 1), lonT(x));
+        g.setTransform((p10.x - p00.x) / 256, (p10.y - p00.y) / 256, (p01.x - p00.x) / 256, (p01.y - p00.y) / 256, p00.x, p00.y);
+        g.drawImage(bmp, -0.5, -0.5, 257, 257);
+        g.setTransform(1, 0, 0, 1, 0, 0);
+        if(bmp.close) bmp.close();
+      }catch(_){ fehler++; }
+    }
+  };
+  await Promise.all([1, 2, 3, 4].map(arbeiter));
+  if(fehler > kacheln.length * 0.15) return null;
+  // Zonen halbtransparent in den Farben der NFP-Karte, dazu kraeftige Grenzlinien
+  const r = nfpRaster(), zw = NFP_KARTE.w, zh = NFP_KARTE.h, zelle = NFP_KARTE.zelle;
+  const zc = document.createElement('canvas'); zc.width = zw; zc.height = zh;
+  const zg = zc.getContext('2d'), img = zg.createImageData(zw, zh);
+  const rgb = {};
+  Object.keys(NFP_ZONEN).forEach(k=>{ const h = NFP_ZONEN[k].farbe; rgb[k] = [1, 3, 5].map(o=> parseInt(h.substr(o, 2), 16)); });
+  for(let i = 0; i < r.length; i++){ const f = rgb[r[i]]; if(f) img.data.set([f[0], f[1], f[2], 80], i * 4); }
+  zg.putImageData(img, 0, 0);
+  g.imageSmoothingEnabled = true;
+  g.drawImage(zc, 0, 0, zw * zelle, zh * zelle);
+  const zoneAn = (i, j)=> (i < 0 || j < 0 || i >= zw || j >= zh) ? 0 : r[j * zw + i];
+  const innen = (a, b)=> (rgb[a] && rgb[b]) ? Math.min(a, b) : (rgb[a] ? a : (rgb[b] ? b : 0));
+  g.lineWidth = 3; g.lineCap = 'round';
+  for(let j = 0; j < zh; j++) for(let i = 0; i < zw; i++){
+    const a = zoneAn(i, j);
+    [[1, 0], [0, 1]].forEach(([di, dj])=>{
+      const b = zoneAn(i + di, j + dj);
+      if(a === b || (!rgb[a] && !rgb[b])) return;
+      const k = innen(a, b); if(!k) return;
+      g.strokeStyle = NFP_ZONEN[k].farbe;
+      g.beginPath();
+      if(di){ g.moveTo((i + 1) * zelle, j * zelle); g.lineTo((i + 1) * zelle, (j + 1) * zelle); }
+      else { g.moveTo(i * zelle, (j + 1) * zelle); g.lineTo((i + 1) * zelle, (j + 1) * zelle); }
+      g.stroke();
+    });
+  }
+  // Quellenangabe auch ins Bild
+  const t = '© OpenStreetMap-Mitwirkende';
+  g.font = '600 22px sans-serif';
+  const tw = g.measureText(t).width;
+  g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(W - tw - 22, H - 38, tw + 16, 30);
+  g.fillStyle = '#333'; g.fillText(t, W - tw - 14, H - 15);
+  return await new Promise((ok)=> c.toBlob(ok, 'image/jpeg', 0.85));
+}
+
+// ---------- Geocoding-Zwischenspeicher (nur im Geraet) ----------
+// Gleiche Adresse -> kein erneuter Abruf (spart Datenvolumen, wirkt offline;
+// gebraucht v.a. fuer die Einsatzorte auf der Startseiten-Karte).
+geocode = (function(basis){
+  return async function(adresse){
+    const k = String(adresse || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const c = LS.get('geo_cache', {}) || {};
+    if(k && c[k]) return { lat: c[k][0], lon: c[k][1] };
+    const g = await basis(adresse);
+    if(g && k){
+      c[k] = [+g.lat.toFixed(6), +g.lon.toFixed(6), Date.now()];
+      const schl = Object.keys(c);
+      if(schl.length > 400) schl.sort((a, b)=> c[a][2] - c[b][2]).slice(0, schl.length - 400).forEach(x=> delete c[x]);
+      LS.set('geo_cache', c);
+    }
+    return g;
+  };
+})(geocode);
+
+// ---------- Startseite: Standortkarte mit Einsatzorten des Dienstes ----------
+// Klein: Ausschnitt um den eigenen Standort mit Zone. Ausgeklappt: Ausschnitt
+// ueber alle Einsatzorte des aktuellen Dienstes (ohne Dienst: letzte 24 h),
+// nummeriert, mit Liste darunter.
+function kartenZeitAus(datum, zeit){
+  let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(datum || ''), d = null;
+  if(m) d = new Date(+m[1], +m[2] - 1, +m[3]);
+  else if((m = /^(\d{1,2})\.(\d{1,2})\.(\d{2,4})/.exec(datum || ''))) d = new Date(+m[3] < 100 ? 2000 + +m[3] : +m[3], +m[2] - 1, +m[1]);
+  if(!d) return null;
+  const zz = /(\d{1,2}):(\d{2})/.exec(zeit || '');
+  d.setHours(zz ? +zz[1] : 12, zz ? +zz[2] : 0, 0, 0);
+  return d;
+}
+function standortKarteFaelle(info){
+  const von = info && info.fenster ? info.fenster.von : new Date(Date.now() - 24 * 3600000);
+  const bis = info && info.fenster ? info.fenster.bis : new Date(Date.now() + 3600000);
+  const drin = (t)=> t && t >= von && t < bis;
+  const out = [];
+  const lsPt = (art, w, quelle)=>{
+    w = w || {};
+    const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS); if(!drin(t)) return;
+    const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim();
+    const adr = abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
+    out.push({ art, t, name: (w.txtName || '').trim() || 'ohne Namen', adr, quelle });
+  };
+  try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach(f=> f && lsPt(art, f.werte, 'fall'))); }catch(_){}
+  try{ betaEntwuerfe().forEach(e=> e && (e.art === 'ls' || e.art === 'pt') && lsPt(e.art, e.werte, 'entwurf')); }catch(_){}
+  try{
+    gkvFaelleLaden().forEach(f=>{
+      if(!f || f.name === GKV_PSEUDO_NAME) return;
+      const t = designFallZeit(f); if(!drin(t)) return;
+      out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', adr: f.adresse || '', geo: f.geo || null });
+    });
+  }catch(_){}
+  // gleiche Person/Zeit doppelt (Entwurf + gespeicherter Fall) nur einmal
+  const ges = new Set();
+  return out.sort((a, b)=> a.t - b.t).filter(x=>{ const k = x.art + '|' + x.name + '|' + x.t.getTime(); if(ges.has(k)) return false; ges.add(k); return true; });
+}
+// Ausschnitt der Wegegeld-Karte mit beliebigen Punkten zeichnen.
+// punkte: [{p:{x,y}, kl:'ich'|'ls'|'pt'|'gkv', nr}] ; opt: {mitte:{x,y}, breite, hoehe}
+function kartenAusschnittHtml(url, punkte, opt){
+  const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1];
+  const sicht = punkte.filter(q=> nfpImBild(q.p));
+  let x0, x1, y0, y1;
+  const wachsen = (a, b, min)=>{ const m = (a + b) / 2, h = Math.max(b - a, min) / 2; return [m - h, m + h]; };
+  if(opt.mitte){
+    [x0, x1] = wachsen(opt.mitte.x, opt.mitte.x, opt.breite || 560); [y0, y1] = wachsen(opt.mitte.y, opt.mitte.y, opt.hoehe || 340);
+  } else {
+    const rand = 60;
+    x0 = Math.min.apply(null, sicht.map(q=> q.p.x)) - rand; x1 = Math.max.apply(null, sicht.map(q=> q.p.x)) + rand;
+    y0 = Math.min.apply(null, sicht.map(q=> q.p.y)) - rand; y1 = Math.max.apply(null, sicht.map(q=> q.p.y)) + rand;
+    [x0, x1] = wachsen(x0, x1, opt.breite || 420); [y0, y1] = wachsen(y0, y1, opt.hoehe || 360);
+    if((x1 - x0) / (y1 - y0) > 1.4) [y0, y1] = wachsen(y0, y1, (x1 - x0) / 1.4);
+    if((x1 - x0) / (y1 - y0) < 0.85) [x0, x1] = wachsen(x0, x1, (y1 - y0) * 0.85);
+  }
+  const schieben = (a, b, max)=>{ const l = b - a; if(l >= max) return [0, max]; if(a < 0) return [0, l]; if(b > max) return [max - l, max]; return [a, b]; };
+  [x0, x1] = schieben(x0, x1, W); [y0, y1] = schieben(y0, y1, H);
+  const bw = x1 - x0, bh = y1 - y0, r = Math.max(bw, bh) / 50;
+  const zeichen = sicht.map(q=>{
+    const cx = q.p.x.toFixed(1), cy = q.p.y.toFixed(1);
+    if(q.kl === 'ich') return '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 2.2).toFixed(1) + '" class="karte-ich-hof"/><circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.9).toFixed(1) + '" class="karte-ich"/>';
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 1.15).toFixed(1) + '" class="karte-fall ' + q.kl + '"/>' +
+      (q.nr ? '<text x="' + cx + '" y="' + cy + '" class="karte-nr" font-size="' + (r * 1.3).toFixed(1) + '">' + q.nr + '</text>' : '');
+  });
+  // eigener Standort zuoberst
+  zeichen.sort((a, b)=> (a.indexOf('karte-ich') >= 0) - (b.indexOf('karte-ich') >= 0));
+  const pN = { x: NFP_KARTE.nfp[0], y: NFP_KARTE.nfp[1] };
+  return '<div class="luft-karte-flaeche" style="aspect-ratio:' + bw.toFixed(0) + ' / ' + bh.toFixed(0) + ';">' +
+      '<img alt="Karte" draggable="false" src="' + url + '" style="left:' + (-x0 / bw * 100).toFixed(3) + '%; top:' + (-y0 / bh * 100).toFixed(3) + '%; width:' + (W / bw * 100).toFixed(3) + '%;">' +
+      '<svg viewBox="' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' ' + bw.toFixed(1) + ' ' + bh.toFixed(1) + '" preserveAspectRatio="none" aria-hidden="true">' +
+        '<rect class="luft-nfp" x="' + (pN.x - r * 0.7).toFixed(1) + '" y="' + (pN.y - r * 0.7).toFixed(1) + '" width="' + (r * 1.4).toFixed(1) + '" height="' + (r * 1.4).toFixed(1) + '"/>' +
+        zeichen.join('') + '</svg></div>';
+}
+let standortKarteLauf = 0;
+async function standortKarteZeichnen(info, mitDialog){
+  const box = document.getElementById('skKarte'); if(!box || typeof NFP_KARTE === 'undefined') return;
+  const lauf = ++standortKarteLauf, aktuell = ()=> lauf === standortKarteLauf && document.body.contains(box);
+  let auf = !!LS.get('start_karte_auf', false);
+  const ohneDienst = !info || !info.fenster;
+  box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Standort</b><small>wird ermittelt …</small></span></div>';
+  const [hg, pos] = await Promise.all([nfpHintergrund(), standortHolen({ still: !mitDialog })]);
+  if(!aktuell()) return;
+  const ich = pos ? nfpGeoZuPixel(pos.lat, pos.lon) : null;
+  let zone = '';
+  if(ich && nfpImBild(ich)){ try{ zone = nfpBewertung(ich).text; }catch(_){} }
+  else if(ich) zone = 'außerhalb der Wegegeld-Karte';
+  const faelle = standortKarteFaelle(info);
+  const kopf = (unter)=> '<div class="sk-kopf"><span class="sk-titel"><b>' + (auf ? 'Einsatzorte ' + (ohneDienst ? '(letzte 24 h)' : 'in diesem Dienst') : 'Standort') + '</b><small>' + htmlEsc(unter) + '</small></span>' +
+    (ich ? '' : '<button type="button" class="sk-pos">📍 Standort</button>') +
+    '<button type="button" class="sk-auf">' + (auf ? 'Einklappen' : 'Ausklappen' + (faelle.length ? ' (' + faelle.length + ')' : '')) + '</button></div>';
+  const verdrahten = ()=>{
+    const a = box.querySelector('.sk-auf'); if(a) a.onclick = ()=>{ LS.set('start_karte_auf', !auf); standortKarteZeichnen(info); };
+    const p = box.querySelector('.sk-pos'); if(p) p.onclick = ()=> standortKarteZeichnen(info, true);
+    const k = box.querySelector('.luft-karte-flaeche'); if(k) k.onclick = ()=> nfpKarteOeffnen(pos ? { adresse: { lat: pos.lat, lon: pos.lon } } : {});
+  };
+  if(!auf){
+    if(!ich || !nfpImBild(ich)){
+      box.innerHTML = kopf(ich ? zone : 'Standort nicht verfügbar') + '<div class="sk-leer">' + (ich ? 'Du bist außerhalb der Wegegeld-Karte NFP.' : 'Ohne Standortfreigabe keine Anzeige – „📍 Standort“ tippen.') + '</div>';
+      verdrahten(); return;
+    }
+    box.innerHTML = kopf(zone) + kartenAusschnittHtml(hg.url, [{ p: ich, kl: 'ich' }], { mitte: ich, breite: 560, hoehe: 330 }) + (hg.osm ? '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>' : '');
+    verdrahten(); return;
+  }
+  // ausgeklappt: Einsatzorte ermitteln (GKV mit gespeichertem Ort, LS/PT ueber die Adresse)
+  box.innerHTML = kopf(faelle.length ? faelle.length + ' Einsatzorte werden gesucht …' : 'noch keine Einsätze') + '<div class="sk-leer">…</div>';
+  verdrahten();
+  for(const f of faelle){
+    if(f.geo || !f.adr) continue;
+    try{ f.geo = await geocode(f.adr); }catch(_){ f.geo = null; }
+    if(!aktuell()) return;
+  }
+  const punkte = [], liste = [];
+  let ohneOrt = 0, nr = 0;
+  faelle.forEach(f=>{
+    const p = f.geo ? nfpGeoZuPixel(f.geo.lat, f.geo.lon) : null;
+    if(!p || !nfpImBild(p)){ ohneOrt++; liste.push('<div class="sk-ort"><span class="nr ' + f.art + '">–</span><span class="txt">' + htmlEsc(f.name) + ' <span class="zeit">' + designUhr(f.t) + '</span></span></div>'); return; }
+    nr++; punkte.push({ p, kl: f.art, nr });
+    liste.push('<div class="sk-ort"><span class="nr ' + f.art + '">' + nr + '</span><span class="txt">' + htmlEsc(f.name) + ' <span class="zeit">' + designUhr(f.t) + ' · ' + f.art.toUpperCase() + '</span></span></div>');
+  });
+  if(ich && nfpImBild(ich)) punkte.push({ p: ich, kl: 'ich' });
+  const unter = (zone ? 'Standort: ' + zone : 'ohne Standort') + (ohneDienst ? '' : ' · ' + designDienstTitel(info));
+  if(!punkte.length){
+    box.innerHTML = kopf(unter) + '<div class="sk-leer">' + (faelle.length ? 'Keiner der Einsatzorte liegt auf der Karte.' : 'Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.')) + '</div>' + (liste.length ? '<div class="sk-liste">' + liste.join('') + '</div>' : '');
+    verdrahten(); return;
+  }
+  box.innerHTML = kopf(unter) + kartenAusschnittHtml(hg.url, punkte, { breite: 420, hoehe: 380 }) +
+    (liste.length ? '<div class="sk-liste">' + liste.join('') + '</div>' : '') +
+    (ohneOrt ? '<div class="sk-hinweis">' + ohneOrt + ' ohne Ort (keine/unbekannte Adresse – bei GKV erst ab „Wegegeld ermitteln“).</div>' : '') +
+    (hg.osm ? '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>' : '');
+  verdrahten();
 }
 
 // ---------- Standort (GPS) mit Freigabe ueber Android ----------
@@ -12827,7 +13111,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v154';
+const APP_VERSION = 'v155';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -12902,9 +13186,10 @@ const LIVE_DIENSTZEITEN = {
 const LIVE_ANZEIGEN = [
   { k: 'karte', titel: 'Karte mit Balken', text: 'Dienstart und Zeit, GKV-Summe gegen Pauschale, voraussichtliche Förderung.' },
   { k: 'ring', titel: 'Uhr-Ring mit Zeitleiste', text: 'Uhrzeit und Restzeit im Ring, Einsätze als Punkte und darunter als Liste.' },
-  { k: 'zeile', titel: 'Kompakte Zeile', text: 'Status des Dienstes mit Fällen, GKV-Summe und Förderung.' }
+  { k: 'zeile', titel: 'Kompakte Zeile', text: 'Status des Dienstes mit Fällen, GKV-Summe und Förderung.' },
+  { k: 'standort', titel: 'Standortkarte', text: 'Kleine Karte mit deinem Standort und der Zone; ausgeklappt alle Einsatzorte dieses Dienstes (LS, PT, GKV).' }
 ];
-function liveEinst(){ const l = (ladeEinstellungen() || {}).liveDienst || {}; return { karte: !!l.karte, ring: !!l.ring, zeile: !!l.zeile, auto: !!l.auto }; }
+function liveEinst(){ const l = (ladeEinstellungen() || {}).liveDienst || {}; return { karte: !!l.karte, ring: !!l.ring, zeile: !!l.zeile, standort: !!l.standort, auto: !!l.auto }; }
 function liveAuto(){ return liveEinst().auto; }
 // Standard-Fahrdienstfenster um einen Zeitpunkt: Werktag 18-08, Wochenende/Feiertag/24.12./31.12. 08-08
 function designDienstFenster(t){
@@ -13255,8 +13540,9 @@ function designRingBlockHtml(info){
 }
 function liveAnzeigeHtml(info){
   const l = liveEinst();
-  if(!l.karte && !l.ring && !l.zeile) return '';
-  return '<div class="ds-live">' + (l.ring ? designRingBlockHtml(info) : '') + (l.karte ? designDienstKarteHtml(info) : '') + (l.zeile ? designZeileHtml(info) : '') + '</div>';
+  if(!l.karte && !l.ring && !l.zeile && !l.standort) return '';
+  return '<div class="ds-live">' + (l.ring ? designRingBlockHtml(info) : '') + (l.karte ? designDienstKarteHtml(info) : '') + (l.zeile ? designZeileHtml(info) : '') +
+    (l.standort ? '<div class="sk-karte" id="skKarte"></div>' : '') + '</div>';
 }
 function designFallZeilenHtml(liste){
   if(!liste.length) return '<div class="ds-leer">Keine offenen Fälle.</div>';
@@ -13301,7 +13587,7 @@ function designStartErgaenzen(){
     vor('<div class="ds-start ds-einhand"><div class="ds-zeile-oben"><span>' + DESIGN_WT[jetzt.getDay()] + ' ' + zz2(jetzt.getDate()) + '.' + zz2(jetzt.getMonth() + 1) + '. · ' + designUhr(jetzt) + '</span>' +
       '<span class="ds-sync' + (anmeldung ? ' an' : '') + '"><i></i>' + (anmeldung ? 'OneDrive' : 'nicht angemeldet') + '</span></div></div>');
   }
-  if(live){ vor(live); liveAutoAuffrischen(); }
+  if(live){ vor(live); liveAutoAuffrischen(); if(document.getElementById('skKarte')) standortKarteZeichnen(info); }
   if(d === 'klinik'){
     const offen = designOffeneFaelle().slice(0, 5);
     reihe.insertAdjacentHTML('afterend', '<section class="ds-offen"><div class="ds-abschnitt-kopf"><h2>Offene Fälle</h2>' +
