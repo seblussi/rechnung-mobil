@@ -12466,7 +12466,7 @@ async function nfpOsmBildUrl(){
   if(nfpOsmBildUrl.url) return nfpOsmBildUrl.url;
   if(nfpOsmBildUrl.laeuft) return nfpOsmBildUrl.laeuft;
   nfpOsmBildUrl.laeuft = (async ()=>{
-    const SCHL = './__nfp_osm_v7__';
+    const SCHL = './__nfp_osm_v8__';
     let cache = null;
     try{ cache = ('caches' in window) ? await caches.open('nfp-karte') : null; }catch(_){}
     let res = cache ? await cache.match(SCHL) : null;
@@ -12490,9 +12490,9 @@ async function nfpOsmBildUrl(){
   })().catch(()=> null).finally(()=>{ nfpOsmBildUrl.laeuft = null; });
   return nfpOsmBildUrl.laeuft;
 }
-// Doppelte Aufloesung (Faktor 2, Zoomstufe 13, ca. 380 Kacheln): Ortsnamen und
+// Dreifache Aufloesung (Faktor 3, Zoomstufe 14, ca. 1500 Kacheln): Ortsnamen und
 // kleine Strassen bleiben auch beim Hineinzoomen lesbar.
-const NFP_OSM_FAKTOR = 2, NFP_OSM_ZOOM = 13;
+const NFP_OSM_FAKTOR = 3, NFP_OSM_ZOOM = 14;
 async function nfpOsmZusammensetzen(fortschritt){
   if(typeof NFP_KARTE === 'undefined' || typeof createImageBitmap !== 'function') return null;
   if(typeof navigator !== 'undefined' && navigator.onLine === false) return null;
@@ -12528,7 +12528,7 @@ async function nfpOsmZusammensetzen(fortschritt){
       }catch(_){ fehler++; }
     }
   };
-  await Promise.all([1, 2, 3, 4].map(arbeiter));
+  await Promise.all([1, 2, 3, 4, 5, 6].map(arbeiter));
   if(fehler > kacheln.length * 0.15) return null;
   // Zonen NICHT ins Bild einbrennen -- sie werden in der App live darueber gezeichnet
   // Quellenangabe auch ins Bild
@@ -13631,7 +13631,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v169';
+const APP_VERSION = 'v170';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14277,7 +14277,7 @@ function ansichtEinstellungen(){
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
   document.getElementById('btnEinstOsmSpeichern').onclick = async ()=>{
     // immer frisch zusammensetzen (nicht die Datei aus dem Repo erneut speichern)
-    try{ const cache = await caches.open('nfp-karte'); await cache.delete('./__nfp_osm_v7__'); }catch(_){}
+    try{ const cache = await caches.open('nfp-karte'); await cache.delete('./__nfp_osm_v8__'); }catch(_){}
     nfpOsmBildUrl.url = null; nfpOsmBildUrl.ausRepo = false;
     const knopf = document.getElementById('btnEinstOsmSpeichern'), alt = knopf.textContent;
     knopf.disabled = true;
