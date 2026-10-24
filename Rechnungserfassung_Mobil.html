@@ -1383,12 +1383,12 @@
   body.design-einhand:not(.dunkel){
     --bg:#eceef2; --karte:#ffffff; --text:#101317; --text-schwach:#4d5562; --rand:#d5d9e0; --titelfarbe:#101317;
     --ls-farbe:#1a4f85; --pt-farbe:#17663a; --grau-feld:#e3e6eb;
-    --ds-primaer:#101317; --ds-primaer-text:#ffffff; --ds-gkv:#5b3480; --ds-nav:#101317; --ds-nav-text:#c3c8d2; --ds-gkv-hell:#efe8f6; --ds-gkv-text:#43255f;
+    --ds-primaer:#101317; --ds-primaer-text:#ffffff; --ds-gkv:#5b3480; --ds-nav:#3a4558; --ds-nav-text:#dde2ea; --ds-gkv-hell:#efe8f6; --ds-gkv-text:#43255f;
   }
   body.design-einhand.dunkel{
     --bg:#14171c; --karte:#1e232b; --text:#eef0f3; --text-schwach:#a3abb8; --rand:#313844; --titelfarbe:#eef0f3;
     --ls-farbe:#22609e; --pt-farbe:#1c7a46; --grau-feld:#262c35;
-    --ds-primaer:#eef0f3; --ds-primaer-text:#14171c; --ds-gkv:#7a4aa8; --ds-nav:#2a303a; --ds-nav-text:#c3c8d2; --ds-gkv-hell:#2a2236; --ds-gkv-text:#d9c2ee;
+    --ds-primaer:#eef0f3; --ds-primaer-text:#14171c; --ds-gkv:#7a4aa8; --ds-nav:#363f4d; --ds-nav-text:#d3d8e0; --ds-gkv-hell:#2a2236; --ds-gkv-text:#d9c2ee;
   }
   body.design-einhand{font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;}
   body.design-einhand header{background:var(--bg); color:var(--text); padding:10px 8px;}
@@ -13694,7 +13694,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v177';
+const APP_VERSION = 'v178';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
