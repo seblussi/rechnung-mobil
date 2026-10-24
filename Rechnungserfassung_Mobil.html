@@ -13696,7 +13696,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v180';
+const APP_VERSION = 'v181';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14067,7 +14067,12 @@ function schnellStapel(navKey, eintraege, beiWahl){
     '<button type="button" class="ws-eintrag" data-ws="' + e.k + '"><span class="ws-text">' + e.text + '</span><span class="ws-icon ' + (e.klasse || '') + '">' + e.icon + '</span></button>').join('') + '</div>';
   document.body.appendChild(huelle);
   const st = huelle.querySelector('.ws-stapel');
-  st.style.bottom = (window.innerHeight - r.top + 10) + 'px';
+  // Abstand zur Leiste = Abstand zwischen den Eintraegen (gap des Stapels);
+  // Bezug ist die Oberkante von Leiste bzw. (falls hoeher, z.B. ueberstehendes Plus) Knopf
+  const leiste = knopf ? knopf.closest('.ds-nav') : null;
+  const oben = Math.min(r.top, leiste ? leiste.getBoundingClientRect().top : r.top);
+  const luecke = parseFloat(getComputedStyle(st).rowGap) || 12;
+  st.style.bottom = (window.innerHeight - oben + luecke) + 'px';
   const iconB = document.body.classList.contains('design-einhand') ? 76 : 56;
   // Knopf in der linken Bildschirmhaelfte: Stapel links ausrichten, Schrift rechts neben dem Icon
   if(r.left + r.width / 2 < window.innerWidth / 2){
