@@ -1165,6 +1165,19 @@
   .ds-dz .ds-fall-marke.pt{background:var(--pt-farbe);} .ds-dz .ds-fall-marke.gkv{background:#7d4e9e;}
   .ds-live > .ds-dz + *, .ds-live > * + .ds-dz{margin-top:12px;}
   .ds-neu-knopf.werkzeug .ds-code{background:#5b6576; font-size:12px;}
+  #dsWerkzeugStapel .ws-hinter{position:fixed; inset:0; z-index:960; background:rgba(0,0,0,.18); opacity:0; transition:opacity .15s;}
+  #dsWerkzeugStapel.auf .ws-hinter{opacity:1;}
+  #dsWerkzeugStapel .ws-stapel{position:fixed; z-index:961; display:flex; flex-direction:column; align-items:flex-end; gap:12px;}
+  #dsWerkzeugStapel .ws-eintrag{display:flex; align-items:center; gap:10px; width:auto; margin:0; padding:0; border:0; background:none; font:inherit; cursor:pointer;
+    opacity:0; transform:translateY(12px) scale(.9); transition:opacity .16s, transform .16s;}
+  #dsWerkzeugStapel.auf .ws-eintrag{opacity:1; transform:none;}
+  #dsWerkzeugStapel.auf .ws-eintrag:nth-child(1){transition-delay:.04s;}
+  #dsWerkzeugStapel .ws-text{font-size:13.5px; font-weight:600; color:var(--text); background:var(--karte); border:1px solid var(--rand); border-radius:10px; padding:6px 10px; box-shadow:0 2px 8px rgba(0,0,0,.18); white-space:nowrap;}
+  #dsWerkzeugStapel .ws-icon{display:flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:16px; box-shadow:0 3px 10px rgba(0,0,0,.25); border:1px solid var(--rand); background:var(--karte);}
+  #dsWerkzeugStapel .ws-icon.blau{background:#eaf1fb; border-color:#cfe0f7;} body.dunkel #dsWerkzeugStapel .ws-icon.blau{background:#16243a; border-color:#274469;}
+  #dsWerkzeugStapel .ws-icon.rot{background:#fdeaea; border-color:#f3d3d3;} body.dunkel #dsWerkzeugStapel .ws-icon.rot{background:#3a1717; border-color:#5c2828;}
+  #dsWerkzeugStapel .ws-icon svg{width:38px; height:38px;}
+  .ds-nav-btn.ws-offen{color:var(--ls-farbe);}
   .ds-live > * + *{margin-top:12px;}
   .ds-ring-knopf, .ds-zeile-live{display:block; width:100%; margin:0; padding:0; border:0; background:none; color:var(--text); font:inherit; text-align:left; cursor:pointer;}
   .ds-ring-knopf .ds-ring-grenzen{margin-bottom:2px;}
@@ -13573,7 +13586,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v163';
+const APP_VERSION = 'v164';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -13920,16 +13933,7 @@ function designNav(eintraege){
 async function designNavAktion(k){
   if(k === 'start'){ if(aktuelleAnsichtIstHauptbildschirm) window.scrollTo({ top: 0, behavior: 'smooth' }); else ansichtStart(); return; }
   if(k === 'einst'){ if(!einstellungenOffen) document.getElementById('btnEinstellungen').click(); return; }
-  if(k === 'werkzeuge'){
-    const a = await betaOverlay.ergebnis('Werkzeuge', '<div class="ds-neu-wahl">' +
-      '<button type="button" class="ds-neu-knopf werkzeug" data-neu="luft"><span class="ds-code">km</span><span><b>Luftlinie berechnen</b><small>Entfernung, Fahrstrecke, Zone</small></span></button>' +
-      '<button type="button" class="ds-neu-knopf werkzeug" data-neu="apo"><span class="ds-code">Apo</span><span><b>Apotheken-Notdienst</b><small>Umkreissuche aponet.de</small></span></button></div>',
-      (function(){ setTimeout(()=> document.querySelectorAll('.beta-overlay [data-neu]').forEach(b=> b.onclick = ()=> betaOverlay.loesen && betaOverlay.loesen(b.dataset.neu)), 0); return [{ label: 'Schließen', akt: 'nein' }]; })());
-    betaOverlay.schliessen();
-    if(a === 'luft'){ vorbereiteRuecksprung(); einstellungenOffen = false; ansichtLuftlinienTool(); }
-    else if(a === 'apo') notapothekenSucheOeffnen();
-    return;
-  }
+  if(k === 'werkzeuge'){ werkzeugStapelUmschalten(); return; }
   if(k === 'verwaltung'){ vorbereiteRuecksprung(); einstellungenOffen = false; if(betaGesamtAktiv()) ansichtRechnungenGesamt(); else ansichtKorrigieren(); return; }
   if(k === 'fahrtenbuch'){
     if(msGraphStatus === 'angemeldet'){ vorbereiteRuecksprung(); einstellungenOffen = false; ansichtFahrdienstAuswertung(); return; }
@@ -13947,6 +13951,36 @@ async function designNavAktion(k){
     vorbereiteRuecksprung(); einstellungenOffen = false;
     if(a === 'gkv') ansichtGkv(); else betaNeueRechnung(a);
   }
+}
+// Werkzeuge: Icons gestapelt direkt ueber dem Werkzeug-Knopf der Leiste
+// (wie ein Schnellmenue), mit den eigenen Werkzeug-Icons der Startseite
+function werkzeugStapelUmschalten(){
+  const alt = document.getElementById('dsWerkzeugStapel');
+  if(alt){ werkzeugStapelSchliessen(); return; }
+  const knopf = [...document.querySelectorAll('.ds-nav [data-nav="werkzeuge"]')].find(b=> b.offsetParent !== null);
+  const r = knopf ? knopf.getBoundingClientRect() : { top: window.innerHeight - 80, left: window.innerWidth - 70, width: 60, right: window.innerWidth - 10 };
+  const huelle = document.createElement('div');
+  huelle.id = 'dsWerkzeugStapel';
+  huelle.innerHTML = '<div class="ws-hinter"></div><div class="ws-stapel">' +
+    '<button type="button" class="ws-eintrag" data-ws="apo"><span class="ws-text">Apotheken-Notdienst</span><span class="ws-icon rot">' + SVG_ICON_APOTHEKE + '</span></button>' +
+    '<button type="button" class="ws-eintrag" data-ws="luft"><span class="ws-text">Luftlinie berechnen</span><span class="ws-icon blau">' + SVG_ICON_LUFTLINIE + '</span></button>' +
+    '</div>';
+  document.body.appendChild(huelle);
+  const st = huelle.querySelector('.ws-stapel');
+  st.style.bottom = (window.innerHeight - r.top + 10) + 'px';
+  st.style.right = Math.max(8, window.innerWidth - r.right + (r.width - 56) / 2) + 'px';
+  if(knopf) knopf.classList.add('ws-offen');
+  requestAnimationFrame(()=> huelle.classList.add('auf'));
+  huelle.querySelector('.ws-hinter').onclick = werkzeugStapelSchliessen;
+  huelle.querySelectorAll('[data-ws]').forEach(b=> b.onclick = ()=>{
+    const w = b.dataset.ws; werkzeugStapelSchliessen();
+    if(w === 'luft'){ vorbereiteRuecksprung(); einstellungenOffen = false; ansichtLuftlinienTool(); }
+    else if(w === 'apo') notapothekenSucheOeffnen();
+  });
+}
+function werkzeugStapelSchliessen(){
+  const h = document.getElementById('dsWerkzeugStapel'); if(h) h.remove();
+  document.querySelectorAll('.ws-offen').forEach(b=> b.classList.remove('ws-offen'));
 }
 function designNavWiring(wurzel){
   (wurzel || document).querySelectorAll('.ds-nav [data-nav]').forEach(b=> b.onclick = ()=> designNavAktion(b.dataset.nav));
@@ -13974,7 +14008,7 @@ function designGlobalNav(){
     nav.querySelectorAll('[data-nav]').forEach(b=> b.classList.toggle('an', b.dataset.nav === akt));
   }catch(_){}
 }
-setzeTitel = (function(basis){ return function(){ const r = basis.apply(this, arguments); setTimeout(designGlobalNav, 0); return r; }; })(setzeTitel);
+setzeTitel = (function(basis){ return function(){ const r = basis.apply(this, arguments); setTimeout(designGlobalNav, 0); try{ werkzeugStapelSchliessen(); }catch(_){} return r; }; })(setzeTitel);
 function designKachelnUmbauen(info){
   const anz = { ls: 0, pt: 0 };
   try{ betaEntwuerfe().forEach(e=>{ if(anz[e.art] !== undefined) anz[e.art]++; }); }catch(_){}
