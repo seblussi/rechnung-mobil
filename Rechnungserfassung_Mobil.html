@@ -282,7 +282,7 @@
   /* fruehere verschickte Fassung */
   .fall-zeile .info.fassungen-text{font-size:12px; color:var(--text-schwach);}
   .fassung-link{color:#2f6fed; text-decoration:underline; cursor:pointer;}
-  .luft-maps-icon.luft-karte{background:var(--karte);}
+  .luft-maps-icon.luft-karten-icon{background:var(--karte);}
   .fd-gp{display:inline-block; margin-left:4px; font-size:10px; font-weight:700; color:#fff; background:#b9770e; border-radius:4px; padding:0 4px; vertical-align:1px;}
   .luft-start-liste{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
   .luft-start-liste:empty{display:none;}
@@ -833,13 +833,18 @@
      (siehe Wiring). align-items:stretch + aspect-ratio:1/1 (statt fester
      Pixelmasse) -- Badge passt sich dadurch automatisch der tatsaechlichen
      Hoehe des Buttons daneben an, bleibt aber quadratisch. */
-  .luft-zwischenablage-reihe{display:flex; align-items:stretch; gap:10px; margin-bottom:16px;}
-  .luft-zwischenablage-reihe .btn-primaer{margin-bottom:0; margin-top:0; flex:1;}
+  /* Layout-Korrektur: festes 3-Spalten-Raster mit fester Zeilenhoehe statt
+     Flex + nachtraeglichem JS-Ausmessen -- vorher waren die beiden Icons
+     unterschiedlich gross und versetzt (das Karten-Icon erbte zudem ueber
+     die Klasse "luft-karte" den margin-top der Routenkarte darunter). */
+  .luft-zwischenablage-reihe{display:grid; grid-template-columns:64px 1fr 64px; grid-template-rows:64px; gap:10px; align-items:stretch; margin-bottom:14px;}
+  .luft-zwischenablage-reihe .btn-primaer{margin:0; height:100%; padding:6px 10px; line-height:1.25;}
   .luft-maps-icon{
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    aspect-ratio:1/1; height:auto; border-radius:12px; background:#eaf1fb;
+    display:flex; align-items:center; justify-content:center; box-sizing:border-box;
+    width:64px; height:64px; border-radius:12px; background:#eaf1fb;
     border:2px solid #2f6fed; box-shadow:0 1px 3px rgba(0,0,0,.15); cursor:pointer;
   }
+  .luft-maps-icon svg{width:42px; height:42px; display:block;}
   body.dunkel .luft-maps-icon{background:#16243a;}
   /* "Sterbeort abweichend?" sitzt wie am PC (btnSterbeAbw: gleiche Zeile wie
      "PLZ + Stadt", rechtsbuendig, kompakte Schaltflaeche) rechts NEBEN dem
@@ -3669,7 +3674,7 @@ function ansichtLuftlinienTool(){
           <circle cx="19" cy="6.75" r="2.15" fill="#fff" transform="translate(-7,2.89)"/>
         </svg></span>
         <button class="btn-primaer blass" id="btnLuftZwischenablage">Aus Zwischenablage einfügen</button>
-        <span class="luft-maps-icon luft-karte" id="btnLuftMapsOeffnen" title="Google Maps öffnen"><svg width="46" height="46" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <span class="luft-maps-icon luft-karten-icon" id="btnLuftMapsOeffnen" title="Google Maps öffnen"><svg width="46" height="46" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
           <path d="M6 12l11-4 14 4 11-4v28l-11 4-14-4-11 4z" fill="#e8f0fe"/>
           <path d="M17 8v28l14 4V12z" fill="#cfe3d2"/>
           <path d="M6 12l11-4v28l-11 4z" fill="#d6e4fb"/>
@@ -3692,15 +3697,6 @@ function ansichtLuftlinienTool(){
   // laessig -- stattdessen nach dem Rendern die TATSAECHLICHE Hoehe des
   // Buttons daneben messen und Breite/Hoehe des Badges explizit darauf
   // setzen (garantiert quadratisch, unabhaengig vom Textumbruch im Button).
-  requestAnimationFrame(()=>{
-    const btnZw = document.getElementById('btnLuftZwischenablage');
-    document.querySelectorAll('.luft-zwischenablage-reihe .luft-maps-icon').forEach(iconEl=>{
-      if(btnZw && btnZw.offsetHeight){
-        iconEl.style.width = btnZw.offsetHeight + 'px';
-        iconEl.style.height = btnZw.offsetHeight + 'px';
-      }
-    });
-  });
 
   const ergebnisEl = document.getElementById('luftErgebnis');
   // Eigene, deutlich groessere/auffaelligere Darstellung fuer das
@@ -11601,7 +11597,8 @@ function ansichtGkv(bearbeitenId){
         <input type="text" id="gkvPlzOrt" autocomplete="off" enterkeyhint="search" placeholder="PLZ Ort (PLZ oder Ort genügt)" value="${htmlEsc(gkvAdrTeile(st.adresse).plzOrt)}" aria-label="PLZ und Ort" style="margin-top:6px;">
         <div class="gkv-plz-info" id="gkvPlzInfo"></div></div>
       <div class="gkv-adr-knoepfe"><button type="button" class="btn-sekundaer" id="gkvKmBtn">Wegegeld ermitteln</button><button type="button" class="btn-sekundaer" id="gkvKarteBtn" title="Wegegeld-Karte NFP Offenburg">🗺 Karte</button></div>
-      <div class="gkv-zeitinfo" id="gkvKmInfo">${st.kmInfo || ''}</div></div>
+      <div class="gkv-zeitinfo" id="gkvKmInfo">${st.kmInfo || ''}</div>
+      <div class="routen-karte" id="gkvRouteKarte"></div></div>
     </div>
     <div class="profil-leiste gkv-profile" id="gkvProfile"></div>
     <div id="gkvListe"></div>
@@ -11769,7 +11766,7 @@ function ansichtGkv(bearbeitenId){
   el('gkvPlzOrt').oninput = ()=> el('gkvAdresse').oninput();
   el('gkvPlzOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(el('gkvAdresse'), el('gkvPlzOrt'), el('gkvPlzInfo')).then(()=>{ st.adresse = adrLesen(); }));
   el('gkvPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); el('gkvKmBtn').click(); } };
-  el('gkvAdresse').oninput = ()=>{ st.adresse = adrLesen(); if(st.kmInfo){ st.kmInfo = ''; st.kmStufe = ''; st.kmGeo = null; el('gkvKmInfo').textContent = 'Adresse geändert – „Luftlinie“ erneut tippen.'; } };
+  el('gkvAdresse').oninput = ()=>{ st.adresse = adrLesen(); routenKarteSetzen('gkvRouteKarte', null, null); if(st.kmInfo){ st.kmInfo = ''; st.kmStufe = ''; st.kmGeo = null; el('gkvKmInfo').textContent = 'Adresse geändert – „Luftlinie“ erneut tippen.'; } };
   el('gkvAdresse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); el('gkvPlzOrt').focus(); } };
   el('gkvKmBtn').onclick = async ()=>{
     await gkvPlzOrtErgaenzen(el('gkvAdresse'), el('gkvPlzOrt'), el('gkvPlzInfo'));
@@ -11801,6 +11798,8 @@ function ansichtGkv(bearbeitenId){
     st.kmInfo = text + (ok ? '' : ' · <i>kommt mit einem Besuch (01418) dazu</i>') + ' · <a href="#" class="gkv-karte-link">auf der Karte prüfen</a>';
     el('gkvKmInfo').innerHTML = st.kmInfo;
     zeichnen();
+    // Routenkarte ab Startadresse (Einstellung GKV) zur Einsatzstelle
+    if(st.kmGeo) gkvStartGeoHolen().then(s=> routenKarteSetzen('gkvRouteKarte', s, st.kmGeo, undefined, adrLesen()));
   }
   el('gkvKmInfo').addEventListener('click', (ev)=>{ if(ev.target.classList.contains('gkv-karte-link')){ ev.preventDefault(); el('gkvKarteBtn').click(); } });
   el('gkvKarteBtn').onclick = async ()=>{
@@ -12115,6 +12114,21 @@ async function routeMitWeg(start, ziel){
   const data = await res.json();
   if(!data.routes || !data.routes.length) return [];
   return data.routes.map(r=> ({ km: r.distance / 1000, minuten: r.duration / 60, coords: (r.geometry && r.geometry.coordinates) || [] }));
+}
+// Routenkarte (Wegegeld-Karte NFP mit Fahrstrecke) in einen Container zeichnen
+// -- genutzt von LS, PT und GKV. Ohne "weg" wird die Strecke selbst geholt.
+// Jeder Aufruf ersetzt den Inhalt; ein veralteter, noch laufender Aufruf
+// zeichnet in einen bereits entfernten Rahmen und bleibt dadurch unsichtbar.
+async function routenKarteSetzen(el, start, ziel, weg, zielText){
+  if(typeof el === 'string') el = document.getElementById(el);
+  if(!el) return;
+  const rahmen = document.createElement('div');
+  el.replaceChildren(rahmen);
+  if(!start || !ziel) return;
+  if(weg === undefined){
+    try{ const r = await routeMitWeg(start, ziel); weg = (r && r.length) ? r[0].coords : null; }catch(_){ weg = null; }
+  }
+  try{ await luftKarteZeigen(rahmen, start, ziel, weg, zielText); }catch(_){}
 }
 // Ausschnitt der Wegegeld-Karte NFP unter dem Ergebnis: Start, Ziel, NFP,
 // Luftlinie (gestrichelt) und berechnete Fahrstrecke
@@ -12813,7 +12827,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v152';
+const APP_VERSION = 'v153';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14054,6 +14068,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         <button type="button" id="btnGoogleMapsRoute">Google Maps Route</button>
       </div>
       <div class="routenoptionen" id="routenoptionen"></div>
+      <div class="routen-karte" id="routeKarte"></div>
     </div>`);
 
   if(art==='ls'){
@@ -14495,8 +14510,12 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       if(!start){ info.textContent = 'Praxisadresse nicht auffindbar -- bitte in den Einstellungen prüfen.'; return; }
       const ziel = await geocode(zielAdresse);
       if(!ziel){ info.textContent = 'Zieladresse nicht gefunden.'; return; }
-      const einweg = await routeKm(start, ziel);
-      if(einweg===null){ info.textContent = 'Route nicht berechenbar.'; return; }
+      // Strecke MIT Verlauf holen (gleicher Routendienst, Route 1) -- der
+      // Verlauf wird unten in die Routenkarte eingezeichnet.
+      const routenW = await routeMitWeg(start, ziel);
+      if(!routenW.length){ info.textContent = 'Route nicht berechenbar.'; routenKarteSetzen('routeKarte', null, null); return; }
+      const einweg = routenW[0].km;
+      routenKarteSetzen('routeKarte', start, ziel, routenW[0].coords, zielAdresse);
       // Wie am PC: Fahrstrecke wird als Hin- und Rückfahrt gerechnet,
       // Luftlinie bleibt die reine Einfachstrecke (Grundlage für die
       // Wegegeld-Bänder und ggf. für die Reise-Entscheidung).
@@ -14524,6 +14543,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // simples "nicht gefunden" (Praxis-/Zieladresse) wird oben bereits
       // separat und ohne diesen Zusatz gemeldet.
       info.textContent = 'Route konnte nicht berechnet werden.'+keinInternetHinweisText()+' km bitte manuell eintragen.';
+      routenKarteSetzen('routeKarte', null, null);
     }
   }
 
