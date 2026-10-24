@@ -1138,6 +1138,33 @@
     --ds-mono:ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace; --ds-display:"Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Noto Serif", serif;}
   body.dunkel{--ds-gkv:#9b6cc4; --ds-gkv-hell:#2a2236; --ds-gkv-text:#cfb2ea; --ds-akzent:#ffb547; --ds-ls-hell:#1a2a3d; --ds-ls-text:#9cc4ee; --ds-pt-hell:#173024; --ds-pt-text:#8fd9a8;}
   .ds-live{margin:0 0 14px;}
+  .ds-dz .ds-zeile-live{border-bottom-left-radius:0; border-bottom-right-radius:0;}
+  .ds-live .ds-dz .ds-status{font-size:17px; font-weight:700;}
+  .ds-live .ds-dz .ds-status-unter{font-size:12.5px; color:var(--text-schwach);}
+  .ds-live .ds-dz .ds-zahlen{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:6px; margin-top:10px;}
+  .ds-live .ds-dz .ds-zahlen > span{background:var(--bg); border-radius:10px; padding:7px 9px; display:flex; flex-direction:column; gap:1px; min-width:0;}
+  .ds-live .ds-dz .ds-zahlen span{font-size:11px; font-weight:600; color:var(--text-schwach);}
+  .ds-live .ds-dz .ds-zahlen b{font-size:15px; font-weight:700; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ds-dz .ds-fort{display:flex; flex-direction:column; gap:5px; margin-top:10px;}
+  .ds-dz .ds-fort-zeile{display:flex; justify-content:space-between; gap:8px; font-size:12px; color:var(--text-schwach);}
+  .ds-dz .ds-fort-zeile b{color:var(--text); font-weight:600; white-space:nowrap;}
+  .ds-dz .ds-balken{height:7px; border-radius:4px; background:var(--grau-feld); overflow:hidden; display:block;}
+  .ds-dz .ds-balken i{display:block; height:7px; border-radius:4px; background:#7d4e9e;}
+  .ds-dz-auf{display:flex; justify-content:space-between; align-items:center; width:100%; margin:0; padding:9px 14px; box-sizing:border-box; font:inherit; font-size:13px; font-weight:600;
+    color:var(--text); background:var(--karte); border:1px solid var(--rand); border-top:0; border-radius:0 0 16px 16px; cursor:pointer;}
+  .ds-dz-auf[aria-expanded="true"]{border-radius:0;}
+  .ds-dz-auf[aria-expanded="true"] .ds-dz-pfeil{transform:rotate(180deg);}
+  .ds-dz-liste{background:var(--karte); border:1px solid var(--rand); border-top:0; border-radius:0 0 16px 16px; padding:4px 10px 8px;}
+  .ds-live .ds-dz-liste{margin-top:0;}
+  .ds-dz-fall{display:grid; grid-template-columns:44px auto minmax(0, 1fr) auto; align-items:center; gap:8px; width:100%; margin:0; padding:8px 4px; border:0; border-bottom:1px solid var(--rand); background:none; color:var(--text); font:inherit; font-size:13.5px; text-align:left; cursor:pointer;}
+  .ds-dz-fall:last-child{border-bottom:0;}
+  .ds-dz-zeit{font-variant-numeric:tabular-nums; color:var(--text-schwach);}
+  .ds-dz-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;}
+  .ds-dz-betrag{font-variant-numeric:tabular-nums;}
+  .ds-dz .ds-fall-marke{font-size:10.5px; font-weight:700; color:#fff; border-radius:5px; padding:2px 5px; background:var(--ls-farbe);}
+  .ds-dz .ds-fall-marke.pt{background:var(--pt-farbe);} .ds-dz .ds-fall-marke.gkv{background:#7d4e9e;}
+  .ds-live > .ds-dz + *, .ds-live > * + .ds-dz{margin-top:12px;}
+  .ds-neu-knopf.werkzeug .ds-code{background:#5b6576; font-size:12px;}
   .ds-live > * + *{margin-top:12px;}
   .ds-ring-knopf, .ds-zeile-live{display:block; width:100%; margin:0; padding:0; border:0; background:none; color:var(--text); font:inherit; text-align:left; cursor:pointer;}
   .ds-ring-knopf .ds-ring-grenzen{margin-bottom:2px;}
@@ -2365,7 +2392,7 @@ function fahrdienstZeilenAuswerten(zeilen){
 let fahrdienstAuswertungCache = null;
 
 async function ansichtFahrdienstAuswertung(){
-  setzeTitel('Fahrdienst-Auswertung', ansichtStart);
+  setzeTitel('Quartalsübersicht', ansichtStart);
   app.innerHTML = `
     <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Förderung der KVBW greift (GKV-Anteil mindestens 21,43 €/h im Fahrdienst Mo–Fr = 300 € je 14-h-Dienst, 50 €/h an Wochenenden, Feiertagen, 24.12. und 31.12. sowie immer im Sitzdienst). Die Dienstart steht im Fahrtenbuch in Spalte B unter dem Datum.</div>
     <div style="display:flex; gap:8px; margin-bottom:12px;">
@@ -3579,7 +3606,7 @@ function ansichtStart(){
           ? betaStartUntertitel()
           : gesamtOffen + ' lokal · ohne OneDrive-Anmeldung'}</span>
       </button>
-      <button class="btn-sekundaer btn-uebersicht${msGraphStatus==='angemeldet' ? '' : ' deaktiviert'}" id="btnAlleRechnungen">Fahrtenbuch-Auswertung
+      <button class="btn-sekundaer btn-uebersicht${msGraphStatus==='angemeldet' ? '' : ' deaktiviert'}" id="btnAlleRechnungen">Quartalsübersicht
         <span class="unter">${msGraphStatus==='angemeldet' ? 'Diensttage und Quartale' : 'OneDrive-Anmeldung nötig'}</span>
       </button>
     </div>`;
@@ -12119,30 +12146,30 @@ async function nfpKarteOeffnen(opt){
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
   const img = ov.querySelector('img'), fl = ov.querySelector('.nfp-flaeche'), sc = ov.querySelector('.nfp-scroll'), info = ov.querySelector('#nfpInfo');
-  // Kartenebene: KVBW-Karte (eigenes Bild) oder OSM (Ersatzkarte mit Zonen) -- Knopf oben rechts
-  const ebKnopf = ov.querySelector('.karte-ebene'), attrEl = ov.querySelector('.nfp-osm-attr');
-  let ebene = (LS.get('karte_ebene', 'kvbw') === 'osm' || !hg.eigen) ? 'osm' : 'kvbw';
-  const ebeneAnzeigen = (e, osmBild)=>{ ebene = e; karteEbeneKnopfSetzen(ebKnopf, e); attrEl.hidden = !(e === 'osm' && osmBild); };
-  if(ebene === 'osm'){
-    const u = hg.osm ? hg.url : await nfpOsmBildUrl();
-    img.src = u || bildUrl; ebeneAnzeigen('osm', !!u);
-  } else { img.src = bildUrl; ebeneAnzeigen('kvbw', false); }
-  ebKnopf.onclick = async (ev)=>{
-    ev.stopPropagation();
-    const neu = ebene === 'osm' ? 'kvbw' : 'osm';
-    ebKnopf.classList.add('laedt');
-    const u = neu === 'kvbw' ? await nfpKarteBildUrl() : await nfpOsmBildUrl();
-    ebKnopf.classList.remove('laedt');
-    if(!u){ appToastAnzeigen(neu === 'kvbw' ? 'Die KVBW-Karte gibt es nur mit OneDrive-Anmeldung.' : 'OSM-Karte gerade nicht verfügbar (Internet?).', 3200); return; }
-    img.src = u; ebeneAnzeigen(neu, neu === 'osm'); LS.set('karte_ebene', neu);
-  };
+  let wahl = null;
+  img.src = bildUrl;
+  // Knopf oben rechts: dieselbe Lage auf der OSM-Karte (darueber geoeffnet, Schliessen fuehrt hierher zurueck)
+  const ebKnopf = ov.querySelector('.karte-ebene');
+  karteEbeneKnopfSetzen(ebKnopf, 'kvbw');
+  ov.querySelector('.nfp-osm-attr').hidden = !hg.osm;
   // Weg, Luftlinie und Punkte (Start, NFP, Einsatzorte) wie in der kleinen Karte
   const W0 = NFP_KARTE.bild[0], H0 = NFP_KARTE.bild[1];
   const startGeo = opt.start || gkvStartGeo() || null;
   img.insertAdjacentHTML('afterend', '<svg class="nfp-ueber" viewBox="0 0 ' + W0 + ' ' + H0 + '" preserveAspectRatio="none" aria-hidden="true">' +
     '<polyline class="luft-weg" points=""/><line class="luft-linie" x1="0" y1="0" x2="0" y2="0" visibility="hidden"/></svg>');
   const wegEl = ov.querySelector('.nfp-ueber .luft-weg'), linieEl = ov.querySelector('.nfp-ueber .luft-linie');
-  const wegSetzen = (coords)=>{ wegEl.setAttribute('points', (coords || []).map(c=>{ const q = nfpGeoZuPixel(c[1], c[0]); return q.x.toFixed(1) + ',' + q.y.toFixed(1); }).join(' ')); };
+  let aktWeg = opt.weg || null;
+  ebKnopf.onclick = (ev)=>{
+    ev.stopPropagation();
+    const ziel = (wahl && wahl.geo) || (opt.adresse && opt.adresse.lat ? opt.adresse : null);
+    const pois = [];
+    if(startGeo) pois.push({ lat: startGeo.lat, lon: startGeo.lon, kl: 'start' });
+    if(ziel) pois.push({ lat: ziel.lat, lon: ziel.lon, kl: 'ziel' });
+    (opt.pois || []).forEach(q=> pois.push(q));
+    osmKarteOverlay({ pois, weg: aktWeg || [], linie: startGeo && ziel ? [startGeo, ziel] : null, nfp: true, rahmen: true,
+      fallKlick: opt.fallKlick ? (i)=>{ ov.querySelector('.nfp-zu').click(); opt.fallKlick(i); } : null }, (wahl && wahl.adresseText) || opt.adresseText || '');
+  };
+  const wegSetzen = (coords)=>{ aktWeg = coords || null; wegEl.setAttribute('points', (coords || []).map(c=>{ const q = nfpGeoZuPixel(c[1], c[0]); return q.x.toFixed(1) + ',' + q.y.toFixed(1); }).join(' ')); };
   const linieSetzen = (g)=>{
     if(!startGeo || !g){ linieEl.setAttribute('visibility', 'hidden'); return; }
     const a = nfpGeoZuPixel(startGeo.lat, startGeo.lon), b = nfpGeoZuPixel(g.lat, g.lon);
@@ -12179,7 +12206,7 @@ async function nfpKarteOeffnen(opt){
     const h = ov.querySelector('.nfp-hinweis');
     if(h){ h.insertAdjacentHTML('beforeend', '<br><button type="button" class="nfp-osm-speichern">Ersatzkarte als Datei speichern (für GitHub)</button>'); h.querySelector('.nfp-osm-speichern').onclick = nfpOsmKarteSpeichern; }
   }
-  let zoom = 1, wahl = null;
+  let zoom = 1;
   const setzeZoom = (z, mitte)=>{
     const alt = { x: (sc.scrollLeft + sc.clientWidth / 2) / fl.clientWidth, y: (sc.scrollTop + sc.clientHeight / 2) / Math.max(1, fl.clientHeight) };
     zoom = Math.max(1, Math.min(6, z)); fl.style.width = (zoom * 100) + '%';
@@ -12382,7 +12409,7 @@ async function nfpOsmBildUrl(){
   if(nfpOsmBildUrl.url) return nfpOsmBildUrl.url;
   if(nfpOsmBildUrl.laeuft) return nfpOsmBildUrl.laeuft;
   nfpOsmBildUrl.laeuft = (async ()=>{
-    const SCHL = './__nfp_osm_v1__';
+    const SCHL = './__nfp_osm_v3__';
     let cache = null;
     try{ cache = ('caches' in window) ? await caches.open('nfp-karte') : null; }catch(_){}
     let res = cache ? await cache.match(SCHL) : null;
@@ -12442,32 +12469,15 @@ async function nfpOsmZusammensetzen(){
   };
   await Promise.all([1, 2, 3, 4].map(arbeiter));
   if(fehler > kacheln.length * 0.15) return null;
-  // Zonen halbtransparent in den Farben der NFP-Karte, dazu kraeftige Grenzlinien
-  const r = nfpRaster(), zw = NFP_KARTE.w, zh = NFP_KARTE.h, zelle = NFP_KARTE.zelle;
-  const zc = document.createElement('canvas'); zc.width = zw; zc.height = zh;
-  const zg = zc.getContext('2d'), img = zg.createImageData(zw, zh);
-  const rgb = {};
-  Object.keys(NFP_ZONEN).forEach(k=>{ const h = NFP_ZONEN[k].farbe; rgb[k] = [1, 3, 5].map(o=> parseInt(h.substr(o, 2), 16)); });
-  for(let i = 0; i < r.length; i++){ const f = rgb[r[i]]; if(f) img.data.set([f[0], f[1], f[2], 80], i * 4); }
-  zg.putImageData(img, 0, 0);
-  g.imageSmoothingEnabled = true;
-  g.drawImage(zc, 0, 0, zw * zelle, zh * zelle);
-  const zoneAn = (i, j)=> (i < 0 || j < 0 || i >= zw || j >= zh) ? 0 : r[j * zw + i];
-  const innen = (a, b)=> (rgb[a] && rgb[b]) ? Math.min(a, b) : (rgb[a] ? a : (rgb[b] ? b : 0));
-  g.lineWidth = 3; g.lineCap = 'round';
-  for(let j = 0; j < zh; j++) for(let i = 0; i < zw; i++){
-    const a = zoneAn(i, j);
-    [[1, 0], [0, 1]].forEach(([di, dj])=>{
-      const b = zoneAn(i + di, j + dj);
-      if(a === b || (!rgb[a] && !rgb[b])) return;
-      const k = innen(a, b); if(!k) return;
-      g.strokeStyle = NFP_ZONEN[k].farbe;
-      g.beginPath();
-      if(di){ g.moveTo((i + 1) * zelle, j * zelle); g.lineTo((i + 1) * zelle, (j + 1) * zelle); }
-      else { g.moveTo(i * zelle, (j + 1) * zelle); g.lineTo((i + 1) * zelle, (j + 1) * zelle); }
-      g.stroke();
-    });
-  }
+  // Zonen halbtransparent in den Farben der NFP-Karte, mit Grenzlinien (geglaettete Umrisse)
+  const ringe = nfpZonenRinge();
+  ['5', '4', '3', '2', '1'].forEach(k=>{
+    if(!NFP_ZONEN[k] || !ringe[k] || !ringe[k].length) return;
+    const pfad = new Path2D();
+    ringe[k].forEach(ring=>{ ring.forEach((q, i)=> i ? pfad.lineTo(q.x, q.y) : pfad.moveTo(q.x, q.y)); pfad.closePath(); });
+    g.globalAlpha = .32; g.fillStyle = NFP_ZONEN[k].farbe; g.fill(pfad, 'evenodd');
+    g.globalAlpha = 1; g.strokeStyle = NFP_ZONEN[k].farbe; g.lineWidth = 3; g.lineJoin = 'round'; g.stroke(pfad);
+  });
   // Quellenangabe auch ins Bild
   const t = '© OpenStreetMap-Mitwirkende';
   g.font = '600 22px sans-serif';
@@ -12520,6 +12530,7 @@ function osmAusschnitt(d, opt){
   }
   const P = (g)=> osmWelt(g.lat, g.lon, z), f = (v)=> v.toFixed(1);
   let svg = '<svg viewBox="' + f(x0) + ' ' + f(y0) + ' ' + f(bw) + ' ' + f(bh) + '" preserveAspectRatio="none" aria-hidden="true">';
+  if(d.rahmen && typeof NFP_KARTE !== 'undefined') svg += osmKartenBereichSvg(z, opt.ebene === 'kvbw' && opt.kvbwUrl ? opt.kvbwUrl : null);
   if(d.rahmen && typeof NFP_KARTE !== 'undefined'){
     const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1], rand = [];
     for(let i = 0; i <= 8; i++) rand.push([W * i / 8, 0]);
@@ -12544,6 +12555,76 @@ function osmAusschnitt(d, opt){
   const html = '<div class="luft-karte-flaeche osm-flaeche" style="aspect-ratio:' + bw.toFixed(0) + ' / ' + bh.toFixed(0) + ';' + (opt.px ? ' width:' + bw.toFixed(0) + 'px;' : '') + '">' + kacheln + svg + '</div>';
   return { html, z, x0, y0, bw, bh };
 }
+// Inhalt des Wegegeld-Kartenbereichs auf der OSM-Karte (gestrichelter Bereich):
+// ohne kvbwUrl die Zonen halbtransparent in den Farben der NFP-Karte (exakt
+// je Zellenlauf umgerechnet), mit kvbwUrl das KVBW-Kartenbild selbst, in 4x4
+// Stuecken lagerichtig eingepasst (die Karte ist leicht verzerrt).
+// Zonengrenzen in voller Aufloesung aus dem KVBW-Kartenbild ausgelesen
+// (Farbklassen, Strassen/Schrift herausgefiltert, gegen das Zonenraster
+// geprueft, geglaettet), als Umrisse in Kartenpixeln, delta-kodiert.
+const NFP_ZONEN_KONTUR = {"1":"694,1015 -7,0 -10,-3 -29,-17 -17,-7 -7,-7 -3,-6 6,-10 17,-14 12,-6 10,-13 18,-12 16,-7 28,10 5,4 2,5 -3,5 -16,17 -4,6 1,6 7,15 -2,10 -12,19 -12,5","2":"737,1089 -5,-1 -3,-6 2,-39 -4,-5 -14,-11 -7,-15 14,-27 -1,-6 -7,-14 1,-6 3,-5 16,-17 3,-5 -2,-5 -4,-3 -22,-7 -7,-6 1,-18 2,-8 12,-19 -1,-5 -10,-15 2,-11 6,-4 6,3 8,7 6,19 23,16 13,12 4,8 -1,12 2,4 4,3 11,1 4,3 12,19 12,15 3,8 -8,33 -12,25 -7,6 -18,1 -9,7 -5,9 -12,36 -5,8 -6,3|573,983 -6,0 -5,-2 -9,-7 -3,-5 4,-12 1,-20 3,-10 4,-3 16,-6 20,-5 40,-29 18,-18 8,-2 5,2 3,4 1,5 -7,17 0,37 -6,11 -32,24 -10,11 -45,8","3":"625,1217 -6,0 -6,-2 -19,-27 -35,-23 -7,-9 -7,-16 -10,-11 -9,-6 -20,-8 -28,-22 -14,-14 -9,-5 -15,-4 -7,-7 -3,-10 1,-22 -2,-16 7,-9 14,-6 6,-5 6,-7 2,-8 -5,-11 -19,-12 -5,-8 -2,-7 -2,-16 1,-25 5,-10 8,-6 13,-2 38,1 5,-2 4,-4 2,-7 -13,-22 -1,-17 4,-33 4,-9 5,-5 9,-1 16,7 27,5 10,7 16,18 7,3 7,0 12,-8 18,-26 23,-17 17,-25 19,-14 14,-13 11,-5 21,-2 10,-3 19,-17 8,-3 7,4 13,13 18,13 11,19 5,5 7,4 18,0 9,7 1,8 -6,20 4,31 7,30 11,19 5,4 5,0 17,-12 7,-3 7,3 5,5 2,11 -9,25 -6,27 2,11 8,18 1,12 -5,11 -8,4 -26,-3 -15,0 -10,3 -11,8 -17,19 -1,12 7,27 0,31 -10,37 0,29 -6,28 0,18 -3,8 -5,6 -8,3 -36,-12 -12,-12 -14,-21 -7,-5 -9,-1 -10,2 -10,7 -7,7 -15,22 -14,10 -16,8 -26,6|738,1089 6,-3 5,-9 11,-35 5,-9 9,-7 18,-1 7,-6 12,-25 8,-33 -3,-8 -12,-15 -12,-19 -4,-3 -11,-1 -4,-3 -2,-4 1,-12 -4,-8 -13,-12 -23,-16 -6,-19 -8,-7 -6,-3 -6,4 -2,11 10,15 1,5 -12,19 -3,21 -3,7 -26,15 -4,0 -1,-34 7,-22 -6,-7 -8,0 -21,19 -40,29 -20,5 -19,8 -2,4 -3,27 -4,12 6,8 12,6 34,-6 16,-1 12,12 18,7 29,17 12,3 16,-1 8,14 14,10 4,5 -2,39 3,6 6,1","4":"815,1500 -7,0 -4,-1 -4,-4 -3,-14 -4,-6 -11,-10 -19,-9 -24,-4 -55,-1 -15,3 -23,14 -6,1 -11,-7 -30,-31 -11,-6 -7,2 -23,15 -11,14 -7,3 -20,2 -25,-4 -47,12 -27,-4 -26,-2 -6,-5 -11,-23 2,-32 -4,-13 -18,-24 -19,-31 -22,-25 -17,-13 0,-4 4,-24 -4,-13 -6,-13 -6,-7 -8,-4 -39,-3 -8,-3 -11,-11 -6,-18 0,-15 7,-23 1,-10 -4,-30 -10,-25 -2,-12 11,-29 3,-15 8,-53 -1,-45 5,-9 2,-7 -2,-22 18,-73 10,-33 37,-134 16,-48 13,-56 12,-7 43,-19 15,-18 15,-13 10,-2 16,3 11,-4 8,-9 11,-17 12,-10 7,0 18,6 9,0 9,-3 14,-12 20,-25 6,-4 22,-1 13,8 14,-5 10,7 6,2 20,-5 22,1 13,4 18,13 11,5 13,1 15,-5 17,5 6,-2 6,-5 17,-28 8,-8 9,-4 10,2 13,12 9,4 9,-1 17,-8 8,0 34,21 8,3 10,-4 20,-16 8,-4 5,1 4,7 -1,6 -16,15 -4,10 0,13 5,11 7,6 9,2 7,-1 14,-7 4,0 3,4 5,14 9,15 6,3 18,1 5,5 0,6 -8,20 0,11 8,25 10,20 1,7 -1,8 -12,22 0,9 12,27 1,14 2,6 5,7 16,8 11,10 6,8 6,19 7,11 23,20 21,22 0,5 -8,18 6,23 -1,8 -2,6 -4,3 -5,0 -35,-12 -10,4 -5,7 -8,22 -10,17 -4,26 -4,5 -16,12 -6,13 0,6 2,9 9,10 11,4 24,-6 11,4 3,6 -46,72 -2,9 1,17 5,34 6,15 0,6 -14,18 -5,10 0,9 4,12 -1,9 -12,17 -21,20 -4,8 3,12 16,26 0,20 -4,5 -12,11 -16,25 -21,22 -4,10 1,18 -2,5 -21,16 -4,0 -4,-2 -13,-14 -4,-10 0,-11 -3,-5 -5,-1 -6,6 -4,14 4,22 -3,33 7,21 -3,9 -7,4 -11,0 -10,3 -22,12 -23,0 -11,2|626,1217 25,-6 16,-8 14,-10 15,-22 7,-7 10,-7 10,-2 9,1 7,5 14,21 12,12 36,12 8,-3 5,-6 3,-8 0,-18 6,-28 0,-29 10,-37 0,-31 -7,-27 1,-12 17,-19 11,-8 10,-3 15,0 26,3 8,-4 5,-11 -1,-12 -8,-18 -2,-11 6,-27 9,-25 -2,-11 -5,-5 -7,-3 -7,3 -17,12 -5,0 -5,-4 -11,-19 -7,-30 -4,-31 6,-20 -1,-8 -9,-7 -18,0 -7,-4 -5,-5 -11,-19 -18,-13 -13,-13 -7,-4 -8,3 -19,17 -10,3 -21,2 -11,5 -14,13 -19,14 -17,25 -23,17 -18,26 -12,8 -7,0 -7,-3 -16,-18 -10,-7 -27,-5 -16,-7 -9,1 -5,5 -4,9 -4,33 1,17 13,22 -2,7 -4,4 -5,2 -38,-1 -13,2 -8,6 -5,10 -1,25 2,16 2,7 5,8 19,12 5,11 -2,8 -6,7 -6,5 -14,6 -7,9 2,16 -1,22 3,10 7,7 15,4 9,5 14,14 28,22 20,8 9,6 10,11 7,16 7,9 35,23 19,27 6,2 7,0","5":"1165,1414 -34,-3 -64,4 -30,-10 -16,4 -17,-3 -29,3 -10,-4 -5,-6 -1,-19 4,-12 21,-22 16,-25 13,-11 3,-6 -1,-20 -15,-25 -3,-12 4,-8 21,-20 12,-17 1,-9 -4,-12 0,-9 5,-10 14,-18 0,-6 -6,-15 -5,-34 -1,-17 2,-9 46,-72 -3,-6 -11,-4 -24,6 -11,-4 -9,-10 -2,-9 0,-7 6,-12 16,-12 4,-5 4,-26 10,-17 8,-22 5,-7 10,-4 35,12 5,0 4,-3 2,-6 1,-8 -6,-23 8,-20 -4,-8 -40,-37 -6,-10 -7,-18 -5,-9 -12,-11 -16,-8 -6,-8 -2,-19 -12,-27 0,-9 12,-22 1,-8 -1,-7 -10,-20 -8,-25 0,-11 8,-20 0,-6 -5,-5 -18,-1 -6,-3 -9,-15 -5,-14 -3,-4 -4,0 -14,7 -7,1 -9,-2 -7,-6 -5,-13 0,-12 5,-9 15,-15 1,-4 -3,-8 -3,-2 -6,2 -12,6 -14,13 -9,3 -8,-3 -34,-21 -8,0 -17,8 -9,1 -9,-4 -13,-12 -10,-2 -9,4 -8,8 -17,28 -6,5 -6,2 -17,-5 -15,5 -13,-1 -11,-5 -18,-13 -13,-4 -22,-1 -20,5 -6,-2 -10,-7 -14,5 -13,-8 -22,1 -6,4 -20,25 -16,12 -16,3 -18,-6 -7,0 -12,10 -14,21 -7,6 -9,3 -15,-3 -10,2 -13,9 -14,19 -7,5 -49,20 -4,-1 -3,-6 0,-9 5,-10 33,-54 22,-44 13,-17 10,-6 7,-2 28,13 23,2 10,-4 14,-13 -1,-7 -7,-4 -27,-1 -14,3 -13,0 -8,-2 -6,-6 -3,-5 0,-6 5,-18 7,-13 11,-13 11,-8 40,-18 11,-4 20,-3 6,-2 5,-7 1,-11 4,-6 22,-24 13,-7 34,-6 18,5 16,11 17,-9 7,1 12,4 5,-1 0,-10 -2,-9 -4,-6 -7,-3 -28,-6 -34,13 -7,-4 -1,-8 6,-10 20,-19 26,-28 54,-67 15,-13 5,0 4,3 1,9 -4,8 -20,16 -8,11 -1,10 5,7 16,7 6,0 6,-3 8,-9 10,-21 16,-20 11,-10 10,-1 6,3 6,5 4,6 0,5 -3,5 -4,2 -15,-3 -8,2 -3,6 3,8 6,5 10,4 28,-7 7,0 8,2 16,17 13,11 3,6 -4,12 5,5 16,-3 21,5 29,-1 3,-6 -5,-11 1,-6 14,-20 26,-21 10,-6 9,-2 22,3 9,8 1,6 -15,16 -14,33 -5,4 -12,2 -6,7 0,5 3,11 4,6 4,3 7,-3 18,-25 11,-9 8,0 15,12 12,3 11,-4 42,-22 13,-2 7,2 24,13 6,7 -2,5 -8,14 3,16 -12,10 -1,4 1,3 8,6 22,3 19,5 4,5 7,15 13,16 1,5 -2,5 -17,14 -1,5 2,3 34,20 6,8 7,13 7,7 7,2 16,0 7,2 27,30 -1,6 -2,3 -3,0 -19,-16 -8,-4 -31,-2 -18,-5 -9,2 -1,4 0,6 12,26 3,10 0,16 -7,16 8,18 -1,16 2,17 -3,6 -7,5 -5,0 -18,-6 -8,3 -3,7 2,5 6,5 11,1 19,-3 6,2 6,5 2,6 -1,15 8,19 -4,21 2,3 14,9 6,16 -4,14 -11,9 -9,3 -14,-1 -22,-10 -5,5 2,8 9,8 46,11 4,5 -2,13 3,5 5,2 11,0 10,3 8,4 3,6 -2,6 -9,4 -22,-3 -26,-1 -15,-2 -9,3 -3,3 0,3 7,5 21,0 24,3 12,7 9,8 2,10 0,8 -3,10 -10,16 -1,6 1,9 8,15 -3,15 6,5 18,5 9,9 4,8 2,19 21,30 15,31 0,6 -3,8 -16,23 -3,15 -8,7 -13,6 -39,-2 -7,5 1,5 6,4 28,-1 16,2 5,6 -1,4 -3,3 -9,5 -28,7 -7,4 -10,19 -4,16 -7,7 -6,-1 -11,-9 -20,-3 -6,3 -5,7 2,12 17,21 5,13 5,4 13,7 3,4 -6,30 -7,5 -13,3 -4,6 5,6 18,5 8,8 2,7 1,28 -4,7 -11,11 -2,8 3,6 5,4 16,5 6,5 5,7 -1,6 -5,5 -9,3 -47,-1 -8,-4 -1,-16 -3,-4 -5,-3 -67,-1 -8,5 0,4 4,11 -4,15 3,4 5,4 31,0 23,3 58,-2 9,3 7,8 1,7 -3,10 -16,16 -3,5 0,16 -5,9 -11,5 -21,-2 -17,3|1351,517 -24,-3 -5,-4 0,-5 3,-4 6,-2 27,0 11,-5 6,-9 4,-17 14,-20 3,-9 -1,-6 -5,-6 -5,-2 -14,1 -6,-1 -8,-4 -2,-7 6,-5 17,-5 12,0 9,3 17,12 6,7 2,6 -2,8 -14,18 -5,11 3,9 13,17 2,7 -1,7 -4,5 -7,2 -33,-5 -25,6|881,1758 -11,-1 -40,-12 -21,8 -19,3 -22,-10 -20,-5 -21,-12 -14,-4 -10,3 -22,14 -15,5 -10,0 -17,-6 -24,-4 -26,-15 -13,-4 -28,6 -23,-2 -25,-5 -31,-3 -26,0 -10,3 -14,13 -6,2 -4,-1 -2,-4 3,-19 -3,-5 -4,-2 -35,0 -19,-2 -17,1 -16,-4 -19,3 -17,-1 -15,-5 -23,-17 -2,-4 0,-3 10,-25 -3,-8 -11,-17 1,-7 5,-6 6,-1 14,5 21,-7 20,1 15,4 18,14 5,2 32,-20 8,-2 25,0 7,-2 7,-7 2,-7 -1,-7 -4,-3 -34,-7 -7,1 -26,14 -10,2 -20,-5 -21,1 -26,-2 -22,-11 -14,-4 -27,5 -12,-4 -3,-4 0,-5 5,-5 7,-3 11,-2 21,0 34,7 10,-5 7,-7 3,-7 3,-23 -3,-6 -9,-9 -1,-5 2,-5 11,-8 1,-5 -6,-6 -16,-6 -7,-1 -25,8 -20,-4 -8,0 -7,2 -5,7 1,7 6,4 41,0 6,3 1,4 -2,4 -17,4 -7,9 3,6 11,5 4,3 0,5 -6,6 -21,1 -18,-2 -28,2 -33,-16 -3,-3 1,-5 8,-15 4,-10 2,-30 -8,-29 -16,-80 -6,-44 1,-26 10,-38 3,-22 28,-63 3,-15 -2,-22 4,-19 38,-137 4,-11 5,-6 6,-2 4,5 0,34 -9,65 -13,36 2,12 10,25 4,30 -1,10 -8,25 0,11 3,10 9,16 7,6 45,5 8,4 7,7 6,13 4,13 -4,24 0,4 17,13 22,25 19,31 18,24 4,13 -2,32 11,23 6,5 26,2 27,4 47,-12 25,4 20,-2 7,-3 11,-14 23,-15 7,-2 12,7 28,29 11,8 6,-1 24,-14 13,-3 72,3 13,3 21,13 7,8 5,17 5,5 44,-2 23,-12 22,-4 7,-6 1,-8 -7,-19 3,-33 -4,-23 3,-12 9,-7 5,3 1,15 7,12 23,24 11,5 11,0 29,-4 33,0 16,2 76,-1 11,2 14,9 16,-8 7,-2 13,1 9,6 2,5 0,5 -4,5 -6,4 -10,1 -19,-4 -4,1 -1,6 8,13 1,5 -2,5 -7,6 -16,3 -32,0 -15,-3 -5,2 -3,4 1,8 7,5 31,0 12,5 9,7 6,12 -4,28 -9,16 -13,8 -21,6 -8,9 0,5 5,6 12,2 6,4 2,6 -3,5 -10,5 -9,-1 -21,5 -16,-2 -7,2 -5,4 -3,7 9,23 0,5 -3,4 -8,5 -54,13 -13,12 -7,3 -29,1 -15,-2 -20,4 -19,-4 -7,1 -4,4 -1,4 5,8 12,4 16,2 6,7 -1,5 -3,4 -20,7"};
+function nfpZonenRinge(){
+  if(nfpZonenRinge.r) return nfpZonenRinge.r;
+  const r = {};
+  Object.keys(NFP_ZONEN_KONTUR).forEach(z=>{
+    r[z] = NFP_ZONEN_KONTUR[z] ? NFP_ZONEN_KONTUR[z].split('|').map(ring=>{
+      let x = 0, y = 0;
+      return ring.split(' ').map(pr=>{ const t = pr.split(','); x += +t[0]; y += +t[1]; return { x, y }; });
+    }) : [];
+  });
+  return (nfpZonenRinge.r = r);
+}
+function nfpZonenGeo(){
+  if(nfpZonenGeo.d) return nfpZonenGeo.d;
+  const r = nfpRaster(), w = NFP_KARTE.w, h = NFP_KARTE.h, c = NFP_KARTE.zelle, cache = new Map();
+  const G = (x, y)=>{ const k = x + ',' + y; let g = cache.get(k); if(!g){ g = nfpPixelZuGeo(x * c, y * c); cache.set(k, g); } return g; };
+  const zone = (i, j)=> (i < 0 || j < 0 || i >= w || j >= h) ? 0 : r[j * w + i];
+  const flaechen = {}, grenzen = {};
+  Object.keys(NFP_ZONEN).forEach(k=>{ flaechen[k] = []; grenzen[k] = []; });
+  for(let j = 0; j < h; j++){
+    let i = 0;
+    while(i < w){
+      const v = zone(i, j); let e = i + 1;
+      while(e < w && zone(e, j) === v) e++;
+      if(flaechen[v]) flaechen[v].push([G(i, j), G(e, j), G(e, j + 1), G(i, j + 1)]);
+      i = e;
+    }
+  }
+  const innen = (a, b)=> (flaechen[a] && flaechen[b]) ? Math.min(a, b) : (flaechen[a] ? a : (flaechen[b] ? b : 0));
+  for(let j = 0; j < h; j++) for(let i = 0; i < w; i++){
+    const a = zone(i, j), rechts = zone(i + 1, j), unten = zone(i, j + 1);
+    if(a !== rechts){ const k = innen(a, rechts); if(k) grenzen[k].push([G(i + 1, j), G(i + 1, j + 1)]); }
+    if(a !== unten){ const k = innen(a, unten); if(k) grenzen[k].push([G(i, j + 1), G(i + 1, j + 1)]); }
+  }
+  return (nfpZonenGeo.d = { flaechen, grenzen });
+}
+function osmKartenBereichSvg(z, kvbwUrl){
+  const f = (v)=> v.toFixed(1), P = (g)=> osmWelt(g.lat, g.lon, z);
+  if(kvbwUrl){
+    const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1], n = 4;
+    const id = 'kv' + Math.random().toString(36).slice(2, 7);
+    let defs = '<defs>', bild = '';
+    for(let j = 0; j < n; j++) for(let i = 0; i < n; i++){
+      const x0 = W * i / n, x1 = W * (i + 1) / n, y0 = H * j / n, y1 = H * (j + 1) / n;
+      const p00 = P(nfpPixelZuGeo(x0, y0)), p10 = P(nfpPixelZuGeo(x1, y0)), p01 = P(nfpPixelZuGeo(x0, y1));
+      const a = (p10.x - p00.x) / (x1 - x0), b = (p10.y - p00.y) / (x1 - x0), c = (p01.x - p00.x) / (y1 - y0), d = (p01.y - p00.y) / (y1 - y0);
+      const e = p00.x - a * x0 - c * y0, ff = p00.y - b * x0 - d * y0;
+      defs += '<clipPath id="' + id + i + j + '"><rect x="' + f(x0 - 1) + '" y="' + f(y0 - 1) + '" width="' + f(x1 - x0 + 2) + '" height="' + f(y1 - y0 + 2) + '"/></clipPath>';
+      bild += '<image href="' + kvbwUrl + '" x="0" y="0" width="' + W + '" height="' + H + '" preserveAspectRatio="none" clip-path="url(#' + id + i + j + ')" transform="matrix(' +
+        [a, b, c, d, e, ff].map(v=> v.toFixed(5)).join(' ') + ')"/>';
+    }
+    return defs + '</defs>' + bild;
+  }
+  const ringe = nfpZonenRinge(), cache = osmKartenBereichSvg.cache || (osmKartenBereichSvg.cache = new Map());
+  const PG = (q)=>{ const k = q.x + ',' + q.y; let g = cache.get(k); if(!g){ g = nfpPixelZuGeo(q.x, q.y); cache.set(k, g); } return P(g); };
+  let out = '';
+  ['5', '4', '3', '2', '1'].forEach(k=>{
+    if(!NFP_ZONEN[k] || !ringe[k] || !ringe[k].length) return;
+    const d = ringe[k].map(ring=> 'M' + ring.map(q=>{ const p = PG(q); return f(p.x) + ' ' + f(p.y); }).join('L') + 'Z').join('');
+    out += '<path d="' + d + '" fill="' + NFP_ZONEN[k].farbe + '" fill-opacity=".32" fill-rule="evenodd" stroke="' + NFP_ZONEN[k].farbe + '" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
+  });
+  return out;
+}
 // Vollbild-Karte aus OSM: verschieben per Wischen, Zoom ueber - / +
 const KARTE_EBENE_KNOPF = '<button type="button" class="karte-ebene" aria-label="Kartenebene wechseln"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg><span></span></button>';
 // Knopf zeigt die Ebene, zu der man wechselt (wie bei Google Maps)
@@ -12563,10 +12644,10 @@ function osmKarteOverlay(d, text){
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
   const sc = ov.querySelector('.osm-scroll');
-  let z = 12, mitte = null, akt = null;
+  let z = 12, mitte = null, akt = null, ebene = 'zonen', kvbwUrl = null;
   const zeichnen = ()=>{
     const vw = sc.clientWidth || 360, vh = sc.clientHeight || 500;
-    akt = osmAusschnitt(d, { z, mitte, w: vw * 3, h: vh * 3, px: true, r: 9 });
+    akt = osmAusschnitt(d, { z, mitte, w: vw * 3, h: vh * 3, px: true, r: 9, ebene, kvbwUrl });
     sc.innerHTML = akt.html;
     const m = osmWelt(mitte.lat, mitte.lon, z);
     sc.scrollLeft = m.x - akt.x0 - vw / 2; sc.scrollTop = m.y - akt.y0 - vh / 2;
@@ -12583,17 +12664,18 @@ function osmKarteOverlay(d, text){
     z = Math.max(3, Math.min(18, z + Number(b.dataset.zoom))); zeichnen();
   });
   ov.querySelector('.osm-alles').onclick = alles;
-  const zu = ()=>{ ov.remove(); document.body.classList.remove('nfp-offen'); };
+  const zu = ()=>{ ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); };
   ov.querySelector('.nfp-zu').onclick = zu;
-  // Wechsel zur KVBW-Karte: dieselben Daten in der Wegegeld-Karte (Teile ausserhalb fehlen dort)
+  // Umschalter: im gestrichelten Bereich Zonen (OSM) oder das KVBW-Kartenbild
   const eb = ov.querySelector('.karte-ebene'); karteEbeneKnopfSetzen(eb, 'osm');
   eb.onclick = async ()=>{
-    if(!await nfpKarteBildUrl()){ appToastAnzeigen('Die KVBW-Karte gibt es nur mit OneDrive-Anmeldung.', 3200); return; }
-    LS.set('karte_ebene', 'kvbw'); zu();
-    const st = (d.pois || []).find(q=> q.kl === 'start'), zi = (d.pois || []).find(q=> q.kl === 'ziel');
-    appToastAnzeigen('Teile außerhalb der KVBW-Karte werden dort nicht angezeigt.', 3000);
-    nfpKarteOeffnen({ start: st || null, adresse: zi ? { lat: zi.lat, lon: zi.lon } : null, adresseText: text || '', weg: d.weg,
-      pois: (d.pois || []).filter(q=> q.kl !== 'start' && q.kl !== 'ziel'), fallKlick: d.fallKlick });
+    if(ebene === 'zonen'){
+      eb.classList.add('laedt'); kvbwUrl = kvbwUrl || await nfpKarteBildUrl(); eb.classList.remove('laedt');
+      if(!kvbwUrl){ appToastAnzeigen('Die KVBW-Karte gibt es nur mit OneDrive-Anmeldung.', 3200); return; }
+      ebene = 'kvbw';
+    } else ebene = 'zonen';
+    if(akt) mitte = osmGeo(akt.x0 + sc.scrollLeft + sc.clientWidth / 2, akt.y0 + sc.scrollTop + sc.clientHeight / 2, z);
+    karteEbeneKnopfSetzen(eb, ebene === 'kvbw' ? 'kvbw' : 'osm'); zeichnen();
   };
   sc.addEventListener('click', (ev)=>{
     const t = ev.target.closest && ev.target.closest('[data-fall]');
@@ -12644,7 +12726,7 @@ function standortKarteFaelle(info){
     const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS); if(!drin(t)) return;
     const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim();
     const adr = abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
-    out.push({ art, t, name: (w.txtName || '').trim() || 'ohne Namen', adr, oeffnen });
+    out.push({ art, t, name: (w.txtName || '').trim() || 'ohne Namen', adr, oeffnen, euro: w.txtBetrag ? parseFloat(String(w.txtBetrag).replace(/\./g, '').replace(',', '.')) : null });
   };
   const weg = ()=>{ try{ vorbereiteRuecksprung(); }catch(_){} einstellungenOffen = false; };
   try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=> f && lsPt(art, f.werte, ()=>{ weg(); ansichtMaske(art, i); }))); }catch(_){}
@@ -12653,7 +12735,7 @@ function standortKarteFaelle(info){
     gkvFaelleLaden().forEach(f=>{
       if(!f || f.name === GKV_PSEUDO_NAME) return;
       const t = designFallZeit(f); if(!drin(t)) return;
-      out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', adr: f.adresse || '', geo: f.geo || null, oeffnen: ()=>{ weg(); ansichtGkv(f.id); } });
+      out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', adr: f.adresse || '', geo: f.geo || null, euro: f.euro, oeffnen: ()=>{ weg(); ansichtGkv(f.id); } });
     });
   }catch(_){}
   // gleiche Person/Zeit doppelt (Entwurf + gespeicherter Fall) nur einmal
@@ -13434,7 +13516,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v158';
+const APP_VERSION = 'v161';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -13507,12 +13589,16 @@ const LIVE_DIENSTZEITEN = {
   Telemedizin: { werktag: [], wochenende: [] }
 };
 const LIVE_ANZEIGEN = [
-  { k: 'karte', titel: 'Karte mit Balken', text: 'Dienstart und Zeit, GKV-Summe gegen Pauschale, voraussichtliche Förderung.' },
-  { k: 'ring', titel: 'Uhr-Ring mit Zeitleiste', text: 'Uhrzeit und Restzeit im Ring, Einsätze als Punkte und darunter als Liste.' },
-  { k: 'zeile', titel: 'Kompakte Zeile', text: 'Status des Dienstes mit Fällen, GKV-Summe und Förderung.' },
+  { k: 'ring', titel: 'Uhr', text: 'Uhrzeit und Restzeit des Dienstes im Ring, Einsätze als Punkte.' },
+  { k: 'dienst', titel: 'Dienst', text: 'Status, Fälle, GKV-Summe und Förderung mit Balken; darunter die Fälle des Dienstes als einklappbare Liste.' },
   { k: 'standort', titel: 'Standortkarte', text: 'Kleine Karte mit deinem Standort und der Zone; ausgeklappt alle Einsatzorte dieses Dienstes (LS, PT, GKV).' }
 ];
-function liveEinst(){ const l = (ladeEinstellungen() || {}).liveDienst || {}; return { karte: !!l.karte, ring: !!l.ring, zeile: !!l.zeile, standort: !!l.standort, auto: !!l.auto }; }
+function liveEinst(){
+  const l = (ladeEinstellungen() || {}).liveDienst || {};
+  // "Karte mit Balken" und "Kompakte Zeile" sind jetzt ein Feature "Dienst"
+  const dienst = l.dienst !== undefined ? !!l.dienst : !!(l.karte || l.zeile);
+  return { dienst, ring: !!l.ring, standort: !!l.standort, auto: !!l.auto };
+}
 function liveAuto(){ return liveEinst().auto; }
 // Standard-Fahrdienstfenster um einen Zeitpunkt: Werktag 18-08, Wochenende/Feiertag/24.12./31.12. 08-08
 function designDienstFenster(t){
@@ -13754,6 +13840,7 @@ const DS_ICON = {
   liste: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>',
   plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
   auto: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16l2-6h11l3 6v3H3z"/><circle cx="7" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/><path d="M7 10l1.5-4h6L16 10"/></svg>',
+  werkzeug: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4 4 0 0 0-5 5L4 16l4 4 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>',
   regler: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
   stift: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
   pfeil: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'
@@ -13776,6 +13863,16 @@ function designNav(eintraege){
 async function designNavAktion(k){
   if(k === 'start'){ if(aktuelleAnsichtIstHauptbildschirm) window.scrollTo({ top: 0, behavior: 'smooth' }); else ansichtStart(); return; }
   if(k === 'einst'){ if(!einstellungenOffen) document.getElementById('btnEinstellungen').click(); return; }
+  if(k === 'werkzeuge'){
+    const a = await betaOverlay.ergebnis('Werkzeuge', '<div class="ds-neu-wahl">' +
+      '<button type="button" class="ds-neu-knopf werkzeug" data-neu="luft"><span class="ds-code">km</span><span><b>Luftlinie berechnen</b><small>Entfernung, Fahrstrecke, Zone</small></span></button>' +
+      '<button type="button" class="ds-neu-knopf werkzeug" data-neu="apo"><span class="ds-code">Apo</span><span><b>Apotheken-Notdienst</b><small>Umkreissuche aponet.de</small></span></button></div>',
+      (function(){ setTimeout(()=> document.querySelectorAll('.beta-overlay [data-neu]').forEach(b=> b.onclick = ()=> betaOverlay.loesen && betaOverlay.loesen(b.dataset.neu)), 0); return [{ label: 'Schließen', akt: 'nein' }]; })());
+    betaOverlay.schliessen();
+    if(a === 'luft'){ vorbereiteRuecksprung(); einstellungenOffen = false; ansichtLuftlinienTool(); }
+    else if(a === 'apo') notapothekenSucheOeffnen();
+    return;
+  }
   if(k === 'verwaltung'){ vorbereiteRuecksprung(); einstellungenOffen = false; if(betaGesamtAktiv()) ansichtRechnungenGesamt(); else ansichtKorrigieren(); return; }
   if(k === 'fahrtenbuch'){
     if(msGraphStatus === 'angemeldet'){ vorbereiteRuecksprung(); einstellungenOffen = false; ansichtFahrdienstAuswertung(); return; }
@@ -13808,15 +13905,15 @@ function designGlobalNav(){
       const h = document.createElement('div');
       h.innerHTML = designNav([
         { k: 'start', icon: 'start', label: 'Start' }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen' },
-        { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch' },
-        { k: 'einst', icon: 'regler', label: 'Einstellungen' }]);
+        { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'fahrtenbuch', icon: 'auto', label: 'Quartale' },
+        { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge' }]);
       nav = h.firstElementChild; nav.id = 'dsGlobalNav';
       document.body.appendChild(nav);
       designNavWiring(nav.parentNode);
     }
     const t = String((document.getElementById('titel') || {}).textContent || '');
-    const akt = einstellungenOffen || /Einstellungen|Backups/.test(t) ? 'einst' : aktuelleAnsichtIstHauptbildschirm ? 'start'
-      : /Rechnungsverwaltung|Lokale Rechnungen/.test(t) ? 'verwaltung' : /Fahrdienst|Fahrtenbuch/.test(t) ? 'fahrtenbuch' : '';
+    const akt = einstellungenOffen || /Einstellungen|Backups/.test(t) ? '' : aktuelleAnsichtIstHauptbildschirm ? 'start'
+      : /Rechnungsverwaltung|Lokale Rechnungen/.test(t) ? 'verwaltung' : /Fahrdienst|Fahrtenbuch|Quartals/.test(t) ? 'fahrtenbuch' : /Luftlinie|Apotheke/.test(t) ? 'werkzeuge' : '';
     nav.querySelectorAll('[data-nav]').forEach(b=> b.classList.toggle('an', b.dataset.nav === akt));
   }catch(_){}
 }
@@ -13856,17 +13953,47 @@ function designRingBlockHtml(info){
   return '<div class="ds-ring-block">' +
     '<div class="ds-kopfzeile">' + (info.modus === 'leer' ? 'LIVE-DIENST' : (DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + info.art).toUpperCase()) + '</div>' +
     '<button type="button" class="ds-ring-knopf" data-live="1" aria-label="Dienst wählen oder ändern">' + designRingHtml(info) + '</button>' +
-    (info.modus === 'leer' ? '' : '<section class="ds-foerd"><div><span class="ds-klein">FÖRDERUNG' + (info.modus === 'vorbei' ? '' : ' BISHER') + '</span><span class="ds-foerd-wert">' + betaEuro(info.foerderung) + '</span></div>' +
+    (true ? '' : '<section class="ds-foerd"><div><span class="ds-klein">FÖRDERUNG' + (info.modus === 'vorbei' ? '' : ' BISHER') + '</span><span class="ds-foerd-wert">' + betaEuro(info.foerderung) + '</span></div>' +
       '<div class="ds-foerd-rechts"><span>GKV ' + betaEuro(info.gkv) + '</span><span class="ds-schwach">Pauschale ' + betaEuro(info.pauschale) + '</span></div></section>' +
       '<section class="ds-zeitleiste"><h2 class="ds-klein">EINSÄTZE IN DIESEM DIENST</h2>' + designZeitleisteHtml(info) + '</section>') +
     '</div>';
+}
+// Dienst: kompakte Zeile + Balken (GKV gegen Pauschale) + einklappbare Fallliste
+function designDienstHtml(info){
+  const fe = info.fenster;
+  const status = { geplant: info.art + ' ab ' + designUhr(fe.von), laufend: info.art + ' läuft', vorbei: 'Dienst beendet' }[info.modus] || '';
+  const unter = (info.modus === 'laufend' ? 'bis ' + designUhr(fe.bis) + ' · ' : '') + designDienstUnter(info) + (info.auto ? ' · automatisch' : '');
+  let faelle = [];
+  try{ faelle = standortKarteFaelle(info).slice().reverse(); }catch(_){}
+  designDienstHtml.faelle = faelle;
+  const p = info.pauschale ? Math.min(100, Math.round(info.gkv / info.pauschale * 1000) / 10) : 0;
+  const auf = !!LS.get('dienst_liste_auf', false);
+  return '<div class="ds-dz">' +
+    '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status">' + htmlEsc(status) + '</span><span class="ds-status-unter">' + htmlEsc(unter) + '</span>' +
+      '<span class="ds-zahlen"><span><span>Fälle</span><b>' + faelle.length + '</b></span><span><span>GKV</span><b>' + betaEuro(info.gkv).replace(' €', '') + '</b></span>' +
+      '<span><span>Förderung</span><b>' + betaEuro(info.foerderung).replace(' €', '') + '</b></span></span>' +
+      '<span class="ds-fort"><span class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + betaEuro(info.gkv).replace(' €', '') + ' / ' + betaEuro(info.pauschale) + '</b></span>' +
+        '<span class="ds-balken"><i style="width:' + p + '%"></i></span></span></button>' +
+    '<button type="button" class="ds-dz-auf" aria-expanded="' + auf + '"><span>Fälle in diesem Dienst (' + faelle.length + ')</span><span class="ds-dz-pfeil" aria-hidden="true">▾</span></button>' +
+    '<div class="ds-dz-liste"' + (auf ? '' : ' hidden') + '>' +
+      (faelle.length ? faelle.map((f, i)=> '<button type="button" class="ds-dz-fall" data-dzfall="' + i + '"><span class="ds-dz-zeit">' + designUhr(f.t) + '</span>' +
+        '<span class="ds-fall-marke ' + f.art + '">' + f.art.toUpperCase() + '</span><span class="ds-dz-name">' + htmlEsc(f.name) + '</span>' +
+        '<span class="ds-dz-betrag">' + (f.euro != null && f.euro !== '' ? betaEuro(f.euro).replace(' €', '') : '') + '</span></button>').join('')
+        : '<div class="ds-leer">Noch keine Fälle in diesem Dienst.</div>') +
+    '</div></div>';
+}
+function designDienstWiring(wurzel){
+  const box = wurzel.querySelector('.ds-dz'); if(!box) return;
+  const knopf = box.querySelector('.ds-dz-auf'), liste = box.querySelector('.ds-dz-liste');
+  knopf.onclick = ()=>{ const auf = liste.hidden; liste.hidden = !auf; knopf.setAttribute('aria-expanded', String(auf)); LS.set('dienst_liste_auf', auf); };
+  box.querySelectorAll('[data-dzfall]').forEach(b=> b.onclick = ()=>{ const f = (designDienstHtml.faelle || [])[+b.dataset.dzfall]; if(f && f.oeffnen) f.oeffnen(); });
 }
 function liveAnzeigeHtml(info){
   const l = liveEinst();
   // ohne erkannten/gewaehlten Dienst keine Dienst-Anzeige (auch kein Hinweis)
   const dienst = info.modus !== 'leer';
-  if(!(dienst && (l.karte || l.ring || l.zeile)) && !l.standort) return '';
-  return '<div class="ds-live">' + (dienst && l.ring ? designRingBlockHtml(info) : '') + (dienst && l.karte ? designDienstKarteHtml(info) : '') + (dienst && l.zeile ? designZeileHtml(info) : '') +
+  if(!(dienst && (l.dienst || l.ring)) && !l.standort) return '';
+  return '<div class="ds-live">' + (dienst && l.ring ? designRingBlockHtml(info) : '') + (dienst && l.dienst ? designDienstHtml(info) : '') +
     (l.standort ? '<div class="sk-karte" id="skKarte"></div>' : '') + '</div>';
 }
 function designFallZeilenHtml(liste){
@@ -13912,7 +14039,14 @@ function designStartErgaenzen(){
     vor('<div class="ds-start ds-einhand"><div class="ds-zeile-oben"><span>' + DESIGN_WT[jetzt.getDay()] + ' ' + zz2(jetzt.getDate()) + '.' + zz2(jetzt.getMonth() + 1) + '. · ' + designUhr(jetzt) + '</span>' +
       '<span class="ds-sync' + (anmeldung ? ' an' : '') + '"><i></i>' + (anmeldung ? 'OneDrive' : 'nicht angemeldet') + '</span></div></div>');
   }
-  if(live){ vor(live); liveAutoAuffrischen(); if(document.getElementById('skKarte')) standortKarteZeichnen(info); }
+  // Einhand: Neuer-Fall-Kacheln ganz oben, darunter Uhr, Dienst, Karte
+  if(live){ if(d === 'einhand') reihe.insertAdjacentHTML('afterend', live); else vor(live); liveAutoAuffrischen(); if(document.getElementById('skKarte')) standortKarteZeichnen(info); designDienstWiring(app); }
+  // Werkzeuge stehen in der Leiste (Klinik, Einhand), Excel-Dateien in den Einstellungen
+  app.querySelectorAll('.start-abschnitt').forEach(a=>{
+    const t = ((a.querySelector('.trennlinie') || {}).textContent || '').trim();
+    if(d !== 'standard' && /^Excel/.test(t)) a.remove();
+    if((d === 'klinik' || d === 'einhand') && /^Werkzeuge/.test(t)) a.remove();
+  });
   if(d === 'klinik'){
     const offen = designOffeneFaelle().slice(0, 5);
     reihe.insertAdjacentHTML('afterend', '<section class="ds-offen"><div class="ds-abschnitt-kopf"><h2>Offene Fälle</h2>' +
@@ -13928,12 +14062,11 @@ function designStartErgaenzen(){
   }
   if(d === 'einhand'){
     const w = designWeiterFall();
-    vor('<div class="ds-start ds-einhand">' +
-      (w ? '<button type="button" class="ds-weiter" id="dsWeiter"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten</span><b>' + htmlEsc(w.titel) + '</b></span>' + DS_ICON.pfeil + '</button>' : '') +
-      '<div class="ds-klein ds-neu-titel">NEUER FALL</div></div>');
+    vor('<div class="ds-start ds-einhand"><div class="ds-klein ds-neu-titel">NEUER FALL</div></div>');
+    if(w) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand"><button type="button" class="ds-weiter" id="dsWeiter"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten</span><b>' + htmlEsc(w.titel) + '</b></span>' + DS_ICON.pfeil + '</button></div>');
     app.insertAdjacentHTML('beforeend', designNav([
       { k: 'start', icon: 'start', label: 'Start', an: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen', nurIcon: true },
-      { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch', nurIcon: true }, { k: 'einst', icon: 'regler', label: 'Einstellungen', nurIcon: true }]));
+      { k: 'fahrtenbuch', icon: 'auto', label: 'Quartalsübersicht', nurIcon: true }, { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge', nurIcon: true }]));
     if(w) document.getElementById('dsWeiter').onclick = w.oeffnen;
   }
   app.querySelectorAll('[data-live]').forEach(b=> b.onclick = async ()=>{ if(await liveDienstDialog()) ansichtStart(); });
@@ -13987,10 +14120,36 @@ function ansichtEinstellungen(){
       ${msGraphAbschnittHtml()}
       ${betaOneDriveTestHtml()}
     </div>
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Excel-Dateien öffnen</div>
+      <div class="icon-buttons-2">
+        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnEinstOeffneUebersicht"><span class="btn-icon-symbol">&#128203;</span><span class="btn-titel">Rechnungsübersicht</span><span class="unter">Excel-Datei öffnen</span></button>
+        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnEinstOeffneFahrtenbuch"><span class="btn-icon-symbol">&#128657;</span><span class="btn-titel">Fahrtenbuch</span><span class="unter">Excel-Datei öffnen</span></button>
+      </div>
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Ersatzkarte (OpenStreetMap)</div>
+      <div class="design-hinweis">Wird gezeigt, wenn die KVBW-Karte nicht verfügbar ist (ohne Anmeldung, offline). Einmal hier speichern und die Datei <b>nfp_osm_karte.jpg</b> ins GitHub-Repo neben die App-Datei hochladen – dann haben sie alle Geräte sofort.</div>
+      <button type="button" class="btn-sekundaer" id="btnEinstOsmSpeichern" style="margin-top:8px;">Ersatzkarte speichern (für GitHub)</button>
+    </div>
     ${betaProfileHtml()}
     ${betaAbschnittHtml()}
     ${betaHaftungHtml()}
   `;
+  document.getElementById('btnEinstOeffneUebersicht').onclick = ()=> excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
+    'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
+  document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
+  document.getElementById('btnEinstOsmSpeichern').onclick = async ()=>{
+    // immer frisch zusammensetzen (nicht die Datei aus dem Repo erneut speichern)
+    try{ const cache = await caches.open('nfp-karte'); await cache.delete('./__nfp_osm_v3__'); }catch(_){}
+    nfpOsmBildUrl.url = null; nfpOsmBildUrl.ausRepo = false;
+    appToastAnzeigen('Ersatzkarte wird aus OpenStreetMap zusammengesetzt …', 4000);
+    const blob = await nfpOsmZusammensetzen();
+    if(!blob){ appToastAnzeigen('Das hat nicht geklappt (Internet?). Bitte nochmal versuchen.', 3500); return; }
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = NFP_OSM_DATEI; document.body.appendChild(a); a.click(); a.remove();
+    appToastAnzeigen('Gespeichert als „' + NFP_OSM_DATEI + '“ (Downloads) – jetzt ins GitHub-Repo hochladen.', 6000);
+  };
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
   // "Speichern"-Schritt.
   const anwenden = ()=>{
