@@ -14067,7 +14067,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v184';
+const APP_VERSION = 'v185';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14388,9 +14388,9 @@ function designWeiterFall(){
 // ---------- Icons (Strich-SVG, keine Emoji) ----------
 const DS_ICON = {
   start: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6h-6v6H4z"/></svg>',
-  liste: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>',
+  liste: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.8h8.6l4.4 4.4V21.2H6z"/><path d="M14.6 2.8v4.4H19"/><path d="M15.2 11.3a3.6 3.6 0 1 0 0 5.2"/><path d="M8.8 13.1h4.6M8.8 15h4.6"/></svg>',
   plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
-  auto: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16l2-6h11l3 6v3H3z"/><circle cx="7" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/><path d="M7 10l1.5-4h6L16 10"/></svg>',
+  auto: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 17V6.5h11.5V17"/><path d="M13.5 9.5h4.2l3.3 3.6V17"/><path d="M15.5 9.5v3.6H21"/><path d="M2 17h2M8 17h7.2M19.8 17H21"/><circle cx="6" cy="17.6" r="2"/><circle cx="17.5" cy="17.6" r="2"/><path d="M7.75 9.2v5M5.25 11.7h5"/></svg>',
   werkzeug: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4 4 0 0 0-5 5L4 16l4 4 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>',
   regler: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
   stift: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
