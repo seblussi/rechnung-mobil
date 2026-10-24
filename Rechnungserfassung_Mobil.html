@@ -1187,6 +1187,8 @@
   #dsWerkzeugStapel .ws-icon.code.ls{background:var(--ls-farbe);} #dsWerkzeugStapel .ws-icon.code.pt{background:var(--pt-farbe);} #dsWerkzeugStapel .ws-icon.code.gkv{background:var(--ds-gkv, #7d4e9e);}
   body.dunkel #dsWerkzeugStapel .ws-icon.code{border-color:transparent;}
   .ds-nav-btn.ws-offen{color:var(--ls-farbe);}
+  #dsWerkzeugStapel .ws-stapel.links{align-items:flex-start;}
+  #dsWerkzeugStapel .ws-stapel.links .ws-eintrag{flex-direction:row-reverse;}
   body.design-einhand #dsWerkzeugStapel .ws-stapel{gap:16px;}
   body.design-einhand #dsWerkzeugStapel .ws-icon{width:76px; height:76px; border-radius:22px;}
   body.design-einhand #dsWerkzeugStapel .ws-icon svg{width:50px; height:50px;}
@@ -13694,7 +13696,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v178';
+const APP_VERSION = 'v179';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14067,7 +14069,13 @@ function schnellStapel(navKey, eintraege, beiWahl){
   const st = huelle.querySelector('.ws-stapel');
   st.style.bottom = (window.innerHeight - r.top + 10) + 'px';
   const iconB = document.body.classList.contains('design-einhand') ? 76 : 56;
-  st.style.right = Math.max(8, window.innerWidth - r.right + (r.width - iconB) / 2) + 'px';
+  // Knopf in der linken Bildschirmhaelfte: Stapel links ausrichten, Schrift rechts neben dem Icon
+  if(r.left + r.width / 2 < window.innerWidth / 2){
+    st.classList.add('links');
+    st.style.left = Math.max(8, r.left + (r.width - iconB) / 2) + 'px';
+  } else {
+    st.style.right = Math.max(8, window.innerWidth - r.right + (r.width - iconB) / 2) + 'px';
+  }
   if(knopf) knopf.classList.add('ws-offen');
   requestAnimationFrame(()=> huelle.classList.add('auf'));
   huelle.querySelector('.ws-hinter').onclick = werkzeugStapelSchliessen;
