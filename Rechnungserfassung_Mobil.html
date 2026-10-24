@@ -467,6 +467,49 @@
   .gkv-txt{flex:1; min-width:0; font-size:14px;}
   .gkv-txt small{display:block; font-size:11.5px; color:var(--text-schwach);}
   .gkv-eur{font-size:13.5px; white-space:nowrap; font-variant-numeric:tabular-nums;}
+  /* ---- Darstellung der Rechnungspositionen (Einstellungen > Allgemein) ---- */
+  .maske.pt{--pos-farbe:var(--pt-farbe);} .maske.ls{--pos-farbe:var(--ls-farbe);} #gkvListe{--pos-farbe:#7d4e9e;}
+  .position-zeile{position:relative;}
+  .gkv-haken{display:none;}
+  .gkv-zieh-hinweis{margin:2px 0 6px;}
+  /* Option 1: Haekchen auch bei EBM, Zeilen wie PT/LS */
+  body.pos-stil-haken .gkv-haken{display:inline-block; flex:0 0 auto; width:20px; height:20px; margin:0 4px 0 0; border:2px solid var(--text-schwach); border-radius:4px; box-sizing:border-box; align-self:flex-start;}
+  body.pos-stil-haken .gkv-pos.an .gkv-haken{background:var(--pos-farbe); border-color:var(--pos-farbe); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3 3 7-7' fill='none' stroke='white' stroke-width='2.4'/%3E%3C/svg%3E"); background-size:100%;}
+  body.pos-stil-haken .gkv-pos, body.pos-stil-kompakt .gkv-pos{border:none; border-bottom:1px solid var(--rand); border-radius:0; margin:0; padding:6px 34px 6px 2px; box-shadow:none; background:transparent;}
+  body.pos-stil-haken .gkv-pos:not(.an), body.pos-stil-kompakt .gkv-pos:not(.an){opacity:1;}
+  body.pos-stil-haken .gkv-pos.an{box-shadow:none;}
+  /* Option 2 + 3: Haekchen ausblenden (bleibt bedienbar) */
+  body.pos-stil-farbe .position-zeile input[type=checkbox], body.pos-stil-kompakt .position-zeile input[type=checkbox]{position:absolute; left:0; top:0; width:1px; height:1px; opacity:0; margin:0; pointer-events:none;}
+  /* Option 2: farbiger Rahmen wie bisher bei EBM */
+  body.pos-stil-farbe .position-zeile{border:1px solid var(--rand); border-radius:10px; padding:8px 10px; margin:0 0 6px; background:var(--karte);}
+  body.pos-stil-farbe .position-zeile:has(input:checked){border-color:var(--pos-farbe); box-shadow:inset 4px 0 0 var(--pos-farbe);}
+  body.pos-stil-farbe .position-zeile:not(:has(input:checked)) .haupt{opacity:.8;}
+  /* Option 3: eng, Auswahl als Hintergrundfarbe */
+  body.pos-stil-kompakt .position-zeile{padding:6px 6px; border-radius:6px;}
+  body.pos-stil-kompakt .position-zeile:has(input:checked), body.pos-stil-kompakt .gkv-pos.an{background:color-mix(in srgb, var(--pos-farbe) 22%, var(--karte));}
+  body.pos-stil-kompakt .gkv-pos{border-radius:6px; padding-left:6px;}
+  .pos-stil-wahl{display:flex; flex-direction:column; gap:6px;}
+  .pos-stil-option{display:flex; gap:10px; align-items:flex-start; padding:9px 11px; border:1px solid var(--rand); border-radius:10px; background:var(--karte); cursor:pointer;}
+  .pos-stil-option.an{border-color:#2f6fed; box-shadow:inset 3px 0 0 #2f6fed;}
+  .pos-stil-option input{margin-top:3px;}
+  .pos-stil-option small{display:block; font-size:12.5px; color:var(--text-schwach); font-weight:400;}
+  /* Schrift wie bei PT/LS (Ziffer klein und grau, Text 13,5 px, Betrag 14 px fett) */
+  :root{--ziffer-breite:46px; --ziffer-breite-goae:30px;}
+  body.ziffer-gross{--ziffer-breite:64px; --ziffer-breite-goae:44px;}
+  .gkv-pos-haupt{align-items:flex-start; gap:6px;}
+  .gkv-pos .gkv-gop{font-size:12px; font-weight:600; color:var(--text-schwach); width:calc(var(--ziffer-breite) - 6px); min-width:0; flex:0 0 auto; line-height:1.55;}
+  /* PT/LS: Ziffer als eigene Spalte, Text mit Einzug darunter (wie bei EBM) */
+  .position-zeile .haupt{position:relative; padding-left:var(--ziffer-breite-goae);}
+  .position-zeile .haupt-text .ziffer{position:absolute; left:0; top:0; width:calc(var(--ziffer-breite-goae) - 4px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.55;}
+  body.ziffer-gross .position-zeile .haupt-text .ziffer, body.ziffer-gross .gkv-pos .gkv-gop{font-size:15.5px; font-weight:700; color:var(--text); line-height:1.15;}
+  .gkv-pos .gkv-txt{font-size:13.5px; line-height:1.25; color:var(--text);}
+  .gkv-pos .gkv-txt small{font-size:12px; color:var(--text-schwach); margin-top:2px;}
+  .gkv-pos .gkv-eur{font-size:14px; font-weight:600; min-width:60px; text-align:right; color:var(--text);}
+  .gkv-stufen, .gkv-anz{margin-left:var(--ziffer-breite);}
+  body.pos-stil-haken .gkv-stufen, body.pos-stil-haken .gkv-anz{margin-left:calc(var(--ziffer-breite) + 30px);}
+  .gkv-pos.gkv-aus{opacity:.5 !important;}
+  .gkv-aus-grund{display:block; font-size:12px; color:var(--text-schwach); margin-top:2px;}
+  .gkv-pos.gkv-konflikt .gkv-aus-grund{color:#d35400; font-weight:600;}
   .gkv-weg{position:absolute; top:4px; right:4px; width:26px; height:26px; padding:0; margin:0; border:none; background:none; color:var(--text-schwach); font-size:18px; line-height:1;}
   .gkv-stufen{display:flex; gap:6px; flex-wrap:wrap; margin:7px 0 0 54px;}
   .gkv-stufen button, .gkv-anz button{width:auto; margin:0; padding:5px 10px; font-size:13px; border-radius:14px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
@@ -1078,6 +1121,272 @@
   .diag-chip .chip-del{
     background:none; border:none; color:var(--fehler); font-size:16px; font-weight:700; cursor:pointer; padding:0 2px;
   }
+
+  /* =================================================================
+     DESIGNS (Einstellungen > Allgemein > Design)
+     Nur Systemschriften -- keine Web-Fonts, kein Abruf bei Dritten.
+     ================================================================= */
+  .design-muster{display:flex; gap:3px; margin-top:3px; flex:0 0 auto;}
+  .design-muster i{display:block; width:13px; height:13px; border-radius:4px; border:1px solid rgba(0,0,0,.18);}
+  .ds-nav, .ds-dock, .ds-start{display:none;}
+  body.design-klinik .ds-nav, body.design-einhand .ds-nav, body.design-nacht .ds-dock{display:grid;}
+  body.design-klinik .ds-start, body.design-nacht .ds-start, body.design-einhand .ds-start{display:block;}
+  .ds-nav-btn, .ds-dock-btn, .ds-fall, .ds-ein, .ds-weiter, .ds-link{width:auto; margin:0; font:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent;}
+  .ds-nav-btn svg, .ds-weiter svg, .karte .ds-plus svg{fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round;}
+  .ds-leer{padding:12px 14px; color:var(--text-schwach); font-size:13.5px;}
+  .ds-klein{display:block; font-size:12px; font-weight:600; letter-spacing:.08em; color:var(--text-schwach); text-transform:uppercase;}
+  #app:has(.ds-nav), #app:has(.ds-dock){padding-bottom:120px;}
+  .karte .ds-kt{display:flex; flex-direction:column;}
+  .karte .ds-lang, .karte .ds-plus{display:none;}
+
+  /* ---------------- 1 · KLINIK ---------------- */
+  body.design-klinik:not(.dunkel){
+    --bg:#f6f7f9; --karte:#ffffff; --text:#141a24; --text-schwach:#5b6576; --rand:#e2e6ec; --titelfarbe:#141a24;
+    --ls-farbe:#1f5f9e; --pt-farbe:#1d7a45; --grau-feld:#edf0f4;
+    --ds-primaer:#141a24; --ds-primaer-text:#ffffff; --ds-gkv:#6e4391; --ds-gkv-hell:#f1ebf6; --ds-gkv-text:#5e3880;
+    --ds-ls-hell:#e6effa; --ds-ls-text:#1a4f80; --ds-pt-hell:#e8f4ec; --ds-pt-text:#1a5e37;
+  }
+  body.design-klinik.dunkel{
+    --bg:#12161d; --karte:#1b2129; --text:#e6e9ee; --text-schwach:#9aa4b2; --rand:#2c3440; --titelfarbe:#e6e9ee;
+    --ls-farbe:#2a6db0; --pt-farbe:#22874c; --grau-feld:#232a34;
+    --ds-primaer:#e6e9ee; --ds-primaer-text:#12161d; --ds-gkv:#8a5cb3; --ds-gkv-hell:#2a2236; --ds-gkv-text:#cfb2ea;
+    --ds-ls-hell:#1a2a3d; --ds-ls-text:#9cc4ee; --ds-pt-hell:#173024; --ds-pt-text:#8fd9a8;
+  }
+  body.design-klinik{font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; --ds-mono:ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace;}
+  body.design-klinik header{background:var(--karte); color:var(--text); border-bottom:1px solid var(--rand); padding:10px 8px 10px 12px;}
+  body.design-klinik header h1{font-size:18px; font-weight:700; letter-spacing:-.01em;}
+  body.design-klinik header .zurueck, body.design-klinik header .zahnrad{color:var(--text); min-width:44px; min-height:44px;}
+  body.design-klinik .abschnitt{border-radius:14px; box-shadow:none;}
+  body.design-klinik .trennlinie{background:var(--karte); color:var(--text-schwach); border-bottom:1px solid var(--rand); border-radius:14px 14px 0 0; font-size:11.5px; letter-spacing:.08em;}
+  body.design-klinik .maske.pt .abschnitt .trennlinie{background:var(--karte); color:var(--pt-farbe);}
+  body.design-klinik .maske.ls .abschnitt .trennlinie{background:var(--karte); color:var(--ls-farbe);}
+  body.design-klinik .abschnitt.einklappbar > .trennlinie:focus-visible{outline-color:var(--ls-farbe);}
+  body.design-klinik .btn-sekundaer{border-radius:12px;}
+  body.design-klinik .btn-primaer{border-radius:12px; background:var(--ds-primaer); color:var(--ds-primaer-text);}
+  body.design-klinik .maske.pt .btn-primaer{background:var(--pt-farbe); color:#fff;}
+  body.design-klinik .maske.ls .btn-primaer{background:var(--ls-farbe); color:#fff;}
+  body.design-klinik .btn-primaer.blass, body.design-klinik .maske.pt .btn-primaer.blass, body.design-klinik .maske.ls .btn-primaer.blass{background:var(--karte); color:var(--text); border:1px solid var(--rand);}
+  body.design-klinik .btn-uebersicht, body.design-klinik.dunkel .btn-uebersicht{background:var(--karte); color:var(--text); border-color:var(--rand); font-size:16px; font-weight:600; padding:16px 14px; text-align:left;}
+  body.design-klinik .btn-uebersicht .unter{color:var(--text-schwach); opacity:1;}
+  body.design-klinik .btn-icon.btn-icon-grau, body.design-klinik .btn-icon.btn-icon-blau, body.design-klinik .btn-icon.btn-icon-rot{background:var(--karte); border-color:var(--rand);}
+  body.design-klinik .gkv-gop, body.design-klinik .position-zeile .haupt-text .ziffer, body.design-klinik .gkv-eur{font-family:var(--ds-mono);}
+  body.design-klinik #gkvListe{--pos-farbe:var(--ds-gkv);}
+  body.design-klinik .gkv-kopf{border-radius:14px;}
+  body.design-klinik .gkv-feld input{border-radius:10px;}
+  body.design-klinik .fb-chip{border-radius:10px; padding:8px 12px;}
+  body.design-klinik .fb-chip.an, body.design-klinik .gkv-stufen button.an{background:var(--ds-gkv); border-color:var(--ds-gkv);}
+  body.design-klinik .gkv-summe-leiste{background:var(--karte); border-top:1px solid var(--rand); margin-left:-14px; margin-right:-14px; padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
+  body.design-klinik .gkv-summe-leiste #gkvSumme{font-family:var(--ds-mono); font-weight:600; font-size:18px;}
+  body.design-klinik .gkv-summe-leiste .btn-primaer{background:var(--ds-gkv); color:#fff; padding:14px 18px;}
+  body.design-klinik .pos-fuss{background:var(--karte);}
+  /* Kacheln */
+  body.design-klinik .kachelreihe.drei .karte{aspect-ratio:auto; min-height:108px; background:var(--karte); color:var(--text); border:1px solid var(--rand); box-shadow:none;
+    align-items:flex-start; justify-content:space-between; text-align:left; padding:12px; border-radius:14px; font-size:14px; gap:10px;}
+  body.design-klinik .karte .ds-code{font-family:var(--ds-mono); font-size:12px; font-weight:600; color:#fff; padding:3px 7px; border-radius:5px; background:var(--ls-farbe);}
+  body.design-klinik .karte.pt .ds-code{background:var(--pt-farbe);} body.design-klinik .karte.gkv .ds-code{background:var(--ds-gkv);}
+  body.design-klinik .karte .ds-titel{font-size:14px; font-weight:600;}
+  body.design-klinik .karte .ds-unter{font-size:12px; font-weight:400; color:var(--text-schwach);}
+  /* Dienst-Karte */
+  .ds-klinik .ds-dienst{background:var(--karte); border:1px solid var(--rand); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:14px; margin-bottom:12px;}
+  .ds-klinik .ds-dienst.leer{gap:3px;}
+  .ds-dienst-kopf{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .ds-dienst-text{display:flex; flex-direction:column; gap:2px;}
+  .ds-ueber{display:block; font-size:11px; font-weight:600; color:var(--text-schwach); text-transform:uppercase; letter-spacing:.08em;}
+  .ds-dienst-titel{display:block; font-size:17px; font-weight:600;}
+  .ds-dienst-unter{display:block; font-size:13px; color:var(--text-schwach);}
+  .ds-gkv-marke{font-family:var(--ds-mono); font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px; background:var(--ds-gkv-hell); color:var(--ds-gkv-text); white-space:nowrap;}
+  .ds-fort{display:flex; flex-direction:column; gap:6px;}
+  .ds-fort-zeile{display:flex; justify-content:space-between; gap:8px; font-size:13px; color:var(--text-schwach);}
+  .ds-fort-zeile b{font-family:var(--ds-mono); color:var(--text); font-weight:600; white-space:nowrap;}
+  .ds-balken{height:8px; border-radius:4px; background:var(--grau-feld); overflow:hidden;}
+  .ds-balken i{display:block; height:8px; border-radius:4px; background:var(--ds-gkv);}
+  .ds-fort-text{font-size:13px; color:var(--text-schwach);} .ds-fort-text b{color:var(--text); font-weight:600;} .ds-fort-text small{font-size:11.5px;}
+  /* Offene Faelle */
+  .ds-offen{margin:4px 0 16px;}
+  .ds-abschnitt-kopf{display:flex; justify-content:space-between; align-items:center; margin:0 2px 8px;}
+  .ds-abschnitt-kopf h2{margin:0; font-size:15px; font-weight:600;}
+  .ds-link{background:none; border:0; color:var(--ls-farbe); font-size:13.5px; font-weight:500; padding:8px 0;}
+  body.design-klinik.dunkel .ds-link{color:#9cc4ee;}
+  .ds-liste{background:var(--karte); border:1px solid var(--rand); border-radius:14px; overflow:hidden;}
+  .ds-fall{display:flex; align-items:center; gap:12px; width:100%; min-height:60px; padding:10px 14px; border:0; border-bottom:1px solid var(--rand); background:var(--karte); color:var(--text); text-align:left; box-sizing:border-box;}
+  .ds-fall:last-child{border-bottom:0;}
+  .ds-fall-marke{flex:0 0 38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:var(--ds-mono); font-size:11px; font-weight:600; background:var(--ds-ls-hell); color:var(--ds-ls-text);}
+  .ds-fall-marke.pt{background:var(--ds-pt-hell); color:var(--ds-pt-text);} .ds-fall-marke.gkv{background:var(--ds-gkv-hell); color:var(--ds-gkv-text);}
+  .ds-fall-text{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
+  .ds-fall-name{font-size:15px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ds-fall-unter{font-size:12px; color:var(--text-schwach);}
+  .ds-fall-rechts{display:flex; flex-direction:column; align-items:flex-end; gap:3px;}
+  .ds-fall-betrag{font-family:var(--ds-mono); font-size:14px; font-weight:600;}
+  .ds-fall-status{font-size:11px; font-weight:600; color:var(--text-schwach); background:var(--grau-feld); padding:1px 7px; border-radius:9px; white-space:nowrap;}
+  /* Leiste unten */
+  body.design-klinik .ds-nav{position:fixed; left:0; right:0; bottom:0; z-index:20; grid-template-columns:repeat(5, minmax(0, 1fr)); align-items:center;
+    background:var(--karte); border-top:1px solid var(--rand); padding:6px 4px calc(8px + env(safe-area-inset-bottom));}
+  body.design-klinik .ds-nav-btn{display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:0; color:var(--text-schwach); font-size:11px; font-weight:500; padding:6px 0; min-height:48px; justify-content:center;}
+  body.design-klinik .ds-nav-btn svg{width:22px; height:22px;}
+  body.design-klinik .ds-nav-btn.an{color:var(--ls-farbe); font-weight:600;}
+  body.design-klinik.dunkel .ds-nav-btn.an{color:#9cc4ee;}
+  body.design-klinik .ds-nav-btn.gross{justify-self:center; width:54px; height:54px; min-height:0; padding:0; border-radius:16px; background:var(--ds-primaer); color:var(--ds-primaer-text);}
+  body.design-klinik .ds-nav-btn.gross svg{width:24px; height:24px; stroke-width:2.2;}
+
+  /* ---------------- 2 · NACHTFAHRT ---------------- */
+  body.design-nacht, body.design-nacht.dunkel{
+    --bg:#0b1020; --karte:#141b2e; --text:#eef1f8; --text-schwach:#9aa4bf; --rand:#263052; --titelfarbe:#141b2e;
+    --ls-farbe:#2f6db5; --pt-farbe:#23824a; --grau-feld:#1c2440;
+    --warnung-bg:#2a2010; --warnung-rand:#a8782a; --warnung-text:#ffd08a; --fehler:#ff8a80;
+    --ds-akzent:#ffb547; --ds-akzent-dunkel:#1d1810; --ds-gkv:#c79bff; --ds-ls-hell:#7fb2ff; --ds-pt-hell:#6fe3a5;
+    --ds-display:"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Noto Serif", serif;
+    font-family:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--text);
+  }
+  body.design-nacht #btnDunkelToggle{display:none;}
+  body.design-nacht header{background:var(--bg); border-bottom:1px solid #1c2440;}
+  body.design-nacht header h1{font-size:13px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--text-schwach);}
+  body.design-nacht header .zurueck, body.design-nacht header .zahnrad{color:var(--text); min-width:44px; min-height:44px;}
+  body.design-nacht .abschnitt{border-radius:20px; box-shadow:none; background:var(--karte);}
+  body.design-nacht .trennlinie, body.design-nacht .maske.pt .abschnitt .trennlinie, body.design-nacht .maske.ls .abschnitt .trennlinie{background:#10172a; color:var(--text-schwach); border-bottom:1px solid var(--rand); border-radius:19px 19px 0 0; letter-spacing:.1em; font-weight:600;}
+  body.design-nacht .maske.pt .abschnitt .trennlinie{color:var(--ds-pt-hell);} body.design-nacht .maske.ls .abschnitt .trennlinie{color:var(--ds-ls-hell);}
+  body.design-nacht .btn-sekundaer{border-radius:16px; background:var(--karte); border-color:var(--rand);}
+  body.design-nacht .btn-primaer, body.design-nacht .maske.pt .btn-primaer, body.design-nacht .maske.ls .btn-primaer{background:var(--ds-akzent); color:#1a1206; border-radius:28px; font-weight:700;}
+  body.design-nacht .btn-primaer.blass, body.design-nacht .maske.pt .btn-primaer.blass, body.design-nacht .maske.ls .btn-primaer.blass{background:var(--karte); color:var(--ds-akzent); border:1.5px solid var(--ds-akzent);}
+  body.design-nacht .btn-uebersicht{background:var(--karte); border-color:var(--rand); color:var(--text); font-weight:600; font-size:17px; border-radius:20px;}
+  body.design-nacht .btn-uebersicht .unter{color:var(--text-schwach); opacity:1;}
+  body.design-nacht .btn-icon.btn-icon-grau, body.design-nacht .btn-icon.btn-icon-blau, body.design-nacht .btn-icon.btn-icon-rot{background:var(--karte); border-color:var(--rand);}
+  body.design-nacht .btn-icon-symbol{background:var(--bg);}
+  body.design-nacht .maske.pt, body.design-nacht .maske.ls, body.design-nacht #gkvListe{--pos-farbe:#d9891a;}
+  body.design-nacht .gkv-pos.an .gkv-gop, body.design-nacht .position-zeile:has(input:checked) .haupt-text .ziffer{color:var(--ds-akzent);}
+  body.design-nacht .gkv-pos .gkv-gop{font-family:var(--ds-display); font-size:17px; font-weight:400; line-height:1.15;}
+  body.design-nacht .gkv-kopf{border-radius:20px;}
+  body.design-nacht .gkv-feld input{border-radius:12px; background:var(--bg);}
+  body.design-nacht .fb-chip{border-radius:20px; padding:8px 14px; background:transparent;}
+  body.design-nacht .fb-chip.an{background:var(--text); color:var(--bg); border-color:var(--text);}
+  body.design-nacht .gkv-stufen button.an{background:var(--ds-akzent); border-color:var(--ds-akzent); color:#1a1206;}
+  body.design-nacht .gkv-summe-leiste{background:var(--bg); border-top:1px solid #1c2440; padding:12px 0 calc(12px + env(safe-area-inset-bottom));}
+  body.design-nacht .gkv-summe-leiste #gkvSumme{font-family:var(--ds-display); font-size:26px; font-weight:300;}
+  body.design-nacht .gkv-summe-leiste .btn-primaer{padding:16px 22px;}
+  body.design-nacht .pos-fuss{background:var(--bg);}
+  body.design-nacht .gesamt-abschnitt{letter-spacing:.1em;}
+  body.design-nacht .nfp-fuss, body.design-nacht .nfp-kopf, body.design-nacht .nfp-suche{background:var(--karte);}
+  body.design-nacht .nfp-knoepfe .nfp-ok{background:var(--ds-akzent); border-color:var(--ds-akzent); color:#1a1206; border-radius:22px;}
+  body.design-nacht #app .kachelreihe.drei{display:none;}
+  /* Start */
+  .ds-nacht .ds-kopfzeile{font-size:12.5px; font-weight:500; letter-spacing:.08em; color:var(--text-schwach); text-align:center; margin:2px 0 4px;}
+  .ds-ring{position:relative; width:min(280px, 74vw); aspect-ratio:1/1; margin:6px auto 0;}
+  .ds-ring svg{display:block; width:100%; height:100%;}
+  .ds-ring-aussen{fill:none; stroke:#1a2238; stroke-width:1;}
+  .ds-ring-spur{fill:none; stroke:#1c2440; stroke-width:10;}
+  .ds-ring-fort{fill:none; stroke:var(--ds-akzent); stroke-width:10; stroke-linecap:round;}
+  .ds-ring-innen{fill:none; stroke:#222c4a; stroke-width:1; stroke-dasharray:1 7;}
+  .ds-ring-fall{fill:var(--ds-gkv); stroke:var(--bg); stroke-width:2;}
+  .ds-ring-mitte{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;}
+  .ds-ring-zeit{font-family:var(--ds-display); font-weight:300; font-size:clamp(48px, 18vw, 74px); line-height:1; letter-spacing:-.02em; font-variant-numeric:lining-nums tabular-nums;}
+  .ds-ring-rest{font-size:14px; color:var(--text-schwach);}
+  .ds-ring-grenzen{display:flex; justify-content:space-between; width:min(280px, 74vw); margin:2px auto 0; font-size:12px; color:#8f9ab6; letter-spacing:.04em;}
+  .ds-foerd{margin:20px 0 0; padding:14px 18px; border:1px solid var(--rand); border-radius:20px; display:flex; align-items:center; gap:14px; justify-content:space-between;}
+  .ds-foerd-wert{display:block; font-family:var(--ds-display); font-style:italic; font-weight:400; font-size:32px; line-height:1.15; color:var(--ds-akzent);}
+  .ds-foerd-rechts{display:flex; flex-direction:column; align-items:flex-end; gap:2px; font-size:13px; color:#c9d0e2;}
+  .ds-schwach{color:#8f9ab6;}
+  .ds-zeitleiste{margin:20px 0 6px;}
+  .ds-zeitleiste h2{margin:0 0 6px;}
+  .ds-ein{display:grid; grid-template-columns:50px 14px minmax(0, 1fr) auto; align-items:center; gap:10px; width:100%; min-height:54px; padding:4px 0; border:0; background:none; color:var(--text); text-align:left; position:relative;}
+  .ds-ein + .ds-ein::before{content:''; position:absolute; left:66px; top:-10px; height:20px; border-left:1px solid #263052;}
+  .ds-ein-zeit{font-size:14px; font-weight:500; color:#c9d0e2; font-variant-numeric:tabular-nums;}
+  .ds-ein-punkt{width:10px; height:10px; border-radius:50%; background:var(--ds-gkv); justify-self:center;}
+  .ds-ein-text{display:flex; flex-direction:column; min-width:0;}
+  .ds-ein-name{font-size:16px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ds-ein-unter{font-size:12px; color:var(--text-schwach);}
+  .ds-ein-betrag{font-size:15px; font-weight:500; font-variant-numeric:tabular-nums;}
+  body.design-nacht .ds-dock{position:fixed; left:0; right:0; bottom:0; z-index:20; background:var(--bg); border-top:1px solid #1c2440; padding:10px 16px calc(14px + env(safe-area-inset-bottom)); gap:8px;}
+  .ds-dock .ds-klein{text-align:center;}
+  .ds-dock-reihe{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px;}
+  .ds-dock-btn{height:58px; border-radius:29px; background:transparent; border:1px solid #3a4a78; color:var(--ds-ls-hell); font-family:var(--ds-display); font-style:italic; font-size:23px;}
+  .ds-dock-btn.pt{border-color:#2f5d4a; color:var(--ds-pt-hell);}
+  .ds-dock-btn.gkv{background:var(--ds-akzent); border-color:var(--ds-akzent); color:#1a1206; font-weight:600;}
+
+  /* ---------------- 3 · EINHAND ---------------- */
+  body.design-einhand:not(.dunkel){
+    --bg:#eceef2; --karte:#ffffff; --text:#101317; --text-schwach:#4d5562; --rand:#d5d9e0; --titelfarbe:#101317;
+    --ls-farbe:#1a4f85; --pt-farbe:#17663a; --grau-feld:#e3e6eb;
+    --ds-primaer:#101317; --ds-primaer-text:#ffffff; --ds-gkv:#5b3480; --ds-nav:#101317; --ds-nav-text:#c3c8d2; --ds-gkv-hell:#efe8f6; --ds-gkv-text:#43255f;
+  }
+  body.design-einhand.dunkel{
+    --bg:#14171c; --karte:#1e232b; --text:#eef0f3; --text-schwach:#a3abb8; --rand:#313844; --titelfarbe:#eef0f3;
+    --ls-farbe:#22609e; --pt-farbe:#1c7a46; --grau-feld:#262c35;
+    --ds-primaer:#eef0f3; --ds-primaer-text:#14171c; --ds-gkv:#7a4aa8; --ds-nav:#2a303a; --ds-nav-text:#c3c8d2; --ds-gkv-hell:#2a2236; --ds-gkv-text:#d9c2ee;
+  }
+  body.design-einhand{font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;}
+  body.design-einhand header{background:var(--bg); color:var(--text); padding:10px 8px;}
+  body.design-einhand header h1{font-size:19px; font-weight:800; letter-spacing:-.01em;}
+  body.design-einhand header .zurueck, body.design-einhand header .zahnrad{color:var(--text); font-size:24px; min-width:48px; min-height:48px;}
+  body.design-einhand main{padding:12px 16px 24px;}
+  body.design-einhand .abschnitt{border:0; border-radius:22px; box-shadow:none;}
+  body.design-einhand .trennlinie, body.design-einhand .maske.pt .abschnitt .trennlinie, body.design-einhand .maske.ls .abschnitt .trennlinie{background:var(--karte); color:var(--text-schwach); border-radius:22px 22px 0 0; font-size:12.5px; font-weight:800; letter-spacing:.05em;}
+  body.design-einhand .maske.pt .abschnitt .trennlinie{color:var(--pt-farbe);} body.design-einhand .maske.ls .abschnitt .trennlinie{color:var(--ls-farbe);}
+  body.design-einhand.dunkel .maske.pt .abschnitt .trennlinie{color:#8fd9a8;} body.design-einhand.dunkel .maske.ls .abschnitt .trennlinie{color:#9cc4ee;}
+  body.design-einhand .btn-sekundaer{border:0; border-radius:18px; min-height:56px; font-weight:700; font-size:16px;}
+  body.design-einhand .btn-primaer, body.design-einhand .maske.pt .btn-primaer, body.design-einhand .maske.ls .btn-primaer{border-radius:30px; min-height:60px; font-size:17px; font-weight:800; background:var(--ds-primaer); color:var(--ds-primaer-text);}
+  body.design-einhand .btn-primaer.blass, body.design-einhand .maske.pt .btn-primaer.blass, body.design-einhand .maske.ls .btn-primaer.blass{background:var(--karte); color:var(--text); border:2px solid var(--rand);}
+  body.design-einhand .btn-uebersicht, body.design-einhand.dunkel .btn-uebersicht{background:var(--karte); color:var(--text); font-size:17px; font-weight:800; padding:18px 16px; border-radius:22px;}
+  body.design-einhand .btn-uebersicht .unter{color:var(--text-schwach); opacity:1;}
+  body.design-einhand .btn-icon.btn-icon-grau, body.design-einhand .btn-icon.btn-icon-blau, body.design-einhand .btn-icon.btn-icon-rot{background:var(--karte); border:0; border-radius:22px;}
+  body.design-einhand .gkv-kopf{border:0; border-radius:22px; padding:14px 16px;}
+  body.design-einhand .gkv-feld{font-weight:600;}
+  body.design-einhand .gkv-feld input{border-radius:14px; padding:12px; font-size:17px;}
+  body.design-einhand .fb-chip{border-radius:22px; padding:11px 16px; font-size:15px; font-weight:700; border:0; background:var(--karte);}
+  body.design-einhand .fb-chip.an, body.design-einhand .gkv-stufen button.an{background:var(--ds-gkv); color:#fff;}
+  body.design-einhand .gkv-stufen button, body.design-einhand .gkv-anz button{padding:9px 14px; font-size:14.5px; border-radius:18px; min-height:40px;}
+  body.design-einhand #gkvListe{--pos-farbe:var(--ds-gkv);}
+  body.design-einhand .gkv-pos, body.design-einhand.pos-stil-haken .gkv-pos, body.design-einhand.pos-stil-kompakt .gkv-pos{background:var(--karte); border:2px solid transparent; border-radius:18px; margin:0 0 8px; padding:14px 40px 14px 12px; box-shadow:none;}
+  body.design-einhand .gkv-pos.an, body.design-einhand.pos-stil-haken .gkv-pos.an, body.design-einhand.pos-stil-kompakt .gkv-pos.an{border-color:var(--ds-gkv); background:color-mix(in srgb, var(--ds-gkv) 9%, var(--karte)); box-shadow:none;}
+  body.design-einhand .gkv-pos .gkv-gop{font-size:18px; font-weight:800; color:var(--text); line-height:1.1;}
+  body.design-einhand .gkv-pos .gkv-txt{font-size:14.5px;}
+  body.design-einhand .gkv-weg{top:10px; right:8px; width:32px; height:32px;}
+  body.design-einhand .position-zeile{background:var(--karte); border-radius:16px; padding:12px 10px; margin-bottom:8px;}
+  body.design-einhand .gkv-summe-leiste{background:var(--bg); border-top:0; padding:10px 0 calc(14px + env(safe-area-inset-bottom));}
+  body.design-einhand .gkv-summe-leiste #gkvSumme{font-size:20px; font-weight:800;}
+  body.design-einhand .gkv-summe-leiste .btn-primaer{min-height:64px; padding:0 24px; border-radius:32px;}
+  body.design-einhand .pos-fuss{background:var(--bg);}
+  body.design-einhand .gesamt-abschnitt{font-weight:800;}
+  /* Kacheln: GKV gross, darunter PT + LS */
+  body.design-einhand #app .kachelreihe.drei{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px;}
+  body.design-einhand #app .kachelreihe.drei .karte{aspect-ratio:auto; display:grid; grid-template-columns:1fr auto; grid-template-rows:auto 1fr; align-items:start; justify-items:start;
+    text-align:left; min-height:136px; padding:16px 18px; border-radius:26px; box-shadow:none; color:#fff; font-size:14px; box-sizing:border-box;}
+  body.design-einhand #app .kachelreihe.drei .karte.gkv{grid-column:1 / -1; order:-1; min-height:176px; background:var(--ds-gkv);}
+  body.design-einhand .karte .ds-kt{grid-area:1 / 1;}
+  body.design-einhand .karte .ds-titel{display:none;}
+  body.design-einhand .karte .ds-lang{display:block; font-size:15px; font-weight:600; opacity:.9;}
+  body.design-einhand .karte .ds-unter{font-size:12.5px; font-weight:500; opacity:.85; margin-top:2px;}
+  body.design-einhand .karte .ds-plus{display:flex; grid-area:1 / 2; align-items:center; justify-content:center;}
+  body.design-einhand .karte .ds-plus svg{width:22px; height:22px; stroke-width:2.6;}
+  body.design-einhand .karte.gkv .ds-plus{width:52px; height:52px; border-radius:26px; background:#fff; color:var(--ds-gkv);}
+  body.design-einhand .karte .ds-code{grid-area:2 / 1 / 3 / 3; align-self:end; font-size:42px; font-weight:800; letter-spacing:-.03em; line-height:.9;}
+  body.design-einhand .karte.gkv .ds-code{font-size:58px;}
+  /* Start oben */
+  .ds-einhand .ds-zeile-oben{display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; color:var(--text-schwach);}
+  .ds-sync{display:flex; align-items:center; gap:6px;}
+  .ds-sync i{width:8px; height:8px; border-radius:50%; background:#9aa1ad;}
+  .ds-sync.an{color:#1a5e37;} .ds-sync.an i{background:#1d7a45;}
+  body.dunkel .ds-sync.an{color:#8fd9a8;}
+  .ds-einhand .ds-status{margin:6px 0 0; font-size:30px; font-weight:800; letter-spacing:-.02em; line-height:1.1;}
+  .ds-status-unter{font-size:15px; color:var(--text-schwach); margin-top:2px;}
+  .ds-zahlen{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin-top:16px;}
+  .ds-zahlen > div{background:var(--karte); border-radius:16px; padding:12px; display:flex; flex-direction:column; gap:2px; min-width:0;}
+  .ds-zahlen span{font-size:12px; font-weight:600; color:var(--text-schwach);}
+  .ds-zahlen b{font-size:20px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ds-weiter{display:flex; align-items:center; gap:12px; width:100%; margin-top:12px; min-height:64px; padding:12px 16px; border:0; border-radius:18px; background:var(--ds-primaer); color:var(--ds-primaer-text); text-align:left; box-sizing:border-box;}
+  .ds-weiter > svg{width:20px; height:20px; flex:0 0 auto; stroke-width:2.2;}
+  .ds-weiter-icon{width:40px; height:40px; flex:0 0 auto; border-radius:12px; background:color-mix(in srgb, var(--ds-primaer-text) 16%, transparent); display:flex; align-items:center; justify-content:center;}
+  .ds-weiter-icon svg{width:20px; height:20px;}
+  .ds-weiter-text{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .ds-weiter-text span{font-size:12px; font-weight:600; opacity:.75;}
+  .ds-weiter-text b{font-size:16px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ds-neu-titel{margin:22px 2px 8px; font-weight:800;}
+  body.design-einhand .ds-nav{position:fixed; left:16px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20; height:66px; border-radius:33px; background:var(--ds-nav);
+    grid-template-columns:repeat(4, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
+  body.design-einhand .ds-nav-btn{display:flex; align-items:center; justify-content:center; gap:6px; height:50px; border:0; background:none; color:var(--ds-nav-text); border-radius:25px; font-size:13px; font-weight:800; padding:0;}
+  body.design-einhand .ds-nav-btn svg{width:22px; height:22px; stroke-width:2;}
+  body.design-einhand .ds-nav-btn.an{background:#fff; color:#101317;}
+  body.design-nacht, body.design-nacht.ziffer-gross{--ziffer-breite:62px;}
+  body.design-einhand, body.design-einhand.ziffer-gross{--ziffer-breite:72px;}
+  body.design-klinik .gkv-txt, body.design-nacht .gkv-txt, body.design-einhand .gkv-txt{overflow-wrap:anywhere; hyphens:auto;}
 </style>
 </head>
 <body>
@@ -9394,6 +9703,43 @@ function betaProfilKurz(art, p){
   if(na) t.push(na + ' ausgeblendet');
   return t.join(' · ');
 }
+// ---------- Darstellung der Rechnungspositionen (PT, LS, GKV) ----------
+// haken   = Haekchen wie bisher bei PT/LS, auch bei EBM
+// farbe   = ohne Haekchen, Auswahl als farbiger Rand wie bisher bei EBM
+// kompakt = ohne Haekchen, enge Zeilen, Auswahl als Hintergrundfarbe (PT gruen, LS blau, GKV lila)
+const POS_STILE = [
+  { k: 'haken', titel: 'Häkchen', text: 'Einheitlich mit Häkchen – auch bei den EBM-Ziffern.' },
+  { k: 'farbe', titel: 'Farbiger Rahmen', text: 'Ohne Häkchen; gewählte Positionen mit farbigem Rand (wie bisher bei EBM).' },
+  { k: 'kompakt', titel: 'Kompakt farbig', text: 'Ohne Häkchen, enge Zeilen; gewählte Positionen farbig hinterlegt (PT grün, LS blau, GKV lila).' }
+];
+function posStil(){ const s = (ladeEinstellungen() || {}).posStil; return POS_STILE.some(x=> x.k === s) ? s : 'haken'; }
+function posZifferGross(){ return (ladeEinstellungen() || {}).zifferGross === true; }
+function posStilAnwenden(){
+  try{
+    POS_STILE.forEach(x=> document.body.classList.toggle('pos-stil-' + x.k, x.k === posStil()));
+    document.body.classList.toggle('ziffer-gross', posZifferGross());
+  }catch(_){}
+}
+function posStilHtml(){
+  const akt = posStil();
+  return `
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Allgemein</div>
+      ${typeof designWahlHtml === 'function' ? designWahlHtml() : '<div class="sync-unter-titel">Darstellung der Rechnungspositionen (PT, LS, GKV)</div>'}
+      <div class="pos-stil-wahl">${POS_STILE.map(x=> `
+        <label class="pos-stil-option${x.k === akt ? ' an' : ''}"><input type="radio" name="posStil" value="${x.k}"${x.k === akt ? ' checked' : ''}>
+          <span><b>${x.titel}</b><small>${x.text}</small></span></label>`).join('')}
+      </div>
+      <div class="sync-unter-titel" style="margin-top:14px;">Schrift der Ziffern</div>
+      <div class="pos-stil-wahl">
+        <label class="pos-stil-option${!posZifferGross() ? ' an' : ''}"><input type="radio" name="zifferGroesse" value="klein"${!posZifferGross() ? ' checked' : ''}>
+          <span><b>Klein</b><small>Ziffer klein und grau vor der Bezeichnung.</small></span></label>
+        <label class="pos-stil-option${posZifferGross() ? ' an' : ''}"><input type="radio" name="zifferGroesse" value="gross"${posZifferGross() ? ' checked' : ''}>
+          <span><b>Groß</b><small>Ziffer groß und fett (wie früher bei den EBM-Ziffern).</small></span></label>
+      </div>
+    </div>`;
+}
+if(document.body) posStilAnwenden(); else document.addEventListener('DOMContentLoaded', posStilAnwenden);
 function betaProfileHtml(){
   const zeilen = (art)=> betaProfile(art).map(p=> `
         <button type="button" class="profil-zeile" data-art="${art}" data-id="${htmlEsc(p.id)}">
@@ -9411,7 +9757,7 @@ function betaProfileHtml(){
         <div class="profil-liste" data-art="${art}">${liste || '<div class="beta-erg-klein">noch keine Profile</div>'}</div>
         <button type="button" class="btn-sekundaer ${neuAttr}" data-art="${art}" style="margin-top:8px;">+ Neues Profil</button>
       </div>`;
-  return `
+  return posStilHtml() + `
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Profile (Rechnungspositionen)</div>
       <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
@@ -9561,6 +9907,15 @@ async function betaProfilBearbeiten(art, id){
 }
 
 function betaProfileWiring(neuZeichnen){
+  if(typeof designWahlWiring === 'function') designWahlWiring();
+  document.querySelectorAll('input[name="zifferGroesse"]').forEach(r=> r.onchange = ()=>{
+    const e = ladeEinstellungen(); e.zifferGross = r.value === 'gross'; speichereEinstellungen(e); posStilAnwenden();
+    document.querySelectorAll('input[name="zifferGroesse"]').forEach(x=> x.closest('.pos-stil-option').classList.toggle('an', x.checked));
+  });
+  document.querySelectorAll('input[name="posStil"]').forEach(r=> r.onchange = ()=>{
+    const e = ladeEinstellungen(); e.posStil = r.value; speichereEinstellungen(e); posStilAnwenden();
+    document.querySelectorAll('input[name="posStil"]').forEach(x=> x.closest('.pos-stil-option').classList.toggle('an', x.checked));
+  });
   document.querySelectorAll('.profil-zeile').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, b.dataset.id)) neuZeichnen(); });
   document.querySelectorAll('.profil-neu').forEach(b=> b.onclick = async ()=>{ if(await betaProfilBearbeiten(b.dataset.art, null)) neuZeichnen(); });
   document.querySelectorAll('[data-gkvprofil]').forEach(b=> b.onclick = async ()=>{ if(await gkvProfilBearbeiten(b.dataset.gkvprofil)) neuZeichnen(); });
@@ -10497,6 +10852,43 @@ function gkvPositionen(auswahl, dt){
   });
   return out;
 }
+// ---------- Ausschluesse (wie die GOAE-Ausschluesse bei PT/LS) ----------
+// -> { schluessel: { grund, partner:[schluessel] } } fuer jede Zeile der Liste,
+// die neben der aktuellen Auswahl nicht (oder nur mit Voraussetzung) geht
+const GKV_NICHT_NFD = ['01100', '01101', '01102', '01410', '01411', '01412'];
+function gkvAusschluesse(auswahl, liste, dt){
+  const gopVon = (k, a)=>{ const g = EBM_GRUPPEN[k]; return g ? g.waehle(dt, a && a.stufe) : k; };
+  const gew = Object.keys(auswahl || {}).filter(k=> auswahl[k]).map(k=> ({ k, gop: gopVon(k, auswahl[k]) }));
+  const out = {};
+  (liste || []).forEach(k=>{
+    const c = gopVon(k, auswahl[k]);
+    const andere = gew.filter(x=> x.k !== k);
+    const hat = (re)=> andere.filter(x=> typeof re === 'string' ? x.gop === re : re.test(x.gop));
+    let grund = '', partner = [];
+    const setze = (gr, p)=>{ if(!grund){ grund = gr; partner = (p || []).map(x=> x.k); } };
+    if(/^0[34]\d{3}$/.test(c)) setze('im Ärztlichen Bereitschaftsdienst nicht berechnungsfähig (Kap. 3/4)');
+    if(GKV_NICHT_NFD.includes(c)) setze('nicht im organisierten Not-/Bereitschaftsdienst');
+    if(c === '01226'){ if(!hat('01212').length) setze('nur zusammen mit 01212 (Mo–Fr 19–7 Uhr, Sa/So/Feiertag)'); else if(hat('01224').length) setze('nicht neben 01224', hat('01224')); }
+    if(c === '01223' && !hat('01210').length) setze('nur zusammen mit 01210');
+    if(c === '01224'){ if(!hat('01212').length) setze('nur zusammen mit 01212'); else if(hat('01226').length) setze('nicht neben 01226', hat('01226')); }
+    if(/^0121[468]$/.test(c) && hat(/^0121[02]$/).length) setze('nicht beim selben Kontakt wie die Notfallpauschale', hat(/^0121[02]$/));
+    if(/^0121[02]$/.test(c)){
+      if(hat(/^0121[468]$/).length) setze('nicht beim selben Kontakt wie die Konsultationspauschale', hat(/^0121[468]$/));
+      else if(hat(/^0120[57]$/).length) setze('nicht neben der Abklärungspauschale', hat(/^0120[57]$/));
+    }
+    if(/^0120[57]$/.test(c)){
+      if(hat(/^0121[02]$/).length) setze('nicht neben der Notfallpauschale', hat(/^0121[02]$/));
+      else if(hat(/^3[345]\d{3}$/).length) setze('nicht neben Leistungen der Kapitel 33–35', hat(/^3[345]\d{3}$/));
+    }
+    if(/^3[345]\d{3}$/.test(c) && hat(/^0120[57]$/).length) setze('nicht neben der Abklärungspauschale 01205/01207', hat(/^0120[57]$/));
+    if(c === '01413' && hat('01418').length) setze('nicht neben 01418 beim selben Patienten', hat('01418'));
+    if(c === '01418' && hat('01413').length) setze('nicht neben 01413 beim selben Patienten', hat('01413'));
+    if((c === '01221' || c === '01222') && !hat('01220').length) setze('nur zusammen mit 01220');
+    if(c === '01450' && !hat(/^012(1[02468])$/).length) setze('nur zu einem Video-Kontakt (01210/01212/01214–01218)');
+    if(grund) out[k] = { grund, partner };
+  });
+  return out;
+}
 function gkvHinweise(pos){
   const hat = (g)=> pos.some(p=> p.gop === g);
   const h = [];
@@ -10981,7 +11373,8 @@ function ansichtGkv(bearbeitenId){
     const dt = dtVon();
     const nacht = ebmWochenendeOderFeiertag(dt) ? (istFeiertagBW(dt) || (dt.getDay() === 0 ? 'Sonntag' : dt.getDay() === 6 ? 'Samstag' : 'Feiertag')) : (ebmStunde(dt) >= 7 && ebmStunde(dt) < 19 ? 'Werktag, 7–19 Uhr' : 'Werktag, Unzeit');
     el('gkvZeitInfo').textContent = 'Ziffern nach Zeitpunkt: ' + nacht;
-    el('gkvListe').innerHTML = liste.map(k=>{
+    const aus = gkvAusschluesse(st.auswahl, liste, dt);
+    el('gkvListe').innerHTML = '<div class="pos-gruppe" data-gruppe="gkv">' + liste.map(k=>{
       const g = EBM_GRUPPEN[k], a = st.auswahl[k];
       const gop = g ? g.waehle(dt, a && a.stufe) : k;
       const e = ebmEintrag(gop);
@@ -10991,23 +11384,42 @@ function ansichtGkv(bearbeitenId){
       const mehr = a && (g ? g.mehrfach : EBM_MEHRFACH.includes(gop));
       const wst = k === 'weg' && a ? g.stufen.find(x=> x.k === a.stufe) : null;
       const anz = wst && wst.anz ? wst.anz : a ? Math.max(1, Number(a.anz) || 1) : 1;
-      return '<div class="gkv-pos' + (a ? ' an' : '') + '" data-k="' + k + '">' +
-        '<div class="gkv-pos-haupt" data-tipp="' + k + '"><span class="gkv-gop">' + gop + '</span>' +
-        '<span class="gkv-txt">' + htmlEsc(titel) + (unter ? '<small>' + htmlEsc(unter) + '</small>' : '') + '</span>' +
+      const x = aus[k];
+      return '<div class="gkv-pos pos-item' + (a ? ' an' : '') + (x ? (a ? ' gkv-konflikt' : ' gkv-aus') : '') + '" data-k="' + k + '" data-key="' + k + '" data-drag="1">' +
+        '<div class="gkv-pos-haupt" data-tipp="' + k + '"><span class="gkv-haken" aria-hidden="true"></span><span class="gkv-gop">' + gop + '</span>' +
+        '<span class="gkv-txt">' + htmlEsc(titel) + (unter ? '<small>' + htmlEsc(unter) + '</small>' : '') +
+          (x ? '<span class="gkv-aus-grund">' + (a ? '⚠ ' : '') + htmlEsc(x.grund) + '</span>' : '') + '</span>' +
         '<span class="gkv-eur">' + betaEuro(ebmEuro(gop, dt) * (a ? anz : 1)) + '</span></div>' +
         (k === 'weg' ? '<div class="gkv-stufen">' + g.stufen.map(s=> '<button type="button" data-stufe="' + s.k + '" class="' + (a && a.stufe === s.k ? 'an' : '') + '">' + s.label + '</button>').join('') + '</div>' : '') +
         (mehr ? '<div class="gkv-anz"><button type="button" data-minus="' + k + '">−</button><b>' + anz + '×</b><button type="button" data-plus="' + k + '">+</button></div>' : '') +
         '<button type="button" class="gkv-weg" data-weg="' + k + '" aria-label="aus der Liste entfernen">×</button></div>';
-    }).join('');
+    }).join('') + '<div class="pos-gruppe-ende"></div></div><div class="eigene-hinweis gkv-zieh-hinweis">Lang drücken und ziehen: Reihenfolge ändern.</div>';
+    // Reihenfolge per langem Druecken + Ziehen (wie bei PT/LS)
+    betaPosZiehen(el('gkvListe'), (gr)=>{
+      if(Array.isArray(gr.gkv) && gr.gkv.length){ liste = gr.gkv.slice(); gkvListeSpeichern(liste); }
+      zeichnen();
+    });
     const pos = gkvPositionen(st.auswahl, dt);
     const summe = pos.reduce((s, p)=> s + p.euro, 0);
     el('gkvSumme').innerHTML = '<b>' + betaEuro(summe) + '</b> <small>' + pos.length + ' Position' + (pos.length === 1 ? '' : 'en') + '</small>';
     el('gkvHinweise').innerHTML = gkvHinweise(pos).map(h=> '<div class="gkv-warn">' + htmlEsc(h) + '</div>').join('');
     profileZeichnen();
-    el('gkvListe').querySelectorAll('[data-tipp]').forEach(b=> b.onclick = ()=>{
+    el('gkvListe').querySelectorAll('[data-tipp]').forEach(b=> b.onclick = async ()=>{
       const k = b.dataset.tipp;
-      if(st.auswahl[k]) delete st.auswahl[k];
-      else st.auswahl[k] = k === 'weg' ? { anz: 1, stufe: '2' } : { anz: 1 };
+      if(st.auswahl[k]){ delete st.auswahl[k]; zeichnen(); return; }
+      const x = aus[k];
+      if(x){
+        // ausgegraut: wie bei PT/LS nachfragen
+        const gop = (EBM_GRUPPEN[k] ? EBM_GRUPPEN[k].waehle(dt, null) : k);
+        const kn = [{ label: 'Abbrechen', akt: 'nein' }];
+        if(x.partner.length) kn.push({ label: x.partner.map(p=> EBM_GRUPPEN[p] ? EBM_GRUPPEN[p].waehle(dt, st.auswahl[p] && st.auswahl[p].stufe) : p).join(', ') + ' abwählen', akt: 'tausch' });
+        kn.push({ label: 'Trotzdem wählen', akt: 'beide', primaer: !x.partner.length });
+        const akt = await betaOverlay.ergebnis('Ausschluss laut EBM', '<div class="fb-info">' + htmlEsc(gop + ': ' + x.grund + '.') + '</div>', kn);
+        betaOverlay.schliessen();
+        if(akt === 'nein' || !akt) return;
+        if(akt === 'tausch') x.partner.forEach(p=> delete st.auswahl[p]);
+      }
+      st.auswahl[k] = k === 'weg' ? { anz: 1, stufe: st.kmStufe || '2' } : { anz: 1 };
       zeichnen();
     });
     el('gkvListe').querySelectorAll('[data-stufe]').forEach(b=> b.onclick = (ev)=>{
@@ -11028,9 +11440,8 @@ function ansichtGkv(bearbeitenId){
     const pr = gkvProfileLaden();
     const akt = pr.find(p=> p.id === st.profil);
     const geaendert = akt && gkvAuswahlNorm(akt.auswahl) !== gkvAuswahlNorm(st.auswahl);
-    el('gkvProfile').innerHTML = pr.map(p=> '<span class="fb-chip arzt' + (p.id === st.profil && !geaendert ? ' an' : '') + '"><button type="button" class="w" data-profil="' + htmlEsc(p.id) + '">' + htmlEsc(p.name) + '</button><button type="button" class="x" data-profilweg="' + htmlEsc(p.id) + '" aria-label="Profil löschen">×</button></span>').join('') +
-      '<button type="button" class="fb-chip" id="gkvProfilNeu">+ Profil</button>' +
-      (geaendert ? '<div class="gkv-profil-hinweis">Auswahl weicht von „' + htmlEsc(akt.name) + '“ ab · <a href="#" id="gkvProfilUeber">Profil damit überschreiben</a></div>' : '');
+    // Profile werden nur noch in den Einstellungen angelegt/geaendert/geloescht
+    el('gkvProfile').innerHTML = pr.map(p=> '<button type="button" class="fb-chip' + (p.id === st.profil && !geaendert ? ' an' : '') + '" data-profil="' + htmlEsc(p.id) + '">' + htmlEsc(p.name) + '</button>').join('');
     el('gkvProfile').querySelectorAll('[data-profil]').forEach(b=> b.onclick = ()=>{
       const p = gkvProfileLaden().find(x=> x.id === b.dataset.profil); if(!p) return;
       st.auswahl = JSON.parse(JSON.stringify(p.auswahl)); st.profil = p.id;
@@ -11041,28 +11452,6 @@ function ansichtGkv(bearbeitenId){
       if(neu) gkvListeSpeichern(liste);
       zeichnen();
     });
-    el('gkvProfile').querySelectorAll('[data-profilweg]').forEach(b=> b.onclick = async ()=>{
-      const p = gkvProfileLaden().find(x=> x.id === b.dataset.profilweg); if(!p) return;
-      if(!await betaFrage('Profil „' + p.name + '“ löschen?', 'Löschen', 'Abbrechen')) return;
-      gkvProfilLoeschen(p.id);
-      if(st.profil === p.id) st.profil = '';
-      profileZeichnen();
-    });
-    el('gkvProfilNeu').onclick = async ()=>{
-      if(!Object.keys(st.auswahl).length){ el('gkvMeldung').innerHTML = '<div class="gkv-warn">Erst die Positionen wählen, dann als Profil speichern.</div>'; return; }
-      const n = await gkvNameFragen('Neues Profil', '', 'Die aktuell gewählten Positionen werden als Schnellwahl gespeichert.');
-      if(!n) return;
-      const p = { id: 'p' + Date.now().toString(36), name: n, auswahl: JSON.parse(JSON.stringify(st.auswahl)) };
-      gkvProfilSichern(p);
-      st.profil = p.id; LS.set('gkv_profil_letztes', p.id);
-      profileZeichnen();
-    };
-    const ue = document.getElementById('gkvProfilUeber');
-    if(ue) ue.onclick = (ev)=>{
-      ev.preventDefault();
-      const p = gkvProfileLaden().find(x=> x.id === st.profil); if(!p) return;
-      p.auswahl = JSON.parse(JSON.stringify(st.auswahl)); gkvProfilSichern(p); profileZeichnen();
-    };
   }
   function verlaufZeichnen(){
     const a = gkvFaelleLaden().slice().reverse().slice(0, 25);
@@ -12020,6 +12409,326 @@ document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState === 'visible' && Date.now() - syncZuletzt > 15000) faelleAbgleichen(false);
 });
 setInterval(()=>{ if(document.visibilityState === 'visible' && Date.now() - syncZuletzt > 55000) faelleAbgleichen(false); }, 60000);
+
+// =====================================================================
+// Designs (Einstellungen > Allgemein > Design)
+// ---------------------------------------------------------------------
+// standard = bisheriges Aussehen
+// klinik   = sachlich: weisse Flaechen, Dienst-Karte mit Foerderung,
+//            offene Faelle, Leiste unten
+// nacht    = dunkel/blendfrei: Dienst als Uhr-Ring, Einsaetze der Nacht
+//            als Zeitleiste, neue Faelle ueber drei Knoepfe unten
+// einhand  = alles im Daumenbereich: Status oben, grosse Kacheln, Leiste
+//            unten, grosse Tippflaechen
+// Nur Optik + Startseite -- Daten, Ablaeufe und Knoepfe bleiben dieselben.
+// Bewusst nur Systemschriften (keine Web-Fonts): kein Abruf bei Dritten,
+// funktioniert offline.
+// =====================================================================
+const DESIGNS = [
+  { k: 'standard', titel: 'Standard', text: 'Bisheriges Aussehen.', farben: ['#2b3a55', '#1f5f9e', '#1f8a4c', '#7d4e9e'] },
+  { k: 'klinik', titel: 'Klinik', text: 'Sachlich und ruhig: weiße Flächen, Dienst-Karte mit Förderung, offene Fälle, Leiste unten.', farben: ['#ffffff', '#141a24', '#1f5f9e', '#6e4391'] },
+  { k: 'nacht', titel: 'Nachtfahrt', text: 'Dunkel und blendfrei: Dienst als Uhr-Ring, Einsätze als Zeitleiste, Bernstein-Akzent.', farben: ['#0b1020', '#141b2e', '#ffb547', '#c79bff'] },
+  { k: 'einhand', titel: 'Einhand', text: 'Alles im Daumenbereich: große Kacheln, kräftige Schrift, große Tippflächen.', farben: ['#eceef2', '#101317', '#5b3480', '#17663a'] }
+];
+const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
+function designAnwenden(){
+  try{
+    const d = designAktuell(), b = document.body;
+    DESIGNS.forEach(x=> b.classList.toggle('design-' + x.k, x.k === d));
+    // Nachtfahrt ist immer dunkel (die vorhandenen Dunkel-Regeln greifen mit)
+    if(d === 'nacht') b.classList.add('dunkel');
+    else b.classList.toggle('dunkel', !!(ladeEinstellungen() || {}).dunkel);
+    const dunkel = b.classList.contains('dunkel');
+    const tc = { standard: '#2b3a55', klinik: dunkel ? '#242b36' : '#ffffff', nacht: '#0b1020', einhand: dunkel ? '#1b2028' : '#eceef2' }[d];
+    const m = document.querySelector('meta[name="theme-color"]'); if(m && tc) m.setAttribute('content', tc);
+  }catch(_){}
+}
+// themaAnwenden (Sonne/Mond, Einstellungen) zieht das Design immer mit
+themaAnwenden = (function(basis){ return function(){ basis(); designAnwenden(); }; })(themaAnwenden);
+if(document.body) designAnwenden(); else document.addEventListener('DOMContentLoaded', designAnwenden);
+
+function designWahlHtml(){
+  const akt = designAktuell();
+  return `
+      <div class="sync-unter-titel">Design</div>
+      <div class="pos-stil-wahl design-wahl">${DESIGNS.map(x=> `
+        <label class="pos-stil-option${x.k === akt ? ' an' : ''}"><input type="radio" name="design" value="${x.k}"${x.k === akt ? ' checked' : ''}>
+          <span class="design-muster" aria-hidden="true">${x.farben.map(f=> `<i style="background:${f}"></i>`).join('')}</span>
+          <span><b>${x.titel}</b><small>${x.text}</small></span></label>`).join('')}
+      </div>
+      <div class="sync-unter-titel" style="margin-top:14px;">Darstellung der Rechnungspositionen (PT, LS, GKV)</div>`;
+}
+function designWahlWiring(){
+  document.querySelectorAll('input[name="design"]').forEach(r=> r.onchange = ()=>{
+    const e = ladeEinstellungen(); e.design = r.value; speichereEinstellungen(e); designAnwenden();
+    document.querySelectorAll('input[name="design"]').forEach(x=> x.closest('.pos-stil-option').classList.toggle('an', x.checked));
+  });
+}
+
+// ---------- Dienst aus den lokal erfassten GKV-Faellen ----------
+function designFallZeit(f){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((f && f.datum) || ''), z = /^(\d{1,2}):(\d{2})/.exec((f && f.zeit) || '');
+  return m ? new Date(+m[1], +m[2] - 1, +m[3], z ? +z[1] : 12, z ? +z[2] : 0) : null;
+}
+// Fahrdienst: Werktag 18-08 Uhr, Wochenende/Feiertag/24.12./31.12. 08-08 Uhr
+function designDienstFenster(t){
+  const tag = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  if(t.getHours() < 8) tag.setDate(tag.getDate() - 1);
+  const we = fahrdienstWochenendSatz(tag);
+  const von = new Date(tag); von.setHours(we ? 8 : 18, 0, 0, 0);
+  const bis = new Date(tag); bis.setDate(bis.getDate() + 1); bis.setHours(8, 0, 0, 0);
+  return { tag, von, bis, stunden: (bis - von) / 3600000, wochenende: we };
+}
+function designDatumDe(d){ return zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' + d.getFullYear(); }
+function designUhr(d){ return zz2(d.getHours()) + ':' + zz2(d.getMinutes()); }
+function designProfilName(id){
+  try{ const p = (typeof gkvProfileLaden === 'function' ? gkvProfileLaden() : []).find(x=> x.id === id); if(p) return p.name; }catch(_){}
+  return { hb: 'Hausbesuch', tel: 'Telefon', sitz: 'Sitzdienst' }[id] || 'GKV';
+}
+// -> { modus: 'laufend'|'fenster'|'letzter'|'leer', fenster, faelle:[{f,t}], gkv, pauschale, foerderung, art }
+function designDienstInfo(){
+  const jetzt = new Date();
+  const alle = (typeof gkvFaelleLaden === 'function' ? gkvFaelleLaden() : [])
+    .filter(f=> f && f.name !== (typeof GKV_PSEUDO_NAME !== 'undefined' ? GKV_PSEUDO_NAME : ''))
+    .map(f=> ({ f, t: designFallZeit(f) })).filter(x=> x.t);
+  let fe = designDienstFenster(jetzt), modus;
+  const imFenster = jetzt >= fe.von && jetzt < fe.bis;
+  let drin = alle.filter(x=> x.t >= fe.von && x.t < fe.bis);
+  if(imFenster && drin.length) modus = 'laufend';
+  else if(imFenster) modus = 'fenster';
+  else if(alle.length){
+    const letzter = alle.reduce((a, b)=> b.t > a.t ? b : a);
+    fe = designDienstFenster(letzter.t);
+    if(!(letzter.t >= fe.von && letzter.t < fe.bis)){   // Werktag tagsueber -> eigener Tagesblock ohne Pauschale
+      const tag = new Date(letzter.t.getFullYear(), letzter.t.getMonth(), letzter.t.getDate());
+      const von = new Date(tag); von.setHours(8, 0, 0, 0); const bis = new Date(tag); bis.setHours(18, 0, 0, 0);
+      fe = { tag, von, bis, stunden: null, wochenende: false };
+    }
+    drin = alle.filter(x=> x.t >= fe.von && x.t < fe.bis);
+    modus = 'letzter';
+  } else modus = 'leer';
+  drin.sort((a, b)=> b.t - a.t);
+  const sitz = drin.some(x=> x.f.profil === 'sitz');
+  const art = sitz ? 'Sitzdienst' : 'Fahrdienst';
+  const gkv = betaRund2(drin.reduce((s, x)=> s + (Number(x.f.euro) || 0), 0));
+  let pauschale = null, foerderung = null;
+  if(!sitz && fe.stunden && modus !== 'fenster'){
+    const dt = designDatumDe(fe.tag);
+    const zusatz = fahrdienstZusatzSatz(dt) * 24;
+    pauschale = betaRund2(fe.stunden * fahrdienstPauschaleSatz(dt, 'Fahrdienst'));
+    foerderung = betaRund2(Math.max(0, pauschale - gkv) + zusatz);
+  }
+  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art, jetzt };
+}
+function designDienstTitel(info){
+  const fe = info.fenster;
+  return info.art + ' · ' + designUhr(fe.von) + ' – ' + designUhr(fe.bis);
+}
+function designDienstUnter(info){
+  const fe = info.fenster;
+  return DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + (fe.wochenende ? 'Wochenende/Feiertag' : (fe.stunden ? 'Werktag' : 'tagsüber'));
+}
+function designUeber(info){
+  return { laufend: 'Laufender Dienst', fenster: 'Dienstzeit · noch kein Fall', letzter: 'Letzter Dienst', leer: 'Dienst' }[info.modus];
+}
+function designRestText(info){
+  const ms = info.fenster.bis - info.jetzt;
+  if(ms <= 0) return '';
+  const min = Math.round(ms / 60000);
+  return 'noch ' + Math.floor(min / 60) + ' h ' + zz2(min % 60) + ' min';
+}
+function designFortschritt(info){
+  const fe = info.fenster;
+  if(info.modus === 'letzter') return 1;
+  return Math.max(0, Math.min(1, (info.jetzt - fe.von) / (fe.bis - fe.von)));
+}
+
+// ---------- Offene Faelle (unfertige LS/PT + GKV noch nicht im Fahrtenbuch) ----------
+function designOffeneFaelle(){
+  const out = [];
+  try{
+    betaEntwuerfe().forEach(e=> out.push({ art: e.art, name: ((e.werte || {}).txtName || '').trim() || 'ohne Namen', unter: (e.art === 'ls' ? 'Leichenschau' : 'Privat') + ' · unfertig', status: 'Entwurf', oeffnen: ()=> betaEntwurfOeffnen(e, null) }));
+  }catch(_){}
+  try{
+    gkvFaelleLaden().filter(f=> f && f.status !== 'eingetragen').slice().reverse().forEach(f=> out.push({ art: 'gkv', name: f.name || 'ohne Namen',
+      unter: designProfilName(f.profil) + ' · ' + isoDe(f.datum).slice(0, 6) + ' ' + (f.zeit || ''), betrag: f.euro, status: 'nicht im Fahrtenbuch', oeffnen: ()=> ansichtGkv(f.id) }));
+  }catch(_){}
+  return out;
+}
+function designWeiterFall(){
+  try{
+    if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim())
+      return { art: 'gkv', titel: (gkvEntwurf.name || 'GKV-Patient') + ' · GKV', oeffnen: ()=> ansichtGkv() };
+    const e = betaEntwuerfe()[0];
+    if(e) return { art: e.art, titel: (((e.werte || {}).txtName || '').trim() || 'ohne Namen') + ' · ' + e.art.toUpperCase(), oeffnen: ()=> betaEntwurfOeffnen(e, null) };
+  }catch(_){}
+  return null;
+}
+
+// ---------- Icons (Strich-SVG, keine Emoji) ----------
+const DS_ICON = {
+  start: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6h-6v6H4z"/></svg>',
+  liste: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  auto: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16l2-6h11l3 6v3H3z"/><circle cx="7" cy="19" r="1.6"/><circle cx="16" cy="19" r="1.6"/><path d="M7 10l1.5-4h6L16 10"/></svg>',
+  regler: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+  stift: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  pfeil: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'
+};
+const DS_KACHEL = {
+  ls: { code: 'LS', titel: 'Leichenschau', lang: 'Leichenschau' },
+  pt: { code: 'PT', titel: 'Privat', lang: 'Privatrechnung' },
+  gkv: { code: 'GKV', titel: 'Kasse', lang: 'Kassenpatient' }
+};
+
+// ---------- Startseite je Design ergaenzen ----------
+ansichtStart = (function(basis){ return function(){ basis(); try{ designStartErgaenzen(); }catch(e){ console.warn('Design', e); } }; })(ansichtStart);
+
+function designNav(eintraege){
+  return '<nav class="ds-nav" aria-label="Hauptnavigation">' + eintraege.map(x=>
+    '<button type="button" class="ds-nav-btn' + (x.an ? ' an' : '') + (x.gross ? ' gross' : '') + '" data-nav="' + x.k + '"' + (x.gross || x.nurIcon ? ' aria-label="' + x.label + '"' : '') + '>' + DS_ICON[x.icon] +
+      (x.gross || x.nurIcon ? '' : '<span>' + x.label + '</span>') + '</button>').join('') + '</nav>';
+}
+function designNavWiring(){
+  const klick = (id)=>{ const b = document.getElementById(id); if(b) b.click(); };
+  document.querySelectorAll('.ds-nav [data-nav]').forEach(b=> b.onclick = ()=>{
+    const k = b.dataset.nav;
+    if(k === 'start') window.scrollTo({ top: 0, behavior: 'smooth' });
+    else if(k === 'verwaltung') klick('btnKorrigieren');
+    else if(k === 'fahrtenbuch') klick('btnAlleRechnungen');
+    else if(k === 'neu') klick('kGKV');
+    else if(k === 'einst') klick('btnEinstellungen');
+  });
+}
+function designKachelnUmbauen(info){
+  const anz = { ls: 0, pt: 0 };
+  try{ betaEntwuerfe().forEach(e=>{ if(anz[e.art] !== undefined) anz[e.art]++; }); }catch(_){}
+  [['kLS', 'ls'], ['kPT', 'pt'], ['kGKV', 'gkv']].forEach(([id, art])=>{
+    const b = document.getElementById(id); if(!b) return;
+    const k = DS_KACHEL[art];
+    const unter = art === 'gkv' ? (info.modus === 'laufend' ? info.faelle.length + ' in diesem Dienst' : 'neuer Patient') : (anz[art] ? anz[art] + ' unfertig' : 'neue Rechnung');
+    b.innerHTML = '<span class="ds-code">' + k.code + '</span><span class="ds-kt"><span class="ds-titel">' + k.titel + '</span><span class="ds-lang">' + k.lang + '</span><span class="ds-unter">' + unter + '</span></span>' +
+      '<span class="ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span>';
+  });
+}
+function designDienstKarteHtml(info){
+  if(info.modus === 'leer') return '<section class="ds-dienst leer"><span class="ds-ueber">Dienst</span><span class="ds-dienst-titel">Noch kein GKV-Fall erfasst</span><span class="ds-dienst-unter">Die Dienst-Karte füllt sich mit dem ersten GKV-Patienten.</span></section>';
+  const p = info.pauschale ? Math.min(100, Math.round(info.gkv / info.pauschale * 1000) / 10) : 0;
+  return '<section class="ds-dienst">' +
+    '<div class="ds-dienst-kopf"><div class="ds-dienst-text"><span class="ds-ueber">' + designUeber(info) + '</span>' +
+      '<span class="ds-dienst-titel">' + designDienstTitel(info) + '</span><span class="ds-dienst-unter">' + designDienstUnter(info) + '</span></div>' +
+      '<span class="ds-gkv-marke">' + info.faelle.length + ' GKV</span></div>' +
+    (info.pauschale ? '<div class="ds-fort"><div class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + betaEuro(info.gkv).replace(' €', '') + ' / ' + betaEuro(info.pauschale) + '</b></div>' +
+      '<div class="ds-balken"><i style="width:' + p + '%"></i></div>' +
+      '<span class="ds-fort-text">Förderung voraussichtlich <b>' + betaEuro(info.foerderung) + '</b> <small>(ohne Strukturpauschale)</small></span></div>'
+      : '<div class="ds-fort"><div class="ds-fort-zeile"><span>GKV in diesem Dienst</span><b>' + betaEuro(info.gkv) + '</b></div>' + (info.art === 'Sitzdienst' ? '<span class="ds-fort-text">Sitzdienst: Förderung 50 €/h nach Präsenzzeit</span>' : '') + '</div>') +
+    '</section>';
+}
+function designFallZeilenHtml(liste){
+  if(!liste.length) return '<div class="ds-leer">Keine offenen Fälle.</div>';
+  return liste.map((x, i)=> '<button type="button" class="ds-fall" data-fall="' + i + '"><span class="ds-fall-marke ' + x.art + '">' + x.art.toUpperCase() + '</span>' +
+    '<span class="ds-fall-text"><span class="ds-fall-name">' + htmlEsc(x.name) + '</span><span class="ds-fall-unter">' + htmlEsc(x.unter) + '</span></span>' +
+    '<span class="ds-fall-rechts">' + (x.betrag != null ? '<span class="ds-fall-betrag">' + betaEuro(x.betrag) + '</span>' : '') + '<span class="ds-fall-status">' + htmlEsc(x.status) + '</span></span></button>').join('');
+}
+function designZeitleisteHtml(info){
+  if(!info.faelle.length) return '<div class="ds-leer">' + (info.modus === 'fenster' ? 'Noch kein Einsatz in dieser Dienstzeit.' : 'Noch keine GKV-Einsätze erfasst.') + '</div>';
+  return info.faelle.map(x=> '<button type="button" class="ds-ein" data-gkv="' + htmlEsc(x.f.id) + '"><span class="ds-ein-zeit">' + designUhr(x.t) + '</span><span class="ds-ein-punkt" aria-hidden="true"></span>' +
+    '<span class="ds-ein-text"><span class="ds-ein-name">' + htmlEsc(x.f.name || 'ohne Namen') + '</span><span class="ds-ein-unter">' + htmlEsc(designProfilName(x.f.profil)) + (x.f.status === 'eingetragen' ? ' · im Fahrtenbuch' : ' · offen') + '</span></span>' +
+    '<span class="ds-ein-betrag">' + betaEuro(x.f.euro).replace(' €', '') + '</span></button>').join('');
+}
+function designRingHtml(info){
+  const r = 110, u = 2 * Math.PI * r, p = designFortschritt(info), fe = info.fenster;
+  const punkte = info.faelle.map(x=>{
+    const q = Math.max(0, Math.min(1, (x.t - fe.von) / (fe.bis - fe.von))), w = -Math.PI / 2 + q * 2 * Math.PI;
+    return '<circle cx="' + (140 + r * Math.cos(w)).toFixed(1) + '" cy="' + (140 + r * Math.sin(w)).toFixed(1) + '" r="6" class="ds-ring-fall"/>';
+  }).join('');
+  const gross = info.modus === 'letzter' ? designDatumDe(fe.tag).slice(0, 6) : designUhr(info.jetzt);
+  const unter = info.modus === 'letzter' ? 'letzter Dienst' : (info.modus === 'leer' ? 'kein Dienst erfasst' : designRestText(info));
+  return '<div class="ds-ring" id="dsRing"><svg viewBox="0 0 280 280" role="img" aria-label="Dienstzeit ' + Math.round(p * 100) + ' Prozent vorbei">' +
+    '<circle cx="140" cy="140" r="126" class="ds-ring-aussen"/><circle cx="140" cy="140" r="' + r + '" class="ds-ring-spur"/>' +
+    '<circle cx="140" cy="140" r="' + r + '" class="ds-ring-fort" stroke-dasharray="' + (u * p).toFixed(1) + ' ' + u.toFixed(1) + '" transform="rotate(-90 140 140)"/>' +
+    '<circle cx="140" cy="140" r="94" class="ds-ring-innen"/>' + punkte + '</svg>' +
+    '<div class="ds-ring-mitte"><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-rest">' + unter + '</span></div></div>' +
+    '<div class="ds-ring-grenzen"><span>' + designUhr(fe.von) + '</span><span>' + designUhr(fe.bis) + '</span></div>';
+}
+
+function designStartErgaenzen(){
+  const d = designAktuell();
+  if(d === 'standard') return;
+  const app = document.getElementById('app');
+  const reihe = app.querySelector('.kachelreihe');
+  const info = designDienstInfo();
+  designKachelnUmbauen(info);
+  const vor = (html)=> reihe.insertAdjacentHTML('beforebegin', html);
+  const anmeldung = (typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet');
+
+  if(d === 'klinik'){
+    vor('<div class="ds-start ds-klinik">' + designDienstKarteHtml(info) + '</div>');
+    const offen = designOffeneFaelle().slice(0, 5);
+    reihe.insertAdjacentHTML('afterend', '<section class="ds-offen"><div class="ds-abschnitt-kopf"><h2>Offene Fälle</h2>' +
+      '<button type="button" class="ds-link" id="dsAlleFaelle">Alle anzeigen</button></div><div class="ds-liste">' + designFallZeilenHtml(offen) + '</div></section>');
+    app.insertAdjacentHTML('beforeend', designNav([
+      { k: 'start', icon: 'start', label: 'Start', an: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen' },
+      { k: 'neu', icon: 'plus', label: 'Neuer GKV-Patient', gross: true }, { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch' },
+      { k: 'einst', icon: 'regler', label: 'Einstellungen' }]));
+    app.querySelectorAll('.ds-fall').forEach(b=> b.onclick = ()=> offen[+b.dataset.fall].oeffnen());
+    const alle = document.getElementById('dsAlleFaelle'); if(alle) alle.onclick = ()=> document.getElementById('btnKorrigieren').click();
+  }
+
+  if(d === 'nacht'){
+    const fe = info.fenster;
+    vor('<div class="ds-start ds-nacht">' +
+      '<div class="ds-kopfzeile">' + (info.modus === 'leer' ? 'NOCH KEIN DIENST' : (DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + info.art).toUpperCase()) + '</div>' +
+      designRingHtml(info) +
+      (info.pauschale != null ? '<section class="ds-foerd"><div><span class="ds-klein">FÖRDERUNG ' + (info.modus === 'letzter' ? '' : 'BISHER') + '</span><span class="ds-foerd-wert">' + betaEuro(info.foerderung) + '</span></div>' +
+        '<div class="ds-foerd-rechts"><span>GKV ' + betaEuro(info.gkv) + '</span><span class="ds-schwach">Pauschale ' + betaEuro(info.pauschale) + '</span></div></section>'
+        : (info.modus !== 'leer' ? '<section class="ds-foerd"><div><span class="ds-klein">GKV IN DIESEM DIENST</span><span class="ds-foerd-wert">' + betaEuro(info.gkv) + '</span></div></section>' : '')) +
+      '<section class="ds-zeitleiste"><h2 class="ds-klein">' + (info.modus === 'letzter' ? 'LETZTER DIENST' : (fe.wochenende ? 'DIESER DIENST' : 'DIESE NACHT')) + '</h2>' + designZeitleisteHtml(info) + '</section>' +
+      '</div>');
+    app.insertAdjacentHTML('beforeend', '<nav class="ds-dock" aria-label="Neuer Fall"><span class="ds-klein">NEUER FALL</span><div class="ds-dock-reihe">' +
+      '<button type="button" class="ds-dock-btn ls" data-k="kLS">LS</button><button type="button" class="ds-dock-btn pt" data-k="kPT">PT</button>' +
+      '<button type="button" class="ds-dock-btn gkv" data-k="kGKV">GKV</button></div></nav>');
+    app.querySelectorAll('.ds-dock-btn').forEach(b=> b.onclick = ()=> document.getElementById(b.dataset.k).click());
+    app.querySelectorAll('.ds-ein').forEach(b=> b.onclick = ()=> ansichtGkv(b.dataset.gkv));
+    designUhrStarten();
+  }
+
+  if(d === 'einhand'){
+    const jetzt = info.jetzt, w = designWeiterFall();
+    const status = { laufend: info.art + ' läuft', fenster: 'Dienstzeit', letzter: 'Kein laufender Dienst', leer: 'Bereit' }[info.modus];
+    const unter = info.modus === 'laufend' || info.modus === 'fenster' ? 'bis ' + designUhr(info.fenster.bis) + ' · ' + designDienstUnter(info)
+      : (info.modus === 'letzter' ? 'Letzter Dienst ' + designDienstUnter(info) : 'Noch kein GKV-Fall erfasst');
+    vor('<div class="ds-start ds-einhand">' +
+      '<div class="ds-zeile-oben"><span>' + DESIGN_WT[jetzt.getDay()] + ' ' + zz2(jetzt.getDate()) + '.' + zz2(jetzt.getMonth() + 1) + '. · ' + designUhr(jetzt) + '</span>' +
+        '<span class="ds-sync' + (anmeldung ? ' an' : '') + '"><i></i>' + (anmeldung ? 'OneDrive' : 'nicht angemeldet') + '</span></div>' +
+      '<h2 class="ds-status">' + status + '</h2><div class="ds-status-unter">' + unter + '</div>' +
+      '<div class="ds-zahlen"><div><span>Fälle</span><b>' + info.faelle.length + '</b></div><div><span>GKV</span><b>' + betaEuro(info.gkv).replace(' €', '') + '</b></div>' +
+        '<div><span>Förderung</span><b>' + (info.foerderung != null ? betaEuro(info.foerderung).replace(' €', '') : '–') + '</b></div></div>' +
+      (w ? '<button type="button" class="ds-weiter" id="dsWeiter"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten</span><b>' + htmlEsc(w.titel) + '</b></span>' + DS_ICON.pfeil + '</button>' : '') +
+      '<div class="ds-klein ds-neu-titel">NEUER FALL</div></div>');
+    app.insertAdjacentHTML('beforeend', designNav([
+      { k: 'start', icon: 'start', label: 'Start', an: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen', nurIcon: true },
+      { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch', nurIcon: true }, { k: 'einst', icon: 'regler', label: 'Einstellungen', nurIcon: true }]));
+    if(w) document.getElementById('dsWeiter').onclick = w.oeffnen;
+  }
+  if(app.querySelector('.ds-nav')) designNavWiring();
+}
+
+// Uhr im Ring jede halbe Minute nachfuehren (nur solange die Startseite offen ist)
+let designUhrTimer = null;
+function designUhrStarten(){
+  if(designUhrTimer) return;
+  designUhrTimer = setInterval(()=>{
+    const ring = document.getElementById('dsRing');
+    if(!ring || designAktuell() !== 'nacht'){ clearInterval(designUhrTimer); designUhrTimer = null; return; }
+    const info = designDienstInfo();
+    const neu = document.createElement('div'); neu.innerHTML = designRingHtml(info);
+    const grenzen = ring.nextElementSibling;
+    ring.replaceWith(neu.firstElementChild);
+    if(grenzen && grenzen.classList.contains('ds-ring-grenzen')) grenzen.replaceWith(neu.lastElementChild);
+  }, 30000);
+}
 
 
 function ansichtEinstellungen(){
