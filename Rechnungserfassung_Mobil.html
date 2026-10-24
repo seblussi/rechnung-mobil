@@ -12457,7 +12457,7 @@ async function nfpOsmBildUrl(){
   if(nfpOsmBildUrl.url) return nfpOsmBildUrl.url;
   if(nfpOsmBildUrl.laeuft) return nfpOsmBildUrl.laeuft;
   nfpOsmBildUrl.laeuft = (async ()=>{
-    const SCHL = './__nfp_osm_v6__';
+    const SCHL = './__nfp_osm_v7__';
     let cache = null;
     try{ cache = ('caches' in window) ? await caches.open('nfp-karte') : null; }catch(_){}
     let res = cache ? await cache.match(SCHL) : null;
@@ -12481,15 +12481,18 @@ async function nfpOsmBildUrl(){
   })().catch(()=> null).finally(()=>{ nfpOsmBildUrl.laeuft = null; });
   return nfpOsmBildUrl.laeuft;
 }
-async function nfpOsmZusammensetzen(){
+// Doppelte Aufloesung (Faktor 2, Zoomstufe 13, ca. 380 Kacheln): Ortsnamen und
+// kleine Strassen bleiben auch beim Hineinzoomen lesbar.
+const NFP_OSM_FAKTOR = 2, NFP_OSM_ZOOM = 13;
+async function nfpOsmZusammensetzen(fortschritt){
   if(typeof NFP_KARTE === 'undefined' || typeof createImageBitmap !== 'function') return null;
   if(typeof navigator !== 'undefined' && navigator.onLine === false) return null;
-  const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1], z = 12, n = Math.pow(2, z);
+  const F = NFP_OSM_FAKTOR, W = NFP_KARTE.bild[0] * F, H = NFP_KARTE.bild[1] * F, z = NFP_OSM_ZOOM, n = Math.pow(2, z);
   const tx = (lon)=> (lon + 180) / 360 * n;
   const ty = (lat)=>{ const r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n; };
   const lonT = (x)=> x / n * 360 - 180;
   const latT = (y)=> Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI;
-  const ecken = [[0, 0], [W, 0], [0, H], [W, H]].map(([x, y])=> nfpPixelZuGeo(x, y));
+  const ecken = [[0, 0], [W / F, 0], [0, H / F], [W / F, H / F]].map(([x, y])=> nfpPixelZuGeo(x, y));
   const xs = ecken.map(p=> tx(p.lon)), ys = ecken.map(p=> ty(p.lat));
   const x0 = Math.floor(Math.min.apply(null, xs)), x1 = Math.floor(Math.max.apply(null, xs));
   const y0 = Math.floor(Math.min.apply(null, ys)), y1 = Math.floor(Math.max.apply(null, ys));
@@ -12498,17 +12501,18 @@ async function nfpOsmZusammensetzen(){
   g.fillStyle = '#f2efe9'; g.fillRect(0, 0, W, H);
   const kacheln = [];
   for(let y = y0; y <= y1; y++) for(let x = x0; x <= x1; x++) kacheln.push([x, y]);
-  let fehler = 0, idx = 0;
+  let fehler = 0, idx = 0, fertig = 0;
   const arbeiter = async ()=>{
     while(idx < kacheln.length){
       const [x, y] = kacheln[idx++];
+      if(fortschritt){ try{ fortschritt(++fertig, kacheln.length); }catch(_){} }
       try{
         const r = await fetch('https://tile.openstreetmap.org/' + z + '/' + x + '/' + y + '.png');
         if(!r.ok) throw new Error('HTTP ' + r.status);
         const bmp = await createImageBitmap(await r.blob());
         // Kachelecken in Kartenpixel -> affine Abbildung je Kachel (Homographie lokal linear)
         const p00 = nfpGeoZuPixel(latT(y), lonT(x)), p10 = nfpGeoZuPixel(latT(y), lonT(x + 1)), p01 = nfpGeoZuPixel(latT(y + 1), lonT(x));
-        g.setTransform((p10.x - p00.x) / 256, (p10.y - p00.y) / 256, (p01.x - p00.x) / 256, (p01.y - p00.y) / 256, p00.x, p00.y);
+        g.setTransform(F * (p10.x - p00.x) / 256, F * (p10.y - p00.y) / 256, F * (p01.x - p00.x) / 256, F * (p01.y - p00.y) / 256, F * p00.x, F * p00.y);
         g.drawImage(bmp, -0.5, -0.5, 257, 257);
         g.setTransform(1, 0, 0, 1, 0, 0);
         if(bmp.close) bmp.close();
@@ -12520,10 +12524,10 @@ async function nfpOsmZusammensetzen(){
   // Zonen NICHT ins Bild einbrennen -- sie werden in der App live darueber gezeichnet
   // Quellenangabe auch ins Bild
   const t = '© OpenStreetMap-Mitwirkende';
-  g.font = '600 22px sans-serif';
+  g.font = '600 ' + (22 * F) + 'px sans-serif';
   const tw = g.measureText(t).width;
-  g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(W - tw - 22, H - 38, tw + 16, 30);
-  g.fillStyle = '#333'; g.fillText(t, W - tw - 14, H - 15);
+  g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(W - tw - 22 * F, H - 38 * F, tw + 16 * F, 30 * F);
+  g.fillStyle = '#333'; g.fillText(t, W - tw - 14 * F, H - 15 * F);
   return await new Promise((ok)=> c.toBlob(ok, 'image/jpeg', 0.85));
 }
 
@@ -13618,7 +13622,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v167';
+const APP_VERSION = 'v168';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14264,10 +14268,12 @@ function ansichtEinstellungen(){
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
   document.getElementById('btnEinstOsmSpeichern').onclick = async ()=>{
     // immer frisch zusammensetzen (nicht die Datei aus dem Repo erneut speichern)
-    try{ const cache = await caches.open('nfp-karte'); await cache.delete('./__nfp_osm_v6__'); }catch(_){}
+    try{ const cache = await caches.open('nfp-karte'); await cache.delete('./__nfp_osm_v7__'); }catch(_){}
     nfpOsmBildUrl.url = null; nfpOsmBildUrl.ausRepo = false;
-    appToastAnzeigen('Ersatzkarte wird aus OpenStreetMap zusammengesetzt …', 4000);
-    const blob = await nfpOsmZusammensetzen();
+    const knopf = document.getElementById('btnEinstOsmSpeichern'), alt = knopf.textContent;
+    knopf.disabled = true;
+    const blob = await nfpOsmZusammensetzen((i, n)=>{ knopf.textContent = 'Kacheln laden … ' + Math.round(i / n * 100) + ' %'; });
+    knopf.disabled = false; knopf.textContent = alt;
     if(!blob){ appToastAnzeigen('Das hat nicht geklappt (Internet?). Bitte nochmal versuchen.', 3500); return; }
     const url = URL.createObjectURL(blob), a = document.createElement('a');
     a.href = url; a.download = NFP_OSM_DATEI; document.body.appendChild(a); a.click(); a.remove();
