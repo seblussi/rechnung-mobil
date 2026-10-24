@@ -1165,7 +1165,11 @@
   .ds-dz .ds-fall-marke.pt{background:var(--pt-farbe);} .ds-dz .ds-fall-marke.gkv{background:#7d4e9e;}
   .ds-live > .ds-dz + *, .ds-live > * + .ds-dz{margin-top:12px;}
   .ds-neu-knopf.werkzeug .ds-code{background:#5b6576; font-size:12px;}
-  #dsWerkzeugStapel .ws-hinter{position:fixed; inset:0; z-index:960; background:rgba(0,0,0,.18); opacity:0; transition:opacity .15s;}
+  #dsWerkzeugStapel .ws-hinter{position:fixed; inset:0; z-index:960; background:rgba(15,20,30,.32); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); opacity:0; transition:opacity .15s;}
+  body.dunkel #dsWerkzeugStapel .ws-hinter{background:rgba(0,0,0,.62);}
+  body.dunkel #dsWerkzeugStapel .ws-text{background:#2f3846; border-color:#56627a; color:#fff; box-shadow:0 3px 12px rgba(0,0,0,.6);}
+  body.dunkel #dsWerkzeugStapel .ws-icon{border-color:rgba(255,255,255,.4); box-shadow:0 4px 14px rgba(0,0,0,.65);}
+  #dsWerkzeugStapel .ws-text{border-width:1.5px;}
   #dsWerkzeugStapel.auf .ws-hinter{opacity:1;}
   #dsWerkzeugStapel .ws-stapel{position:fixed; z-index:961; display:flex; flex-direction:column; align-items:flex-end; gap:12px;}
   #dsWerkzeugStapel .ws-eintrag{display:flex; align-items:center; gap:10px; width:auto; margin:0; padding:0; border:0; background:none; font:inherit; cursor:pointer;
@@ -13681,7 +13685,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v174';
+const APP_VERSION = 'v175';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
