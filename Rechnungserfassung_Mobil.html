@@ -12605,37 +12605,8 @@ async function osmOfflineLaden(neu){
   return null;
 }
 setTimeout(()=>{ try{ osmOfflineLaden(); }catch(_){} }, 4000);
-// Bild auf dem Geraet zusammensetzen (Einstellungen), im Geraet speichern und als Datei ausgeben
-async function osmOfflineErzeugen(fortschritt){
-  if(typeof createImageBitmap !== 'function') return null;
-  const k = osmOfflineKacheln(), z = OSM_OFFLINE.z;
-  const bx = k.x1 - k.x0 + 1, by = k.y1 - k.y0 + 1;
-  const c = document.createElement('canvas'); c.width = bx * 256; c.height = by * 256;
-  const g = c.getContext('2d'); g.fillStyle = '#f2efe9'; g.fillRect(0, 0, c.width, c.height);
-  const liste = []; for(let y = k.y0; y <= k.y1; y++) for(let x = k.x0; x <= k.x1; x++) liste.push([x, y]);
-  let idx = 0, fertig = 0, fehler = 0;
-  const arbeiter = async ()=>{
-    while(idx < liste.length){
-      const [x, y] = liste[idx++];
-      try{
-        const r = await fetch('https://tile.openstreetmap.org/' + z + '/' + x + '/' + y + '.png');
-        if(!r.ok) throw new Error('HTTP ' + r.status);
-        const bmp = await createImageBitmap(await r.blob());
-        g.drawImage(bmp, (x - k.x0) * 256, (y - k.y0) * 256); if(bmp.close) bmp.close();
-      }catch(_){ fehler++; }
-      if(fortschritt){ try{ fortschritt(++fertig, liste.length); }catch(_){} }
-    }
-  };
-  await Promise.all([1, 2, 3, 4, 5, 6].map(arbeiter));
-  if(fehler > liste.length * 0.1) return null;
-  const t = '© OpenStreetMap-Mitwirkende'; g.font = '600 28px sans-serif';
-  const tw = g.measureText(t).width;
-  g.fillStyle = 'rgba(255,255,255,.85)'; g.fillRect(c.width - tw - 30, c.height - 48, tw + 20, 38);
-  g.fillStyle = '#333'; g.fillText(t, c.width - tw - 20, c.height - 20);
-  const blob = await new Promise((ok)=> c.toBlob(ok, 'image/jpeg', 0.82));
-  if(blob){ try{ const cache = await caches.open('nfp-karte'); await cache.put('./__osm_offline_v1__', new Response(blob, { headers: { 'Content-Type': 'image/jpeg' } })); }catch(_){} osmOfflineUrl = URL.createObjectURL(blob); }
-  return blob;
-}
+// Hinweis: Vorab-Laden von Kacheln fuer offline ist nach der Nutzungsrichtlinie von
+// tile.openstreetmap.org nicht erlaubt -- daher kein Erzeugen in der App.
 function osmOfflineHtml(z, x0, y0, bw, bh){
   if(!osmOfflineUrl) return '';
   const k = osmOfflineKacheln(), s = Math.pow(2, z - OSM_OFFLINE.z);
@@ -13704,7 +13675,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v172';
+const APP_VERSION = 'v173';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14336,11 +14307,6 @@ function ansichtEinstellungen(){
         <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnEinstOeffneFahrtenbuch"><span class="btn-icon-symbol">&#128657;</span><span class="btn-titel">Fahrtenbuch</span><span class="unter">Excel-Datei öffnen</span></button>
       </div>
     </div>
-    <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">Offline-Karte (OpenStreetMap)</div>
-      <div class="design-hinweis">Für die OSM-Karte ohne Internet: Gebiet vom Rhein bis Hornberg/Ottenhöfen, von Rust/Ettenheim bis Durmersheim. Nach dem Erzeugen sofort auf diesem Gerät offline nutzbar. Die gespeicherte Datei <b>${OSM_OFFLINE.datei}</b> ins GitHub-Repo hochladen, dann haben sie alle Geräte.</div>
-      <button type="button" class="btn-sekundaer" id="btnEinstOsmSpeichern" style="margin-top:8px;">Offline-Karte erzeugen (WLAN, ca. 1–2 Min.)</button>
-    </div>
     ${betaProfileHtml()}
     ${betaAbschnittHtml()}
     ${betaHaftungHtml()}
@@ -14348,16 +14314,6 @@ function ansichtEinstellungen(){
   document.getElementById('btnEinstOeffneUebersicht').onclick = ()=> excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
     'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
-  document.getElementById('btnEinstOsmSpeichern').onclick = async ()=>{
-    const knopf = document.getElementById('btnEinstOsmSpeichern'), alt = knopf.textContent;
-    knopf.disabled = true;
-    const blob = await osmOfflineErzeugen((i, n)=>{ knopf.textContent = 'Kacheln laden … ' + Math.round(i / n * 100) + ' %'; });
-    knopf.disabled = false; knopf.textContent = alt;
-    if(!blob){ appToastAnzeigen('Das hat nicht geklappt (Internet?). Bitte nochmal versuchen.', 3500); return; }
-    const url = URL.createObjectURL(blob), a = document.createElement('a');
-    a.href = url; a.download = OSM_OFFLINE.datei; document.body.appendChild(a); a.click(); a.remove();
-    appToastAnzeigen('Offline-Karte ist auf diesem Gerät aktiv. Datei „' + OSM_OFFLINE.datei + '“ (Downloads) für alle Geräte ins GitHub-Repo hochladen.', 7000);
-  };
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
   // "Speichern"-Schritt.
   const anwenden = ()=>{
