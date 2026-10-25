@@ -11780,8 +11780,8 @@ function fbZeitVorschlaege(fb, datum){
   });
   const kurz = (t)=>{ const [h, m] = t.split(':'); return String(+h) + (m !== '00' ? ':' + m : ''); };
   const schichten = [...new Set(fahrdienstSchichten(datum).map(x=> kurz(x.von) + '-' + kurz(x.bis)))];
-  const liste = schichten.concat([...zaehl.keys()].filter(t=> !schichten.includes(t)).sort((a, b)=> (zaehlTyp.get(b) || 0) - (zaehlTyp.get(a) || 0) || zaehl.get(b) - zaehl.get(a)));
-  (zielTyp === 'we' ? ['8-20', '20-8', '8-8', '8-16', '16-24'] : ['18-23', '19-7', '16-24', '8-16', '18-8'])
+  const liste = schichten.concat([...zaehl.keys()].filter(t=> !schichten.includes(t) && t !== '8-8').sort((a, b)=> (zaehlTyp.get(b) || 0) - (zaehlTyp.get(a) || 0) || zaehl.get(b) - zaehl.get(a)));
+  (zielTyp === 'we' ? ['8-20', '20-8', '8-16', '16-24'] : ['18-23', '19-7', '16-24', '8-16', '18-8'])
     .forEach(t=>{ if(!liste.includes(t)) liste.push(t); });
   return liste.slice(0, 10);
 }
@@ -14264,7 +14264,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v202';
+const APP_VERSION = 'v203';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14387,7 +14387,7 @@ function schichtZeilenHtml(liste, schicht){
 }
 function dienstSchichten(art, tag){ return art === 'Fahrdienst' ? fahrdienstSchichten(tag) : art === 'Sitzdienst' ? sitzdienstSchichten(tag) : art === 'Telemedizin' ? telemedizinSchichten(tag) : art === 'docdirekt' ? docdirektSchichten(tag) : []; }
 const LIVE_DIENSTZEITEN = {
-  Fahrdienst:  { werktag: ['18:00-08:00'], wochenende: ['08:00-08:00'] },
+  Fahrdienst:  { werktag: ['18:00-08:00'], wochenende: [] },
   Sitzdienst:  { werktag: [], wochenende: [] },
   Telemedizin: { werktag: [], wochenende: [] },
   docdirekt:   { werktag: [], wochenende: [] }
@@ -14557,7 +14557,7 @@ async function liveDienstDialog(){
     const schichten = dienstSchichten(art, tag).map(x=> x.von + '-' + x.bis);
     const zuletzt = ((LS.get('live_dienst_zeiten', {}) || {})[art + (we ? '|we' : '|wt')]) || [];
     // bei Fahrdienst stehen die Schichten als eigene Auswahl darueber -- hier nur weitere Zeiten (z.B. 18-08 am Stueck)
-    const l = []; zuletzt.concat(std).forEach(z=>{ if(z && !l.includes(z) && !schichten.includes(z)) l.push(z); });
+    const l = []; zuletzt.concat(std).forEach(z=>{ if(z && z !== '08:00-08:00' && !l.includes(z) && !schichten.includes(z)) l.push(z); });
     return l.slice(0, 6);
   };
   const tagVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD; };
