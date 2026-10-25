@@ -87,6 +87,13 @@
   .beta-erg{white-space:normal; padding:8px 0; border-bottom:1px solid var(--rand);}
   .beta-erg:last-of-type{border-bottom:none;}
   .beta-erg-klein{font-size:12.5px; color:var(--text-schwach);}
+  .bank-liste{max-height:55vh; overflow:auto; margin-top:8px; text-align:left;}
+  .bank-z{display:flex; gap:10px; align-items:flex-start; padding:8px 2px; border-bottom:1px solid var(--rand); font-size:13.5px; cursor:pointer;}
+  .bank-z input{width:20px; height:20px; margin:2px 0 0; flex:0 0 auto;}
+  .bank-txt{display:flex; flex-direction:column; gap:2px; min-width:0;}
+  .bank-txt small{color:var(--text-schwach); font-size:12px; overflow:hidden; text-overflow:ellipsis;}
+  .bank-grund{font-style:normal; font-size:11.5px; color:#2fa84f;}
+  .bank-z.unsicher .bank-grund{color:#c77700;}
   .beta-erg .aktionen{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
   .beta-erg .aktionen button{width:auto; padding:7px 12px; font-size:13.5px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .beta-inline{margin-top:8px; padding:8px 10px; border:1px solid var(--rand); border-radius:8px; font-size:13.5px;}
@@ -1618,6 +1625,9 @@
   .fbx-kpi{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:0 12px 6px;}
   .fbx-kpi div{background:var(--grau-feld); border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; font-size:11.5px; color:var(--text-schwach);}
   .fbx-kpi b{font-size:15px; color:var(--text);}
+  .fbx-ortkarte{padding:4px 12px 12px;} .fbx-ortkarte:empty{display:none;}
+  .fbx-ortnr{display:inline-flex; width:17px; height:17px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; align-items:center; justify-content:center; margin-right:4px; vertical-align:1px;}
+  .fbx-ortnr.ls{background:var(--ls-farbe);} .fbx-ortnr.pt{background:var(--pt-farbe);} .fbx-ortnr.gkv{background:#7d4e9e;}
   .mini-ebenen{position:relative;}
   .mini-ebenen .karte-ebene{width:46px; height:46px; top:8px; right:8px; font-size:9.5px; border-radius:9px;}
   .mini-ebenen .karte-ebene svg{width:18px; height:18px;}
@@ -2536,10 +2546,12 @@ async function fbBuchLaden(blatt, meldung){
   const tage = (a, b)=> Math.abs(a - b) / 86400000;
   // lokale Faelle zum Anreichern (Uhrzeit, Ziffern bei LS/PT, Oeffnen)
   const lokal = [];
-  try{ gkvFaelleLaden().forEach(f=>{ const t = designFallZeit(f); if(t) lokal.push({ art: 'gkv', n: fbNameNorm(f.name), t, zeit: f.zeit || '', oeffnen: ()=> ansichtGkv(f.id) }); }); }catch(_){}
+  try{ gkvFaelleLaden().forEach(f=>{ const t = designFallZeit(f); if(t) lokal.push({ art: 'gkv', n: fbNameNorm(f.name), t, zeit: f.zeit || '', geo: f.geo || null, adr: f.adresse || '', oeffnen: ()=> ansichtGkv(f.id) }); }); }catch(_){}
   try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=>{
     const w = (f && f.werte) || {}; const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS);
-    if(t) lokal.push({ art, n: fbNameNorm(w.txtName), t, zeit: w.txtZeitLS || '', positionen: f.positionen || [], oeffnen: ()=> ansichtMaske(art, i) });
+    const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim();
+    const adr = abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
+    if(t) lokal.push({ art, n: fbNameNorm(w.txtName), t, zeit: w.txtZeitLS || '', adr, positionen: f.positionen || [], oeffnen: ()=> ansichtMaske(art, i) });
   })); }catch(_){}
   const dienste = L.daten.bloecke.map(b=>{
     const tag = fbDatumAusText(b.datumText);
@@ -2560,6 +2572,7 @@ async function fbBuchLaden(blatt, meldung){
       const treffer = tag ? lokal.find(x=> x.art === art && x.n === nn && tage(x.t, tag) <= 1.5) : null;
       if(treffer){
         if(!f.zeit) f.zeit = fbZeitAusZelle(treffer.zeit); f.oeffnen = treffer.oeffnen;
+        f.geo = treffer.geo || null; f.adr = treffer.adr || '';
         if(!ziffern.length && treffer.positionen) f.ziffern = treffer.positionen.map(g=> ({ gop: String(g), anz: 1 }));
       }
       faelle.push(f);
@@ -2615,6 +2628,7 @@ async function ansichtFahrtenbuch(blatt){
     document.querySelectorAll('[data-fbv]').forEach(b=> b.classList.toggle('an', b.dataset.fbv === ansicht));
     if(!buch.dienste.length){ inhalt.innerHTML = '<div class="leer-hinweis">Keine Dienste im Blatt ' + htmlEsc(buch.blatt) + '.</div>'; return; }
     inhalt.innerHTML = ansicht === 'b' ? fbAnsichtB(buch) : ansicht === 'c' ? fbAnsichtC(buch) : fbAnsichtA(buch);
+    if(ansicht === 'c'){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
     inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=>{ if(k._lang){ k._lang = false; return; } k.closest('.fbx-karte').classList.toggle('zu'); });
     inhalt.querySelectorAll('[data-fbtag]').forEach(k=> k.onclick = ()=>{ LS.set('fb_tag', k.dataset.fbtag); zeichnen(); });
     // Loeschen nur durch langes Druecken (Handy) bzw. Rechtsklick (PC), jeweils mit Nachfrage
@@ -2737,7 +2751,47 @@ function fbAnsichtC(buch){
       DESIGN_WT[x.tag.getDay()] + ' ' + zz2(x.tag.getDate()) + '.' + zz2(x.tag.getMonth() + 1) + '.</span><b>' + betaEuro(x.gesamt).replace(' €', '') + '</b><small>' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle</small></button>').join('') + '</div>' +
     '<div class="fbx-karte"><div class="fbx-kopf" data-fbdienst="' + wahl + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '</span></div>' +
     '<div class="fbx-kpi"><div><span>GKV + Förderung</span><b>' + betaEuro(d.gkv) + '</b></div><div><span>LS + PT</span><b>' + betaEuro(d.ls + d.pt) + '</b></div></div>' +
-    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + ' ›</span></button>').join('') + '</div></div>';
+    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + ' ›</span></button>').join('') + '</div>' +
+    '<div class="fbx-ortkarte" id="fbxKarte"></div></div>';
+}
+// Einsatzorte des gewaehlten Diensttags (Ansicht "Woche"): GKV mit gespeichertem
+// Ort, LS/PT ueber die Adresse (Geocoding im Geraet zwischengespeichert).
+// Faelle nur in der Excel (ohne Fall auf dem Geraet) haben keinen Ort.
+let fbTagKarteLauf = 0;
+async function fbTagKarteZeichnen(d, di){
+  const box = document.getElementById('fbxKarte'); if(!box || !d || typeof NFP_KARTE === 'undefined') return;
+  const lauf = ++fbTagKarteLauf, aktuell = ()=> lauf === fbTagKarteLauf && document.body.contains(box);
+  const faelle = d.faelle.map((f, fi)=> ({ f, fi })).filter(x=> !x.f.pseudo);
+  if(!faelle.length){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Einsatzorte</b><small>werden gesucht …</small></span></div>';
+  for(const x of faelle){
+    if(x.f.geo || !x.f.adr) continue;
+    try{ x.f.geo = await geocode(x.f.adr); }catch(_){ x.f.geo = null; }
+    if(!aktuell()) return;
+  }
+  const hg = await nfpHintergrund(); if(!aktuell()) return;
+  const pois = []; let nr = 0, ohne = 0;
+  faelle.forEach(x=>{
+    const zeile = document.querySelector('[data-fbfall="' + di + '-' + x.fi + '"] .fbx-zeit');
+    if(!x.f.geo){ ohne++; return; }
+    nr++; pois.push({ lat: x.f.geo.lat, lon: x.f.geo.lon, kl: x.f.art, nr, idx: x.fi });
+    if(zeile && !zeile.querySelector('.fbx-ortnr')) zeile.insertAdjacentHTML('afterbegin', '<span class="fbx-ortnr ' + x.f.art + '">' + nr + '</span>');
+  });
+  const hinweis = ohne ? '<div class="sk-hinweis">' + ohne + ' ohne Ort (nur in der Excel oder ohne Adresse – GKV erst ab „Wegegeld ermitteln“).</div>' : '';
+  if(!pois.length){ box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Einsatzorte</b><small>keine Orte bekannt</small></span></div>' + hinweis; return; }
+  const fallKlick = (i)=>{ const z = document.querySelector('[data-fbfall="' + di + '-' + i + '"]'); if(z) z.click(); };
+  const pix = pois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
+  const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
+  const dd = { pois, nfp: true, rahmen: true, fallKlick };
+  const kvH = etwasDrin ? kartenAusschnittHtml(hg.url, pix, { breite: 420, hoehe: 380, zonen: hg.osm }) : '';
+  box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Einsatzorte</b><small>' + nr + ' von ' + faelle.length + ' Fällen mit Ort</small></span></div>' +
+    miniEbenenHtml(kvH, osmAusschnitt(dd, {}).html, allesDrin ? 'kvbw' : 'osm') + hinweis;
+  box.querySelectorAll('.luft-karte-flaeche').forEach(k=> k.onclick = (ev)=>{
+    const t = ev.target.closest && ev.target.closest('[data-fall]');
+    if(t){ fallKlick(+t.dataset.fall); return; }
+    const titel = 'Einsatzorte ' + fbTagText(d.tag);
+    if(box.querySelector('.mini-ebenen').dataset.ebene === 'osm') osmKarteOverlay(dd, titel); else nfpKarteOeffnen({ pois, nfpZeigen: true, fallKlick });
+  });
 }
 
 let fahrdienstAuswertungCache = null;
@@ -7596,6 +7650,7 @@ async function ansichtRechnungenGesamt(neuLaden){
         <button type="button" id="btnGesamtNeu">Neu laden</button>
         <button type="button" id="btnGesamtExcel">Übersicht in Excel</button>
         <button type="button" id="btnGesamtBackups">Backups</button>
+        <button type="button" id="btnGesamtBank" title="Zahlungseingänge aus einer CSV des Online-Bankings übernehmen">Kontoauszug</button>
       </div>
       ${ziel.echt ? '' : '<div class="gesamt-ziel">Testablage (Beta-Test)</div>'}
     </div>
@@ -7603,6 +7658,7 @@ async function ansichtRechnungenGesamt(neuLaden){
   const suchEl = document.getElementById('txtGesamtSuche');
   document.getElementById('btnGesamtNeu').onclick = ()=> ansichtRechnungenGesamt(true);
   document.getElementById('btnGesamtBackups').onclick = ansichtSyncBackups;
+  document.getElementById('btnGesamtBank').onclick = async ()=>{ if(await bankCsvImport()) ansichtRechnungenGesamt(true); };
   document.getElementById('btnGesamtExcel').onclick = ()=>{
     if(ziel.echt) excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT, 'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
     else excelDateiUeberGraphOeffnen(BETA_TEST_UEBERSICHT, '');
@@ -8302,6 +8358,190 @@ async function betaAktionBezahlt(eintraege){
     appToastAnzeigen(akt === 'weg' ? 'Zahlung entfernt.' : (orig.length === 1 ? 'Als bezahlt eingetragen.' : orig.length + ' als bezahlt eingetragen.'), 2200);
     return true;
   }catch(err){ await betaOverlay.ergebnis('Nicht eingetragen', '✗ ' + htmlEsc(err.message || String(err))); betaOverlay.schliessen(); return false; }
+}
+
+// ---------- Kontoauszug (CSV) einlesen: Zahlungseingaenge -> "bezahlt" ----------
+// Die CSV kommt aus dem Online-Banking (Umsaetze exportieren). Erkannt werden die
+// ueblichen deutschen Formate (Sparkasse, Volksbank, DKB, ING, comdirect ...):
+// Trennzeichen ; , oder Tab, Dezimalkomma, Betrag mit Vorzeichen oder Soll/Haben.
+// Zuordnung: 1. Rechnungsnummer im Verwendungszweck, 2. gleicher Betrag + Nachname,
+// 3. gleicher Betrag, der nur bei genau einer offenen Rechnung vorkommt (nicht vorausgewaehlt).
+function bankCsvZeilen(text){
+  const zeilen = String(text || '').replace(/^﻿/, '').split(/\r?\n/).filter(z=> z.trim());
+  const kopfIdx = zeilen.findIndex(z=> /betrag|umsatz|haben/i.test(z) && /buchung|datum|valuta|wertstellung/i.test(z));
+  if(kopfIdx < 0) throw new Error('In der Datei wurde keine Kopfzeile mit „Betrag“ und „Buchungstag/Datum“ gefunden.');
+  const kz = zeilen[kopfIdx];
+  const trenn = [';', '\t', ','].sort((a, b)=> kz.split(b).length - kz.split(a).length)[0];
+  const zerlegen = (z)=>{
+    const out = []; let feld = '', inQ = false;
+    for(let i = 0; i < z.length; i++){
+      const c = z[i];
+      if(inQ){ if(c === '"'){ if(z[i + 1] === '"'){ feld += '"'; i++; } else inQ = false; } else feld += c; }
+      else if(c === '"') inQ = true;
+      else if(c === trenn){ out.push(feld.trim()); feld = ''; }
+      else feld += c;
+    }
+    out.push(feld.trim()); return out;
+  };
+  // Zeilenumbrueche innerhalb von Anfuehrungszeichen wieder zusammensetzen
+  const roh = []; let puffer = '';
+  zeilen.slice(kopfIdx + 1).forEach(z=>{ puffer = puffer ? puffer + ' ' + z : z; if(((puffer.match(/"/g) || []).length % 2) === 0){ roh.push(puffer); puffer = ''; } });
+  const kopf = zerlegen(kz).map(h=> h.toLowerCase());
+  const spalte = (...re)=>{ for(const r of re){ const i = kopf.findIndex(h=> r.test(h)); if(i >= 0) return i; } return -1; };
+  const cDatum = spalte(/^buchungs(tag|datum)/, /^buchung$/, /^datum$/, /buchungstag|buchungsdatum/, /valuta|wertstellung/, /datum/);
+  const cBetrag = spalte(/^betrag/, /umsatz/, /^betrag/);
+  const cHaben = spalte(/^haben/);
+  const cSH = spalte(/^(soll\/haben|s\/h|soll-haben)$/);
+  // eigene Kontodaten (Auftragskonto, Bankname, IBAN/BIC) nicht als Zahler werten
+  const eigenSp = (h)=> /auftragskonto|bankname|iban|bic|kontonummer|bankleitzahl|blz/.test(h);
+  const cName = (()=>{ for(const r of [/zahlungsbeteiligt/, /zahlungspflichtig/, /auftraggeber/, /beg(ue|ü)nstigt/, /name/, /empf(ae|ä)nger/]){ const i = kopf.findIndex(h=> r.test(h) && !eigenSp(h)); if(i >= 0) return i; } return -1; })();
+  const textSp = kopf.map((h, i)=> !eigenSp(h) && /verwendung|zweck|buchungstext|beschreibung|name|auftraggeber|zahlungspflichtig|zahlungsbeteiligt|beg(ue|ü)nstigt|empf(ae|ä)nger|referenz|info|vorgang/i.test(h) ? i : -1).filter(i=> i >= 0);
+  if(cDatum < 0 || (cBetrag < 0 && cHaben < 0)) throw new Error('Spalten „Datum“ bzw. „Betrag“ nicht erkannt (Kopfzeile: ' + kz.slice(0, 120) + ').');
+  const zahl = (t)=>{
+    let s = String(t || '').replace(/eur|€|\s| /gi, '').replace(/^\+/, '');
+    if(!s) return NaN;
+    if(/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(/,/g, '');
+    return Number(s);
+  };
+  const datum = (t)=>{
+    let m = /^(\d{1,2})\.(\d{1,2})\.(\d{2,4})/.exec(String(t || '').trim());
+    if(m) return (m[3].length === 2 ? '20' + m[3] : m[3]) + '-' + zz2(+m[2]) + '-' + zz2(+m[1]);
+    m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(t || '').trim());
+    return m ? m[1] + '-' + m[2] + '-' + m[3] : '';
+  };
+  const out = [];
+  roh.forEach(z=>{
+    const f = zerlegen(z); if(f.length < 2) return;
+    let betrag = cBetrag >= 0 ? zahl(f[cBetrag]) : NaN;
+    if(cHaben >= 0 && !(betrag > 0)){ const h = zahl(f[cHaben]); if(h > 0) betrag = h; }
+    if(cSH >= 0 && /^s/i.test(f[cSH] || '')) betrag = -Math.abs(betrag);
+    const am = datum(f[cDatum]);
+    if(!(betrag > 0) || !am) return;   // nur Eingaenge
+    out.push({ am, betrag: Math.round(betrag * 100) / 100, name: cName >= 0 ? (f[cName] || '') : '', text: textSp.map(i=> f[i] || '').filter(Boolean).join(' · ') });
+  });
+  return out;
+}
+function bankNorm(t){ return String(t || '').toUpperCase().replace(/Ä/g, 'AE').replace(/Ö/g, 'OE').replace(/Ü/g, 'UE').replace(/ß/g, 'SS').replace(/[^A-Z0-9]/g, ''); }
+function bankZahl(v){
+  if(typeof v === 'number') return Math.round(v * 100) / 100;
+  let s = String(v == null ? '' : v).replace(/eur|€|\s| /gi, '');
+  if(/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.');
+  const n = Number(s); return isFinite(n) ? Math.round(n * 100) / 100 : NaN;
+}
+// offene Rechnungen + Eingaenge -> Vorschlaege [{z (Eingang), r (Rechnung), grund, an, hinweis}]
+function bankZuordnen(eingaenge, offen){
+  const vergeben = new Set(), erg = [];
+  const nimm = (e, r, grund, an, hinweis)=>{ vergeben.add(r.key); e.zu = true; erg.push({ e, r, grund, an, hinweis: hinweis || '' }); };
+  const gleich = (a, b)=> Math.abs(a - b) < 0.005;
+  const nachVersand = (e, r)=> !r.ab || e.am >= r.ab;
+  // 1. Rechnungsnummer im Text
+  eingaenge.forEach(e=>{
+    const t = bankNorm(e.text + ' ' + e.name);
+    const r = offen.find(r=> !vergeben.has(r.key) && r.renuN.length >= 5 && t.indexOf(r.renuN) >= 0);
+    if(!r) return;
+    const diff = Math.round((e.betrag - r.betrag) * 100) / 100;
+    if(!(r.betrag > 0) || gleich(diff, 0)) nimm(e, r, 'Rechnungsnummer', true);
+    else if(diff > 0) nimm(e, r, 'Rechnungsnummer', true, betaEuro(diff) + ' mehr als berechnet');
+    else nimm(e, r, 'Rechnungsnummer', false, 'Teilzahlung? ' + betaEuro(-diff) + ' fehlen');
+  });
+  // 2. Betrag + Nachname
+  eingaenge.filter(e=> !e.zu).forEach(e=>{
+    const t = bankNorm(e.text + ' ' + e.name);
+    const r = offen.find(r=> !vergeben.has(r.key) && gleich(r.betrag, e.betrag) && r.nachN.length >= 3 && t.indexOf(r.nachN) >= 0 && nachVersand(e, r));
+    if(r) nimm(e, r, 'Betrag + Name', true);
+  });
+  // 3. nur Betrag, eindeutig
+  eingaenge.filter(e=> !e.zu).forEach(e=>{
+    const k = offen.filter(r=> !vergeben.has(r.key) && gleich(r.betrag, e.betrag) && nachVersand(e, r));
+    if(k.length === 1) nimm(e, k[0], 'nur Betrag', false, 'bitte prüfen');
+  });
+  return erg;
+}
+async function bankCsvImport(){
+  const datei = await new Promise(res=>{
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.csv,.txt,text/csv,text/plain';
+    inp.onchange = ()=> res(inp.files && inp.files[0] || null);
+    inp.click();
+  });
+  if(!datei) return false;
+  let eingaenge;
+  try{
+    const buf = await datei.arrayBuffer();
+    let text;
+    try{ text = new TextDecoder('utf-8', { fatal: true }).decode(buf); }catch(_){ text = new TextDecoder('windows-1252').decode(buf); }
+    eingaenge = bankCsvZeilen(text);
+  }catch(e){ await betaOverlay.meldung(e.message || String(e), 'Kontoauszug'); return false; }
+  if(!eingaenge.length){ await betaOverlay.meldung('In der Datei stehen keine Zahlungseingänge.', 'Kontoauszug'); return false; }
+  const ziel = betaZiel();
+  betaOverlay.zeigen('Kontoauszug wird abgeglichen'); betaOverlay.fortschritt(null);
+  let token, ue, ana;
+  const offen = [];
+  try{
+    token = await msGraphTokenHolen();
+    if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+    ue = await uebersichtLadenRepariert(token, ziel, betaFrage);
+    ana = uebersichtAuswerten(ue);
+    const t = x=> String(x == null ? '' : x).trim();
+    ue.zeilen.forEach(z=>{
+      if(z.nr < 2) return;
+      const v = z.v, renu = t(v[16]);
+      if(!renu || t(v[18])) return;   // ohne Nummer oder schon bezahlt
+      const ab = xlDatumText(v[17]);
+      offen.push({ key: 'U' + z.nr, quelle: 'ue', nr: z.nr, renu, renuN: bankNorm(renu), name: t(v[5]) + ', ' + t(v[6]), nachN: bankNorm(t(v[5])),
+                   betrag: bankZahl(v[15]), ab: /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(ab) ? ab.split('.').reverse().map(x=> x.padStart(2, '0')).join('-') : '' });
+    });
+  }catch(e){ betaOverlay.schliessen(); await betaOverlay.meldung('Übersicht konnte nicht gelesen werden: ' + (e.message || e), 'Kontoauszug'); return false; }
+  // Rechnungen an Vertretungsaerzte (nur in der App gefuehrt)
+  try{
+    (aerzteDaten().aerzteRechnungen || []).filter(x=> x && !x.geloescht && !x.bezahlt && x.renu).forEach(x=>{
+      offen.push({ key: 'A' + x.renu, quelle: 'arzt', renu: x.renu, renuN: bankNorm(x.renu), name: x.vname || x.arzt || '', nachN: bankNorm(String(x.arzt || '').split(/[ ,]+/).filter(Boolean).pop() || ''),
+                   betrag: bankZahl(x.summe), ab: x.datum && /^\d{4}-/.test(x.datum) ? x.datum : '' });
+    });
+  }catch(_){}
+  betaOverlay.schliessen();
+  const vor = bankZuordnen(eingaenge, offen);
+  const ohne = eingaenge.filter(e=> !e.zu).length;
+  const heute = heuteIso();
+  if(!vor.length){
+    await betaOverlay.meldung(eingaenge.length + ' Zahlungseingänge gelesen, keiner passt zu einer offenen Rechnung (' + offen.length + ' offen).', 'Kontoauszug');
+    return false;
+  }
+  vor.sort((a, b)=> (b.an - a.an) || (a.e.am < b.e.am ? -1 : 1));
+  const html = '<div class="beta-erg-klein">' + eingaenge.length + ' Zahlungseingänge gelesen · ' + vor.length + ' passen zu offenen Rechnungen' + (ohne ? ' · ' + ohne + ' ohne Treffer' : '') + '</div>' +
+    '<div class="bank-liste">' + vor.map((v, i)=> '<label class="bank-z' + (v.an ? '' : ' unsicher') + '"><input type="checkbox" data-bank="' + i + '"' + (v.an ? ' checked' : '') + '>' +
+      '<span class="bank-txt"><b>' + htmlEsc(v.r.name) + '</b> · ' + htmlEsc(v.r.renu) + (v.r.betrag > 0 ? ' · ' + betaEuro(v.r.betrag) : '') +
+      '<small>' + isoDe(v.e.am) + ' · ' + betaEuro(v.e.betrag) + ' · ' + htmlEsc((v.e.name || v.e.text).slice(0, 70)) + '</small>' +
+      '<i class="bank-grund">' + htmlEsc(v.grund) + (v.hinweis ? ' – ' + htmlEsc(v.hinweis) : '') + '</i></span></label>').join('') + '</div>' +
+    '<div class="beta-erg-klein" style="margin-top:6px;">Angehakte Rechnungen bekommen das Buchungsdatum als „Zahlung erhalten“ (Übersicht Spalte S bzw. Arztrechnung).</div>';
+  const akt = await betaOverlay.ergebnis('Kontoauszug abgleichen', html, [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Als bezahlt markieren', akt: 'ja', primaer: true }]);
+  const gewaehlt = vor.filter((v, i)=>{ const c = document.querySelector('.beta-overlay [data-bank="' + i + '"]'); return c && c.checked; });
+  if(akt !== 'ja' || !gewaehlt.length){ betaOverlay.schliessen(); return false; }
+  betaOverlay.zeigen('Zahlungen werden eingetragen'); betaOverlay.fortschritt(null);
+  try{
+    const ueListe = gewaehlt.filter(v=> v.r.quelle === 'ue');
+    if(ueListe.length){
+      const sid = await xlSitzung(token, ue.basis);
+      try{
+        const schutz = await blattSchutzAufheben(token, ue, sid);
+        try{
+          for(let i = 0; i < ueListe.length; i++){
+            const v = ueListe[i]; betaOverlay.fortschritt(i / ueListe.length);
+            const am = v.e.am > heute ? heute : v.e.am;
+            await gx(token, 'PATCH', zelle(ue, 'S' + v.r.nr), { values: [[xlDatumSerial(isoDe(am))]], numberFormat: [[XL_FORMAT_DATUM]] }, sid);
+          }
+        } finally { await blattSchutzWiederherstellen(token, ue, schutz, sid); }
+      } finally { await xlSitzungEnde(token, ue.basis, sid); }
+    }
+    const arztListe = gewaehlt.filter(v=> v.r.quelle === 'arzt');
+    if(arztListe.length){
+      const jetzt = new Date().toISOString(), m = new Map(arztListe.map(v=> [v.r.renu, v.e.am > heute ? heute : v.e.am]));
+      await aerzteDatenSichern((d)=>{ d.aerzteRechnungen = (d.aerzteRechnungen || []).map(x=> m.has(x.renu) ? Object.assign({}, x, { bezahlt: m.get(x.renu), am: jetzt }) : x); }).catch(()=>{});
+    }
+    betaOverlay.schliessen();
+    appToastAnzeigen(gewaehlt.length === 1 ? '1 Rechnung als bezahlt eingetragen.' : gewaehlt.length + ' Rechnungen als bezahlt eingetragen.', 2600);
+    return true;
+  }catch(err){ await betaOverlay.ergebnis('Nicht vollständig eingetragen', '✗ ' + htmlEsc(err.message || String(err))); betaOverlay.schliessen(); return true; }
 }
 
 // Versendet-Symbol (wie die anderen Symbole der Liste als Farb-Emoji)
@@ -11822,6 +12062,17 @@ function fbArztAusblenden(name){
 // Dienstart steht in Spalte B unter dem Datum (bisher immer "Fahrdienst");
 // sie bestimmt den Foerdersatz (Sitzdienst/Telemedizin immer 50 EUR/h)
 const FB_DIENSTARTEN = ['Fahrdienst', 'Sitzdienst', 'Telemedizin', 'docdirekt'];
+// Spalte B kann die Schicht mit enthalten ("Fahrdienst Früh 3", "Sitzdienst OG Früh 1")
+// -> { art: 'Fahrdienst', schicht: 'Früh 3' }
+function fbDienstartZerlegen(text){
+  const t = String(text == null ? '' : text).trim();
+  for(const a of FB_DIENSTARTEN){
+    if(t.toLowerCase() === a.toLowerCase()) return { art: a, schicht: '' };
+    if(t.toLowerCase().startsWith(a.toLowerCase() + ' ')) return { art: a, schicht: t.slice(a.length + 1).trim() };
+  }
+  return { art: t || 'Fahrdienst', schicht: '' };
+}
+function fbDienstartText(art, schicht){ return (art || 'Fahrdienst') + (schicht ? ' ' + schicht : ''); }
 // Rueckfrage "Neuer Dienst" -> {datum, zeit:{s,e}, arzt, art} oder null (nicht eintragen)
 async function fbDienstAbfragen(fb, dt, fallText){
   let datum = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
@@ -11837,6 +12088,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
   let aerzte = fbAerzte(fb);
   let arzt = aerzte[0] || '';
   let art = LS.get('fb_dienstart', 'Fahrdienst');
+  let schicht = '';
   let fehler = '';
   // gewaehlter Live-Dienst (Startseite) fuellt vor
   const live = (typeof liveDienstFuer === 'function') ? liveDienstFuer(dt) : null;
@@ -11845,6 +12097,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
     const z = fbZeitParsen(live.von + '-' + live.bis);
     if(z){ zeit = z; const t = fbZeitText(z); if(!vorschlaege.includes(t)) vorschlaege.unshift(t); }
     art = live.art || art;
+    schicht = live.schicht || '';
     if(live.arzt) arzt = live.arzt;
   }
   const iso = (d)=> d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate());
@@ -11861,6 +12114,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
       '<label>bis<input type="text" inputmode="decimal" id="fbBis" value="' + (zeit ? htmlEsc(fbZeitText(zeit).split('-')[1]) : '') + '"></label><span class="fb-uhr">Uhr</span></div>' +
       '<div class="fb-lbl">Dienstart</div>' +
       '<div class="fb-chips" id="fbArtChips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-art="' + a + '">' + a + '</button>').join('') + '</div>' +
+      '<div id="fbSchichtBox"></div>' +
       '<div class="fb-lbl">Vertretener Arzt (Dienstinhaber)</div>' +
       '<div class="fb-chips" id="fbArztChips">' + aerzte.map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-arzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-weg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>' +
       '<input type="text" id="fbArzt" placeholder="Name (neu eintippen oder oben wählen)" value="' + htmlEsc(arzt) + '">' +
@@ -11875,9 +12129,32 @@ async function fbDienstAbfragen(fb, dt, fallText){
         const [v, bi] = fbZeitText(z).split('-');
         wurzel.querySelector('#fbVon').value = v; wurzel.querySelector('#fbBis').value = bi;
         wurzel.querySelectorAll('[data-zeit]').forEach(x=> x.classList.toggle('an', x === b));
+        schicht = ''; wurzel.querySelectorAll('[data-lschicht]').forEach(x=> x.classList.remove('an'));
       });
+      // Schicht/Auto (z.B. "Früh 3") -- landet mit der Dienstart in Spalte B
+      const schichtZeichnen = ()=>{
+        const box = wurzel.querySelector('#fbSchichtBox'); if(!box) return;
+        const dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec((wurzel.querySelector('#fbDatum') || {}).value || '');
+        const tag = dm ? new Date(+dm[1], +dm[2] - 1, +dm[3]) : datum;
+        const liste = dienstSchichten(art, tag);
+        if(schicht && !liste.some(x=> x.label === schicht)) schicht = '';
+        box.innerHTML = liste.length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div>' + schichtZeilenHtml(liste, schicht) : '';
+        box.querySelectorAll('[data-lschicht]').forEach(b=> b.onclick = ()=>{
+          const an = schicht !== b.dataset.lschicht;
+          schicht = an ? b.dataset.lschicht : '';
+          box.querySelectorAll('[data-lschicht]').forEach(x=> x.classList.toggle('an', an && x === b));
+          if(an){
+            const [v, bi] = b.dataset.lzeit.split('-');
+            wurzel.querySelector('#fbVon').value = v.replace(/:00$/, ''); wurzel.querySelector('#fbBis').value = bi.replace(/:00$/, '');
+            wurzel.querySelectorAll('[data-zeit]').forEach(x=> x.classList.remove('an'));
+          }
+        });
+      };
+      schichtZeichnen();
+      const dEl = wurzel.querySelector('#fbDatum'); if(dEl) dEl.addEventListener('change', schichtZeichnen);
       wurzel.querySelectorAll('[data-art]').forEach(b=> b.onclick = ()=>{
-        art = b.dataset.art; wurzel.querySelectorAll('[data-art]').forEach(x=> x.classList.toggle('an', x === b));
+        art = b.dataset.art; schicht = ''; wurzel.querySelectorAll('[data-art]').forEach(x=> x.classList.toggle('an', x === b));
+        schichtZeichnen();
       });
       wurzel.querySelectorAll('[data-arzt]').forEach(b=> b.onclick = ()=>{
         wurzel.querySelector('#fbArzt').value = b.dataset.arzt;
@@ -11903,7 +12180,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
     if(!arzt){ fehler = 'Bitte den vertretenen Arzt eintragen.'; continue; }
     fbArztMerken(arzt);
     LS.set('fb_dienstart', art);
-    return { datum, zeit, arzt, art };
+    return { datum, zeit, arzt, art, schicht };
   }
 }
 
@@ -11987,7 +12264,7 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
     }
     await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='A" + z1 + ':C' + (z1 + 1) + "')", {
       numberFormat: [['0', 'dd.mm.yyyy', '@'], ['General', '@', '@']],
-      values: [[Math.floor(d.datum.getMonth() / 3) + 1, fbSerial(d.datum), fbZeitText(d.zeit)], ['', d.art || 'Fahrdienst', d.arzt]]
+      values: [[Math.floor(d.datum.getMonth() / 3) + 1, fbSerial(d.datum), fbZeitText(d.zeit)], ['', fbDienstartText(d.art, d.schicht), d.arzt]]
     });
     block = { zeileStart: z1, zeileEnde: z1 + 1, datumText: fbDatumText(d.datum), zeitRoh: fbZeitText(d.zeit), arzt: d.arzt, frisch: true };
     neuerDienst = true;
@@ -14303,7 +14580,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v204';
+const APP_VERSION = 'v205';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14458,8 +14735,8 @@ function designDienstFenster(t){
 function liveDienstAuto(){
   const jetzt = Date.now(), H = 3600000;
   const alsDienst = (von, bis, art, arzt, quelle)=>{
-    const v = new Date(von), b = new Date(bis);
-    return { datum: liveIso(v), von: designUhr(v), bis: designUhr(b), art: art || 'Fahrdienst', arzt: arzt || '', auto: quelle };
+    const v = new Date(von), b = new Date(bis), za = fbDienstartZerlegen(art);
+    return { datum: liveIso(v), von: designUhr(v), bis: designUhr(b), art: za.art, schicht: za.schicht, arzt: arzt || '', auto: quelle };
   };
   const c = LS.get('fb_dienste_cache', null), dienste = (c && c.dienste) || [];
   let d = dienste.find(x=> jetzt >= x.von && jetzt < x.bis)
