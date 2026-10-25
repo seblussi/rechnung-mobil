@@ -1554,6 +1554,16 @@
   .ze-werkzeug .ze-modus.an{background:#1f5f9e; border-color:#1f5f9e; color:#fff; font-weight:700;}
   .ze-werkzeug button:disabled{opacity:.45;}
   .ze-flaeche{cursor:crosshair;}
+  .ze-overlay{position:fixed;}
+  .ze-schwebe{position:fixed; right:10px; z-index:5; display:flex; flex-direction:column; gap:8px; top:160px;}
+  .ze-schwebe button{width:46px; height:46px; margin:0; padding:0; border-radius:12px; border:1px solid var(--rand); background:var(--karte); color:var(--text); font-size:20px; box-shadow:0 2px 8px rgba(0,0,0,.25); display:flex; align-items:center; justify-content:center;}
+  .ze-schwebe button svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .ze-schwebe button.an{background:#1f5f9e; border-color:#1f5f9e; color:#fff;}
+  .ze-schwebe .ze-s-modus.an{background:var(--zf); border-color:var(--zf);}
+  .ze-schwebe button:disabled{opacity:.45;}
+  .ze-overlay .ze-s-modus, .ze-overlay .ze-s-undo{display:none;}
+  .ze-overlay.ze-voll .ze-s-modus, .ze-overlay.ze-voll .ze-s-undo{display:flex;}
+  .ze-overlay.ze-voll .nfp-kopf, .ze-overlay.ze-voll .ze-leiste, .ze-overlay.ze-voll .nfp-fuss{display:none;}
   .ze-svg{pointer-events:none;}
   .ze-info{font-size:13px;}
   .gkv-zwischenablage{margin:0 0 4px; padding:10px;}
@@ -13464,12 +13474,14 @@ async function standortKarteZeichnen(info, mitDialog){
 async function zonenEditorOeffnen(){
   const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1];
   const bild = await nfpKarteBildUrl();
-  let stand = JSON.parse(JSON.stringify(nfpZonenRinge())), verlauf = [], zone = '3', modus = 'zeichnen', geaendert = false;
+  let stand = JSON.parse(JSON.stringify(nfpZonenRinge())), verlauf = [], zone = '3', modus = 'zeichnen', geaendert = false, linienAus = false, voll = false;
   const ov = document.createElement('div');
   ov.className = 'nfp-overlay ze-overlay';
   ov.innerHTML = '<div class="nfp-kopf"><b>Zonen bearbeiten</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
     '<div class="ze-leiste"><div class="ze-zonen">' + ['1', '2', '3', '4', '5'].map(k=> '<button type="button" data-zone="' + k + '" style="--zf:' + NFP_ZONEN[k].farbe + '">' + NFP_ZONEN[k].label.replace('-Zone', '') + '</button>').join('') + '</div>' +
       '<div class="ze-werkzeug"><button type="button" class="ze-modus"></button><button type="button" class="ze-undo">↶ Zurück</button><button type="button" class="ze-original">Original</button></div></div>' +
+    '<div class="ze-schwebe"><button type="button" class="ze-s-modus" aria-label="Zeichnen/Verschieben"></button><button type="button" class="ze-s-undo" aria-label="Rückgängig">↶</button>' +
+      '<button type="button" class="ze-s-linien" aria-label="Linien ein/aus"></button><button type="button" class="ze-s-voll" aria-label="Vollbild"></button></div>' +
     '<div class="nfp-scroll ze-scroll"><div class="nfp-flaeche ze-flaeche"><img alt="KVBW-Karte" draggable="false" src="' + (bild || nfpZonenBildUrl()) + '">' +
       '<svg class="nfp-ueber ze-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none"></svg></div></div>' +
     '<div class="nfp-fuss"><div class="nfp-info ze-info"></div><div class="nfp-knoepfe"><button type="button" data-zoom="-1">−</button><button type="button" data-zoom="1">+</button>' +
@@ -13486,6 +13498,7 @@ async function zonenEditorOeffnen(){
     let h = '';
     ['5', '4', '3', '2', '1'].forEach(k=>{
       const an = k === zone;
+      if(linienAus) return;
       h += '<path d="' + pfad(k) + '" fill="' + (an ? NFP_ZONEN[k].farbe : 'none') + '" fill-opacity=".18" stroke="' + NFP_ZONEN[k].farbe + '" stroke-width="' + (an ? 4 : 2) + '" stroke-opacity="' + (an ? 1 : .55) + '" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
     });
     if(strich && strich.length > 1) h += '<polyline points="' + strich.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '" fill="none" stroke="#111" stroke-width="3" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>';
@@ -13496,6 +13509,16 @@ async function zonenEditorOeffnen(){
     const m = ov.querySelector('.ze-modus'); m.textContent = modus === 'zeichnen' ? '✏ Zeichnen' : '✋ Verschieben'; m.classList.toggle('an', modus === 'zeichnen');
     fl.style.touchAction = modus === 'zeichnen' ? 'none' : '';
     ov.querySelector('.ze-undo').disabled = !verlauf.length;
+    const SM = ov.querySelector('.ze-s-modus');
+    SM.innerHTML = modus === 'zeichnen' ? '✏' : '✋'; SM.classList.toggle('an', modus === 'zeichnen'); SM.style.setProperty('--zf', NFP_ZONEN[zone].farbe);
+    ov.querySelector('.ze-s-undo').disabled = !verlauf.length;
+    const SL = ov.querySelector('.ze-s-linien');
+    SL.innerHTML = linienAus ? '<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 9 4.5 10 6-.5.8-1.5 2.1-2.9 3.3M6.5 7.6C4.5 8.9 2.9 10.8 2 12c1 1.5 5 6 10 6 1.3 0 2.5-.3 3.6-.8"/></svg>'
+                          : '<svg viewBox="0 0 24 24"><path d="M2 12c1-1.5 5-6 10-6s9 4.5 10 6c-1 1.5-5 6-10 6S3 13.5 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+    SL.classList.toggle('an', linienAus);
+    ov.querySelector('.ze-s-voll').innerHTML = voll ? '<svg viewBox="0 0 24 24"><path d="M9 3v6H3M15 3v6h6M9 21v-6H3M15 21v-6h6"/></svg>' : '<svg viewBox="0 0 24 24"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/></svg>';
+    ov.classList.toggle('ze-voll', voll);
+    requestAnimationFrame(()=>{ const sw = ov.querySelector('.ze-schwebe'); if(sw) sw.style.top = (sc.getBoundingClientRect().top + 10) + 'px'; });
     standardHinweis();
   };
   // Zoom
@@ -13555,12 +13578,28 @@ async function zonenEditorOeffnen(){
   fl.addEventListener('pointerup', ende); fl.addEventListener('pointercancel', (ev)=>{ if(ev.pointerId === aktivZeiger){ aktivZeiger = null; strich = null; zeichnen(); } });
   ov.querySelectorAll('[data-zone]').forEach(b=> b.onclick = ()=>{ zone = b.dataset.zone; zeichnen(); knoepfe(); });
   ov.querySelector('.ze-modus').onclick = ()=>{ modus = modus === 'zeichnen' ? 'verschieben' : 'zeichnen'; knoepfe(); };
+  ov.querySelector('.ze-s-modus').onclick = ()=> ov.querySelector('.ze-modus').click();
+  ov.querySelector('.ze-s-undo').onclick = ()=> ov.querySelector('.ze-undo').click();
+  ov.querySelector('.ze-s-linien').onclick = ()=>{ linienAus = !linienAus; zeichnen(); knoepfe(); };
+  ov.querySelector('.ze-s-voll').onclick = async ()=>{
+    const mitte = { x: (sc.scrollLeft + sc.clientWidth / 2) / fl.clientWidth, y: (sc.scrollTop + sc.clientHeight / 2) / Math.max(1, fl.clientHeight) };
+    voll = !voll; knoepfe();
+    try{
+      if(voll && !document.fullscreenElement && ov.requestFullscreen) await ov.requestFullscreen();
+      else if(!voll && document.fullscreenElement) await document.exitFullscreen();
+    }catch(_){}
+    requestAnimationFrame(()=> setzeZoom(zoom, mitte));
+  };
+  document.addEventListener('fullscreenchange', function fs(){
+    if(!document.body.contains(ov)){ document.removeEventListener('fullscreenchange', fs); return; }
+    if(!document.fullscreenElement && voll){ voll = false; knoepfe(); }
+  });
   ov.querySelector('.ze-undo').onclick = ()=>{ if(!verlauf.length) return; stand = JSON.parse(verlauf.pop()); geaendert = true; zeichnen(); knoepfe(); };
   ov.querySelector('.ze-original').onclick = async ()=>{
     if(!await betaFrage('Alle eigenen Korrekturen verwerfen und die ursprünglich ausgelesenen Grenzen wiederherstellen?', 'Original', 'Abbrechen')) return;
     verlauf.push(JSON.stringify(stand)); stand = nfpZonenDekodieren(NFP_ZONEN_KONTUR); geaendert = true; zeichnen(); knoepfe();
   };
-  const schliessen = ()=>{ ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); };
+  const schliessen = ()=>{ try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); };
   ov.querySelector('.nfp-zu').onclick = async ()=>{
     if(geaendert && !await betaFrage('Änderungen verwerfen?', 'Verwerfen', 'Zurück')) return;
     schliessen();
@@ -14264,7 +14303,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v203';
+const APP_VERSION = 'v204';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
