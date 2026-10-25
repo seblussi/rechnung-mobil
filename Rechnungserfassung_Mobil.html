@@ -14258,7 +14258,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v198';
+const APP_VERSION = 'v199';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14344,6 +14344,20 @@ function fahrdienstSchichten(tag){
   [1, 2].forEach(nr=> dazu('Nacht', nr, '23:00', '08:00'));
   return l;
 }
+// Sitzdienste Ortenau (Plan April bis Oktober 2026): werktags Offenburg Abend
+// (Mo/Di/Do 19-22, Mi/Fr 16-22); Sa/So/Feiertag Offenburg Frueh 1 8-14,
+// Frueh 2 10-16, Spaet 1 16-21, Spaet 2 17-22 und Lahr Frueh 1 9-14,
+// Frueh 2 10-15, Spaet 15-19
+function sitzdienstSchichten(tag){
+  const d = tag || new Date(), wd = d.getDay(), l = [];
+  const dazu = (label, von, bis)=> l.push({ label, von, bis });
+  if(fahrdienstWochenendSatz(d)){
+    dazu('OG Früh 1', '08:00', '14:00'); dazu('OG Früh 2', '10:00', '16:00'); dazu('OG Spät 1', '16:00', '21:00'); dazu('OG Spät 2', '17:00', '22:00');
+    dazu('Lahr Früh 1', '09:00', '14:00'); dazu('Lahr Früh 2', '10:00', '15:00'); dazu('Lahr Spät', '15:00', '19:00');
+  } else dazu('OG Abend', (wd === 3 || wd === 5) ? '16:00' : '19:00', '22:00');
+  return l;
+}
+function dienstSchichten(art, tag){ return art === 'Fahrdienst' ? fahrdienstSchichten(tag) : art === 'Sitzdienst' ? sitzdienstSchichten(tag) : []; }
 const LIVE_DIENSTZEITEN = {
   Fahrdienst:  { werktag: ['18:00-08:00'], wochenende: ['08:00-08:00'] },
   Sitzdienst:  { werktag: [], wochenende: [] },
@@ -14511,7 +14525,7 @@ async function liveDienstDialog(){
   const vorschlaege = ()=>{
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum), tag = m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD;
     const we = fahrdienstWochenendSatz(tag), std = (LIVE_DIENSTZEITEN[art] || {})[we ? 'wochenende' : 'werktag'] || [];
-    const schichten = art === 'Fahrdienst' ? fahrdienstSchichten(tag).map(x=> x.von + '-' + x.bis) : [];
+    const schichten = dienstSchichten(art, tag).map(x=> x.von + '-' + x.bis);
     const zuletzt = ((LS.get('live_dienst_zeiten', {}) || {})[art + (we ? '|we' : '|wt')]) || [];
     // bei Fahrdienst stehen die Schichten als eigene Auswahl darueber -- hier nur weitere Zeiten (z.B. 18-08 am Stueck)
     const l = []; zuletzt.concat(std).forEach(z=>{ if(z && !l.includes(z) && !schichten.includes(z)) l.push(z); });
@@ -14533,7 +14547,7 @@ async function liveDienstDialog(){
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
-      (art === 'Fahrdienst' ? '<div class="fb-lbl">Welcher Dienst (Auto)?</div><div class="fb-chips fb-schichten">' + fahrdienstSchichten(tagVon()).map(x=>
+      (dienstSchichten(art, tagVon()).length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div><div class="fb-chips fb-schichten">' + dienstSchichten(art, tagVon()).map(x=>
         '<button type="button" class="fb-chip schicht' + (x.label === schicht ? ' an' : '') + '" data-lzeit="' + x.von + '-' + x.bis + '" data-lschicht="' + x.label + '"><b>' + x.label + '</b><small>' + (x.von + '–' + x.bis).replace(/:00/g, '') + '</small></button>').join('') + '</div>' : '') +
       '<div class="fb-lbl">Dienstzeit</div>' +
       (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis && !schicht ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace(/:00/g, '').replace('-', '–') + '</button>').join('') + '</div>' : '') +
@@ -14568,7 +14582,7 @@ async function liveDienstDialog(){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)){ fehler = 'Bitte den Tag des Dienstbeginns wählen.'; continue; }
     if(!/^\d{1,2}:\d{2}$/.test(von) || !/^\d{1,2}:\d{2}$/.test(bis)){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen.'; continue; }
     betaOverlay.schliessen();
-    if(art !== 'Fahrdienst') schicht = '';
+    if(!dienstSchichten(art, tagVon()).length) schicht = '';
     LS.set('live_dienst', { datum, von, bis, art, arzt, schicht, am: new Date().toISOString() });
     LS.set('fb_dienstart', art);
     // zuletzt benutzte Zeiten merken (je Dienstart, Werktag/Wochenende)
