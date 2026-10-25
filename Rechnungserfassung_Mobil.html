@@ -14243,7 +14243,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v190';
+const APP_VERSION = 'v191';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -16933,13 +16933,14 @@ function appToastAnzeigen(text, dauerMs){
 try{ themaAnwenden(); }catch(e){}
 try{ dunkelModusAutoSyncEinrichten(); }catch(e){}
 try{ ansichtStart(); }catch(e){}
-// Schnellstart aus dem App-Symbol (Rechtsklick in der Taskleiste / langes Druecken): ?neu=ls|pt|gkv, ?seite=fahrtenbuch
+// Schnellstart aus dem App-Symbol (Rechtsklick in der Taskleiste / langes Druecken): ?neu=dienst|ls|pt|gkv, ?seite=fahrtenbuch
 try{
   const q = new URLSearchParams(location.search), neu = q.get('neu'), seite = q.get('seite');
   if(neu || seite){
     history.replaceState(null, '', location.pathname);
     setTimeout(()=>{
-      if(neu === 'ls' || neu === 'pt') betaNeueRechnung(neu);
+      if(neu === 'dienst') liveDienstDialog().then(ok=>{ if(ok && aktuelleAnsichtIstHauptbildschirm) ansichtStart(); });
+      else if(neu === 'ls' || neu === 'pt') betaNeueRechnung(neu);
       else if(neu === 'gkv') ansichtGkv();
       else if(seite === 'fahrtenbuch' && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') ansichtFahrtenbuch();
     }, 600);
