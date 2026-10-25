@@ -1463,6 +1463,14 @@
   .ds-neu-titel{margin:22px 2px 8px; font-weight:800;}
   body.design-einhand .ds-nav{position:fixed; left:16px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20; height:66px; border-radius:33px; background:var(--ds-nav);
     grid-template-columns:repeat(5, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
+  .ds-dienst-start{display:none;}
+  body.design-einhand .ds-dienst-start{display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; margin:0 0 10px; padding:8px 12px; min-height:50px;
+    border:0; border-radius:16px; background:#d9861a; color:#fff; font:inherit; font-size:16px; font-weight:800; text-align:left; cursor:pointer;}
+  body.design-einhand .ds-dienst-start svg{fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;}
+  body.design-einhand .ds-ds-icon{display:flex; width:34px; height:34px; align-items:center; justify-content:center; border-radius:10px; background:rgba(255,255,255,.2);}
+  body.design-einhand .ds-ds-icon svg{width:22px; height:22px;}
+  body.design-einhand .ds-ds-text{flex:1;}
+  body.design-einhand .ds-ds-plus svg{width:22px; height:22px; display:block;}
   body.design-einhand .ds-nav-btn.gross{justify-self:center; width:72px; height:72px; margin-top:-26px; border-radius:22px; background:#fff; color:#101317;
     box-shadow:0 6px 18px rgba(0,0,0,.35);}
   body.dunkel.design-einhand .ds-nav-btn.gross{background:#e6e9ee; color:#12161d;}
@@ -14243,7 +14251,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v192';
+const APP_VERSION = 'v193';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14833,11 +14841,16 @@ function designStartErgaenzen(){
   if(d === 'einhand'){
     const w = designWeiterFall();
     vor('<div class="ds-start ds-einhand"><div class="ds-klein ds-neu-titel">NEUER FALL</div></div>');
+    // schmale Zeile ueber den Kacheln: Dienst starten (nur wenn keiner laeuft/geplant ist)
+    if(info.modus !== 'laufend' && info.modus !== 'geplant')
+      vor('<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>');
     if(w) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand"><button type="button" class="ds-weiter" id="dsWeiter"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten</span><b>' + htmlEsc(w.titel) + '</b></span>' + DS_ICON.pfeil + '</button></div>');
     app.insertAdjacentHTML('beforeend', designNav([
       { k: 'start', icon: 'start', label: 'Start', an: true }, { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen', nurIcon: true },
       { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch', nurIcon: true }, { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge', nurIcon: true }]));
     if(w) document.getElementById('dsWeiter').onclick = w.oeffnen;
+    const dst = document.getElementById('dsDienstStart');
+    if(dst) dst.onclick = async ()=>{ if(await liveDienstDialog()) ansichtStart(); };
   }
   app.querySelectorAll('[data-live]').forEach(b=> b.onclick = async ()=>{ if(await liveDienstDialog()) ansichtStart(); });
   app.querySelectorAll('.ds-ein').forEach(b=> b.onclick = ()=> ansichtGkv(b.dataset.gkv));
