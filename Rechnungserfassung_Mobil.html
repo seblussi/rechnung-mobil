@@ -2465,7 +2465,7 @@ function fahrdienstZeilenAuswerten(zeilen){
     // 24.12., 31.12.) -- nach dem Tag des Dienstbeginns; am 24.12./31.12.
     // zusaetzlich 500 € je 24 h
     const dienstart = String(arztZeile[COL_B] == null ? '' : arztZeile[COL_B]).trim() || 'Fahrdienst';
-    const satz = fahrdienstPauschaleSatz(r[COL_B], dienstart), satzFormel = fahrdienstSatzFormel(r[COL_B], dienstart), zusatz = fahrdienstZusatzSatz(r[COL_B]);
+    const satz = fahrdienstPauschaleSatz(r[COL_B], dienstart), satzFormel = fahrdienstSatzFormel(r[COL_B], dienstart), zusatz = fahrdienstZusatzSatz(r[COL_B], dienstart);
     const gkvRoh = gkv;
     const pauschale = dienststunden > 0 && dienststunden * satz > gkvRoh + 0.005;
     if(pauschale){ gkv = dienststunden * satz; }
@@ -2803,7 +2803,7 @@ function fahrdienstAuswertungRendernBasis(daten){
     '<th>Datum</th><th>Arzt</th><th>Zeit</th><th>Gesamt</th><th>Std.-Lohn</th><th>gesetzl.</th><th>LS+PT</th><th>LS</th><th>PT</th></tr>' +
     daten.bloecke.map(b=>`<tr>
       <td>${b.datumText}</td><td>${b.arzt}</td><td>${b.zeitLabel}</td>
-      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}${b.pauschale ? '<span class="fd-gp" title="Förderung ' + fahrdienstSatzText(b.satz) + ' €/h (' + b.satzGrund + ') statt ' + euro(b.gkvRoh) + '">GP</span>' : ''}${b.zusatz ? '<span class="fd-gp" title="Zusatzförderung 24.12./31.12.: 500 € je 24 h">+500</span>' : ''} ${b.pseudo ? '<span class="fd-gp" title="Dienst ohne GKV-Patient – Pseudo-Fall 99999 eingetragen (auch in der KV-Abrechnung anlegen)">Pseudo</span>' : ''}${!(b.gkvRoh > 0) && !b.pseudo ? '<span class="fd-gp fd-pseudo" title="Kein GKV-Fall in diesem Dienst: Für die Förderung muss ein Pseudo-Abrechnungsfall (GOP 99999, ICD Z02, Uhrzeit Dienstbeginn) angelegt werden.">99999?</span>' : ''}</td>
+      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}${b.pauschale ? '<span class="fd-gp" title="Förderung ' + fahrdienstSatzText(b.satz) + ' €/h (' + b.satzGrund + ') statt ' + euro(b.gkvRoh) + '">GP</span>' : ''}${b.zusatz ? '<span class="fd-gp" title="Zusatzförderung 24.12./31.12.: 500 € je 24 h">+500</span>' : ''} ${b.pseudo ? '<span class="fd-gp" title="Dienst ohne GKV-Patient – Pseudo-Fall 99999 eingetragen (auch in der KV-Abrechnung anlegen)">Pseudo</span>' : ''}${!(b.gkvRoh > 0) && !b.pseudo && !fahrdienstOhneFoerderung(b.dienstart) ? '<span class="fd-gp fd-pseudo" title="Kein GKV-Fall in diesem Dienst: Für die Förderung muss ein Pseudo-Abrechnungsfall (GOP 99999, ICD Z02, Uhrzeit Dienstbeginn) angelegt werden.">99999?</span>' : ''}</td>
       <td>${euro(b.ls+b.pt)}</td><td>${euro(b.ls)}</td><td>${euro(b.pt)}</td>
     </tr>`).join('') + '</table></div></div>';
 
@@ -10551,22 +10551,27 @@ function fahrdienstSilvesterHeiligabend(d){ return !!d && d.getMonth() === 11 &&
 function fahrdienstWochenendSatz(d){ return !!d && (d.getDay() === 0 || d.getDay() === 6 || !!istFeiertagBW(d) || fahrdienstSilvesterHeiligabend(d)); }
 // Sitzdienst und telemedizinischer Dienst: an allen Tagen 50 EUR/h
 function fahrdienstIstSitz(art){ return /sitz|tele/i.test(String(art || '')); }
+// docdirekt: keine Foerderung (keine Grundpauschale, kein Zuschlag 24.12./31.12., kein Pseudo-Fall noetig)
+function fahrdienstOhneFoerderung(art){ return /docdirekt/i.test(String(art || '')); }
 function fahrdienstPauschaleSatz(datumWert, art){
+  if(fahrdienstOhneFoerderung(art)) return 0;
   if(fahrdienstIstSitz(art)) return FAHRDIENST_PAUSCHALE_WOCHENENDE;
   const d = fahrdienstDatumAusWert(datumWert);
   return fahrdienstWochenendSatz(d) ? FAHRDIENST_PAUSCHALE_WOCHENENDE : FAHRDIENST_PAUSCHALE_WERKTAG;
 }
 // dieselbe Zahl als Excel-Ausdruck (300/14 exakt statt gerundet)
 function fahrdienstSatzFormel(datumWert, art){
+  if(fahrdienstOhneFoerderung(art)) return '0';
   if(fahrdienstIstSitz(art)) return String(FAHRDIENST_PAUSCHALE_WOCHENENDE);
   return fahrdienstWochenendSatz(fahrdienstDatumAusWert(datumWert)) ? String(FAHRDIENST_PAUSCHALE_WOCHENENDE) : FAHRDIENST_PAUSCHALE_WERKTAG_FORMEL;
 }
 // Zusatzfoerderung 24.12./31.12. je Stunde (sonst 0)
-function fahrdienstZusatzSatz(datumWert){ return fahrdienstSilvesterHeiligabend(fahrdienstDatumAusWert(datumWert)) ? FAHRDIENST_ZUSATZ_2412_3112 : 0; }
+function fahrdienstZusatzSatz(datumWert, art){ if(fahrdienstOhneFoerderung(art)) return 0; return fahrdienstSilvesterHeiligabend(fahrdienstDatumAusWert(datumWert)) ? FAHRDIENST_ZUSATZ_2412_3112 : 0; }
 function fahrdienstSatzText(satz){ return String(Math.round(satz * 100) / 100).replace('.', ','); }
 function fahrdienstSatzGrund(datumWert, art){
   const d = fahrdienstDatumAusWert(datumWert);
   if(!d) return '';
+  if(fahrdienstOhneFoerderung(art)) return 'docdirekt (ohne Förderung)';
   if(fahrdienstIstSitz(art)) return String(art).trim();
   if(fahrdienstSilvesterHeiligabend(d)) return d.getDate() === 24 ? 'Heiligabend' : 'Silvester';
   const f = istFeiertagBW(d);
@@ -11440,7 +11445,7 @@ async function pseudoOffeneDienste(neu){
       fahrdienstZeilenAuswerten(werte).bloecke.forEach(b=>{
         const z = fbBlockZeitraum({ datumText: b.datumText, zeitRoh: b.zeitRoh });
         if(!z || z.bis.getTime() > Date.now() || z.von.getTime() < grenze) return;
-        if(b.gkvRoh > 0 || b.pseudo) return;
+        if(b.gkvRoh > 0 || b.pseudo || fahrdienstOhneFoerderung(b.dienstart)) return;
         const key = b.datumText + ' ' + String(b.zeitRoh || '');
         if(weg.has(key)) return;
         offen.push({ key, datumText: b.datumText, zeit: String(b.zeitRoh || ''), arzt: b.arzt || '', von: z.von.getTime() });
@@ -11805,7 +11810,7 @@ function fbArztAusblenden(name){
 
 // Dienstart steht in Spalte B unter dem Datum (bisher immer "Fahrdienst");
 // sie bestimmt den Foerdersatz (Sitzdienst/Telemedizin immer 50 EUR/h)
-const FB_DIENSTARTEN = ['Fahrdienst', 'Sitzdienst', 'Telemedizin'];
+const FB_DIENSTARTEN = ['Fahrdienst', 'Sitzdienst', 'Telemedizin', 'docdirekt'];
 // Rueckfrage "Neuer Dienst" -> {datum, zeit:{s,e}, arzt, art} oder null (nicht eintragen)
 async function fbDienstAbfragen(fb, dt, fallText){
   let datum = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
@@ -14258,7 +14263,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v200';
+const APP_VERSION = 'v201';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14363,13 +14368,20 @@ function sitzdienstSchichten(tag){
 function telemedizinSchichten(tag){
   const d = tag || new Date();
   if(fahrdienstWochenendSatz(d)) return [{ label: 'Telearzt früh', von: '09:00', bis: '16:00' }, { label: 'Telearzt spät', von: '16:00', bis: '23:00' }];
-  return [{ label: 'docdirekt Vormittag', von: '08:00', bis: '13:00' }, { label: 'docdirekt Nachmittag', von: '13:00', bis: '19:00' }, { label: 'Telearzt', von: '19:00', bis: '23:00' }];
+  return [{ label: 'Telearzt', von: '19:00', bis: '23:00' }];
 }
-function dienstSchichten(art, tag){ return art === 'Fahrdienst' ? fahrdienstSchichten(tag) : art === 'Sitzdienst' ? sitzdienstSchichten(tag) : art === 'Telemedizin' ? telemedizinSchichten(tag) : []; }
+// docdirekt (eigene Dienstart, ohne Foerderung): werktags Vormittag 8-13, Nachmittag 13-19
+function docdirektSchichten(tag){
+  const d = tag || new Date();
+  if(fahrdienstWochenendSatz(d)) return [];
+  return [{ label: 'Vormittag', von: '08:00', bis: '13:00' }, { label: 'Nachmittag', von: '13:00', bis: '19:00' }];
+}
+function dienstSchichten(art, tag){ return art === 'Fahrdienst' ? fahrdienstSchichten(tag) : art === 'Sitzdienst' ? sitzdienstSchichten(tag) : art === 'Telemedizin' ? telemedizinSchichten(tag) : art === 'docdirekt' ? docdirektSchichten(tag) : []; }
 const LIVE_DIENSTZEITEN = {
   Fahrdienst:  { werktag: ['18:00-08:00'], wochenende: ['08:00-08:00'] },
   Sitzdienst:  { werktag: [], wochenende: [] },
-  Telemedizin: { werktag: [], wochenende: [] }
+  Telemedizin: { werktag: [], wochenende: [] },
+  docdirekt:   { werktag: [], wochenende: [] }
 };
 const LIVE_ANZEIGEN = [
   { k: 'ring', titel: 'Uhr', text: 'Uhrzeit und Restzeit des Dienstes im Ring, Einsätze als Punkte.' },
@@ -14455,7 +14467,7 @@ function designDienstInfo(){
   const dt = designDatumDe(fe.tag);
   // Foerderung (Statut NFD-O zu § 10): Pauschale je Stunde minus GKV-Einnahmen, 24.12./31.12. zusaetzlich
   const pauschale = betaRund2(fe.stunden * fahrdienstPauschaleSatz(dt, d.art));
-  const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fahrdienstZusatzSatz(dt) * fe.stunden);
+  const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fahrdienstZusatzSatz(dt, d.art) * fe.stunden);
   return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, schicht: d.schicht || '', arzt: d.arzt || '', jetzt, auto: d.auto || '' };
 }
 function designDienstTitel(info){ return info.art + (info.schicht ? ' ' + info.schicht : '') + ' · ' + designUhr(info.fenster.von) + ' – ' + designUhr(info.fenster.bis); }
