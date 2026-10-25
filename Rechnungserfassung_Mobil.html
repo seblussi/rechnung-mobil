@@ -1463,6 +1463,8 @@
   .ds-neu-titel{margin:22px 2px 8px; font-weight:800;}
   body.design-einhand .ds-nav{position:fixed; left:16px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20; height:66px; border-radius:33px; background:var(--ds-nav);
     grid-template-columns:repeat(5, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
+  .fb-schichten .fb-chip.schicht{display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; min-width:64px;}
+  .fb-schichten .fb-chip.schicht small{font-size:11px; opacity:.75;}
   .ds-dienst-start{display:none;}
   body.design-einhand .ds-dienst-start{display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; margin:0 0 10px; padding:8px 12px; min-height:50px;
     border:0; border-radius:16px; background:#d9861a; color:#fff; font:inherit; font-size:16px; font-weight:800; text-align:left; cursor:pointer;}
@@ -11771,7 +11773,7 @@ function fbZeitVorschlaege(fb, datum){
     if(typ(fbDatumAusText(b.datumText)) === zielTyp) zaehlTyp.set(t, (zaehlTyp.get(t) || 0) + 1);
   });
   const kurz = (t)=>{ const [h, m] = t.split(':'); return String(+h) + (m !== '00' ? ':' + m : ''); };
-  const schichten = fahrdienstSchichten(datum).map(x=> kurz(x.von) + '-' + kurz(x.bis));
+  const schichten = [...new Set(fahrdienstSchichten(datum).map(x=> kurz(x.von) + '-' + kurz(x.bis)))];
   const liste = schichten.concat([...zaehl.keys()].filter(t=> !schichten.includes(t)).sort((a, b)=> (zaehlTyp.get(b) || 0) - (zaehlTyp.get(a) || 0) || zaehl.get(b) - zaehl.get(a)));
   (zielTyp === 'we' ? ['8-20', '20-8', '8-8', '8-16', '16-24'] : ['18-23', '19-7', '16-24', '8-16', '18-8'])
     .forEach(t=>{ if(!liste.includes(t)) liste.push(t); });
@@ -14256,7 +14258,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v197';
+const APP_VERSION = 'v198';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14323,21 +14325,24 @@ function designProfilName(id){
 // Gespeichert lokal: live_dienst = {datum:'JJJJ-MM-TT', von:'HH:MM', bis:'HH:MM', art, arzt}
 // Uebliche Dienstzeiten je Dienstart (Werktag / Wochenende+Feiertag) --
 // werden zusammen mit den zuletzt benutzten Zeiten als Knoepfe angeboten.
-// Schichten im Fahrdienst (Fahrservice Mittelbaden): Mo/Di/Do Abend 18-23, Mi 13-23,
-// Fr 16-23, jeweils Nacht 23-08; Sa/So/Feiertag Frueh 08-15 oder 08-16,
-// Abend 15-23 oder 16-23, Nacht 23-08
+// Schichten im Fahrdienst (Fahrservice Mittelbaden), je Auto/Dienst nummeriert.
+// Werktags: Abend 1-4 (Mo/Di/Do 18-23, Mi 13-23, Fr 16-23), Nacht 1-2 (23-08).
+// Sa/So/Feiertag: Frueh 1-4 (08-15 bzw. 08-16), Abend 1-4 (15-23 bzw. 16-23), Nacht 1-2.
+// Welche Nummer kurz/lang ist, wechselt mit dem Vertragszeitraum:
+// bis 31.10.2026 Nr. 1+2 kurz, 3+4 lang; ab 01.11.2026 Nr. 1+3 kurz, 2+4 lang.
 function fahrdienstSchichten(tag){
-  const d = tag || new Date(), wd = d.getDay();
-  if(fahrdienstWochenendSatz(d)) return [
-    { name: 'Früh', von: '08:00', bis: '15:00' }, { name: 'Früh', von: '08:00', bis: '16:00' },
-    { name: 'Abend', von: '15:00', bis: '23:00' }, { name: 'Abend', von: '16:00', bis: '23:00' },
-    { name: 'Nacht', von: '23:00', bis: '08:00' }];
-  const abend = wd === 3 ? '13:00' : wd === 5 ? '16:00' : '18:00';
-  return [{ name: 'Abend', von: abend, bis: '23:00' }, { name: 'Nacht', von: '23:00', bis: '08:00' }];
-}
-function fahrdienstSchichtName(v, tag){
-  const s = fahrdienstSchichten(tag).find(x=> x.von + '-' + x.bis === v);
-  return s ? s.name : '';
+  const d = tag || new Date(), wd = d.getDay(), l = [];
+  const dazu = (name, nr, von, bis)=> l.push({ name, nr, von, bis, label: name + ' ' + nr });
+  if(fahrdienstWochenendSatz(d)){
+    const neu = d >= new Date(2026, 10, 1), kurz = (nr)=> neu ? (nr % 2 === 1) : (nr <= 2);
+    [1, 2, 3, 4].forEach(nr=> dazu('Früh', nr, '08:00', kurz(nr) ? '15:00' : '16:00'));
+    [1, 2, 3, 4].forEach(nr=> dazu('Abend', nr, kurz(nr) ? '15:00' : '16:00', '23:00'));
+  } else {
+    const abend = wd === 3 ? '13:00' : wd === 5 ? '16:00' : '18:00';
+    [1, 2, 3, 4].forEach(nr=> dazu('Abend', nr, abend, '23:00'));
+  }
+  [1, 2].forEach(nr=> dazu('Nacht', nr, '23:00', '08:00'));
+  return l;
 }
 const LIVE_DIENSTZEITEN = {
   Fahrdienst:  { werktag: ['18:00-08:00'], wochenende: ['08:00-08:00'] },
@@ -14429,9 +14434,9 @@ function designDienstInfo(){
   // Foerderung (Statut NFD-O zu § 10): Pauschale je Stunde minus GKV-Einnahmen, 24.12./31.12. zusaetzlich
   const pauschale = betaRund2(fe.stunden * fahrdienstPauschaleSatz(dt, d.art));
   const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fahrdienstZusatzSatz(dt) * fe.stunden);
-  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, arzt: d.arzt || '', jetzt, auto: d.auto || '' };
+  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, schicht: d.schicht || '', arzt: d.arzt || '', jetzt, auto: d.auto || '' };
 }
-function designDienstTitel(info){ return info.art + ' · ' + designUhr(info.fenster.von) + ' – ' + designUhr(info.fenster.bis); }
+function designDienstTitel(info){ return info.art + (info.schicht ? ' ' + info.schicht : '') + ' · ' + designUhr(info.fenster.von) + ' – ' + designUhr(info.fenster.bis); }
 function designDienstUnter(info){
   const fe = info.fenster;
   return DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + (fe.wochenende ? 'Wochenende/Feiertag' : 'Werktag') + (info.arzt ? ' · für ' + info.arzt : '');
@@ -14501,16 +14506,18 @@ async function liveDienstDialog(){
   let datumD = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate()); if(jetzt.getHours() < 8) datumD.setDate(datumD.getDate() - 1);
   let datum = vorschlag ? vorschlag.datum : liveIso(datumD);
   let art = vorschlag ? vorschlag.art : LS.get('fb_dienstart', 'Fahrdienst');
-  let von = vorschlag ? vorschlag.von : '', bis = vorschlag ? vorschlag.bis : '', arzt = vorschlag ? (vorschlag.arzt || '') : '';
+  let von = vorschlag ? vorschlag.von : '', bis = vorschlag ? vorschlag.bis : '', arzt = vorschlag ? (vorschlag.arzt || '') : '', schicht = vorschlag ? (vorschlag.schicht || '') : '';
   let fehler = '';
   const vorschlaege = ()=>{
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum), tag = m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD;
     const we = fahrdienstWochenendSatz(tag), std = (LIVE_DIENSTZEITEN[art] || {})[we ? 'wochenende' : 'werktag'] || [];
     const schichten = art === 'Fahrdienst' ? fahrdienstSchichten(tag).map(x=> x.von + '-' + x.bis) : [];
     const zuletzt = ((LS.get('live_dienst_zeiten', {}) || {})[art + (we ? '|we' : '|wt')]) || [];
-    const l = []; schichten.concat(zuletzt, std).forEach(z=>{ if(z && !l.includes(z)) l.push(z); });
-    return l.slice(0, 8);
+    // bei Fahrdienst stehen die Schichten als eigene Auswahl darueber -- hier nur weitere Zeiten (z.B. 18-08 am Stueck)
+    const l = []; zuletzt.concat(std).forEach(z=>{ if(z && !l.includes(z) && !schichten.includes(z)) l.push(z); });
+    return l.slice(0, 6);
   };
+  const tagVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD; };
   if(!von || !bis){ const v = vorschlaege()[0]; if(v){ [von, bis] = v.split('-'); } }
   // bisherige vertretene Aerzte (Fahrtenbuch, Merkliste, Aerzte-Rechnungen)
   if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet' && Date.now() - ((LS.get('fb_aerzte_historie', null) || {}).am || 0) > 6 * 3600000){
@@ -14526,9 +14533,10 @@ async function liveDienstDialog(){
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
+      (art === 'Fahrdienst' ? '<div class="fb-lbl">Welcher Dienst (Auto)?</div><div class="fb-chips fb-schichten">' + fahrdienstSchichten(tagVon()).map(x=>
+        '<button type="button" class="fb-chip schicht' + (x.label === schicht ? ' an' : '') + '" data-lzeit="' + x.von + '-' + x.bis + '" data-lschicht="' + x.label + '"><b>' + x.label + '</b><small>' + (x.von + '–' + x.bis).replace(/:00/g, '') + '</small></button>').join('') + '</div>' : '') +
       '<div class="fb-lbl">Dienstzeit</div>' +
-      (vs.length ? '<div class="fb-chips">' + vs.map(v=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum), n = art === 'Fahrdienst' && m ? fahrdienstSchichtName(v, new Date(+m[1], +m[2] - 1, +m[3])) : '';
-        return '<button type="button" class="fb-chip' + (v === von + '-' + bis ? ' an' : '') + '" data-lzeit="' + v + '">' + (n ? '<b>' + n + '</b> ' : '') + v.replace(/:00/g, '').replace('-', '–') + '</button>'; }).join('') + '</div>' : '') +
+      (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis && !schicht ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace(/:00/g, '').replace('-', '–') + '</button>').join('') + '</div>' : '') +
       '<div class="fb-zeile"><label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
       '<div class="fb-lbl">Vertretener Arzt (optional)</div>' +
       (aerzte.length ? '<div class="fb-chips">' + aerzte.slice(0, 12).map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-larzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-larztweg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>'
@@ -14539,9 +14547,11 @@ async function liveDienstDialog(){
     kn.push({ label: akt ? 'Übernehmen' : 'Dienst starten', akt: 'ok', primaer: true });
     const warte = betaOverlay.ergebnis(akt ? 'Dienst ändern' : 'Welcher Dienst?', html, kn);
     const lesen = ()=>{ datum = (document.getElementById('liveDatum') || {}).value || datum; von = (document.getElementById('liveVon') || {}).value || ''; bis = (document.getElementById('liveBis') || {}).value || ''; arzt = String((document.getElementById('liveArzt') || {}).value || '').trim(); };
-    document.querySelectorAll('.beta-overlay [data-lart]').forEach(b=> b.onclick = ()=>{ lesen(); art = b.dataset.lart; const v = vorschlaege()[0]; if(v) [von, bis] = v.split('-'); betaOverlay.loesen && betaOverlay.loesen('neu'); });
+    document.querySelectorAll('.beta-overlay [data-lart]').forEach(b=> b.onclick = ()=>{ lesen(); art = b.dataset.lart; schicht = ''; const v = vorschlaege()[0]; if(v) [von, bis] = v.split('-'); betaOverlay.loesen && betaOverlay.loesen('neu'); });
     document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(b=> b.onclick = ()=>{ const [v1, b1] = b.dataset.lzeit.split('-'); document.getElementById('liveVon').value = v1; document.getElementById('liveBis').value = b1;
+      schicht = b.dataset.lschicht || '';
       document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(x=> x.classList.toggle('an', x === b)); });
+    ['liveVon', 'liveBis'].forEach(id=>{ const e = document.getElementById(id); if(e) e.addEventListener('input', ()=>{ schicht = ''; document.querySelectorAll('.beta-overlay [data-lschicht]').forEach(x=> x.classList.remove('an')); }); });
     document.querySelectorAll('.beta-overlay [data-larzt]').forEach(b=> b.onclick = ()=>{ document.getElementById('liveArzt').value = b.dataset.larzt;
       document.querySelectorAll('.beta-overlay .fb-chip.arzt').forEach(x=> x.classList.toggle('an', x.contains(b))); });
     document.querySelectorAll('.beta-overlay [data-larztweg]').forEach(b=> b.onclick = ()=>{
@@ -14549,7 +14559,7 @@ async function liveDienstDialog(){
       const chip = b.closest('.fb-chip'); if(chip) chip.remove();
       if(document.getElementById('liveArzt').value === b.dataset.larztweg) document.getElementById('liveArzt').value = '';
     });
-    const dEl = document.getElementById('liveDatum'); if(dEl) dEl.onchange = ()=>{ lesen(); betaOverlay.loesen && betaOverlay.loesen('neu'); };
+    const dEl = document.getElementById('liveDatum'); if(dEl) dEl.onchange = ()=>{ lesen(); schicht = ''; betaOverlay.loesen && betaOverlay.loesen('neu'); };
     const a = await warte;
     lesen();
     if(a === 'neu'){ fehler = ''; continue; }
@@ -14558,7 +14568,8 @@ async function liveDienstDialog(){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)){ fehler = 'Bitte den Tag des Dienstbeginns wählen.'; continue; }
     if(!/^\d{1,2}:\d{2}$/.test(von) || !/^\d{1,2}:\d{2}$/.test(bis)){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen.'; continue; }
     betaOverlay.schliessen();
-    LS.set('live_dienst', { datum, von, bis, art, arzt, am: new Date().toISOString() });
+    if(art !== 'Fahrdienst') schicht = '';
+    LS.set('live_dienst', { datum, von, bis, art, arzt, schicht, am: new Date().toISOString() });
     LS.set('fb_dienstart', art);
     // zuletzt benutzte Zeiten merken (je Dienstart, Werktag/Wochenende)
     try{
