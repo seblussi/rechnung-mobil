@@ -1568,6 +1568,12 @@
   .fbx-summen b{color:var(--text);}
   .fbx-fall{display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:8px; align-items:start; width:100%; margin:0; padding:7px 0; border:0; border-top:1px solid var(--rand); background:none; color:var(--text); font:inherit; font-size:13px; text-align:left; cursor:pointer;}
   .fbx-zeit{color:var(--text-schwach); font-variant-numeric:tabular-nums;}
+  .fbx-detail{display:grid; grid-template-columns:minmax(0,1fr) 34px;}
+  .fbx-detail > .fbx-summen{grid-column:1 / -1;}
+  .fbx-weg{margin:0; padding:0; width:34px; border:0; border-top:1px solid var(--rand); background:none; color:var(--text-schwach); cursor:pointer;}
+  .fbx-weg svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .fbx-weg:active{color:var(--fehler);}
+  .fbx-dienst-weg{grid-column:1 / -1; margin:6px 0 4px; padding:7px; font-size:12.5px; border-radius:8px; border:1px solid var(--fehler); background:none; color:var(--fehler);}
   .fbx-mitte{min-width:0;}
   .fbx-mitte b{font-weight:600;}
   .fbx-zl{display:block; margin-top:2px;}
@@ -1593,6 +1599,9 @@
   .fbx-kpi{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:0 12px 6px;}
   .fbx-kpi div{background:var(--grau-feld); border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; font-size:11.5px; color:var(--text-schwach);}
   .fbx-kpi b{font-size:15px; color:var(--text);}
+  .mini-ebenen{position:relative;}
+  .mini-ebenen .karte-ebene{width:46px; height:46px; top:8px; right:8px; font-size:9.5px; border-radius:9px;}
+  .mini-ebenen .karte-ebene svg{width:18px; height:18px;}
   .nfp-start{background:#1a55c9;}
   .nfp-nfp{background:#111; border-radius:3px; width:14px; height:14px; margin:-7px 0 0 -7px;}
   .nfp-poi{display:flex; align-items:center; justify-content:center; color:#fff; font:700 10px sans-serif; width:20px; height:20px; margin:-10px 0 0 -10px;}
@@ -2541,6 +2550,7 @@ async function fbBuchLaden(blatt, meldung){
   }).filter(d=> d.tag).sort((a, b)=> b.tag - a.tag);
   return { blatt: L.blatt, blaetter: kx.info.blaetter, dienste };
 }
+const FB_MUELL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
 function fbTagText(d){ return DESIGN_WT[d.getDay()] + ' ' + zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' + d.getFullYear(); }
 function fbZiffernHtml(z){ return z.map(x=> '<span class="fbx-z">' + htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '') + '</span>').join(''); }
 function fbMarke(art){ return '<span class="fbx-m ' + art + '">' + ({ ls: 'LS', pt: 'PT', gkv: 'GKV' }[art]) + '</span>'; }
@@ -2576,6 +2586,11 @@ async function ansichtFahrtenbuch(blatt){
     inhalt.innerHTML = ansicht === 'b' ? fbAnsichtB(buch) : ansicht === 'c' ? fbAnsichtC(buch) : fbAnsichtA(buch);
     inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=> k.closest('.fbx-karte').classList.toggle('zu'));
     inhalt.querySelectorAll('[data-fbtag]').forEach(k=> k.onclick = ()=>{ LS.set('fb_tag', k.dataset.fbtag); zeichnen(); });
+    inhalt.querySelectorAll('[data-fbweg]').forEach(z=> z.onclick = (ev)=>{
+      ev.stopPropagation();
+      const t = z.dataset.fbweg.split('-'), dd = buch.dienste[+t[0]];
+      if(dd) fbLoeschen(dd, t.length > 1 ? dd.faelle[+t[1]] : null);
+    });
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> z.onclick = ()=>{
       const [di, fi] = z.dataset.fbfall.split('-').map(Number), f = buch.dienste[di] && buch.dienste[di].faelle[fi];
       if(f && f.oeffnen){ vorbereiteRuecksprung(); f.oeffnen(); return; }
@@ -2605,8 +2620,8 @@ function fbGkvAusExcelOeffnen(d, f){
       auswahl[k] = Object.assign({ anz }, g.stufen ? { stufe: g.stufen[0].k } : {});
     } else auswahl[gop] = { anz };
   });
-  // Uhrzeit aus Spalte AS; fehlt sie (alte Eintraege), Tag- bzw. Nachtzeit passend zu den Ziffern
-  const zeit = f.zeit || (nacht ? '20:00' : '12:00');
+  // Uhrzeit aus Spalte AS; fehlt sie (alte Eintraege), bleibt sie leer und wird von Hand eingetragen
+  const zeit = f.zeit || '';
   const tag = d.tag, datum = tag.getFullYear() + '-' + zz2(tag.getMonth() + 1) + '-' + zz2(tag.getDate());
   const id = 'g' + Date.now().toString(36);
   const arr = gkvFaelleLaden();
@@ -2615,7 +2630,58 @@ function fbGkvAusExcelOeffnen(d, f){
   gkvFaelleSpeichern(arr);
   fbBuchCache = null;
   ansichtGkv(id);
-  setTimeout(()=>{ const m = document.getElementById('gkvMeldung'); if(m) m.innerHTML = '<div class="gkv-warn">Aus dem Fahrtenbuch übernommen.' + (f.zeit ? '' : ' Die Uhrzeit stand nicht in der Excel – bitte prüfen.') + ' „Speichern“ überschreibt die Zeile im Fahrtenbuch.</div>'; }, 0);
+  setTimeout(()=>{ const m = document.getElementById('gkvMeldung'); if(m) m.innerHTML = '<div class="gkv-warn">Aus dem Fahrtenbuch übernommen.' + (f.zeit ? '' : ' Die Uhrzeit stand nicht in der Excel – bitte oben eintragen (bestimmt Tag-/Nacht-Ziffern).') + ' „Speichern“ überschreibt die Zeile im Fahrtenbuch.</div>'; }, 0);
+}
+// Faelle bzw. ganze Dienste aus dem Fahrtenbuch loeschen. Die Zeilen werden
+// in A:AG und AS nach oben herausgeschoben (die Statistik AH:AQ bleibt stehen
+// und wird danach neu geschrieben). In den beiden Kopfzeilen eines Diensts
+// (Quartal/Datum/Zeit, Dienstart/Arzt) wird beim Loeschen eines Falls nur
+// der Fall (D:AG, AS) geleert.
+async function fbLoeschen(d, f){
+  const ganz = !f;
+  const text = ganz ? 'Den ganzen Dienst ' + fbTagText(d.tag) + ' (' + d.faelle.length + ' Einträge) aus dem Fahrtenbuch löschen?'
+                    : '„' + f.name + '“ aus dem Dienst ' + fbTagText(d.tag) + ' im Fahrtenbuch löschen?';
+  if(!await betaFrage(text + '\n\nRückgängig nur über den Versionsverlauf der Excel in OneDrive.', 'Löschen', 'Abbrechen')) return;
+  const blatt = fbBuchCache ? fbBuchCache.blatt : undefined;
+  betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
+  try{
+    const kx = await fbKontext(t=> betaOverlay.schritt(t));
+    const L = await fbLesen(t=> betaOverlay.schritt(t), kx, blatt);
+    const url = L.blattUrl, tok = L.token;
+    const b = L.daten.bloecke.find(x=> x.zeileStart === d.zeileStart && x.datumText === d.datumText);
+    if(!b) throw new Error('Der Dienst wurde inzwischen verändert – bitte das Fahrtenbuch neu laden.');
+    const schiebe = async (von, bis)=>{
+      await gx(tok, 'POST', url + "/range(address='A" + von + ':AG' + bis + "')/delete", { shift: 'Up' });
+      await gx(tok, 'POST', url + "/range(address='AS" + von + ':AS' + bis + "')/delete", { shift: 'Up' });
+    };
+    if(ganz){
+      betaOverlay.schritt('Dienst wird gelöscht …');
+      await schiebe(b.zeileStart, b.zeileEnde);
+    } else {
+      const r = L.werte[f.zeile - 1] || [];
+      if(String(r[FB_COL.D] == null ? '' : r[FB_COL.D]).trim() !== f.name) throw new Error('Die Zeile wurde inzwischen verändert – bitte das Fahrtenbuch neu laden.');
+      betaOverlay.schritt('Eintrag wird gelöscht …');
+      if(f.zeile <= b.zeileStart + 1){
+        const leer = new Array(FB_COL.AG - FB_COL.D + 1).fill('');
+        await gx(tok, 'PATCH', url + "/range(address='D" + f.zeile + ':AG' + f.zeile + "')", { values: [leer] });
+        await gx(tok, 'PATCH', url + "/range(address='AS" + f.zeile + "')", { values: [['']] });
+      } else await schiebe(f.zeile, f.zeile);
+    }
+    try{ await fahrdienstStatistikSchreiben(t=> betaOverlay.schritt(t), { blatt: L.blatt }); }catch(_){}
+    // passende GKV-Faelle auf dem Geraet ebenfalls entfernen
+    const nn = new Set((ganz ? d.faelle : [f]).filter(x=> x.art === 'gkv').map(x=> fbNameNorm(x.name)));
+    if(nn.size){
+      const tag = d.tag.getTime();
+      gkvFaelleSpeichern(gkvFaelleLaden().filter(x=>{ const t = designFallZeit(x); return !(nn.has(fbNameNorm(x.name)) && t && Math.abs(t - tag) < 1.5 * 86400000); }));
+    }
+    betaOverlay.schliessen();
+    appToastAnzeigen(ganz ? 'Dienst gelöscht.' : 'Eintrag gelöscht.', 2500);
+  }catch(e){
+    betaOverlay.schliessen();
+    await betaOverlay.meldung('Löschen hat nicht geklappt: ' + (e.message || e), 'Fahrtenbuch');
+  }
+  fbBuchCache = null;
+  ansichtFahrtenbuch(blatt);
 }
 // A: Dienst-Karten, neuester offen
 function fbAnsichtA(buch){
@@ -2623,7 +2689,9 @@ function fbAnsichtA(buch){
     '<button type="button" class="fbx-kopf" data-fbauf="1"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '<small>' + (fbLaufend(d) ? 'bisher' : 'gesamt') + '</small></span></button>' +
     '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + di + '-' + fi + '">' +
       '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
-      '<span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + '</span></button>').join('') + '</div></div>').join('');
+      '<span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + '</span></button>' +
+      '<button type="button" class="fbx-weg" data-fbweg="' + di + '-' + fi + '" aria-label="Eintrag löschen">' + FB_MUELL + '</button>').join('') +
+      '<button type="button" class="fbx-dienst-weg" data-fbweg="' + di + '">Ganzen Dienst löschen</button></div></div>').join('');
 }
 // B: Tabelle wie die Excel
 function fbAnsichtB(buch){
@@ -2641,7 +2709,9 @@ function fbAnsichtC(buch){
       DESIGN_WT[x.tag.getDay()] + ' ' + zz2(x.tag.getDate()) + '.' + zz2(x.tag.getMonth() + 1) + '.</span><b>' + betaEuro(x.gesamt).replace(' €', '') + '</b><small>' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle</small></button>').join('') + '</div>' +
     '<div class="fbx-karte"><div class="fbx-kopf"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '</span></div>' +
     '<div class="fbx-kpi"><div><span>GKV + Förderung</span><b>' + betaEuro(d.gkv) + '</b></div><div><span>LS + PT</span><b>' + betaEuro(d.ls + d.pt) + '</b></div></div>' +
-    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + ' ›</span></button>').join('') + '</div></div>';
+    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + ' ›</span></button>' +
+      '<button type="button" class="fbx-weg" data-fbweg="' + wahl + '-' + fi + '" aria-label="Eintrag löschen">' + FB_MUELL + '</button>').join('') +
+      '<button type="button" class="fbx-dienst-weg" data-fbweg="' + wahl + '">Ganzen Dienst löschen</button></div></div>';
 }
 
 let fahrdienstAuswertungCache = null;
@@ -12252,6 +12322,9 @@ function ansichtGkv(bearbeitenId){
   el('gkvSpeichern').onclick = async ()=>{
     st.name = el('gkvName').value.trim();
     if(!st.name){ el('gkvName').classList.add('pflichtfeld-fehlt'); el('gkvName').focus(); return; }
+    st.zeit = el('gkvZeit').value;
+    if(!st.zeit){ el('gkvZeit').classList.add('pflichtfeld-fehlt'); el('gkvZeit').focus(); el('gkvMeldung').innerHTML = '<div class="gkv-warn">Bitte die Uhrzeit eintragen – sie bestimmt die Tag-/Nacht-Ziffern.</div>'; return; }
+    el('gkvZeit').classList.remove('pflichtfeld-fehlt');
     const dt = dtVon();
     const pos = gkvPositionen(st.auswahl, dt);
     if(!pos.length){ el('gkvMeldung').innerHTML = '<div class="gkv-warn">Bitte mindestens eine Position wählen.</div>'; return; }
@@ -12474,6 +12547,11 @@ async function nfpKarteOeffnen(opt){
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
   const img = ov.querySelector('img'), fl = ov.querySelector('.nfp-flaeche'), sc = ov.querySelector('.nfp-scroll'), info = ov.querySelector('#nfpInfo');
+  // nur der farbige Bereich der KVBW-Karte (Rand ausserhalb der 30-km-Zone abgeschnitten)
+  const AU = nfpKvbwAusschnitt(), WB = NFP_KARTE.bild[0], HB = NFP_KARTE.bild[1];
+  fl.style.aspectRatio = AU.w.toFixed(0) + ' / ' + AU.h.toFixed(0); fl.style.overflow = 'hidden';
+  Object.assign(img.style, { position: 'absolute', maxWidth: 'none', height: 'auto', width: (WB / AU.w * 100).toFixed(3) + '%', left: (-AU.x / AU.w * 100).toFixed(3) + '%', top: (-AU.y / AU.h * 100).toFixed(3) + '%' });
+  const relX = (x)=> (x - AU.x) / AU.w, relY = (y)=> (y - AU.y) / AU.h;
   let wahl = null;
   img.src = bildUrl;
   // Knopf oben rechts: dieselbe Lage auf der OSM-Karte (darueber geoeffnet, Schliessen fuehrt hierher zurueck)
@@ -12483,7 +12561,7 @@ async function nfpKarteOeffnen(opt){
   // Weg, Luftlinie und Punkte (Start, NFP, Einsatzorte) wie in der kleinen Karte
   const W0 = NFP_KARTE.bild[0], H0 = NFP_KARTE.bild[1];
   const startGeo = opt.start || gkvStartGeo() || null;
-  img.insertAdjacentHTML('afterend', '<svg class="nfp-ueber" viewBox="0 0 ' + W0 + ' ' + H0 + '" preserveAspectRatio="none" aria-hidden="true">' +
+  img.insertAdjacentHTML('afterend', '<svg class="nfp-ueber" viewBox="' + AU.x.toFixed(1) + ' ' + AU.y.toFixed(1) + ' ' + AU.w.toFixed(1) + ' ' + AU.h.toFixed(1) + '" preserveAspectRatio="none" aria-hidden="true">' +
     (hg.osm ? nfpZonenPixelSvg() : '') + nfp50KreisPixelSvg() + '<polyline class="luft-weg" points=""/><line class="luft-linie" x1="0" y1="0" x2="0" y2="0" visibility="hidden"/></svg>');
   const wegEl = ov.querySelector('.nfp-ueber .luft-weg'), linieEl = ov.querySelector('.nfp-ueber .luft-linie');
   let aktWeg = opt.weg || null;
@@ -12521,7 +12599,7 @@ async function nfpKarteOeffnen(opt){
   if(opt.weg) wegSetzen(opt.weg);
   if(opt.start && opt.adresse && opt.adresse.lat) linieSetzen(opt.adresse);
   {
-    const marke = (p, kl, nr)=> nfpImBild(p) ? '<div class="nfp-punkt ' + kl + '" style="left:' + (p.x / W0 * 100) + '%; top:' + (p.y / H0 * 100) + '%;">' + (nr || '') + '</div>' : '';
+    const marke = (p, kl, nr)=> nfpImBild(p) ? '<div class="nfp-punkt ' + kl + '" style="left:' + (relX(p.x) * 100) + '%; top:' + (relY(p.y) * 100) + '%;">' + (nr || '') + '</div>' : '';
     let m = marke({ x: NFP_KARTE.nfp[0], y: NFP_KARTE.nfp[1] }, 'nfp-nfp');
     if(startGeo) m += marke(nfpGeoZuPixel(startGeo.lat, startGeo.lon), 'nfp-start');
     (opt.pois || []).forEach(q=> m += marke(nfpGeoZuPixel(q.lat, q.lon), q.kl === 'ich' ? 'nfp-gps' : 'nfp-poi ' + q.kl + (q.idx != null && opt.fallKlick ? '" data-fall="' + q.idx : ''), q.nr));
@@ -12544,7 +12622,7 @@ async function nfpKarteOeffnen(opt){
   const punkt = (cls, p)=>{
     const el = ov.querySelector('.' + cls);
     if(!p || !nfpImBild(p)){ el.hidden = true; return; }
-    el.hidden = false; el.style.left = (p.x / NFP_KARTE.bild[0] * 100) + '%'; el.style.top = (p.y / NFP_KARTE.bild[1] * 100) + '%';
+    el.hidden = false; el.style.left = (relX(p.x) * 100) + '%'; el.style.top = (relY(p.y) * 100) + '%';
   };
   const waehlen = (p, woher, geo, adresseText)=>{
     if(!nfpImBild(p)){ info.innerHTML = 'Dieser Ort liegt außerhalb der Karte.'; wegLauf++; wegSetzen(null); linieSetzen(null); return; }
@@ -12560,12 +12638,12 @@ async function nfpKarteOeffnen(opt){
     ov.querySelector('.nfp-ok').disabled = false;
     linieSetzen(g); wegFuer(g);
   };
-  const zentrieren = (p, z)=> setzeZoom(Math.max(zoom, z || 2.5), { x: p.x / NFP_KARTE.bild[0], y: p.y / NFP_KARTE.bild[1] });
+  const zentrieren = (p, z)=> setzeZoom(Math.max(zoom, z || 2.5), { x: relX(p.x), y: relY(p.y) });
   let gezogen = false;
   fl.addEventListener('click', (ev)=>{
     if(gezogen){ gezogen = false; return; }
-    const r = img.getBoundingClientRect();
-    waehlen({ x: (ev.clientX - r.left) / r.width * NFP_KARTE.bild[0], y: (ev.clientY - r.top) / r.height * NFP_KARTE.bild[1] }, 'Gewählt');
+    const r = fl.getBoundingClientRect();
+    waehlen({ x: AU.x + (ev.clientX - r.left) / r.width * AU.w, y: AU.y + (ev.clientY - r.top) / r.height * AU.h }, 'Gewählt');
   });
   // Zwei-Finger-Zoom selbst umsetzen (statt Browser-Zoom, der auch die Punkte vergroessern wuerde)
   let pinch = null;
@@ -12663,16 +12741,15 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
   const pS = nfpGeoZuPixel(start.lat, start.lon), pZ = nfpGeoZuPixel(ziel.lat, ziel.lon), pN = { x: NFP_KARTE.nfp[0], y: NFP_KARTE.nfp[1] };
   const box = document.createElement('div'); box.className = 'luft-karte'; ziel_el.appendChild(box);
   const wegP = (weg || []).map(c=> nfpGeoZuPixel(c[1], c[0])).filter(Boolean);
-  // Liegt etwas ausserhalb der Wegegeld-Karte: Karte direkt aus OpenStreetMap
-  // (eigener Massstab, Umriss der Wegegeld-Karte gestrichelt)
+  // OSM-Ansicht immer moeglich; KVBW nur, wenn Start oder Ziel auf der KVBW-Karte liegt.
+  // Startansicht: KVBW, wenn alles darauf liegt, sonst OSM.
   const osmDaten = { pois: [{ lat: start.lat, lon: start.lon, kl: 'start' }, { lat: ziel.lat, lon: ziel.lon, kl: 'ziel' }], weg: weg || [], linie: [start, ziel], nfp: true, rahmen: true };
-  if(!nfpImBild(pS) || !nfpImBild(pZ) || wegP.some(p=> !nfpImBild(p))){
-    const kbA = nfpImBild(pZ) ? nfpBewertung(pZ) : null;
-    const a = osmAusschnitt(osmDaten, {});
-    box.innerHTML = '<div class="luft-karte-kopf"><b>Karte</b>' + (kbA ? ' · Ziel: ' + htmlEsc(kbA.text) : ' · außerhalb der Wegegeld-Karte NFP') +
-        '<button type="button" class="luft-karte-gross">Große Karte</button></div>' + a.html +
+  const allesDrin = nfpImBild(pS) && nfpImBild(pZ) && !wegP.some(p=> !nfpImBild(p));
+  const osmHtml = osmAusschnitt(osmDaten, {}).html;
+  if(!nfpImBild(pS) && !nfpImBild(pZ)){
+    box.innerHTML = '<div class="luft-karte-kopf"><b>Karte</b> · außerhalb der Wegegeld-Karte NFP<button type="button" class="luft-karte-gross">Große Karte</button></div>' + miniEbenenHtml('', osmHtml, 'osm') +
       '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
-        (weg && weg.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="k50"></i>50 km</span><span><i class="r"></i>Wegegeld-Karte</span>' + OSM_ATTR_HTML + '</div>';
+        (weg && weg.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="k50"></i>50 km</span></div>';
     box.querySelector('.luft-karte-gross').onclick = ()=> osmKarteOverlay(osmDaten, zielText);
     return;
   }
@@ -12685,15 +12762,14 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
   [x0, x1] = wachsen(x0, x1, 420); [y0, y1] = wachsen(y0, y1, 320);
   if((x1 - x0) / (y1 - y0) > 1.5) [y0, y1] = wachsen(y0, y1, (x1 - x0) / 1.5);
   if((x1 - x0) / (y1 - y0) < 0.8) [x0, x1] = wachsen(x0, x1, (y1 - y0) * 0.8);
-  const schieben = (a, b, max)=>{ const l = b - a; if(l >= max) return [0, max]; if(a < 0) return [0, l]; if(b > max) return [max - l, max]; return [a, b]; };
-  [x0, x1] = schieben(x0, x1, W); [y0, y1] = schieben(y0, y1, H);
+  const AU = nfpKvbwAusschnitt();
+  const schieben = (a, b, lo, len)=>{ const l = b - a, hi = lo + len; if(l >= len) return [lo, hi]; if(a < lo) return [lo, lo + l]; if(b > hi) return [hi - l, hi]; return [a, b]; };
+  [x0, x1] = schieben(x0, x1, AU.x, AU.w); [y0, y1] = schieben(y0, y1, AU.y, AU.h);
   const bw = x1 - x0, bh = y1 - y0, r = Math.max(bw, bh) / 55;
   const hg = await nfpHintergrund(), url = hg.url;
   const punkt = (p, kl)=> nfpImBild(p) ? '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r.toFixed(1) + '" class="' + kl + '"/>' : '';
   const kb = nfpImBild(pZ) ? nfpBewertung(pZ) : null;
-  box.innerHTML = '<div class="luft-karte-kopf"><b>Wegegeld-Karte NFP</b>' + (kb ? ' · Ziel: ' + htmlEsc(kb.text) : '') +
-      '<button type="button" class="luft-karte-gross">Große Karte</button></div>' +
-    '<div class="luft-karte-flaeche" style="aspect-ratio:' + bw.toFixed(0) + ' / ' + bh.toFixed(0) + ';">' +
+  const kvbwHtml = '<div class="luft-karte-flaeche" style="aspect-ratio:' + bw.toFixed(0) + ' / ' + bh.toFixed(0) + ';">' +
       '<img alt="Wegegeld-Karte" draggable="false" src="' + url + '" style="left:' + (-x0 / bw * 100).toFixed(3) + '%; top:' + (-y0 / bh * 100).toFixed(3) + '%; width:' + (W / bw * 100).toFixed(3) + '%;">' +
       '<svg viewBox="' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' ' + bw.toFixed(1) + ' ' + bh.toFixed(1) + '" preserveAspectRatio="none" aria-hidden="true">' +
         (wegP.length > 1 ? '<polyline class="luft-weg" points="' + wegP.map(p=> p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ') + '"/>' : '') +
@@ -12701,10 +12777,15 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
         (hg.osm ? nfpZonenPixelSvg() : '') + nfp50KreisPixelSvg() +
         '<rect class="luft-nfp" x="' + (pN.x - r * 0.8).toFixed(1) + '" y="' + (pN.y - r * 0.8).toFixed(1) + '" width="' + (r * 1.6).toFixed(1) + '" height="' + (r * 1.6).toFixed(1) + '"/>' +
         punkt(pS, 'luft-start') + punkt(pZ, 'luft-ziel') +
-      '</svg></div>' +
+      '</svg></div>';
+  box.innerHTML = '<div class="luft-karte-kopf"><b>Karte</b>' + (kb ? ' · Ziel: ' + htmlEsc(kb.text) : '') +
+      '<button type="button" class="luft-karte-gross">Große Karte</button></div>' + miniEbenenHtml(kvbwHtml, osmHtml, allesDrin ? 'kvbw' : 'osm') +
     '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
       (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="k50"></i>50 km</span>' + (hg.osm ? OSM_ATTR_HTML : '') + '</div>';
-  box.querySelector('.luft-karte-gross').onclick = ()=> nfpKarteOeffnen({ adresse: { lat: ziel.lat, lon: ziel.lon }, adresseText: zielText || '', start, weg, nfpZeigen: true });
+  box.querySelector('.luft-karte-gross').onclick = ()=>{
+    if(box.querySelector('.mini-ebenen').dataset.ebene === 'osm') osmKarteOverlay(osmDaten, zielText);
+    else nfpKarteOeffnen({ adresse: { lat: ziel.lat, lon: ziel.lon }, adresseText: zielText || '', start, weg, nfpZeigen: true });
+  };
 }
 
 // ---------- Ersatzkarte: OpenStreetMap mit den Zonen der NFP-Karte ----------
@@ -13000,7 +13081,18 @@ function nfpZonenDekodieren(kontur){
   });
   return r;
 }
+// Ausschnitt der KVBW-Karte auf den farbigen Bereich (30-km-Zone + Rand), in Kartenpixeln
+function nfpKvbwAusschnitt(){
+  if(nfpKvbwAusschnitt.c) return nfpKvbwAusschnitt.c;
+  const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1], r = (nfpZonenRinge()['5'] || []).flat();
+  if(!r.length) return (nfpKvbwAusschnitt.c = { x: 0, y: 0, w: W, h: H });
+  const rand = 45;
+  const x0 = Math.max(0, Math.min.apply(null, r.map(q=> q.x)) - rand), x1 = Math.min(W, Math.max.apply(null, r.map(q=> q.x)) + rand);
+  const y0 = Math.max(0, Math.min.apply(null, r.map(q=> q.y)) - rand), y1 = Math.min(H, Math.max.apply(null, r.map(q=> q.y)) + rand);
+  return (nfpKvbwAusschnitt.c = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 });
+}
 function nfpZonenCachesLeeren(){
+  nfpKvbwAusschnitt.c = null;
   nfpZonenRinge.r = null; nfpZoneAnPixel.box = null; nfpZonenPixelSvg.s = null;
   if(typeof osmKartenBereichSvg === 'function') osmKartenBereichSvg.cache = null;
 }
@@ -13060,6 +13152,9 @@ function osmKartenBereichSvg(z, kvbwUrl){
       bild += '<image href="' + kvbwUrl + '" x="0" y="0" width="' + W + '" height="' + H + '" preserveAspectRatio="none" clip-path="url(#' + id + i + j + ')" transform="matrix(' +
         [a, b, c, d, e, ff].map(v=> v.toFixed(5)).join(' ') + ')"/>';
     }
+    // auf den farbigen Bereich zuschneiden (Umriss der 30-km-Zone)
+    const z5 = (nfpZonenRinge()['5'] || []).map(r=> 'M' + r.map(q=>{ const pp = P(nfpPixelZuGeo(q.x, q.y)); return f(pp.x) + ' ' + f(pp.y); }).join('L') + 'Z').join('');
+    if(z5){ defs += '<clipPath id="' + id + 'z5" clipPathUnits="userSpaceOnUse"><path d="' + z5 + '"/></clipPath>'; return defs + '</defs><g clip-path="url(#' + id + 'z5)">' + bild + '</g>'; }
     return defs + '</defs>' + bild;
   }
   const cache = osmKartenBereichSvg.cache || (osmKartenBereichSvg.cache = new Map());
@@ -13075,6 +13170,24 @@ function karteEbeneKnopfSetzen(btn, aktuell){
   btn.dataset.ziel = ziel; btn.querySelector('span').textContent = ziel === 'osm' ? 'OSM' : 'KVBW';
   btn.setAttribute('aria-label', ziel === 'osm' ? 'Zur OpenStreetMap-Karte wechseln' : 'Zur KVBW-Karte wechseln');
 }
+// kleine Karte mit beiden Ebenen (KVBW / OSM) und Umschaltknopf oben rechts
+function miniEbenenHtml(kvbwHtml, osmHtml, start){
+  const e = (kvbwHtml && start === 'kvbw') || !osmHtml ? 'kvbw' : 'osm';
+  const knopf = KARTE_EBENE_KNOPF.replace('class="karte-ebene"', 'class="karte-ebene mini-ebene-knopf" data-ziel="' + (e === 'osm' ? 'kvbw' : 'osm') + '"')
+    .replace('<span></span>', '<span>' + (e === 'osm' ? 'KVBW' : 'OSM') + '</span>');
+  return '<div class="mini-ebenen" data-ebene="' + e + '">' +
+    (kvbwHtml ? '<div class="mini-e" data-e="kvbw"' + (e === 'kvbw' ? '' : ' hidden') + '>' + kvbwHtml + '</div>' : '') +
+    (osmHtml ? '<div class="mini-e" data-e="osm"' + (e === 'osm' ? '' : ' hidden') + '>' + osmHtml + '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div></div>' : '') +
+    knopf + '</div>';
+}
+document.addEventListener('click', (ev)=>{
+  const b = ev.target.closest && ev.target.closest('.mini-ebene-knopf'); if(!b) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const w = b.closest('.mini-ebenen'), neu = w.dataset.ebene === 'kvbw' ? 'osm' : 'kvbw', ziel = w.querySelector('[data-e="' + neu + '"]');
+  if(!ziel){ appToastAnzeigen(neu === 'kvbw' ? 'Dieser Ort liegt außerhalb der KVBW-Karte.' : 'OSM-Ansicht hier nicht verfügbar.', 2600); return; }
+  w.querySelectorAll('.mini-e').forEach(x=> x.hidden = x !== ziel);
+  w.dataset.ebene = neu; karteEbeneKnopfSetzen(b, neu);
+}, true);
 function osmKarteOverlay(d, text){
   const ov = document.createElement('div');
   ov.className = 'nfp-overlay';
@@ -13228,8 +13341,9 @@ function kartenAusschnittHtml(url, punkte, opt){
     if((x1 - x0) / (y1 - y0) > 1.4) [y0, y1] = wachsen(y0, y1, (x1 - x0) / 1.4);
     if((x1 - x0) / (y1 - y0) < 0.85) [x0, x1] = wachsen(x0, x1, (y1 - y0) * 0.85);
   }
-  const schieben = (a, b, max)=>{ const l = b - a; if(l >= max) return [0, max]; if(a < 0) return [0, l]; if(b > max) return [max - l, max]; return [a, b]; };
-  [x0, x1] = schieben(x0, x1, W); [y0, y1] = schieben(y0, y1, H);
+  const AU = nfpKvbwAusschnitt();
+  const schieben = (a, b, lo, len)=>{ const l = b - a, hi = lo + len; if(l >= len) return [lo, hi]; if(a < lo) return [lo, lo + l]; if(b > hi) return [hi - l, hi]; return [a, b]; };
+  [x0, x1] = schieben(x0, x1, AU.x, AU.w); [y0, y1] = schieben(y0, y1, AU.y, AU.h);
   const bw = x1 - x0, bh = y1 - y0, r = Math.max(bw, bh) / 50;
   const zeichen = sicht.map(q=>{
     const cx = q.p.x.toFixed(1), cy = q.p.y.toFixed(1);
@@ -13270,26 +13384,22 @@ async function standortKarteZeichnen(info, mitDialog){
   const verdrahten = ()=>{
     const a = box.querySelector('.sk-auf'); if(a) a.onclick = ()=>{ LS.set('start_karte_auf', !auf); standortKarteZeichnen(info); };
     const p = box.querySelector('.sk-pos'); if(p) p.onclick = ()=> standortKarteZeichnen(info, true);
-    const k = box.querySelector('.luft-karte-flaeche');
-    if(k) k.onclick = (ev)=>{
+    box.querySelectorAll('.luft-karte-flaeche').forEach(k=> k.onclick = (ev)=>{
       const t = ev.target.closest && ev.target.closest('[data-fall]');
       if(t){ const f = faelle[+t.dataset.fall]; if(f && f.oeffnen) f.oeffnen(); return; }
       if(gross) gross();
-    };
+    });
     box.querySelectorAll('.sk-ort[data-fall]').forEach(z=> z.onclick = ()=>{ const f = faelle[+z.dataset.fall]; if(f && f.oeffnen) f.oeffnen(); });
   };
   const fallKlick = (i)=>{ const f = faelle[i]; if(f && f.oeffnen) f.oeffnen(); };
   const ichPoi = pos ? [{ lat: pos.lat, lon: pos.lon, kl: 'ich' }] : [];
   if(!auf){
     if(!pos){ box.innerHTML = kopf('Standort nicht verfügbar') + '<div class="sk-leer">Ohne Standortfreigabe keine Anzeige – „📍 Standort“ tippen.</div>'; verdrahten(); return; }
-    if(ichDrin){
-      box.innerHTML = kopf(zone) + kartenAusschnittHtml(hg.url, [{ p: ich, kl: 'ich' }], { mitte: ich, breite: 560, hoehe: 330, zonen: hg.osm }) + (hg.osm ? '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>' : '');
-      gross = ()=> nfpKarteOeffnen({ pois: ichPoi, nfpZeigen: true });
-    } else {
-      const d = { pois: ichPoi, nfp: true, rahmen: true };
-      box.innerHTML = kopf(zone) + osmAusschnitt(d, { z: 12, mitte: pos, w: 560, h: 330 }).html + '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>';
-      gross = ()=> osmKarteOverlay(d, 'Dein Standort');
-    }
+    const d = { pois: ichPoi, nfp: true, rahmen: true };
+    const osmH = osmAusschnitt(d, { z: 12, mitte: pos, w: 560, h: 330 }).html;
+    const kvH = ichDrin ? kartenAusschnittHtml(hg.url, [{ p: ich, kl: 'ich' }], { mitte: ich, breite: 560, hoehe: 330, zonen: hg.osm }) : '';
+    box.innerHTML = kopf(zone) + miniEbenenHtml(kvH, osmH, ichDrin ? 'kvbw' : 'osm');
+    gross = ()=> box.querySelector('.mini-ebenen').dataset.ebene === 'osm' ? osmKarteOverlay(d, 'Dein Standort') : nfpKarteOeffnen({ pois: ichPoi, nfpZeigen: true });
     verdrahten(); return;
   }
   // ausgeklappt: Einsatzorte ermitteln (GKV mit gespeichertem Ort, LS/PT ueber die Adresse)
@@ -13316,15 +13426,11 @@ async function standortKarteZeichnen(info, mitDialog){
     verdrahten(); return;
   }
   const pix = allePois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
-  if(pix.every(q=> nfpImBild(q.p))){
-    box.innerHTML = kopf(unter) + kartenAusschnittHtml(hg.url, pix, { breite: 420, hoehe: 380, zonen: hg.osm }) + listeHtml + (hg.osm ? '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>' : '');
-    gross = ()=> nfpKarteOeffnen({ pois: allePois, nfpZeigen: true, fallKlick });
-  } else {
-    // mind. ein Ort ausserhalb der Wegegeld-Karte -> OSM-Karte
-    const d = { pois: allePois, nfp: true, rahmen: true, fallKlick };
-    box.innerHTML = kopf(unter) + osmAusschnitt(d, {}).html + listeHtml + '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div>';
-    gross = ()=> osmKarteOverlay(d, 'Einsatzorte');
-  }
+  const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
+  const d = { pois: allePois, nfp: true, rahmen: true, fallKlick };
+  const kvH = etwasDrin ? kartenAusschnittHtml(hg.url, pix, { breite: 420, hoehe: 380, zonen: hg.osm }) : '';
+  box.innerHTML = kopf(unter) + miniEbenenHtml(kvH, osmAusschnitt(d, {}).html, allesDrin ? 'kvbw' : 'osm') + listeHtml;
+  gross = ()=> box.querySelector('.mini-ebenen').dataset.ebene === 'osm' ? osmKarteOverlay(d, 'Einsatzorte') : nfpKarteOeffnen({ pois: allePois, nfpZeigen: true, fallKlick });
   verdrahten();
 }
 
@@ -14135,7 +14241,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v187';
+const APP_VERSION = 'v188';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
