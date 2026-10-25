@@ -11770,10 +11770,12 @@ function fbZeitVorschlaege(fb, datum){
     zaehl.set(t, (zaehl.get(t) || 0) + 1);
     if(typ(fbDatumAusText(b.datumText)) === zielTyp) zaehlTyp.set(t, (zaehlTyp.get(t) || 0) + 1);
   });
-  const liste = [...zaehl.keys()].sort((a, b)=> (zaehlTyp.get(b) || 0) - (zaehlTyp.get(a) || 0) || zaehl.get(b) - zaehl.get(a));
+  const kurz = (t)=>{ const [h, m] = t.split(':'); return String(+h) + (m !== '00' ? ':' + m : ''); };
+  const schichten = fahrdienstSchichten(datum).map(x=> kurz(x.von) + '-' + kurz(x.bis));
+  const liste = schichten.concat([...zaehl.keys()].filter(t=> !schichten.includes(t)).sort((a, b)=> (zaehlTyp.get(b) || 0) - (zaehlTyp.get(a) || 0) || zaehl.get(b) - zaehl.get(a)));
   (zielTyp === 'we' ? ['8-20', '20-8', '8-8', '8-16', '16-24'] : ['18-23', '19-7', '16-24', '8-16', '18-8'])
     .forEach(t=>{ if(!liste.includes(t)) liste.push(t); });
-  return liste.slice(0, 8);
+  return liste.slice(0, 10);
 }
 // Katalog der Vertretungsaerzte: aus der Datei (zuletzt vertretene zuerst) + lokal ergaenzte
 function fbAerzte(fb){
@@ -14254,7 +14256,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v196';
+const APP_VERSION = 'v197';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14321,6 +14323,22 @@ function designProfilName(id){
 // Gespeichert lokal: live_dienst = {datum:'JJJJ-MM-TT', von:'HH:MM', bis:'HH:MM', art, arzt}
 // Uebliche Dienstzeiten je Dienstart (Werktag / Wochenende+Feiertag) --
 // werden zusammen mit den zuletzt benutzten Zeiten als Knoepfe angeboten.
+// Schichten im Fahrdienst (Fahrservice Mittelbaden): Mo/Di/Do Abend 18-23, Mi 13-23,
+// Fr 16-23, jeweils Nacht 23-08; Sa/So/Feiertag Frueh 08-15 oder 08-16,
+// Abend 15-23 oder 16-23, Nacht 23-08
+function fahrdienstSchichten(tag){
+  const d = tag || new Date(), wd = d.getDay();
+  if(fahrdienstWochenendSatz(d)) return [
+    { name: 'Früh', von: '08:00', bis: '15:00' }, { name: 'Früh', von: '08:00', bis: '16:00' },
+    { name: 'Abend', von: '15:00', bis: '23:00' }, { name: 'Abend', von: '16:00', bis: '23:00' },
+    { name: 'Nacht', von: '23:00', bis: '08:00' }];
+  const abend = wd === 3 ? '13:00' : wd === 5 ? '16:00' : '18:00';
+  return [{ name: 'Abend', von: abend, bis: '23:00' }, { name: 'Nacht', von: '23:00', bis: '08:00' }];
+}
+function fahrdienstSchichtName(v, tag){
+  const s = fahrdienstSchichten(tag).find(x=> x.von + '-' + x.bis === v);
+  return s ? s.name : '';
+}
 const LIVE_DIENSTZEITEN = {
   Fahrdienst:  { werktag: ['18:00-08:00'], wochenende: ['08:00-08:00'] },
   Sitzdienst:  { werktag: [], wochenende: [] },
@@ -14488,9 +14506,10 @@ async function liveDienstDialog(){
   const vorschlaege = ()=>{
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum), tag = m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD;
     const we = fahrdienstWochenendSatz(tag), std = (LIVE_DIENSTZEITEN[art] || {})[we ? 'wochenende' : 'werktag'] || [];
+    const schichten = art === 'Fahrdienst' ? fahrdienstSchichten(tag).map(x=> x.von + '-' + x.bis) : [];
     const zuletzt = ((LS.get('live_dienst_zeiten', {}) || {})[art + (we ? '|we' : '|wt')]) || [];
-    const l = []; std.concat(zuletzt).forEach(z=>{ if(z && !l.includes(z)) l.push(z); });
-    return l.slice(0, 6);
+    const l = []; schichten.concat(zuletzt, std).forEach(z=>{ if(z && !l.includes(z)) l.push(z); });
+    return l.slice(0, 8);
   };
   if(!von || !bis){ const v = vorschlaege()[0]; if(v){ [von, bis] = v.split('-'); } }
   // bisherige vertretene Aerzte (Fahrtenbuch, Merkliste, Aerzte-Rechnungen)
@@ -14508,7 +14527,8 @@ async function liveDienstDialog(){
       '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
       '<div class="fb-lbl">Dienstzeit</div>' +
-      (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace('-', ' – ') + '</button>').join('') + '</div>' : '') +
+      (vs.length ? '<div class="fb-chips">' + vs.map(v=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum), n = art === 'Fahrdienst' && m ? fahrdienstSchichtName(v, new Date(+m[1], +m[2] - 1, +m[3])) : '';
+        return '<button type="button" class="fb-chip' + (v === von + '-' + bis ? ' an' : '') + '" data-lzeit="' + v + '">' + (n ? '<b>' + n + '</b> ' : '') + v.replace(/:00/g, '').replace('-', '–') + '</button>'; }).join('') + '</div>' : '') +
       '<div class="fb-zeile"><label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
       '<div class="fb-lbl">Vertretener Arzt (optional)</div>' +
       (aerzte.length ? '<div class="fb-chips">' + aerzte.slice(0, 12).map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-larzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-larztweg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>'
