@@ -1578,12 +1578,8 @@
   .fbx-summen b{color:var(--text);}
   .fbx-fall{display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:8px; align-items:start; width:100%; margin:0; padding:7px 0; border:0; border-top:1px solid var(--rand); background:none; color:var(--text); font:inherit; font-size:13px; text-align:left; cursor:pointer;}
   .fbx-zeit{color:var(--text-schwach); font-variant-numeric:tabular-nums;}
-  .fbx-detail{display:grid; grid-template-columns:minmax(0,1fr) 34px;}
-  .fbx-detail > .fbx-summen{grid-column:1 / -1;}
-  .fbx-weg{margin:0; padding:0; width:34px; border:0; border-top:1px solid var(--rand); background:none; color:var(--text-schwach); cursor:pointer;}
-  .fbx-weg svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
-  .fbx-weg:active{color:var(--fehler);}
-  .fbx-dienst-weg{grid-column:1 / -1; margin:6px 0 4px; padding:7px; font-size:12.5px; border-radius:8px; border:1px solid var(--fehler); background:none; color:var(--fehler);}
+  .fbx-fall, .fbx-kopf, .fbx-tr{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none; transition:background .25s;}
+  .lang-aktiv{background:color-mix(in srgb, var(--fehler) 12%, transparent) !important; transition:background .6s;}
   .fbx-mitte{min-width:0;}
   .fbx-mitte b{font-weight:600;}
   .fbx-zl{display:block; margin-top:2px;}
@@ -2560,7 +2556,19 @@ async function fbBuchLaden(blatt, meldung){
   }).filter(d=> d.tag).sort((a, b)=> b.tag - a.tag);
   return { blatt: L.blatt, blaetter: kx.info.blaetter, dienste };
 }
-const FB_MUELL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+// langes Druecken (ca. 0,6 s, ohne Verschieben) bzw. Rechtsklick -> aktion; der folgende Klick wird ignoriert (el._lang)
+function langDruecken(el, aktion){
+  let t = null, x0 = 0, y0 = 0;
+  const ab = ()=>{ if(t){ clearTimeout(t); t = null; } el.classList.remove('lang-aktiv'); };
+  el.addEventListener('pointerdown', (ev)=>{
+    if(ev.button > 0) return;
+    x0 = ev.clientX; y0 = ev.clientY; el._lang = false; el.classList.add('lang-aktiv');
+    t = setTimeout(()=>{ t = null; el._lang = true; el.classList.remove('lang-aktiv'); try{ navigator.vibrate && navigator.vibrate(30); }catch(_){} aktion(); }, 600);
+  });
+  el.addEventListener('pointermove', (ev)=>{ if(t && Math.hypot(ev.clientX - x0, ev.clientY - y0) > 10) ab(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(n=> el.addEventListener(n, ab));
+  el.addEventListener('contextmenu', (ev)=>{ ev.preventDefault(); ab(); el._lang = true; aktion(); });
+}
 function fbTagText(d){ return DESIGN_WT[d.getDay()] + ' ' + zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' + d.getFullYear(); }
 function fbZiffernHtml(z){ return z.map(x=> '<span class="fbx-z">' + htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '') + '</span>').join(''); }
 function fbMarke(art){ return '<span class="fbx-m ' + art + '">' + ({ ls: 'LS', pt: 'PT', gkv: 'GKV' }[art]) + '</span>'; }
@@ -2594,14 +2602,13 @@ async function ansichtFahrtenbuch(blatt){
     document.querySelectorAll('[data-fbv]').forEach(b=> b.classList.toggle('an', b.dataset.fbv === ansicht));
     if(!buch.dienste.length){ inhalt.innerHTML = '<div class="leer-hinweis">Keine Dienste im Blatt ' + htmlEsc(buch.blatt) + '.</div>'; return; }
     inhalt.innerHTML = ansicht === 'b' ? fbAnsichtB(buch) : ansicht === 'c' ? fbAnsichtC(buch) : fbAnsichtA(buch);
-    inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=> k.closest('.fbx-karte').classList.toggle('zu'));
+    inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=>{ if(k._lang){ k._lang = false; return; } k.closest('.fbx-karte').classList.toggle('zu'); });
     inhalt.querySelectorAll('[data-fbtag]').forEach(k=> k.onclick = ()=>{ LS.set('fb_tag', k.dataset.fbtag); zeichnen(); });
-    inhalt.querySelectorAll('[data-fbweg]').forEach(z=> z.onclick = (ev)=>{
-      ev.stopPropagation();
-      const t = z.dataset.fbweg.split('-'), dd = buch.dienste[+t[0]];
-      if(dd) fbLoeschen(dd, t.length > 1 ? dd.faelle[+t[1]] : null);
-    });
+    // Loeschen nur durch langes Druecken (Handy) bzw. Rechtsklick (PC), jeweils mit Nachfrage
+    inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]) fbLoeschen(dd, dd.faelle[fi]); }));
+    inhalt.querySelectorAll('[data-fbdienst]').forEach(z=> langDruecken(z, ()=>{ const dd = buch.dienste[+z.dataset.fbdienst]; if(dd) fbLoeschen(dd, null); }));
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> z.onclick = ()=>{
+      if(z._lang){ z._lang = false; return; }
       const [di, fi] = z.dataset.fbfall.split('-').map(Number), f = buch.dienste[di] && buch.dienste[di].faelle[fi];
       if(f && f.oeffnen){ vorbereiteRuecksprung(); f.oeffnen(); return; }
       if(f && f.art === 'gkv'){ vorbereiteRuecksprung(); fbGkvAusExcelOeffnen(buch.dienste[di], f); return; }
@@ -2696,17 +2703,15 @@ async function fbLoeschen(d, f){
 // A: Dienst-Karten, neuester offen
 function fbAnsichtA(buch){
   return buch.dienste.map((d, di)=> '<div class="fbx-karte' + (di ? ' zu' : '') + (fbLaufend(d) ? ' laeuft' : '') + '">' +
-    '<button type="button" class="fbx-kopf" data-fbauf="1"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '<small>' + (fbLaufend(d) ? 'bisher' : 'gesamt') + '</small></span></button>' +
+    '<button type="button" class="fbx-kopf" data-fbauf="1" data-fbdienst="' + di + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '<small>' + (fbLaufend(d) ? 'bisher' : 'gesamt') + '</small></span></button>' +
     '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + di + '-' + fi + '">' +
       '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
-      '<span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + '</span></button>' +
-      '<button type="button" class="fbx-weg" data-fbweg="' + di + '-' + fi + '" aria-label="Eintrag löschen">' + FB_MUELL + '</button>').join('') +
-      '<button type="button" class="fbx-dienst-weg" data-fbweg="' + di + '">Ganzen Dienst löschen</button></div></div>').join('');
+      '<span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + '</span></button>').join('') + '</div></div>').join('');
 }
 // B: Tabelle wie die Excel
 function fbAnsichtB(buch){
   return '<div class="fbx-tab"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div>' +
-    buch.dienste.map((d, di)=> '<div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
+    buch.dienste.map((d, di)=> '<div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
       d.faelle.map((f, fi)=> '<div class="fbx-tr" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art) + '</span><span class="fbx-zt">' +
         f.ziffern.map(x=> htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '')).join(' ') + '</span><span>' + betaEuro(f.euro).replace(' €', '') + '</span></div>').join('') +
       '<div class="fbx-tr fbx-sum"><span>GKV ' + betaEuro(d.gkv).replace(' €', '') + (d.pauschale ? ' (GP)' : '') + ' · LS ' + betaEuro(d.ls).replace(' €', '') + ' · PT ' + betaEuro(d.pt).replace(' €', '') + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span></div>').join('') + '</div>';
@@ -2717,11 +2722,9 @@ function fbAnsichtC(buch){
   const d = buch.dienste[wahl];
   return '<div class="fbx-woche">' + buch.dienste.map((x, i)=> '<button type="button" class="fbx-tag' + (i === wahl ? ' an' : '') + (fbLaufend(x) ? ' laeuft' : '') + '" data-fbtag="' + i + '"><span>' +
       DESIGN_WT[x.tag.getDay()] + ' ' + zz2(x.tag.getDate()) + '.' + zz2(x.tag.getMonth() + 1) + '.</span><b>' + betaEuro(x.gesamt).replace(' €', '') + '</b><small>' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle</small></button>').join('') + '</div>' +
-    '<div class="fbx-karte"><div class="fbx-kopf"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '</span></div>' +
+    '<div class="fbx-karte"><div class="fbx-kopf" data-fbdienst="' + wahl + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '</span></div>' +
     '<div class="fbx-kpi"><div><span>GKV + Förderung</span><b>' + betaEuro(d.gkv) + '</b></div><div><span>LS + PT</span><b>' + betaEuro(d.ls + d.pt) + '</b></div></div>' +
-    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + ' ›</span></button>' +
-      '<button type="button" class="fbx-weg" data-fbweg="' + wahl + '-' + fi + '" aria-label="Eintrag löschen">' + FB_MUELL + '</button>').join('') +
-      '<button type="button" class="fbx-dienst-weg" data-fbweg="' + wahl + '">Ganzen Dienst löschen</button></div></div>';
+    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + ' ›</span></button>').join('') + '</div></div>';
 }
 
 let fahrdienstAuswertungCache = null;
@@ -14251,7 +14254,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v195';
+const APP_VERSION = 'v196';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
