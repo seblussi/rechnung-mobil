@@ -14251,7 +14251,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v193';
+const APP_VERSION = 'v194';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -16946,7 +16946,7 @@ function appToastAnzeigen(text, dauerMs){
 try{ themaAnwenden(); }catch(e){}
 try{ dunkelModusAutoSyncEinrichten(); }catch(e){}
 try{ ansichtStart(); }catch(e){}
-// Schnellstart aus dem App-Symbol (Rechtsklick in der Taskleiste / langes Druecken): ?neu=dienst|ls|pt|gkv, ?seite=fahrtenbuch
+// Schnellstart aus dem App-Symbol (Rechtsklick in der Taskleiste / langes Druecken): ?neu=dienst|rechnung|ls|pt|gkv, ?seite=fahrtenbuch
 try{
   const q = new URLSearchParams(location.search), neu = q.get('neu'), seite = q.get('seite');
   if(neu || seite){
@@ -16954,6 +16954,14 @@ try{
     setTimeout(()=>{
       if(neu === 'dienst') liveDienstDialog().then(ok=>{ if(ok && aktuelleAnsichtIstHauptbildschirm) ansichtStart(); });
       else if(neu === 'ls' || neu === 'pt') betaNeueRechnung(neu);
+      else if(neu === 'rechnung') (async ()=>{
+        const w = await betaOverlay.ergebnis('Neue Rechnung', '<div class="ds-neu-wahl">' +
+          '<button type="button" class="ds-neu-knopf ls" data-neu="ls"><span class="ds-code">LS</span><span><b>Leichenschau</b><small>neue Rechnung</small></span></button>' +
+          '<button type="button" class="ds-neu-knopf pt" data-neu="pt"><span class="ds-code">PT</span><span><b>Privatrechnung</b><small>neue Rechnung</small></span></button></div>',
+          (function(){ setTimeout(()=> document.querySelectorAll('.beta-overlay [data-neu]').forEach(b=> b.onclick = ()=> betaOverlay.loesen && betaOverlay.loesen(b.dataset.neu)), 0); return [{ label: 'Abbrechen', akt: 'nein' }]; })());
+        betaOverlay.schliessen();
+        if(w === 'ls' || w === 'pt') betaNeueRechnung(w);
+      })();
       else if(neu === 'gkv') ansichtGkv();
       else if(seite === 'fahrtenbuch' && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') ansichtFahrtenbuch();
     }, 600);
