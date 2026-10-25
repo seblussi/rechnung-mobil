@@ -1463,6 +1463,7 @@
   .ds-neu-titel{margin:22px 2px 8px; font-weight:800;}
   body.design-einhand .ds-nav{position:fixed; left:16px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20; height:66px; border-radius:33px; background:var(--ds-nav);
     grid-template-columns:repeat(5, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
+  .fb-schichten + .fb-schichten{margin-top:6px;}
   .fb-schichten .fb-chip.schicht{display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; min-width:64px;}
   .fb-schichten .fb-chip.schicht small{font-size:11px; opacity:.75;}
   .ds-dienst-start{display:none;}
@@ -14263,7 +14264,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v201';
+const APP_VERSION = 'v202';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14375,6 +14376,14 @@ function docdirektSchichten(tag){
   const d = tag || new Date();
   if(fahrdienstWochenendSatz(d)) return [];
   return [{ label: 'Vormittag', von: '08:00', bis: '13:00' }, { label: 'Nachmittag', von: '13:00', bis: '19:00' }];
+}
+// Dienst-Chips zeilenweise nach Art (Frueh / Vormittag, Spaet / Abend / Nachmittag, Nacht, Rest)
+function schichtZeilenHtml(liste, schicht){
+  const gruppe = (l)=> /früh|vormittag/i.test(l) ? 1 : /spät|abend|nachmittag/i.test(l) ? 2 : /nacht/i.test(l) ? 3 : 4;
+  const zeilen = {};
+  liste.forEach(x=>{ const g = gruppe(x.label); (zeilen[g] = zeilen[g] || []).push(x); });
+  return Object.keys(zeilen).sort().map(g=> '<div class="fb-chips fb-schichten">' + zeilen[g].map(x=>
+    '<button type="button" class="fb-chip schicht' + (x.label === schicht ? ' an' : '') + '" data-lzeit="' + x.von + '-' + x.bis + '" data-lschicht="' + x.label + '"><b>' + x.label + '</b><small>' + (x.von + '–' + x.bis).replace(/:00/g, '') + '</small></button>').join('') + '</div>').join('');
 }
 function dienstSchichten(art, tag){ return art === 'Fahrdienst' ? fahrdienstSchichten(tag) : art === 'Sitzdienst' ? sitzdienstSchichten(tag) : art === 'Telemedizin' ? telemedizinSchichten(tag) : art === 'docdirekt' ? docdirektSchichten(tag) : []; }
 const LIVE_DIENSTZEITEN = {
@@ -14567,8 +14576,7 @@ async function liveDienstDialog(){
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
-      (dienstSchichten(art, tagVon()).length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div><div class="fb-chips fb-schichten">' + dienstSchichten(art, tagVon()).map(x=>
-        '<button type="button" class="fb-chip schicht' + (x.label === schicht ? ' an' : '') + '" data-lzeit="' + x.von + '-' + x.bis + '" data-lschicht="' + x.label + '"><b>' + x.label + '</b><small>' + (x.von + '–' + x.bis).replace(/:00/g, '') + '</small></button>').join('') + '</div>' : '') +
+      (dienstSchichten(art, tagVon()).length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div>' + schichtZeilenHtml(dienstSchichten(art, tagVon()), schicht) : '') +
       '<div class="fb-lbl">Dienstzeit</div>' +
       (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis && !schicht ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace(/:00/g, '').replace('-', '–') + '</button>').join('') + '</div>' : '') +
       '<div class="fb-zeile"><label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
