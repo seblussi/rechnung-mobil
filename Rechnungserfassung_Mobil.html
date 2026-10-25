@@ -14258,7 +14258,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v199';
+const APP_VERSION = 'v200';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14357,7 +14357,15 @@ function sitzdienstSchichten(tag){
   } else dazu('OG Abend', (wd === 3 || wd === 5) ? '16:00' : '19:00', '22:00');
   return l;
 }
-function dienstSchichten(art, tag){ return art === 'Fahrdienst' ? fahrdienstSchichten(tag) : art === 'Sitzdienst' ? sitzdienstSchichten(tag) : []; }
+// Telemedizin: werktags docdirekt Vormittag 8-13 und Nachmittag 13-19 sowie
+// Telearzt-Dienst Werktag 19-23; Sa/So/Feiertag Telearzt frueh 9-16 und spaet 16-23
+// (Telemedizin AeBD April 2026 - Maerz 2027, docdirekt Plan Oktober 2026)
+function telemedizinSchichten(tag){
+  const d = tag || new Date();
+  if(fahrdienstWochenendSatz(d)) return [{ label: 'Telearzt früh', von: '09:00', bis: '16:00' }, { label: 'Telearzt spät', von: '16:00', bis: '23:00' }];
+  return [{ label: 'docdirekt Vormittag', von: '08:00', bis: '13:00' }, { label: 'docdirekt Nachmittag', von: '13:00', bis: '19:00' }, { label: 'Telearzt', von: '19:00', bis: '23:00' }];
+}
+function dienstSchichten(art, tag){ return art === 'Fahrdienst' ? fahrdienstSchichten(tag) : art === 'Sitzdienst' ? sitzdienstSchichten(tag) : art === 'Telemedizin' ? telemedizinSchichten(tag) : []; }
 const LIVE_DIENSTZEITEN = {
   Fahrdienst:  { werktag: ['18:00-08:00'], wochenende: ['08:00-08:00'] },
   Sitzdienst:  { werktag: [], wochenende: [] },
