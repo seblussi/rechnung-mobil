@@ -1184,6 +1184,8 @@
   #dsWerkzeugStapel .ws-icon.rot{background:#fdeaea; border-color:#f3d3d3;} body.dunkel #dsWerkzeugStapel .ws-icon.rot{background:#3a1717; border-color:#5c2828;}
   #dsWerkzeugStapel .ws-icon svg{width:38px; height:38px;}
   #dsWerkzeugStapel .ws-icon.code{color:#fff; font-family:var(--ds-mono, monospace); font-weight:700; font-size:16px; border-color:transparent;}
+  #dsWerkzeugStapel .ws-icon.code.dienst{background:#d9861a;} #dsWerkzeugStapel .ws-icon.code.dienst svg{width:30px; height:30px;}
+  body.design-einhand #dsWerkzeugStapel .ws-icon.code.dienst svg{width:40px; height:40px;}
   #dsWerkzeugStapel .ws-icon.code.ls{background:var(--ls-farbe);} #dsWerkzeugStapel .ws-icon.code.pt{background:var(--pt-farbe);} #dsWerkzeugStapel .ws-icon.code.gkv{background:var(--ds-gkv, #7d4e9e);}
   body.dunkel #dsWerkzeugStapel .ws-icon.code{border-color:transparent;}
   .ds-nav-btn.ws-offen{color:var(--ls-farbe);}
@@ -14241,7 +14243,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v189';
+const APP_VERSION = 'v190';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14642,11 +14644,15 @@ function werkzeugStapelUmschalten(){
 }
 // Neuer Fall: LS / PT / GKV als Stapel ueber dem Plus
 function neuStapelUmschalten(){
-  schnellStapel('neu', [
+  let laeuft = false;
+  try{ const i = designDienstInfo(); laeuft = i.modus === 'laufend' || i.modus === 'geplant'; }catch(_){}
+  const dienst = laeuft ? [] : [{ k: 'dienst', text: 'Neuen Dienst starten', icon: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg>', klasse: 'code dienst' }];
+  schnellStapel('neu', dienst.concat([
     { k: 'ls', text: 'Leichenschau', icon: 'LS', klasse: 'code ls' },
     { k: 'pt', text: 'Privatrechnung', icon: 'PT', klasse: 'code pt' },
     { k: 'gkv', text: 'GKV-Patient', icon: 'GKV', klasse: 'code gkv' }
-  ], (a)=>{
+  ]), async (a)=>{
+    if(a === 'dienst'){ if(await liveDienstDialog() && aktuelleAnsichtIstHauptbildschirm) ansichtStart(); return; }
     vorbereiteRuecksprung(); einstellungenOffen = false;
     if(a === 'gkv') ansichtGkv(); else betaNeueRechnung(a);
   });
