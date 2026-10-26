@@ -1695,8 +1695,14 @@ try{
   /* Klinik: Leiste immer und ueberall */
   body.ds-leiste-global{--ds-leiste-h:calc(70px + env(safe-area-inset-bottom));}
   body.ds-leiste-global main{padding-bottom:calc(var(--ds-leiste-h) + 20px);}
-  body.ds-leiste-global .gkv-summe-leiste, body.ds-leiste-global .pos-fuss{bottom:var(--ds-leiste-h);}
-  body.ds-leiste-global .pos-fuss{padding-bottom:10px;}
+  /* Speichern-/Uebernehmen-Leisten reichen bis zum unteren Rand (hinter der Leiste mit dem
+     Plus) -- keine Luecke, durch die der Inhalt scheint; oben weicher Uebergang */
+  body.ds-leiste-global .gkv-summe-leiste, body.ds-leiste-global .pos-fuss{bottom:var(--ds-leiste-h); padding-bottom:10px; --fuss-bg:var(--bg);}
+  body.ds-leiste-global.design-klinik .gkv-summe-leiste, body.ds-leiste-global.design-klinik .pos-fuss{--fuss-bg:var(--karte);}
+  body.ds-leiste-global .gkv-summe-leiste{border-top:0;}
+  /* nur solange die Leiste unten klebt (Klasse per Skript): Flaeche bis zum Rand + Verlauf oben */
+  body.ds-leiste-global .klebt::after{content:''; position:absolute; left:0; right:0; top:100%; height:var(--ds-leiste-h); background:var(--fuss-bg); pointer-events:none;}
+  body.ds-leiste-global .klebt::before{content:''; position:absolute; left:0; right:0; top:-22px; height:22px; pointer-events:none; background:linear-gradient(to bottom, transparent, var(--fuss-bg));}
   body.ds-leiste-global .app-toast{bottom:calc(var(--ds-leiste-h) + 14px);}
   body.nfp-offen #dsGlobalNav{display:none;}
   body.ds-leiste-global.design-einhand{--ds-leiste-h:calc(96px + env(safe-area-inset-bottom));}
@@ -14685,7 +14691,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v215';
+const APP_VERSION = 'v216';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -15191,6 +15197,24 @@ function designGlobalNav(){
     nav.querySelectorAll('[data-nav]').forEach(b=> b.classList.toggle('an', b.dataset.nav === akt));
   }catch(_){}
 }
+// Speichern-/Uebernehmen-Leisten: merken, ob sie gerade unten kleben
+(function(){
+  let geplant = false;
+  const pruefen = ()=>{
+    geplant = false;
+    const unten = window.innerHeight;
+    document.querySelectorAll('.gkv-summe-leiste, .pos-fuss').forEach(el=>{
+      const cs = getComputedStyle(el), b = parseFloat(cs.bottom) || 0, r = el.getBoundingClientRect();
+      // klebt = steht genau an ihrer Sticky-Grenze und darunter folgt noch Inhalt
+      const ende = document.documentElement.scrollHeight - window.scrollY - unten < 2;
+      el.classList.toggle('klebt', Math.abs(r.bottom - (unten - b)) < 2 && !ende);
+    });
+  };
+  const planen = ()=>{ if(!geplant){ geplant = true; requestAnimationFrame(pruefen); } };
+  window.addEventListener('scroll', planen, { passive: true });
+  window.addEventListener('resize', planen);
+  new MutationObserver(planen).observe(document.documentElement, { childList: true, subtree: true });
+})();
 function designAktSeite(){
   const t = String((document.getElementById('titel') || {}).textContent || '');
   return einstellungenOffen || /Einstellungen|Backups/.test(t) ? '' : aktuelleAnsichtIstHauptbildschirm ? 'start'
