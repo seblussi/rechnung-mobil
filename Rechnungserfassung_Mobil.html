@@ -68,7 +68,22 @@
      einzelne (v.a. transparent/blass gestylte) Elemente eigenmaechtig
      umfaerbt und dadurch z.B. Buttontext unsichtbar macht. -->
 <meta name="color-scheme" content="light dark">
+<!-- War die App zuletzt dunkel, sofort schwarz malen (kein heller Blitz beim Start,
+     bevor das Design per Skript gesetzt ist) -->
+<script>
+try{
+  var e0 = JSON.parse(localStorage.getItem('einstellungen') || '{}') || {};
+  // wie spaeter in der App: ohne manuelle Wahl folgt sie dem System-Dunkelmodus
+  var dk0 = e0.design === 'nacht' || (e0.dunkelManuell ? !!e0.dunkel : (window.matchMedia ? matchMedia('(prefers-color-scheme: dark)').matches : !!e0.dunkel));
+  if(dk0){
+    document.documentElement.classList.add('frueh-dunkel');
+    var m0 = document.querySelector('meta[name="theme-color"]'); if(m0) m0.setAttribute('content', '#000000');
+  }
+}catch(_){}
+</script>
 <style>
+  html.frueh-dunkel{background:#000; color-scheme:dark;}
+  html.frueh-dunkel body:not(.dunkel){background:#000;}
   /* BETA: eigenes Fenster (statt Browser-Popups) mit Ladeanimation */
   .beta-overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:10000; padding:16px; box-sizing:border-box;}
   .beta-overlay.aktiv{display:flex;}
@@ -1684,10 +1699,6 @@
   body.ds-leiste-global .pos-fuss{padding-bottom:10px;}
   body.ds-leiste-global .app-toast{bottom:calc(var(--ds-leiste-h) + 14px);}
   body.nfp-offen #dsGlobalNav{display:none;}
-  @keyframes wischRechts{from{transform:translateX(40px); opacity:.4;} to{transform:none; opacity:1;}}
-  @keyframes wischLinks{from{transform:translateX(-40px); opacity:.4;} to{transform:none; opacity:1;}}
-  #app.wisch-von-rechts{animation:wischRechts .25s ease-out;}
-  #app.wisch-von-links{animation:wischLinks .25s ease-out;}
   body.ds-leiste-global.design-einhand{--ds-leiste-h:calc(96px + env(safe-area-inset-bottom));}
   /* Auswahl "Neuer Fall" */
   .ds-neu-wahl{display:flex; flex-direction:column; gap:8px; margin:4px 0 2px; text-align:left;}
@@ -14663,7 +14674,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v212';
+const APP_VERSION = 'v214';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -15174,40 +15185,6 @@ function designAktSeite(){
   return einstellungenOffen || /Einstellungen|Backups/.test(t) ? '' : aktuelleAnsichtIstHauptbildschirm ? 'start'
     : /Rechnungsverwaltung|Lokale Rechnungen/.test(t) ? 'verwaltung' : /Fahrdienst|Fahrtenbuch|Quartals/.test(t) ? 'fahrtenbuch' : /Luftlinie|Apotheke/.test(t) ? 'werkzeuge' : '';
 }
-// Wischen nach links/rechts: zwischen Start, Rechnungen und Fahrtenbuch wechseln
-// (Reihenfolge wie in der Leiste). Nicht auf Karten, Eingabefeldern, Zeilen mit
-// Wisch-Loeschen, waagerecht scrollbaren Bereichen und offenen Fenstern.
-const WISCH_SEITEN = ['start', 'verwaltung', 'fahrtenbuch'];
-(function(){
-  let w = null;
-  const gesperrt = (el)=>{
-    if(document.querySelector('.nfp-overlay, .beta-overlay.aktiv, #dsWerkzeugStapel, .ze-overlay')) return true;
-    for(let e = el; e && e !== document.body; e = e.parentElement){
-      if(e.matches && e.matches('input, textarea, select, .wisch-huelle, .mini-ebenen, .luft-karte-flaeche, .osm-scroll, .nfp-scroll, [contenteditable="true"]')) return true;
-      if(e.scrollWidth > e.clientWidth + 4){ const ox = getComputedStyle(e).overflowX; if(ox === 'auto' || ox === 'scroll') return true; }
-    }
-    return false;
-  };
-  document.addEventListener('touchstart', (ev)=>{
-    w = null;
-    if(ev.touches.length !== 1) return;
-    const seite = designAktSeite(); if(!WISCH_SEITEN.includes(seite)) return;
-    if(gesperrt(ev.target)) return;
-    const t = ev.touches[0]; w = { x: t.clientX, y: t.clientY, zeit: Date.now(), seite };
-  }, { passive: true });
-  document.addEventListener('touchmove', (ev)=>{ if(w && ev.touches.length !== 1) w = null; }, { passive: true });
-  document.addEventListener('touchend', (ev)=>{
-    if(!w) return;
-    const q = w; w = null;
-    const t = ev.changedTouches[0], dx = t.clientX - q.x, dy = t.clientY - q.y;
-    if(Date.now() - q.zeit > 700 || Math.abs(dx) < 70 || Math.abs(dx) < 2 * Math.abs(dy)) return;
-    const i = WISCH_SEITEN.indexOf(q.seite), ziel = WISCH_SEITEN[i + (dx < 0 ? 1 : -1)];
-    if(!ziel) return;
-    const app = document.getElementById('app');
-    if(app){ app.classList.remove('wisch-von-links', 'wisch-von-rechts'); void app.offsetWidth; app.classList.add(dx < 0 ? 'wisch-von-rechts' : 'wisch-von-links'); setTimeout(()=> app.classList.remove('wisch-von-links', 'wisch-von-rechts'), 300); }
-    designNavAktion(ziel);
-  }, { passive: true });
-})();
 setzeTitel = (function(basis){ return function(){ const r = basis.apply(this, arguments); setTimeout(designGlobalNav, 0); try{ werkzeugStapelSchliessen(); }catch(_){} return r; }; })(setzeTitel);
 function designKachelnUmbauen(info){
   const anz = { ls: 0, pt: 0 };
