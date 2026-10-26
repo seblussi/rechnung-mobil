@@ -1170,7 +1170,15 @@
   .ds-dz-zeit{font-variant-numeric:tabular-nums; color:var(--text-schwach);}
   .ds-dz-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;}
   .ds-dz-betrag{font-variant-numeric:tabular-nums;}
-  .ds-dz .ds-fall-marke{font-size:10.5px; font-weight:700; color:#fff; border-radius:5px; padding:2px 5px; background:var(--ls-farbe);}
+  .ds-dz .ds-fall-marke{flex:0 0 32px; width:32px; height:32px; padding:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:700; color:#fff; border-radius:8px; background:var(--ls-farbe);}
+  .ds-dz .ds-dz-name{font-size:15.5px;}
+  .ds-live .ds-dz .ds-fall-marke{color:#fff;}
+  .ds-status-zeile{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .ds-status-zeile .ds-status{min-width:0;}
+  .ds-schicht{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; flex:0 0 auto; line-height:1.15;}
+  .ds-schicht b{font-size:15px; font-weight:700; color:var(--text);}
+  .ds-schicht small{font-size:12px; color:var(--text-schwach); font-variant-numeric:tabular-nums;}
+  .ds-live .ds-dz .ds-zahlen.vier{grid-template-columns:repeat(4, minmax(0, 1fr));}
   .ds-dz .ds-fall-marke.pt{background:var(--pt-farbe);} .ds-dz .ds-fall-marke.gkv{background:#7d4e9e;}
   .ds-live > .ds-dz + *, .ds-live > * + .ds-dz{margin-top:12px;}
   .ds-neu-knopf.werkzeug .ds-code{background:#5b6576; font-size:12px;}
@@ -14650,7 +14658,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v207';
+const APP_VERSION = 'v208';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -15206,12 +15214,18 @@ function designDienstHtml(info){
   designDienstHtml.faelle = faelle;
   const p = info.pauschale ? Math.min(100, Math.round(info.gkv / info.pauschale * 1000) / 10) : 0;
   const auf = !!LS.get('dienst_liste_auf', false);
+  const summe = (art)=> faelle.filter(f=> f.art === art).reduce((a, f)=> a + (Number(f.euro) || 0), 0);
+  const kurzEuro = (v)=> betaEuro(v).replace(' €', '');
+  // Balken nur, solange die Foerderung noch greift (GKV unter der Pauschale)
+  const balken = info.pauschale > 0 && info.gkv < info.pauschale;
   return '<div class="ds-dz">' +
-    '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status">' + htmlEsc(status) + '</span><span class="ds-status-unter">' + htmlEsc(unter) + '</span>' +
-      '<span class="ds-zahlen"><span><span>Fälle</span><b>' + faelle.length + '</b></span><span><span>GKV</span><b>' + betaEuro(info.gkv).replace(' €', '') + '</b></span>' +
-      '<span><span>Förderung</span><b>' + betaEuro(info.foerderung).replace(' €', '') + '</b></span></span>' +
-      '<span class="ds-fort"><span class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + betaEuro(info.gkv).replace(' €', '') + ' / ' + betaEuro(info.pauschale) + '</b></span>' +
-        '<span class="ds-balken"><i style="width:' + p + '%"></i></span></span></button>' +
+    '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status-zeile"><span class="ds-status">' + htmlEsc(status) + '</span>' +
+      '<span class="ds-schicht">' + (info.schicht ? '<b>' + htmlEsc(info.schicht) + '</b>' : '') + '<small>' + designUhr(fe.von) + '–' + designUhr(fe.bis) + '</small></span></span>' +
+      '<span class="ds-status-unter">' + htmlEsc(unter) + '</span>' +
+      '<span class="ds-zahlen vier"><span><span>Fälle</span><b>' + faelle.length + '</b></span><span><span>GKV</span><b>' + kurzEuro(info.gkv) + '</b></span>' +
+      '<span><span>PT</span><b>' + kurzEuro(summe('pt')) + '</b></span><span><span>LS</span><b>' + kurzEuro(summe('ls')) + '</b></span></span>' +
+      (balken ? '<span class="ds-fort"><span class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + kurzEuro(info.gkv) + ' / ' + betaEuro(info.pauschale) + '</b></span>' +
+        '<span class="ds-balken"><i style="width:' + p + '%"></i></span></span>' : '') + '</button>' +
     '<button type="button" class="ds-dz-auf" aria-expanded="' + auf + '"><span>Fälle in diesem Dienst (' + faelle.length + ')</span><span class="ds-dz-pfeil" aria-hidden="true">▾</span></button>' +
     '<div class="ds-dz-liste"' + (auf ? '' : ' hidden') + '>' +
       (faelle.length ? faelle.map((f, i)=> '<button type="button" class="ds-dz-fall" data-dzfall="' + i + '"><span class="ds-dz-zeit">' + designUhr(f.t) + '</span>' +
