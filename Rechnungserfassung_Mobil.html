@@ -14658,7 +14658,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v209';
+const APP_VERSION = 'v210';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -15216,8 +15216,8 @@ function designDienstHtml(info){
   const auf = !!LS.get('dienst_liste_auf', false);
   const summe = (art)=> faelle.filter(f=> f.art === art).reduce((a, f)=> a + (Number(f.euro) || 0), 0);
   const kurzEuro = (v)=> betaEuro(v).replace(' €', '');
-  // Balken nur, solange die Foerderung noch greift (GKV unter der Pauschale)
-  const balken = info.pauschale > 0 && info.gkv < info.pauschale;
+  // Balken immer (ausser ohne Pauschale, z.B. docdirekt); ab Erreichen der Pauschale voll
+  const balken = info.pauschale > 0;
   return '<div class="ds-dz">' +
     '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status-zeile"><span class="ds-status">' + htmlEsc(status) + '</span>' +
       '<span class="ds-schicht">' + (info.schicht ? '<b>' + htmlEsc(info.schicht) + '</b>' : '') + '<small>' + designUhr(fe.von) + '–' + designUhr(fe.bis) + '</small></span></span>' +
