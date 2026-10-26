@@ -13488,7 +13488,7 @@ function miniKarteHtml(d, opt){
   }
   MINI_KARTEN.set(id, { d, opt, fit });
   if(MINI_KARTEN.size > 40) MINI_KARTEN.delete(MINI_KARTEN.keys().next().value);
-  const e = opt.start === 'kvbw' && opt.kvbwOk ? 'kvbw' : 'osm';
+  const e = 'osm';   // Vorauswahl immer OSM; KVBW ueber den Knopf oben rechts
   const knopf = KARTE_EBENE_KNOPF.replace('class="karte-ebene"', 'class="karte-ebene mini-ebene-knopf" data-ziel="' + (e === 'osm' ? 'kvbw' : 'osm') + '"')
     .replace('<span></span>', '<span>' + (e === 'osm' ? 'KVBW' : 'OSM') + '</span>');
   return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + '</div>' +
@@ -14658,7 +14658,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v208';
+const APP_VERSION = 'v209';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
