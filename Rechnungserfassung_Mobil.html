@@ -1612,6 +1612,22 @@ try{
   .fbx-tabs{display:flex; gap:6px; margin:0 0 10px;}
   .fbx-tabs button{flex:1; margin:0; padding:9px; font-size:14px; font-weight:600; border-radius:10px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .fbx-tabs button.an{background:var(--ls-farbe); border-color:var(--ls-farbe); color:#fff;}
+  .vw-tabs button.gkv.an{background:#7d4e9e; border-color:#7d4e9e;}
+  .gv-info{font-size:13px; color:var(--text-schwach); margin:8px 2px 4px;} .gv-info .gv-offen{color:#c77700;}
+  .gv-tag{display:flex; justify-content:space-between; gap:8px; font-size:12.5px; font-weight:700; color:var(--text-schwach); text-transform:uppercase; letter-spacing:.02em; margin:14px 2px 6px;}
+  .gv-fall{display:grid; grid-template-columns:44px 32px minmax(0, 1fr) auto; align-items:center; gap:8px; width:100%; margin:0; padding:9px 10px; box-sizing:border-box;
+    border:1px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text); font:inherit; text-align:left; cursor:pointer;}
+  .wisch-huelle[data-gvid]{margin-bottom:6px; border-radius:12px;}
+  .wisch-huelle > .gv-fall{position:relative; z-index:1; touch-action:pan-y;}
+  .wisch-huelle[data-gvid] .wisch-hinter{inset:2px; border-radius:10px;}
+  .gv-fall .ds-fall-marke{width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:8px; background:#7d4e9e; color:#fff; font-size:10.5px; font-weight:700;}
+  .gv-fall.pseudo{opacity:.65;}
+  .gv-zeit{font-variant-numeric:tabular-nums; color:var(--text-schwach); font-size:13.5px;}
+  .gv-mitte{display:flex; flex-direction:column; min-width:0;} .gv-mitte b{font-size:15.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .gv-mitte small{font-size:12px; color:var(--text-schwach); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .gv-rechts{display:flex; flex-direction:column; align-items:flex-end;} .gv-rechts b{font-variant-numeric:tabular-nums;}
+  .gv-rechts small{font-size:11.5px;} .gv-ok{color:#2fa84f;} .gv-rechts .gv-offen{color:#c77700; font-weight:600;}
+  .gv-neu{margin-top:14px;}
   .fbx-leiste{display:flex; gap:8px; align-items:center; margin:0 0 10px;}
   .fbx-varianten{display:flex; gap:4px; flex:1;}
   .fbx-varianten button{flex:1; margin:0; padding:6px 4px; font-size:12.5px; border-radius:14px; border:1px solid var(--rand); background:var(--karte); color:var(--text-schwach);}
@@ -4549,13 +4565,78 @@ async function rechnungsnummernVergeben(faelleAusw){
   return ohneNummer;
 }
 
+// ---------- Rechnungsverwaltung: Reiter LS/PT | GKV ----------
+// Die Rechnungsverwaltung zeigt die Einzelfaelle zum Bearbeiten, das
+// Fahrtenbuch die Dienste und das Honorar. GKV-Faelle (nur im Geraet
+// gespeichert) haben hier einen eigenen Reiter.
+function vwTabsHtml(akt){
+  return '<div class="fbx-tabs vw-tabs"><button type="button" data-vwtab="lspt" class="' + (akt === 'lspt' ? 'an' : '') + '">LS / PT</button>' +
+    '<button type="button" data-vwtab="gkv" class="gkv' + (akt === 'gkv' ? ' an' : '') + '">GKV</button></div>';
+}
+document.addEventListener('click', (ev)=>{
+  const b = ev.target.closest && ev.target.closest('[data-vwtab]'); if(!b) return;
+  LS.set('vw_tab', b.dataset.vwtab);
+  if(b.dataset.vwtab === 'gkv') ansichtGkvVerwaltung(); else designNavAktion('verwaltung');
+});
+let gkvHerkunft = null;
+function ansichtGkvVerwaltung(){
+  einstellungenOffen = false;
+  LS.set('vw_tab', 'gkv');
+  vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=> ansichtGkvVerwaltung(); };
+  setzeTitel('Rechnungsverwaltung', ()=>{ betaMaskeHerkunft = null; ansichtStart(); });
+  app.innerHTML = vwTabsHtml('gkv') +
+    '<div class="gesamt-kopf"><div class="feld" style="margin-bottom:0;"><input type="text" id="gvSuche" autocomplete="off" placeholder="Suche: Name, Ziffer oder Datum"></div></div>' +
+    '<div id="gvInfo" class="gv-info"></div><div id="gvListe"></div>' +
+    '<button type="button" class="btn-primaer gv-neu" id="gvNeu">+ Neuer GKV-Patient</button>';
+  const suchEl = document.getElementById('gvSuche');
+  document.getElementById('gvNeu').onclick = ()=>{ gkvHerkunft = 'verwaltung'; ansichtGkv(); };
+  // Diensttag: Faelle vor 7 Uhr gehoeren zum Dienst des Vortags
+  const diensttag = (t)=>{ const d = new Date(t.getFullYear(), t.getMonth(), t.getDate()); if(t.getHours() < 7) d.setDate(d.getDate() - 1); return d; };
+  const zeichnen = ()=>{
+    const q = suchEl.value.trim().toLowerCase();
+    const alle = gkvFaelleLaden().map(f=> ({ f, t: designFallZeit(f) || new Date(0) }))
+      .filter(x=> !q || [x.f.name, isoDe(x.f.datum), (x.f.positionen || []).map(p=> p.gop).join(' ')].join(' ').toLowerCase().includes(q))
+      .sort((a, b)=> b.t - a.t);
+    const offen = alle.filter(x=> x.f.status !== 'eingetragen' && x.f.name !== GKV_PSEUDO_NAME).length;
+    document.getElementById('gvInfo').innerHTML = alle.length ? alle.length + ' Fälle auf diesem Gerät' + (offen ? ' · <b class="gv-offen">' + offen + ' noch nicht im Fahrtenbuch</b>' : ' · alle im Fahrtenbuch') : '';
+    if(!alle.length){ document.getElementById('gvListe').innerHTML = '<div class="leer-hinweis">' + (q ? 'Nichts gefunden.' : 'Noch keine GKV-Patienten erfasst.') + '</div>'; return; }
+    const gruppen = [];
+    alle.forEach(x=>{
+      const tag = diensttag(x.t), k = tag.getTime();
+      let g = gruppen[gruppen.length - 1];
+      if(!g || g.k !== k){ g = { k, tag, faelle: [] }; gruppen.push(g); }
+      g.faelle.push(x);
+    });
+    document.getElementById('gvListe').innerHTML = gruppen.map(g=>{
+      const summe = g.faelle.reduce((s, x)=> s + (Number(x.f.euro) || 0), 0);
+      return '<div class="gv-tag"><span>' + fbTagText(g.tag) + '</span><span>' + g.faelle.length + (g.faelle.length === 1 ? ' Fall' : ' Fälle') + ' · ' + betaEuro(summe) + '</span></div>' +
+        g.faelle.map(x=>{
+          const f = x.f, pseudo = f.name === GKV_PSEUDO_NAME;
+          return '<div class="wisch-huelle" data-gvid="' + htmlEsc(f.id) + '"><div class="wisch-hinter">&#128465; Löschen</div>' +
+            '<button type="button" class="gv-fall' + (pseudo ? ' pseudo' : '') + '" data-gvoeffnen="' + htmlEsc(f.id) + '">' +
+            '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="ds-fall-marke gkv">GKV</span>' +
+            '<span class="gv-mitte"><b>' + htmlEsc(pseudo ? 'Pseudo-Fall 99999' : (f.name || 'ohne Namen')) + '</b><small>' + htmlEsc((f.positionen || []).map(p=> p.gop + (p.anz > 1 ? '×' + p.anz : '')).join(' ')) + '</small></span>' +
+            '<span class="gv-rechts"><b>' + betaEuro(f.euro).replace(' €', '') + '</b><small class="' + (f.status === 'eingetragen' ? 'gv-ok' : 'gv-offen') + '">' + (f.status === 'eingetragen' ? '✓ Fahrtenbuch' : 'offen') + '</small></span>' +
+            '</button></div>';
+        }).join('');
+    }).join('') + '<div class="eigene-hinweis" style="margin-top:8px;">Antippen = bearbeiten · nach links wischen = aus der Liste löschen (die Zeile im Fahrtenbuch bleibt).</div>';
+    document.querySelectorAll('[data-gvoeffnen]').forEach(b=> b.onclick = ()=>{ if(Date.now() - (b._wischZeit || 0) < 400) return; gkvHerkunft = 'verwaltung'; ansichtGkv(b.dataset.gvoeffnen); });
+    document.querySelectorAll('.wisch-huelle[data-gvid]').forEach(h=> betaWischen(h.querySelector('.gv-fall'), async ()=>{
+      const f = gkvFaelleLaden().find(x=> x.id === h.dataset.gvid);
+      if(!await betaFrage('„' + ((f && f.name) || 'Fall') + '“ nur aus der Liste in der App löschen?\n\nEine schon geschriebene Zeile im Fahrtenbuch bleibt stehen.', 'Löschen', 'Abbrechen')) return false;
+      gkvFaelleSpeichern(gkvFaelleLaden().filter(x=> x.id !== h.dataset.gvid)); zeichnen(); return true;
+    }));
+  };
+  suchEl.oninput = zeichnen;
+  zeichnen();
+}
 function ansichtKorrigieren(){
   einstellungenOffen = false;
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtKorrigieren(); };
   setzeTitel('Lokale Rechnungen', ansichtStart);
   const alle = [...ladeFaelle('ls').map((f,i)=>({...f, art:'ls', idx:i})), ...ladeFaelle('pt').map((f,i)=>({...f, art:'pt', idx:i}))];
   if(!alle.length){
-    app.innerHTML = '<div class="leer-hinweis">Keine lokal gespeicherten Fälle vorhanden.</div>' +
+    app.innerHTML = vwTabsHtml('lspt') + '<div class="leer-hinweis">Keine lokal gespeicherten Fälle vorhanden.</div>' +
       '<button class="btn-sekundaer" id="btnBackupsOeffnen" style="margin-top:12px;">Backups ansehen</button>';
     document.getElementById('btnBackupsOeffnen').onclick = ansichtSyncBackups;
     return;
@@ -4564,7 +4645,7 @@ function ansichtKorrigieren(){
   const ausgewaehlt = new Set(); // Schlüssel "art:idx"
   const schluessel = f => f.art+':'+f.idx;
 
-  app.innerHTML = `
+  app.innerHTML = vwTabsHtml('lspt') + `
     <div class="auswahlleiste">
       <div class="aktionen-reihe">
         <div class="aktionen-buttons">
@@ -7708,7 +7789,7 @@ async function ansichtRechnungenGesamt(neuLaden){
   setzeTitel('Rechnungsverwaltung', ()=>{ betaMaskeHerkunft = null; ansichtStart(); });
   betaLokaleAufraeumen();
   const ziel = betaZiel(), zk = betaZielKey(ziel);
-  app.innerHTML = `
+  app.innerHTML = vwTabsHtml('lspt') + `
     <div class="gesamt-kopf">
       <div class="feld" style="margin-bottom:0;"><input type="text" id="txtGesamtSuche" autocomplete="off" placeholder="Suche: Name oder Rechnungsnummer"></div>
       <div class="gesamt-knoepfe">
@@ -12424,7 +12505,8 @@ function gkvFaelleSpeichern(a){ const neu = a.slice(-200); if(typeof faelleMetaN
 let gkvEntwurf = null;
 
 function ansichtGkv(bearbeitenId){
-  setzeTitel('GKV-Patient', ansichtStart);
+  const ausVerwaltung = gkvHerkunft === 'verwaltung'; gkvHerkunft = null;
+  setzeTitel('GKV-Patient', ausVerwaltung ? ansichtGkvVerwaltung : ansichtStart);
   const jetzt = new Date();
   const alle = gkvFaelleLaden();
   let f = bearbeitenId ? alle.find(x=> x.id === bearbeitenId) : null;
@@ -14722,7 +14804,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v219';
+const APP_VERSION = 'v220';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -15131,7 +15213,7 @@ async function designNavAktion(k){
   if(k === 'start'){ if(aktuelleAnsichtIstHauptbildschirm) window.scrollTo({ top: 0, behavior: 'smooth' }); else ansichtStart(); return; }
   if(k === 'einst'){ if(!einstellungenOffen) document.getElementById('btnEinstellungen').click(); return; }
   if(k === 'werkzeuge'){ werkzeugStapelUmschalten(); return; }
-  if(k === 'verwaltung'){ vorbereiteRuecksprung(); einstellungenOffen = false; if(betaGesamtAktiv()) ansichtRechnungenGesamt(); else ansichtKorrigieren(); return; }
+  if(k === 'verwaltung'){ vorbereiteRuecksprung(); einstellungenOffen = false; if(LS.get('vw_tab', 'lspt') === 'gkv'){ ansichtGkvVerwaltung(); return; } if(betaGesamtAktiv()) ansichtRechnungenGesamt(); else ansichtKorrigieren(); return; }
   if(k === 'fahrtenbuch'){
     if(msGraphStatus === 'angemeldet'){ vorbereiteRuecksprung(); einstellungenOffen = false; ansichtFahrtenbuch(); return; }
     if(!msGraphVerfuegbar() || msGraphStatus === 'nicht_verfuegbar'){ appToastAnzeigen('OneDrive-Anmeldung ist auf diesem Gerät gerade nicht verfügbar.', 3200); return; }
