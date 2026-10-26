@@ -1684,6 +1684,7 @@
   body.ds-leiste-global .pos-fuss{padding-bottom:10px;}
   body.ds-leiste-global .app-toast{bottom:calc(var(--ds-leiste-h) + 14px);}
   body.nfp-offen #dsGlobalNav{display:none;}
+  body.ds-leiste-global.design-einhand{--ds-leiste-h:calc(96px + env(safe-area-inset-bottom));}
   /* Auswahl "Neuer Fall" */
   .ds-neu-wahl{display:flex; flex-direction:column; gap:8px; margin:4px 0 2px; text-align:left;}
   .ds-neu-knopf{display:flex; align-items:center; gap:12px; width:100%; margin:0; min-height:60px; padding:10px 14px; border:1px solid var(--rand); border-radius:14px; background:var(--karte); color:var(--text); font:inherit; cursor:pointer; box-sizing:border-box;}
@@ -14658,7 +14659,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v210';
+const APP_VERSION = 'v211';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -15140,20 +15141,23 @@ function werkzeugStapelSchliessen(){
 function designNavWiring(wurzel){
   (wurzel || document).querySelectorAll('.ds-nav [data-nav]').forEach(b=> b.onclick = ()=> designNavAktion(b.dataset.nav));
 }
-// Klinik: Leiste unten immer und ueberall (ausserhalb von #app)
+// Klinik und Einhand: Leiste unten immer und ueberall (ausserhalb von #app)
 function designGlobalNav(){
   try{
     let nav = document.getElementById('dsGlobalNav');
-    const an = designAktuell() === 'klinik';
+    const d = designAktuell(), an = d === 'klinik' || d === 'einhand';
     document.body.classList.toggle('ds-leiste-global', an);
-    if(!an){ if(nav) nav.remove(); return; }
+    if(nav && (!an || nav.dataset.design !== d)){ nav.remove(); nav = null; }
+    if(!an) return;
     if(!nav){
       const h = document.createElement('div');
-      h.innerHTML = designNav([
+      h.innerHTML = designNav(d === 'einhand' ? [
+        { k: 'start', icon: 'start', label: 'Start' }, { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen', nurIcon: true },
+        { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch', nurIcon: true }, { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge', nurIcon: true }] : [
         { k: 'start', icon: 'start', label: 'Start' }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen' },
         { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch' },
         { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge' }]);
-      nav = h.firstElementChild; nav.id = 'dsGlobalNav';
+      nav = h.firstElementChild; nav.id = 'dsGlobalNav'; nav.dataset.design = d;
       document.body.appendChild(nav);
       designNavWiring(nav.parentNode);
     }
@@ -15216,8 +15220,8 @@ function designDienstHtml(info){
   const auf = !!LS.get('dienst_liste_auf', false);
   const summe = (art)=> faelle.filter(f=> f.art === art).reduce((a, f)=> a + (Number(f.euro) || 0), 0);
   const kurzEuro = (v)=> betaEuro(v).replace(' €', '');
-  // Balken immer (ausser ohne Pauschale, z.B. docdirekt); ab Erreichen der Pauschale voll
-  const balken = info.pauschale > 0;
+  // Balken nur, solange die Foerderung noch greift (GKV unter der Pauschale)
+  const balken = info.pauschale > 0 && info.gkv < info.pauschale;
   return '<div class="ds-dz">' +
     '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status-zeile"><span class="ds-status">' + htmlEsc(status) + '</span>' +
       '<span class="ds-schicht">' + (info.schicht ? '<b>' + htmlEsc(info.schicht) + '</b>' : '') + '<small>' + designUhr(fe.von) + '–' + designUhr(fe.bis) + '</small></span></span>' +
@@ -15319,9 +15323,7 @@ function designStartErgaenzen(){
     if(info.modus !== 'laufend' && info.modus !== 'geplant')
       vor('<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>');
     if(w) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand"><button type="button" class="ds-weiter" id="dsWeiter"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten</span><b>' + htmlEsc(w.titel) + '</b></span>' + DS_ICON.pfeil + '</button></div>');
-    app.insertAdjacentHTML('beforeend', designNav([
-      { k: 'start', icon: 'start', label: 'Start', an: true }, { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen', nurIcon: true },
-      { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch', nurIcon: true }, { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge', nurIcon: true }]));
+    // Leiste unten kommt global (designGlobalNav), damit sie auf allen Seiten steht
     if(w) document.getElementById('dsWeiter').onclick = w.oeffnen;
     const dst = document.getElementById('dsDienstStart');
     if(dst) dst.onclick = async ()=>{ if(await liveDienstDialog()) ansichtStart(); };
