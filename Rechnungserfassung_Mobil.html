@@ -87,6 +87,12 @@ try{
   /* BETA: eigenes Fenster (statt Browser-Popups) mit Ladeanimation */
   .beta-overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:10000; padding:16px; box-sizing:border-box;}
   .beta-overlay.aktiv{display:flex;}
+  .beta-overlay-karte{position:relative;}
+  .beta-overlay-zu{display:none; position:absolute; top:6px; right:6px; width:34px; height:34px; margin:0; padding:0; border:0; border-radius:50%; background:none;
+    color:var(--text-schwach); font-size:24px; line-height:34px; text-align:center; cursor:pointer;}
+  .beta-overlay-zu:active{background:var(--grau-feld);}
+  .beta-overlay.abbrechbar .beta-overlay-zu{display:block;}
+  .beta-overlay.abbrechbar .beta-overlay-titel{padding-right:30px;}
   .beta-overlay-karte{background:var(--karte); color:var(--text); border-radius:14px; padding:18px 16px; width:100%; max-width:440px; max-height:86vh; overflow:auto; box-shadow:0 12px 32px rgba(0,0,0,.35); box-sizing:border-box;}
   .beta-overlay-titel{font-weight:700; font-size:17px; margin-bottom:10px;}
   .beta-overlay-titel:empty{display:none;}
@@ -1495,7 +1501,7 @@ try{
     grid-template-columns:repeat(5, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
   .fb-schichten + .fb-schichten{margin-top:6px;}
   .fb-chips.fb-schichten{justify-content:center;}
-  .fb-schichten .fb-chip.schicht{display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; min-width:80px;}
+  .fb-schichten .fb-chip.schicht{display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; flex:0 0 calc((100% - 18px) / 4); min-width:0; box-sizing:border-box; padding-left:2px; padding-right:2px; text-align:center;}
   .fb-schichten .fb-chip.schicht small{font-size:11px; opacity:.75;}
   .ds-dienst-start{display:none;}
   body.design-einhand .ds-dienst-start{display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; margin:0 0 10px; padding:8px 12px; min-height:50px;
@@ -7383,21 +7389,35 @@ function betaFallAendern(art, zeitstempel, aendern){
 }
 
 // ---------- Eigenes Fenster statt Browser-Popups (mit Ladeanimation) ----------
+// Abbrechen ohne Knopf: Tippen neben das Fenster, "×" oben rechts oder Zurueck-Taste.
+// Geht nur, wenn das Fenster einen Abbrechen-artigen Knopf hat (bzw. nur "OK") --
+// dann wirkt es genau wie dieser Knopf. Waehrend eines Ladevorgangs nicht.
 const betaOverlay = (()=>{
-  let el = null, fort = 0;
+  let el = null, fort = 0, abbruch = null;
+  const abbruchSetzen = (f)=>{ abbruch = f || null; if(el) el.classList.toggle('abbrechbar', !!abbruch); };
   function bauen(){
     if(el) return el;
     el = document.createElement('div');
     el.className = 'beta-overlay';
-    el.innerHTML = '<div class="beta-overlay-karte"><div class="beta-overlay-titel"></div>' +
+    el.innerHTML = '<div class="beta-overlay-karte"><button type="button" class="beta-overlay-zu" aria-label="Schließen">×</button><div class="beta-overlay-titel"></div>' +
       '<div class="beta-fortschritt"><div></div></div><div class="beta-spinner"></div>' +
       '<div class="beta-overlay-text"></div><div class="beta-overlay-knoepfe"></div></div>';
     document.body.appendChild(el);
+    let unten = null;
+    el.addEventListener('pointerdown', (ev)=>{ unten = ev.target; });
+    el.addEventListener('click', (ev)=>{ if(ev.target === el && unten === el && abbruch) abbruch(); unten = null; });
+    el.querySelector('.beta-overlay-zu').onclick = ()=>{ if(abbruch) abbruch(); };
     return el;
   }
   const t = (sel)=> bauen().querySelector(sel);
-  function spinner(an){ t('.beta-spinner').style.display = an ? 'block' : 'none'; }
+  function spinner(an){ t('.beta-spinner').style.display = an ? 'block' : 'none'; if(an) abbruchSetzen(null); }
   return {
+    // fuer die Zurueck-Taste: true = Fenster war offen (abgebrochen oder gerade nicht abbrechbar)
+    abbrechen(){
+      if(!el || !el.classList.contains('aktiv')) return false;
+      if(abbruch) abbruch();
+      return true;
+    },
     zeigen(titel){
       bauen().classList.add('aktiv');
       t('.beta-overlay-titel').textContent = titel || '';
@@ -7423,8 +7443,9 @@ const betaOverlay = (()=>{
         k.innerHTML = '';
         const b1 = document.createElement('button'); b1.type = 'button'; b1.className = 'btn-sekundaer'; b1.textContent = nein || 'Abbrechen';
         const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'btn-primaer'; b2.textContent = ja || 'OK';
-        const fertig = (wert)=>{ k.innerHTML = ''; if(offen){ t('.beta-overlay-text').textContent = vorher; spinner(true); } else this.schliessen(); res(wert); };
+        const fertig = (wert)=>{ abbruchSetzen(null); k.innerHTML = ''; if(offen){ t('.beta-overlay-text').textContent = vorher; spinner(true); } else this.schliessen(); res(wert); };
         b1.onclick = ()=> fertig(false); b2.onclick = ()=> fertig(true);
+        abbruchSetzen(()=> fertig(false));
         k.appendChild(b1); k.appendChild(b2);
       });
     },
@@ -7438,18 +7459,23 @@ const betaOverlay = (()=>{
       k.innerHTML = '';
       return new Promise(res=>{
         // von aussen aufloesbar (z.B. Fenster mit neuem Inhalt neu aufbauen)
-        this.loesen = (akt)=>{ this.loesen = null; res(akt); };
-        (knoepfe && knoepfe.length ? knoepfe : [{label:'OK', akt:'ok', primaer:true}]).forEach(kn=>{
+        this.loesen = (akt)=>{ this.loesen = null; abbruchSetzen(null); res(akt); };
+        const liste = knoepfe && knoepfe.length ? knoepfe : [{label:'OK', akt:'ok', primaer:true}];
+        liste.forEach(kn=>{
           const b = document.createElement('button'); b.type = 'button';
           b.className = kn.primaer ? 'btn-primaer' : 'btn-sekundaer';
           b.textContent = kn.label;
-          b.onclick = ()=>{ this.loesen = null; res(kn.akt); };
+          b.onclick = ()=>{ this.loesen = null; abbruchSetzen(null); res(kn.akt); };
           k.appendChild(b);
         });
+        // welcher Knopf entspricht "Abbrechen"?
+        const RE = /abbrech|nein|schlie(ß|ss)|später|zurück|nicht|behalten|^ok$|^fertig$/i;
+        const weg = liste.find(kn=> !kn.primaer && RE.test(kn.label)) || (liste.length === 1 && /^(ok|schlie(ß|ss)en|fertig)$/i.test(liste[0].label) ? liste[0] : null);
+        abbruchSetzen(weg ? ()=>{ this.loesen = null; abbruchSetzen(null); res(weg.akt); } : null);
       });
     },
     meldung(text, titel){ return this.ergebnis(titel || '', htmlEsc(text).replace(/\n/g, '<br>'), [{label:'OK', akt:'ok', primaer:true}]).then(()=> this.schliessen()); },
-    schliessen(){ if(el){ el.classList.remove('aktiv'); t('.beta-overlay-text').innerHTML = ''; t('.beta-overlay-knoepfe').innerHTML = ''; } }
+    schliessen(){ abbruchSetzen(null); if(el){ el.classList.remove('aktiv'); t('.beta-overlay-text').innerHTML = ''; t('.beta-overlay-knoepfe').innerHTML = ''; } }
   };
 })();
 const betaFrage = (text, ja, nein)=> betaOverlay.frage(text, ja, nein);
@@ -14691,7 +14717,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v216';
+const APP_VERSION = 'v217';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -17453,6 +17479,13 @@ function appToastAnzeigen(text, dauerMs){
   window.addEventListener('popstate', ()=>{
     tiefe = stand();
     if(ignorieren > 0){ ignorieren--; return; }
+    // offenes Fenster / Menue / Vollbild-Karte zuerst schliessen
+    try{
+      if(typeof betaOverlay !== 'undefined' && betaOverlay.abbrechen()){ beendenScharf = false; return; }
+      if(document.getElementById('dsWerkzeugStapel')){ werkzeugStapelSchliessen(); beendenScharf = false; return; }
+      const ovs = document.querySelectorAll('.nfp-overlay'), ov = ovs[ovs.length - 1];
+      if(ov){ const zu = ov.querySelector('.nfp-zu'); if(zu){ zu.click(); beendenScharf = false; return; } }
+    }catch(_){}
     if(aktuellerZurueckHandler){ beendenScharf = false; aktuellerZurueckHandler(); return; }
     if(!aktuelleAnsichtIstHauptbildschirm){ beendenScharf = false; ansichtStart(); return; }
     // Startseite: 1. Zurueck -> Hinweis, restliche Waechter abbauen; das
