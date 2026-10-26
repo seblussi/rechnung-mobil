@@ -490,6 +490,9 @@ try{
   .nfp-knoepfe .nfp-ok{margin-left:auto;}
   body.nfp-offen{overflow:hidden;}
   .gkv-zeile{display:flex; gap:10px;}
+  #gkvWegBlock:empty{display:none;} #gkvWegBlock{margin-top:10px;} #gkvWegBlock .gkv-weg-titel{margin-top:0;}
+  body #gkvWegBlock .gkv-stufen{display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; margin:10px 0 0;}
+  body #gkvWegBlock .gkv-stufen button{padding:8px 2px; font-size:13.5px; white-space:nowrap; min-height:38px;}
   .gkv-zeitinfo{font-size:12px; color:var(--text-schwach);}
   .gkv-pos{position:relative; background:var(--karte); border:1px solid var(--rand); border-radius:10px; margin-bottom:6px; padding:8px 34px 8px 10px;}
   .gkv-pos.an{border-color:#7d4e9e; box-shadow:inset 4px 0 0 #7d4e9e;}
@@ -500,7 +503,7 @@ try{
   .gkv-txt small{display:block; font-size:11.5px; color:var(--text-schwach);}
   .gkv-eur{font-size:13.5px; white-space:nowrap; font-variant-numeric:tabular-nums;}
   /* ---- Darstellung der Rechnungspositionen (Einstellungen > Allgemein) ---- */
-  .maske.pt{--pos-farbe:var(--pt-farbe);} .maske.ls{--pos-farbe:var(--ls-farbe);} #gkvListe{--pos-farbe:#7d4e9e;}
+  .maske.pt{--pos-farbe:var(--pt-farbe);} .maske.ls{--pos-farbe:var(--ls-farbe);} #gkvListe, #gkvWegBlock{--pos-farbe:#7d4e9e;}
   .position-zeile{position:relative;}
   .gkv-haken{display:none;}
   .gkv-zieh-hinweis{margin:2px 0 6px;}
@@ -1288,7 +1291,7 @@ try{
   body.design-klinik .btn-uebersicht .unter{color:var(--text-schwach); opacity:1;}
   body.design-klinik .btn-icon.btn-icon-grau, body.design-klinik .btn-icon.btn-icon-blau, body.design-klinik .btn-icon.btn-icon-rot{background:var(--karte); border-color:var(--rand);}
   body.design-klinik .gkv-gop, body.design-klinik .position-zeile .haupt-text .ziffer, body.design-klinik .gkv-eur{font-family:var(--ds-mono);}
-  body.design-klinik #gkvListe{--pos-farbe:var(--ds-gkv);}
+  body.design-klinik #gkvListe, body.design-klinik #gkvWegBlock{--pos-farbe:var(--ds-gkv);}
   body.design-klinik .gkv-kopf{border-radius:14px;}
   body.design-klinik .gkv-feld input{border-radius:10px;}
   body.design-klinik .fb-chip{border-radius:10px; padding:8px 12px;}
@@ -1369,7 +1372,7 @@ try{
   body.design-nacht .btn-uebersicht .unter{color:var(--text-schwach); opacity:1;}
   body.design-nacht .btn-icon.btn-icon-grau, body.design-nacht .btn-icon.btn-icon-blau, body.design-nacht .btn-icon.btn-icon-rot{background:var(--karte); border-color:var(--rand);}
   body.design-nacht .btn-icon-symbol{background:var(--bg);}
-  body.design-nacht .maske.pt, body.design-nacht .maske.ls, body.design-nacht #gkvListe{--pos-farbe:#d9891a;}
+  body.design-nacht .maske.pt, body.design-nacht .maske.ls, body.design-nacht #gkvListe, body.design-nacht #gkvWegBlock{--pos-farbe:#d9891a;}
   body.design-nacht .gkv-pos.an .gkv-gop, body.design-nacht .position-zeile:has(input:checked) .haupt-text .ziffer{color:var(--ds-akzent);}
   body.design-nacht .gkv-pos .gkv-gop{font-family:var(--ds-display); font-size:17px; font-weight:400; line-height:1.15;}
   body.design-nacht .gkv-kopf{border-radius:20px;}
@@ -1451,7 +1454,7 @@ try{
   body.design-einhand .fb-chip{border-radius:22px; padding:11px 16px; font-size:15px; font-weight:700; border:0; background:var(--karte);}
   body.design-einhand .fb-chip.an, body.design-einhand .gkv-stufen button.an{background:var(--ds-gkv); color:#fff;}
   body.design-einhand .gkv-stufen button, body.design-einhand .gkv-anz button{padding:9px 14px; font-size:14.5px; border-radius:18px; min-height:40px;}
-  body.design-einhand #gkvListe{--pos-farbe:var(--ds-gkv);}
+  body.design-einhand #gkvListe, body.design-einhand #gkvWegBlock{--pos-farbe:var(--ds-gkv);}
   body.design-einhand .gkv-pos, body.design-einhand.pos-stil-haken .gkv-pos, body.design-einhand.pos-stil-kompakt .gkv-pos{background:var(--karte); border:2px solid transparent; border-radius:18px; margin:0 0 8px; padding:14px 40px 14px 12px; box-shadow:none;}
   body.design-einhand .gkv-pos.an, body.design-einhand.pos-stil-haken .gkv-pos.an, body.design-einhand.pos-stil-kompakt .gkv-pos.an{border-color:var(--ds-gkv); background:color-mix(in srgb, var(--ds-gkv) 9%, var(--karte)); box-shadow:none;}
   body.design-einhand .gkv-pos .gkv-gop{font-size:18px; font-weight:800; color:var(--text); line-height:1.1;}
@@ -12447,6 +12450,7 @@ function ansichtGkv(bearbeitenId){
         <div class="gkv-plz-info" id="gkvPlzInfo"></div></div>
       <div class="gkv-adr-knoepfe"><button type="button" class="btn-sekundaer" id="gkvKmBtn">Wegegeld ermitteln</button><button type="button" class="btn-sekundaer" id="gkvKarteBtn" title="Wegegeld-Karte NFP Offenburg">🗺 Karte</button></div>
       <div class="gkv-zeitinfo" id="gkvKmInfo">${st.kmInfo || ''}</div>
+      <div id="gkvWegBlock"></div>
       <div class="routen-karte" id="gkvRouteKarte"></div></div>
     </div>
     <div class="profil-leiste gkv-profile" id="gkvProfile"></div>
@@ -12496,7 +12500,7 @@ function ansichtGkv(bearbeitenId){
         '<span class="gkv-txt">' + htmlEsc(titel) + (unter ? '<small>' + htmlEsc(unter) + '</small>' : '') +
           (x ? '<span class="gkv-aus-grund">' + (a ? '⚠ ' : '') + htmlEsc(x.grund) + '</span>' : '') + '</span>' +
         '<span class="gkv-eur">' + betaEuro(ebmEuro(gop, dt) * (a ? anz : 1)) + '</span></div>' +
-        (k === 'weg' ? '<div class="gkv-stufen">' + g.stufen.map(s=> '<button type="button" data-stufe="' + s.k + '" class="' + (a && a.stufe === s.k ? 'an' : '') + '">' + s.label + '</button>').join('') + '</div>' : '') +
+        (k === 'weg' ? '<div class="gkv-stufen">' + g.stufen.map(s=> '<button type="button" data-stufe="' + s.k + '" class="' + (a && a.stufe === s.k ? 'an' : '') + '">' + String(s.label).replace(/\s*km$/, '').replace(/^über\s*/, '> ') + '</button>').join('') + '</div>' : '') +
         (mehr ? '<div class="gkv-anz"><button type="button" data-minus="' + k + '">−</button><b>' + anz + '×</b><button type="button" data-plus="' + k + '">+</button></div>' : '') +
         '</div>';
       if(art === 'fest') return innen;
@@ -12511,8 +12515,9 @@ function ansichtGkv(bearbeitenId){
       '<div class="pos-gruppe" data-gruppe="eigene">' + gE.map(k=> zeile(k, 'eigene')).join('') +
         (gE.length ? '' : '<div class="eigene-hinweis gkv-eigene-leer">hierher ziehen oder unten hinzufügen</div>') + '<div class="pos-gruppe-ende"></div></div>' +
       '<button type="button" class="btn-sekundaer" id="gkvEigeneNeu" style="margin:8px 0 4px;">+ EBM-Position hinzufügen</button>' +
-      (gE.length ? '<div class="eigene-hinweis">Zum Entfernen nach links wischen.</div>' : '') +
-      (wegOk ? '<div class="positionen-gruppe-titel">Wegepauschale <span class="auto-hinweis">nur mit Besuch</span></div>' + zeile('weg', 'fest') : '');
+      (gE.length ? '<div class="eigene-hinweis">Zum Entfernen nach links wischen.</div>' : '');
+    // Wegepauschale direkt unter der Adresse (gehoert zu "Wegegeld ermitteln")
+    el('gkvWegBlock').innerHTML = wegOk ? '<div class="positionen-gruppe-titel gkv-weg-titel">Wegepauschale <span class="auto-hinweis">Entfernung in km · nur mit Besuch</span></div>' + zeile('weg', 'fest') : '';
     // Reihenfolge per langem Druecken + Ziehen (wie bei PT/LS) -- gilt fuer das aktive Profil
     betaPosZiehen(el('gkvListe'), (gr)=>{
       gkvAnordnungSpeichern(st.profil, { grund: gr.grund || [], eigene: gr.eigene || [] });
@@ -12544,14 +12549,14 @@ function ansichtGkv(bearbeitenId){
         if(!st.auswahl[k]) st.auswahl[k] = { anz: 1 };
       }
       zeichnen();
-      const z = el('gkvListe').querySelector('[data-k="' + k + '"]'); if(z) z.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const z = document.querySelector('#gkvListe [data-k="' + k + '"], #gkvWegBlock [data-k="' + k + '"]'); if(z) z.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
     const pos = gkvPositionen(st.auswahl, dt);
     const summe = pos.reduce((s, p)=> s + p.euro, 0);
     el('gkvSumme').innerHTML = '<b>' + betaEuro(summe) + '</b> <small>' + pos.length + ' Position' + (pos.length === 1 ? '' : 'en') + '</small>';
     el('gkvHinweise').innerHTML = gkvHinweise(pos).map(h=> '<div class="gkv-warn">' + htmlEsc(h) + '</div>').join('');
     profileZeichnen();
-    el('gkvListe').querySelectorAll('[data-tipp]').forEach(b=> b.onclick = async ()=>{
+    document.querySelectorAll('#gkvListe [data-tipp], #gkvWegBlock [data-tipp]').forEach(b=> b.onclick = async ()=>{
       const k = b.dataset.tipp;
       if(st.auswahl[k]){ delete st.auswahl[k]; zeichnen(); return; }
       const x = aus[k];
@@ -12570,15 +12575,15 @@ function ansichtGkv(bearbeitenId){
       if(GKV_BESUCH.includes(k) && st.kmStufe && !st.auswahl.weg && gkvWegMoeglich(st.auswahl, prof)) st.auswahl.weg = { anz: 1, stufe: st.kmStufe };
       zeichnen();
     });
-    el('gkvListe').querySelectorAll('[data-stufe]').forEach(b=> b.onclick = (ev)=>{
+    document.querySelectorAll('#gkvListe [data-stufe], #gkvWegBlock [data-stufe]').forEach(b=> b.onclick = (ev)=>{
       ev.stopPropagation();
       const a = st.auswahl.weg;
       if(a && a.stufe === b.dataset.stufe) delete st.auswahl.weg;
       else st.auswahl.weg = { anz: 1, stufe: b.dataset.stufe };
       zeichnen();
     });
-    el('gkvListe').querySelectorAll('[data-plus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.plus]; a.anz = Math.min(20, (Number(a.anz) || 1) + 1); zeichnen(); });
-    el('gkvListe').querySelectorAll('[data-minus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.minus]; a.anz = Math.max(1, (Number(a.anz) || 1) - 1); zeichnen(); });
+    document.querySelectorAll('#gkvListe [data-plus], #gkvWegBlock [data-plus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.plus]; a.anz = Math.min(20, (Number(a.anz) || 1) + 1); zeichnen(); });
+    document.querySelectorAll('#gkvListe [data-minus], #gkvWegBlock [data-minus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.minus]; a.anz = Math.max(1, (Number(a.anz) || 1) - 1); zeichnen(); });
   }
   function profileZeichnen(){
     const pr = gkvProfileLaden();
@@ -14717,7 +14722,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v218';
+const APP_VERSION = 'v219';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
