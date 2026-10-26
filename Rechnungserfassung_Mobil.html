@@ -1471,7 +1471,8 @@
   body.design-einhand .ds-nav{position:fixed; left:16px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20; height:66px; border-radius:33px; background:var(--ds-nav);
     grid-template-columns:repeat(5, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
   .fb-schichten + .fb-schichten{margin-top:6px;}
-  .fb-schichten .fb-chip.schicht{display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; min-width:64px;}
+  .fb-chips.fb-schichten{justify-content:center;}
+  .fb-schichten .fb-chip.schicht{display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; min-width:80px;}
   .fb-schichten .fb-chip.schicht small{font-size:11px; opacity:.75;}
   .ds-dienst-start{display:none;}
   body.design-einhand .ds-dienst-start{display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; margin:0 0 10px; padding:8px 12px; min-height:50px;
@@ -1629,6 +1630,8 @@
   .fbx-ortnr{display:inline-flex; width:17px; height:17px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; align-items:center; justify-content:center; margin-right:4px; vertical-align:1px;}
   .fbx-ortnr.ls{background:var(--ls-farbe);} .fbx-ortnr.pt{background:var(--pt-farbe);} .fbx-ortnr.gkv{background:#7d4e9e;}
   .mini-ebenen{position:relative;}
+  .mini-fenster{position:relative; width:100%; overflow:hidden; border:1px solid var(--rand); border-radius:10px; background:#f2efe9; touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:pointer;}
+  .mini-attr{margin-top:3px;}
   .mini-ebenen .karte-ebene{width:46px; height:46px; top:8px; right:8px; font-size:9.5px; border-radius:9px;}
   .mini-ebenen .karte-ebene svg{width:18px; height:18px;}
   .nfp-start{background:#1a55c9;}
@@ -2769,7 +2772,6 @@ async function fbTagKarteZeichnen(d, di){
     try{ x.f.geo = await geocode(x.f.adr); }catch(_){ x.f.geo = null; }
     if(!aktuell()) return;
   }
-  const hg = await nfpHintergrund(); if(!aktuell()) return;
   const pois = []; let nr = 0, ohne = 0;
   faelle.forEach(x=>{
     const zeile = document.querySelector('[data-fbfall="' + di + '-' + x.fi + '"] .fbx-zeit');
@@ -2783,15 +2785,9 @@ async function fbTagKarteZeichnen(d, di){
   const pix = pois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
   const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
   const dd = { pois, nfp: true, rahmen: true, fallKlick };
-  const kvH = etwasDrin ? kartenAusschnittHtml(hg.url, pix, { breite: 420, hoehe: 380, zonen: hg.osm }) : '';
+  const gross = (ebene, ansicht)=> ebene === 'osm' ? osmKarteOverlay(dd, 'Einsatzorte ' + fbTagText(d.tag), { ansicht }) : nfpKarteOeffnen({ pois, nfpZeigen: true, fallKlick, ansicht });
   box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Einsatzorte</b><small>' + nr + ' von ' + faelle.length + ' Fällen mit Ort</small></span></div>' +
-    miniEbenenHtml(kvH, osmAusschnitt(dd, {}).html, allesDrin ? 'kvbw' : 'osm') + hinweis;
-  box.querySelectorAll('.luft-karte-flaeche').forEach(k=> k.onclick = (ev)=>{
-    const t = ev.target.closest && ev.target.closest('[data-fall]');
-    if(t){ fallKlick(+t.dataset.fall); return; }
-    const titel = 'Einsatzorte ' + fbTagText(d.tag);
-    if(box.querySelector('.mini-ebenen').dataset.ebene === 'osm') osmKarteOverlay(dd, titel); else nfpKarteOeffnen({ pois, nfpZeigen: true, fallKlick });
-  });
+    miniKarteHtml(dd, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk: etwasDrin, fallKlick, gross }) + hinweis;
 }
 
 let fahrdienstAuswertungCache = null;
@@ -12030,9 +12026,7 @@ function fbZeitVorschlaege(fb, datum){
   });
   const kurz = (t)=>{ const [h, m] = t.split(':'); return String(+h) + (m !== '00' ? ':' + m : ''); };
   const schichten = [...new Set(fahrdienstSchichten(datum).map(x=> kurz(x.von) + '-' + kurz(x.bis)))];
-  const liste = schichten.concat([...zaehl.keys()].filter(t=> !schichten.includes(t) && t !== '8-8').sort((a, b)=> (zaehlTyp.get(b) || 0) - (zaehlTyp.get(a) || 0) || zaehl.get(b) - zaehl.get(a)));
-  (zielTyp === 'we' ? ['8-20', '20-8', '8-16', '16-24'] : ['18-23', '19-7', '16-24', '8-16', '18-8'])
-    .forEach(t=>{ if(!liste.includes(t)) liste.push(t); });
+  const liste = schichten.concat([...zaehl.keys()].filter(t=> !schichten.includes(t) && t !== '8-8' && t !== '18-8').sort((a, b)=> (zaehlTyp.get(b) || 0) - (zaehlTyp.get(a) || 0) || zaehl.get(b) - zaehl.get(a)));
   return liste.slice(0, 10);
 }
 // Katalog der Vertretungsaerzte: aus der Datei (zuletzt vertretene zuerst) + lokal ergaenzte
@@ -12883,7 +12877,8 @@ async function nfpKarteOeffnen(opt){
     if(ziel) pois.push({ lat: ziel.lat, lon: ziel.lon, kl: 'ziel' });
     (opt.pois || []).forEach(q=> pois.push(q));
     osmKarteOverlay({ pois, weg: aktWeg || [], linie: startGeo && ziel ? [startGeo, ziel] : null, nfp: true, rahmen: true,
-      fallKlick: opt.fallKlick ? (i)=>{ ov.querySelector('.nfp-zu').click(); opt.fallKlick(i); } : null }, (wahl && wahl.adresseText) || opt.adresseText || '');
+      fallKlick: opt.fallKlick ? (i)=>{ ov.querySelector('.nfp-zu').click(); opt.fallKlick(i); } : null }, (wahl && wahl.adresseText) || opt.adresseText || '',
+      { ansicht: kvbwAnsichtHolen(), zurueck: (a)=> kvbwAnsichtSetzen(a) });
   };
   const wegSetzen = (coords)=>{ aktWeg = coords || null; wegEl.setAttribute('points', (coords || []).map(c=>{ const q = nfpGeoZuPixel(c[1], c[0]); return q.x.toFixed(1) + ',' + q.y.toFixed(1); }).join(' ')); };
   const linieSetzen = (g)=>{
@@ -12949,6 +12944,18 @@ async function nfpKarteOeffnen(opt){
     linieSetzen(g); wegFuer(g);
   };
   const zentrieren = (p, z)=> setzeZoom(Math.max(zoom, z || 2.5), { x: relX(p.x), y: relY(p.y) });
+  // Ansicht in OSM-Begriffen (Mitte + Zoomstufe), damit OSM- und KVBW-Karte denselben Ausschnitt zeigen
+  const mProBildPx = (p)=>{ const a = nfpPixelZuGeo(p.x, p.y), b = nfpPixelZuGeo(p.x + 20, p.y), c = nfpPixelZuGeo(p.x, p.y + 20); return (kmLuftlinieEinfach(a, b) + kmLuftlinieEinfach(a, c)) * 1000 / 40; };
+  function kvbwAnsichtHolen(){
+    const cx = AU.x + (sc.scrollLeft + sc.clientWidth / 2) / fl.clientWidth * AU.w, cy = AU.y + (sc.scrollTop + sc.clientHeight / 2) / Math.max(1, fl.clientHeight) * AU.h;
+    const g = nfpPixelZuGeo(cx, cy), mpp = mProBildPx({ x: cx, y: cy }) / (fl.clientWidth / AU.w);
+    return { lat: g.lat, lon: g.lon, z: osmZAusMpp(g.lat, mpp) };
+  }
+  function kvbwAnsichtSetzen(a){
+    if(!a) return;
+    const p = nfpGeoZuPixel(a.lat, a.lon), cssProBildPx = mProBildPx(p) / osmMpp(a.lat, a.z);
+    setzeZoom(cssProBildPx * AU.w / sc.clientWidth, { x: relX(p.x), y: relY(p.y) });
+  }
   let gezogen = false;
   fl.addEventListener('click', (ev)=>{
     if(gezogen){ gezogen = false; return; }
@@ -13012,6 +13019,7 @@ async function nfpKarteOeffnen(opt){
     if(nfpImBild(p)){ waehlen(p, 'Adresse', opt.adresse, opt.adresseText || ''); zentrieren(p); }
   } else if(opt.adresseText) suchen();
   else if(opt.gps) gps(true);   // beim Oeffnen still: nur wenn schon freigegeben
+  if(opt.ansicht) requestAnimationFrame(()=> kvbwAnsichtSetzen(opt.ansicht));
   return await new Promise((fertig)=>{
     const zu = (erg)=>{ ov.remove(); document.body.classList.remove('nfp-offen'); fertig(erg); };
     ov.querySelector('.nfp-zu').onclick = ()=> zu(null);
@@ -13055,46 +13063,19 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
   // Startansicht: KVBW, wenn alles darauf liegt, sonst OSM.
   const osmDaten = { pois: [{ lat: start.lat, lon: start.lon, kl: 'start' }, { lat: ziel.lat, lon: ziel.lon, kl: 'ziel' }], weg: weg || [], linie: [start, ziel], nfp: true, rahmen: true };
   const allesDrin = nfpImBild(pS) && nfpImBild(pZ) && !wegP.some(p=> !nfpImBild(p));
-  const osmHtml = osmAusschnitt(osmDaten, {}).html;
-  if(!nfpImBild(pS) && !nfpImBild(pZ)){
-    box.innerHTML = '<div class="luft-karte-kopf"><b>Karte</b> · außerhalb der Wegegeld-Karte NFP<button type="button" class="luft-karte-gross">Große Karte</button></div>' + miniEbenenHtml('', osmHtml, 'osm') +
-      '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
-        (weg && weg.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="k50"></i>50 km</span></div>';
-    box.querySelector('.luft-karte-gross').onclick = ()=> osmKarteOverlay(osmDaten, zielText);
-    return;
-  }
-  const pts = [pS, pZ, pN].concat(wegP).filter(p=> nfpImBild(p));
-  let x0 = Math.min.apply(null, pts.map(p=> p.x)), x1 = Math.max.apply(null, pts.map(p=> p.x));
-  let y0 = Math.min.apply(null, pts.map(p=> p.y)), y1 = Math.max.apply(null, pts.map(p=> p.y));
-  const rand = 70; x0 -= rand; x1 += rand; y0 -= rand; y1 += rand;
-  // Mindestgroesse und ein angenehmes Seitenverhaeltnis (0,8 ... 1,5)
-  const wachsen = (a, b, min)=>{ const m = (a + b) / 2, h = Math.max(b - a, min) / 2; return [m - h, m + h]; };
-  [x0, x1] = wachsen(x0, x1, 420); [y0, y1] = wachsen(y0, y1, 320);
-  if((x1 - x0) / (y1 - y0) > 1.5) [y0, y1] = wachsen(y0, y1, (x1 - x0) / 1.5);
-  if((x1 - x0) / (y1 - y0) < 0.8) [x0, x1] = wachsen(x0, x1, (y1 - y0) * 0.8);
-  const AU = nfpKvbwAusschnitt();
-  const schieben = (a, b, lo, len)=>{ const l = b - a, hi = lo + len; if(l >= len) return [lo, hi]; if(a < lo) return [lo, lo + l]; if(b > hi) return [hi - l, hi]; return [a, b]; };
-  [x0, x1] = schieben(x0, x1, AU.x, AU.w); [y0, y1] = schieben(y0, y1, AU.y, AU.h);
-  const bw = x1 - x0, bh = y1 - y0, r = Math.max(bw, bh) / 55;
-  const hg = await nfpHintergrund(), url = hg.url;
-  const punkt = (p, kl)=> nfpImBild(p) ? '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + r.toFixed(1) + '" class="' + kl + '"/>' : '';
+  const legende = '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
+    (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="k50"></i>50 km</span></div>';
+  const kvbwOk = nfpImBild(pS) || nfpImBild(pZ);
+  const gross = (ebene, ansicht)=>{
+    if(ebene === 'osm' || !kvbwOk) osmKarteOverlay(osmDaten, zielText, { ansicht });
+    else nfpKarteOeffnen({ adresse: { lat: ziel.lat, lon: ziel.lon }, adresseText: zielText || '', start, weg, nfpZeigen: true, ansicht });
+  };
   const kb = nfpImBild(pZ) ? nfpBewertung(pZ) : null;
-  const kvbwHtml = '<div class="luft-karte-flaeche" style="aspect-ratio:' + bw.toFixed(0) + ' / ' + bh.toFixed(0) + ';">' +
-      '<img alt="Wegegeld-Karte" draggable="false" src="' + url + '" style="left:' + (-x0 / bw * 100).toFixed(3) + '%; top:' + (-y0 / bh * 100).toFixed(3) + '%; width:' + (W / bw * 100).toFixed(3) + '%;">' +
-      '<svg viewBox="' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' ' + bw.toFixed(1) + ' ' + bh.toFixed(1) + '" preserveAspectRatio="none" aria-hidden="true">' +
-        (wegP.length > 1 ? '<polyline class="luft-weg" points="' + wegP.map(p=> p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ') + '"/>' : '') +
-        '<line class="luft-linie" x1="' + pS.x.toFixed(1) + '" y1="' + pS.y.toFixed(1) + '" x2="' + pZ.x.toFixed(1) + '" y2="' + pZ.y.toFixed(1) + '"/>' +
-        (hg.osm ? nfpZonenPixelSvg() : '') + nfp50KreisPixelSvg() +
-        '<rect class="luft-nfp" x="' + (pN.x - r * 0.8).toFixed(1) + '" y="' + (pN.y - r * 0.8).toFixed(1) + '" width="' + (r * 1.6).toFixed(1) + '" height="' + (r * 1.6).toFixed(1) + '"/>' +
-        punkt(pS, 'luft-start') + punkt(pZ, 'luft-ziel') +
-      '</svg></div>';
-  box.innerHTML = '<div class="luft-karte-kopf"><b>Karte</b>' + (kb ? ' · Ziel: ' + htmlEsc(kb.text) : '') +
-      '<button type="button" class="luft-karte-gross">Große Karte</button></div>' + miniEbenenHtml(kvbwHtml, osmHtml, allesDrin ? 'kvbw' : 'osm') +
-    '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
-      (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="k50"></i>50 km</span>' + (hg.osm ? OSM_ATTR_HTML : '') + '</div>';
+  box.innerHTML = '<div class="luft-karte-kopf"><b>Karte</b>' + (kb ? ' · Ziel: ' + htmlEsc(kb.text) : kvbwOk ? '' : ' · außerhalb der Wegegeld-Karte NFP') +
+      '<button type="button" class="luft-karte-gross">Große Karte</button></div>' + miniKarteHtml(osmDaten, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk, gross }) + legende;
   box.querySelector('.luft-karte-gross').onclick = ()=>{
-    if(box.querySelector('.mini-ebenen').dataset.ebene === 'osm') osmKarteOverlay(osmDaten, zielText);
-    else nfpKarteOeffnen({ adresse: { lat: ziel.lat, lon: ziel.lon }, adresseText: zielText || '', start, weg, nfpZeigen: true });
+    const w = box.querySelector('.mini-ebenen');
+    gross(w && w._mk ? w._mk.ebene() : 'osm', miniKarteAnsicht(box));
   };
 }
 
@@ -13458,7 +13439,7 @@ function osmKartenBereichSvg(z, kvbwUrl){
       const p00 = P(nfpPixelZuGeo(x0, y0)), p10 = P(nfpPixelZuGeo(x1, y0)), p01 = P(nfpPixelZuGeo(x0, y1));
       const a = (p10.x - p00.x) / (x1 - x0), b = (p10.y - p00.y) / (x1 - x0), c = (p01.x - p00.x) / (y1 - y0), d = (p01.y - p00.y) / (y1 - y0);
       const e = p00.x - a * x0 - c * y0, ff = p00.y - b * x0 - d * y0;
-      defs += '<clipPath id="' + id + i + j + '"><rect x="' + f(x0 - 1) + '" y="' + f(y0 - 1) + '" width="' + f(x1 - x0 + 2) + '" height="' + f(y1 - y0 + 2) + '"/></clipPath>';
+      defs += '<clipPath id="' + id + i + j + '"><rect x="' + f(x0 - 3) + '" y="' + f(y0 - 3) + '" width="' + f(x1 - x0 + 6) + '" height="' + f(y1 - y0 + 6) + '"/></clipPath>';
       bild += '<image href="' + kvbwUrl + '" x="0" y="0" width="' + W + '" height="' + H + '" preserveAspectRatio="none" clip-path="url(#' + id + i + j + ')" transform="matrix(' +
         [a, b, c, d, e, ff].map(v=> v.toFixed(5)).join(' ') + ')"/>';
     }
@@ -13480,25 +13461,145 @@ function karteEbeneKnopfSetzen(btn, aktuell){
   btn.dataset.ziel = ziel; btn.querySelector('span').textContent = ziel === 'osm' ? 'OSM' : 'KVBW';
   btn.setAttribute('aria-label', ziel === 'osm' ? 'Zur OpenStreetMap-Karte wechseln' : 'Zur KVBW-Karte wechseln');
 }
-// kleine Karte mit beiden Ebenen (KVBW / OSM) und Umschaltknopf oben rechts
-function miniEbenenHtml(kvbwHtml, osmHtml, start){
-  const e = (kvbwHtml && start === 'kvbw') || !osmHtml ? 'kvbw' : 'osm';
+// ---------- kleine Karte (live): OSM oder KVBW, Zwei-Finger-Zoom/-Verschieben ----------
+// Beide Ebenen werden im selben OSM-Raster gezeichnet (KVBW-Bild lagerichtig im
+// farbigen Bereich, aussen OSM) -- beim Umschalten bleiben Ausschnitt und Zoom gleich.
+// Ansicht = { lat, lon, z } mit z als (gebrochener) OSM-Zoomstufe am Bildschirm.
+function osmMpp(lat, z){ return 156543.034 * Math.cos(lat * Math.PI / 180) / Math.pow(2, z); }
+function osmZAusMpp(lat, mpp){ return Math.log2(156543.034 * Math.cos(lat * Math.PI / 180) / mpp); }
+const MINI_KARTEN = new Map(); let miniKarteNr = 0;
+// d wie bei osmAusschnitt; opt: { start:'kvbw'|'osm', kvbwOk, mitte, z, w, h (Ausschnitt bei Zoom z), fallKlick(i), gross(ebene, ansicht) }
+function miniKarteHtml(d, opt){
+  opt = opt || {};
+  const id = 'mk' + (++miniKarteNr);
+  let fit;
+  if(opt.mitte){ const w = opt.w || 560, h = opt.h || 330; fit = { lat: opt.mitte.lat, lon: opt.mitte.lon, z: opt.z || 12, bw: w, bh: h }; }
+  else {
+    const a = osmAusschnitt(d, {}), m = osmGeo(a.x0 + a.bw / 2, a.y0 + a.bh / 2, a.z);
+    fit = { lat: m.lat, lon: m.lon, z: a.z, bw: a.bw, bh: a.bh };
+  }
+  MINI_KARTEN.set(id, { d, opt, fit });
+  if(MINI_KARTEN.size > 40) MINI_KARTEN.delete(MINI_KARTEN.keys().next().value);
+  const e = opt.start === 'kvbw' && opt.kvbwOk ? 'kvbw' : 'osm';
   const knopf = KARTE_EBENE_KNOPF.replace('class="karte-ebene"', 'class="karte-ebene mini-ebene-knopf" data-ziel="' + (e === 'osm' ? 'kvbw' : 'osm') + '"')
     .replace('<span></span>', '<span>' + (e === 'osm' ? 'KVBW' : 'OSM') + '</span>');
-  return '<div class="mini-ebenen" data-ebene="' + e + '">' +
-    (kvbwHtml ? '<div class="mini-e" data-e="kvbw"' + (e === 'kvbw' ? '' : ' hidden') + '>' + kvbwHtml + '</div>' : '') +
-    (osmHtml ? '<div class="mini-e" data-e="osm"' + (e === 'osm' ? '' : ' hidden') + '>' + osmHtml + '<div class="sk-hinweis">' + OSM_ATTR_HTML + '</div></div>' : '') +
-    knopf + '</div>';
+  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + '</div>' +
+    '<div class="sk-hinweis mini-attr">' + OSM_ATTR_HTML + ' · Zoom mit zwei Fingern</div>';
 }
+function miniKarteAnsicht(el){
+  const w = el && (el.classList && el.classList.contains('mini-ebenen') ? el : el.querySelector && el.querySelector('.mini-ebenen'));
+  return w && w._mk ? w._mk.ansicht() : null;
+}
+function miniKarteStarten(w){
+  const cfg = MINI_KARTEN.get(w.dataset.mk); if(!cfg || w._mk) return;
+  const f = w.querySelector('.mini-fenster'); if(!f) return;
+  const { d, opt, fit } = cfg;
+  let ebene = w.dataset.ebene, ansicht = null, cur = null, kvbwUrl = null, lauf = 0, breiteAlt = 0;
+  const zKlemm = (z)=> Math.max(3, Math.min(18.4, z));
+  const zeichnen = async ()=>{
+    const W = f.clientWidth, H = f.clientHeight; if(!W || !H) return;
+    if(!ansicht) ansicht = { lat: fit.lat, lon: fit.lon, z: zKlemm(fit.z + Math.log2(W / fit.bw)) };
+    const nr = ++lauf;
+    if(ebene === 'kvbw' && !kvbwUrl){ kvbwUrl = await nfpKarteBildUrl(); if(nr !== lauf) return; if(!kvbwUrl){ ebene = 'osm'; w.dataset.ebene = 'osm'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'osm'); } }
+    const zi = Math.max(3, Math.min(18, Math.round(ansicht.z))), s = Math.pow(2, ansicht.z - zi);
+    const a = osmAusschnitt(d, { z: zi, mitte: ansicht, w: 3 * W / s, h: 3 * H / s, r: Math.max(W, H) / 55 / s, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', kvbwUrl });
+    const tmp = document.createElement('div'); tmp.innerHTML = a.html;
+    const fl = tmp.firstElementChild;
+    Object.assign(fl.style, { position: 'absolute', width: (a.bw * s) + 'px', left: (-W) + 'px', top: (-H) + 'px', border: 'none', borderRadius: '0', transformOrigin: '0 0' });
+    // alte Ansicht bleibt kurz darunter liegen, bis die neuen Kacheln da sind (kein Flackern)
+    const alt = [...f.children];
+    f.appendChild(fl);
+    cur = { fl, a, s, left: -W, top: -H, W, H };
+    let rest = alt.length ? [...fl.querySelectorAll('img')] : [];
+    const weg = ()=>{ alt.forEach(x=> x.remove()); };
+    if(!rest.length) weg();
+    else { let n = rest.length; const eins = ()=>{ if(--n <= Math.floor(rest.length * 0.2)) weg(); }; rest.forEach(i=> i.complete ? eins() : (i.addEventListener('load', eins, { once: true }), i.addEventListener('error', eins, { once: true }))); setTimeout(weg, 1500); }
+  };
+  w._mk = { ansicht: ()=> ansicht ? { ...ansicht } : null, ebene: ()=> ebene,
+    ebeneSetzen: (e)=>{ ebene = e; w.dataset.ebene = e; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), e); zeichnen(); }, kvbwOk: !!opt.kvbwOk };
+  // Geste: Bildschirmpunkt m0 wandert nach m, Faktor k
+  let g = null, gezogen = false;
+  const anwenden = (m, k)=>{
+    const Tx = m.x - cur.left - k * (g.m0.x - cur.left), Ty = m.y - cur.top - k * (g.m0.y - cur.top);
+    g.k = k; g.T = { x: Tx, y: Ty };
+    cur.fl.style.transform = 'translate(' + Tx.toFixed(1) + 'px,' + Ty.toFixed(1) + 'px) scale(' + k.toFixed(4) + ')';
+  };
+  const beenden = ()=>{
+    const q = g; g = null; if(!q || !cur) return;
+    if(Math.abs(q.k - 1) < 0.02 && Math.hypot(q.T.x, q.T.y) < 3){ cur.fl.style.transform = ''; return; }
+    gezogen = true; setTimeout(()=> gezogen = false, 350);
+    const px = (cur.W / 2 - cur.left - q.T.x) / q.k, py = (cur.H / 2 - cur.top - q.T.y) / q.k;
+    const zi = Math.max(3, Math.min(18, Math.round(ansicht.z)));
+    const m = osmGeo(cur.a.x0 + px / cur.s, cur.a.y0 + py / cur.s, zi);
+    ansicht = { lat: m.lat, lon: m.lon, z: zKlemm(ansicht.z + Math.log2(q.k)) };
+    zeichnen();
+  };
+  const lokal = (x, y)=>{ const r = f.getBoundingClientRect(); return { x: x - r.left, y: y - r.top }; };
+  const mitteT = (t)=> lokal((t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2);
+  const abst = (t)=> Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  f.addEventListener('touchstart', (ev)=>{
+    if(ev.touches.length !== 2 || !cur) return;
+    ev.preventDefault();
+    if(g) return;
+    g = { d0: abst(ev.touches), m0: mitteT(ev.touches), k: 1, T: { x: 0, y: 0 } };
+  }, { passive: false });
+  f.addEventListener('touchmove', (ev)=>{
+    if(!g || ev.touches.length !== 2) return;
+    ev.preventDefault();
+    anwenden(mitteT(ev.touches), Math.max(1 / 16, Math.min(16, abst(ev.touches) / g.d0)));
+  }, { passive: false });
+  f.addEventListener('touchend', (ev)=>{ if(g && ev.touches.length < 2) beenden(); });
+  f.addEventListener('touchcancel', ()=>{ if(g) beenden(); });
+  // PC: mit der Maus ziehen, Strg+Mausrad bzw. Touchpad-Zoom
+  let maus = null;
+  f.addEventListener('pointerdown', (ev)=>{ if(ev.pointerType !== 'mouse' || ev.button !== 0 || !cur) return; maus = { x: ev.clientX, y: ev.clientY, an: false }; });
+  window.addEventListener('pointermove', (ev)=>{
+    if(!maus) return;
+    if(!maus.an && Math.hypot(ev.clientX - maus.x, ev.clientY - maus.y) < 4) return;
+    if(!maus.an){ maus.an = true; g = { d0: 1, m0: lokal(maus.x, maus.y), k: 1, T: { x: 0, y: 0 } }; }
+    anwenden(lokal(ev.clientX, ev.clientY), 1);
+  });
+  window.addEventListener('pointerup', ()=>{ if(maus){ const an = maus.an; maus = null; if(an) beenden(); } });
+  let radT = null;
+  f.addEventListener('wheel', (ev)=>{
+    if(!ev.ctrlKey || !cur) return;
+    ev.preventDefault();
+    const m = lokal(ev.clientX, ev.clientY);
+    if(!g) g = { d0: 1, m0: m, k: 1, T: { x: 0, y: 0 } };
+    anwenden(g.m0, Math.max(1 / 16, Math.min(16, g.k * Math.pow(1.0025, -ev.deltaY))));
+    clearTimeout(radT); radT = setTimeout(beenden, 250);
+  }, { passive: false });
+  // Tippen: Fall oeffnen bzw. grosse Karte (mit derselben Ansicht)
+  w.addEventListener('click', (ev)=>{
+    if(ev.target.closest('.mini-ebene-knopf')) return;
+    if(gezogen){ ev.stopPropagation(); return; }
+    const t = ev.target.closest('[data-fall]');
+    if(t && opt.fallKlick){ ev.stopPropagation(); opt.fallKlick(+t.dataset.fall); return; }
+    if(opt.gross){ ev.stopPropagation(); opt.gross(ebene, ansicht ? { ...ansicht } : null); }
+  });
+  const ro = new ResizeObserver(()=>{ if(!document.body.contains(w)){ ro.disconnect(); return; } const b = f.clientWidth; if(b && b !== breiteAlt){ if(ansicht && breiteAlt) ansicht.z = zKlemm(ansicht.z + Math.log2(b / breiteAlt)); breiteAlt = b; zeichnen(); } });
+  ro.observe(f);
+  osmOfflineLaden().catch(()=>null).then(()=>{ if(cur) zeichnen(); });
+}
+// neu eingefuegte kleine Karten automatisch starten
+new MutationObserver((liste)=>{
+  for(const m of liste) for(const n of m.addedNodes){
+    if(n.nodeType !== 1) continue;
+    if(n.matches && n.matches('.mini-ebenen[data-mk]')) miniKarteStarten(n);
+    if(n.querySelectorAll) n.querySelectorAll('.mini-ebenen[data-mk]').forEach(miniKarteStarten);
+  }
+}).observe(document.documentElement, { childList: true, subtree: true });
 document.addEventListener('click', (ev)=>{
   const b = ev.target.closest && ev.target.closest('.mini-ebene-knopf'); if(!b) return;
   ev.preventDefault(); ev.stopPropagation();
-  const w = b.closest('.mini-ebenen'), neu = w.dataset.ebene === 'kvbw' ? 'osm' : 'kvbw', ziel = w.querySelector('[data-e="' + neu + '"]');
-  if(!ziel){ appToastAnzeigen(neu === 'kvbw' ? 'Dieser Ort liegt außerhalb der KVBW-Karte.' : 'OSM-Ansicht hier nicht verfügbar.', 2600); return; }
-  w.querySelectorAll('.mini-e').forEach(x=> x.hidden = x !== ziel);
-  w.dataset.ebene = neu; karteEbeneKnopfSetzen(b, neu);
+  const w = b.closest('.mini-ebenen'); if(!w || !w._mk) return;
+  const neu = w._mk.ebene() === 'kvbw' ? 'osm' : 'kvbw';
+  if(neu === 'kvbw' && !w._mk.kvbwOk){ appToastAnzeigen('Dieser Ort liegt außerhalb der KVBW-Karte.', 2600); return; }
+  w._mk.ebeneSetzen(neu);
 }, true);
-function osmKarteOverlay(d, text){
+// opt: { ansicht:{lat,lon,z} Start-Ausschnitt, ebene:'kvbw'|'zonen', zurueck(ansicht): Ebenenknopf schliesst und gibt die Ansicht zurueck }
+function osmKarteOverlay(d, text, opt){
+  opt = opt || {};
   const ov = document.createElement('div');
   ov.className = 'nfp-overlay';
   ov.innerHTML = '<div class="nfp-kopf"><b>Karte</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
@@ -13509,13 +13610,18 @@ function osmKarteOverlay(d, text){
   document.body.classList.add('nfp-offen');
   const sc = ov.querySelector('.osm-scroll');
   let z = 12, mitte = null, akt = null, ebene = 'zonen', kvbwUrl = null;
+  // z darf gebrochen sein: Kacheln der naechsten ganzen Stufe, passend skaliert
   const zeichnen = ()=>{
     const vw = sc.clientWidth || 360, vh = sc.clientHeight || 500;
-    akt = osmAusschnitt(d, { z, mitte, w: vw * 3, h: vh * 3, px: true, r: 9, ebene, kvbwUrl });
+    const zi = Math.max(3, Math.min(18, Math.round(z))), s = Math.pow(2, z - zi);
+    akt = osmAusschnitt(d, { z: zi, mitte, w: vw * 3 / s, h: vh * 3 / s, px: true, r: 9 / s, ebene, kvbwUrl });
+    akt.s = s; akt.zi = zi;
     sc.innerHTML = akt.html;
-    const m = osmWelt(mitte.lat, mitte.lon, z);
-    sc.scrollLeft = m.x - akt.x0 - vw / 2; sc.scrollTop = m.y - akt.y0 - vh / 2;
+    if(s !== 1 && sc.firstElementChild) sc.firstElementChild.style.width = (akt.bw * s).toFixed(1) + 'px';
+    const m = osmWelt(mitte.lat, mitte.lon, zi);
+    sc.scrollLeft = (m.x - akt.x0) * s - vw / 2; sc.scrollTop = (m.y - akt.y0) * s - vh / 2;
   };
+  const mitteJetzt = ()=> osmGeo(akt.x0 + (sc.scrollLeft + sc.clientWidth / 2) / akt.s, akt.y0 + (sc.scrollTop + sc.clientHeight / 2) / akt.s, akt.zi);
   const alles = ()=>{
     z = osmZoomFuer(d, Math.max(200, sc.clientWidth - 60), Math.max(200, sc.clientHeight - 60));
     const ps = osmGeoListe(d).map(p=> osmWelt(p.lat, p.lon, z));
@@ -13524,8 +13630,8 @@ function osmKarteOverlay(d, text){
     zeichnen();
   };
   ov.querySelectorAll('[data-zoom]').forEach(b=> b.onclick = ()=>{
-    if(akt) mitte = osmGeo(akt.x0 + sc.scrollLeft + sc.clientWidth / 2, akt.y0 + sc.scrollTop + sc.clientHeight / 2, z);
-    z = Math.max(3, Math.min(18, z + Number(b.dataset.zoom))); zeichnen();
+    if(akt) mitte = mitteJetzt();
+    z = Math.max(3, Math.min(18, Math.round(z) + Number(b.dataset.zoom))); zeichnen();
   });
   ov.querySelector('.osm-alles').onclick = alles;
   // Zwei-Finger-Zoom: waehrend der Geste skalieren, danach in der neuen Zoomstufe neu laden
@@ -13548,32 +13654,42 @@ function osmKarteOverlay(d, text){
   sc.addEventListener('touchend', (ev)=>{
     if(!pinch || ev.touches.length >= 2) return;
     const p = pinch; pinch = null;
-    const dz = Math.round(Math.log2(p.s));
-    if(!dz){ if(p.fl) p.fl.style.transform = ''; return; }
-    const geo = osmGeo(akt.x0 + p.sx + p.mx, akt.y0 + p.sy + p.my, z);
-    z = Math.max(3, Math.min(18, z + dz));
-    const g = osmWelt(geo.lat, geo.lon, z);
-    mitte = osmGeo(g.x - p.mx + sc.clientWidth / 2, g.y - p.my + sc.clientHeight / 2, z);
+    const dz = Math.log2(p.s);
+    if(Math.abs(dz) < 0.03){ if(p.fl) p.fl.style.transform = ''; return; }
+    const geo = osmGeo(akt.x0 + (p.sx + p.mx) / akt.s, akt.y0 + (p.sy + p.my) / akt.s, akt.zi);
+    z = Math.max(3, Math.min(18.4, z + dz));
+    const zi = Math.max(3, Math.min(18, Math.round(z))), sn = Math.pow(2, z - zi);
+    const g = osmWelt(geo.lat, geo.lon, zi);
+    mitte = osmGeo(g.x + (sc.clientWidth / 2 - p.mx) / sn, g.y + (sc.clientHeight / 2 - p.my) / sn, zi);
     zeichnen();
   });
   const zu = ()=>{ ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); };
   ov.querySelector('.nfp-zu').onclick = zu;
   // Umschalter: im gestrichelten Bereich Zonen (OSM) oder das KVBW-Kartenbild
   const eb = ov.querySelector('.karte-ebene'); karteEbeneKnopfSetzen(eb, 'osm');
+  const jetzt = ()=>{ if(akt) mitte = mitteJetzt(); return { lat: mitte.lat, lon: mitte.lon, z }; };
+  if(opt.zurueck) karteEbeneKnopfSetzen(eb, 'osm');
   eb.onclick = async ()=>{
+    if(opt.zurueck){ const a = jetzt(); zu(); opt.zurueck(a); return; }
     if(ebene === 'zonen'){
       eb.classList.add('laedt'); kvbwUrl = kvbwUrl || await nfpKarteBildUrl(); eb.classList.remove('laedt');
       if(!kvbwUrl){ appToastAnzeigen('Die KVBW-Karte gibt es nur mit OneDrive-Anmeldung.', 3200); return; }
       ebene = 'kvbw';
     } else ebene = 'zonen';
-    if(akt) mitte = osmGeo(akt.x0 + sc.scrollLeft + sc.clientWidth / 2, akt.y0 + sc.scrollTop + sc.clientHeight / 2, z);
+    if(akt) mitte = mitteJetzt();
     karteEbeneKnopfSetzen(eb, ebene === 'kvbw' ? 'kvbw' : 'osm'); zeichnen();
   };
   sc.addEventListener('click', (ev)=>{
     const t = ev.target.closest && ev.target.closest('[data-fall]');
     if(t && d.fallKlick){ zu(); d.fallKlick(+t.dataset.fall); }
   });
-  osmOfflineLaden().catch(()=>null).then(()=> requestAnimationFrame(alles));
+  osmOfflineLaden().catch(()=>null).then(async ()=>{
+    if(opt.ebene === 'kvbw' && !opt.zurueck){ kvbwUrl = await nfpKarteBildUrl(); if(kvbwUrl){ ebene = 'kvbw'; karteEbeneKnopfSetzen(eb, 'kvbw'); } }
+    requestAnimationFrame(()=>{
+      if(opt.ansicht){ z = Math.max(3, Math.min(18.4, opt.ansicht.z)); mitte = { lat: opt.ansicht.lat, lon: opt.ansicht.lon }; zeichnen(); }
+      else alles();
+    });
+  });
 }
 
 // ---------- Geocoding-Zwischenspeicher (nur im Geraet) ----------
@@ -13634,44 +13750,6 @@ function standortKarteFaelle(info){
   const ges = new Set();
   return out.sort((a, b)=> a.t - b.t).filter(x=>{ const k = x.art + '|' + x.name + '|' + x.t.getTime(); if(ges.has(k)) return false; ges.add(k); return true; });
 }
-// Ausschnitt der Wegegeld-Karte mit beliebigen Punkten zeichnen.
-// punkte: [{p:{x,y}, kl:'ich'|'ls'|'pt'|'gkv', nr}] ; opt: {mitte:{x,y}, breite, hoehe}
-function kartenAusschnittHtml(url, punkte, opt){
-  const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1];
-  const sicht = punkte.filter(q=> nfpImBild(q.p));
-  let x0, x1, y0, y1;
-  const wachsen = (a, b, min)=>{ const m = (a + b) / 2, h = Math.max(b - a, min) / 2; return [m - h, m + h]; };
-  if(opt.mitte){
-    [x0, x1] = wachsen(opt.mitte.x, opt.mitte.x, opt.breite || 560); [y0, y1] = wachsen(opt.mitte.y, opt.mitte.y, opt.hoehe || 340);
-  } else {
-    const rand = 60;
-    x0 = Math.min.apply(null, sicht.map(q=> q.p.x)) - rand; x1 = Math.max.apply(null, sicht.map(q=> q.p.x)) + rand;
-    y0 = Math.min.apply(null, sicht.map(q=> q.p.y)) - rand; y1 = Math.max.apply(null, sicht.map(q=> q.p.y)) + rand;
-    [x0, x1] = wachsen(x0, x1, opt.breite || 420); [y0, y1] = wachsen(y0, y1, opt.hoehe || 360);
-    if((x1 - x0) / (y1 - y0) > 1.4) [y0, y1] = wachsen(y0, y1, (x1 - x0) / 1.4);
-    if((x1 - x0) / (y1 - y0) < 0.85) [x0, x1] = wachsen(x0, x1, (y1 - y0) * 0.85);
-  }
-  const AU = nfpKvbwAusschnitt();
-  const schieben = (a, b, lo, len)=>{ const l = b - a, hi = lo + len; if(l >= len) return [lo, hi]; if(a < lo) return [lo, lo + l]; if(b > hi) return [hi - l, hi]; return [a, b]; };
-  [x0, x1] = schieben(x0, x1, AU.x, AU.w); [y0, y1] = schieben(y0, y1, AU.y, AU.h);
-  const bw = x1 - x0, bh = y1 - y0, r = Math.max(bw, bh) / 50;
-  const zeichen = sicht.map(q=>{
-    const cx = q.p.x.toFixed(1), cy = q.p.y.toFixed(1);
-    if(q.kl === 'ich') return '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 2.2).toFixed(1) + '" class="karte-ich-hof"/><circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.9).toFixed(1) + '" class="karte-ich"/>';
-    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 1.15).toFixed(1) + '" class="karte-fall ' + q.kl + '"/>' +
-      (q.nr ? '<text x="' + cx + '" y="' + cy + '" class="karte-nr" font-size="' + (r * 1.3).toFixed(1) + '">' + q.nr + '</text>' : '') +
-      (q.idx != null ? '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 2.4).toFixed(1) + '" fill="transparent" class="karte-klick" data-fall="' + q.idx + '"/>' : '');
-  });
-  // eigener Standort zuoberst
-  zeichen.sort((a, b)=> (a.indexOf('karte-ich') >= 0) - (b.indexOf('karte-ich') >= 0));
-  const pN = { x: NFP_KARTE.nfp[0], y: NFP_KARTE.nfp[1] };
-  return '<div class="luft-karte-flaeche" style="aspect-ratio:' + bw.toFixed(0) + ' / ' + bh.toFixed(0) + ';">' +
-      '<img alt="Karte" draggable="false" src="' + url + '" style="left:' + (-x0 / bw * 100).toFixed(3) + '%; top:' + (-y0 / bh * 100).toFixed(3) + '%; width:' + (W / bw * 100).toFixed(3) + '%;">' +
-      '<svg viewBox="' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' ' + bw.toFixed(1) + ' ' + bh.toFixed(1) + '" preserveAspectRatio="none" aria-hidden="true">' +
-        (opt.zonen ? nfpZonenPixelSvg() : '') + nfp50KreisPixelSvg() +
-        '<rect class="luft-nfp" x="' + (pN.x - r * 0.7).toFixed(1) + '" y="' + (pN.y - r * 0.7).toFixed(1) + '" width="' + (r * 1.4).toFixed(1) + '" height="' + (r * 1.4).toFixed(1) + '"/>' +
-        zeichen.join('') + '</svg></div>';
-}
 let standortKarteLauf = 0;
 async function standortKarteZeichnen(info, mitDialog){
   const box = document.getElementById('skKarte'); if(!box || typeof NFP_KARTE === 'undefined') return;
@@ -13694,11 +13772,6 @@ async function standortKarteZeichnen(info, mitDialog){
   const verdrahten = ()=>{
     const a = box.querySelector('.sk-auf'); if(a) a.onclick = ()=>{ LS.set('start_karte_auf', !auf); standortKarteZeichnen(info); };
     const p = box.querySelector('.sk-pos'); if(p) p.onclick = ()=> standortKarteZeichnen(info, true);
-    box.querySelectorAll('.luft-karte-flaeche').forEach(k=> k.onclick = (ev)=>{
-      const t = ev.target.closest && ev.target.closest('[data-fall]');
-      if(t){ const f = faelle[+t.dataset.fall]; if(f && f.oeffnen) f.oeffnen(); return; }
-      if(gross) gross();
-    });
     box.querySelectorAll('.sk-ort[data-fall]').forEach(z=> z.onclick = ()=>{ const f = faelle[+z.dataset.fall]; if(f && f.oeffnen) f.oeffnen(); });
   };
   const fallKlick = (i)=>{ const f = faelle[i]; if(f && f.oeffnen) f.oeffnen(); };
@@ -13706,10 +13779,8 @@ async function standortKarteZeichnen(info, mitDialog){
   if(!auf){
     if(!pos){ box.innerHTML = kopf('Standort nicht verfügbar') + '<div class="sk-leer">Ohne Standortfreigabe keine Anzeige – „📍 Standort“ tippen.</div>'; verdrahten(); return; }
     const d = { pois: ichPoi, nfp: true, rahmen: true };
-    const osmH = osmAusschnitt(d, { z: 12, mitte: pos, w: 560, h: 330 }).html;
-    const kvH = ichDrin ? kartenAusschnittHtml(hg.url, [{ p: ich, kl: 'ich' }], { mitte: ich, breite: 560, hoehe: 330, zonen: hg.osm }) : '';
-    box.innerHTML = kopf(zone) + miniEbenenHtml(kvH, osmH, ichDrin ? 'kvbw' : 'osm');
-    gross = ()=> box.querySelector('.mini-ebenen').dataset.ebene === 'osm' ? osmKarteOverlay(d, 'Dein Standort') : nfpKarteOeffnen({ pois: ichPoi, nfpZeigen: true });
+    gross = (ebene, ansicht)=> ebene === 'osm' ? osmKarteOverlay(d, 'Dein Standort', { ansicht }) : nfpKarteOeffnen({ pois: ichPoi, nfpZeigen: true, ansicht });
+    box.innerHTML = kopf(zone) + miniKarteHtml(d, { mitte: pos, z: 12, w: 560, h: 330, start: ichDrin ? 'kvbw' : 'osm', kvbwOk: ichDrin, gross });
     verdrahten(); return;
   }
   // ausgeklappt: Einsatzorte ermitteln (GKV mit gespeichertem Ort, LS/PT ueber die Adresse)
@@ -13738,9 +13809,8 @@ async function standortKarteZeichnen(info, mitDialog){
   const pix = allePois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
   const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
   const d = { pois: allePois, nfp: true, rahmen: true, fallKlick };
-  const kvH = etwasDrin ? kartenAusschnittHtml(hg.url, pix, { breite: 420, hoehe: 380, zonen: hg.osm }) : '';
-  box.innerHTML = kopf(unter) + miniEbenenHtml(kvH, osmAusschnitt(d, {}).html, allesDrin ? 'kvbw' : 'osm') + listeHtml;
-  gross = ()=> box.querySelector('.mini-ebenen').dataset.ebene === 'osm' ? osmKarteOverlay(d, 'Einsatzorte') : nfpKarteOeffnen({ pois: allePois, nfpZeigen: true, fallKlick });
+  gross = (ebene, ansicht)=> ebene === 'osm' ? osmKarteOverlay(d, 'Einsatzorte', { ansicht }) : nfpKarteOeffnen({ pois: allePois, nfpZeigen: true, fallKlick, ansicht });
+  box.innerHTML = kopf(unter) + miniKarteHtml(d, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk: etwasDrin, fallKlick, gross }) + listeHtml;
   verdrahten();
 }
 
@@ -14580,7 +14650,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v205';
+const APP_VERSION = 'v207';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
@@ -14649,16 +14719,14 @@ function designProfilName(id){
 // werden zusammen mit den zuletzt benutzten Zeiten als Knoepfe angeboten.
 // Schichten im Fahrdienst (Fahrservice Mittelbaden), je Auto/Dienst nummeriert.
 // Werktags: Abend 1-4 (Mo/Di/Do 18-23, Mi 13-23, Fr 16-23), Nacht 1-2 (23-08).
-// Sa/So/Feiertag: Frueh 1-4 (08-15 bzw. 08-16), Abend 1-4 (15-23 bzw. 16-23), Nacht 1-2.
-// Welche Nummer kurz/lang ist, wechselt mit dem Vertragszeitraum:
-// bis 31.10.2026 Nr. 1+2 kurz, 3+4 lang; ab 01.11.2026 Nr. 1+3 kurz, 2+4 lang.
+// Sa/So/Feiertag: Frueh 1+2 08-15, Frueh 3+4 08-16, Spaet 1+2 15-23, Spaet 3+4 16-23, Nacht 1-2.
 function fahrdienstSchichten(tag){
   const d = tag || new Date(), wd = d.getDay(), l = [];
   const dazu = (name, nr, von, bis)=> l.push({ name, nr, von, bis, label: name + ' ' + nr });
   if(fahrdienstWochenendSatz(d)){
-    const neu = d >= new Date(2026, 10, 1), kurz = (nr)=> neu ? (nr % 2 === 1) : (nr <= 2);
+    const kurz = (nr)=> nr <= 2;
     [1, 2, 3, 4].forEach(nr=> dazu('Früh', nr, '08:00', kurz(nr) ? '15:00' : '16:00'));
-    [1, 2, 3, 4].forEach(nr=> dazu('Abend', nr, kurz(nr) ? '15:00' : '16:00', '23:00'));
+    [1, 2, 3, 4].forEach(nr=> dazu('Spät', nr, kurz(nr) ? '15:00' : '16:00', '23:00'));
   } else {
     const abend = wd === 3 ? '13:00' : wd === 5 ? '16:00' : '18:00';
     [1, 2, 3, 4].forEach(nr=> dazu('Abend', nr, abend, '23:00'));
@@ -14703,7 +14771,7 @@ function schichtZeilenHtml(liste, schicht){
 }
 function dienstSchichten(art, tag){ return art === 'Fahrdienst' ? fahrdienstSchichten(tag) : art === 'Sitzdienst' ? sitzdienstSchichten(tag) : art === 'Telemedizin' ? telemedizinSchichten(tag) : art === 'docdirekt' ? docdirektSchichten(tag) : []; }
 const LIVE_DIENSTZEITEN = {
-  Fahrdienst:  { werktag: ['18:00-08:00'], wochenende: [] },
+  Fahrdienst:  { werktag: [], wochenende: [] },
   Sitzdienst:  { werktag: [], wochenende: [] },
   Telemedizin: { werktag: [], wochenende: [] },
   docdirekt:   { werktag: [], wochenende: [] }
@@ -14873,7 +14941,7 @@ async function liveDienstDialog(){
     const schichten = dienstSchichten(art, tag).map(x=> x.von + '-' + x.bis);
     const zuletzt = ((LS.get('live_dienst_zeiten', {}) || {})[art + (we ? '|we' : '|wt')]) || [];
     // bei Fahrdienst stehen die Schichten als eigene Auswahl darueber -- hier nur weitere Zeiten (z.B. 18-08 am Stueck)
-    const l = []; zuletzt.concat(std).forEach(z=>{ if(z && z !== '08:00-08:00' && !l.includes(z) && !schichten.includes(z)) l.push(z); });
+    const l = []; zuletzt.concat(std).forEach(z=>{ if(z && z !== '08:00-08:00' && z !== '18:00-08:00' && !l.includes(z) && !schichten.includes(z)) l.push(z); });
     return l.slice(0, 6);
   };
   const tagVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD; };
