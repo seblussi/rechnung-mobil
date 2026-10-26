@@ -3338,6 +3338,17 @@ function strasseAusschreiben(text){
 // sich etwas geändert hat.
 let gGrossSchreibLaeuft = false;
 function grossKleinKorrigieren(text){
+  // Zuerst falsch geschriebene Woerter richten: komplett GROSS (ab 3 Buchstaben,
+  // kurze Kuerzel wie "KG" bleiben) oder verdreht wie "mÜLLER" -> "Müller".
+  // Gemischte Schreibung wie "McDonald" oder "GmbH" bleibt unangetastet.
+  text = String(text || '').replace(/[^\s\-\/,.()&]+/g, (w)=>{
+    if(!/^\p{L}/u.test(w)) return w;
+    const b = w.replace(/[^\p{L}]/gu, '');
+    if(b.length < 3) return w;
+    const rest = b.slice(1);
+    if(rest !== rest.toUpperCase() || rest === rest.toLowerCase()) return w;
+    return w[0].toUpperCase() + w.slice(1).toLowerCase().replace(/'(\p{L})/gu, (m, c)=> "'" + c.toUpperCase());
+  });
   // Entspricht GrossKleinKorrigieren (PC): Leerzeichen UND Bindestrich
   // sind Wortgrenzen, nur der erste Buchstabe je Wort wird grossgeschrieben,
   // der Rest bleibt unangetastet (korrigiert also gezielt vergessene
@@ -14674,7 +14685,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v214';
+const APP_VERSION = 'v215';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{
