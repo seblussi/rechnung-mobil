@@ -1203,6 +1203,7 @@ try{
   .ds-dz-betrag{font-variant-numeric:tabular-nums;}
   .ds-dz .ds-fall-marke{flex:0 0 32px; width:32px; height:32px; padding:0; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:700; color:#fff; border-radius:8px; background:var(--ls-farbe);}
   .ds-dz .ds-dz-name{font-size:15.5px;}
+  .ds-unfertig{font-size:11.5px; font-weight:700; color:#c77700; text-transform:uppercase; letter-spacing:.03em;}
   .ds-live .ds-dz .ds-fall-marke{color:#fff;}
   .ds-status-zeile{display:flex; align-items:center; justify-content:space-between; gap:10px;}
   .ds-status-zeile .ds-status{min-width:0;}
@@ -1660,7 +1661,15 @@ try{
   .gv-rechts{display:flex; flex-direction:column; align-items:flex-end;} .gv-rechts b{font-variant-numeric:tabular-nums;}
   .gv-rechts small{font-size:11.5px;} .gv-ok{color:#2fa84f;} .gv-rechts .gv-offen{color:#c77700; font-weight:600;}
   .gv-neu{margin-top:14px;}
+  .gv-weitere{margin-top:10px;} .gv-excel{border-style:dashed;} .gv-nurfb{color:var(--text-schwach);}
+  .fbx-foerd{font-size:11px; font-weight:600; color:#2fa84f;}
   .fbx-leiste{display:flex; gap:8px; align-items:center; margin:0 0 10px;}
+  .fbx-filter{display:flex; gap:8px; margin:0 0 10px;}
+  .fbx-filter select, .fbx-filter input, .fbx-eigen input{height:42px; box-sizing:border-box; margin:0; padding:0 12px; font:inherit; font-size:15px; border:1px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text);}
+  .fbx-filter select{flex:0 0 122px; width:122px; padding-right:24px;} .fbx-filter input{flex:1; min-width:0;}
+  .fbx-eigen{display:flex; gap:8px; margin:0 0 10px;} .fbx-eigen[hidden]{display:none;}
+  .fbx-eigen label{flex:1; font-size:12.5px; color:var(--text-schwach);} .fbx-eigen input{width:100%; margin-top:3px;}
+  .fbx-summe-filter{font-size:13px; font-weight:700; color:var(--text-schwach); margin:0 2px 8px;}
   .fbx-varianten{display:flex; gap:4px; flex:1;}
   .fbx-varianten button{flex:1; margin:0; padding:6px 4px; font-size:12.5px; border-radius:14px; border:1px solid var(--rand); background:var(--karte); color:var(--text-schwach);}
   .fbx-varianten button.an{border-color:var(--ls-farbe); color:var(--ls-farbe); font-weight:700;}
@@ -2687,6 +2696,11 @@ function langDruecken(el, aktion){
 }
 function fbTagText(d){ return DESIGN_WT[d.getDay()] + ' ' + zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' + d.getFullYear(); }
 function fbZiffernHtml(z){ return z.map(x=> '<span class="fbx-z">' + htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '') + '</span>').join(''); }
+// Betrag einer Zeile; beim Pseudo-Fall 99999 die Foerderung des Diensts (GKV-Pauschale minus echte GKV-Faelle)
+function fbFallEuro(d, f){
+  if(f && f.pseudo){ const fo = Math.max(0, (Number(d.gkv) || 0) - (Number(d.gkvRoh) || 0)); return '<span class="fbx-foerd">Förderung</span> ' + betaEuro(fo).replace(' €', ''); }
+  return betaEuro(f.euro).replace(' €', '');
+}
 function fbMarke(art){ return '<span class="fbx-m ' + art + '">' + ({ ls: 'LS', pt: 'PT', gkv: 'GKV' }[art]) + '</span>'; }
 function fbDienstKopf(d){
   return '<span class="fbx-titel">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.dienstart || 'Fahrdienst') + ' ' + htmlEsc(d.zeitLabel || '') + '</span>' +
@@ -2704,7 +2718,11 @@ async function ansichtFahrtenbuch(blatt){
   let ansicht = LS.get('fb_ansicht', 'a');
   app.innerHTML = fbTabsHtml('dienste') +
     '<div class="fbx-leiste"><div class="fbx-varianten">' + [['a', 'Karten'], ['b', 'Tabelle'], ['c', 'Woche']].map(([k, t])=> '<button type="button" data-fbv="' + k + '">' + t + '</button>').join('') + '</div>' +
-    '<select id="fbxJahr" aria-label="Jahr"></select></div><div id="fbxInhalt"><div class="leer-hinweis">Fahrtenbuch wird gelesen …</div></div>';
+    '<select id="fbxJahr" aria-label="Jahr"></select></div>' +
+    '<div class="fbx-filter"><select id="fbxZeitraum" aria-label="Zeitraum">' + [['jahr', 'Ganzes Jahr'], ['q1', 'Q1'], ['q2', 'Q2'], ['q3', 'Q3'], ['q4', 'Q4'], ['eigen', 'Zeitraum …']].map(([k, t])=> '<option value="' + k + '">' + t + '</option>').join('') + '</select>' +
+      '<input type="search" id="fbxSuche" autocomplete="off" placeholder="🔍 Name, Ziffer, Datum"></div>' +
+    '<div class="fbx-eigen" id="fbxEigen" hidden><label>von<input type="date" id="fbxVon"></label><label>bis<input type="date" id="fbxBis"></label></div>' +
+    '<div id="fbxInhalt"><div class="leer-hinweis">Fahrtenbuch wird gelesen …</div></div>';
   fbTabsWiring();
   const inhalt = document.getElementById('fbxInhalt');
   try{
@@ -2714,16 +2732,45 @@ async function ansichtFahrtenbuch(blatt){
   const sel = document.getElementById('fbxJahr');
   sel.innerHTML = buch.blaetter.slice().reverse().map(b=> '<option' + (b === buch.blatt ? ' selected' : '') + '>' + htmlEsc(b) + '</option>').join('');
   sel.onchange = ()=>{ fbBuchCache = null; ansichtFahrtenbuch(sel.value); };
+  // Zeitraum (ganzes Jahr / Quartal / eigener) und Suche
+  const zrEl = document.getElementById('fbxZeitraum'), suEl = document.getElementById('fbxSuche'), vonEl = document.getElementById('fbxVon'), bisEl = document.getElementById('fbxBis');
+  zrEl.value = LS.get('fb_zeitraum', 'jahr'); vonEl.value = LS.get('fb_von', ''); bisEl.value = LS.get('fb_bis', '');
+  const eigenZeigen = ()=>{ document.getElementById('fbxEigen').hidden = zrEl.value !== 'eigen'; };
+  eigenZeigen();
+  const isoTag = (v)=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+  const gefiltert = ()=>{
+    const zr = zrEl.value, q = suEl.value.trim().toLowerCase();
+    let dienste = buch.dienste;
+    if(/^q[1-4]$/.test(zr)){ const qn = +zr[1]; dienste = dienste.filter(d=> Math.floor(d.tag.getMonth() / 3) + 1 === qn); }
+    else if(zr === 'eigen'){ const v = isoTag(vonEl.value), b = isoTag(bisEl.value); dienste = dienste.filter(d=> (!v || d.tag >= v) && (!b || d.tag <= b)); }
+    if(q){
+      dienste = dienste.map(d=>{
+        if([fbTagText(d.tag), designDatumDe(d.tag), d.arzt || '', d.dienstart || ''].join(' ').toLowerCase().includes(q)) return d;
+        const fs = d.faelle.filter(f=> [f.name, (f.ziffern || []).map(z=> z.gop).join(' ')].join(' ').toLowerCase().includes(q));
+        return fs.length ? Object.assign({}, d, { faelle: fs, _orig: d }) : null;
+      }).filter(Boolean);
+    }
+    return Object.assign({}, buch, { dienste });
+  };
+  [zrEl, vonEl, bisEl].forEach(el=> el.onchange = ()=>{ LS.set('fb_zeitraum', zrEl.value); LS.set('fb_von', vonEl.value); LS.set('fb_bis', bisEl.value); eigenZeigen(); zeichnen(); });
+  suEl.oninput = ()=> zeichnen();
   const zeichnen = ()=>{
     document.querySelectorAll('[data-fbv]').forEach(b=> b.classList.toggle('an', b.dataset.fbv === ansicht));
     if(!buch.dienste.length){ inhalt.innerHTML = '<div class="leer-hinweis">Keine Dienste im Blatt ' + htmlEsc(buch.blatt) + '.</div>'; return; }
+    const voll = buch;
+    const buchS = gefiltert();
+    if(!buchS.dienste.length){ inhalt.innerHTML = '<div class="leer-hinweis">Keine Dienste ' + (suEl.value.trim() ? 'mit „' + htmlEsc(suEl.value.trim()) + '“ ' : '') + 'in diesem Zeitraum.</div>'; return; }
+    const summe = buchS.dienste.reduce((s, d)=> s + (Number((d._orig || d).gesamt) || 0), 0);
+    const kopf = (buchS.dienste.length !== voll.dienste.length) ? '<div class="fbx-summe-filter">' + buchS.dienste.length + (buchS.dienste.length === 1 ? ' Dienst · ' : ' Dienste · ') + betaEuro(summe) + '</div>' : '';
+    {
+    const buch = buchS;
     inhalt.innerHTML = ansicht === 'b' ? fbAnsichtB(buch) : ansicht === 'c' ? fbAnsichtC(buch) : fbAnsichtA(buch);
     if(ansicht === 'c'){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
     inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=>{ if(k._lang){ k._lang = false; return; } k.closest('.fbx-karte').classList.toggle('zu'); });
     inhalt.querySelectorAll('[data-fbtag]').forEach(k=> k.onclick = ()=>{ LS.set('fb_tag', k.dataset.fbtag); zeichnen(); });
     // Loeschen nur durch langes Druecken (Handy) bzw. Rechtsklick (PC), jeweils mit Nachfrage
-    inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]) fbLoeschen(dd, dd.faelle[fi]); }));
-    inhalt.querySelectorAll('[data-fbdienst]').forEach(z=> langDruecken(z, ()=>{ const dd = buch.dienste[+z.dataset.fbdienst]; if(dd) fbLoeschen(dd, null); }));
+    inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]) fbLoeschen(dd._orig || dd, dd.faelle[fi]); }));
+    inhalt.querySelectorAll('[data-fbdienst]').forEach(z=> langDruecken(z, ()=>{ const dd = buch.dienste[+z.dataset.fbdienst]; if(dd) fbLoeschen(dd._orig || dd, null); }));
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> z.onclick = ()=>{
       if(z._lang){ z._lang = false; return; }
       const [di, fi] = z.dataset.fbfall.split('-').map(Number), f = buch.dienste[di] && buch.dienste[di].faelle[fi];
@@ -2731,6 +2778,8 @@ async function ansichtFahrtenbuch(blatt){
       if(f && f.art === 'gkv'){ vorbereiteRuecksprung(); fbGkvAusExcelOeffnen(buch.dienste[di], f); return; }
       appToastAnzeigen('LS/PT-Rechnungen bitte über „Rechnungen“ bearbeiten – das Fahrtenbuch übernimmt die Änderung.', 3500);
     });
+    if(kopf) inhalt.insertAdjacentHTML('afterbegin', kopf);
+    }
   };
   document.querySelectorAll('[data-fbv]').forEach(b=> b.onclick = ()=>{ ansicht = b.dataset.fbv; LS.set('fb_ansicht', ansicht); zeichnen(); });
   zeichnen();
@@ -2823,14 +2872,14 @@ function fbAnsichtA(buch){
     '<button type="button" class="fbx-kopf" data-fbauf="1" data-fbdienst="' + di + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '<small>' + (fbLaufend(d) ? 'bisher' : 'gesamt') + '</small></span></button>' +
     '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + di + '-' + fi + '">' +
       '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
-      '<span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + '</span></button>').join('') + '</div></div>').join('');
+      '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + '</div></div>').join('');
 }
 // B: Tabelle wie die Excel
 function fbAnsichtB(buch){
   return '<div class="fbx-tab"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div>' +
     buch.dienste.map((d, di)=> '<div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
       d.faelle.map((f, fi)=> '<div class="fbx-tr" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art) + '</span><span class="fbx-zt">' +
-        f.ziffern.map(x=> htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '')).join(' ') + '</span><span>' + betaEuro(f.euro).replace(' €', '') + '</span></div>').join('') +
+        f.ziffern.map(x=> htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '')).join(' ') + '</span><span>' + fbFallEuro(d, f) + '</span></div>').join('') +
       '<div class="fbx-tr fbx-sum"><span>GKV ' + betaEuro(d.gkv).replace(' €', '') + (d.pauschale ? ' (GP)' : '') + ' · LS ' + betaEuro(d.ls).replace(' €', '') + ' · PT ' + betaEuro(d.pt).replace(' €', '') + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span></div>').join('') + '</div>';
 }
 // C: Diensttage als Kacheln, darunter der gewaehlte Tag
@@ -2841,7 +2890,7 @@ function fbAnsichtC(buch){
       DESIGN_WT[x.tag.getDay()] + ' ' + zz2(x.tag.getDate()) + '.' + zz2(x.tag.getMonth() + 1) + '.</span><b>' + betaEuro(x.gesamt).replace(' €', '') + '</b><small>' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle</small></button>').join('') + '</div>' +
     '<div class="fbx-karte"><div class="fbx-kopf" data-fbdienst="' + wahl + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '</span></div>' +
     '<div class="fbx-kpi"><div><span>GKV + Förderung</span><b>' + betaEuro(d.gkv) + '</b></div><div><span>LS + PT</span><b>' + betaEuro(d.ls + d.pt) + '</b></div></div>' +
-    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + betaEuro(f.euro).replace(' €', '') + ' ›</span></button>').join('') + '</div>' +
+    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + fbFallEuro(d, f) + ' ›</span></button>').join('') + '</div>' +
     '<div class="fbx-ortkarte" id="fbxKarte"></div></div>';
 }
 // Einsatzorte des gewaehlten Diensttags (Ansicht "Woche"): GKV mit gespeichertem
@@ -4627,6 +4676,22 @@ document.addEventListener('click', (ev)=>{
   if(b.dataset.vwtab === 'gkv') ansichtGkvVerwaltung(); else designNavAktion('verwaltung');
 });
 let gkvHerkunft = null;
+// Pseudo-Fall: Foerderung des Diensts = Pauschale (Stunden x Satz) minus GKV-Faelle im Dienst (+ Zuschlag 24.12./31.12.)
+function gkvPseudoFoerderung(f){
+  const t = designFallZeit(f); if(!t) return null;
+  const c = LS.get('fb_dienste_cache', null), dienste = ((c && c.dienste) || []).slice();
+  try{ const l = liveDienstLaden(); if(l){ const fe = liveDienstFenster(l); dienste.push({ von: fe.von.getTime(), bis: fe.bis.getTime(), art: l.art }); } }catch(_){}
+  const d = dienste.find(x=> t.getTime() >= x.von - 3600000 && t.getTime() <= x.bis);
+  if(!d) return null;
+  const std = (d.bis - d.von) / 3600000, tag = new Date(d.von), art = fbDienstartZerlegen(d.art).art;
+  const dt = designDatumDe(new Date(tag.getFullYear(), tag.getMonth(), tag.getDate()));
+  const gkv = gkvFaelleLaden().filter(x=> x && x.name !== GKV_PSEUDO_NAME).reduce((s, x)=>{ const tx = designFallZeit(x); return s + (tx && tx.getTime() >= d.von && tx.getTime() < d.bis ? (Number(x.euro) || 0) : 0); }, 0);
+  return Math.max(0, std * fahrdienstPauschaleSatz(dt, art) - gkv) + std * fahrdienstZusatzSatz(dt, art);
+}
+function gkvPseudoFoerderungHtml(f){
+  const v = gkvPseudoFoerderung(f);
+  return v == null ? '<span class="fbx-foerd">Förderung siehe Fahrtenbuch</span>' : '<span class="fbx-foerd">Förderung</span> ' + betaEuro(v).replace(' €', '');
+}
 function ansichtGkvVerwaltung(){
   einstellungenOffen = false;
   LS.set('vw_tab', 'gkv');
@@ -4638,16 +4703,48 @@ function ansichtGkvVerwaltung(){
     '<button type="button" class="btn-primaer gv-neu" id="gvNeu">+ Neuer GKV-Patient</button>';
   const suchEl = document.getElementById('gvSuche');
   document.getElementById('gvNeu').onclick = ()=>{ gkvHerkunft = 'verwaltung'; ansichtGkv(); };
+  // zuerst die letzten 25 auf dem Geraet; "Weitere laden" holt alle weiteren aus dem Fahrtenbuch (je Jahresblatt)
+  let anzahl = 25, excel = [], blaetterGeladen = [], blaetterAlle = null, laedt = false;
+  const lokalSchl = new Set();
+  const weitereLaden = async ()=>{
+    if(laedt) return;
+    anzahl = Infinity;
+    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ appToastAnzeigen('Für ältere Fälle aus dem Fahrtenbuch bitte bei OneDrive anmelden.', 3200); zeichnen(); return; }
+    laedt = true; zeichnen();
+    try{
+      const naechstes = blaetterAlle ? blaetterAlle.slice().reverse().find(b=> !blaetterGeladen.includes(b)) : undefined;
+      if(blaetterAlle && !naechstes){ laedt = false; zeichnen(); return; }
+      const buch = await fbBuchLaden(naechstes, ()=>{});
+      blaetterAlle = buch.blaetter; blaetterGeladen.push(buch.blatt);
+      const lokal = gkvFaelleLaden().map(x=> ({ n: x.name === GKV_PSEUDO_NAME ? '#pseudo' : fbNameNorm(x.name), t: designFallZeit(x) }));
+      buch.dienste.forEach(d=> d.faelle.forEach(f=>{
+        if(f.art !== 'gkv') return;
+        const t = new Date(d.tag.getTime()); const zm = /(\d{1,2}):(\d{2})/.exec(f.zeit || ''); t.setHours(zm ? +zm[1] : 12, zm ? +zm[2] : 0, 0, 0);
+        const n = f.pseudo ? '#pseudo' : fbNameNorm(f.name);
+        if(lokal.some(x=> x.n === n && x.t && Math.abs(x.t - d.tag) < 1.5 * 86400000)) return;
+        excel.push({ excel: true, d, f, t, blatt: buch.blatt });
+      }));
+    }catch(e){ appToastAnzeigen('Fahrtenbuch konnte nicht gelesen werden: ' + (e.message || e), 3500); }
+    laedt = false; zeichnen();
+  };
   // Diensttag: Faelle vor 7 Uhr gehoeren zum Dienst des Vortags
   const diensttag = (t)=>{ const d = new Date(t.getFullYear(), t.getMonth(), t.getDate()); if(t.getHours() < 7) d.setDate(d.getDate() - 1); return d; };
   const zeichnen = ()=>{
     const q = suchEl.value.trim().toLowerCase();
-    const alle = gkvFaelleLaden().map(f=> ({ f, t: designFallZeit(f) || new Date(0) }))
+    const lokalAlle = gkvFaelleLaden().map(f=> ({ f, t: designFallZeit(f) || new Date(0) }))
       .filter(x=> !q || [x.f.name, isoDe(x.f.datum), (x.f.positionen || []).map(p=> p.gop).join(' ')].join(' ').toLowerCase().includes(q))
       .sort((a, b)=> b.t - a.t);
-    const offen = alle.filter(x=> x.f.status !== 'eingetragen' && x.f.name !== GKV_PSEUDO_NAME).length;
-    document.getElementById('gvInfo').innerHTML = alle.length ? alle.length + ' Fälle auf diesem Gerät' + (offen ? ' · <b class="gv-offen">' + offen + ' noch nicht im Fahrtenbuch</b>' : ' · alle im Fahrtenbuch') : '';
-    if(!alle.length){ document.getElementById('gvListe').innerHTML = '<div class="leer-hinweis">' + (q ? 'Nichts gefunden.' : 'Noch keine GKV-Patienten erfasst.') + '</div>'; return; }
+    const exSicht = excel.filter(x=> !q || [x.f.name, designDatumDe(x.d.tag), (x.f.ziffern || []).map(z=> z.gop).join(' ')].join(' ').toLowerCase().includes(q));
+    const alle = (q ? lokalAlle : lokalAlle.slice(0, anzahl)).concat(exSicht).sort((a, b)=> b.t - a.t);
+    const mehrLokal = !q && lokalAlle.length > anzahl;
+    const offen = lokalAlle.filter(x=> x.f.status !== 'eingetragen' && x.f.name !== GKV_PSEUDO_NAME).length;
+    document.getElementById('gvInfo').innerHTML = (lokalAlle.length ? lokalAlle.length + ' Fälle auf diesem Gerät' + (offen ? ' · <b class="gv-offen">' + offen + ' noch nicht im Fahrtenbuch</b>' : ' · alle im Fahrtenbuch') : '') +
+      (exSicht.length ? ' · ' + exSicht.length + ' nur im Fahrtenbuch' : '');
+    const weiterKnopf = laedt ? '<div class="leer-hinweis">Fahrtenbuch wird gelesen …</div>'
+      : (mehrLokal || !blaetterAlle || blaetterAlle.some(b=> !blaetterGeladen.includes(b)))
+        ? '<button type="button" class="btn-sekundaer gv-weitere" id="gvWeitere">' + (mehrLokal ? 'Weitere laden' : blaetterGeladen.length ? 'Ältere laden (Fahrtenbuch ' + htmlEsc(blaetterAlle.slice().reverse().find(b=> !blaetterGeladen.includes(b)) || '') + ')' : 'Weitere aus dem Fahrtenbuch laden') + '</button>' : '';
+    const weiterVerdrahten = ()=>{ const b = document.getElementById('gvWeitere'); if(b) b.onclick = ()=>{ if(mehrLokal){ anzahl = Infinity; zeichnen(); } else weitereLaden(); }; };
+    if(!alle.length){ document.getElementById('gvListe').innerHTML = '<div class="leer-hinweis">' + (q ? 'Nichts gefunden.' : 'Noch keine GKV-Patienten erfasst.') + '</div>' + weiterKnopf; weiterVerdrahten(); return; }
     const gruppen = [];
     alle.forEach(x=>{
       const tag = diensttag(x.t), k = tag.getTime();
@@ -4656,18 +4753,33 @@ function ansichtGkvVerwaltung(){
       g.faelle.push(x);
     });
     document.getElementById('gvListe').innerHTML = gruppen.map(g=>{
-      const summe = g.faelle.reduce((s, x)=> s + (Number(x.f.euro) || 0), 0);
+      const betrag = (x)=> x.excel ? (x.f.pseudo ? Math.max(0, (Number(x.d.gkv) || 0) - (Number(x.d.gkvRoh) || 0)) : (Number(x.f.euro) || 0))
+        : x.f.name === GKV_PSEUDO_NAME ? (gkvPseudoFoerderung(x.f) || 0) : (Number(x.f.euro) || 0);
+      const summe = g.faelle.reduce((s, x)=> s + betrag(x), 0);
       return '<div class="gv-tag"><span>' + fbTagText(g.tag) + '</span><span>' + g.faelle.length + (g.faelle.length === 1 ? ' Fall' : ' Fälle') + ' · ' + betaEuro(summe) + '</span></div>' +
         g.faelle.map(x=>{
+          if(x.excel){
+            const f = x.f, i = excel.indexOf(x);
+            return '<button type="button" class="gv-fall gv-excel' + (f.pseudo ? ' pseudo' : '') + '" data-gvexcel="' + i + '">' +
+              '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="ds-fall-marke gkv">GKV</span>' +
+              '<span class="gv-mitte"><b>' + htmlEsc(f.pseudo ? 'Pseudo-Fall 99999' : f.name) + '</b><small>' + htmlEsc((f.ziffern || []).map(z=> z.gop + (z.anz > 1 ? '×' + z.anz : '')).join(' ')) + '</small></span>' +
+              '<span class="gv-rechts"><b>' + fbFallEuro(x.d, f) + '</b><small class="gv-nurfb">nur im Fahrtenbuch</small></span></button>';
+          }
           const f = x.f, pseudo = f.name === GKV_PSEUDO_NAME;
           return '<div class="wisch-huelle" data-gvid="' + htmlEsc(f.id) + '"><div class="wisch-hinter">&#128465; Löschen</div>' +
             '<button type="button" class="gv-fall' + (pseudo ? ' pseudo' : '') + '" data-gvoeffnen="' + htmlEsc(f.id) + '">' +
             '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="ds-fall-marke gkv">GKV</span>' +
             '<span class="gv-mitte"><b>' + htmlEsc(pseudo ? 'Pseudo-Fall 99999' : (f.name || 'ohne Namen')) + '</b><small>' + htmlEsc((f.positionen || []).map(p=> p.gop + (p.anz > 1 ? '×' + p.anz : '')).join(' ')) + '</small></span>' +
-            '<span class="gv-rechts"><b>' + betaEuro(f.euro).replace(' €', '') + '</b><small class="' + (f.status === 'eingetragen' ? 'gv-ok' : 'gv-offen') + '">' + (f.status === 'eingetragen' ? '✓ Fahrtenbuch' : 'offen') + '</small></span>' +
+            '<span class="gv-rechts"><b>' + (pseudo ? gkvPseudoFoerderungHtml(f) : betaEuro(f.euro).replace(' €', '')) + '</b><small class="' + (f.status === 'eingetragen' ? 'gv-ok' : 'gv-offen') + '">' + (f.status === 'eingetragen' ? '✓ Fahrtenbuch' : 'offen') + '</small></span>' +
             '</button></div>';
         }).join('');
-    }).join('') + '<div class="eigene-hinweis" style="margin-top:8px;">Antippen = bearbeiten · nach links wischen = aus der Liste löschen (die Zeile im Fahrtenbuch bleibt).</div>';
+    }).join('') + weiterKnopf + '<div class="eigene-hinweis" style="margin-top:8px;">Antippen = bearbeiten · nach links wischen = aus der Liste löschen (die Zeile im Fahrtenbuch bleibt).</div>';
+    weiterVerdrahten();
+    document.querySelectorAll('[data-gvexcel]').forEach(b=> b.onclick = ()=>{
+      const x = excel[+b.dataset.gvexcel]; if(!x) return;
+      if(x.f.pseudo){ appToastAnzeigen('Pseudo-Fall: im Fahrtenbuch bearbeiten.', 2500); return; }
+      gkvHerkunft = 'verwaltung'; fbGkvAusExcelOeffnen(x.d, x.f);
+    });
     document.querySelectorAll('[data-gvoeffnen]').forEach(b=> b.onclick = ()=>{ if(Date.now() - (b._wischZeit || 0) < 400) return; gkvHerkunft = 'verwaltung'; ansichtGkv(b.dataset.gvoeffnen); });
     document.querySelectorAll('.wisch-huelle[data-gvid]').forEach(h=> betaWischen(h.querySelector('.gv-fall'), async ()=>{
       const f = gkvFaelleLaden().find(x=> x.id === h.dataset.gvid);
@@ -13997,16 +14109,24 @@ function standortKarteFaelle(info){
   const bis = info && info.fenster ? info.fenster.bis : new Date(Date.now() + 3600000);
   const drin = (t)=> t && t >= von && t < bis;
   const out = [];
-  const lsPt = (art, w, oeffnen)=>{
+  const lsPt = (art, w, oeffnen, entwurf)=>{
     w = w || {};
-    const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS); if(!drin(t)) return;
+    // unfertige Faelle (Entwurf) ohne Datum/Uhrzeit: Zeitpunkt der letzten Bearbeitung
+    const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS) || (entwurf && entwurf.geaendert ? new Date(entwurf.geaendert) : null); if(!drin(t)) return;
     const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim();
     const adr = abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
-    out.push({ art, t, name: (w.txtName || '').trim() || 'ohne Namen', adr, oeffnen, euro: w.txtBetrag ? parseFloat(String(w.txtBetrag).replace(/\./g, '').replace(',', '.')) : null });
+    out.push({ art, t, name: (w.txtName || '').trim() || 'ohne Namen', adr, oeffnen, unfertig: !!entwurf, euro: w.txtBetrag ? parseFloat(String(w.txtBetrag).replace(/\./g, '').replace(',', '.')) : null });
   };
   const weg = ()=>{ try{ vorbereiteRuecksprung(); }catch(_){} einstellungenOffen = false; };
   try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=> f && lsPt(art, f.werte, ()=>{ weg(); ansichtMaske(art, i); }))); }catch(_){}
-  try{ betaEntwuerfe().forEach(e=> e && (e.art === 'ls' || e.art === 'pt') && lsPt(e.art, e.werte, ()=>{ weg(); betaEntwurfOeffnen(e, null); })); }catch(_){}
+  try{ betaEntwuerfe().forEach(e=> e && (e.art === 'ls' || e.art === 'pt') && lsPt(e.art, e.werte, ()=>{ weg(); betaEntwurfOeffnen(e, null); }, e)); }catch(_){}
+  // GKV-Patient, der gerade erfasst wird (noch nicht gespeichert)
+  try{
+    if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()){
+      const t = designFallZeit(gkvEntwurf) || new Date();
+      if(drin(t)) out.push({ art: 'gkv', t, name: gkvEntwurf.name, adr: gkvEntwurf.adresse || '', geo: null, euro: null, unfertig: true, oeffnen: ()=>{ weg(); ansichtGkv(); } });
+    }
+  }catch(_){}
   try{
     gkvFaelleLaden().forEach(f=>{
       if(!f || f.name === GKV_PSEUDO_NAME) return;
@@ -14014,9 +14134,9 @@ function standortKarteFaelle(info){
       out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', adr: f.adresse || '', geo: f.geo || null, euro: f.euro, oeffnen: ()=>{ weg(); ansichtGkv(f.id); } });
     });
   }catch(_){}
-  // gleiche Person/Zeit doppelt (Entwurf + gespeicherter Fall) nur einmal
+  // gleiche Person/Zeit doppelt (Entwurf + gespeicherter Fall) nur einmal -- der gespeicherte gewinnt
   const ges = new Set();
-  return out.sort((a, b)=> a.t - b.t).filter(x=>{ const k = x.art + '|' + x.name + '|' + x.t.getTime(); if(ges.has(k)) return false; ges.add(k); return true; });
+  return out.sort((a, b)=> (a.t - b.t) || ((a.unfertig ? 1 : 0) - (b.unfertig ? 1 : 0))).filter(x=>{ const k = x.art + '|' + x.name + '|' + x.t.getTime(); if(ges.has(k)) return false; ges.add(k); return true; });
 }
 let standortKarteLauf = 0;
 async function standortKarteZeichnen(info, mitDialog){
@@ -14935,7 +15055,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v224';
+const APP_VERSION = 'v225';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -15532,7 +15652,7 @@ function designDienstHtml(info){
     '<div class="ds-dz-liste"' + (auf ? '' : ' hidden') + '>' +
       (faelle.length ? faelle.map((f, i)=> '<button type="button" class="ds-dz-fall" data-dzfall="' + i + '"><span class="ds-dz-zeit">' + designUhr(f.t) + '</span>' +
         '<span class="ds-fall-marke ' + f.art + '">' + f.art.toUpperCase() + '</span><span class="ds-dz-name">' + htmlEsc(f.name) + '</span>' +
-        '<span class="ds-dz-betrag">' + (f.euro != null && f.euro !== '' ? betaEuro(f.euro).replace(' €', '') : '') + '</span></button>').join('')
+        '<span class="ds-dz-betrag">' + (f.unfertig ? '<span class="ds-unfertig">unfertig</span>' : (f.euro != null && f.euro !== '' ? betaEuro(f.euro).replace(' €', '') : '')) + '</span></button>').join('')
         : '<div class="ds-leer">Noch keine Fälle in diesem Dienst.</div>') +
     '</div></div>';
 }
