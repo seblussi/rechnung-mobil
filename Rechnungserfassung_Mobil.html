@@ -1608,6 +1608,14 @@ try{
   .ok-zoom button{width:46px; height:46px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; font-size:24px; font-weight:700; line-height:1;}
   .ok-karte .nfp-knoepfe{flex-wrap:wrap;}
   .ok-attr{font-size:11px; color:var(--text-schwach); margin-top:6px;} .ok-attr a{color:inherit;}
+  .vk-karte{flex:1; min-height:0; position:relative;}
+  .vk-test{font-weight:500; font-size:11.5px; color:var(--text-schwach); margin-left:6px;}
+  .vk-overlay .karte-ebene, .vk-overlay .karte-auge{z-index:5;}
+  .vk-marke{line-height:0;}
+  .vk-fall{display:flex; width:24px; height:24px; border-radius:50%; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:800; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); background:var(--ls-farbe); line-height:1;}
+  .vk-fall.pt{background:var(--pt-farbe);} .vk-fall.gkv{background:#7d4e9e;}
+  .vk-punkt{display:block; width:16px; height:16px; border-radius:50%; border:2.5px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4);} .vk-punkt.start{background:#1a55c9;} .vk-punkt.ziel{background:#e0242b;}
+  .vk-ich{display:block; width:16px; height:16px; border-radius:50%; background:#2f80ed; border:3px solid #fff; box-shadow:0 0 0 8px rgba(47,128,237,.25);}
   .osm-scroll.zieht{cursor:grabbing;} .ok-karte .osm-scroll{cursor:grab;}
   .ze-leiste{display:flex; flex-direction:column; gap:6px; padding:8px 12px; background:var(--karte); border-bottom:1px solid var(--rand);}
   .ze-zonen, .ze-werkzeug{display:flex; gap:6px; flex-wrap:wrap;}
@@ -13633,6 +13641,7 @@ document.addEventListener('click', (ev)=>{
 // Mit "waehlen": Adresse suchen, Stelle antippen oder Standort -> Zone, Luftlinie, Route.
 function osmKarteOverlay(d, text, opt){
   opt = opt || {};
+  if(!opt.waehlen && !opt.keinVektor && opt.ebene !== 'kvbw' && vkAn()) return vektorKarteOverlay(Object.assign({ nfp: true, rahmen: true }, d || {}), text, opt);
   d = Object.assign({ nfp: true, rahmen: true }, d || {});
   d.pois = (d.pois || []).slice(); d.weg = (d.weg || []).slice();
   const W = opt.waehlen || null;
@@ -13821,6 +13830,123 @@ function osmKarteOverlay(d, text, opt){
         else if(W.gps) position(true);
       }
     });
+  });
+  return ergebnis;
+}
+// ---------- Vektorkarte (Test, Einstellung "Große Karte als Vektorkarte") ----------
+// MapLibre GL + freie Vektorkacheln von OpenFreeMap (ohne Schluessel). Zeigt dieselben
+// Inhalte wie die normale grosse Karte (Zonen, Route, Varianten, Luftlinie, Einsatzorte,
+// NFP/Wache); fuer die KVBW-Ansicht und die Auswahl einer Einsatzstelle (GKV) wird
+// die normale Karte verwendet.
+const VK_VERSION = '4.7.1';
+let vkLaden = null;
+function vkMaplibreHolen(){
+  if(window.maplibregl) return Promise.resolve(window.maplibregl);
+  if(vkLaden) return vkLaden;
+  vkLaden = new Promise((ok, fehler)=>{
+    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://unpkg.com/maplibre-gl@' + VK_VERSION + '/dist/maplibre-gl.css'; document.head.appendChild(css);
+    const s = document.createElement('script'); s.src = 'https://unpkg.com/maplibre-gl@' + VK_VERSION + '/dist/maplibre-gl.js';
+    s.onload = ()=> window.maplibregl ? ok(window.maplibregl) : fehler(new Error('MapLibre fehlt'));
+    s.onerror = ()=>{ vkLaden = null; fehler(new Error('MapLibre konnte nicht geladen werden')); };
+    document.head.appendChild(s);
+  });
+  return vkLaden;
+}
+function vkAn(){ return !!(ladeEinstellungen() || {}).karteVektor; }
+function vkStilUrl(){ const st = (ladeEinstellungen() || {}).karteVektorStil || 'liberty'; return 'https://tiles.openfreemap.org/styles/' + (['liberty', 'bright', 'positron'].includes(st) ? st : 'liberty'); }
+// Zonen als Geo-Polygone (Zone k = Ring k ohne Ring k-1), passend zu nfpZonenRinge (inkl. eigener Korrekturen)
+function vkZonenGeo(){
+  const ringe = nfpZonenRinge();
+  if(vkZonenGeo.quelle === ringe && vkZonenGeo.fc) return vkZonenGeo.fc;
+  const geo = (r)=>{ const l = r.map(q=>{ const g = nfpPixelZuGeo(q.x, q.y); return [+g.lon.toFixed(6), +g.lat.toFixed(6)]; }); if(l.length) l.push(l[0]); return l; };
+  const features = [];
+  ['5', '4', '3', '2', '1'].forEach(k=>{
+    if(!NFP_ZONEN[k] || !ringe[k] || !ringe[k].length) return;
+    const innen = ringe[String(+k - 1)];
+    const coords = [geo(ringe[k][0])].concat(innen && innen.length ? [geo(innen[0]).reverse()] : []);
+    features.push({ type: 'Feature', properties: { farbe: NFP_ZONEN[k].farbe, k }, geometry: { type: 'Polygon', coordinates: coords } });
+  });
+  vkZonenGeo.quelle = ringe; vkZonenGeo.fc = { type: 'FeatureCollection', features };
+  return vkZonenGeo.fc;
+}
+function vektorKarteOverlay(d, text, opt){
+  opt = opt || {};
+  let fertigRes = null; const ergebnis = new Promise(r=> fertigRes = r);
+  const ov = document.createElement('div');
+  ov.className = 'nfp-overlay ok-karte vk-overlay';
+  ov.innerHTML = '<div class="nfp-kopf"><b>' + htmlEsc(opt.titel || 'Karte') + ' <small class="vk-test">Vektorkarte (Test)</small></b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
+    '<div class="nfp-rahmen"><div class="vk-karte"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF + '</div>' +
+    '<div class="nfp-fuss"><div class="nfp-info" id="vkInfo">' + (text ? htmlEsc(text) : 'Vektorkarte wird geladen …') + '</div>' +
+      '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button></div></div>';
+  document.body.appendChild(ov);
+  document.body.classList.add('nfp-offen');
+  const info = ov.querySelector('#vkInfo'), box = ov.querySelector('.vk-karte');
+  let map = null;
+  const zu = ()=>{ try{ map && map.remove(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(null); };
+  ov.querySelector('.nfp-zu').onclick = zu;
+  const ansichtJetzt = ()=>{ if(!map) return opt.ansicht || null; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
+  // KVBW: in die normale Karte wechseln (gleicher Ausschnitt)
+  const eb = ov.querySelector('.karte-ebene'); karteEbeneKnopfSetzen(eb, 'osm');
+  eb.onclick = ()=>{ const a = ansichtJetzt(); zu(); osmKarteOverlay(d, text, { ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true }); };
+  const auge = ov.querySelector('.karte-auge');
+  const zonenAn = ()=> LS.get('karte_zonen', true) !== false;
+  auge.classList.toggle('aus', !zonenAn());
+  vkMaplibreHolen().then((ml)=>{
+    const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]);
+    const a = opt.ansicht;
+    map = new ml.Map({ container: box, style: vkStilUrl(), center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
+      attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, maxZoom: 18.5 });
+    map.touchZoomRotate.disableRotation();
+    map.addControl(new ml.NavigationControl({ showCompass: false }), 'bottom-right');
+    map.on('error', (e)=>{ if(e && e.error && /style|fetch/i.test(String(e.error.message || ''))) info.textContent = 'Vektorkarte nicht erreichbar (Internet?).'; });
+    const ll = (g)=> [g.lon, g.lat];
+    const linie = (koords)=> ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: koords } });
+    const marke = (html, g, klick)=>{ const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = html; if(klick){ el.style.cursor = 'pointer'; el.onclick = (ev)=>{ ev.stopPropagation(); klick(); }; } return new ml.Marker({ element: el }).setLngLat(ll(g)).addTo(map); };
+    const symbol = (art, g)=> marke('<svg viewBox="-20 -14 40 28" width="' + (art === 'rtw' ? 38 : 26) + '" height="' + (art === 'rtw' ? 26 : 26) + '">' + kartenSymbol(art, 0, 0, 6.5) + '</svg>', g);
+    let ichMarke = null;
+    map.on('load', ()=>{
+      info.textContent = text || '';
+      map.addSource('vk-zonen', { type: 'geojson', data: vkZonenGeo() });
+      map.addLayer({ id: 'vk-zonen-fl', type: 'fill', source: 'vk-zonen', paint: { 'fill-color': ['get', 'farbe'], 'fill-opacity': 0.28 } });
+      map.addLayer({ id: 'vk-zonen-li', type: 'line', source: 'vk-zonen', paint: { 'line-color': ['get', 'farbe'], 'line-width': 2 } });
+      map.addSource('vk-k50', { type: 'geojson', data: linie(nfp50Kreis().map(ll)) });
+      map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
+      map.addSource('vk-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: (d.wegAlt || []).filter(w=> w && w.length > 1).map(linie) } });
+      map.addLayer({ id: 'vk-alt', type: 'line', source: 'vk-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#6b7686', 'line-width': 4, 'line-dasharray': [2, 1.6], 'line-opacity': 0.85 } });
+      map.addSource('vk-weg', { type: 'geojson', data: { type: 'FeatureCollection', features: d.weg && d.weg.length > 1 ? [linie(d.weg)] : [] } });
+      map.addLayer({ id: 'vk-weg', type: 'line', source: 'vk-weg', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1a55c9', 'line-width': 5, 'line-opacity': 0.9 } });
+      map.addSource('vk-luft', { type: 'geojson', data: { type: 'FeatureCollection', features: d.linie && d.linie[0] && d.linie[1] ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] } });
+      map.addLayer({ id: 'vk-luft', type: 'line', source: 'vk-luft', paint: { 'line-color': '#111', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
+      const sichtbar = ()=> ['vk-zonen-fl', 'vk-zonen-li'].forEach(id=> map.setLayoutProperty(id, 'visibility', zonenAn() ? 'visible' : 'none'));
+      sichtbar();
+      auge.onclick = ()=>{ LS.set('karte_zonen', !zonenAn()); auge.classList.toggle('aus', !zonenAn()); sichtbar(); miniKartenNeu(); };
+      // NFP, Wache, Einsatzorte
+      symbol('nfp', n);
+      const wache = gkvStartGeo(); if(wache) symbol('rtw', wache);
+      (d.pois || []).forEach(q=>{
+        if(q.kl === 'start' && wache && kmLuftlinieEinfach(wache, q) < 0.05) return;
+        if(q.kl === 'ich'){ ichMarke = marke('<span class="vk-ich"></span>', q); return; }
+        if(q.kl === 'start' || q.kl === 'ziel'){ marke('<span class="vk-punkt ' + q.kl + '"></span>', q); return; }
+        marke('<span class="vk-fall ' + q.kl + '">' + (q.nr || '') + '</span>', q, q.idx != null && d.fallKlick ? ()=>{ zu(); d.fallKlick(q.idx); } : null);
+      });
+      if(!opt.ansicht) uebersicht();
+    });
+    const uebersicht = ()=>{
+      const g = osmGeoListe(d);
+      if(!g.length){ map.easeTo({ center: [n.lon, n.lat], zoom: 9.5 }); return; }
+      const b = new ml.LngLatBounds(ll(g[0]), ll(g[0])); g.forEach(p=> b.extend(ll(p)));
+      map.fitBounds(b, { padding: 60, maxZoom: 14.5, duration: 400 });
+    };
+    ov.querySelector('.ok-uebersicht').onclick = uebersicht;
+    ov.querySelector('.ok-position').onclick = async ()=>{
+      const g = await standortHolen({ still: false }); if(!g) return;
+      if(ichMarke) ichMarke.remove();
+      ichMarke = marke('<span class="vk-ich"></span>', g);
+      map.easeTo({ center: ll(g), zoom: Math.max(map.getZoom(), 13.5) });
+    };
+  }).catch(()=>{
+    // ohne MapLibre (offline o.ae.): normale Karte
+    zu(); osmKarteOverlay(d, text, Object.assign({}, opt, { keinVektor: true }));
   });
   return ergebnis;
 }
@@ -14809,7 +14935,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v223';
+const APP_VERSION = 'v224';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -15555,6 +15681,11 @@ function ansichtEinstellungen(){
       <div class="trennlinie">Wegegeld-Zonen</div>
       <div class="design-hinweis">Grenzen der Zonen auf der KVBW-Karte selbst nachzeichnen. Gilt sofort für Wegegeld und alle Karten; mit OneDrive-Anmeldung auf allen Geräten.${LS.get('nfp_zonen_eigen', null) ? ' <b>Eigene Korrekturen aktiv</b> (Stand ' + new Date(LS.get('nfp_zonen_eigen', {}).am || Date.now()).toLocaleDateString('de-DE') + ').' : ''}</div>
       <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:8px;">Zonen bearbeiten</button>
+      <div class="einstellung-zeile" style="margin-top:14px;">
+        <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor ? ' checked' : ''}>
+        <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
+      </div>
+      <div class="fb-chips" id="vkStile" style="margin-top:6px;">${['liberty', 'bright', 'positron'].map(k=> '<button type="button" class="fb-chip' + (((ladeEinstellungen() || {}).karteVektorStil || 'liberty') === k ? ' an' : '') + '" data-vkstil="' + k + '">' + { liberty: 'Liberty', bright: 'Bright', positron: 'Hell (Positron)' }[k] + '</button>').join('')}</div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Excel-Dateien öffnen</div>
@@ -15571,6 +15702,8 @@ function ansichtEinstellungen(){
     'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
   document.getElementById('btnZonenBearbeiten').onclick = async ()=>{ await nfpZonenEigeneLaden(); zonenEditorOeffnen(); };
+  document.getElementById('chkKarteVektor').onchange = (ev)=>{ const e = ladeEinstellungen(); e.karteVektor = ev.target.checked; speichereEinstellungen(e); if(ev.target.checked) vkMaplibreHolen().catch(()=>{}); };
+  document.querySelectorAll('[data-vkstil]').forEach(b=> b.onclick = ()=>{ const e = ladeEinstellungen(); e.karteVektorStil = b.dataset.vkstil; speichereEinstellungen(e); document.querySelectorAll('[data-vkstil]').forEach(x=> x.classList.toggle('an', x === b)); });
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
   // "Speichern"-Schritt.
   const anwenden = ()=>{
