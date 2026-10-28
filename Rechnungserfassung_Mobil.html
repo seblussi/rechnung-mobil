@@ -1665,7 +1665,10 @@ try{
   .einr p{font-size:15px; line-height:1.5; margin:0 0 10px;} .einr-klein{font-size:13px !important; color:var(--text-schwach);}
   .einr-fort{display:flex; gap:6px; margin:6px 0 4px;} .einr-fort span{flex:1; height:5px; border-radius:3px; background:var(--rand);} .einr-fort span.an{background:#1f5f9e;}
   .einr-knoepfe{display:flex; justify-content:space-between; gap:10px; margin-top:18px;} .einr-knoepfe button{width:auto; flex:1; margin:0;}
-  .einr-ok{color:#2fa84f;} .einr-liste{display:flex; flex-direction:column; gap:6px; margin:8px 0 12px;}
+  .einr-ok{color:#2fa84f;} .einr-hinweis{font-size:13px; line-height:1.45; padding:10px 12px; border-radius:10px; background:rgba(199,119,0,.10); border:1px solid rgba(199,119,0,.35); margin:0 0 10px;}
+  .einr-code{display:flex; gap:8px; align-items:center; padding:8px 10px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); margin:0 0 8px;} .einr-code code{flex:1; font-size:12.5px; word-break:break-all; user-select:all; -webkit-user-select:all;}
+  .einr-code .btn-sekundaer{flex:none; width:auto; margin:0; padding:8px 12px;} .einr-link{background:none; border:0; color:var(--text-schwach); text-decoration:underline; font:inherit; font-size:13px; padding:6px; cursor:pointer;}
+  .einr a{color:var(--akzent, #2f6fd6);} .einr-liste{display:flex; flex-direction:column; gap:6px; margin:8px 0 12px;}
   .einr-z{display:flex; justify-content:space-between; gap:10px; padding:9px 12px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); font-size:14px;}
   .einr-z b{font-weight:600; text-align:right;} .einr-z.ok b{color:#2fa84f;} .einr-z.fehlt b{color:#c77700;}
   .einr-feld{display:flex; flex-direction:column; gap:3px; margin:0 0 8px; font-size:12.5px; font-weight:600; color:var(--text-schwach);}
@@ -5015,7 +5018,7 @@ function ansichtEinrichtung(schritt){
   const beenden = ()=>{ LS.set('einrichtung_schritt', null); ansichtStart(); };
   setzeTitel('Einrichtung', beenden);
   const angemeldet = typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet';
-  const schritte = ['start', 'anmelden', 'dateien', 'daten', 'fertig'];
+  const schritte = ['start', 'anmelden', 'dateien', 'daten', 'brief', 'fertig'];
   const nr = schritte.indexOf(schritt) + 1;
   const kopf = '<div class="einr-fort">' + schritte.map((s, i)=> '<span class="' + (i < nr ? 'an' : '') + '"></span>').join('') + '</div>';
   const knoepfe = (zurueck, weiter, weiterText, weiterAus)=> '<div class="einr-knoepfe">' + (zurueck ? '<button type="button" class="btn-sekundaer" data-einr="' + zurueck + '">Zurück</button>' : '<span></span>') +
@@ -5039,11 +5042,32 @@ function ansichtEinrichtung(schritt){
       feld('ARZTNAME', 'Name (ohne Titel)', 'Vorname Nachname') + feld('ARZTADRESSE1', 'Straße Hausnummer') + feld('ARZTADRESSE2', 'PLZ Ort') + feld('ARZTEMAIL', 'E-Mail') +
       '<h3>Bankverbindung</h3>' + feld('ARZTKONTOINHABER', 'Kontoinhaber') + feld('ARZTBANKNAME', 'Bank') + feld('ARZTIBAN', 'IBAN') + feld('ARZTBIC', 'BIC') +
       '<h3>Wegegeld</h3>' + feld('GKV_STARTADRESSE', 'Ausgangspunkt für die Luftlinie (Wache)', 'Straße Nr., PLZ Ort') +
-      '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'fertig', 'Speichern und weiter');
+      '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'brief', 'Speichern und weiter');
+  } else if(schritt === 'brief'){
+    const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
+    const eigen = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG);
+    html = '<h2>Briefversand (optional)</h2>' +
+      '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Weil LetterXpress keine Aufrufe direkt aus dem Browser erlaubt, braucht es eine kleine <b>Weiterleitung in deinem eigenen Azure-Konto</b> (Rechenzentrum Frankfurt). So läuft nichts über fremde Server – auch nicht über meine.</p>' +
+      '<div class="einr-hinweis"><b>Wichtig:</b> Die App ist ein privates Projekt ohne Gewähr; ich übernehme keine Haftung. Du bist für deine Daten und den Versand selbst verantwortlich. Mit LetterXpress musst du selbst einen <b>Auftragsverarbeitungsvertrag (AVV)</b> nach DSGVO abschließen. Im Zweifel bitte rechtlich beraten lassen.</div>' +
+      '<h3>1. LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren, AVV abschließen, unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
+      '<label class="einr-feld"><span>LetterXpress-Benutzername</span><input type="text" id="einrLxpNutzer" autocomplete="off" value="' + htmlEsc(w.BRIEF_BENUTZER || '') + '"></label>' +
+      '<label class="einr-feld"><span>API-Key</span><input type="password" id="einrLxpKey" autocomplete="off" value="' + htmlEsc(w.BRIEF_APIKEY || '') + '"></label>' +
+      '<h3>2. Azure-Konto</h3><p class="einr-klein">Auf <a href="https://azure.microsoft.com/de-de/free/" target="_blank" rel="noopener">azure.microsoft.com</a> ein Konto anlegen (Kreditkarte nötig). Die Weiterleitung kostet bei ein paar Briefen im Monat praktisch nichts (meist 0 €, höchstens wenige Cent für den Speicher).</p>' +
+      '<h3>3. Skript ausführen</h3><p class="einr-klein">Am besten am PC: <a href="https://shell.azure.com" target="_blank" rel="noopener">shell.azure.com</a> öffnen, mit dem Azure-Konto anmelden, <b>Bash</b> wählen (Frage nach Speicher: „Kein Speicherkonto erforderlich“). Dann diese Zeile einfügen (Rechtsklick › Einfügen) und Enter drücken:</p>' +
+      '<div class="einr-code"><code id="einrSkript">' + htmlEsc(EINR_AZURE_BEFEHL) + '</code><button type="button" class="btn-sekundaer" id="einrKopieren">Kopieren</button></div>' +
+      '<p class="einr-klein">Das dauert 3–5 Minuten. Am Ende steht dort „Diese Adresse in der App eintragen“ mit einer Adresse wie <i>https://lxp-weiterleitung-….azurewebsites.net/api</i>. Das Skript darf jederzeit erneut laufen (z. B. für Updates); es legt nichts doppelt an.</p>' +
+      '<h3>4. Adresse eintragen und prüfen</h3>' +
+      '<label class="einr-feld"><span>Adresse der Weiterleitung</span><input type="url" id="einrLxpUrl" autocomplete="off" placeholder="https://….azurewebsites.net/api" value="' + htmlEsc(eigen) + '"></label>' +
+      '<button type="button" class="btn-sekundaer" id="einrLxpPruefen">Prüfen</button><div id="einrLxpErgebnis" class="einr-liste"></div>' +
+      '<div id="einrBriefInfo" class="einr-klein"></div>' +
+      '<div class="einr-knoepfe"><button type="button" class="btn-sekundaer" data-einr="daten">Zurück</button><button type="button" class="btn-primaer" id="einrBriefSpeichern" disabled>Speichern und weiter</button></div>' +
+      '<p style="text-align:center; margin-top:10px;"><button type="button" class="einr-link" data-einr="fertig">Überspringen – später in den Einstellungen</button></p>';
   } else {
     html = '<h2>Fertig 🎉</h2><p>Die App ist eingerichtet. Ein paar Tipps:</p><ul class="einr-tipps">' +
       '<li>Unter <b>Einstellungen › Design</b> die Optik wählen (z. B. „Einhand“).</li>' +
-      '<li>Den <b>Briefversand</b> über LetterXpress kannst du später in den Einstellungen einrichten (eigenes LetterXpress-Konto nötig).</li>' +
+      (lxpAdresseNormal(((iniCacheLaden() || {}).werte || {}).BRIEF_WEITERLEITUNG)
+        ? '<li><b>Briefversand</b> ist eingerichtet – zunächst im <b>Testmodus</b> (nichts wird gedruckt). Unter Einstellungen › Briefversand ausschalten, wenn alles passt.</li>'
+        : '<li>Den <b>Briefversand</b> kannst du jederzeit nachholen: Einstellungen › „Briefversand einrichten“.</li>') +
       '<li>Auf dem iPhone: in Safari <b>Teilen › Zum Home-Bildschirm</b>, dann startet die App wie eine normale App.</li></ul>' +
       '<button type="button" class="btn-primaer" id="einrFertig">Zur Startseite</button>';
   }
@@ -5069,6 +5093,92 @@ function ansichtEinrichtung(schritt){
   const an = document.getElementById('einrAnmelden'); if(an) an.onclick = ()=> msGraphAnmelden();
   const fe = document.getElementById('einrFertig'); if(fe) fe.onclick = beenden;
   if(schritt === 'dateien') einrDateienPruefen();
+  if(schritt === 'brief') einrBriefStarten();
+}
+// ---------- Einrichtung: eigene LetterXpress-Weiterleitung in Azure ----------
+const EINR_AZURE_BEFEHL = 'curl -fsSL https://seblussi.github.io/rechnung-mobil/azure/einrichten.sh | bash';
+async function einrFetchZeit(url, opt, ms){
+  const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const t = ac ? setTimeout(()=> ac.abort(), ms) : null;
+  try{ return await fetch(url, Object.assign({}, opt, ac ? { signal: ac.signal } : {})); }
+  finally{ if(t) clearTimeout(t); }
+}
+// Prueft Erreichbarkeit/Version der Weiterleitung und (falls eingetragen) die
+// LetterXpress-Zugangsdaten im Testmodus (ohne Brief -> es entsteht kein Auftrag).
+// Ergebnis: {ok, zeilen:[{text, ok:true|false|null}]}
+async function einrWeiterleitungPruefen(adresse, nutzer, key){
+  const zeilen = [], z = (text, ok)=> zeilen.push({ text, ok });
+  const url = lxpAdresseNormal(adresse);
+  if(!url){ z('Bitte die Adresse aus der Cloud Shell eintragen.', false); return { ok: false, zeilen }; }
+  if(!/^https:\/\//.test(url)){ z('Die Adresse muss mit https:// beginnen.', false); return { ok: false, zeilen }; }
+  if(url === LXP_WEITERLEITUNG_STANDARD){ z('Das ist die Standard-Weiterleitung, nicht deine eigene. Bitte das Skript in deinem Azure-Konto ausführen und die dort angezeigte Adresse eintragen.', false); return { ok: false, zeilen, url }; }
+  if(!/\.azurewebsites\.net\/api$/i.test(url)) z('Hinweis: Die Adresse endet nicht wie erwartet auf „.azurewebsites.net/api“.', null);
+  if(typeof navigator !== 'undefined' && navigator.onLine === false){ z('Keine Internetverbindung.', false); return { ok: false, zeilen, url }; }
+  let version = 0;
+  try{
+    const r = await einrFetchZeit(url + '/v3/_version', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 45000);
+    const txt = await r.text(); let j = null; try{ j = JSON.parse(txt); }catch(_){}
+    if(r.status === 403) { z('Die Weiterleitung lehnt die App ab (HTTP 403). Bitte das Skript erneut ausführen.', false); return { ok: false, zeilen, url }; }
+    if(r.status === 404) { z('Unter dieser Adresse gibt es keine Weiterleitung (HTTP 404). Endet die Adresse auf „/api“? Läuft das Skript noch? Sonst das Skript erneut ausführen.', false); return { ok: false, zeilen, url }; }
+    if(!r.ok){ z('Die Weiterleitung antwortet mit HTTP ' + r.status + '. Azure braucht nach dem Einrichten manchmal ein paar Minuten – bitte gleich noch einmal prüfen.', false); return { ok: false, zeilen, url }; }
+    version = j && Number(j.weiterleitung) || 1;
+  }catch(e){
+    z('Keine Antwort von der Weiterleitung (' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e.message || e)) + '). Adresse richtig kopiert? Direkt nach dem Skript kann der erste Start bis zu einer Minute dauern – bitte noch einmal prüfen.', false);
+    return { ok: false, zeilen, url };
+  }
+  if(version < 2){ z('Weiterleitung erreichbar, aber alte Version ' + version + ' – bitte das Skript erneut ausführen (sonst lassen sich geplante Briefe nicht verschieben/stornieren).', false); return { ok: false, zeilen, url }; }
+  z('Weiterleitung erreichbar und aktuell (Version ' + version + ').', true);
+  if(!nutzer || !key){ z('LetterXpress-Zugangsdaten fehlen noch – ohne sie kann nicht getestet werden, ob LetterXpress dich annimmt.', false); return { ok: false, zeilen, url }; }
+  try{
+    const r = await einrFetchZeit(url + '/v3/printjobs', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ auth: { username: nutzer, apikey: key, mode: 'test' } }) }, 45000);
+    const txt = (await r.text()).slice(0, 400);
+    if(r.status === 502){ z('Die Weiterleitung erreicht LetterXpress nicht (HTTP 502). Später noch einmal prüfen.', false); return { ok: false, zeilen, url }; }
+    if(r.status === 401 || /unauthori|invalid.{0,20}(api|key|user|credential)/i.test(txt)){ z('LetterXpress lehnt Benutzername oder API-Key ab – bitte prüfen (Groß-/Kleinschreibung, Leerzeichen).', false); return { ok: false, zeilen, url }; }
+    if(r.status === 403 && /freigegeben/.test(txt)){ z('Die Weiterleitung lässt diesen LetterXpress-Benutzer nicht zu (ERLAUBTE_LXP_NUTZER in Azure).', false); return { ok: false, zeilen, url }; }
+    z('LetterXpress hat die Zugangsdaten angenommen (Testmodus, es wurde nichts verschickt).', true);
+  }catch(e){
+    z('Test bei LetterXpress fehlgeschlagen: ' + (e.message || e), false); return { ok: false, zeilen, url };
+  }
+  return { ok: true, zeilen, url };
+}
+function einrBriefStarten(){
+  const $ = (id)=> document.getElementById(id);
+  const knopf = $('einrBriefSpeichern'), info = $('einrBriefInfo'), erg = $('einrLxpErgebnis');
+  let geprueft = null;
+  const eingaben = ()=> ({ url: $('einrLxpUrl').value, nutzer: $('einrLxpNutzer').value.trim(), key: $('einrLxpKey').value.trim() });
+  const zuruecksetzen = ()=>{ geprueft = null; knopf.disabled = true; };
+  ['einrLxpUrl', 'einrLxpNutzer', 'einrLxpKey'].forEach(id=> $(id).addEventListener('input', zuruecksetzen));
+  $('einrKopieren').onclick = async ()=>{
+    try{ await navigator.clipboard.writeText(EINR_AZURE_BEFEHL); $('einrKopieren').textContent = '✓ Kopiert'; }
+    catch(_){ const r = document.createRange(); r.selectNodeContents($('einrSkript')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('einrKopieren').textContent = 'Markiert'; }
+    setTimeout(()=>{ const b = $('einrKopieren'); if(b) b.textContent = 'Kopieren'; }, 2500);
+  };
+  $('einrLxpPruefen').onclick = async ()=>{
+    const b = $('einrLxpPruefen'); b.disabled = true; b.textContent = 'Prüfe …'; zuruecksetzen();
+    erg.innerHTML = '<div class="einr-z"><span>Verbinde mit der Weiterleitung …</span><b>…</b></div>';
+    const e = eingaben();
+    const r = await einrWeiterleitungPruefen(e.url, e.nutzer, e.key);
+    if(!$('einrLxpPruefen')) return;
+    erg.innerHTML = r.zeilen.map(x=> '<div class="einr-z ' + (x.ok === true ? 'ok' : x.ok === false ? 'fehlt' : '') + '"><span>' + htmlEsc(x.text) + '</span><b>' + (x.ok === true ? '✓' : x.ok === false ? '✗' : 'i') + '</b></div>').join('') +
+      (r.ok ? '<div class="einr-ok" style="margin-top:4px;"><b>✓ Hat geklappt.</b> Jetzt speichern.</div>' : '');
+    if(r.url && $('einrLxpUrl').value.trim() !== r.url) $('einrLxpUrl').value = r.url;
+    b.disabled = false; b.textContent = 'Erneut prüfen';
+    if(r.ok){ geprueft = Object.assign({}, eingaben(), { url: r.url }); knopf.disabled = false; }
+  };
+  knopf.onclick = async ()=>{
+    if(!geprueft) return;
+    knopf.disabled = true; info.textContent = 'Wird in OneDrive gespeichert …';
+    const aend = { BRIEF_WEITERLEITUNG: geprueft.url, BRIEF_BENUTZER: geprueft.nutzer, BRIEF_APIKEY: geprueft.key, BRIEF_AKTIVIERT: '1', BRIEF_TESTMODUS: '1' };
+    try{
+      const r = await iniAenderungenSchreiben(aend, (iniCacheLaden() || {}).werte || {});
+      if(r && r.abgebrochen){ knopf.disabled = false; info.textContent = ''; return; }
+      try{ await iniVonOneDriveLaden(); }catch(_){}
+    }catch(err){ knopf.disabled = false; info.textContent = 'Nicht gespeichert: ' + (err.message || err); return; }
+    ansichtEinrichtung('fertig');
+  };
+  // schon eingetragen -> gleich pruefen
+  if($('einrLxpUrl').value.trim() && $('einrLxpNutzer').value.trim() && $('einrLxpKey').value.trim()) $('einrLxpPruefen').click();
 }
 async function einrDateienPruefen(){
   const liste = document.getElementById('einrListe'), knopfBox = document.getElementById('einrDateiKnopf');
@@ -7417,6 +7527,7 @@ const INI_FELDER = [
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
   {k:'BRIEF_TESTMODUS',  typ:'bool', label:'Testmodus (es wird nichts gedruckt/berechnet)', standard:'1'},
+  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung in Azure (https://….azurewebsites.net/api; leer = Standard)'},
 ];
 const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
@@ -7424,7 +7535,7 @@ const INI_GRUPPEN = [
   {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTBANKNAME','ARZTIBAN','ARZTBIC']},
   {titel:'Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)', keys:['AERZTE_KONTOINHABER','AERZTE_BANKNAME','AERZTE_IBAN','AERZTE_BIC']},
   {titel:'GKV-Patient: Wegepauschale', keys:['GKV_STARTADRESSE']},
-  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_TESTMODUS']}
+  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_TESTMODUS','BRIEF_WEITERLEITUNG']}
 ];
 
 // ---------- Windows-1252 lesen/schreiben ----------
@@ -7567,10 +7678,24 @@ async function iniAenderungenSchreiben(aenderungen, basisWerte){
 // Anfrage laeuft deshalb ueber eine kleine Weiterleitung (Azure Function),
 // die nur an api.letterxpress.de durchreicht. Zugangsdaten liegen NICHT in
 // der Weiterleitung, sondern werden wie am PC bei jedem Aufruf mitgeschickt.
-// Die Weiterleitung ist fest eingebaut (eigene Azure-Funktion in Frankfurt);
-// ein frueherer Eintrag LXP_WEITERLEITUNG in der ini wird ignoriert.
+// Jeder Nutzer richtet seine EIGENE Weiterleitung im eigenen Azure-Konto ein
+// (Einrichtungsassistent, Skript azure/einrichten.sh) -> ini BRIEF_WEITERLEITUNG.
+// Ohne Eintrag gilt die Standard-Weiterleitung (Sergej, Frankfurt). Ein
+// frueherer Eintrag LXP_WEITERLEITUNG in der ini wird weiterhin ignoriert.
+// Die EBM-Werte (/ebm/werte, nur oeffentliche Daten) kommen immer vom Standard.
 const LXP_WEITERLEITUNG_STANDARD = 'https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net/api';
-function lxpBasisUrl(){ return LXP_WEITERLEITUNG_STANDARD; }
+function lxpAdresseNormal(s){
+  s = String(s || '').trim().replace(/\s+/g, '').replace(/\/+$/, '');
+  if(!s) return '';
+  if(!/^https?:\/\//i.test(s)) s = 'https://' + s;
+  s = s.replace(/\/v3(\/.*)?$/, '').replace(/\/+$/, '');
+  if(!/\/api$/i.test(s)) s += '/api';
+  return s;
+}
+function lxpBasisUrl(w){
+  if(!w){ const ini = iniCacheLaden(); w = ini ? ini.werte : {}; }
+  return lxpAdresseNormal(w && w.BRIEF_WEITERLEITUNG) || LXP_WEITERLEITUNG_STANDARD;
+}
 
 // ---------- Verbindungstest (Fehlersuche) ----------
 // Fuehrt jeden OneDrive-Zugriff, den App und Beta brauchen, einzeln aus und
@@ -11990,7 +12115,7 @@ function ebmVorschlagBilden(j){
 }
 async function ebmWerteOnlineHolen(){
   let r;
-  try{ r = await fetch(lxpBasisUrl() + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
+  try{ r = await fetch(LXP_WEITERLEITUNG_STANDARD + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
   catch(e){ throw new Error('Keine Verbindung zur Azure-Weiterleitung (Internet?).'); }
   if(r.status === 404) throw new Error('Die Azure-Weiterleitung kennt die Werte-Prüfung noch nicht – bitte einmal das neue Azure-Skript ausführen.');
   const j = await r.json().catch(()=> null);
@@ -15532,7 +15657,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v228';
+const APP_VERSION = 'v229';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -16279,6 +16404,7 @@ function ansichtEinstellungen(){
       <div class="design-hinweis">Grenzen der Zonen auf der KVBW-Karte selbst nachzeichnen. Gilt sofort für Wegegeld und alle Karten; mit OneDrive-Anmeldung auf allen Geräten.${LS.get('nfp_zonen_eigen', null) ? ' <b>Eigene Korrekturen aktiv</b> (Stand ' + new Date(LS.get('nfp_zonen_eigen', {}).am || Date.now()).toLocaleDateString('de-DE') + ').' : ''}</div>
       <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:8px;">Zonen bearbeiten</button>
       <button type="button" class="btn-sekundaer" id="btnEinrichtung" style="margin-top:8px;">Einrichtungsassistent (neues Gerät / neuer Nutzer)</button>
+      <button type="button" class="btn-sekundaer" id="btnEinrichtungBrief" style="margin-top:8px;">Briefversand einrichten (eigene Azure-Weiterleitung)</button>
       <div class="einstellung-zeile" style="margin-top:14px;">
         <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor ? ' checked' : ''}>
         <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
@@ -16301,6 +16427,7 @@ function ansichtEinstellungen(){
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
   document.getElementById('btnZonenBearbeiten').onclick = async ()=>{ await nfpZonenEigeneLaden(); zonenEditorOeffnen(); };
   document.getElementById('btnEinrichtung').onclick = ()=> ansichtEinrichtung('start');
+  document.getElementById('btnEinrichtungBrief').onclick = ()=> ansichtEinrichtung('brief');
   document.getElementById('chkKarteVektor').onchange = (ev)=>{ const e = ladeEinstellungen(); e.karteVektor = ev.target.checked; speichereEinstellungen(e); if(ev.target.checked) vkMaplibreHolen().catch(()=>{}); };
   document.querySelectorAll('[data-vkstil]').forEach(b=> b.onclick = ()=>{ const e = ladeEinstellungen(); e.karteVektorStil = b.dataset.vkstil; speichereEinstellungen(e); document.querySelectorAll('[data-vkstil]').forEach(x=> x.classList.toggle('an', x === b)); });
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
