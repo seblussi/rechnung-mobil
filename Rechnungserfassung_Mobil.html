@@ -1661,6 +1661,32 @@ try{
   .gv-rechts{display:flex; flex-direction:column; align-items:flex-end;} .gv-rechts b{font-variant-numeric:tabular-nums;}
   .gv-rechts small{font-size:11.5px;} .gv-ok{color:#2fa84f;} .gv-rechts .gv-offen{color:#c77700; font-weight:600;}
   .gv-neu{margin-top:14px;}
+  .doku-knopf{display:flex !important; align-items:center; gap:12px; width:100%; text-align:left; margin:12px 0; padding:12px 14px;}
+  .doku-knopf b{display:block; font-size:15px;} .doku-knopf small{display:block; font-size:12.5px; color:var(--text-schwach); font-weight:500;}
+  .doku-k-icon{font-size:22px;} .doku-knopf > span:nth-child(2){flex:1;} .doku-k-opt{font-size:11px; color:var(--text-schwach); border:1px solid var(--rand); border-radius:10px; padding:2px 7px;}
+  .doku-overlay .doku-inhalt{flex:1; overflow:auto; padding:10px 14px 30px; -webkit-overflow-scrolling:touch;}
+  .doku-overlay .nfp-kopf small{font-weight:500; color:var(--text-schwach); margin-left:6px;}
+  .doku-inhalt section{background:var(--karte); border:1px solid var(--rand); border-radius:14px; padding:10px 12px 12px; margin-bottom:10px;}
+  .doku-inhalt h3{margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-schwach);}
+  .doku-vgrid{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px;}
+  .doku-vw{display:flex; flex-direction:column; gap:3px; font-size:12px; color:var(--text-schwach); font-weight:600;}
+  .doku-vw-in{display:flex; align-items:center; border:1px solid var(--rand); border-radius:10px; background:var(--bg); padding:0 8px;}
+  .doku-vw-in input{flex:1; min-width:0; border:0; background:none; height:40px; margin:0; padding:0; font:inherit; font-size:17px; font-weight:700; color:var(--text);}
+  .doku-vw-in i{font-style:normal; font-size:11px; color:var(--text-schwach); white-space:nowrap;}
+  .doku-zus{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:10px;} .doku-zu{font-size:14px; display:flex; align-items:center; gap:6px;} .doku-zu input{width:20px; height:20px; margin:0;}
+  .doku-ekg{margin-bottom:8px;}
+  .doku-inhalt textarea{width:100%; box-sizing:border-box; border:1px solid var(--rand); border-radius:10px; background:var(--bg); color:var(--text); font:inherit; font-size:15px; padding:8px 10px; margin:0;}
+  .doku-tf{display:block; font-size:12.5px; font-weight:700; color:var(--text-schwach); margin-bottom:8px;} .doku-tf textarea{margin-top:3px;}
+  .doku-score{display:flex; flex-direction:column; gap:2px; border-left:5px solid #9aa3ad; background:var(--bg); border-radius:8px; padding:7px 10px; margin-bottom:6px; font-size:14px;}
+  .doku-score b{font-size:15px;} .doku-score.rot{border-color:#d62828;} .doku-score.orange{border-color:#e07b00;} .doku-score.gelb{border-color:#e0b400;} .doku-score.gruen{border-color:#2fa84f;} .doku-score.aus{opacity:.65;}
+  .doku-fehlt{color:var(--text-schwach); font-size:12px;} .doku-quelle{font-size:11.5px; color:var(--text-schwach); margin-top:6px;}
+  .doku-fotos{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin-bottom:8px;}
+  .doku-foto{position:relative; aspect-ratio:3/4; border-radius:10px; background:#ccd center/cover no-repeat; border:1px solid var(--rand); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; color:#555;}
+  .doku-foto-weg{position:absolute; top:4px; right:4px; width:28px; height:28px; margin:0; padding:0; border-radius:50%; border:0; background:rgba(0,0,0,.55); color:#fff; font-size:18px; line-height:28px;}
+  .doku-leer{font-size:13px; color:var(--text-schwach); margin-bottom:8px; grid-column:1 / -1;}
+  .doku-reihe{display:flex; gap:8px;} .doku-foto-knopf{flex:1; margin:0 !important; text-align:center; cursor:pointer; border:1px solid var(--rand) !important; border-radius:12px !important; padding:10px 6px !important; background:var(--bg) !important; font-size:14px !important;}
+  .doku-overlay .nfp-info:empty{display:none;}
+  .doku-gross{position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.92); display:flex; align-items:center; justify-content:center;} .doku-gross img{max-width:100%; max-height:100%;}
   .gv-weitere{margin-top:10px;} .gv-excel{border-style:dashed;} .gv-nurfb{color:var(--text-schwach);}
   .fbx-foerd{font-size:11px; font-weight:600; color:#2fa84f;}
   .fbx-leiste{display:flex; gap:8px; align-items:center; margin:0 0 10px;}
@@ -4660,6 +4686,298 @@ async function rechnungsnummernVergeben(faelleAusw){
     speichereEinstellungen(eNeu);
   }
   return ohneNummer;
+}
+
+// =====================================================================
+// Dokumentation je Fall (optional): Fotos (z.B. Notfallschein), Anamnese,
+// Befund, Therapie, Vitalwerte, EKG, Sonstiges -- mit Scores (NEWS2, qSOFA,
+// CRB-65 mit Entscheidungshilfe, Schockindex). Ablage in OneDrive unter
+// KVBW Onedrive/Dokumentation/<ID>/ (doku.json, foto_*.jpg, Export als HTML),
+// lokal als Kopie (Text im Geraet, Fotos in IndexedDB bis zum Hochladen).
+// =====================================================================
+const DOKU_ORDNER = 'KVBW Onedrive/Dokumentation';
+function dokuNeueId(){ const d = new Date(); return 'D' + d.getFullYear() + zz2(d.getMonth() + 1) + zz2(d.getDate()) + '-' + Math.random().toString(36).slice(2, 7); }
+function dokuLaden(id){ return id ? LS.get('doku_' + id, null) : null; }
+function dokuSpeichernLokal(d){ d.geaendert = new Date().toISOString(); LS.set('doku_' + d.id, d); }
+// --- Fotos lokal (IndexedDB) ---
+const dokuDb = (()=>{
+  let p = null;
+  const oeffnen = ()=> p || (p = new Promise((ok, f)=>{ const r = indexedDB.open('rechnung_doku', 1); r.onupgradeneeded = ()=> r.result.createObjectStore('fotos'); r.onsuccess = ()=> ok(r.result); r.onerror = ()=> f(r.error); }));
+  const tx = async (modus, fn)=>{ const db = await oeffnen(); return new Promise((ok, f)=>{ const t = db.transaction('fotos', modus), s = t.objectStore('fotos'); const r = fn(s); t.oncomplete = ()=> ok(r && 'result' in r ? r.result : undefined); t.onerror = ()=> f(t.error); }); };
+  return { holen: (k)=> tx('readonly', s=> s.get(k)), setzen: (k, v)=> tx('readwrite', s=> s.put(v, k)), weg: (k)=> tx('readwrite', s=> s.delete(k)) };
+})();
+// Foto verkleinern (laengste Seite 1600 px, JPEG ~0,8) -> Blob
+function dokuFotoVerkleinern(datei){
+  return new Promise((ok, fehler)=>{
+    const img = new Image(), url = URL.createObjectURL(datei);
+    img.onload = ()=>{
+      const m = 1600, s = Math.min(1, m / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b=> b ? ok(b) : fehler(new Error('Foto konnte nicht verarbeitet werden')), 'image/jpeg', 0.82);
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); fehler(new Error('Foto konnte nicht gelesen werden')); };
+    img.src = url;
+  });
+}
+// --- Scores ---
+// NEWS2 (Royal College of Physicians, SpO2-Skala 1), qSOFA (Sepsis-3),
+// CRB-65 mit Zusatzkriterien D/S nach S3-Leitlinie ambulant erworbene Pneumonie.
+function dokuZahl(x){ if(x === '' || x == null) return null; const n = Number(String(x).replace(',', '.')); return isFinite(n) ? n : null; }
+function dokuScores(d){
+  const v = d.vital || {}, z = d.zustand || {};
+  const af = dokuZahl(v.af), spo2 = dokuZahl(v.spo2), sys = dokuZahl(v.rrSys), dia = dokuZahl(v.rrDia), puls = dokuZahl(v.puls),
+    temp = dokuZahl(v.temp), gcs = dokuZahl(v.gcs), bz = dokuZahl(v.bz), alter = dokuZahl(d.alter);
+  const verwirrt = !!z.verwirrt || (gcs != null && gcs < 15);
+  const erg = { hinweise: [] };
+  // NEWS2
+  const fehltN = [];
+  const p = (wert, name, fn)=>{ if(wert == null){ fehltN.push(name); return 0; } return fn(wert); };
+  let news = 0, drei = false;
+  const add = (x)=>{ news += x; if(x === 3) drei = true; };
+  add(p(af, 'AF', a=> a <= 8 ? 3 : a <= 11 ? 1 : a <= 20 ? 0 : a <= 24 ? 2 : 3));
+  add(p(spo2, 'SpO₂', s=> s <= 91 ? 3 : s <= 93 ? 2 : s <= 95 ? 1 : 0));
+  add(v.o2 ? 2 : 0);
+  add(p(sys, 'RR sys', s=> s <= 90 ? 3 : s <= 100 ? 2 : s <= 110 ? 1 : s <= 219 ? 0 : 3));
+  add(p(puls, 'Puls', h=> h <= 40 ? 3 : h <= 50 ? 1 : h <= 90 ? 0 : h <= 110 ? 1 : h <= 130 ? 2 : 3));
+  add(verwirrt ? 3 : 0);
+  add(p(temp, 'Temp', t=> t <= 35 ? 3 : t <= 36 ? 1 : t <= 38 ? 0 : t <= 39 ? 1 : 2));
+  // fehlende Werte: keine Entwarnung, nur "mindestens"
+  const nUnv = fehltN.length > 0;
+  const newsStufe = news >= 7 ? 'hoch' : news >= 5 ? 'mittel' : drei ? 'niedrig–mittel' : nUnv ? 'unvollstaendig' : 'niedrig';
+  erg.news = { wert: news, fehlt: fehltN, stufe: newsStufe, mindestens: nUnv,
+    text: (news >= 7 ? 'Hohes Risiko – Notfallversorgung, intensivmedizinische Einschätzung' : news >= 5 ? 'Mittleres Risiko – dringliche ärztliche Abklärung, engmaschige Kontrolle' : drei ? 'Ein Einzelwert mit 3 Punkten – zeitnahe ärztliche Abklärung' : nUnv ? 'Unvollständig – keine Risikoeinstufung' : 'Niedriges Risiko') };
+  // qSOFA
+  const q = [af != null && af >= 22, sys != null && sys <= 100, verwirrt];
+  const qF = [af == null ? 'AF' : '', sys == null ? 'RR sys' : ''].filter(Boolean), qW = q.filter(Boolean).length;
+  erg.qsofa = { wert: qW, fehlt: qF, mindestens: qF.length > 0,
+    text: qW >= 2 ? 'qSOFA ≥ 2: erhöhtes Risiko – bei Infekt an Sepsis denken (Organdysfunktion abklären)' : qF.length ? 'Unvollständig' : 'qSOFA < 2' };
+  // CRB-65 (+ D, S)
+  const c = [verwirrt, af != null && af >= 30, (sys != null && sys < 90) || (dia != null && dia <= 60), alter != null && alter >= 65];
+  const crb = c.filter(Boolean).length, dKrit = !!z.komorbid, sKrit = spo2 != null && spo2 < 90;
+  const fehltC = [af == null ? 'AF' : '', sys == null && dia == null ? 'RR' : '', alter == null ? 'Alter' : '', spo2 == null ? 'SpO₂' : ''].filter(Boolean);
+  let empf, stufe;
+  if(crb >= 3){ empf = 'Sofortige Krankenhauseinweisung, ggf. Intensivüberwachung.' + (sKrit ? ' SpO₂ < 90 %.' : ''); stufe = 'hoch'; }
+  else if(dKrit || sKrit){ empf = 'Krankenhauseinweisung empfohlen' + (sKrit ? ' (SpO₂ < 90 %)' : '') + (dKrit ? ' (instabile Komorbidität / bettlägerig ≥ 50 %)' : '') + '.'; stufe = 'hoch'; }
+  else if(crb === 1 && c[3]){ empf = 'Nur Alter ≥ 65 erfüllt: ambulante Behandlung möglich, wenn Versorgung zu Hause und Kontrolle nach 48–72 h gesichert sind – sonst stationär.'; stufe = 'niedrig–mittel'; }
+  else if(crb >= 1){ empf = 'Stationäre Behandlung empfohlen.'; stufe = 'mittel'; }
+  else if(fehltC.length){ empf = 'Unvollständig – für eine Empfehlung fehlen: ' + fehltC.join(', ') + '.'; stufe = 'unvollstaendig'; }
+  else { empf = 'Ambulante Behandlung möglich, wenn Versorgung zu Hause gesichert ist; klinische Kontrolle nach 48–72 h.'; stufe = 'niedrig'; }
+  erg.crb = { wert: crb, d: dKrit, s: sKrit, fehlt: fehltC, stufe, text: empf, aktiv: !!z.pneumonie };
+  // Schockindex, weitere Hinweise
+  if(puls != null && sys) erg.schock = { wert: Math.round(puls / sys * 100) / 100, text: puls / sys >= 1 ? 'Schockindex ≥ 1: Schock möglich' : puls / sys > 0.7 ? 'grenzwertig' : 'unauffällig' };
+  if(gcs != null && gcs <= 8) erg.hinweise.push('GCS ≤ 8: Atemwegssicherung erwägen.');
+  if(bz != null && bz < 70) erg.hinweise.push('BZ < 70 mg/dl: Hypoglykämie.');
+  if(bz != null && bz > 250) erg.hinweise.push('BZ > 250 mg/dl: Hyperglykämie – Ketoazidose/Hyperosmolarität bedenken.');
+  if(spo2 != null && spo2 < 90 && !z.pneumonie) erg.hinweise.push('SpO₂ < 90 %.');
+  return erg;
+}
+const DOKU_EKG = ['Sinusrhythmus', 'Vorhofflimmern', 'Tachykardie', 'Bradykardie', 'AV-Block', 'Schenkelblock', 'ST-Hebung', 'ST-Senkung', 'T-Negativierung', 'Schrittmacher', 'Extrasystolen'];
+// --- OneDrive ---
+async function dokuHochladen(d, meldung){
+  const token = await msGraphTokenHolen(); if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+  const ordner = DOKU_ORDNER + '/' + d.id;
+  for(const f of (d.fotos || [])){
+    if(f.oben) continue;
+    const blob = await dokuDb.holen(d.id + '/' + f.name); if(!blob) continue;
+    if(meldung) meldung('Foto ' + f.name + ' wird hochgeladen …');
+    await msGraphDateiHochladen(token, ordner + '/' + f.name, blob, 'image/jpeg');
+    f.oben = true; dokuSpeichernLokal(d);
+  }
+  await msGraphDateiHochladen(token, ordner + '/doku.json', JSON.stringify(d, null, 1), 'application/json');
+  d.obenAm = new Date().toISOString(); dokuSpeichernLokal(d);
+}
+async function dokuAusOneDrive(id){
+  try{
+    const token = await msGraphTokenHolen(); if(!token) return null;
+    const r = await fetch(msGraphPfadUrl(DOKU_ORDNER + '/' + id + '/doku.json') + '/content', { headers: { Authorization: 'Bearer ' + token } });
+    if(!r.ok) return null;
+    const d = await r.json(); if(d && d.id === id){ LS.set('doku_' + id, d); return d; }
+  }catch(_){}
+  return null;
+}
+async function dokuFotoBlob(d, f){
+  let b = await dokuDb.holen(d.id + '/' + f.name).catch(()=> null);
+  if(b) return b;
+  try{
+    const token = await msGraphTokenHolen(); if(!token) return null;
+    const r = await fetch(msGraphPfadUrl(DOKU_ORDNER + '/' + d.id + '/' + f.name) + '/content', { headers: { Authorization: 'Bearer ' + token } });
+    if(!r.ok) return null;
+    b = await r.blob(); await dokuDb.setzen(d.id + '/' + f.name, b).catch(()=>{}); return b;
+  }catch(_){ return null; }
+}
+// Kurzinfo fuer den Knopf in den Masken
+function dokuKurz(id){
+  const d = dokuLaden(id); if(!d) return 'noch nichts dokumentiert';
+  const t = [];
+  if((d.fotos || []).length) t.push(d.fotos.length + (d.fotos.length === 1 ? ' Foto' : ' Fotos'));
+  if(Object.values(d.vital || {}).some(x=> x !== '' && x != null && x !== false)) t.push('Vitalwerte');
+  if(['anamnese', 'befund', 'therapie', 'sonstiges'].some(k=> String(d[k] || '').trim())) t.push('Text');
+  return t.length ? t.join(' · ') + (d.obenAm ? '' : ' · noch nicht in OneDrive') : 'angelegt';
+}
+// Knopf fuer die Masken
+function dokuKnopfHtml(id){
+  return '<button type="button" class="btn-sekundaer doku-knopf" id="btnDoku"><span class="doku-k-icon">📋</span><span><b>Dokumentation</b><small id="dokuKurz">' + htmlEsc(dokuKurz(id)) + '</small></span><span class="doku-k-opt">optional</span></button>';
+}
+// --- Export (druckbar / als PDF speichern / teilen) ---
+async function dokuExportHtml(d){
+  const sc = dokuScores(d), v = d.vital || {};
+  const zeile = (k, w)=> w === '' || w == null ? '' : '<tr><th>' + k + '</th><td>' + htmlEsc(String(w)) + '</td></tr>';
+  const bilder = [];
+  for(const f of (d.fotos || [])){
+    const b = await dokuFotoBlob(d, f); if(!b) continue;
+    bilder.push(await new Promise(ok=>{ const r = new FileReader(); r.onload = ()=> ok(r.result); r.readAsDataURL(b); }));
+  }
+  const text = (t, k)=> String(d[k] || '').trim() ? '<h2>' + t + '</h2><p>' + htmlEsc(d[k]).replace(/\n/g, '<br>') + '</p>' : '';
+  return '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Dokumentation ' + htmlEsc(d.name || '') + '</title>' +
+    '<style>body{font-family:system-ui,Arial,sans-serif;color:#111;margin:24px;max-width:780px} h1{font-size:20px;margin:0 0 4px} h2{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #ccc;padding-bottom:3px} .meta{color:#555;font-size:13px} table{border-collapse:collapse;font-size:14px} th{text-align:left;padding:3px 14px 3px 0;color:#444;font-weight:600} td{padding:3px 0} .score{margin:4px 0;font-size:14px} img{max-width:100%;margin:8px 0;border:1px solid #ddd} .klein{font-size:11.5px;color:#666;margin-top:18px}</style></head><body>' +
+    '<h1>Dokumentation – ' + htmlEsc(d.name || 'ohne Namen') + '</h1><div class="meta">' + htmlEsc([d.artText, d.datum ? isoDe(d.datum) : '', d.zeit, d.alter ? d.alter + ' Jahre' : ''].filter(Boolean).join(' · ')) + '</div>' +
+    text('Anamnese', 'anamnese') + text('Befund', 'befund') +
+    '<h2>Vitalwerte</h2><table>' + zeile('SpO₂', v.spo2 ? v.spo2 + ' %' + (v.o2 ? ' (mit O₂)' : '') : '') + zeile('RR', v.rrSys || v.rrDia ? (v.rrSys || '–') + '/' + (v.rrDia || '–') + ' mmHg' : '') +
+      zeile('Puls', v.puls ? v.puls + ' /min' : '') + zeile('Temperatur', v.temp ? v.temp + ' °C' : '') + zeile('BZ', v.bz ? v.bz + ' mg/dl' : '') + zeile('AF', v.af ? v.af + ' /min' : '') + zeile('GCS', v.gcs) +
+      zeile('EKG', [(d.ekg || {}).befunde ? d.ekg.befunde.join(', ') : '', (d.ekg || {}).text || ''].filter(Boolean).join(' – ')) + '</table>' +
+    '<h2>Scores</h2><div class="score">NEWS2: <b>' + sc.news.wert + '</b> – ' + htmlEsc(sc.news.text) + (sc.news.fehlt.length ? ' (unvollständig: ' + sc.news.fehlt.join(', ') + ')' : '') + '</div>' +
+      '<div class="score">qSOFA: <b>' + sc.qsofa.wert + '</b> – ' + htmlEsc(sc.qsofa.text) + '</div>' +
+      (sc.crb.aktiv ? '<div class="score">CRB-65: <b>' + sc.crb.wert + '</b>' + (sc.crb.d ? ' + D' : '') + (sc.crb.s ? ' + S' : '') + ' – ' + htmlEsc(sc.crb.text) + '</div>' : '') +
+      (sc.schock ? '<div class="score">Schockindex: <b>' + String(sc.schock.wert).replace('.', ',') + '</b> – ' + htmlEsc(sc.schock.text) + '</div>' : '') +
+      sc.hinweise.map(h=> '<div class="score">' + htmlEsc(h) + '</div>').join('') +
+    text('Therapie', 'therapie') + text('Sonstiges', 'sonstiges') +
+    (bilder.length ? '<h2>Fotos</h2>' + bilder.map(u=> '<img src="' + u + '">').join('') : '') +
+    '<div class="klein">Erstellt ' + new Date().toLocaleString('de-DE') + '. Scores sind eine Entscheidungshilfe und ersetzen nicht die ärztliche Gesamtbeurteilung.</div></body></html>';
+}
+// --- Editor ---
+// fall: { id (Doku-ID), name, datum (ISO), zeit, alter, artText }
+async function dokuOeffnen(fall){
+  let d = dokuLaden(fall.id);
+  if(!d && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') d = await dokuAusOneDrive(fall.id);
+  d = Object.assign({ id: fall.id, vital: {}, zustand: {}, ekg: { befunde: [], text: '' }, fotos: [], anamnese: '', befund: '', therapie: '', sonstiges: '' }, d || {});
+  ['name', 'datum', 'zeit', 'artText'].forEach(k=>{ if(fall[k]) d[k] = fall[k]; });
+  if(fall.alter != null && fall.alter !== '' && (d.alter == null || d.alter === '')) d.alter = fall.alter;
+  const ov = document.createElement('div');
+  ov.className = 'nfp-overlay doku-overlay';
+  const feld = (k, label, einheit, attr)=> '<label class="doku-vw"><span>' + label + '</span><span class="doku-vw-in"><input type="text" inputmode="decimal" data-v="' + k + '" value="' + htmlEsc(d.vital[k] == null ? '' : d.vital[k]) + '"' + (attr || '') + '>' + (einheit ? '<i>' + einheit + '</i>' : '') + '</span></label>';
+  const tf = (k, label)=> '<label class="doku-tf"><span>' + label + '</span><textarea data-t="' + k + '" rows="3">' + htmlEsc(d[k] || '') + '</textarea></label>';
+  const zu = (k, label)=> '<label class="doku-zu"><input type="checkbox" data-z="' + k + '"' + (d.zustand[k] ? ' checked' : '') + '> ' + label + '</label>';
+  ov.innerHTML = '<div class="nfp-kopf"><b>Dokumentation <small>' + htmlEsc(d.name || '') + '</small></b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
+    '<div class="doku-inhalt">' +
+      '<section><h3>Fotos</h3><div class="doku-fotos" id="dokuFotos"></div>' +
+        '<div class="doku-reihe"><label class="btn-sekundaer doku-foto-knopf">📷 Foto aufnehmen<input type="file" accept="image/*" capture="environment" id="dokuKamera" hidden></label>' +
+        '<label class="btn-sekundaer doku-foto-knopf">🖼 Aus Galerie<input type="file" accept="image/*" multiple id="dokuGalerie" hidden></label></div></section>' +
+      '<section><h3>Vitalwerte</h3><div class="doku-vgrid">' + feld('spo2', 'SpO₂', '%') + feld('af', 'AF', '/min') + feld('rrSys', 'RR sys', 'mmHg') + feld('rrDia', 'RR dia', 'mmHg') +
+        feld('puls', 'Puls', '/min') + feld('temp', 'Temp', '°C') + feld('bz', 'BZ', 'mg/dl') + feld('gcs', 'GCS', '3–15') +
+        '<label class="doku-vw"><span>Alter</span><span class="doku-vw-in"><input type="text" inputmode="numeric" id="dokuAlter" value="' + htmlEsc(d.alter == null ? '' : d.alter) + '"><i>J.</i></span></label></div>' +
+        '<div class="doku-zus">' + '<label class="doku-zu"><input type="checkbox" data-o2' + (d.vital.o2 ? ' checked' : '') + '> O₂-Gabe</label>' + zu('verwirrt', 'neu verwirrt / bewusstseinsgetrübt') +
+          zu('pneumonie', 'V. a. Pneumonie') + zu('infekt', 'V. a. Infekt / Sepsis') + zu('komorbid', 'instabile Komorbidität / bettlägerig ≥ 50 %') + '</div></section>' +
+      '<section><h3>EKG</h3><div class="fb-chips doku-ekg">' + DOKU_EKG.map(e=> '<button type="button" class="fb-chip' + ((d.ekg.befunde || []).includes(e) ? ' an' : '') + '" data-ekg="' + e + '">' + e + '</button>').join('') + '</div>' +
+        '<textarea data-ekgtext rows="2" placeholder="Interpretation, z. B. Lagetyp, Frequenz, Besonderheiten">' + htmlEsc(d.ekg.text || '') + '</textarea></section>' +
+      '<section><h3>Scores</h3><div id="dokuScores"></div></section>' +
+      '<section><h3>Verlauf</h3>' + tf('anamnese', 'Anamnese') + tf('befund', 'Befund') + tf('therapie', 'Therapie') + tf('sonstiges', 'Sonstiges') + '</section>' +
+    '</div>' +
+    '<div class="nfp-fuss"><div class="nfp-info" id="dokuInfo"></div><div class="nfp-knoepfe"><button type="button" id="dokuExport">Export / PDF</button><button type="button" class="btn-primaer nfp-ok" id="dokuFertig">Speichern</button></div></div>';
+  document.body.appendChild(ov);
+  document.body.classList.add('nfp-offen');
+  const info = ov.querySelector('#dokuInfo');
+  let fertigRes = null; const ergebnis = new Promise(r=> fertigRes = r);
+  const lesen = ()=>{
+    ov.querySelectorAll('[data-v]').forEach(i=> d.vital[i.dataset.v] = i.value.trim());
+    d.vital.o2 = ov.querySelector('[data-o2]').checked;
+    ov.querySelectorAll('[data-z]').forEach(i=> d.zustand[i.dataset.z] = i.checked);
+    ov.querySelectorAll('[data-t]').forEach(i=> d[i.dataset.t] = i.value);
+    d.ekg.text = ov.querySelector('[data-ekgtext]').value;
+    d.alter = ov.querySelector('#dokuAlter').value.trim();
+  };
+  const scoresZeichnen = ()=>{
+    const s = dokuScores(d), farbe = (st)=> ({ hoch: 'rot', mittel: 'orange', 'niedrig–mittel': 'gelb', niedrig: 'gruen' }[st] || '');
+    const fehlt = (l)=> l.length ? '<small class="doku-fehlt">fehlt: ' + l.join(', ') + '</small>' : '';
+    ov.querySelector('#dokuScores').innerHTML =
+      '<div class="doku-score ' + farbe(s.news.stufe) + '"><b>NEWS2 ' + (s.news.mindestens ? '≥ ' : '') + s.news.wert + '</b><span>' + htmlEsc(s.news.text) + '</span>' + fehlt(s.news.fehlt) + '</div>' +
+      '<div class="doku-score ' + (s.qsofa.wert >= 2 ? 'rot' : 'gruen') + '"><b>qSOFA ' + (s.qsofa.mindestens ? '≥ ' : '') + s.qsofa.wert + '</b><span>' + htmlEsc(s.qsofa.text) + '</span>' + fehlt(s.qsofa.fehlt) + '</div>' +
+      (s.crb.aktiv ? '<div class="doku-score ' + farbe(s.crb.stufe) + '"><b>CRB-65 ' + s.crb.wert + (s.crb.d ? ' + D' : '') + (s.crb.s ? ' + S' : '') + '</b><span>' + htmlEsc(s.crb.text) + '</span>' + fehlt(s.crb.fehlt) + '</div>'
+        : '<div class="doku-score aus"><b>CRB-65</b><span>Für die Einweisungsempfehlung „V. a. Pneumonie“ anhaken.</span></div>') +
+      (s.schock ? '<div class="doku-score ' + (s.schock.wert >= 1 ? 'rot' : s.schock.wert > 0.7 ? 'gelb' : 'gruen') + '"><b>Schockindex ' + String(s.schock.wert).replace('.', ',') + '</b><span>' + htmlEsc(s.schock.text) + '</span></div>' : '') +
+      s.hinweise.map(h=> '<div class="doku-score orange"><span>' + htmlEsc(h) + '</span></div>').join('') +
+      '<div class="doku-quelle">NEWS2 (RCP), qSOFA (Sepsis-3), CRB-65 mit D/S-Kriterien (S3-Leitlinie ambulant erworbene Pneumonie). Entscheidungshilfe – ersetzt nicht die ärztliche Gesamtbeurteilung.</div>';
+  };
+  let fotoUrls = [];
+  const fotosZeichnen = async ()=>{
+    fotoUrls.forEach(u=> URL.revokeObjectURL(u)); fotoUrls = [];
+    const box = ov.querySelector('#dokuFotos');
+    if(!d.fotos.length){ box.innerHTML = '<div class="doku-leer">Noch keine Fotos (z. B. Notfallschein).</div>'; return; }
+    box.innerHTML = d.fotos.map((f, i)=> '<div class="doku-foto" data-foto="' + i + '"><span class="doku-foto-laedt">…</span><button type="button" class="doku-foto-weg" data-fotoweg="' + i + '" aria-label="Foto löschen">×</button></div>').join('');
+    for(let i = 0; i < d.fotos.length; i++){
+      const b = await dokuFotoBlob(d, d.fotos[i]); const el = box.querySelector('[data-foto="' + i + '"]'); if(!el) continue;
+      if(b){ const u = URL.createObjectURL(b); fotoUrls.push(u); el.style.backgroundImage = 'url(' + u + ')'; el.querySelector('.doku-foto-laedt').remove(); el.dataset.url = u; }
+      else el.querySelector('.doku-foto-laedt').textContent = 'nicht geladen';
+    }
+    box.querySelectorAll('[data-foto]').forEach(el=> el.onclick = (ev)=>{ if(ev.target.closest('[data-fotoweg]') || !el.dataset.url) return; const w = document.createElement('div'); w.className = 'doku-gross'; w.innerHTML = '<img src="' + el.dataset.url + '" alt="">'; w.onclick = ()=> w.remove(); document.body.appendChild(w); });
+    box.querySelectorAll('[data-fotoweg]').forEach(b=> b.onclick = async ()=>{
+      if(!await betaFrage('Foto löschen?', 'Löschen', 'Abbrechen')) return;
+      const f = d.fotos.splice(+b.dataset.fotoweg, 1)[0];
+      dokuDb.weg(d.id + '/' + f.name).catch(()=>{});
+      if(f.oben){ try{ const token = await msGraphTokenHolen(); if(token) await fetch(msGraphPfadUrl(DOKU_ORDNER + '/' + d.id + '/' + f.name), { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } }); }catch(_){} }
+      dokuSpeichernLokal(d); fotosZeichnen();
+    });
+  };
+  const fotosNeu = async (dateien)=>{
+    for(const datei of Array.from(dateien || [])){
+      try{
+        const blob = await dokuFotoVerkleinern(datei);
+        const nr = d.fotos.reduce((m, f)=> Math.max(m, +(/(\d+)/.exec(f.name) || [0, 0])[1]), 0) + 1;
+        const name = 'foto_' + zz2(nr) + '.jpg';
+        await dokuDb.setzen(d.id + '/' + name, blob);
+        d.fotos.push({ name, am: new Date().toISOString(), oben: false });
+      }catch(e){ appToastAnzeigen(e.message || String(e), 3000); }
+    }
+    dokuSpeichernLokal(d); fotosZeichnen();
+  };
+  ov.querySelector('#dokuKamera').onchange = (ev)=>{ fotosNeu(ev.target.files); ev.target.value = ''; };
+  ov.querySelector('#dokuGalerie').onchange = (ev)=>{ fotosNeu(ev.target.files); ev.target.value = ''; };
+  ov.querySelectorAll('[data-ekg]').forEach(b=> b.onclick = ()=>{
+    const l = d.ekg.befunde || (d.ekg.befunde = []), i = l.indexOf(b.dataset.ekg);
+    if(i >= 0) l.splice(i, 1); else l.push(b.dataset.ekg);
+    b.classList.toggle('an', i < 0); dokuSpeichernLokal(d);
+  });
+  ov.addEventListener('input', ()=>{ lesen(); scoresZeichnen(); dokuSpeichernLokal(d); });
+  ov.addEventListener('change', ()=>{ lesen(); scoresZeichnen(); dokuSpeichernLokal(d); });
+  const schliessen = ()=>{ fotoUrls.forEach(u=> URL.revokeObjectURL(u)); ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(d); };
+  const speichern = async (auchSchliessen)=>{
+    lesen(); dokuSpeichernLokal(d);
+    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ info.textContent = 'Im Gerät gespeichert – in OneDrive, sobald angemeldet.'; if(auchSchliessen) schliessen(); return; }
+    info.textContent = 'Wird in OneDrive gespeichert …';
+    try{ await dokuHochladen(d, (t)=> info.textContent = t); info.textContent = '✓ In OneDrive gespeichert (Dokumentation/' + d.id + ').'; if(auchSchliessen) schliessen(); }
+    catch(e){ info.textContent = 'Im Gerät gespeichert – OneDrive: ' + (e.message || e); }
+  };
+  ov.querySelector('.nfp-zu').onclick = ()=> speichern(true);
+  ov.querySelector('#dokuFertig').onclick = ()=> speichern(true);
+  ov.querySelector('#dokuExport').onclick = async ()=>{
+    lesen(); info.textContent = 'Export wird erstellt …';
+    const html = await dokuExportHtml(d);
+    const datei = 'Dokumentation ' + (d.datum || '') + ' ' + String(d.name || '').replace(/[\\/:*?"<>|]/g, '').trim() + '.html';
+    // in OneDrive ablegen
+    if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){
+      try{ const token = await msGraphTokenHolen(); if(token) await msGraphDateiHochladen(token, DOKU_ORDNER + '/' + d.id + '/' + datei, html, 'text/html'); }catch(_){}
+    }
+    const w = await betaOverlay.ergebnis('Export', 'Die Dokumentation ist als „' + htmlEsc(datei) + '“' + (msGraphStatus === 'angemeldet' ? ' in OneDrive (Dokumentation/' + htmlEsc(d.id) + ') abgelegt' : ' erstellt') + '.<br><span class="beta-erg-klein">„Drucken / PDF“ öffnet den Druckdialog – dort „Als PDF speichern“ wählen.</span>',
+      [{ label: 'Schließen', akt: 'zu' }, ...(navigator.share ? [{ label: 'Teilen', akt: 'teilen' }] : []), { label: 'Drucken / PDF', akt: 'druck', primaer: true }]);
+    betaOverlay.schliessen(); info.textContent = '';
+    if(w === 'druck'){
+      const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;'; document.body.appendChild(f);
+      f.srcdoc = html; f.onload = ()=>{ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(_){} setTimeout(()=> f.remove(), 60000); };
+    } else if(w === 'teilen'){
+      try{ await navigator.share({ files: [new File([html], datei, { type: 'text/html' })], title: datei }); }catch(_){}
+    }
+  };
+  scoresZeichnen(); fotosZeichnen();
+  // Fotos, die noch nicht hochgeladen sind, im Hintergrund nachholen
+  if(d.fotos.some(f=> !f.oben) && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') dokuHochladen(d).catch(()=>{});
+  return ergebnis;
+}
+function dokuAlterAusGeda(geda, bezug){
+  const m = /^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/.exec(String(geda || '').trim()); if(!m) return '';
+  const j = +m[3] < 100 ? 1900 + +m[3] : +m[3], b = bezug || new Date();
+  let a = b.getFullYear() - j; if(b.getMonth() + 1 < +m[2] || (b.getMonth() + 1 === +m[2] && b.getDate() < +m[1])) a--;
+  return a >= 0 && a < 130 ? a : '';
 }
 
 // ---------- Rechnungsverwaltung: Reiter LS/PT | GKV ----------
@@ -12671,7 +12989,7 @@ function ansichtGkv(bearbeitenId){
   const jetzt = new Date();
   const alle = gkvFaelleLaden();
   let f = bearbeitenId ? alle.find(x=> x.id === bearbeitenId) : null;
-  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null }
+  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null, dokuId: f.dokuId || null }
     : (gkvEntwurf || Object.assign({ id: '', name: '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()) }, gkvStartAuswahl()));
   gkvEntwurf = st.id ? null : st;
   let liste = gkvListeLaden();
@@ -12695,6 +13013,7 @@ function ansichtGkv(bearbeitenId){
       <div class="gkv-zeitinfo" id="gkvKmInfo">${st.kmInfo || ''}</div>
       <div id="gkvWegBlock"></div>
       <div class="routen-karte" id="gkvRouteKarte"></div></div>
+      <div id="gkvDokuBox">${dokuKnopfHtml(st.dokuId)}</div>
     </div>
     <div class="profil-leiste gkv-profile" id="gkvProfile"></div>
     <div id="gkvListe"></div>
@@ -12907,6 +13226,16 @@ function ansichtGkv(bearbeitenId){
     kmUebernehmen(erg.stufe, (erg.woher ? htmlEsc(erg.woher) + ' · ' : '') + 'Karte NFP: <b>' + htmlEsc(erg.text) + '</b> → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(erg.stufe)) + '</b> · ' + htmlEsc(erg.kmText || ''));
   };
   el('gkvName').oninput = ()=>{ st.name = el('gkvName').value; el('gkvName').classList.remove('pflichtfeld-fehlt'); };
+  // Dokumentation (optional) zum Fall
+  el('btnDoku').onclick = async ()=>{
+    if(!st.dokuId){
+      st.dokuId = dokuNeueId();
+      if(st.id){ const arr = gkvFaelleLaden(), x = arr.find(y=> y.id === st.id); if(x){ x.dokuId = st.dokuId; gkvFaelleSpeichern(arr); } }
+    }
+    st.name = el('gkvName').value.trim();
+    await dokuOeffnen({ id: st.dokuId, name: st.name, datum: st.datum, zeit: el('gkvZeit').value, artText: 'GKV-Patient' });
+    const k = document.getElementById('dokuKurz'); if(k) k.textContent = dokuKurz(st.dokuId);
+  };
   // wie bei LS/PT: Einsatzmeldung (Patient:, Strasse:, Ort:) aus der Zwischenablage
   el('gkvZwischenablage').onclick = async ()=>{
     const h = el('gkvZwHinweis'); h.textContent = '';
@@ -12951,7 +13280,7 @@ function ansichtGkv(bearbeitenId){
     const eintrag = { id: st.id || ('g' + Date.now().toString(36)), name: st.name, datum: st.datum, zeit: st.zeit,
       auswahl: JSON.parse(JSON.stringify(st.auswahl)), profil: st.profil || '', positionen: pos.map(p=> ({ gop: p.gop, anz: p.anz })),
       euro: betaRund2(pos.reduce((s, p)=> s + p.euro, 0)), status: 'offen', alterName: null,
-      adresse: st.adresse || '', geo: st.kmGeo && st.kmGeo.lat ? { lat: +(+st.kmGeo.lat).toFixed(5), lon: +(+st.kmGeo.lon).toFixed(5) } : null };
+      adresse: st.adresse || '', geo: st.kmGeo && st.kmGeo.lat ? { lat: +(+st.kmGeo.lat).toFixed(5), lon: +(+st.kmGeo.lon).toFixed(5) } : null, dokuId: st.dokuId || null };
     const i = arr.findIndex(x=> x.id === eintrag.id);
     if(i >= 0){ eintrag.alterName = arr[i].name !== eintrag.name ? arr[i].name : (arr[i].alterName || null); eintrag.zeile = arr[i].zeile; arr[i] = eintrag; }
     else arr.push(eintrag);
@@ -15055,7 +15384,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v226';
+const APP_VERSION = 'v227';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -16537,6 +16866,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     `<button class="btn-primaer blass" id="btnPunkte">Rechnungspositionen auswählen
       <span class="unter" id="punkteStatus">${positionenAuswahl? positionenAuswahl.size+' Position(en) ausgewählt' : 'noch nicht geprüft'}</span></button>`);
 
+  html += `<input type="hidden" id="txtDokuId" value="${htmlEsc(werte.txtDokuId || '')}">` + dokuKnopfHtml(werte.txtDokuId || '');
   html += `<div id="allgemeinerHinweis"></div>`;
   html += `<button class="btn-primaer" id="btnSpeichern">Speichern</button>`;
   html += `</div>`;
@@ -16544,8 +16874,18 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   app.innerHTML = html;
 
   const feldIds = art==='ls'
-    ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2']
-    : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmFahrstrecke','txtKmLuftlinie'];
+    ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2','txtDokuId']
+    : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtDokuId'];
+  // Dokumentation (optional) zum Fall
+  document.getElementById('btnDoku').onclick = async ()=>{
+    const idEl = document.getElementById('txtDokuId');
+    if(!idEl.value){ idEl.value = dokuNeueId(); idEl.dispatchEvent(new Event('input', { bubbles: true })); idEl.dispatchEvent(new Event('change', { bubbles: true })); }
+    const wert = (id)=> ((document.getElementById(id) || {}).value || '').trim();
+    const dn = normalisiereDatum(wert('txtDatumExcel')), dm = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(dn || '');
+    await dokuOeffnen({ id: idEl.value, name: wert('txtName'), datum: dm ? dm[3] + '-' + zz2(+dm[2]) + '-' + zz2(+dm[1]) : '', zeit: wert('txtZeitLS'),
+      alter: dokuAlterAusGeda(wert('txtGeda')), artText: art === 'ls' ? 'Leichenschau' : 'Privatrechnung' });
+    const k = document.getElementById('dokuKurz'); if(k) k.textContent = dokuKurz(idEl.value);
+  };
 
   // Pflichtfelder je Maskentyp (siehe btnSpeichern.onclick unten) -- ALLE
   // Felder, die tatsächlich ausgefüllt werden sollen, nicht nur die
