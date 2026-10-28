@@ -57,7 +57,7 @@
 })();
 </script>
 
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Rechnungserfassung</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -72,6 +72,9 @@
      bevor das Design per Skript gesetzt ist) -->
 <script>
 try{
+  // iOS ignoriert user-scalable=no -- Zwei-Finger-Zoom dort abfangen; am PC Strg+Mausrad
+  document.addEventListener('gesturestart', function(ev){ ev.preventDefault(); });
+  window.addEventListener('wheel', function(ev){ if(ev.ctrlKey && !(ev.target.closest && ev.target.closest('.mini-fenster, .nfp-scroll, .osm-scroll, .vk-karte'))) ev.preventDefault(); }, { passive: false });
   var e0 = JSON.parse(localStorage.getItem('einstellungen') || '{}') || {};
   // wie spaeter in der App: ohne manuelle Wahl folgt sie dem System-Dunkelmodus
   var dk0 = e0.design === 'nacht' || (e0.dunkelManuell ? !!e0.dunkel : (window.matchMedia ? matchMedia('(prefers-color-scheme: dark)').matches : !!e0.dunkel));
@@ -83,6 +86,10 @@ try{
 </script>
 <style>
   html.frueh-dunkel{background:#000; color-scheme:dark;}
+  /* App nicht zoombar (Doppeltippen/Zwei-Finger); Karten zoomen selbst */
+  html, body{touch-action:manipulation;}
+  /* PC: keine Scrollleiste rechts (Scrollen per Mausrad/Touchpad bleibt) */
+  html{scrollbar-width:none;} html::-webkit-scrollbar{display:none;}
   html.frueh-dunkel body:not(.dunkel){background:#000;}
   /* BETA: eigenes Fenster (statt Browser-Popups) mit Ladeanimation */
   .beta-overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:10000; padding:16px; box-sizing:border-box;}
@@ -1389,7 +1396,8 @@ try{
   body.design-nacht .nfp-knoepfe .nfp-ok{background:var(--ds-akzent); border-color:var(--ds-akzent); color:#1a1206; border-radius:22px;}
   body.design-nacht #app .kachelreihe.drei{display:none;}
   /* Start */
-  .ds-live .ds-kopfzeile{font-size:12.5px; font-weight:500; letter-spacing:.08em; color:var(--text-schwach); text-align:center; margin:2px 0 4px;}
+  .ds-live .ds-kopfzeile{font-size:12.5px; font-weight:500; letter-spacing:.08em; color:var(--text-schwach); text-align:center; margin:30px 0 0;}
+  .ds-live .ds-ring-block .ds-ring{margin-top:-2px;}
   .ds-ring{position:relative; width:min(280px, 74vw); aspect-ratio:1/1; margin:6px auto 0;}
   .ds-ring svg{display:block; width:100%; height:100%;}
   .ds-ring-aussen{fill:none; stroke:var(--rand); stroke-width:1;}
@@ -5008,7 +5016,7 @@ async function ansichtAlleRechnungen(){
   setzeTitel('Rechnungsverwaltung', ansichtStart);
   app.innerHTML = `
     <div class="feld" style="margin-bottom:6px;">
-      <input type="text" id="txtAlleSuche" autocomplete="off" placeholder="Suche: Name oder Rechnungsnummer">
+      <input type="text" id="txtAlleSuche" autocomplete="off" placeholder="Suche: Name, Rechnungsnummer oder Datum">
     </div>
     <button class="btn-sekundaer" id="btnAlleNeuLaden" style="margin-bottom:12px;">Neu laden</button>
     <div id="alleRechnungenListe"><div class="leer-hinweis">Lade Rechnungsübersicht...</div></div>`;
@@ -5036,7 +5044,7 @@ function alleRechnungenListeRendern(cache, suchtext){
   const liste = cache.liste, blattName = cache.blattName;
   const suche = (suchtext||'').trim().toLowerCase();
   const gefiltert = suche ? liste.filter(f=>
-    (f.nachname+' '+f.vorname).toLowerCase().includes(suche) || f.renu.toLowerCase().includes(suche)
+    (f.nachname+' '+f.vorname).toLowerCase().includes(suche) || f.renu.toLowerCase().includes(suche) || String(f.datum || '').toLowerCase().includes(suche)
   ) : liste;
 
   if(!gefiltert.length){
@@ -7791,7 +7799,7 @@ async function ansichtRechnungenGesamt(neuLaden){
   const ziel = betaZiel(), zk = betaZielKey(ziel);
   app.innerHTML = vwTabsHtml('lspt') + `
     <div class="gesamt-kopf">
-      <div class="feld" style="margin-bottom:0;"><input type="text" id="txtGesamtSuche" autocomplete="off" placeholder="Suche: Name oder Rechnungsnummer"></div>
+      <div class="feld" style="margin-bottom:0;"><input type="text" id="txtGesamtSuche" autocomplete="off" placeholder="Suche: Name, Rechnungsnummer oder Datum"></div>
       <div class="gesamt-knoepfe">
         <button type="button" id="btnGesamtHochladen" class="betont" style="display:none;"></button>
         <button type="button" id="btnGesamtNeu">Neu laden</button>
@@ -9018,7 +9026,8 @@ function betaGesamtZeichnen(suchtext, ziel){
   const ana = c.ana || null;
   const dateien = c.dateien || new Map();
   const such = String(suchtext || '').trim().toLowerCase();
-  const passt = (name, renu)=> !such || String(name || '').toLowerCase().includes(such) || String(renu || '').toLowerCase().includes(such);
+  const passt = (name, renu, datum)=> !such || [name, renu, datum].some(x=> String(x || '').toLowerCase().includes(such));
+  const wDatum = (w)=> [(w || {}).txtDatumExcel, (w || {}).txtDatum].filter(Boolean).join(' ');
 
   // lokale Faelle: noch nicht hochgeladen? (wie bisher)
   const lokale = [];
@@ -9075,7 +9084,7 @@ function betaGesamtZeichnen(suchtext, ziel){
 
   let html = '';
   // unfertige (noch nie gespeicherte) Rechnungen ganz oben
-  const entwuerfe = betaEntwuerfe().filter(e=> passt((e.werte || {}).txtName, ''));
+  const entwuerfe = betaEntwuerfe().filter(e=> passt((e.werte || {}).txtName, '', wDatum(e.werte)));
   if(entwuerfe.length){
     html += '<div class="gesamt-abschnitt">Unfertig</div>' + entwuerfe.map(e=>`
       <div class="wisch-huelle" data-entwurf="${htmlEsc(e.id)}"><div class="wisch-hinter">&#128465; Löschen</div>
@@ -9087,7 +9096,7 @@ function betaGesamtZeichnen(suchtext, ziel){
         </div>
       </div></div>`).join('');
   }
-  const offenSichtbar = offen.filter(f=> passt((f.werte || {}).txtName, f.rechnungsnummer));
+  const offenSichtbar = offen.filter(f=> passt((f.werte || {}).txtName, f.rechnungsnummer, wDatum(f.werte)));
   if(offenSichtbar.length){
     html += '<div class="gesamt-abschnitt">Noch nicht hochgeladen</div>' + offenSichtbar.map(f=>`
       <div class="wisch-huelle" data-lokal="${f.art}:${htmlEsc(f.zeitstempel)}"><div class="wisch-hinter">&#128465; Löschen</div>
@@ -9100,7 +9109,7 @@ function betaGesamtZeichnen(suchtext, ziel){
         <div class="fall-icons"><span class="badge-hochladen" data-akt="hoch" title="Jetzt hochladen">&#11014;</span></div>
       </div></div>`).join('');
   }
-  const andereSichtbar = andereAblage.filter(f=> passt((f.werte || {}).txtName, f.rechnungsnummer));
+  const andereSichtbar = andereAblage.filter(f=> passt((f.werte || {}).txtName, f.rechnungsnummer, wDatum(f.werte)));
   if(andereSichtbar.length){
     html += '<div class="gesamt-abschnitt">' + (zk === 'echt' ? 'Alte Testfälle (frühere Testablage)' : 'Aus dem Echtbetrieb') + '</div>' + andereSichtbar.map(f=>`
       <div class="wisch-huelle" data-testfall="${f.art}:${htmlEsc(f.zeitstempel)}"><div class="wisch-hinter">&#128465; Löschen</div>
@@ -9120,7 +9129,7 @@ function betaGesamtZeichnen(suchtext, ziel){
     html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '<br>„Neu laden“ versuchen.</div>';
   } else if(ana){
     // Treffer der Suche: Rechnung samt Unterpositionen
-    const sichtbarZeilen = new Set(eintraege.filter(e=> e.typ === 'ORIG' && passt(e.name, e.renu)).map(e=> e.z.nr));
+    const sichtbarZeilen = new Set(eintraege.filter(e=> e.typ === 'ORIG' && passt(e.name, e.renu, e.datum)).map(e=> e.z.nr));
     const sichtbar = eintraege.filter(e=> sichtbarZeilen.has(e.z.nr));
     const MAX = 200;
     html += '<div class="gesamt-abschnitt">Rechnungsübersicht (' + eintraege.filter(e=> e.typ === 'ORIG').length + ')</div>';
@@ -14804,9 +14813,10 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v220';
+const APP_VERSION = 'v221';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
+  try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
   try{
     const d = designAktuell(), b = document.body;
     DESIGNS.forEach(x=> b.classList.toggle('design-' + x.k, x.k === d));
