@@ -1564,6 +1564,11 @@ try{
   .luft-karte-flaeche{position:relative; width:100%; overflow:hidden; border:1px solid var(--rand); border-radius:10px; background:#d6d9dd;}
   .luft-karte-flaeche img{position:absolute; max-width:none; height:auto; user-select:none; pointer-events:none;}
   .luft-karte-flaeche svg{position:absolute; inset:0; width:100%; height:100%;}
+  .luft-weg-alt{fill:none; stroke:#6b7686; stroke-width:4; stroke-dasharray:9 7; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; opacity:.8;}
+  .luft-wahl{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .luft-wahl button{width:auto; margin:0; padding:7px 10px; border-radius:14px; border:1px solid var(--rand); background:var(--karte); color:var(--text); font-size:13px; text-align:left; line-height:1.25;}
+  .luft-wahl button.an{background:#1a55c9; border-color:#1a55c9; color:#fff;}
+  .luft-wahl button small{display:block; font-size:11.5px; opacity:.8;}
   .luft-weg{fill:none; stroke:#1a55c9; stroke-width:4; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; opacity:.9;}
   .luft-linie{stroke:#111; stroke-width:2.5; stroke-dasharray:7 6; vector-effect:non-scaling-stroke;}
   .luft-start{fill:#1a55c9; stroke:#fff; stroke-width:2.5; vector-effect:non-scaling-stroke;}
@@ -1619,6 +1624,7 @@ try{
   .ze-schwebe button.an{background:#1f5f9e; border-color:#1f5f9e; color:#fff;}
   .ze-schwebe .ze-s-modus.an{background:var(--zf); border-color:var(--zf);}
   .ze-schwebe button:disabled{opacity:.45;}
+  .ze-schwebe .ze-s-ringe{font-size:14px; font-weight:800;}
   .ze-overlay .ze-s-modus, .ze-overlay .ze-s-undo{display:none;}
   .ze-overlay.ze-voll .ze-s-modus, .ze-overlay.ze-voll .ze-s-undo{display:flex;}
   .ze-overlay.ze-voll .nfp-kopf, .ze-overlay.ze-voll .ze-leiste, .ze-overlay.ze-voll .nfp-fuss{display:none;}
@@ -4410,12 +4416,16 @@ function ansichtLuftlinienTool(){
       // grobe Schaetzung) ueber denselben Routendienst (OSRM) ermitteln --
       // derselbe Code, der auch sonst fuer Hin- und Rueckfahrt verwendet
       // wird (routeAlternativen liefert die Einfachstrecke je Route).
+      let routen = [];
       try{
-        const routen = await routeMitWeg(start, ziel);
+        routen = await routeMitWeg(start, ziel);
+        // fast gleiche Varianten (km auf 0,2 genau) nur einmal
+        routen = (routen || []).filter((x, i, a)=> a.findIndex(y=> Math.abs(y.km - x.km) < 0.2) === i);
         if(routen && routen.length){
           luftWeg = routen[0].coords;
           const kmGesamt = routen[0].km*2;
-          zeile2 = `<strong>Fahrstrecke (Hin- und Rückfahrt):</strong> ${kmGesamt.toFixed(1).replace('.',',')} km`;
+          zeile2 = `<strong>Fahrstrecke (Hin- und Rückfahrt):</strong> <span id="luftFahrKm">${kmGesamt.toFixed(1).replace('.',',')}</span> km` +
+            (routen.length > 1 ? '<div class="luft-wahl" id="luftWahl">' + routen.map((x, i)=> '<button type="button" data-route="' + i + '" class="' + (i ? '' : 'an') + '">Variante ' + (i + 1) + ': ' + (x.km * 2).toFixed(1).replace('.', ',') + ' km<small>' + Math.round(x.minuten) + ' min einfach</small></button>').join('') + '</div>' : '');
         } else {
           zeile2 = `<span class="luft-ergebnis-hinweis">Fahrstrecke konnte nicht ermittelt werden -- nur die Luftlinie steht zur Verfügung.</span>`;
         }
@@ -4431,7 +4441,19 @@ function ansichtLuftlinienTool(){
       zeigeErgebnis(`<div class="luft-ergebnis-zeile luft-von-bis">Von ${htmlEsc(vonAdresse)}<br>bis ${htmlEsc(adresse)}</div>${kartenZeile}
         <div class="luft-ergebnis-zeile"><strong>Luftlinie (einfach):</strong> ${luft.toFixed(1).replace('.',',')} km</div>
         <div class="luft-ergebnis-zeile">${zeile2}</div>`, false);
-      try{ await luftKarteZeigen(document.getElementById('luftErgebnis'), start, ziel, luftWeg, adresse); }catch(_){}
+      const karteMit = async (i)=>{
+        const ergEl = document.getElementById('luftErgebnis'); if(!ergEl) return;
+        ergEl.querySelectorAll('.luft-karte').forEach(k=> k.remove());
+        const alt = routen.filter((_, j)=> j !== i).map(x=> x.coords);
+        try{ await luftKarteZeigen(ergEl, start, ziel, routen[i] ? routen[i].coords : luftWeg, adresse, alt); }catch(_){}
+      };
+      await karteMit(0);
+      document.querySelectorAll('#luftWahl [data-route]').forEach(b=> b.onclick = ()=>{
+        const i = +b.dataset.route;
+        document.querySelectorAll('#luftWahl [data-route]').forEach(x=> x.classList.toggle('an', x === b));
+        const k = document.getElementById('luftFahrKm'); if(k) k.textContent = (routen[i].km * 2).toFixed(1).replace('.', ',');
+        karteMit(i);
+      });
     }catch(err){
       zeigeErgebnis('Berechnung fehlgeschlagen.'+keinInternetHinweisText(), true);
     }
@@ -13029,7 +13051,7 @@ async function routenKarteSetzen(el, start, ziel, weg, zielText){
 }
 // Ausschnitt der Wegegeld-Karte NFP unter dem Ergebnis: Start, Ziel, NFP,
 // Luftlinie (gestrichelt) und berechnete Fahrstrecke
-async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
+async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText, wegAlt){
   if(!ziel_el || typeof NFP_KARTE === 'undefined') return;
   const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1];
   const pS = nfpGeoZuPixel(start.lat, start.lon), pZ = nfpGeoZuPixel(ziel.lat, ziel.lon), pN = { x: NFP_KARTE.nfp[0], y: NFP_KARTE.nfp[1] };
@@ -13037,10 +13059,10 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText){
   const wegP = (weg || []).map(c=> nfpGeoZuPixel(c[1], c[0])).filter(Boolean);
   // OSM-Ansicht immer moeglich; KVBW nur, wenn Start oder Ziel auf der KVBW-Karte liegt.
   // Startansicht: KVBW, wenn alles darauf liegt, sonst OSM.
-  const osmDaten = { pois: [{ lat: start.lat, lon: start.lon, kl: 'start' }, { lat: ziel.lat, lon: ziel.lon, kl: 'ziel' }], weg: weg || [], linie: [start, ziel], nfp: true, rahmen: true };
+  const osmDaten = { pois: [{ lat: start.lat, lon: start.lon, kl: 'start' }, { lat: ziel.lat, lon: ziel.lon, kl: 'ziel' }], weg: weg || [], wegAlt: wegAlt || [], linie: [start, ziel], nfp: true, rahmen: true };
   const allesDrin = nfpImBild(pS) && nfpImBild(pZ) && !wegP.some(p=> !nfpImBild(p));
   const legende = '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
-    (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="rtw"></i>Wache</span><span><i class="k50"></i>50 km</span></div>';
+    (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + ((wegAlt || []).length ? '<span><i class="r"></i>andere Varianten</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="rtw"></i>Wache</span><span><i class="k50"></i>50 km</span></div>';
   const kvbwOk = nfpImBild(pS) || nfpImBild(pZ);
   const gross = (ebene, ansicht)=>{
     osmKarteOverlay(osmDaten, zielText, { ansicht, ebene: ebene === 'kvbw' && kvbwOk ? 'kvbw' : 'zonen', titel: 'Route' });
@@ -13286,6 +13308,7 @@ function osmAusschnitt(d, opt){
   const P = (g)=> osmWelt(g.lat, g.lon, z), f = (v)=> v.toFixed(1);
   let svg = '<svg viewBox="' + f(x0) + ' ' + f(y0) + ' ' + f(bw) + ' ' + f(bh) + '" preserveAspectRatio="none" aria-hidden="true">';
   if(d.rahmen && typeof NFP_KARTE !== 'undefined' && opt.zonen !== false) svg += osmKartenBereichSvg(z, opt.ebene === 'kvbw' && opt.kvbwUrl ? opt.kvbwUrl : null);
+  (d.wegAlt || []).forEach(w=>{ if(w && w.length > 1) svg += '<polyline class="luft-weg-alt" points="' + w.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>'; });
   if(d.weg && d.weg.length > 1) svg += '<polyline class="luft-weg" points="' + d.weg.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>';
   if(d.linie && d.linie[0] && d.linie[1]){ const a = P(d.linie[0]), b = P(d.linie[1]); svg += '<line class="luft-linie" x1="' + f(a.x) + '" y1="' + f(a.y) + '" x2="' + f(b.x) + '" y2="' + f(b.y) + '"/>'; }
   if(d.nfp && typeof NFP_KARTE !== 'undefined'){
@@ -13937,17 +13960,26 @@ async function standortKarteZeichnen(info, mitDialog){
 // Zone waehlen, im Modus "Zeichnen" mit dem Finger von einer Stelle der Grenze
 // zu einer anderen die richtige Linie ziehen: das kuerzere Stueck der Grenze
 // zwischen Start und Ende wird durch die gezogene Linie ersetzt.
+// Kreis mit km Luftlinie um die NFP, in Kartenpixeln (ueber die Geo-Umrechnung, beruecksichtigt die Verzerrung der Karte)
+function nfpKmRingPixel(km){
+  const m = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]), out = [];
+  for(let i = 0; i < 96; i++){
+    const w = i / 96 * 2 * Math.PI;
+    out.push(nfpGeoZuPixel(m.lat + km / 111.32 * Math.cos(w), m.lon + km / (111.32 * Math.cos(m.lat * Math.PI / 180)) * Math.sin(w)));
+  }
+  return out;
+}
 async function zonenEditorOeffnen(){
   const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1];
   const bild = await nfpKarteBildUrl();
-  let stand = JSON.parse(JSON.stringify(nfpZonenRinge())), verlauf = [], zone = '3', modus = 'zeichnen', geaendert = false, linienAus = false, voll = false;
+  let stand = JSON.parse(JSON.stringify(nfpZonenRinge())), verlauf = [], zone = '3', modus = 'zeichnen', geaendert = false, linienAus = false, voll = false, ringe = !!LS.get('ze_ringe', false);
   const ov = document.createElement('div');
   ov.className = 'nfp-overlay ze-overlay';
   ov.innerHTML = '<div class="nfp-kopf"><b>Zonen bearbeiten</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
     '<div class="ze-leiste"><div class="ze-zonen">' + ['1', '2', '3', '4', '5'].map(k=> '<button type="button" data-zone="' + k + '" style="--zf:' + NFP_ZONEN[k].farbe + '">' + NFP_ZONEN[k].label.replace('-Zone', '') + '</button>').join('') + '</div>' +
       '<div class="ze-werkzeug"><button type="button" class="ze-modus"></button><button type="button" class="ze-undo">↶ Zurück</button><button type="button" class="ze-original">Original</button></div></div>' +
     '<div class="ze-schwebe"><button type="button" class="ze-s-modus" aria-label="Zeichnen/Verschieben"></button><button type="button" class="ze-s-undo" aria-label="Rückgängig">↶</button>' +
-      '<button type="button" class="ze-s-linien" aria-label="Linien ein/aus"></button><button type="button" class="ze-s-voll" aria-label="Vollbild"></button></div>' +
+      '<button type="button" class="ze-s-linien" aria-label="Linien ein/aus"></button><button type="button" class="ze-s-ringe" aria-label="km-Ringe ein/aus">km</button><button type="button" class="ze-s-voll" aria-label="Vollbild"></button></div>' +
     '<div class="nfp-scroll ze-scroll"><div class="nfp-flaeche ze-flaeche"><img alt="KVBW-Karte" draggable="false" src="' + (bild || nfpZonenBildUrl()) + '">' +
       '<svg class="nfp-ueber ze-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none"></svg></div></div>' +
     '<div class="nfp-fuss"><div class="nfp-info ze-info"></div><div class="nfp-knoepfe"><button type="button" data-zoom="-1">−</button><button type="button" data-zoom="1">+</button>' +
@@ -13966,6 +13998,12 @@ async function zonenEditorOeffnen(){
       const an = k === zone;
       if(linienAus) return;
       h += '<path d="' + pfad(k) + '" fill="' + (an ? NFP_ZONEN[k].farbe : 'none') + '" fill-opacity=".18" stroke="' + NFP_ZONEN[k].farbe + '" stroke-width="' + (an ? 4 : 2) + '" stroke-opacity="' + (an ? 1 : .55) + '" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
+    });
+    // Luftlinie ab NFP als Ringe (2/5/10/20/30 km) in der Farbe der jeweiligen Zone
+    if(ringe) ['1', '2', '3', '4', '5'].forEach(k=>{
+      const km = { '1': 2, '2': 5, '3': 10, '4': 20, '5': 30 }[k], ring = nfpKmRingPixel(km);
+      h += '<polygon points="' + ring.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '" fill="none" stroke="' + NFP_ZONEN[k].farbe + '" stroke-width="3" stroke-dasharray="10 6" vector-effect="non-scaling-stroke"/>';
+      const o = ring[0]; h += '<text x="' + f(o.x) + '" y="' + f(o.y - 6) + '" text-anchor="middle" font-size="22" font-weight="700" fill="' + NFP_ZONEN[k].farbe + '" stroke="#fff" stroke-width="4" paint-order="stroke">' + km + ' km</text>';
     });
     if(strich && strich.length > 1) h += '<polyline points="' + strich.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '" fill="none" stroke="#111" stroke-width="3" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>';
     svg.innerHTML = h;
@@ -14047,6 +14085,8 @@ async function zonenEditorOeffnen(){
   ov.querySelector('.ze-s-modus').onclick = ()=> ov.querySelector('.ze-modus').click();
   ov.querySelector('.ze-s-undo').onclick = ()=> ov.querySelector('.ze-undo').click();
   ov.querySelector('.ze-s-linien').onclick = ()=>{ linienAus = !linienAus; zeichnen(); knoepfe(); };
+  const SR = ov.querySelector('.ze-s-ringe'); SR.classList.toggle('an', ringe);
+  SR.onclick = ()=>{ ringe = !ringe; LS.set('ze_ringe', ringe); SR.classList.toggle('an', ringe); zeichnen(); };
   ov.querySelector('.ze-s-voll').onclick = async ()=>{
     const mitte = { x: (sc.scrollLeft + sc.clientWidth / 2) / fl.clientWidth, y: (sc.scrollTop + sc.clientHeight / 2) / Math.max(1, fl.clientHeight) };
     voll = !voll; knoepfe();
@@ -14769,7 +14809,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v222';
+const APP_VERSION = 'v223';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
