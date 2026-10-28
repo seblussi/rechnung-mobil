@@ -4043,7 +4043,7 @@ function setzeTitel(t, zurueckZiel){
   titel.textContent = t;
   aktuelleAnsichtIstHauptbildschirm = false;
   aktuellerZurueckHandler = zurueckZiel || null;
-  if(zurueckZiel){ btnZurueck.style.visibility='visible'; btnZurueck.onclick = zurueckZiel; }
+  if(zurueckZiel){ btnZurueck.style.visibility='visible'; btnZurueck.onclick = ()=> (typeof navZurueckAusfuehren === 'function' ? navZurueckAusfuehren(()=> zurueckZiel()) : zurueckZiel()); }
   else { btnZurueck.style.visibility='hidden'; btnZurueck.onclick=null; }
   // Jede Ansicht (Start, Maske, Rechnungspositionen, ...) ruft setzeTitel()
   // als ersten Schritt auf -- zentraler Ort, um beim Ansichtswechsel IMMER
@@ -12859,7 +12859,7 @@ function ansichtGkv(bearbeitenId){
       gkvFaelleSpeichern(gkvFaelleLaden().filter(x=> x.id !== b.dataset.loesch)); verlaufZeichnen();
     });
   }
-  const adrLesen = ()=> gkvAdrZusammen(el('gkvAdresse').value, el('gkvPlzOrt').value);
+  const adrLesen = ()=> (el('gkvAdresse') && el('gkvPlzOrt')) ? gkvAdrZusammen(el('gkvAdresse').value, el('gkvPlzOrt').value) : (st.adresse || '');
   el('gkvPlzOrt').oninput = ()=> el('gkvAdresse').oninput();
   el('gkvPlzOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(el('gkvAdresse'), el('gkvPlzOrt'), el('gkvPlzInfo')).then(()=>{ st.adresse = adrLesen(); }));
   el('gkvPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); el('gkvKmBtn').click(); } };
@@ -15055,7 +15055,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v225';
+const APP_VERSION = 'v226';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -17832,8 +17832,8 @@ function appToastAnzeigen(text, dauerMs){
       const ovs = document.querySelectorAll('.nfp-overlay'), ov = ovs[ovs.length - 1];
       if(ov){ const zu = ov.querySelector('.nfp-zu'); if(zu){ zu.click(); beendenScharf = false; return; } }
     }catch(_){}
-    if(aktuellerZurueckHandler){ beendenScharf = false; aktuellerZurueckHandler(); return; }
-    if(!aktuelleAnsichtIstHauptbildschirm){ beendenScharf = false; ansichtStart(); return; }
+    if(aktuellerZurueckHandler){ beendenScharf = false; const h = aktuellerZurueckHandler; navZurueckAusfuehren(()=> h()); return; }
+    if(!aktuelleAnsichtIstHauptbildschirm){ beendenScharf = false; navZurueckAusfuehren(()=> ansichtStart()); return; }
     // Startseite: 1. Zurueck -> Hinweis, restliche Waechter abbauen; das
     // naechste Zurueck verlaesst dann die App
     beendenScharf = true;
@@ -17851,6 +17851,34 @@ function appToastAnzeigen(text, dauerMs){
 // (z.B. Auto-Sync-Initialisierung) soll die anderen Teile (allen voran die
 // Zurück-Tasten-Absicherung oben, aber auch die eigentliche Bildschirm-
 // anzeige) nicht mit lahmlegen.
+// ---------- Zurueck = immer einen Schritt zurueck ----------
+// Jede geoeffnete Ansicht kommt in einen Verlauf. Zurueck (Handy-Taste und Pfeil
+// oben) laesst zuerst die eigene Zurueck-Logik der Ansicht laufen (z.B. Entwurf
+// sichern); wuerde die zur Startseite springen, geht es stattdessen zur
+// vorherigen Ansicht im Verlauf.
+const NAV_STAPEL = []; let navZurueck = false;
+function navZurueckAusfuehren(f){ navZurueck = true; try{ f(); } finally { navZurueck = false; } }
+['ansichtStart', 'ansichtFahrtenbuch', 'ansichtFahrdienstAuswertung', 'ansichtLuftlinienTool', 'ansichtGkvVerwaltung', 'ansichtKorrigieren',
+ 'ansichtSyncBackups', 'ansichtAlleRechnungen', 'ansichtRechnungenGesamt', 'ansichtGkv', 'ansichtMaske', 'ansichtEinstellungen'].forEach(name=>{
+  const basis = window[name]; if(typeof basis !== 'function') return;
+  window[name] = function(){
+    const args = Array.from(arguments);
+    if(navZurueck){
+      navZurueck = false;              // nur der erste Ansichtswechsel gilt als "zurueck"
+      NAV_STAPEL.pop();                // die Ansicht, die verlassen wird
+      if(name === 'ansichtStart'){
+        const vor = NAV_STAPEL.pop();
+        if(vor && vor.name !== 'ansichtStart') return window[vor.name].apply(this, vor.args);
+      } else if(NAV_STAPEL.length && NAV_STAPEL[NAV_STAPEL.length - 1].name === name) NAV_STAPEL.pop();
+    }
+    if(name === 'ansichtStart') NAV_STAPEL.length = 0;
+    const oben = NAV_STAPEL[NAV_STAPEL.length - 1];
+    if(oben && oben.name === name) NAV_STAPEL.pop();   // gleiche Ansicht neu gezeichnet
+    NAV_STAPEL.push({ name, args });
+    if(NAV_STAPEL.length > 30) NAV_STAPEL.shift();
+    return basis.apply(this, args);
+  };
+});
 try{ themaAnwenden(); }catch(e){}
 try{ dunkelModusAutoSyncEinrichten(); }catch(e){}
 try{ ansichtStart(); }catch(e){}
