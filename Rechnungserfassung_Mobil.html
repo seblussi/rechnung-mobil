@@ -1574,6 +1574,8 @@ try{
   .luft-linie{stroke:#111; stroke-width:2.5; stroke-dasharray:7 6; vector-effect:non-scaling-stroke;}
   .luft-start{fill:#1a55c9; stroke:#fff; stroke-width:2.5; vector-effect:non-scaling-stroke;}
   .luft-ziel{fill:#e0242b; stroke:#fff; stroke-width:2.5; vector-effect:non-scaling-stroke;}
+  .ok-pin{position:absolute; z-index:6; width:26px; height:26px; margin:-13px 0 0 -13px; border-radius:50%; background:#e0242b; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,.4); pointer-events:none;}
+  .ok-pin::after{content:''; position:absolute; left:50%; top:100%; width:2px; height:14px; margin-left:-1px; background:#e0242b; opacity:.7;}
   .luft-nfp{fill:#111; stroke:#fff; stroke-width:2; vector-effect:non-scaling-stroke;}
   .luft-karte-legende{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--text-schwach); margin-top:6px;}
   .luft-karte-legende i{display:inline-block; width:12px; height:12px; margin-right:5px; vertical-align:-1px; border-radius:50%;}
@@ -1617,7 +1619,7 @@ try{
   .vk-fall.pt{background:var(--pt-farbe);} .vk-fall.gkv{background:#7d4e9e;}
   .vk-punkt{display:block; width:16px; height:16px; border-radius:50%; border:2.5px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4);} .vk-punkt.start{background:#1a55c9;} .vk-punkt.ziel{background:#e0242b;}
   .vk-ich{display:block; width:16px; height:16px; border-radius:50%; background:#2f80ed; border:3px solid #fff; box-shadow:0 0 0 8px rgba(47,128,237,.25);}
-  .osm-scroll.zieht{cursor:grabbing;} .ok-karte .osm-scroll{cursor:grab;}
+  .osm-scroll.zieht{cursor:grabbing;} .ok-karte .osm-scroll{cursor:grab; touch-action:none;}
   .ze-leiste{display:flex; flex-direction:column; gap:6px; padding:8px 12px; background:var(--karte); border-bottom:1px solid var(--rand);}
   .ze-zonen, .ze-werkzeug{display:flex; gap:6px; flex-wrap:wrap;}
   .ze-zonen button{flex:1; min-width:0; margin:0; padding:8px 4px; font-size:13px; font-weight:700; border-radius:8px; border:2px solid var(--zf); background:var(--karte); color:var(--text);}
@@ -1645,7 +1647,12 @@ try{
   .fbx-tabs{display:flex; gap:6px; margin:0 0 10px;}
   .fbx-tabs button{flex:1; margin:0; padding:9px; font-size:14px; font-weight:600; border-radius:10px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .fbx-tabs button.an{background:var(--ls-farbe); border-color:var(--ls-farbe); color:#fff;}
-  .vw-tabs button.gkv.an{background:#7d4e9e; border-color:#7d4e9e;}
+  .vw-seg{display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; margin:0 0 12px; border-radius:16px; background:var(--rand);}
+  .vw-seg button{margin:0; width:auto; display:flex; flex-direction:column; align-items:center; gap:1px; padding:8px 6px; border:0; border-radius:12px; background:transparent; color:var(--text-schwach); font:inherit; cursor:pointer; transition:background .15s, color .15s, box-shadow .15s;}
+  .vw-seg-t{font-size:16px; font-weight:800; letter-spacing:.01em;} .vw-seg-u{font-size:11.5px; font-weight:600; opacity:.85;}
+  .vw-seg button.an{color:#fff; box-shadow:0 2px 8px rgba(0,0,0,.18);}
+  .vw-seg button.lspt.an{background:var(--ls-farbe);} .vw-seg button.gkv.an{background:#7d4e9e;}
+  .vw-seg button:not(.an):active{background:var(--karte);}
   .gv-info{font-size:13px; color:var(--text-schwach); margin:8px 2px 4px;} .gv-info .gv-offen{color:#c77700;}
   .gv-tag{display:flex; justify-content:space-between; gap:8px; font-size:12.5px; font-weight:700; color:var(--text-schwach); text-transform:uppercase; letter-spacing:.02em; margin:14px 2px 6px;}
   .gv-fall{display:grid; grid-template-columns:44px 32px minmax(0, 1fr) auto; align-items:center; gap:8px; width:100%; margin:0; padding:9px 10px; box-sizing:border-box;
@@ -1725,6 +1732,9 @@ try{
   .fbx-detail{padding:0 12px 6px;}
   .fbx-summen{display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--text-schwach); padding:0 12px 6px;}
   .fbx-summen b{color:var(--text);}
+  .fbx-offen{display:inline-block; font-size:10.5px; font-weight:700; padding:1px 6px; border-radius:6px; background:rgba(199,119,0,.14); color:#b06a00; vertical-align:1px;}
+  .fbx-offen.unfertig{background:rgba(142,68,173,.14); color:#8e44ad;} body.dunkel .fbx-offen{color:#ffb547;} body.dunkel .fbx-offen.unfertig{color:#c79bff;}
+  .fbx-lokal{color:#b06a00 !important; font-weight:600;} body.dunkel .fbx-lokal{color:#ffb547 !important;}
   .fbx-fall{display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:8px; align-items:start; width:100%; margin:0; padding:7px 0; border:0; border-top:1px solid var(--rand); background:none; color:var(--text); font:inherit; font-size:13px; text-align:left; cursor:pointer;}
   .fbx-zeit{color:var(--text-schwach); font-variant-numeric:tabular-nums;}
   .fbx-fall, .fbx-kopf, .fbx-tr{-webkit-user-select:none; user-select:none; -webkit-touch-callout:none; transition:background .25s;}
@@ -2677,20 +2687,45 @@ function fbTabsWiring(){
 }
 let fbBuchCache = null;
 function fbNameNorm(n){ return String(n || '').toLowerCase().replace(/[^a-zäöüß]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' '); }
+// Faelle auf dem Geraet (gespeichert, Entwurf, GKV in Erfassung) fuer das Fahrtenbuch
+function fbLokaleSammeln(){
+  const lokal = [];
+  // Status der lokalen Faelle, die (noch) nicht im Fahrtenbuch stehen:
+  // 'unfertig' (Entwurf bzw. GKV-Patient in Erfassung) oder 'offen' (gespeichert, noch nicht eingetragen)
+  const lsPtAdr = (art, w)=>{
+    const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim();
+    return abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
+  };
+  const euroAus = (v)=>{ const n = parseFloat(String(v == null ? '' : v).replace(/\./g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
+  try{ gkvFaelleLaden().forEach(f=>{ if(!f || f.name === GKV_PSEUDO_NAME) return; const t = designFallZeit(f); if(t) lokal.push({ art: 'gkv', n: fbNameNorm(f.name), name: f.name, t, zeit: f.zeit || '', geo: f.geo || null, adr: f.adresse || '',
+    euro: Number(f.euro) || 0, ziffern: (f.positionen || []).map(p=> ({ gop: ebmNorm(p.gop), anz: Number(p.anz) || 1 })), status: 'offen', oeffnen: ()=> ansichtGkv(f.id) }); }); }catch(_){}
+  try{
+    if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()){
+      const t = designFallZeit(gkvEntwurf) || new Date();
+      lokal.push({ art: 'gkv', n: fbNameNorm(gkvEntwurf.name), name: gkvEntwurf.name, t, zeit: gkvEntwurf.zeit || '', geo: gkvEntwurf.kmGeo && gkvEntwurf.kmGeo.lat ? { lat: +gkvEntwurf.kmGeo.lat, lon: +gkvEntwurf.kmGeo.lon } : null,
+        adr: gkvEntwurf.adresse || '', euro: 0, ziffern: [], status: 'unfertig', oeffnen: ()=> ansichtGkv() });
+    }
+  }catch(_){}
+  try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=>{
+    const w = (f && f.werte) || {}; const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS);
+    if(t) lokal.push({ art, n: fbNameNorm(w.txtName), name: (w.txtName || '').trim() || 'ohne Namen', t, zeit: w.txtZeitLS || '', adr: lsPtAdr(art, w), positionen: f.positionen || [],
+      euro: euroAus(w.txtBetrag), status: 'offen', oeffnen: ()=> ansichtMaske(art, i) });
+  })); }catch(_){}
+  try{ betaEntwuerfe().forEach(e=>{
+    if(!e || (e.art !== 'ls' && e.art !== 'pt')) return;
+    const w = e.werte || {}; const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS) || (e.geaendert ? new Date(e.geaendert) : null);
+    if(t) lokal.push({ art: e.art, n: fbNameNorm(w.txtName), name: (w.txtName || '').trim() || 'ohne Namen', t, zeit: w.txtZeitLS || '', adr: lsPtAdr(e.art, w), positionen: [],
+      euro: euroAus(w.txtBetrag), status: 'unfertig', oeffnen: ()=> betaEntwurfOeffnen(e, null) });
+  }); }catch(_){}
+  return lokal;
+}
 async function fbBuchLaden(blatt, meldung){
   const kx = await fbKontext(meldung);
   const L = await fbLesen(meldung, kx, blatt);
   const kopf = L.werte[1] || [];
   const tage = (a, b)=> Math.abs(a - b) / 86400000;
   // lokale Faelle zum Anreichern (Uhrzeit, Ziffern bei LS/PT, Oeffnen)
-  const lokal = [];
-  try{ gkvFaelleLaden().forEach(f=>{ const t = designFallZeit(f); if(t) lokal.push({ art: 'gkv', n: fbNameNorm(f.name), t, zeit: f.zeit || '', geo: f.geo || null, adr: f.adresse || '', oeffnen: ()=> ansichtGkv(f.id) }); }); }catch(_){}
-  try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=>{
-    const w = (f && f.werte) || {}; const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS);
-    const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim();
-    const adr = abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
-    if(t) lokal.push({ art, n: fbNameNorm(w.txtName), t, zeit: w.txtZeitLS || '', adr, positionen: f.positionen || [], oeffnen: ()=> ansichtMaske(art, i) });
-  })); }catch(_){}
+  const lokal = fbLokaleSammeln();
   const dienste = L.daten.bloecke.map(b=>{
     const tag = fbDatumAusText(b.datumText);
     const faelle = [];
@@ -2707,8 +2742,9 @@ async function fbBuchLaden(blatt, meldung){
       }
       const f = { name, art, euro: Number(r[FB_COL.AG]) || 0, ziffern, zeit: fbZeitAusZelle(r[FB_COL.AS]), pseudo: /^pseudo/i.test(name), zeile: z + 1 };
       const nn = fbNameNorm(name);
-      const treffer = tag ? lokal.find(x=> x.art === art && x.n === nn && tage(x.t, tag) <= 1.5) : null;
+      const treffer = tag ? lokal.find(x=> x.art === art && x.n === nn && tage(x.t, tag) <= 1.5 && x.status !== 'unfertig') : null;
       if(treffer){
+        treffer.imBuch = true;
         if(!f.zeit) f.zeit = fbZeitAusZelle(treffer.zeit); f.oeffnen = treffer.oeffnen;
         f.geo = treffer.geo || null; f.adr = treffer.adr || '';
         if(!ziffern.length && treffer.positionen) f.ziffern = treffer.positionen.map(g=> ({ gop: String(g), anz: 1 }));
@@ -2718,7 +2754,66 @@ async function fbBuchLaden(blatt, meldung){
     faelle.sort((a, b)=> (a.zeit || '99') < (b.zeit || '99') ? -1 : 1);
     return Object.assign({}, b, { tag, faelle });
   }).filter(d=> d.tag).sort((a, b)=> b.tag - a.tag);
+  fbLokaleZuordnen(dienste, lokal, L.blatt);
   return { blatt: L.blatt, blaetter: kx.info.blaetter, dienste };
+}
+// Bei jedem Oeffnen: App-Faelle neu einsortieren (die Excel bleibt zwischengespeichert)
+function fbLokalAuffrischen(buch){
+  if(!buch || !buch.dienste) return;
+  buch.dienste = buch.dienste.filter(d=> !d.lokal);
+  buch.dienste.forEach(d=>{ d.faelle = d.faelle.filter(f=> !f.offen); });
+  const lokal = fbLokaleSammeln();
+  buch.dienste.forEach(d=> d.faelle.forEach(f=>{
+    const nn = fbNameNorm(f.name);
+    const x = lokal.find(y=> !y.imBuch && y.art === f.art && y.n === nn && Math.abs(y.t - d.tag) / 86400000 <= 1.5 && y.status !== 'unfertig');
+    if(x) x.imBuch = true;
+  }));
+  fbLokaleZuordnen(buch.dienste, lokal, buch.blatt);
+}
+// Zeitfenster eines Diensts aus dem Fahrtenbuch ("8-15", "19:00 - 8:00" ...); sonst der ganze Tag
+function fbDienstFenster(d){
+  const m = /(\d{1,2})(?:[:.](\d{2}))?\s*(?:Uhr)?\s*[-–bis]+\s*(\d{1,2})(?:[:.](\d{2}))?/.exec(String(d.zeitLabel || d.zeitRoh || ''));
+  const von = new Date(d.tag), bis = new Date(d.tag);
+  if(m && +m[1] < 25 && +m[3] < 25){
+    von.setHours(+m[1], +(m[2] || 0), 0, 0); bis.setHours(+m[3], +(m[4] || 0), 0, 0);
+    if(bis <= von) bis.setDate(bis.getDate() + 1);
+  } else { von.setHours(0, 0, 0, 0); bis.setHours(0, 0, 0, 0); bis.setDate(bis.getDate() + 1); bis.setHours(8); }
+  return { von, bis };
+}
+// Faelle aus der App, die (noch) nicht im Fahrtenbuch stehen -- unfertig oder
+// gespeichert, aber noch nicht eingetragen -- beim passenden Dienst anzeigen
+// (1 h Spielraum). Passt kein Dienst aus der Excel, aber der Fall liegt im
+// gewaehlten Live-Dienst, erscheint dieser Dienst schon vorab ("noch nicht in
+// der Excel"). Die Summen der Excel bleiben unveraendert.
+function fbLokaleZuordnen(dienste, lokal, blatt){
+  const offen = lokal.filter(x=> !x.imBuch).sort((a, b)=> a.t - b.t);
+  if(!offen.length) return;
+  const jahrOk = (t)=> !/^\d{4}$/.test(String(blatt || '')) || String(t.getFullYear()) === String(blatt) ||
+    // Nachtdienst ueber den Jahreswechsel: Fall am 1.1., Dienst am 31.12.
+    (t.getMonth() === 0 && t.getDate() === 1 && String(t.getFullYear() - 1) === String(blatt));
+  let live = null;
+  try{ const i = designDienstInfo(); if(i && i.fenster && i.modus !== 'leer') live = i; }catch(_){}
+  const H = 3600000;
+  offen.forEach(x=>{
+    let d = dienste.find(dd=>{ const fe = fbDienstFenster(dd); return x.t >= fe.von - H && x.t < fe.bis.getTime() + H; });
+    if(!d && live && x.t >= live.fenster.von - H && x.t < live.fenster.bis.getTime() + H){
+      const tag = new Date(live.fenster.tag); tag.setHours(0, 0, 0, 0);
+      d = dienste.find(dd=> dd.lokal && dd.tag.getTime() === tag.getTime());
+      if(!d){
+        if(!jahrOk(tag)) return;
+        d = { lokal: true, tag, dienstart: live.art || 'Fahrdienst', zeitLabel: designUhr(live.fenster.von) + '–' + designUhr(live.fenster.bis), arzt: live.arzt || '',
+              gesamt: 0, gkv: 0, gkvRoh: 0, ls: 0, pt: 0, pauschale: false, dienststunden: 0, stundenlohn: 0, faelle: [] };
+        dienste.push(d);
+      }
+    }
+    if(!d) return;
+    const ziffern = x.ziffern || (x.positionen || []).map(g=> ({ gop: String(g), anz: 1 }));
+    d.faelle.push({ name: x.name || 'ohne Namen', art: x.art, euro: x.euro || 0, ziffern, zeit: fbZeitAusZelle(x.zeit) || designUhr(x.t), pseudo: false, zeile: null,
+      offen: x.status, oeffnen: x.oeffnen, geo: x.geo || null, adr: x.adr || '' });
+    if(d.lokal){ d[x.art] = betaRund2((d[x.art] || 0) + (x.euro || 0)); d.gesamt = betaRund2(d.gkv + d.ls + d.pt); }
+  });
+  dienste.forEach(d=> d.faelle.sort((a, b)=> (a.zeit || '99') < (b.zeit || '99') ? -1 : 1));
+  dienste.sort((a, b)=> b.tag - a.tag);
 }
 // langes Druecken (ca. 0,6 s, ohne Verschieben) bzw. Rechtsklick -> aktion; der folgende Klick wird ignoriert (el._lang)
 function langDruecken(el, aktion){
@@ -2740,9 +2835,11 @@ function fbFallEuro(d, f){
   if(f && f.pseudo){ const fo = Math.max(0, (Number(d.gkv) || 0) - (Number(d.gkvRoh) || 0)); return '<span class="fbx-foerd">Förderung</span> ' + betaEuro(fo).replace(' €', ''); }
   return betaEuro(f.euro).replace(' €', '');
 }
-function fbMarke(art){ return '<span class="fbx-m ' + art + '">' + ({ ls: 'LS', pt: 'PT', gkv: 'GKV' }[art]) + '</span>'; }
+function fbMarke(art, f){ return '<span class="fbx-m ' + art + '">' + ({ ls: 'LS', pt: 'PT', gkv: 'GKV' }[art]) + '</span>' + fbOffenMarke(f); }
+function fbOffenMarke(f){ return f && f.offen ? ' <span class="fbx-offen ' + f.offen + '">' + (f.offen === 'unfertig' ? 'unfertig' : 'noch nicht im Fahrtenbuch') + '</span>' : ''; }
 function fbDienstKopf(d){
   return '<span class="fbx-titel">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.dienstart || 'Fahrdienst') + ' ' + htmlEsc(d.zeitLabel || '') + '</span>' +
+    (d.lokal ? '<span class="fbx-unter fbx-lokal">noch nicht in der Excel – erscheint dort mit dem ersten eingetragenen Fall</span>' : '') +
     '<span class="fbx-unter">' + (d.arzt ? 'für ' + htmlEsc(d.arzt) + ' · ' : '') + d.faelle.filter(f=> !f.pseudo).length + ' Fälle' + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span>';
 }
 function fbSummenHtml(d){
@@ -2768,6 +2865,7 @@ async function ansichtFahrtenbuch(blatt){
     if(!fbBuchCache || (blatt && fbBuchCache.blatt !== blatt)) fbBuchCache = await fbBuchLaden(blatt, (t)=> inhalt.innerHTML = '<div class="leer-hinweis">' + htmlEsc(t) + '</div>');
   }catch(e){ inhalt.innerHTML = '<div class="gkv-warn">Fahrtenbuch konnte nicht gelesen werden: ' + htmlEsc(e.message || String(e)) + '</div>'; return; }
   const buch = fbBuchCache;
+  fbLokalAuffrischen(buch);
   const sel = document.getElementById('fbxJahr');
   sel.innerHTML = buch.blaetter.slice().reverse().map(b=> '<option' + (b === buch.blatt ? ' selected' : '') + '>' + htmlEsc(b) + '</option>').join('');
   sel.onchange = ()=>{ fbBuchCache = null; ansichtFahrtenbuch(sel.value); };
@@ -2805,11 +2903,13 @@ async function ansichtFahrtenbuch(blatt){
     const buch = buchS;
     inhalt.innerHTML = ansicht === 'b' ? fbAnsichtB(buch) : ansicht === 'c' ? fbAnsichtC(buch) : fbAnsichtA(buch);
     if(ansicht === 'c'){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
+    if(ansicht === 'a' && buch.dienste.length) setTimeout(()=> fbTagKarteZeichnen(buch.dienste[0], 0).catch(()=>{}), 0);
     inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=>{ if(k._lang){ k._lang = false; return; } k.closest('.fbx-karte').classList.toggle('zu'); });
     inhalt.querySelectorAll('[data-fbtag]').forEach(k=> k.onclick = ()=>{ LS.set('fb_tag', k.dataset.fbtag); zeichnen(); });
     // Loeschen nur durch langes Druecken (Handy) bzw. Rechtsklick (PC), jeweils mit Nachfrage
-    inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]) fbLoeschen(dd._orig || dd, dd.faelle[fi]); }));
-    inhalt.querySelectorAll('[data-fbdienst]').forEach(z=> langDruecken(z, ()=>{ const dd = buch.dienste[+z.dataset.fbdienst]; if(dd) fbLoeschen(dd._orig || dd, null); }));
+    const nurApp = ()=> appToastAnzeigen('Steht noch nicht im Fahrtenbuch – öffnen und dort bearbeiten bzw. löschen.', 3000);
+    inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]){ if(dd.faelle[fi].offen || dd.lokal) return nurApp(); fbLoeschen(dd._orig || dd, dd.faelle[fi]); } }));
+    inhalt.querySelectorAll('[data-fbdienst]').forEach(z=> langDruecken(z, ()=>{ const dd = buch.dienste[+z.dataset.fbdienst]; if(dd){ if(dd.lokal) return nurApp(); fbLoeschen(dd._orig || dd, null); } }));
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> z.onclick = ()=>{
       if(z._lang){ z._lang = false; return; }
       const [di, fi] = z.dataset.fbfall.split('-').map(Number), f = buch.dienste[di] && buch.dienste[di].faelle[fi];
@@ -2910,14 +3010,14 @@ function fbAnsichtA(buch){
   return buch.dienste.map((d, di)=> '<div class="fbx-karte' + (di ? ' zu' : '') + (fbLaufend(d) ? ' laeuft' : '') + '">' +
     '<button type="button" class="fbx-kopf" data-fbauf="1" data-fbdienst="' + di + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '<small>' + (fbLaufend(d) ? 'bisher' : 'gesamt') + '</small></span></button>' +
     '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + di + '-' + fi + '">' +
-      '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
-      '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + '</div></div>').join('');
+      '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art, f) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
+      '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + (di ? '' : '<div class="fbx-ortkarte" id="fbxKarte"></div>') + '</div></div>').join('');
 }
 // B: Tabelle wie die Excel
 function fbAnsichtB(buch){
   return '<div class="fbx-tab"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div>' +
     buch.dienste.map((d, di)=> '<div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
-      d.faelle.map((f, fi)=> '<div class="fbx-tr" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art) + '</span><span class="fbx-zt">' +
+      d.faelle.map((f, fi)=> '<div class="fbx-tr" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art, f) + '</span><span class="fbx-zt">' +
         f.ziffern.map(x=> htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '')).join(' ') + '</span><span>' + fbFallEuro(d, f) + '</span></div>').join('') +
       '<div class="fbx-tr fbx-sum"><span>GKV ' + betaEuro(d.gkv).replace(' €', '') + (d.pauschale ? ' (GP)' : '') + ' · LS ' + betaEuro(d.ls).replace(' €', '') + ' · PT ' + betaEuro(d.pt).replace(' €', '') + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span></div>').join('') + '</div>';
 }
@@ -2929,7 +3029,7 @@ function fbAnsichtC(buch){
       DESIGN_WT[x.tag.getDay()] + ' ' + zz2(x.tag.getDate()) + '.' + zz2(x.tag.getMonth() + 1) + '.</span><b>' + betaEuro(x.gesamt).replace(' €', '') + '</b><small>' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle</small></button>').join('') + '</div>' +
     '<div class="fbx-karte"><div class="fbx-kopf" data-fbdienst="' + wahl + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '</span></div>' +
     '<div class="fbx-kpi"><div><span>GKV + Förderung</span><b>' + betaEuro(d.gkv) + '</b></div><div><span>LS + PT</span><b>' + betaEuro(d.ls + d.pt) + '</b></div></div>' +
-    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + fbFallEuro(d, f) + ' ›</span></button>').join('') + '</div>' +
+    '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art, f) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + fbFallEuro(d, f) + ' ›</span></button>').join('') + '</div>' +
     '<div class="fbx-ortkarte" id="fbxKarte"></div></div>';
 }
 // Einsatzorte des gewaehlten Diensttags (Ansicht "Woche"): GKV mit gespeichertem
@@ -5243,8 +5343,13 @@ async function einrNachAnmeldungPruefen(){
 // Fahrtenbuch die Dienste und das Honorar. GKV-Faelle (nur im Geraet
 // gespeichert) haben hier einen eigenen Reiter.
 function vwTabsHtml(akt){
-  return '<div class="fbx-tabs vw-tabs"><button type="button" data-vwtab="lspt" class="' + (akt === 'lspt' ? 'an' : '') + '">LS / PT</button>' +
-    '<button type="button" data-vwtab="gkv" class="gkv' + (akt === 'gkv' ? ' an' : '') + '">GKV</button></div>';
+  let nGkv = 0;
+  try{ nGkv = gkvFaelleLaden().filter(f=> f && f.name !== GKV_PSEUDO_NAME).length; }catch(_){}
+  return '<div class="vw-seg" role="tablist" aria-label="Rechnungsart">' +
+    '<button type="button" role="tab" aria-selected="' + (akt === 'lspt') + '" data-vwtab="lspt" class="lspt' + (akt === 'lspt' ? ' an' : '') + '">' +
+      '<span class="vw-seg-t">LS / PT</span><span class="vw-seg-u">Rechnungen</span></button>' +
+    '<button type="button" role="tab" aria-selected="' + (akt === 'gkv') + '" data-vwtab="gkv" class="gkv' + (akt === 'gkv' ? ' an' : '') + '">' +
+      '<span class="vw-seg-t">GKV</span><span class="vw-seg-u">' + (nGkv === 1 ? '1 Patient' : nGkv + ' Patienten') + '</span></button></div>';
 }
 document.addEventListener('click', (ev)=>{
   const b = ev.target.closest && ev.target.closest('[data-vwtab]'); if(!b) return;
@@ -14364,12 +14469,12 @@ function osmKarteOverlay(d, text, opt){
   ov.className = 'nfp-overlay ok-karte';
   const at = gkvAdrTeile((W && W.adresseText) || '');
   ov.innerHTML = '<div class="nfp-kopf"><b>' + htmlEsc(opt.titel || (W ? 'Einsatzstelle wählen' : 'Karte')) + '</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
-    (W ? '<div class="nfp-suche"><input type="text" id="nfpStrasse" autocomplete="off" placeholder="Straße Nr." value="' + htmlEsc(at.strasse) + '">' +
+    '<div class="nfp-suche"><input type="text" id="nfpStrasse" autocomplete="off" placeholder="Straße Nr." value="' + htmlEsc(at.strasse) + '">' +
       '<input type="text" id="nfpPlzOrt" enterkeyhint="search" autocomplete="off" placeholder="PLZ Ort" value="' + htmlEsc(at.plzOrt) + '">' +
-      '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' : '') +
+      '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
     '<div class="nfp-rahmen"><div class="nfp-scroll osm-scroll"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF +
       '<div class="ok-zoom"><button type="button" data-zoom="1" aria-label="näher">+</button><button type="button" data-zoom="-1" aria-label="weiter weg">−</button></div></div>' +
-    '<div class="nfp-fuss"><div class="nfp-info" id="okInfo">' + (W ? 'Adresse suchen, Position holen oder auf die Einsatzstelle tippen.' : (text ? htmlEsc(text) : '')) + '</div>' +
+    '<div class="nfp-fuss"><div class="nfp-info" id="okInfo">' + (W ? 'Adresse suchen, Position holen, auf die Einsatzstelle tippen oder lange drücken und den Punkt mit dem Finger verschieben.' : (text ? htmlEsc(text) + '<br>' : '') + '<small>Adresse suchen oder lange auf die Karte drücken, um einen Ort zu setzen (mit dem Finger verschiebbar).</small>') + '</div>' +
       '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button>' +
         (W ? '<button type="button" class="btn-primaer nfp-ok" disabled>Übernehmen</button>' : '') + '</div>' +
       '<div class="ok-attr">' + OSM_ATTR_HTML + '</div></div>';
@@ -14474,7 +14579,6 @@ function osmKarteOverlay(d, text, opt){
   // ---- Auswahl einer Einsatzstelle (GKV) ----
   const startGeo = gkvStartGeo();
   const waehlen = (g, woher, adresseText)=>{
-    if(!W) return;
     const p = nfpGeoZuPixel(g.lat, g.lon), drin = nfpImBild(p);
     const kmS = startGeo ? kmLuftlinieEinfach(startGeo, g) : null;
     let b;
@@ -14487,7 +14591,7 @@ function osmKarteOverlay(d, text, opt){
     const zf = NFP_ZONEN[wahl.zone];
     info.innerHTML = (woher ? htmlEsc(woher) + ': ' : '') + '<b' + (zf ? ' style="color:' + zf.farbe + '"' : '') + '>' + htmlEsc(wahl.text) + '</b> → Wegepauschale <b>' +
       htmlEsc(nfpStufeLabel(wahl.stufe)) + '</b><br><small>' + htmlEsc(wahl.kmText) + '<span id="okWegInfo"></span></small>';
-    ov.querySelector('.nfp-ok').disabled = false;
+    const okB = ov.querySelector('.nfp-ok'); if(okB) okB.disabled = false;
     neu();
     if(startGeo){
       const merk = wahl;
@@ -14508,13 +14612,11 @@ function osmKarteOverlay(d, text, opt){
     if(!g){ info.textContent = 'Adresse nicht gefunden – bitte prüfen oder auf die Einsatzstelle tippen.'; return; }
     hinZu(g, 13.5); waehlen(g, 'Adresse' + (g.gefunden ? ' (' + g.gefunden + ')' : ''), a);
   };
-  if(W){
-    ov.querySelector('.nfp-such-knopf').onclick = suchen;
-    ov.querySelector('#nfpPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); suchen(); } };
-    ov.querySelector('#nfpStrasse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); ov.querySelector('#nfpPlzOrt').focus(); } };
-    ov.querySelector('#nfpPlzOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(ov.querySelector('#nfpStrasse'), ov.querySelector('#nfpPlzOrt'), null));
-    ov.querySelector('.nfp-ok').onclick = ()=> zu(wahl);
-  }
+  ov.querySelector('.nfp-such-knopf').onclick = suchen;
+  ov.querySelector('#nfpPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); suchen(); } };
+  ov.querySelector('#nfpStrasse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); ov.querySelector('#nfpPlzOrt').focus(); } };
+  ov.querySelector('#nfpPlzOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(ov.querySelector('#nfpStrasse'), ov.querySelector('#nfpPlzOrt'), null));
+  if(W) ov.querySelector('.nfp-ok').onclick = ()=> zu(wahl);
   // Position: eigener Standort (bei der Auswahl zugleich als Einsatzstelle)
   const position = async (still)=>{
     if(!still) info.textContent = 'Standort wird ermittelt …';
@@ -14531,6 +14633,96 @@ function osmKarteOverlay(d, text, opt){
     if(t && d.fallKlick && !W){ zu(null); d.fallKlick(+t.dataset.fall); return; }
     if(W && akt) waehlen(geoAnBildschirm(ev.clientX, ev.clientY), 'Gewählt');
   });
+  // ---- Ort von Hand setzen: lange druecken, dann mit dem Finger verschieben ----
+  // Ein schon gesetzter Punkt laesst sich direkt anfassen und verschieben.
+  const rahmen = ov.querySelector('.nfp-rahmen');
+  let lang = null, pin = null, wisch = null;
+  const zielGeo = ()=>{ const q = d.pois.find(x=> x.kl === 'ziel'); return q ? { lat: q.lat, lon: q.lon } : null; };
+  const zielAmBildschirm = ()=>{
+    const g = zielGeo(); if(!g || !akt) return null;
+    const w = osmWelt(g.lat, g.lon, akt.zi), r = sc.getBoundingClientRect();
+    return { x: r.left + (w.x - akt.x0) * akt.s - sc.scrollLeft, y: r.top + (w.y - akt.y0) * akt.s - sc.scrollTop };
+  };
+  const pinSetzen = (cx, cy)=>{
+    const r = rahmen.getBoundingClientRect();
+    pin.style.left = (cx - r.left) + 'px'; pin.style.top = (cy - r.top) + 'px';
+    pin.cx = cx; pin.cy = cy;
+  };
+  const pinStart = (cx, cy)=>{
+    lang = null;
+    if(!pin){ pin = document.createElement('div'); pin.className = 'ok-pin'; rahmen.appendChild(pin); }
+    // der Punkt sitzt knapp ueber dem Finger, damit man ihn sieht
+    pin.dy = -34; pinSetzen(cx, cy + pin.dy);
+    // alten Punkt nur ausblenden -- ein Neuzeichnen wuerde das Element unter dem Finger entfernen
+    sc.querySelectorAll('.luft-ziel, .luft-linie, .luft-weg').forEach(el=> el.style.visibility = 'hidden');
+    try{ navigator.vibrate && navigator.vibrate(25); }catch(_){}
+    info.innerHTML = '<small>Zum gewünschten Ort ziehen und loslassen.</small>';
+  };
+  const pinEnde = async ()=>{
+    if(!pin) return;
+    const cx = pin.cx, cy = pin.cy; pin.remove(); pin = null;
+    gezogen = true; setTimeout(()=> gezogen = false, 350);
+    if(!akt) return;
+    const g = geoAnBildschirm(cx, cy);
+    waehlen(g, 'Gesetzt');
+    // Adresse zum Punkt (wenn online) in die Suchfelder und die Auswahl
+    try{
+      const merk = wahl;
+      const res = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + g.lat.toFixed(6) + '&lon=' + g.lon.toFixed(6) + '&zoom=18&addressdetails=1', { headers: { 'Accept': 'application/json' } });
+      const a = ((await res.json()) || {}).address || {};
+      if(wahl !== merk || !document.body.contains(ov)) return;
+      const str = [a.road || a.pedestrian || a.footway || a.path || '', a.house_number || ''].join(' ').trim();
+      const ort = [a.postcode || '', (a.city || a.town || a.village || a.municipality || '').split('/')[0].trim()].join(' ').trim();
+      if(str || ort){
+        ov.querySelector('#nfpStrasse').value = str; ov.querySelector('#nfpPlzOrt').value = ort;
+        if(wahl) wahl.adresseText = [str, ort].filter(Boolean).join(', ');
+      }
+    }catch(_){}
+  };
+  const nahAmZiel = (cx, cy)=>{ const z0 = zielAmBildschirm(); return z0 && Math.hypot(z0.x - cx, z0.y - cy) < 26; };
+  sc.addEventListener('touchstart', (ev)=>{
+    if(ev.touches.length !== 1){ if(lang){ clearTimeout(lang.t); lang = null; } wisch = null; return; }
+    const t0 = ev.touches[0];
+    // Verschieben mit einem Finger selbst gemacht (touch-action:none), damit
+    // ein langer Druck nicht vom Browser-Scrollen abgebrochen wird
+    wisch = { x: t0.clientX, y: t0.clientY, sl: sc.scrollLeft, st: sc.scrollTop, an: false };
+    if(nahAmZiel(t0.clientX, t0.clientY)){ ev.preventDefault(); pinStart(t0.clientX, t0.clientY); pin.dy = 0; pinSetzen(t0.clientX, t0.clientY); return; }
+    lang = { x: t0.clientX, y: t0.clientY, t: setTimeout(()=>{ if(lang) pinStart(lang.x, lang.y); }, 550) };
+  }, { passive: false });
+  // Bewegen/Loslassen am Fenster: nach einem Neuzeichnen bleibt der Finger an einem
+  // entfernten Element haengen, dessen Ereignisse sonst nicht mehr ankommen
+  const tMove = (ev)=>{
+    if(!document.body.contains(ov)){ window.removeEventListener('touchmove', tMove, true); return; }
+    if(!pin && !lang && !wisch) return;
+    const t0 = ev.touches[0]; if(!t0) return;
+    if(pin){ ev.preventDefault(); pinSetzen(t0.clientX, t0.clientY + pin.dy); return; }
+    if(lang && Math.hypot(t0.clientX - lang.x, t0.clientY - lang.y) > 8){ clearTimeout(lang.t); lang = null; }
+    if(wisch && ev.touches.length === 1 && !pinch){
+      const dx = t0.clientX - wisch.x, dy = t0.clientY - wisch.y;
+      if(!wisch.an && Math.hypot(dx, dy) < 6) return;
+      wisch.an = true; ev.preventDefault();
+      sc.scrollLeft = wisch.sl - dx; sc.scrollTop = wisch.st - dy;
+    }
+  };
+  window.addEventListener('touchmove', tMove, { passive: false, capture: true });
+  const touchEnde = ()=>{ if(lang){ clearTimeout(lang.t); lang = null; } if(wisch && wisch.an){ gezogen = true; setTimeout(()=> gezogen = false, 300); } wisch = null; if(pin) pinEnde(); };
+  const tEnde = (ev)=>{ if(!document.body.contains(ov)){ window.removeEventListener('touchend', tEnde, true); window.removeEventListener('touchcancel', tEnde, true); return; } if(ev.touches.length === 0) touchEnde(); };
+  window.addEventListener('touchend', tEnde, true); window.addEventListener('touchcancel', tEnde, true);
+  sc.addEventListener('contextmenu', (ev)=> ev.preventDefault());
+  sc.addEventListener('dragstart', (ev)=> ev.preventDefault());
+  // PC: Maustaste lange gedrueckt halten bzw. Punkt anfassen
+  sc.addEventListener('pointerdown', (ev)=>{
+    if(ev.pointerType !== 'mouse' || ev.button !== 0) return;
+    try{ sc.setPointerCapture(ev.pointerId); }catch(_){}
+    if(nahAmZiel(ev.clientX, ev.clientY)){ ev.preventDefault(); zieh = null; pinStart(ev.clientX, ev.clientY); pin.dy = 0; pinSetzen(ev.clientX, ev.clientY); return; }
+    lang = { x: ev.clientX, y: ev.clientY, t: setTimeout(()=>{ if(lang){ zieh = null; sc.classList.remove('zieht'); pinStart(lang.x, lang.y); } }, 550) };
+  });
+  window.addEventListener('pointermove', (ev)=>{
+    if(ev.pointerType !== 'mouse') return;
+    if(pin){ pinSetzen(ev.clientX, ev.clientY + pin.dy); return; }
+    if(lang && Math.hypot(ev.clientX - lang.x, ev.clientY - lang.y) > 6){ clearTimeout(lang.t); lang = null; }
+  });
+  window.addEventListener('pointerup', (ev)=>{ if(ev.pointerType !== 'mouse') return; if(lang){ clearTimeout(lang.t); lang = null; } if(pin) pinEnde(); });
   // Start
   osmOfflineLaden().catch(()=>null).then(async ()=>{
     if(ebene === 'kvbw' && !await kvbwLaden()){ ebene = 'zonen'; karteEbeneKnopfSetzen(eb, 'osm'); }
@@ -15657,7 +15849,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v230';
+const APP_VERSION = 'v231';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18242,8 +18434,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // Masken-Aufruf frisch auf false gesetzt (Closure-Variable), damit eine neu
   // geoeffnete Maske wieder mit der ersten Warnung startet.
   let warnhinweiseBestaetigt = false;
+  let neuGespeichert = false; // Doppel-Tipp auf "Speichern" legt keinen zweiten Fall an
 
   document.getElementById('btnSpeichern').onclick = ()=>{
+    if(neuGespeichert) return;
     alleChecksAusfuehren();
     if(art==='ls') pruefeBestatterLeer();
     // txtBName_warn bewusst ausgenommen: das ist nur eine Information
@@ -18358,7 +18552,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     } else if(korrekturIdx!==undefined && faelle[korrekturIdx].positionsDetails){
       eintrag.positionsDetails = faelle[korrekturIdx].positionsDetails;
     }
-    if(korrekturIdx!==undefined) faelle[korrekturIdx]=eintrag; else faelle.push(eintrag);
+    if(korrekturIdx!==undefined) faelle[korrekturIdx]=eintrag; else { faelle.push(eintrag); neuGespeichert = true; }
     speichereFaelle(art, faelle);
     // Erfolgreich gespeichert -- ein evtl. zwischengespeicherter Entwurf
     // (siehe maskenEntwuerfe/zurueckAusMaske) ist jetzt ueberholt (die Werte
@@ -18414,6 +18608,24 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 // Kurzer Einblend-Hinweis (siehe #appToast) -- liegt AUSSERHALB von #app,
 // wird also von einem Ansichtswechsel nicht mit weggerissen. Allgemein
 // nutzbar (Zurück-Taste-Hinweis, Auto-Sync-Rückmeldungen, ...).
+// ---------- Tipp auf Speichern direkt nach dem Tippen in ein Feld ----------
+// Verlaesst man ein Feld, aendert sich oft der Inhalt darueber (Hinweis zur
+// Strecke, Adress-Normalisierung, Tastatur geht zu). Dadurch rutschte der
+// Knopf zwischen Antippen und Loslassen weg und der Tipp ging ins Leere
+// ("Speichern geht nicht"). Deshalb: beim Druecken auf einen Haupt-Knopf
+// bleibt der Fokus im Feld (kein Verrutschen); erst beim Klick selbst wird
+// das Feld verlassen -- seine Pruefungen laufen, bevor gespeichert wird.
+const FOKUS_HALTEN_SEL = '.btn-primaer, #btnSpeichern, #gkvSpeichern, .btn-uebernehmen';
+function fokusHaltenAktiv(){ const a = document.activeElement; return a && a !== document.body && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName); }
+document.addEventListener('mousedown', (e)=>{
+  const k = e.target && e.target.closest && e.target.closest(FOKUS_HALTEN_SEL);
+  if(k && !k.disabled && fokusHaltenAktiv()) e.preventDefault();
+}, true);
+document.addEventListener('click', (e)=>{
+  const k = e.target && e.target.closest && e.target.closest(FOKUS_HALTEN_SEL);
+  if(k && fokusHaltenAktiv()) document.activeElement.blur();
+}, true);
+
 let appToastTimer = null;
 function appToastAnzeigen(text, dauerMs){
   const toast = document.getElementById('appToast');
