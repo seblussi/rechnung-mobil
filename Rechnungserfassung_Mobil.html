@@ -2770,42 +2770,39 @@ function fbLokalAuffrischen(buch){
   }));
   fbLokaleZuordnen(buch.dienste, lokal, buch.blatt);
 }
-// Zeitfenster eines Diensts aus dem Fahrtenbuch ("8-15", "19:00 - 8:00" ...); sonst der ganze Tag
+// Zeitfenster eines Diensts aus dem Fahrtenbuch (wie beim Eintragen); sonst der ganze Tag
 function fbDienstFenster(d){
-  const m = /(\d{1,2})(?:[:.](\d{2}))?\s*(?:Uhr)?\s*[-–bis]+\s*(\d{1,2})(?:[:.](\d{2}))?/.exec(String(d.zeitLabel || d.zeitRoh || ''));
-  const von = new Date(d.tag), bis = new Date(d.tag);
-  if(m && +m[1] < 25 && +m[3] < 25){
-    von.setHours(+m[1], +(m[2] || 0), 0, 0); bis.setHours(+m[3], +(m[4] || 0), 0, 0);
-    if(bis <= von) bis.setDate(bis.getDate() + 1);
-  } else { von.setHours(0, 0, 0, 0); bis.setHours(0, 0, 0, 0); bis.setDate(bis.getDate() + 1); bis.setHours(8); }
+  const z = d.datumText ? fbBlockZeitraum(d) : null;
+  if(z) return z;
+  if(d.fenster) return d.fenster;
+  const von = new Date(d.tag), bis = new Date(d.tag); von.setHours(0, 0, 0, 0); bis.setHours(32, 0, 0, 0);
   return { von, bis };
 }
 // Faelle aus der App, die (noch) nicht im Fahrtenbuch stehen -- unfertig oder
 // gespeichert, aber noch nicht eingetragen -- beim passenden Dienst anzeigen
-// (1 h Spielraum). Passt kein Dienst aus der Excel, aber der Fall liegt im
-// gewaehlten Live-Dienst, erscheint dieser Dienst schon vorab ("noch nicht in
-// der Excel"). Die Summen der Excel bleiben unveraendert.
+// (1 h Spielraum). In der App angelegte Dienste, die noch nicht in der Excel
+// stehen, erscheinen schon vorab ("noch nicht in der Excel"), auch ohne Fall.
+// Die Summen der Excel bleiben unveraendert.
 function fbLokaleZuordnen(dienste, lokal, blatt){
-  const offen = lokal.filter(x=> !x.imBuch).sort((a, b)=> a.t - b.t);
-  if(!offen.length) return;
-  const jahrOk = (t)=> !/^\d{4}$/.test(String(blatt || '')) || String(t.getFullYear()) === String(blatt) ||
-    // Nachtdienst ueber den Jahreswechsel: Fall am 1.1., Dienst am 31.12.
-    (t.getMonth() === 0 && t.getDate() === 1 && String(t.getFullYear() - 1) === String(blatt));
-  let live = null;
-  try{ const i = designDienstInfo(); if(i && i.fenster && i.modus !== 'leer') live = i; }catch(_){}
   const H = 3600000;
-  offen.forEach(x=>{
-    let d = dienste.find(dd=>{ const fe = fbDienstFenster(dd); return x.t >= fe.von - H && x.t < fe.bis.getTime() + H; });
-    if(!d && live && x.t >= live.fenster.von - H && x.t < live.fenster.bis.getTime() + H){
-      const tag = new Date(live.fenster.tag); tag.setHours(0, 0, 0, 0);
-      d = dienste.find(dd=> dd.lokal && dd.tag.getTime() === tag.getTime());
-      if(!d){
-        if(!jahrOk(tag)) return;
-        d = { lokal: true, tag, dienstart: live.art || 'Fahrdienst', zeitLabel: designUhr(live.fenster.von) + '–' + designUhr(live.fenster.bis), arzt: live.arzt || '',
-              gesamt: 0, gkv: 0, gkvRoh: 0, ls: 0, pt: 0, pauschale: false, dienststunden: 0, stundenlohn: 0, faelle: [] };
-        dienste.push(d);
-      }
-    }
+  const jahrOk = (tag)=> !/^\d{4}$/.test(String(blatt || '')) || String(tag.getFullYear()) === String(blatt);
+  // App-Dienste ohne Gegenstueck in der Excel (gleicher Beginn +- 1 h)
+  const app = appDiensteLaden().slice();
+  try{ const live = liveDienstLaden(); if(live && !app.some(x=> x.datum === live.datum && x.von === live.von)) app.push(Object.assign({ id: 'live' }, live)); }catch(_){}
+  app.forEach(a=>{
+    const fe = liveDienstFenster(a); if(!fe) return;
+    const tag = new Date(fe.tag); tag.setHours(0, 0, 0, 0);
+    if(!jahrOk(tag)) return;
+    if(dienste.some(dd=> !dd.lokal && Math.abs(fbDienstFenster(dd).von - fe.von) <= H)) return;
+    if(dienste.some(dd=> dd.lokal && dd.appId === a.id)) return;
+    dienste.push({ lokal: true, appId: a.id, tag, fenster: { von: fe.von, bis: fe.bis }, dienstart: (a.art || 'Fahrdienst') + (a.schicht ? ' ' + a.schicht : ''),
+      zeitLabel: a.von.replace(/:00$/, '') + '–' + a.bis.replace(/:00$/, ''), arzt: a.arzt || '',
+      gesamt: 0, gkv: 0, gkvRoh: 0, ls: 0, pt: 0, pauschale: false, dienststunden: 0, stundenlohn: 0, faelle: [] });
+  });
+  // Faelle einsortieren: zuerst ein Dienst der Excel, sonst ein App-Dienst
+  lokal.filter(x=> !x.imBuch).sort((a, b)=> a.t - b.t).forEach(x=>{
+    const passt = (dd)=>{ const fe = fbDienstFenster(dd); return x.t >= fe.von - H && x.t <= fe.bis.getTime() + H; };
+    const d = dienste.find(dd=> !dd.lokal && passt(dd)) || dienste.find(dd=> dd.lokal && passt(dd));
     if(!d) return;
     const ziffern = x.ziffern || (x.positionen || []).map(g=> ({ gop: String(g), anz: 1 }));
     d.faelle.push({ name: x.name || 'ohne Namen', art: x.art, euro: x.euro || 0, ziffern, zeit: fbZeitAusZelle(x.zeit) || designUhr(x.t), pseudo: false, zeile: null,
@@ -2813,7 +2810,7 @@ function fbLokaleZuordnen(dienste, lokal, blatt){
     if(d.lokal){ d[x.art] = betaRund2((d[x.art] || 0) + (x.euro || 0)); d.gesamt = betaRund2(d.gkv + d.ls + d.pt); }
   });
   dienste.forEach(d=> d.faelle.sort((a, b)=> (a.zeit || '99') < (b.zeit || '99') ? -1 : 1));
-  dienste.sort((a, b)=> b.tag - a.tag);
+  dienste.sort((a, b)=> (b.fenster ? b.fenster.von : fbDienstFenster(b).von) - (a.fenster ? a.fenster.von : fbDienstFenster(a).von) || (b.tag - a.tag));
 }
 // langes Druecken (ca. 0,6 s, ohne Verschieben) bzw. Rechtsklick -> aktion; der folgende Klick wird ignoriert (el._lang)
 function langDruecken(el, aktion){
@@ -2909,7 +2906,15 @@ async function ansichtFahrtenbuch(blatt){
     // Loeschen nur durch langes Druecken (Handy) bzw. Rechtsklick (PC), jeweils mit Nachfrage
     const nurApp = ()=> appToastAnzeigen('Steht noch nicht im Fahrtenbuch – öffnen und dort bearbeiten bzw. löschen.', 3000);
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]){ if(dd.faelle[fi].offen || dd.lokal) return nurApp(); fbLoeschen(dd._orig || dd, dd.faelle[fi]); } }));
-    inhalt.querySelectorAll('[data-fbdienst]').forEach(z=> langDruecken(z, ()=>{ const dd = buch.dienste[+z.dataset.fbdienst]; if(dd){ if(dd.lokal) return nurApp(); fbLoeschen(dd._orig || dd, null); } }));
+    inhalt.querySelectorAll('[data-fbdienst]').forEach(z=> langDruecken(z, async ()=>{
+      const dd = buch.dienste[+z.dataset.fbdienst]; if(!dd) return;
+      if(dd.lokal){
+        if(!await betaFrage('Den Dienst ' + fbTagText(dd.tag) + ' ' + (dd.zeitLabel || '') + ' aus der App entfernen?\n\nDie Fälle selbst bleiben erhalten.', 'Entfernen', 'Abbrechen')) return;
+        if(dd.appId === 'live') LS.set('live_dienst', null); else appDienstEntfernen(dd.appId);
+        ansichtFahrtenbuch(buch.blatt); return;
+      }
+      fbLoeschen(dd._orig || dd, null);
+    }));
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> z.onclick = ()=>{
       if(z._lang){ z._lang = false; return; }
       const [di, fi] = z.dataset.fbfall.split('-').map(Number), f = buch.dienste[di] && buch.dienste[di].faelle[fi];
@@ -2979,6 +2984,7 @@ async function fbLoeschen(d, f){
     if(ganz){
       betaOverlay.schritt('Dienst wird gelöscht …');
       await schiebe(b.zeileStart, b.zeileEnde);
+      try{ const fe = fbBlockZeitraum(b); if(fe) appDiensteSpeichern(appDiensteLaden().filter(x=>{ const f = liveDienstFenster(x); return !(f && Math.abs(f.von - fe.von) <= 3600000); })); }catch(_){}
     } else {
       const r = L.werte[f.zeile - 1] || [];
       if(String(r[FB_COL.D] == null ? '' : r[FB_COL.D]).trim() !== f.name) throw new Error('Die Zeile wurde inzwischen verändert – bitte das Fahrtenbuch neu laden.');
@@ -13238,9 +13244,23 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   if(!fb) fb = await fbLesen(meldung, kx); // Jahresblatt fehlt noch: Vorschlaege aus dem neuesten Blatt
   let neuerDienst = false;
   if(!block){
-    if(opt.fragen === false) return { uebersprungen: true, grund: 'kein Dienst am ' + fbDatumText(fall.datum) + ' im Fahrtenbuch' };
-    const d = await fbDienstAbfragen(fb, dt, (fall.kat === 'LS' ? 'Leichenschau' : fall.kat === 'P' ? 'Privatpatient' : 'GKV') + ': ' + fall.name + ' · ' + fbDatumText(fall.datum) + (zm ? ', ' + zm[0] + ' Uhr' : ''));
-    if(!d) return { uebersprungen: true, grund: 'nicht eingetragen (kein Dienst gewählt)', abgelehnt: true };
+    // in der App angelegter Dienst, in dessen Zeitraum der Fall faellt -> ohne Rueckfrage
+    let d = null;
+    const ad = appDienstFuer(dt);
+    if(ad){
+      const z = fbZeitParsen(ad.von + '-' + ad.bis);
+      if(z){
+        d = { datum: new Date(ad.fenster.tag), zeit: z, arzt: ad.arzt || '', art: ad.art || 'Fahrdienst', schicht: ad.schicht || '' };
+        if(d.arzt && typeof fbArztMerken === 'function') try{ fbArztMerken(d.arzt); }catch(_){}
+      }
+    }
+    if(!d){
+      if(opt.fragen === false) return { uebersprungen: true, grund: 'kein Dienst am ' + fbDatumText(fall.datum) + ' im Fahrtenbuch' };
+      d = await fbDienstAbfragen(fb, dt, (fall.kat === 'LS' ? 'Leichenschau' : fall.kat === 'P' ? 'Privatpatient' : 'GKV') + ': ' + fall.name + ' · ' + fbDatumText(fall.datum) + (zm ? ', ' + zm[0] + ' Uhr' : ''));
+      if(!d) return { uebersprungen: true, grund: 'nicht eingetragen (kein Dienst gewählt)', abgelehnt: true };
+      // auch in der App anlegen -> weitere Faelle in diesem Zeitraum landen ohne Rueckfrage hier
+      try{ appDienstMerken({ datum: liveIso(d.datum), von: appStdZuUhr(d.zeit.s), bis: appStdZuUhr(d.zeit.e), art: d.art, schicht: d.schicht, arzt: d.arzt }); }catch(_){}
+    }
     meldung && meldung('Neuer Dienst wird angelegt …');
     if(kx.info.jahresModus){
       const zielJahr = String(d.datum.getFullYear());
@@ -15849,7 +15869,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v231';
+const APP_VERSION = 'v232';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -16024,6 +16044,38 @@ function liveDienstAuto(){
   return null;
 }
 function liveIso(d){ return d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate()); }
+// ---------- Dienste in der App ----------
+// Jeder neu angelegte Dienst (Startseite "Welcher Dienst?" bzw. Abfrage
+// "Neuer Dienst" beim Eintragen) wird hier dauerhaft gemerkt: Er erscheint
+// sofort im Fahrtenbuch, und jeder Fall in seinem Zeitraum (1 h Spielraum)
+// landet ohne weitere Rueckfrage in diesem Dienst -- fehlt er noch in der
+// Excel, legt ihn der erste eingetragene Fall dort an.
+// {id, datum:'yyyy-mm-dd', von:'HH:MM', bis:'HH:MM', art, schicht, arzt}
+const APP_DIENSTE_KEY = 'app_dienste';
+function appDiensteLaden(){ const a = LS.get(APP_DIENSTE_KEY, []); return Array.isArray(a) ? a.filter(d=> d && liveDienstFenster(d)) : []; }
+function appDiensteSpeichern(a){ LS.set(APP_DIENSTE_KEY, a.slice(-400)); }
+function appDienstMerken(d){
+  if(!d || !liveDienstFenster(d)) return null;
+  const neu = { id: d.id || ('d' + Date.now().toString(36)), datum: d.datum, von: d.von, bis: d.bis, art: d.art || 'Fahrdienst', schicht: d.schicht || '', arzt: d.arzt || '' };
+  const fe = liveDienstFenster(neu);
+  // gleicher Tag und ueberlappend -> ersetzt (Dienst geaendert)
+  const a = appDiensteLaden().filter(x=>{ if(x.id === neu.id) return false; const f = liveDienstFenster(x); return !(x.datum === neu.datum && f.von < fe.bis && fe.von < f.bis); });
+  a.push(neu); a.sort((x, y)=> liveDienstFenster(x).von - liveDienstFenster(y).von);
+  appDiensteSpeichern(a);
+  return neu;
+}
+function appDienstEntfernen(id){ appDiensteSpeichern(appDiensteLaden().filter(x=> x.id !== id)); }
+// Dienst der App, in dessen Zeitraum dt faellt (1 h Spielraum); der mit dem naechstgelegenen Beginn gewinnt
+function appDienstFuer(dt){
+  const t = dt.getTime(), H = 3600000;
+  const alle = appDiensteLaden().slice();
+  const live = liveDienstLaden(); if(live && !alle.some(x=> x.datum === live.datum && x.von === live.von)) alle.push(Object.assign({ id: 'live' }, live));
+  const tr = alle.map(d=> ({ d, fe: liveDienstFenster(d) })).filter(x=> t >= x.fe.von - H && t <= x.fe.bis.getTime() + H);
+  tr.sort((a, b)=> Math.abs(t - a.fe.von) - Math.abs(t - b.fe.von));
+  return tr.length ? Object.assign({ fenster: tr[0].fe }, tr[0].d) : null;
+}
+// "HH:MM" <-> Stunden (fuer die Abfrage im Fahrtenbuch)
+function appStdZuUhr(h){ return zz2(Math.floor(h) % 24) + ':' + zz2(Math.round((h % 1) * 60)); }
 function liveDienstFenster(d){
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d.datum || ''); if(!m) return null;
   const tag = new Date(+m[1], +m[2] - 1, +m[3]);
@@ -16155,7 +16207,7 @@ async function liveDienstDialog(){
     const aerzte = liveAerzteHistorie();
     const vs = vorschlaege();
     const html = '<div class="fb-dialog">' +
-      '<div class="fb-info">Der Dienst steuert die Live-Anzeige und füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.' +
+      '<div class="fb-info">Der Dienst wird in der App angelegt und steuert die Live-Anzeige. Alle Fälle in seinem Zeitraum landen im Fahrtenbuch in diesem Dienst – ohne weitere Rückfrage.' +
         (!akt && vorschlag ? ' Vorschlag: automatisch erkannt (' + (vorschlag.auto === 'fahrtenbuch' ? 'Fahrtenbuch' : 'GKV-Fälle') + ').' : '') + (akt && liveAuto() ? ' „Dienst beenden“ schaltet zurück auf automatisch.' : '') + '</div>' +
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
@@ -16196,6 +16248,8 @@ async function liveDienstDialog(){
     betaOverlay.schliessen();
     if(!dienstSchichten(art, tagVon()).length) schicht = '';
     LS.set('live_dienst', { datum, von, bis, art, arzt, schicht, am: new Date().toISOString() });
+    // ersetzt einen geaenderten Dienst (gleicher Tag, ueberlappend) bzw. legt ihn neu an
+    try{ appDienstMerken({ datum, von, bis, art, arzt, schicht }); }catch(_){}
     LS.set('fb_dienstart', art);
     // zuletzt benutzte Zeiten merken (je Dienstart, Werktag/Wochenende)
     try{
