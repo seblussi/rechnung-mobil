@@ -1661,6 +1661,16 @@ try{
   .gv-rechts{display:flex; flex-direction:column; align-items:flex-end;} .gv-rechts b{font-variant-numeric:tabular-nums;}
   .gv-rechts small{font-size:11.5px;} .gv-ok{color:#2fa84f;} .gv-rechts .gv-offen{color:#c77700; font-weight:600;}
   .gv-neu{margin-top:14px;}
+  .einr{padding:4px 2px 20px;} .einr h2{margin:14px 0 8px; font-size:22px;} .einr h3{margin:16px 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-schwach);}
+  .einr p{font-size:15px; line-height:1.5; margin:0 0 10px;} .einr-klein{font-size:13px !important; color:var(--text-schwach);}
+  .einr-fort{display:flex; gap:6px; margin:6px 0 4px;} .einr-fort span{flex:1; height:5px; border-radius:3px; background:var(--rand);} .einr-fort span.an{background:#1f5f9e;}
+  .einr-knoepfe{display:flex; justify-content:space-between; gap:10px; margin-top:18px;} .einr-knoepfe button{width:auto; flex:1; margin:0;}
+  .einr-ok{color:#2fa84f;} .einr-liste{display:flex; flex-direction:column; gap:6px; margin:8px 0 12px;}
+  .einr-z{display:flex; justify-content:space-between; gap:10px; padding:9px 12px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); font-size:14px;}
+  .einr-z b{font-weight:600; text-align:right;} .einr-z.ok b{color:#2fa84f;} .einr-z.fehlt b{color:#c77700;}
+  .einr-feld{display:flex; flex-direction:column; gap:3px; margin:0 0 8px; font-size:12.5px; font-weight:600; color:var(--text-schwach);}
+  .einr-feld input{height:44px; box-sizing:border-box; margin:0; padding:0 12px; font:inherit; font-size:16px; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text);}
+  .einr-titel{margin:4px 0 10px;} .einr-tipps{padding-left:20px; font-size:15px; line-height:1.5;} .einr-tipps li{margin-bottom:6px;}
   .doku-knopf{display:flex !important; align-items:center; gap:12px; width:100%; text-align:left; margin:12px 0; padding:12px 14px;}
   .doku-knopf b{display:block; font-size:15px;} .doku-knopf small{display:block; font-size:12.5px; color:var(--text-schwach); font-weight:500;}
   .doku-k-icon{font-size:22px;} .doku-knopf > span:nth-child(2){flex:1;} .doku-k-opt{font-size:11px; color:var(--text-schwach); border:1px solid var(--rand); border-radius:10px; padding:2px 7px;}
@@ -1913,7 +1923,7 @@ function ladeKatalog(){
 }
 function speichereKatalog(k){ LS.set('bestatter_katalog', k); synchronisiereAlle(); }
 function ladeEinstellungen(){
-  return LS.get('einstellungen', {dunkel:false, dunkelManuell:false, praxisadresse:'Im Drachenacker 25, 77656 Offenburg', reiseBasisLuftlinie:false, rnLetzte:'', rnNaechsterZaehler:null});
+  return LS.get('einstellungen', {dunkel:false, dunkelManuell:false, praxisadresse:'', reiseBasisLuftlinie:false, rnLetzte:'', rnNaechsterZaehler:null});
 }
 function speichereEinstellungen(e){ LS.set('einstellungen', e); }
 
@@ -4978,6 +4988,144 @@ function dokuAlterAusGeda(geda, bezug){
   const j = +m[3] < 100 ? 1900 + +m[3] : +m[3], b = bezug || new Date();
   let a = b.getFullYear() - j; if(b.getMonth() + 1 < +m[2] || (b.getMonth() + 1 === +m[2] && b.getDate() < +m[1])) a--;
   return a >= 0 && a < 130 ? a : '';
+}
+
+// =====================================================================
+// Einrichtungsassistent fuer neue Nutzer: Microsoft-Anmeldung, Ordner und
+// leere Vorlagen aus dem Starter-Paket im Repo (starter/) ins eigene OneDrive
+// kopieren, eigene Daten (einstellungen.ini). Der Schritt wird gemerkt, damit
+// es nach der Rueckkehr von der Microsoft-Anmeldung weitergeht.
+// =====================================================================
+async function einrStarterLaden(){
+  const r = await fetch('./starter/starter.json', { cache: 'no-cache' });
+  if(!r.ok) throw new Error('Starter-Paket nicht gefunden (HTTP ' + r.status + ').');
+  return r.json();
+}
+async function einrVorhanden(token, pfad){
+  const r = await fetch(msGraphPfadUrl(pfad), { headers: { Authorization: 'Bearer ' + token } });
+  if(r.status === 404) return false;
+  if(!r.ok) throw new Error('OneDrive antwortet nicht (HTTP ' + r.status + ').');
+  return true;
+}
+function ansichtEinrichtung(schritt){
+  einstellungenOffen = false;
+  schritt = schritt || LS.get('einrichtung_schritt', 'start');
+  LS.set('einrichtung_schritt', schritt);
+  LS.set('einrichtung_gesehen', true);
+  const beenden = ()=>{ LS.set('einrichtung_schritt', null); ansichtStart(); };
+  setzeTitel('Einrichtung', beenden);
+  const angemeldet = typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet';
+  const schritte = ['start', 'anmelden', 'dateien', 'daten', 'fertig'];
+  const nr = schritte.indexOf(schritt) + 1;
+  const kopf = '<div class="einr-fort">' + schritte.map((s, i)=> '<span class="' + (i < nr ? 'an' : '') + '"></span>').join('') + '</div>';
+  const knoepfe = (zurueck, weiter, weiterText, weiterAus)=> '<div class="einr-knoepfe">' + (zurueck ? '<button type="button" class="btn-sekundaer" data-einr="' + zurueck + '">Zurück</button>' : '<span></span>') +
+    (weiter ? '<button type="button" class="btn-primaer" data-einr="' + weiter + '"' + (weiterAus ? ' disabled' : '') + '>' + (weiterText || 'Weiter') + '</button>' : '') + '</div>';
+  let html = '';
+  if(schritt === 'start'){
+    html = '<h2>Willkommen</h2><p>Diese App erstellt Rechnungen für Leichenschau und Privatpatienten, erfasst GKV-Patienten im Fahrdienst, führt das Fahrtenbuch und berechnet das Wegegeld (NFP Offenburg).</p>' +
+      '<p>Alle Daten liegen in <b>deinem eigenen OneDrive</b> im Ordner „KVBW Onedrive“. Der Assistent legt ihn an, kopiert die leeren Vorlagen hinein und fragt deine Daten für die Rechnungen ab.</p>' +
+      '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + knoepfe(null, 'anmelden', 'Los geht’s');
+  } else if(schritt === 'anmelden'){
+    html = '<h2>Microsoft-Anmeldung</h2>' + (angemeldet
+      ? '<p class="einr-ok">✓ Angemeldet als <b>' + htmlEsc((msGraphKonto && (msGraphKonto.username || msGraphKonto.name)) || '') + '</b>.</p>' + knoepfe('start', 'dateien')
+      : '<p>Melde dich mit deinem Microsoft-Konto an. Danach kommst du automatisch hierher zurück.</p><button type="button" class="btn-primaer" id="einrAnmelden">Mit Microsoft anmelden</button>' + knoepfe('start', null));
+  } else if(schritt === 'dateien'){
+    html = '<h2>Ordner und Vorlagen</h2><p>Prüfe, was in deinem OneDrive schon vorhanden ist …</p><div id="einrListe" class="einr-liste"></div><div id="einrDateiKnopf"></div>' + knoepfe('anmelden', 'daten', 'Weiter', true);
+  } else if(schritt === 'daten'){
+    const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
+    const feld = (k, label, ph)=> '<label class="einr-feld"><span>' + label + '</span><input type="text" data-ini="' + k + '" value="' + htmlEsc(w[k] || '') + '"' + (ph ? ' placeholder="' + htmlEsc(ph) + '"' : '') + '></label>';
+    html = '<h2>Deine Daten</h2><p>Erscheinen auf deinen Rechnungen. Alles lässt sich später unter Einstellungen ändern.</p>' +
+      '<div class="fb-chips einr-titel">' + [['TITEL_DR', 'Dr.'], ['TITEL_DRMED', 'Dr. med.'], ['TITEL_PRIVDOZ', 'Priv.-Doz.'], ['TITEL_PROF', 'Prof.']].map(([k, t])=> '<button type="button" class="fb-chip' + (w[k] === '1' ? ' an' : '') + '" data-titel="' + k + '">' + t + '</button>').join('') + '</div>' +
+      feld('ARZTNAME', 'Name (ohne Titel)', 'Vorname Nachname') + feld('ARZTADRESSE1', 'Straße Hausnummer') + feld('ARZTADRESSE2', 'PLZ Ort') + feld('ARZTEMAIL', 'E-Mail') +
+      '<h3>Bankverbindung</h3>' + feld('ARZTKONTOINHABER', 'Kontoinhaber') + feld('ARZTBANKNAME', 'Bank') + feld('ARZTIBAN', 'IBAN') + feld('ARZTBIC', 'BIC') +
+      '<h3>Wegegeld</h3>' + feld('GKV_STARTADRESSE', 'Ausgangspunkt für die Luftlinie (Wache)', 'Straße Nr., PLZ Ort') +
+      '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'fertig', 'Speichern und weiter');
+  } else {
+    html = '<h2>Fertig 🎉</h2><p>Die App ist eingerichtet. Ein paar Tipps:</p><ul class="einr-tipps">' +
+      '<li>Unter <b>Einstellungen › Design</b> die Optik wählen (z. B. „Einhand“).</li>' +
+      '<li>Den <b>Briefversand</b> über LetterXpress kannst du später in den Einstellungen einrichten (eigenes LetterXpress-Konto nötig).</li>' +
+      '<li>Auf dem iPhone: in Safari <b>Teilen › Zum Home-Bildschirm</b>, dann startet die App wie eine normale App.</li></ul>' +
+      '<button type="button" class="btn-primaer" id="einrFertig">Zur Startseite</button>';
+  }
+  app.innerHTML = '<div class="einr">' + kopf + html + '</div>';
+  app.querySelectorAll('[data-einr]').forEach(b=> b.onclick = async ()=>{
+    if(schritt === 'daten' && b.dataset.einr === 'fertig'){
+      const aend = {};
+      app.querySelectorAll('[data-ini]').forEach(i=>{ aend[i.dataset.ini] = i.value.trim(); });
+      app.querySelectorAll('[data-titel]').forEach(t=>{ aend[t.dataset.titel] = t.classList.contains('an') ? '1' : '0'; });
+      const info = document.getElementById('einrDatenInfo');
+      if(!aend.ARZTNAME){ info.textContent = 'Bitte mindestens den Namen eintragen.'; return; }
+      b.disabled = true; info.textContent = 'Wird in OneDrive gespeichert …';
+      try{
+        const r = await iniAenderungenSchreiben(aend, (iniCacheLaden() || {}).werte || {});
+        if(r && r.abgebrochen){ b.disabled = false; info.textContent = ''; return; }
+        try{ await iniVonOneDriveLaden(); }catch(_){}
+        const e = ladeEinstellungen(); if(aend.ARZTADRESSE1 && !e.praxisadresse){ e.praxisadresse = [aend.ARZTADRESSE1, aend.ARZTADRESSE2].filter(Boolean).join(', '); speichereEinstellungen(e); }
+      }catch(err){ b.disabled = false; info.textContent = 'Nicht gespeichert: ' + (err.message || err); return; }
+    }
+    ansichtEinrichtung(b.dataset.einr);
+  });
+  app.querySelectorAll('[data-titel]').forEach(t=> t.onclick = ()=> t.classList.toggle('an'));
+  const an = document.getElementById('einrAnmelden'); if(an) an.onclick = ()=> msGraphAnmelden();
+  const fe = document.getElementById('einrFertig'); if(fe) fe.onclick = beenden;
+  if(schritt === 'dateien') einrDateienPruefen();
+}
+async function einrDateienPruefen(){
+  const liste = document.getElementById('einrListe'), knopfBox = document.getElementById('einrDateiKnopf');
+  const weiter = document.querySelector('[data-einr="daten"]');
+  const zeile = (titel, status, kl)=> '<div class="einr-z ' + (kl || '') + '"><span>' + htmlEsc(titel) + '</span><b>' + status + '</b></div>';
+  try{
+    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ liste.innerHTML = '<div class="gkv-warn">Bitte zuerst bei Microsoft anmelden.</div>'; return; }
+    const token = await msGraphTokenHolen();
+    const paket = await einrStarterLaden();
+    const status = [];
+    for(const o of paket.ordner) status.push({ art: 'ordner', pfad: o, titel: 'Ordner „' + o.replace(/^KVBW Onedrive\/?/, '') + '“', da: await einrVorhanden(token, o) });
+    for(const f of paket.dateien){
+      let imRepo = false;
+      try{ imRepo = (await fetch('./starter/' + encodeURIComponent(f.quelle), { method: 'HEAD', cache: 'no-cache' })).ok; }catch(_){}
+      status.push({ art: 'datei', pfad: f.ziel, quelle: f.quelle, titel: f.titel, da: await einrVorhanden(token, f.ziel), imRepo });
+    }
+    const zeichnen = ()=>{
+      liste.innerHTML = status.map(x=> zeile(x.art === 'ordner' && x.pfad === 'KVBW Onedrive' ? 'Ordner „KVBW Onedrive“' : x.titel,
+        x.da ? '✓ vorhanden' : x.art === 'datei' && !x.imRepo ? 'fehlt – Vorlage noch nicht im Starter-Paket' : 'fehlt', x.da ? 'ok' : 'fehlt')).join('');
+      const fehlend = status.filter(x=> !x.da && (x.art === 'ordner' || x.imRepo));
+      knopfBox.innerHTML = fehlend.length ? '<button type="button" class="btn-primaer" id="einrAnlegen">' + fehlend.length + ' fehlende anlegen</button>' : '';
+      const ohneVorlage = status.filter(x=> !x.da && x.art === 'datei' && !x.imRepo);
+      if(weiter) weiter.disabled = status.some(x=> !x.da && (x.art === 'ordner' || x.imRepo));
+      if(ohneVorlage.length && !fehlend.length) knopfBox.innerHTML = '<div class="einr-klein">Einige Vorlagen sind noch nicht im Starter-Paket. Die App funktioniert trotzdem; Rechnungen bzw. Fahrtenbuch gehen erst, wenn die Dateien da sind.</div>';
+      const b = document.getElementById('einrAnlegen');
+      if(b) b.onclick = async ()=>{
+        b.disabled = true;
+        for(const x of fehlend){
+          b.textContent = x.titel + ' …';
+          try{
+            if(x.art === 'ordner') await msGraphOrdnerSicherstellen(token, x.pfad);
+            else {
+              const r = await fetch('./starter/' + encodeURIComponent(x.quelle), { cache: 'no-cache' });
+              if(!r.ok) throw new Error('HTTP ' + r.status);
+              await msGraphDateiHochladen(token, x.pfad, await r.blob());
+            }
+            x.da = await einrVorhanden(token, x.pfad);
+          }catch(e){ x.fehler = e.message || String(e); }
+        }
+        zeichnen();
+      };
+    };
+    zeichnen();
+  }catch(e){ liste.innerHTML = '<div class="gkv-warn">' + htmlEsc(e.message || String(e)) + '</div>'; }
+}
+// nach der Anmeldung: neues Konto ohne Rechnungsübersicht -> Einrichtung anbieten (einmal je Konto)
+async function einrNachAnmeldungPruefen(){
+  try{
+    if(LS.get('einrichtung_schritt', null)){ ansichtEinrichtung(); return; }
+    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet' || !msGraphKonto) return;
+    const k = 'einrichtung_geprueft_' + (msGraphKonto.username || '');
+    if(LS.get(k, false)) return;
+    const token = await msGraphTokenHolen(); if(!token) return;
+    const da = await einrVorhanden(token, MSGRAPH_PFAD_UEBERSICHT);
+    LS.set(k, true);
+    if(!da && await betaFrage('In deinem OneDrive fehlen die Dateien der App (Ordner „KVBW Onedrive“).\n\nJetzt einrichten?', 'Einrichten', 'Später')) ansichtEinrichtung('dateien');
+  }catch(_){}
 }
 
 // ---------- Rechnungsverwaltung: Reiter LS/PT | GKV ----------
@@ -15384,7 +15532,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v227';
+const APP_VERSION = 'v228';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -16130,6 +16278,7 @@ function ansichtEinstellungen(){
       <div class="trennlinie">Wegegeld-Zonen</div>
       <div class="design-hinweis">Grenzen der Zonen auf der KVBW-Karte selbst nachzeichnen. Gilt sofort für Wegegeld und alle Karten; mit OneDrive-Anmeldung auf allen Geräten.${LS.get('nfp_zonen_eigen', null) ? ' <b>Eigene Korrekturen aktiv</b> (Stand ' + new Date(LS.get('nfp_zonen_eigen', {}).am || Date.now()).toLocaleDateString('de-DE') + ').' : ''}</div>
       <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:8px;">Zonen bearbeiten</button>
+      <button type="button" class="btn-sekundaer" id="btnEinrichtung" style="margin-top:8px;">Einrichtungsassistent (neues Gerät / neuer Nutzer)</button>
       <div class="einstellung-zeile" style="margin-top:14px;">
         <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor ? ' checked' : ''}>
         <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
@@ -16151,6 +16300,7 @@ function ansichtEinstellungen(){
     'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQABqB5CR1MKTYKl9e0C0HQmAfK2JnVMtavJbZH6NW6GcvI?e=q9P5UX');
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
   document.getElementById('btnZonenBearbeiten').onclick = async ()=>{ await nfpZonenEigeneLaden(); zonenEditorOeffnen(); };
+  document.getElementById('btnEinrichtung').onclick = ()=> ansichtEinrichtung('start');
   document.getElementById('chkKarteVektor').onchange = (ev)=>{ const e = ladeEinstellungen(); e.karteVektor = ev.target.checked; speichereEinstellungen(e); if(ev.target.checked) vkMaplibreHolen().catch(()=>{}); };
   document.querySelectorAll('[data-vkstil]').forEach(b=> b.onclick = ()=>{ const e = ladeEinstellungen(); e.karteVektorStil = b.dataset.vkstil; speichereEinstellungen(e); document.querySelectorAll('[data-vkstil]').forEach(x=> x.classList.toggle('an', x === b)); });
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
@@ -18222,6 +18372,10 @@ function navZurueckAusfuehren(f){ navZurueck = true; try{ f(); } finally { navZu
 try{ themaAnwenden(); }catch(e){}
 try{ dunkelModusAutoSyncEinrichten(); }catch(e){}
 try{ ansichtStart(); }catch(e){}
+try{
+  const neu = localStorage.getItem('einstellungen') === null && !LS.get('einrichtung_gesehen', false) && !ladeFaelle('ls').length && !ladeFaelle('pt').length;
+  if(neu || LS.get('einrichtung_schritt', null)) setTimeout(()=>{ if(aktuelleAnsichtIstHauptbildschirm) ansichtEinrichtung(); }, 300);
+}catch(_){}
 // Schnellstart aus dem App-Symbol (Rechtsklick in der Taskleiste / langes Druecken): ?neu=dienst|rechnung|ls|pt|gkv, ?seite=fahrtenbuch
 try{
   const q = new URLSearchParams(location.search), neu = q.get('neu'), seite = q.get('seite');
@@ -18261,7 +18415,11 @@ try{
 // aufbauen, damit der aktualisierte Anmeldestatus sichtbar wird.
 try{
   msGraphInitialisieren().then(()=>{
-    if(einstellungenOffen) ansichtEinstellungen();
+    // Einrichtungsassistent: nach der Rueckkehr von der Microsoft-Anmeldung weiter, sonst ggf. anbieten
+    const einrLaeuft = !!LS.get('einrichtung_schritt', null);
+    if(einrLaeuft) ansichtEinrichtung(); else setTimeout(()=> einrNachAnmeldungPruefen(), 2500);
+    if(einrLaeuft){}
+    else if(einstellungenOffen) ansichtEinstellungen();
     // Auch den Sync-Button auf der Startseite (falls gerade dort) sofort
     // aktualisieren -- direkt nach einem frischen Login landet man dort,
     // und der Button soll sofort "OneDrive" statt des alten Zustands zeigen.
