@@ -1615,6 +1615,7 @@ try{
   .vk-test{font-weight:500; font-size:11.5px; color:var(--text-schwach); margin-left:6px;}
   .vk-overlay .karte-ebene, .vk-overlay .karte-auge{z-index:5;}
   .vk-marke{line-height:0;}
+  .vk-ziehbar{width:22px !important; height:22px !important; cursor:grab;}
   .mini-fenster > .mini-vk, .mini-fenster > .mini-vk.maplibregl-map{position:absolute; inset:0; width:100%; height:100%;}
   .mini-vk .maplibregl-cooperative-gesture-screen{font-size:14px;}
   .vk-stil-knopf{position:absolute; top:128px; right:10px; z-index:5; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
@@ -6448,7 +6449,7 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
   platzhalterKoerper.push(['RENU', daten.renu], ['ATITEL', a.titel || ''], ['ANAME', a.name || ''],
     ['AFUNKTION', a.funktion || ''], ['AADRESSE1', a.adresse1 || ''], ['AADRESSE2', a.adresse2 || ''],
     ['AEMAIL', a.email || '']);
-  const platzhalterFuss = [['BANAME', a.bank || ''], ['BABIC', a.bic || ''], ['BAIBAN', a.iban || ''], ['ENAME', a.kontoinhaber || '']];
+  const platzhalterFuss = [['BANAME', a.bank || ''], ['BABIC', String(a.bic || '').replace(/\s/g, '').toUpperCase()], ['BAIBAN', a.iban || ''], ['ENAME', a.kontoinhaber || '']];
 
   // Hauptdokument
   let doc = await zip.file('word/document.xml').async('string');
@@ -14870,6 +14871,16 @@ function osmKarteOverlay(d, text, opt){
   });
   return ergebnis;
 }
+// BIC immer in Grossbuchstaben (Ziffern bleiben), ohne Leerzeichen -- in allen Eingabefeldern
+document.addEventListener('input', (ev)=>{
+  const el = ev.target;
+  if(!el || !el.matches || !el.matches('#ini_ARZTBIC, [data-ini="ARZTBIC"], #ini_AERZTE_BIC, [data-ini="AERZTE_BIC"], input[data-bic]')) return;
+  const neu = el.value.replace(/\s/g, '').toUpperCase();
+  if(neu === el.value) return;
+  const pos = el.selectionStart, vorher = el.value.slice(0, pos == null ? el.value.length : pos).replace(/\s/g, '').length;
+  el.value = neu;
+  try{ el.setSelectionRange(vorher, vorher); }catch(_){}
+}, true);
 // ---------- Vektorkarte (Test, Einstellung "Große Karte als Vektorkarte") ----------
 // MapLibre GL + freie Vektorkacheln von OpenFreeMap (ohne Schluessel). Zeigt dieselben
 // Inhalte wie die normale grosse Karte (Zonen, Route, Varianten, Luftlinie, Einsatzorte,
@@ -14961,6 +14972,9 @@ function vektorKarteOverlay(d, text, opt){
   const ov = document.createElement('div');
   ov.className = 'nfp-overlay ok-karte vk-overlay';
   ov.innerHTML = '<div class="nfp-kopf"><b>' + htmlEsc(opt.titel || 'Karte') + ' <small class="vk-test">Vektorkarte (Test)</small></b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
+    '<div class="nfp-suche"><input type="text" id="vkStrasse" autocomplete="off" placeholder="Straße Nr.">' +
+      '<input type="text" id="vkPlzOrt" enterkeyhint="search" autocomplete="off" placeholder="PLZ Ort">' +
+      '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
     '<div class="nfp-rahmen"><div class="vk-karte"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF +
       '<button type="button" class="vk-stil-knopf" aria-label="Kartenstil und Ebenen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>' +
       '<div class="vk-menue" hidden></div></div>' +
@@ -15036,7 +15050,7 @@ function vektorKarteOverlay(d, text, opt){
     box.addEventListener('pointerdown', ()=>{ menue.hidden = true; });
     auge.onclick = ()=>{ LS.set('karte_zonen', !zonenAn()); auge.classList.toggle('aus', !zonenAn()); sichtbar(); miniKartenNeu(); };
     map.on('load', ()=>{
-      info.textContent = text || '';
+      info.innerHTML = (text ? htmlEsc(text) + '<br>' : '') + '<small>Adresse suchen oder lange auf die Karte drücken, um einen Ort zu setzen (Punkt verschiebbar).</small>';
       // NFP, Wache, Einsatzorte
       symbol('nfp', n);
       const wache = gkvStartGeo(); if(wache) symbol('rtw', wache);
@@ -15061,6 +15075,75 @@ function vektorKarteOverlay(d, text, opt){
       ichMarke = marke('<span class="vk-ich"></span>', g);
       map.easeTo({ center: ll(g), zoom: Math.max(map.getZoom(), 13.5) });
     };
+    // ---- Adresse suchen / Ort setzen (lange druecken), Punkt verschiebbar -> Luftlinie, Wegepauschale, Route ----
+    let zielMarke = null, zielNr = 0;
+    const datenNeu = ()=>{
+      const s1 = map.getSource('vk-luft'); if(s1) s1.setData({ type: 'FeatureCollection', features: d.linie ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] });
+      const s2 = map.getSource('vk-weg'); if(s2) s2.setData({ type: 'FeatureCollection', features: d.weg && d.weg.length > 1 ? [linie(d.weg)] : [] });
+    };
+    const zielSetzen = (g, woher, adrText)=>{
+      const nr = ++zielNr;
+      if(!zielMarke){
+        const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = '<span class="vk-punkt ziel vk-ziehbar"></span>';
+        zielMarke = new ml.Marker({ element: el, draggable: true }).setLngLat(ll(g)).addTo(map);
+        zielMarke.on('dragend', ()=>{ const p = zielMarke.getLngLat(); zielSetzen({ lat: p.lat, lon: p.lng }, 'Verschoben'); adresseZu({ lat: p.lat, lon: p.lng }); });
+      } else zielMarke.setLngLat(ll(g));
+      const s = gkvStartGeo();
+      d.linie = s ? [s, g] : null; d.weg = []; datenNeu();
+      if(!s){ info.innerHTML = (woher ? htmlEsc(woher) + (adrText ? ': ' + htmlEsc(adrText) : '') : '') + '<br><small>Kein Ausgangspunkt eingestellt – keine Wegepauschale.</small>'; return; }
+      const km = kmLuftlinieEinfach(s, g);
+      const p = nfpGeoZuPixel(g.lat, g.lon);
+      let b = nfpImBild(p) ? nfpBewertung(p) : null;
+      const stufe = b && b.stufe && km <= 50 ? b.stufe : gkvStufeFuerKm(km);
+      info.innerHTML = (woher ? htmlEsc(woher) + (adrText ? ': ' + htmlEsc(adrText) : '') + '<br>' : '') + 'Wegepauschale <b>' + htmlEsc(nfpStufeLabel(stufe)) + '</b>' +
+        '<br><small>Luftlinie ' + htmlEsc(nfpKmText(km)) + ' km ab ' + htmlEsc(s.adr || 'Ausgangspunkt') + '<span id="vkWegInfo"></span></small>';
+      routeMitWeg(s, g).then(r=>{
+        if(nr !== zielNr || !r || !r.length || !document.body.contains(ov)) return;
+        d.weg = r[0].coords; datenNeu();
+        const wi = ov.querySelector('#vkWegInfo'); if(wi) wi.textContent = ' · Fahrstrecke ' + nfpKmText(r[0].km * 2) + ' km Hin+Rück';
+      }).catch(()=>{});
+    };
+    const adresseZu = async (g)=>{
+      try{
+        const res = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + g.lat.toFixed(6) + '&lon=' + g.lon.toFixed(6) + '&zoom=18&addressdetails=1', { headers: { 'Accept': 'application/json' } });
+        const a = ((await res.json()) || {}).address || {};
+        const str = [a.road || a.pedestrian || a.footway || a.path || '', a.house_number || ''].join(' ').trim();
+        const ort = [a.postcode || '', (a.city || a.town || a.village || a.municipality || '').split('/')[0].trim()].join(' ').trim();
+        if(str || ort){ ov.querySelector('#vkStrasse').value = str; ov.querySelector('#vkPlzOrt').value = ort; }
+      }catch(_){}
+    };
+    const suchen = async ()=>{
+      const st = ov.querySelector('#vkStrasse'), po = ov.querySelector('#vkPlzOrt');
+      try{ await gkvPlzOrtErgaenzen(st, po, info); }catch(_){}
+      const a = gkvAdrZusammen(st.value, po.value);
+      if(!a){ info.textContent = 'Bitte eine Adresse eintragen.'; return; }
+      info.textContent = 'Adresse wird gesucht …';
+      let g = null;
+      try{ g = await gkvOrtSuchen(a); }catch(_){ info.textContent = 'Keine Verbindung zum Kartendienst.'; return; }
+      if(!g){ info.textContent = 'Adresse nicht gefunden – bitte prüfen oder lange auf die Karte drücken.'; return; }
+      st.blur(); po.blur();
+      map.easeTo({ center: ll(g), zoom: Math.max(map.getZoom(), 15) });
+      zielSetzen(g, 'Adresse', g.gefunden || a);
+    };
+    ov.querySelector('.nfp-such-knopf').onclick = suchen;
+    ov.querySelector('#vkPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); suchen(); } };
+    ov.querySelector('#vkStrasse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); ov.querySelector('#vkPlzOrt').focus(); } };
+    // lange druecken (Finger oder Maus) setzt einen Punkt
+    let langT = null, langP = null;
+    const langAus = ()=>{ clearTimeout(langT); langT = null; };
+    box.addEventListener('pointerdown', (ev)=>{
+      if(ev.target.closest('.maplibregl-marker, .maplibregl-ctrl')) return;
+      langP = { x: ev.clientX, y: ev.clientY }; langAus();
+      langT = setTimeout(()=>{
+        const r = box.getBoundingClientRect(), p = map.unproject([langP.x - r.left, langP.y - r.top]);
+        try{ navigator.vibrate && navigator.vibrate(25); }catch(_){}
+        zielSetzen({ lat: p.lat, lon: p.lng }, 'Gesetzt'); adresseZu({ lat: p.lat, lon: p.lng });
+      }, 600);
+    });
+    box.addEventListener('pointermove', (ev)=>{ if(langT && langP && Math.hypot(ev.clientX - langP.x, ev.clientY - langP.y) > 8) langAus(); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(n=> box.addEventListener(n, langAus));
+    box.addEventListener('contextmenu', (ev)=> ev.preventDefault());
+    map.on('movestart', langAus);
   }).catch(()=>{
     // ohne MapLibre (offline o.ae.): normale Karte
     zu(); osmKarteOverlay(d, text, Object.assign({}, opt, { keinVektor: true }));
@@ -15543,7 +15626,7 @@ async function aerzteDocxErzeugen(vorlage, daten){
     ['PADRESSE2', daten.adr2 || ''], ['DATE', daten.datum], ['RENU', daten.renu], ['GELDSUMME', aerzteZahlText(daten.summe)],
     ['ATITEL', a.titel || ''], ['ANAME', a.name || ''], ['AFUNKTION', a.funktion || ''], ['AADRESSE1', a.adresse1 || ''],
     ['AADRESSE2', a.adresse2 || ''], ['AEMAIL', a.email || '']];
-  const fuss = [['BANAME', a.bank || ''], ['BABIC', a.bic || ''], ['BAIBAN', a.iban || ''], ['ENAME', a.kontoinhaber || '']];
+  const fuss = [['BANAME', a.bank || ''], ['BABIC', String(a.bic || '').replace(/\s/g, '').toUpperCase()], ['BAIBAN', a.iban || ''], ['ENAME', a.kontoinhaber || '']];
   let doc = await zip.file('word/document.xml').async('string');
   // Tabelle der Dienste: Zeile mit DIENSTDAT (+ leere Zeilen bis "SUMME") je Dienst
   const tStart = doc.lastIndexOf('<w:tbl>', doc.indexOf('DIENSTDAT'));
@@ -16060,7 +16143,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v238';
+const APP_VERSION = 'v239';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
