@@ -1615,6 +1615,17 @@ try{
   .vk-test{font-weight:500; font-size:11.5px; color:var(--text-schwach); margin-left:6px;}
   .vk-overlay .karte-ebene, .vk-overlay .karte-auge{z-index:5;}
   .vk-marke{line-height:0;}
+  .vk-stil-knopf{position:absolute; top:128px; right:10px; z-index:5; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .vk-menue{position:absolute; top:10px; right:74px; z-index:6; width:min(280px, calc(100% - 90px)); background:var(--karte-bg, #fff); color:var(--text, #222); border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,.35); padding:10px 12px; font-size:14px;}
+  body.dunkel .vk-menue{background:#1d232b; color:#e6e9ee;}
+  .vk-m-titel{font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.7; margin:4px 0 6px;} .vk-m-titel small{text-transform:none; font-weight:500;}
+  .vk-m-stile{display:flex; gap:8px; margin-bottom:8px;}
+  .vk-m-stil{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; margin:0; padding:6px 4px; border-radius:10px; border:2px solid transparent; background:none; color:inherit; font:inherit; font-size:12.5px; cursor:pointer;}
+  .vk-m-stil.an{border-color:#2f6fd6;}
+  .vk-m-vorschau{display:block; width:44px; height:32px; border-radius:7px; border:1px solid rgba(0,0,0,.2);}
+  .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
+  .vk-m-ebene{display:flex; align-items:flex-start; gap:8px; padding:5px 0; line-height:1.3;} .vk-m-ebene input{width:18px; height:18px; flex:none; margin-top:1px;}
   .vk-fall{display:flex; width:24px; height:24px; border-radius:50%; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:800; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); background:var(--ls-farbe); line-height:1;}
   .vk-fall.pt{background:var(--pt-farbe);} .vk-fall.gkv{background:#7d4e9e;}
   .vk-punkt{display:block; width:16px; height:16px; border-radius:50%; border:2.5px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4);} .vk-punkt.start{background:#1a55c9;} .vk-punkt.ziel{background:#e0242b;}
@@ -14780,7 +14791,49 @@ function vkMaplibreHolen(){
   return vkLaden;
 }
 function vkAn(){ return !!(ladeEinstellungen() || {}).karteVektor; }
-function vkStilUrl(){ const st = (ladeEinstellungen() || {}).karteVektorStil || 'liberty'; return 'https://tiles.openfreemap.org/styles/' + (['liberty', 'bright', 'positron'].includes(st) ? st : 'liberty'); }
+// Kartenstile: im Nachtmodus automatisch dunkel (in der Karte umschaltbar, getrennt gemerkt)
+const VK_STILE = { liberty: 'Hell', bright: 'Bunt', dark: 'Dunkel' };
+function vkNacht(){ return document.body.classList.contains('dunkel'); }
+function vkStil(){
+  if(vkNacht()){ const n = LS.get('vk_stil_nacht', 'dark'); return VK_STILE[n] ? n : 'dark'; }
+  const st = (ladeEinstellungen() || {}).karteVektorStil; return VK_STILE[st] ? st : 'liberty';
+}
+function vkStilSetzen(st){
+  if(!VK_STILE[st]) return;
+  if(vkNacht()) LS.set('vk_stil_nacht', st); else { const e = ladeEinstellungen(); e.karteVektorStil = st; speichereEinstellungen(e); }
+}
+function vkStilUrl(st){ return 'https://tiles.openfreemap.org/styles/' + (st || vkStil()); }
+// Zusatz-Ebenen aus den OpenFreeMap-Kacheln (Schema OpenMapTiles): medizinische Orte, Parkplaetze, Hausnummern
+function vkEbenen(){ return Object.assign({ med: true, park: true, hnr: true }, LS.get('vk_ebenen', {}) || {}); }
+const VK_MED_SUB = ['hospital', 'clinic', 'doctors', 'dentist', 'pharmacy', 'nursing_home', 'social_facility', 'physiotherapist'];
+function vkZusatzEbenen(map, st){
+  const dunkel = st === 'dark', e = vkEbenen();
+  const quelle = map.getSource('openmaptiles') ? 'openmaptiles' : null; if(!quelle) return;
+  const weg = (id)=>{ if(map.getLayer(id)) map.removeLayer(id); };
+  ['vk-hnr', 'vk-park', 'vk-med'].forEach(weg);
+  const halo = dunkel ? '#10151c' : '#ffffff';
+  const punkt = ['match', ['geometry-type'], ['Point', 'MultiPoint'], true, false];
+  // Hausnummern ab Zoom 16
+  map.addLayer({ id: 'vk-hnr', type: 'symbol', source: quelle, 'source-layer': 'housenumber', minzoom: 16,
+    layout: { visibility: e.hnr ? 'visible' : 'none', 'text-field': ['to-string', ['get', 'housenumber']], 'text-font': ['Noto Sans Regular'], 'text-size': ['interpolate', ['linear'], ['zoom'], 16, 10, 19, 13], 'text-padding': 1, 'symbol-placement': 'point' },
+    paint: { 'text-color': dunkel ? '#c9d1db' : '#5b4a3a', 'text-halo-color': halo, 'text-halo-width': 1.2 } });
+  // Parkplaetze schon ab Zoom 14
+  map.addLayer({ id: 'vk-park', type: 'symbol', source: quelle, 'source-layer': 'poi', minzoom: 14,
+    filter: ['all', punkt, ['any', ['==', ['get', 'class'], 'parking'], ['in', ['get', 'subclass'], ['literal', ['parking', 'parking_garage', 'parking_space']]]]],
+    layout: { visibility: e.park ? 'visible' : 'none', 'icon-image': ['match', ['get', 'subclass'], 'parking_garage', 'parking_garage', 'parking'], 'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 17, 1.1], 'icon-allow-overlap': false, 'icon-padding': 1,
+      'text-field': ['step', ['zoom'], '', 17, ['coalesce', ['get', 'name'], '']], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'text-offset': [0, 1.1], 'text-anchor': 'top', 'text-optional': true },
+    paint: { 'text-color': '#2a63c7', 'text-halo-color': halo, 'text-halo-width': 1.2 } });
+  // Medizinische Orte bevorzugt (oberste Ebene = Vorrang bei Ueberschneidungen), ab Zoom 12
+  map.addLayer({ id: 'vk-med', type: 'symbol', source: quelle, 'source-layer': 'poi', minzoom: 12,
+    filter: ['all', punkt, ['any', ['in', ['get', 'class'], ['literal', ['hospital', 'pharmacy', 'doctors', 'dentist']]], ['in', ['get', 'subclass'], ['literal', VK_MED_SUB]]]],
+    layout: { visibility: e.med ? 'visible' : 'none',
+      'icon-image': ['match', ['get', 'subclass'], ['pharmacy'], 'pharmacy', ['doctors', 'physiotherapist'], 'doctors', ['dentist'], 'dentist', 'hospital'],
+      'icon-size': ['interpolate', ['linear'], ['zoom'], 12, ['match', ['get', 'subclass'], 'hospital', 1.1, 0.8], 16, 1.35],
+      'icon-allow-overlap': false, 'icon-padding': 0, 'symbol-sort-key': ['match', ['get', 'subclass'], 'hospital', 0, 'nursing_home', 1, 'social_facility', 1, 'pharmacy', 2, 3],
+      'text-field': ['step', ['zoom'], ['match', ['get', 'subclass'], 'hospital', ['coalesce', ['get', 'name'], ''], ''], 14, ['coalesce', ['get', 'name'], '']],
+      'text-font': ['Noto Sans Bold'], 'text-size': ['interpolate', ['linear'], ['zoom'], 12, 11, 17, 13], 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true, 'text-max-width': 9 },
+    paint: { 'text-color': dunkel ? '#ff8a8a' : '#c0262d', 'text-halo-color': halo, 'text-halo-width': 1.5, 'icon-opacity': 1 } });
+}
 // Zonen als Geo-Polygone (Zone k = Ring k ohne Ring k-1), passend zu nfpZonenRinge (inkl. eigener Korrekturen)
 function vkZonenGeo(){
   const ringe = nfpZonenRinge();
@@ -14802,7 +14855,9 @@ function vektorKarteOverlay(d, text, opt){
   const ov = document.createElement('div');
   ov.className = 'nfp-overlay ok-karte vk-overlay';
   ov.innerHTML = '<div class="nfp-kopf"><b>' + htmlEsc(opt.titel || 'Karte') + ' <small class="vk-test">Vektorkarte (Test)</small></b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
-    '<div class="nfp-rahmen"><div class="vk-karte"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF + '</div>' +
+    '<div class="nfp-rahmen"><div class="vk-karte"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF +
+      '<button type="button" class="vk-stil-knopf" aria-label="Kartenstil und Ebenen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>' +
+      '<div class="vk-menue" hidden></div></div>' +
     '<div class="nfp-fuss"><div class="nfp-info" id="vkInfo">' + (text ? htmlEsc(text) : 'Vektorkarte wird geladen …') + '</div>' +
       '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button></div></div>';
   document.body.appendChild(ov);
@@ -14821,7 +14876,8 @@ function vektorKarteOverlay(d, text, opt){
   vkMaplibreHolen().then((ml)=>{
     const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]);
     const a = opt.ansicht;
-    map = new ml.Map({ container: box, style: vkStilUrl(), center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
+    let stil = vkStil();
+    map = new ml.Map({ container: box, style: vkStilUrl(stil), center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
       attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, maxZoom: 18.5 });
     map.touchZoomRotate.disableRotation();
     map.addControl(new ml.NavigationControl({ showCompass: false }), 'bottom-right');
@@ -14831,8 +14887,9 @@ function vektorKarteOverlay(d, text, opt){
     const marke = (html, g, klick)=>{ const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = html; if(klick){ el.style.cursor = 'pointer'; el.onclick = (ev)=>{ ev.stopPropagation(); klick(); }; } return new ml.Marker({ element: el }).setLngLat(ll(g)).addTo(map); };
     const symbol = (art, g)=> marke('<svg viewBox="-20 -14 40 28" width="' + (art === 'rtw' ? 38 : 26) + '" height="' + (art === 'rtw' ? 26 : 26) + '">' + kartenSymbol(art, 0, 0, 6.5) + '</svg>', g);
     let ichMarke = null;
-    map.on('load', ()=>{
-      info.textContent = text || '';
+    // eigene Ebenen: beim ersten Laden und nach jedem Stilwechsel neu anlegen
+    const eigeneEbenen = ()=>{
+      if(map.getSource('vk-zonen')) return;
       map.addSource('vk-zonen', { type: 'geojson', data: vkZonenGeo() });
       map.addLayer({ id: 'vk-zonen-fl', type: 'fill', source: 'vk-zonen', paint: { 'fill-color': ['get', 'farbe'], 'fill-opacity': 0.28 } });
       map.addLayer({ id: 'vk-zonen-li', type: 'line', source: 'vk-zonen', paint: { 'line-color': ['get', 'farbe'], 'line-width': 2 } });
@@ -14844,9 +14901,36 @@ function vektorKarteOverlay(d, text, opt){
       map.addLayer({ id: 'vk-weg', type: 'line', source: 'vk-weg', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1a55c9', 'line-width': 5, 'line-opacity': 0.9 } });
       map.addSource('vk-luft', { type: 'geojson', data: { type: 'FeatureCollection', features: d.linie && d.linie[0] && d.linie[1] ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] } });
       map.addLayer({ id: 'vk-luft', type: 'line', source: 'vk-luft', paint: { 'line-color': '#111', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
-      const sichtbar = ()=> ['vk-zonen-fl', 'vk-zonen-li'].forEach(id=> map.setLayoutProperty(id, 'visibility', zonenAn() ? 'visible' : 'none'));
       sichtbar();
-      auge.onclick = ()=>{ LS.set('karte_zonen', !zonenAn()); auge.classList.toggle('aus', !zonenAn()); sichtbar(); miniKartenNeu(); };
+      // Medizin/Parkplaetze/Hausnummern ganz oben (Vorrang vor allen anderen Beschriftungen)
+      try{ vkZusatzEbenen(map, stil); }catch(e){ console.warn('Vektorkarte: Zusatzebenen', e); }
+    };
+    const sichtbar = ()=> ['vk-zonen-fl', 'vk-zonen-li'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', zonenAn() ? 'visible' : 'none'); });
+    map.on('style.load', eigeneEbenen);
+    // Stil/Ebenen-Menue
+    const sk = ov.querySelector('.vk-stil-knopf'), menue = ov.querySelector('.vk-menue');
+    const menueZeichnen = ()=>{
+      const e = vkEbenen();
+      menue.innerHTML = '<div class="vk-m-titel">Kartenstil' + (vkNacht() ? ' <small>(Nachtmodus)</small>' : '') + '</div><div class="vk-m-stile">' +
+        Object.entries(VK_STILE).map(([k, l])=> '<button type="button" class="vk-m-stil' + (k === stil ? ' an' : '') + '" data-vkst="' + k + '"><span class="vk-m-vorschau ' + k + '"></span>' + l + '</button>').join('') + '</div>' +
+        '<div class="vk-m-titel">Ebenen</div>' +
+        [['med', 'Medizinisch (Kliniken, Praxen, Heime, Apotheken)'], ['park', 'Parkplätze'], ['hnr', 'Hausnummern']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('');
+      menue.querySelectorAll('[data-vkst]').forEach(b=> b.onclick = ()=>{
+        const neu = b.dataset.vkst; if(neu === stil){ menue.hidden = true; return; }
+        stil = neu; vkStilSetzen(neu); menue.hidden = true;
+        map.setStyle(vkStilUrl(neu), { diff: false });
+      });
+      menue.querySelectorAll('[data-vkeb]').forEach(c=> c.onchange = ()=>{
+        const e2 = vkEbenen(); e2[c.dataset.vkeb] = c.checked; LS.set('vk_ebenen', e2);
+        const id = { med: 'vk-med', park: 'vk-park', hnr: 'vk-hnr' }[c.dataset.vkeb];
+        if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', c.checked ? 'visible' : 'none');
+      });
+    };
+    sk.onclick = (ev)=>{ ev.stopPropagation(); if(menue.hidden){ menueZeichnen(); menue.hidden = false; } else menue.hidden = true; };
+    box.addEventListener('pointerdown', ()=>{ menue.hidden = true; });
+    auge.onclick = ()=>{ LS.set('karte_zonen', !zonenAn()); auge.classList.toggle('aus', !zonenAn()); sichtbar(); miniKartenNeu(); };
+    map.on('load', ()=>{
+      info.textContent = text || '';
       // NFP, Wache, Einsatzorte
       symbol('nfp', n);
       const wache = gkvStartGeo(); if(wache) symbol('rtw', wache);
@@ -15870,7 +15954,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v234';
+const APP_VERSION = 'v235';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -16654,9 +16738,9 @@ function ansichtEinstellungen(){
       <button type="button" class="btn-sekundaer" id="btnEinrichtungBrief" style="margin-top:8px;">Briefversand einrichten (eigene Azure-Weiterleitung)</button>
       <div class="einstellung-zeile" style="margin-top:14px;">
         <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor ? ' checked' : ''}>
-        <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
+        <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Im Nachtmodus automatisch dunkel; in der Karte über ◐ Stil und Ebenen (Medizinisch, Parkplätze, Hausnummern) umschaltbar. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
       </div>
-      <div class="fb-chips" id="vkStile" style="margin-top:6px;">${['liberty', 'bright', 'positron'].map(k=> '<button type="button" class="fb-chip' + (((ladeEinstellungen() || {}).karteVektorStil || 'liberty') === k ? ' an' : '') + '" data-vkstil="' + k + '">' + { liberty: 'Liberty', bright: 'Bright', positron: 'Hell (Positron)' }[k] + '</button>').join('')}</div>
+      <div class="fb-chips" id="vkStile" style="margin-top:6px;">${['liberty', 'bright'].map(k=> '<button type="button" class="fb-chip' + (((ladeEinstellungen() || {}).karteVektorStil || 'liberty') === k ? ' an' : '') + '" data-vkstil="' + k + '">' + { liberty: 'Hell', bright: 'Bunt' }[k] + '</button>').join('')}</div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Excel-Dateien öffnen</div>
