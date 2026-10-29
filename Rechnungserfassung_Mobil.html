@@ -5145,7 +5145,7 @@ function ansichtEinrichtung(schritt){
     const feld = (k, label, ph)=> '<label class="einr-feld"><span>' + label + '</span><input type="text" data-ini="' + k + '" value="' + htmlEsc(w[k] || '') + '"' + (ph ? ' placeholder="' + htmlEsc(ph) + '"' : '') + '></label>';
     html = '<h2>Deine Daten</h2><p>Erscheinen auf deinen Rechnungen. Alles lässt sich später unter Einstellungen ändern.</p>' +
       '<div class="fb-chips einr-titel">' + [['TITEL_DR', 'Dr.'], ['TITEL_DRMED', 'Dr. med.'], ['TITEL_PRIVDOZ', 'Priv.-Doz.'], ['TITEL_PROF', 'Prof.']].map(([k, t])=> '<button type="button" class="fb-chip' + (w[k] === '1' ? ' an' : '') + '" data-titel="' + k + '">' + t + '</button>').join('') + '</div>' +
-      feld('ARZTNAME', 'Name (ohne Titel)', 'Vorname Nachname') + feld('ARZTADRESSE1', 'Straße Hausnummer') + feld('ARZTADRESSE2', 'PLZ Ort') + feld('ARZTEMAIL', 'E-Mail') +
+      feld('ARZTNAME', 'Name (ohne Titel)', 'Vorname Nachname') + feld('ARZTFUNKTION', 'Funktion (Zeile unter dem Namen)', 'z. B. Facharzt für Allgemeinmedizin') + feld('ARZTADRESSE1', 'Straße Hausnummer') + feld('ARZTADRESSE2', 'PLZ Ort') + feld('ARZTEMAIL', 'E-Mail') +
       '<h3>Bankverbindung</h3>' + feld('ARZTKONTOINHABER', 'Kontoinhaber') + feld('ARZTBANKNAME', 'Bank') + feld('ARZTIBAN', 'IBAN') + feld('ARZTBIC', 'BIC') +
       '<h3>Wegegeld</h3>' + feld('GKV_STARTADRESSE', 'Ausgangspunkt für die Luftlinie (Wache)', 'Straße Nr., PLZ Ort') +
       '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'brief', 'Speichern und weiter');
@@ -5184,7 +5184,8 @@ function ansichtEinrichtung(schritt){
       app.querySelectorAll('[data-ini]').forEach(i=>{ aend[i.dataset.ini] = i.value.trim(); });
       app.querySelectorAll('[data-titel]').forEach(t=>{ aend[t.dataset.titel] = t.classList.contains('an') ? '1' : '0'; });
       const info = document.getElementById('einrDatenInfo');
-      if(!aend.ARZTNAME){ info.textContent = 'Bitte mindestens den Namen eintragen.'; return; }
+      const fehlt = [['ARZTNAME', 'Name'], ['ARZTFUNKTION', 'Funktion'], ['ARZTADRESSE1', 'Straße'], ['ARZTADRESSE2', 'PLZ Ort'], ['ARZTEMAIL', 'E-Mail']].filter(([k])=> !aend[k]).map(([, l])=> l);
+      if(fehlt.length){ info.textContent = 'Bitte noch eintragen: ' + fehlt.join(', ') + ' (stehen auf jeder Rechnung).'; return; }
       b.disabled = true; info.textContent = 'Wird in OneDrive gespeichert …';
       try{
         const r = await iniAenderungenSchreiben(aend, (iniCacheLaden() || {}).werte || {});
@@ -15869,7 +15870,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v233';
+const APP_VERSION = 'v234';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
