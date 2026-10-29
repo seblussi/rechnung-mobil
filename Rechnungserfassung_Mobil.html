@@ -5179,7 +5179,7 @@ function ansichtEinrichtung(schritt){
   }
   app.innerHTML = '<div class="einr">' + kopf + html + '</div>';
   app.querySelectorAll('[data-einr]').forEach(b=> b.onclick = async ()=>{
-    if(schritt === 'daten' && b.dataset.einr === 'fertig'){
+    if(schritt === 'daten' && b.dataset.einr === 'brief'){
       const aend = {};
       app.querySelectorAll('[data-ini]').forEach(i=>{ aend[i.dataset.ini] = i.value.trim(); });
       app.querySelectorAll('[data-titel]').forEach(t=>{ aend[t.dataset.titel] = t.classList.contains('an') ? '1' : '0'; });
@@ -15869,7 +15869,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v232';
+const APP_VERSION = 'v233';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
