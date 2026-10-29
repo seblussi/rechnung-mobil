@@ -15954,7 +15954,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v235';
+const APP_VERSION = 'v236';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18847,12 +18847,15 @@ function navZurueckAusfuehren(f){ navZurueck = true; try{ f(); } finally { navZu
     return basis.apply(this, args);
   };
 });
+// Erster Start? VOR themaAnwenden/Dunkelmodus pruefen -- die speichern bei
+// dunklem Handy sofort 'einstellungen', dann sah die App nicht mehr "neu" aus.
+let ersterStart = false;
+try{ ersterStart = localStorage.getItem('einstellungen') === null && !LS.get('einrichtung_gesehen', false) && !ladeFaelle('ls').length && !ladeFaelle('pt').length; }catch(_){}
 try{ themaAnwenden(); }catch(e){}
 try{ dunkelModusAutoSyncEinrichten(); }catch(e){}
 try{ ansichtStart(); }catch(e){}
 try{
-  const neu = localStorage.getItem('einstellungen') === null && !LS.get('einrichtung_gesehen', false) && !ladeFaelle('ls').length && !ladeFaelle('pt').length;
-  if(neu || LS.get('einrichtung_schritt', null)) setTimeout(()=>{ if(aktuelleAnsichtIstHauptbildschirm) ansichtEinrichtung(); }, 300);
+  if(ersterStart || LS.get('einrichtung_schritt', null)) setTimeout(()=>{ if(aktuelleAnsichtIstHauptbildschirm) ansichtEinrichtung(); }, 300);
 }catch(_){}
 // Schnellstart aus dem App-Symbol (Rechtsklick in der Taskleiste / langes Druecken): ?neu=dienst|rechnung|ls|pt|gkv, ?seite=fahrtenbuch
 try{
