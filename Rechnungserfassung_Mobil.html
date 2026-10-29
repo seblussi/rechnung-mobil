@@ -14782,8 +14782,8 @@ function vkMaplibreHolen(){
   if(window.maplibregl) return Promise.resolve(window.maplibregl);
   if(vkLaden) return vkLaden;
   vkLaden = new Promise((ok, fehler)=>{
-    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://unpkg.com/maplibre-gl@' + VK_VERSION + '/dist/maplibre-gl.css'; document.head.appendChild(css);
-    const s = document.createElement('script'); s.src = 'https://unpkg.com/maplibre-gl@' + VK_VERSION + '/dist/maplibre-gl.js';
+    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'lib/maplibre/maplibre-gl.css'; document.head.appendChild(css);
+    const s = document.createElement('script'); s.src = 'lib/maplibre/maplibre-gl.js';
     s.onload = ()=> window.maplibregl ? ok(window.maplibregl) : fehler(new Error('MapLibre fehlt'));
     s.onerror = ()=>{ vkLaden = null; fehler(new Error('MapLibre konnte nicht geladen werden')); };
     document.head.appendChild(s);
@@ -15954,7 +15954,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v236';
+const APP_VERSION = 'v237';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
