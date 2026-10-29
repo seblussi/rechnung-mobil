@@ -1615,6 +1615,8 @@ try{
   .vk-test{font-weight:500; font-size:11.5px; color:var(--text-schwach); margin-left:6px;}
   .vk-overlay .karte-ebene, .vk-overlay .karte-auge{z-index:5;}
   .vk-marke{line-height:0;}
+  .mini-fenster > .mini-vk, .mini-fenster > .mini-vk.maplibregl-map{position:absolute; inset:0; width:100%; height:100%;}
+  .mini-vk .maplibregl-cooperative-gesture-screen{font-size:14px;}
   .vk-stil-knopf{position:absolute; top:128px; right:10px; z-index:5; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .vk-menue{position:absolute; top:10px; right:74px; z-index:6; width:min(280px, calc(100% - 90px)); background:var(--karte-bg, #fff); color:var(--text, #222); border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,.35); padding:10px 12px; font-size:14px;}
@@ -14368,10 +14370,14 @@ function miniKarteAnsicht(el){
 function miniKarteStarten(w){
   const cfg = MINI_KARTEN.get(w.dataset.mk); if(!cfg || w._mk) return;
   const f = w.querySelector('.mini-fenster'); if(!f) return;
+  // OSM-Ebene als Vektorkarte (wie die grosse Karte), KVBW weiter als Bild
+  if(w.dataset.ebene !== 'kvbw' && vkAn() && !w._vkFehler){ miniKarteVektor(w, cfg); return; }
   const { d, opt, fit } = cfg;
-  let ebene = w.dataset.ebene, ansicht = null, cur = null, kvbwUrl = null, lauf = 0, breiteAlt = 0;
+  let ebene = w.dataset.ebene, ansicht = w._ansichtStart || null, cur = null, kvbwUrl = null, lauf = 0, breiteAlt = 0, aktiv = true;
+  w._ansichtStart = null;
   const zKlemm = (z)=> Math.max(3, Math.min(18.4, z));
   const zeichnen = async ()=>{
+    if(!aktiv) return;
     const W = f.clientWidth, H = f.clientHeight; if(!W || !H) return;
     if(!ansicht) ansicht = { lat: fit.lat, lon: fit.lon, z: zKlemm(fit.z + Math.log2(W / fit.bw)) };
     const nr = ++lauf;
@@ -14391,7 +14397,15 @@ function miniKarteStarten(w){
     else { let n = rest.length; const eins = ()=>{ if(--n <= Math.floor(rest.length * 0.2)) weg(); }; rest.forEach(i=> i.complete ? eins() : (i.addEventListener('load', eins, { once: true }), i.addEventListener('error', eins, { once: true }))); setTimeout(weg, 1500); }
   };
   w._mk = { ansicht: ()=> ansicht ? { ...ansicht } : null, ebene: ()=> ebene, neu: ()=> zeichnen(),
-    ebeneSetzen: (e)=>{ ebene = e; w.dataset.ebene = e; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), e); zeichnen(); }, kvbwOk: !!opt.kvbwOk };
+    ebeneSetzen: (e)=>{
+      if(e !== 'kvbw' && vkAn() && !w._vkFehler){
+        // zurueck zur Vektorkarte, gleicher Ausschnitt
+        aktiv = false; try{ ro.disconnect(); }catch(_){}
+        w._ansichtStart = ansicht ? { ...ansicht } : null; w._mk = null; f.innerHTML = '';
+        w.dataset.ebene = 'osm'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'osm'); miniKarteStarten(w); return;
+      }
+      ebene = e; w.dataset.ebene = e; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), e); zeichnen();
+    }, kvbwOk: !!opt.kvbwOk };
   // Geste: Bildschirmpunkt m0 wandert nach m, Faktor k
   let g = null, gezogen = false;
   const anwenden = (m, k)=>{
@@ -14456,6 +14470,84 @@ function miniKarteStarten(w){
   ro.observe(f);
   osmOfflineLaden().catch(()=>null).then(()=>{ if(cur) zeichnen(); });
 }
+// kleine Karte als Vektorkarte: eine Hand scrollt die Seite, zwei Finger zoomen/verschieben
+// (am PC Strg+Mausrad); Tippen oeffnet die grosse Karte bzw. den Fall.
+function vkDatenEbenen(map, d){
+  if(map.getSource('vk-zonen')) return;
+  const ll = (g)=> [g.lon, g.lat];
+  const linie = (koords)=> ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: koords } });
+  const zonenAn = LS.get('karte_zonen', true) !== false;
+  map.addSource('vk-zonen', { type: 'geojson', data: vkZonenGeo() });
+  map.addLayer({ id: 'vk-zonen-fl', type: 'fill', source: 'vk-zonen', layout: { visibility: zonenAn ? 'visible' : 'none' }, paint: { 'fill-color': ['get', 'farbe'], 'fill-opacity': 0.28 } });
+  map.addLayer({ id: 'vk-zonen-li', type: 'line', source: 'vk-zonen', layout: { visibility: zonenAn ? 'visible' : 'none' }, paint: { 'line-color': ['get', 'farbe'], 'line-width': 2 } });
+  map.addSource('vk-k50', { type: 'geojson', data: linie(nfp50Kreis().map(ll)) });
+  map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
+  map.addSource('vk-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: (d.wegAlt || []).filter(x=> x && x.length > 1).map(linie) } });
+  map.addLayer({ id: 'vk-alt', type: 'line', source: 'vk-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#6b7686', 'line-width': 4, 'line-dasharray': [2, 1.6], 'line-opacity': 0.85 } });
+  map.addSource('vk-weg', { type: 'geojson', data: { type: 'FeatureCollection', features: d.weg && d.weg.length > 1 ? [linie(d.weg)] : [] } });
+  map.addLayer({ id: 'vk-weg', type: 'line', source: 'vk-weg', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1a55c9', 'line-width': 5, 'line-opacity': 0.9 } });
+  map.addSource('vk-luft', { type: 'geojson', data: { type: 'FeatureCollection', features: d.linie && d.linie[0] && d.linie[1] ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] } });
+  map.addLayer({ id: 'vk-luft', type: 'line', source: 'vk-luft', paint: { 'line-color': '#111', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
+}
+function miniKarteVektor(w, cfg){
+  const f = w.querySelector('.mini-fenster');
+  const { d, opt, fit } = cfg;
+  let map = null, aktiv = true, ansicht = w._ansichtStart || null, gezogen = false;
+  w._ansichtStart = null;
+  const zuRaster = (grund)=>{
+    if(!aktiv) return; aktiv = false;
+    try{ map && map.remove(); }catch(_){}
+    w._vkFehler = !!grund; w._mk = null; f.innerHTML = '';
+    miniKarteStarten(w);
+  };
+  const ansichtJetzt = ()=>{ if(!map) return ansicht; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
+  w._mk = {
+    ansicht: ()=> ansichtJetzt(), ebene: ()=> 'osm', kvbwOk: !!opt.kvbwOk,
+    neu: ()=>{ if(!map) return; const an = LS.get('karte_zonen', true) !== false; ['vk-zonen-fl', 'vk-zonen-li'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', an ? 'visible' : 'none'); }); },
+    ebeneSetzen: (e)=>{ if(e === 'kvbw'){ w._ansichtStart = ansichtJetzt(); w.dataset.ebene = 'kvbw'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'kvbw'); zuRaster(false); } },
+    weg: ()=>{ aktiv = false; try{ map && map.remove(); }catch(_){} }
+  };
+  vkMaplibreHolen().then((ml)=>{
+    if(!aktiv) return;
+    const box = document.createElement('div'); box.className = 'mini-vk'; f.appendChild(box);
+    let stil = vkStil();
+    const W = f.clientWidth || fit.bw;
+    const start = ansicht || { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2(W / fit.bw) };
+    map = new ml.Map({ container: box, style: vkStilUrl(stil), center: [start.lon, start.lat], zoom: Math.max(0, start.z - 1),
+      attributionControl: false, cooperativeGestures: true, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5,
+      locale: { 'CooperativeGesturesHandler.WindowsHelpText': 'Strg + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MacHelpText': '⌘ + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MobileHelpText': 'Mit zwei Fingern verschieben/zoomen' } });
+    map.touchZoomRotate.disableRotation();
+    let geladen = false;
+    const fehlerZeit = setTimeout(()=>{ if(!geladen) zuRaster(true); }, 8000);
+    map.on('error', (e)=>{ if(!geladen && e && e.error && /style|fetch|Failed/i.test(String(e.error.message || e.error))) { clearTimeout(fehlerZeit); zuRaster(true); } });
+    map.on('style.load', ()=>{
+      geladen = true; clearTimeout(fehlerZeit);
+      vkDatenEbenen(map, d);
+      try{ vkZusatzEbenen(map, stil); }catch(_){}
+    });
+    const marke = (html, g, klick)=>{ const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = html;
+      if(klick){ el.style.cursor = 'pointer'; el.addEventListener('click', (ev)=>{ ev.stopPropagation(); klick(); }); }
+      return new ml.Marker({ element: el }).setLngLat([g.lon, g.lat]).addTo(map); };
+    const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]);
+    marke('<svg viewBox="-20 -14 40 28" width="22" height="22">' + kartenSymbol('nfp', 0, 0, 6.5) + '</svg>', n);
+    const wache = gkvStartGeo(); if(wache) marke('<svg viewBox="-20 -14 40 28" width="30" height="21">' + kartenSymbol('rtw', 0, 0, 6.5) + '</svg>', wache);
+    (d.pois || []).forEach(q=>{
+      if(q.kl === 'start' && wache && kmLuftlinieEinfach(wache, q) < 0.05) return;
+      if(q.kl === 'ich'){ marke('<span class="vk-ich"></span>', q); return; }
+      if(q.kl === 'start' || q.kl === 'ziel'){ marke('<span class="vk-punkt ' + q.kl + '"></span>', q); return; }
+      marke('<span class="vk-fall ' + q.kl + '">' + (q.nr || '') + '</span>', q, q.idx != null && opt.fallKlick ? ()=> opt.fallKlick(q.idx) : null);
+    });
+    if(!ansicht && !opt.mitte){
+      const g = osmGeoListe(d);
+      if(g.length > 1){ const b = new ml.LngLatBounds([g[0].lon, g[0].lat], [g[0].lon, g[0].lat]); g.forEach(p=> b.extend([p.lon, p.lat])); map.fitBounds(b, { padding: 36, maxZoom: 14.5, duration: 0 }); }
+    }
+    map.on('movestart', (ev)=>{ if(ev.originalEvent) gezogen = true; });
+    map.on('moveend', ()=>{ setTimeout(()=> gezogen = false, 300); });
+    map.on('click', ()=>{ if(gezogen || !opt.gross) return; opt.gross('osm', ansichtJetzt()); });
+    // Stilwechsel im Nachtmodus / in der grossen Karte uebernehmen
+    w._mk.stilPruefen = ()=>{ const s = vkStil(); if(s !== stil && map){ stil = s; map.setStyle(vkStilUrl(s), { diff: false }); } };
+  }).catch(()=> zuRaster(true));
+}
 function miniKartenNeu(){
   const aus = LS.get('karte_zonen', true) === false;
   document.querySelectorAll('.mini-ebenen').forEach(w=>{ const a = w.querySelector('.karte-auge'); if(a) a.classList.toggle('aus', aus); if(w._mk && w._mk.neu) w._mk.neu(); });
@@ -14468,10 +14560,17 @@ document.addEventListener('click', (ev)=>{
 }, true);
 // neu eingefuegte kleine Karten automatisch starten
 new MutationObserver((liste)=>{
-  for(const m of liste) for(const n of m.addedNodes){
-    if(n.nodeType !== 1) continue;
-    if(n.matches && n.matches('.mini-ebenen[data-mk]')) miniKarteStarten(n);
-    if(n.querySelectorAll) n.querySelectorAll('.mini-ebenen[data-mk]').forEach(miniKarteStarten);
+  for(const m of liste){
+    for(const n of m.addedNodes){
+      if(n.nodeType !== 1) continue;
+      if(n.matches && n.matches('.mini-ebenen[data-mk]')) miniKarteStarten(n);
+      if(n.querySelectorAll) n.querySelectorAll('.mini-ebenen[data-mk]').forEach(miniKarteStarten);
+    }
+    for(const n of m.removedNodes){
+      if(n.nodeType !== 1 || n.isConnected) continue;
+      const alle = (n.matches && n.matches('.mini-ebenen') ? [n] : []).concat(n.querySelectorAll ? [...n.querySelectorAll('.mini-ebenen')] : []);
+      alle.forEach(x=>{ if(x._mk && x._mk.weg) x._mk.weg(); });
+    }
   }
 }).observe(document.documentElement, { childList: true, subtree: true });
 document.addEventListener('click', (ev)=>{
@@ -14811,6 +14910,13 @@ function vkZusatzEbenen(map, st){
   const quelle = map.getSource('openmaptiles') ? 'openmaptiles' : null; if(!quelle) return;
   const weg = (id)=>{ if(map.getLayer(id)) map.removeLayer(id); };
   ['vk-hnr', 'vk-park', 'vk-med'].forEach(weg);
+  // kein 3D: hochgezogene Gebaeude durch flache Flaechen ersetzen
+  (map.getStyle().layers || []).filter(l=> l.type === 'fill-extrusion').forEach(l=>{
+    map.setLayoutProperty(l.id, 'visibility', 'none');
+    if(!map.getLayer('vk-gebaeude') && l['source-layer'] === 'building')
+      map.addLayer({ id: 'vk-gebaeude', type: 'fill', source: l.source, 'source-layer': 'building', minzoom: 13,
+        paint: { 'fill-color': dunkel ? '#2b3038' : '#dcd6cf', 'fill-outline-color': dunkel ? '#3a404a' : '#c9c1b8' } }, l.id);
+  });
   const halo = dunkel ? '#10151c' : '#ffffff';
   const punkt = ['match', ['geometry-type'], ['Point', 'MultiPoint'], true, false];
   // Hausnummern ab Zoom 16
@@ -14878,7 +14984,7 @@ function vektorKarteOverlay(d, text, opt){
     const a = opt.ansicht;
     let stil = vkStil();
     map = new ml.Map({ container: box, style: vkStilUrl(stil), center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
-      attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, maxZoom: 18.5 });
+      attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5 });
     map.touchZoomRotate.disableRotation();
     map.addControl(new ml.NavigationControl({ showCompass: false }), 'bottom-right');
     map.on('error', (e)=>{ if(e && e.error && /style|fetch/i.test(String(e.error.message || ''))) info.textContent = 'Vektorkarte nicht erreichbar (Internet?).'; });
@@ -15954,7 +16060,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v237';
+const APP_VERSION = 'v238';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
