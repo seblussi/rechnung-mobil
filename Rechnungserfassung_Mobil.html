@@ -1629,6 +1629,8 @@ try{
   .vk-m-vorschau{display:block; width:44px; height:32px; border-radius:7px; border:1px solid rgba(0,0,0,.2);}
   .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
   .vk-m-off{font-size:12.5px; opacity:.8; margin-bottom:6px;} .vk-m-offknopf{width:100%; margin:0; padding:8px 10px; font-size:14px;}
+  .vk-off-regler{display:flex; align-items:center; gap:12px; margin:6px 0 2px;} .vk-off-regler input{flex:1; accent-color:#2f6fd6;} .vk-off-regler b{min-width:56px; text-align:right; font-size:16px;}
+  .vk-off-schaetzung{font-size:14px; font-weight:600; margin:2px 0 8px;}
   .vk-off-radien .fb-chip{display:flex; flex-direction:column; align-items:center; gap:2px;} .vk-off-radien .fb-chip small{font-size:11px; font-weight:400; opacity:.8;}
   .vk-m-ebene{display:flex; align-items:flex-start; gap:8px; padding:5px 0; line-height:1.3;} .vk-m-ebene input{width:18px; height:18px; flex:none; margin-top:1px;}
   .vk-fall{display:flex; width:24px; height:24px; border-radius:50%; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:800; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); background:var(--ls-farbe); line-height:1;}
@@ -1684,6 +1686,12 @@ try{
   .gv-rechts{display:flex; flex-direction:column; align-items:flex-end;} .gv-rechts b{font-variant-numeric:tabular-nums;}
   .gv-rechts small{font-size:11.5px;} .gv-ok{color:#2fa84f;} .gv-rechts .gv-offen{color:#c77700; font-weight:600;}
   .gv-neu{margin-top:14px;}
+  /* gleiche Optik wie LS/PT (Rechnungsübersicht) */
+  .gv-tag{font-size:13px; font-weight:700; padding:6px 10px; margin:10px 0 6px; border-radius:6px; background:var(--rand); color:var(--text); text-transform:none; letter-spacing:0;}
+  .gv-fall{border-left:4px solid #7d4e9e; border-radius:10px; padding:12px 14px;}
+  .gv-fall.gv-excel{border-left-style:solid;}
+  .gesamt-knoepfe button.gv-neu-knopf{background:#7d4e9e; border-color:#7d4e9e; color:#fff; font-weight:600;}
+  .gv-weitere.btn-sekundaer{width:auto !important; display:block; margin:10px 0 0 !important; padding:8px 12px !important; min-height:0 !important; height:auto !important; font-size:13.5px !important; font-weight:500 !important; border-radius:8px !important;}
   .einr{padding:4px 2px 20px;} .einr h2{margin:14px 0 8px; font-size:22px;} .einr h3{margin:16px 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-schwach);}
   .einr p{font-size:15px; line-height:1.5; margin:0 0 10px;} .einr-klein{font-size:13px !important; color:var(--text-schwach);}
   .einr-fort{display:flex; gap:6px; margin:6px 0 4px;} .einr-fort span{flex:1; height:5px; border-radius:3px; background:var(--rand);} .einr-fort span.an{background:#1f5f9e;}
@@ -1694,6 +1702,9 @@ try{
   .einr a{color:var(--akzent, #2f6fd6);} .einr-liste{display:flex; flex-direction:column; gap:6px; margin:8px 0 12px;}
   .einr-z{display:flex; justify-content:space-between; gap:10px; padding:9px 12px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); font-size:14px;}
   .einr-z b{font-weight:600; text-align:right;} .einr-z.ok b{color:#2fa84f;} .einr-z.fehlt b{color:#c77700;}
+  .kto-hinweis{font-size:12.5px; font-weight:500; margin:3px 2px 0;} .kto-hinweis.ok{color:#2e8b57;} .kto-hinweis.fehler{color:#c62828;} .kto-hinweis.warn{color:#c77700;}
+  .einr-feld textarea{box-sizing:border-box; margin:0; padding:10px 12px; font:inherit; font-size:16px; line-height:1.35; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text); resize:vertical; min-height:64px;}
+  .einr-gesperrt{opacity:.65;} .einr-check{margin:2px 0 6px;}
   .einr-feld{display:flex; flex-direction:column; gap:3px; margin:0 0 8px; font-size:12.5px; font-weight:600; color:var(--text-schwach);}
   .einr-feld input{height:44px; box-sizing:border-box; margin:0; padding:0 12px; font:inherit; font-size:16px; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text);}
   .einr-titel{margin:4px 0 10px;} .einr-tipps{padding-left:20px; font-size:15px; line-height:1.5;} .einr-tipps li{margin-bottom:6px;}
@@ -1728,14 +1739,14 @@ try{
   .fbx-leiste{display:flex; gap:8px; align-items:center; margin:0 0 10px;}
   .fbx-filter{display:flex; gap:8px; margin:0 0 10px;}
   .fbx-filter select, .fbx-filter input, .fbx-eigen input{height:42px; box-sizing:border-box; margin:0; padding:0 12px; font:inherit; font-size:15px; border:1px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text);}
-  .fbx-filter select{flex:0 0 122px; width:122px; padding-right:24px;} .fbx-filter input{flex:1; min-width:0;}
+  .fbx-filter select{flex:0 0 auto; width:auto; max-width:34%; padding:0 22px 0 10px;} .fbx-filter input{flex:1; min-width:0;}
   .fbx-eigen{display:flex; gap:8px; margin:0 0 10px;} .fbx-eigen[hidden]{display:none;}
   .fbx-eigen label{flex:1; font-size:12.5px; color:var(--text-schwach);} .fbx-eigen input{width:100%; margin-top:3px;}
   .fbx-summe-filter{font-size:13px; font-weight:700; color:var(--text-schwach); margin:0 2px 8px;}
   .fbx-varianten{display:flex; gap:4px; flex:1;}
   .fbx-varianten button{flex:1; margin:0; padding:6px 4px; font-size:12.5px; border-radius:14px; border:1px solid var(--rand); background:var(--karte); color:var(--text-schwach);}
   .fbx-varianten button.an{border-color:var(--ls-farbe); color:var(--ls-farbe); font-weight:700;}
-  #fbxJahr{width:auto; margin:0; padding:6px 8px; font:inherit; font-size:13px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
+  #fbxJahr{height:42px; margin:0; font:inherit; font-size:15px; border-radius:12px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .fbx-karte{background:var(--karte); border:1px solid var(--rand); border-radius:12px; margin:0 0 8px; overflow:hidden;}
   .fbx-karte.laeuft{border:2px solid var(--ls-farbe);}
   .fbx-kopf{display:flex; gap:10px; align-items:flex-start; width:100%; margin:0; padding:10px 12px; border:0; background:none; color:var(--text); font:inherit; text-align:left; cursor:pointer;}
@@ -1784,6 +1795,9 @@ try{
   .fbx-ortnr{display:inline-flex; width:17px; height:17px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; align-items:center; justify-content:center; margin-right:4px; vertical-align:1px;}
   .fbx-ortnr.ls{background:var(--ls-farbe);} .fbx-ortnr.pt{background:var(--pt-farbe);} .fbx-ortnr.gkv{background:#7d4e9e;}
   .mini-ebenen{position:relative;}
+  .mini-gross{position:absolute; right:8px; bottom:8px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .mini-gross svg{width:20px; height:20px;}
   .mini-fenster{position:relative; width:100%; overflow:hidden; border:1px solid var(--rand); border-radius:10px; background:#f2efe9; touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:pointer;}
   .mini-attr{margin-top:3px;}
   .mini-ebenen .karte-ebene{width:46px; height:46px; top:8px; right:8px; font-size:9.5px; border-radius:9px;}
@@ -2867,8 +2881,9 @@ async function ansichtFahrtenbuch(blatt){
   let ansicht = LS.get('fb_ansicht', 'a');
   app.innerHTML = fbTabsHtml('dienste') +
     '<div class="fbx-leiste"><div class="fbx-varianten">' + [['a', 'Karten'], ['b', 'Tabelle'], ['c', 'Woche']].map(([k, t])=> '<button type="button" data-fbv="' + k + '">' + t + '</button>').join('') + '</div>' +
-    '<select id="fbxJahr" aria-label="Jahr"></select></div>' +
-    '<div class="fbx-filter"><select id="fbxZeitraum" aria-label="Zeitraum">' + [['jahr', 'Ganzes Jahr'], ['q1', 'Q1'], ['q2', 'Q2'], ['q3', 'Q3'], ['q4', 'Q4'], ['eigen', 'Zeitraum …']].map(([k, t])=> '<option value="' + k + '">' + t + '</option>').join('') + '</select>' +
+    '</div>' +
+    '<div class="fbx-filter"><select id="fbxZeitraum" aria-label="Zeitraum">' + [['jahr', 'Jahr'], ['q1', 'Q1'], ['q2', 'Q2'], ['q3', 'Q3'], ['q4', 'Q4'], ['eigen', 'Zeitraum …']].map(([k, t])=> '<option value="' + k + '">' + t + '</option>').join('') + '</select>' +
+      '<select id="fbxJahr" class="fbx-jahr" aria-label="Jahr"></select>' +
       '<input type="search" id="fbxSuche" autocomplete="off" placeholder="🔍 Name, Ziffer, Datum"></div>' +
     '<div class="fbx-eigen" id="fbxEigen" hidden><label>von<input type="date" id="fbxVon"></label><label>bis<input type="date" id="fbxBis"></label></div>' +
     '<div id="fbxInhalt"><div class="leer-hinweis">Fahrtenbuch wird gelesen …</div></div>';
@@ -5132,6 +5147,20 @@ async function einrVorhanden(token, pfad){
   if(!r.ok) throw new Error('OneDrive antwortet nicht (HTTP ' + r.status + ').');
   return true;
 }
+function einrSchonEingerichtet(){ const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {}; return !!(w.ARZTNAME && w.ARZTADRESSE1); }
+async function einrSchonEingerichtetPruefen(){
+  if(einrSchonEingerichtetPruefen.laeuft) return; einrSchonEingerichtetPruefen.laeuft = true;
+  try{
+    if(!einrSchonEingerichtet() && typeof iniVonOneDriveLaden === 'function' && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){ try{ await iniVonOneDriveLaden(); }catch(_){} }
+    if(!einrSchonEingerichtet() || !LS.get('einrichtung_auto', false)) return;
+    LS.set('einrichtung_auto', false);
+    const w = (iniCacheLaden() || {}).werte || {};
+    const akt = await betaOverlay.ergebnis('Bereits eingerichtet', 'Für dein Konto gibt es schon Einstellungen (einstellungen.ini) mit deinen Daten – <b>' + htmlEsc(w.ARZTNAME) + '</b>, ' + htmlEsc(w.ARZTADRESSE1) + '. Der Einrichtungsassistent wird nicht gebraucht.',
+      [{ label: 'Trotzdem durchgehen', akt: 'weiter' }, { label: 'Zur Startseite', akt: 'ende', primaer: true }]);
+    betaOverlay.schliessen();
+    if(akt === 'ende'){ LS.set('einrichtung_schritt', null); ansichtStart(); }
+  } finally { einrSchonEingerichtetPruefen.laeuft = false; }
+}
 function ansichtEinrichtung(schritt){
   einstellungenOffen = false;
   schritt = schritt || LS.get('einrichtung_schritt', 'start');
@@ -5159,10 +5188,12 @@ function ansichtEinrichtung(schritt){
   } else if(schritt === 'daten'){
     const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
     const feld = (k, label, ph)=> '<label class="einr-feld"><span>' + label + '</span><input type="text" data-ini="' + k + '" value="' + htmlEsc(w[k] || '') + '"' + (ph ? ' placeholder="' + htmlEsc(ph) + '"' : '') + '></label>';
+    const feldMz = (k, label, ph)=> '<label class="einr-feld"><span>' + label + '</span><textarea rows="2" data-ini="' + k + '" data-mz="1"' + (ph ? ' placeholder="' + htmlEsc(ph) + '"' : '') + '>' + htmlEsc(String(w[k] || '').split('~NL~').join('\n')) + '</textarea></label>';
+    const inhaberGleich = !w.ARZTKONTOINHABER || w.ARZTKONTOINHABER === w.ARZTNAME;
     html = '<h2>Deine Daten</h2><p>Erscheinen auf deinen Rechnungen. Alles lässt sich später unter Einstellungen ändern.</p>' +
       '<div class="fb-chips einr-titel">' + [['TITEL_DR', 'Dr.'], ['TITEL_DRMED', 'Dr. med.'], ['TITEL_PRIVDOZ', 'Priv.-Doz.'], ['TITEL_PROF', 'Prof.']].map(([k, t])=> '<button type="button" class="fb-chip' + (w[k] === '1' ? ' an' : '') + '" data-titel="' + k + '">' + t + '</button>').join('') + '</div>' +
-      feld('ARZTNAME', 'Name (ohne Titel)', 'Vorname Nachname') + feld('ARZTFUNKTION', 'Funktion (Zeile unter dem Namen)', 'z. B. Facharzt für Allgemeinmedizin') + feld('ARZTADRESSE1', 'Straße Hausnummer') + feld('ARZTADRESSE2', 'PLZ Ort') + feld('ARZTEMAIL', 'E-Mail') +
-      '<h3>Bankverbindung</h3>' + feld('ARZTKONTOINHABER', 'Kontoinhaber') + feld('ARZTBANKNAME', 'Bank') + feld('ARZTIBAN', 'IBAN') + feld('ARZTBIC', 'BIC') +
+      feld('ARZTNAME', 'Name (ohne Titel)', 'Vorname Nachname') + feldMz('ARZTFUNKTION', 'Funktion (unter dem Namen, mehrere Zeilen möglich)', 'z. B. Facharzt für Allgemeinmedizin\nNotfallmedizin') + feld('ARZTADRESSE1', 'Straße Hausnummer') + feld('ARZTADRESSE2', 'PLZ Ort') + feld('ARZTEMAIL', 'E-Mail') +
+      '<h3>Bankverbindung</h3>' + '<label class="ts-check einr-check"><input type="checkbox" id="einrInhaberGleich"' + (inhaberGleich ? ' checked' : '') + '> Kontoinhaber ist mein Name</label>' + feld('ARZTKONTOINHABER', 'Kontoinhaber') + feld('ARZTBANKNAME', 'Bank') + feld('ARZTIBAN', 'IBAN') + feld('ARZTBIC', 'BIC') +
       '<h3>Wegegeld</h3>' + feld('GKV_STARTADRESSE', 'Ausgangspunkt für die Luftlinie (Wache)', 'Straße Nr., PLZ Ort') +
       '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'brief', 'Speichern und weiter');
   } else if(schritt === 'brief'){
@@ -5197,7 +5228,13 @@ function ansichtEinrichtung(schritt){
   app.querySelectorAll('[data-einr]').forEach(b=> b.onclick = async ()=>{
     if(schritt === 'daten' && b.dataset.einr === 'brief'){
       const aend = {};
-      app.querySelectorAll('[data-ini]').forEach(i=>{ aend[i.dataset.ini] = i.value.trim(); });
+      app.querySelectorAll('[data-ini]').forEach(i=>{ aend[i.dataset.ini] = i.dataset.mz ? i.value.replace(/\r/g, '').split('\n').map(s=> s.trim()).join('~NL~').replace(/(~NL~)+$/, '').replace(/^(~NL~)+/, '') : i.value.trim(); });
+      if(aend.ARZTIBAN) aend.ARZTIBAN = ibanFormat(aend.ARZTIBAN);
+      if(aend.ARZTBIC) aend.ARZTBIC = aend.ARZTBIC.replace(/\s/g, '').toUpperCase();
+      { const fI = ibanPruefen(aend.ARZTIBAN), fB = bicPruefen(aend.ARZTBIC, aend.ARZTIBAN);
+        const infoK = document.getElementById('einrDatenInfo');
+        if(fI){ infoK.textContent = fI; app.querySelectorAll('[data-ini]').forEach(i=>{ if(i.matches(SEL_IBAN)) ktoPruefenEl(i); }); return; }
+        if(fB && !/^Hinweis/.test(fB)){ infoK.textContent = fB; return; } }
       app.querySelectorAll('[data-titel]').forEach(t=>{ aend[t.dataset.titel] = t.classList.contains('an') ? '1' : '0'; });
       const info = document.getElementById('einrDatenInfo');
       const fehlt = [['ARZTNAME', 'Name'], ['ARZTFUNKTION', 'Funktion'], ['ARZTADRESSE1', 'Straße'], ['ARZTADRESSE2', 'PLZ Ort'], ['ARZTEMAIL', 'E-Mail']].filter(([k])=> !aend[k]).map(([, l])=> l);
@@ -5213,6 +5250,19 @@ function ansichtEinrichtung(schritt){
     ansichtEinrichtung(b.dataset.einr);
   });
   app.querySelectorAll('[data-titel]').forEach(t=> t.onclick = ()=> t.classList.toggle('an'));
+  { const gleich = document.getElementById('einrInhaberGleich');
+    if(gleich){
+      const nameEl = app.querySelector('[data-ini="ARZTNAME"]'), inh = app.querySelector('[data-ini="ARZTKONTOINHABER"]');
+      const sync = ()=>{ if(gleich.checked){ inh.value = nameEl.value.trim(); inh.readOnly = true; inh.classList.add('einr-gesperrt'); } else { inh.readOnly = false; inh.classList.remove('einr-gesperrt'); } };
+      gleich.onchange = ()=>{ sync(); if(!gleich.checked) inh.focus(); }; nameEl.addEventListener('input', sync); sync();
+    }
+    app.querySelectorAll(SEL_IBAN + ',' + SEL_BIC).forEach(el=>{ if(el.value) ktoPruefenEl(el); });
+  }
+  // Automatisch gestartet, aber fuer dieses Konto gibt es schon Einstellungen -> nicht noetig
+  if(LS.get('einrichtung_auto', false)){
+    if(schritt === 'anmelden' || schritt === 'dateien') einrSchonEingerichtetPruefen();
+    else if(schritt !== 'start') LS.set('einrichtung_auto', false);   // ab "Deine Daten" bewusst weiter eingerichtet
+  }
   const an = document.getElementById('einrAnmelden'); if(an) an.onclick = ()=> msGraphAnmelden();
   const fe = document.getElementById('einrFertig'); if(fe) fe.onclick = beenden;
   if(schritt === 'dateien') einrDateienPruefen();
@@ -5402,11 +5452,12 @@ function ansichtGkvVerwaltung(){
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=> ansichtGkvVerwaltung(); };
   setzeTitel('Rechnungsverwaltung', ()=>{ betaMaskeHerkunft = null; ansichtStart(); });
   app.innerHTML = vwTabsHtml('gkv') +
-    '<div class="gesamt-kopf"><div class="feld" style="margin-bottom:0;"><input type="text" id="gvSuche" autocomplete="off" placeholder="Suche: Name, Ziffer oder Datum"></div></div>' +
-    '<div id="gvInfo" class="gv-info"></div><div id="gvListe"></div>' +
-    '<button type="button" class="btn-primaer gv-neu" id="gvNeu">+ Neuer GKV-Patient</button>';
+    '<div class="gesamt-kopf"><div class="feld" style="margin-bottom:0;"><input type="text" id="gvSuche" autocomplete="off" placeholder="Suche: Name, Ziffer oder Datum"></div>' +
+      '<div class="gesamt-knoepfe"><button type="button" id="gvNeu" class="gv-neu-knopf">+ Neuer GKV-Patient</button><button type="button" id="gvFb">Fahrtenbuch</button></div></div>' +
+    '<div id="gvInfo" class="gv-info"></div><div id="gvListe"></div>';
   const suchEl = document.getElementById('gvSuche');
   document.getElementById('gvNeu').onclick = ()=>{ gkvHerkunft = 'verwaltung'; ansichtGkv(); };
+  document.getElementById('gvFb').onclick = ()=> ansichtFahrtenbuch();
   // zuerst die letzten 25 auf dem Geraet; "Weitere laden" holt alle weiteren aus dem Fahrtenbuch (je Jahresblatt)
   let anzahl = 25, excel = [], blaetterGeladen = [], blaetterAlle = null, laedt = false;
   const lokalSchl = new Set();
@@ -14363,7 +14414,8 @@ function miniKarteHtml(d, opt){
   const knopf = KARTE_EBENE_KNOPF.replace('class="karte-ebene"', 'class="karte-ebene mini-ebene-knopf" data-ziel="' + (e === 'osm' ? 'kvbw' : 'osm') + '"')
     .replace('<span></span>', '<span>' + (e === 'osm' ? 'KVBW' : 'OSM') + '</span>');
   const auge = KARTE_AUGE_KNOPF.replace('class="karte-auge"', 'class="karte-auge' + (LS.get('karte_zonen', true) === false ? ' aus' : '') + '"');
-  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + auge + '</div>' +
+  const grossKnopf = opt.gross ? '<button type="button" class="mini-gross" aria-label="Große Karte (Vollbild)" title="Große Karte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>' : '';
+  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + auge + grossKnopf + '</div>' +
     '<div class="sk-hinweis mini-attr">' + OSM_ATTR_HTML + ' · Zoom: zwei Finger bzw. Mausrad</div>';
 }
 function miniKarteAnsicht(el){
@@ -14577,6 +14629,13 @@ new MutationObserver((liste)=>{
     }
   }
 }).observe(document.documentElement, { childList: true, subtree: true });
+// Vollbild-Knopf unten rechts: grosse Karte mit gleichem Ausschnitt
+document.addEventListener('click', (ev)=>{
+  const g = ev.target.closest && ev.target.closest('.mini-gross'); if(!g) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const w = g.closest('.mini-ebenen'); const cfg = w && MINI_KARTEN.get(w.dataset.mk); if(!cfg || !cfg.opt.gross) return;
+  cfg.opt.gross(w._mk ? w._mk.ebene() : 'osm', w._mk ? w._mk.ansicht() : null);
+}, true);
 document.addEventListener('click', (ev)=>{
   const b = ev.target.closest && ev.target.closest('.mini-ebene-knopf'); if(!b) return;
   ev.preventDefault(); ev.stopPropagation();
@@ -14874,15 +14933,64 @@ function osmKarteOverlay(d, text, opt){
   });
   return ergebnis;
 }
-// BIC immer in Grossbuchstaben (Ziffern bleiben), ohne Leerzeichen -- in allen Eingabefeldern
+// ---------- IBAN/BIC: Grossbuchstaben und Formatpruefung (alle Eingabefelder) ----------
+const IBAN_LAENGE = { DE: 22, AT: 20, CH: 21, LI: 21, LU: 20, NL: 18, BE: 16, FR: 27, IT: 27, ES: 24, PL: 28, CZ: 24, DK: 18, SE: 24, NO: 15, FI: 18, IE: 22, PT: 25, GB: 22, HU: 28, SK: 24, SI: 19, HR: 21, GR: 27, RO: 24, BG: 22 };
+const SEL_BIC = '#ini_ARZTBIC, [data-ini="ARZTBIC"], #ini_AERZTE_BIC, [data-ini="AERZTE_BIC"], input[data-bic]';
+const SEL_IBAN = '#ini_ARZTIBAN, [data-ini="ARZTIBAN"], #ini_AERZTE_IBAN, [data-ini="AERZTE_IBAN"], input[data-iban]';
+function ibanNorm(s){ return String(s || '').replace(/\s+/g, '').toUpperCase(); }
+function ibanFormat(s){ return ibanNorm(s).replace(/(.{4})(?=.)/g, '$1 '); }
+// -> null (leer), '' (in Ordnung) oder Fehlertext
+function ibanPruefen(s){
+  const i = ibanNorm(s); if(!i) return null;
+  if(!/^[A-Z]{2}\d{2}[A-Z0-9]{8,30}$/.test(i)) return 'IBAN-Format ungültig (Ländercode, 2 Prüfziffern, Kontonummer).';
+  const soll = IBAN_LAENGE[i.slice(0, 2)]; if(soll && i.length !== soll) return 'Eine IBAN aus ' + i.slice(0, 2) + ' hat ' + soll + ' Zeichen (eingegeben: ' + i.length + ').';
+  const r = (i.slice(4) + i.slice(0, 4)).replace(/[A-Z]/g, c=> String(c.charCodeAt(0) - 55));
+  let rest = 0; for(const ch of r) rest = (rest * 10 + (+ch)) % 97;
+  return rest === 1 ? '' : 'Die Prüfziffer der IBAN stimmt nicht – bitte auf Tippfehler prüfen.';
+}
+function bicPruefen(s, iban){
+  const b = String(s || '').replace(/\s+/g, '').toUpperCase(); if(!b) return null;
+  if(!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(b)) return 'BIC-Format ungültig (8 oder 11 Zeichen, z. B. SOLADES1OFG).';
+  const land = ibanNorm(iban).slice(0, 2);
+  if(/^[A-Z]{2}$/.test(land) && b.slice(4, 6) !== land) return 'Hinweis: Das Land in der BIC (' + b.slice(4, 6) + ') passt nicht zur IBAN (' + land + ').';
+  return '';
+}
+function ktoHinweis(el, text){
+  let h = el.nextElementSibling && el.nextElementSibling.classList && el.nextElementSibling.classList.contains('kto-hinweis') ? el.nextElementSibling : null;
+  if(text == null){ if(h) h.remove(); return; }
+  if(!h){ h = document.createElement('div'); h.className = 'kto-hinweis'; el.insertAdjacentElement('afterend', h); }
+  h.className = 'kto-hinweis ' + (text ? (/^Hinweis/.test(text) ? 'warn' : 'fehler') : 'ok');
+  h.textContent = text || '✓ Format in Ordnung';
+}
+function ktoPruefenEl(el){
+  const bereich = el.closest('.einr, .beta-overlay, #app') || document;
+  if(el.matches(SEL_IBAN)){
+    ktoHinweis(el, ibanPruefen(el.value));
+    const b = bereich.querySelector(SEL_BIC); if(b && b.value) ktoHinweis(b, bicPruefen(b.value, el.value));
+  } else if(el.matches(SEL_BIC)){
+    const i = bereich.querySelector(SEL_IBAN);
+    ktoHinweis(el, bicPruefen(el.value, i ? i.value : ''));
+  }
+}
 document.addEventListener('input', (ev)=>{
   const el = ev.target;
-  if(!el || !el.matches || !el.matches('#ini_ARZTBIC, [data-ini="ARZTBIC"], #ini_AERZTE_BIC, [data-ini="AERZTE_BIC"], input[data-bic]')) return;
-  const neu = el.value.replace(/\s/g, '').toUpperCase();
-  if(neu === el.value) return;
-  const pos = el.selectionStart, vorher = el.value.slice(0, pos == null ? el.value.length : pos).replace(/\s/g, '').length;
-  el.value = neu;
-  try{ el.setSelectionRange(vorher, vorher); }catch(_){}
+  if(!el || !el.matches) return;
+  const istBic = el.matches(SEL_BIC), istIban = el.matches(SEL_IBAN);
+  if(!istBic && !istIban) return;
+  const neu = istBic ? el.value.replace(/\s/g, '').toUpperCase() : el.value.toUpperCase();
+  if(neu !== el.value){
+    const pos = el.selectionStart, vorher = el.value.slice(0, pos == null ? el.value.length : pos);
+    const p2 = istBic ? vorher.replace(/\s/g, '').length : vorher.length;
+    el.value = neu;
+    try{ el.setSelectionRange(p2, p2); }catch(_){}
+  }
+  ktoPruefenEl(el);
+}, true);
+// IBAN beim Verlassen in 4er-Gruppen
+document.addEventListener('blur', (ev)=>{
+  const el = ev.target; if(!el || !el.matches || !el.matches(SEL_IBAN) || !el.value.trim()) return;
+  const f = ibanFormat(el.value); if(f !== el.value) el.value = f;
+  ktoPruefenEl(el);
 }, true);
 // ---------- Vektorkarte (Test, Einstellung "Große Karte als Vektorkarte") ----------
 // MapLibre GL + freie Vektorkacheln von OpenFreeMap (ohne Schluessel). Zeigt dieselben
@@ -14903,7 +15011,7 @@ function vkMaplibreHolen(){
   });
   return vkLaden;
 }
-function vkAn(){ return !!(ladeEinstellungen() || {}).karteVektor; }
+function vkAn(){ return (ladeEinstellungen() || {}).karteVektor !== false; }   // Vorauswahl: an
 // Kartenstile: im Nachtmodus automatisch dunkel (in der Karte umschaltbar, getrennt gemerkt)
 const VK_STILE = { liberty: 'Hell', bright: 'Bunt', dark: 'Dunkel' };
 function vkNacht(){ return document.body.classList.contains('dunkel'); }
@@ -14983,10 +15091,18 @@ function vkKachelListe(m, radiusKm, zMax){
   }
   return liste;
 }
-function vkOffPlan(m, radiusKm){
-  for(const zMax of [14, 13, 12]){ const l = vkKachelListe(m, radiusKm, zMax); if(l.length <= VK_OFF_MAX_KACHELN) return { zMax, liste: l }; }
-  return { zMax: 12, liste: vkKachelListe(m, radiusKm, 12).slice(0, VK_OFF_MAX_KACHELN) };
+// immer bis Zoom 14 (nur dort stecken Hausnummern und alle POI); der Umkreis ist
+// dadurch durch die 3.000-Kachel-Grenze begrenzt (in Deutschland ca. 30-35 km)
+function vkOffPlan(m, radiusKm){ return { zMax: 14, liste: vkKachelListe(m, radiusKm, 14) }; }
+function vkOffMaxRadius(m, kb){
+  // Grenze: 3.000 Kacheln UND geschaetzt hoechstens 48 MB
+  const maxN = Math.min(VK_OFF_MAX_KACHELN, Math.floor(48 * 1024 / (kb || 30)));
+  let lo = 2, hi = 60;
+  while(hi - lo > 0.5){ const mid = (lo + hi) / 2; if(vkKachelListe(m, mid, 14).length <= maxN) lo = mid; else hi = mid; }
+  return Math.floor(lo);
 }
+// MB-Schaetzung: Durchschnitt der letzten Offline-Karte, sonst ca. 30 KB je Kachel
+function vkOffKbJeKachel(){ const o = vkOffInfo(); return o && o.kacheln > 50 && o.mb ? Math.max(8, o.mb * 1024 / o.kacheln) : 30; }
 function vkOffMitte(){
   const s = typeof gkvStartGeo === 'function' && gkvStartGeo(); if(s) return s;
   try{ const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); return { adr: 'NFP', lat: n.lat, lon: n.lon }; }catch(_){ return null; }
@@ -15034,22 +15150,27 @@ async function vkOfflineLaden(m, radiusKm, melde, abgebrochen){
 }
 function vkOffText(){
   const o = vkOffInfo(); if(!o) return 'Keine Offline-Karte geladen.';
-  return 'Offline-Karte: ' + o.radius + ' km um den Ausgangspunkt, Stand ' + new Date(o.am).toLocaleDateString('de-DE') + ' (' + o.mb + ' MB' + (o.zMax >= 14 ? ', mit Hausnummern' : '') + ')';
+  return 'Offline-Karte: ' + o.radius + ' km um den Ausgangspunkt, Stand ' + new Date(o.am).toLocaleDateString('de-DE') + ' (' + o.mb + ' MB, ' + o.kacheln + ' Kacheln)';
 }
 async function vkOfflineDialog(){
   const m = vkOffMitte();
   if(!m){ betaOverlay.meldung('Kein Ausgangspunkt festgelegt (Wache/Dienstprofil) – darum lässt sich das Gebiet nicht bestimmen.'); return false; }
-  const radien = [15, 30, 50];
-  const zeile = (r)=>{ const p = vkOffPlan(m, r); return '<button type="button" class="fb-chip' + (r === ((vkOffInfo() || {}).radius || 30) ? ' an' : '') + '" data-vkr="' + r + '"><b>' + r + ' km</b><small>' + p.liste.length + ' Kacheln' + (p.zMax >= 14 ? ', mit Hausnummern' : ', ohne Hausnummern') + '</small></button>'; };
+  const kb = vkOffKbJeKachel(), rMax = vkOffMaxRadius(m, kb);
+  let radius = Math.min(rMax, (vkOffInfo() || {}).radius || Math.min(25, rMax));
+  const schaetzung = (r)=>{ const n = vkOffPlan(m, r).liste.length; return { n, mb: Math.max(1, Math.round(n * kb / 1024)) }; };
   const html = '<div class="fb-dialog"><div class="fb-info">' + htmlEsc(vkOffText()) + '</div>' +
-    '<div class="fb-lbl">Gebiet um ' + htmlEsc(m.adr || 'den Ausgangspunkt') + '</div><div class="fb-chips vk-off-radien">' + radien.map(zeile).join('') + '</div>' +
-    '<div class="fb-info">Die Karte wird im Gerät gespeichert (bis 50 MB) und dann auch ohne Internet angezeigt – in allen drei Kartenstilen. Adresssuche und Route brauchen weiterhin Internet. Am besten im WLAN laden.</div></div>';
+    '<div class="fb-lbl">Umkreis um ' + htmlEsc(m.adr || 'den Ausgangspunkt') + '</div>' +
+    '<div class="vk-off-regler"><input type="range" id="vkOffR" min="3" max="' + rMax + '" step="1" value="' + radius + '"><b id="vkOffKm"></b></div>' +
+    '<div class="vk-off-schaetzung" id="vkOffS"></div>' +
+    '<div class="fb-info">Immer mit Hausnummern und allen Orten (Kliniken, Praxen, Apotheken, Parkplätze …). Größter Umkreis hier: ' + rMax + ' km – mehr erlaubt der Kartendienst pro Download nicht (3.000 Kacheln / 50 MB). ' +
+      'Die Karte wird im Gerät gespeichert und dann auch ohne Internet angezeigt – in allen drei Stilen. Am besten im WLAN laden.</div></div>';
   const kn = [{ label: 'Abbrechen', akt: 'nein' }];
   if(vkOffInfo()) kn.push({ label: 'Löschen', akt: 'weg' });
   kn.push({ label: vkOffInfo() ? 'Neu laden' : 'Laden', akt: 'ok', primaer: true });
-  let radius = (vkOffInfo() || {}).radius || 30;
   const warte = betaOverlay.ergebnis('Offline-Karte', html, kn);
-  document.querySelectorAll('.beta-overlay [data-vkr]').forEach(b=> b.onclick = ()=>{ radius = +b.dataset.vkr; document.querySelectorAll('.beta-overlay [data-vkr]').forEach(x=> x.classList.toggle('an', x === b)); });
+  const regler = document.getElementById('vkOffR');
+  const zeigen = ()=>{ radius = +regler.value; const s = schaetzung(radius); document.getElementById('vkOffKm').textContent = radius + ' km'; document.getElementById('vkOffS').textContent = s.n + ' Kacheln · ca. ' + s.mb + ' MB' + (kb === 30 ? ' (Schätzung)' : ' (Schätzung nach der letzten Offline-Karte)'); };
+  regler.oninput = zeigen; zeigen();
   const akt = await warte;
   if(akt === 'weg'){ betaOverlay.schliessen(); try{ await caches.delete(VK_OFF_CACHE); }catch(_){} LS.set('vk_offline', null); appToastAnzeigen('Offline-Karte gelöscht.', 2000); return true; }
   if(akt !== 'ok'){ betaOverlay.schliessen(); return false; }
@@ -15390,7 +15511,7 @@ let standortKarteLauf = 0;
 async function standortKarteZeichnen(info, mitDialog){
   const box = document.getElementById('skKarte'); if(!box || typeof NFP_KARTE === 'undefined') return;
   const lauf = ++standortKarteLauf, aktuell = ()=> lauf === standortKarteLauf && document.body.contains(box);
-  const auf = !!LS.get('start_karte_auf', false);
+  const auf = true;   // immer Standort + Einsatzorte; vergroessern ueber den Vollbild-Knopf der Karte
   const ohneDienst = !info || !info.fenster;
   box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Standort</b><small>wird ermittelt …</small></span></div>';
   const [hg, pos] = await Promise.all([nfpHintergrund(), standortHolen({ still: !mitDialog })]);
@@ -15403,7 +15524,7 @@ async function standortKarteZeichnen(info, mitDialog){
   const faelle = standortKarteFaelle(info);
   const kopf = (unter)=> '<div class="sk-kopf"><span class="sk-titel"><b>' + (auf ? 'Einsatzorte ' + (ohneDienst ? '(letzte 24 h)' : 'in diesem Dienst') : 'Standort') + '</b><small>' + htmlEsc(unter) + '</small></span>' +
     (pos ? '' : '<button type="button" class="sk-pos">📍 Standort</button>') +
-    '<button type="button" class="sk-auf">' + (auf ? 'Einklappen' : 'Ausklappen' + (faelle.length ? ' (' + faelle.length + ')' : '')) + '</button></div>';
+    '</div>';
   let gross = null;
   const verdrahten = ()=>{
     const a = box.querySelector('.sk-auf'); if(a) a.onclick = ()=>{ LS.set('start_karte_auf', !auf); standortKarteZeichnen(info); };
@@ -16303,8 +16424,8 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v240';
-function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
+const APP_VERSION = 'v241';
+function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
   try{
@@ -16436,7 +16557,8 @@ const LIVE_ANZEIGEN = [
   { k: 'standort', titel: 'Standortkarte', text: 'Kleine Karte mit deinem Standort und der Zone; ausgeklappt alle Einsatzorte dieses Dienstes (LS, PT, GKV).' }
 ];
 function liveEinst(){
-  const l = (ladeEinstellungen() || {}).liveDienst || {};
+  // Vorauswahl: alle Anzeigen an (ausser automatischer Erkennung)
+  const l = (ladeEinstellungen() || {}).liveDienst || { dienst: true, ring: true, standort: true, auto: false };
   // "Karte mit Balken" und "Kompakte Zeile" sind jetzt ein Feature "Dienst"
   const dienst = l.dienst !== undefined ? !!l.dienst : !!(l.karte || l.zeile);
   return { dienst, ring: !!l.ring, standort: !!l.standort, auto: !!l.auto };
@@ -19177,7 +19299,9 @@ function appToastAnzeigen(text, dauerMs){
 // sichern); wuerde die zur Startseite springen, geht es stattdessen zur
 // vorherigen Ansicht im Verlauf.
 const NAV_STAPEL = []; let navZurueck = false;
-function navZurueckAusfuehren(f){ navZurueck = true; try{ f(); } finally { navZurueck = false; } }
+// Zurueck geht jetzt immer eine EBENE nach oben (wie der Pfeil oben links der
+// jeweiligen Ansicht), nicht mehr Schritt fuer Schritt durch den Verlauf.
+function navZurueckAusfuehren(f){ f(); }
 ['ansichtStart', 'ansichtFahrtenbuch', 'ansichtFahrdienstAuswertung', 'ansichtLuftlinienTool', 'ansichtGkvVerwaltung', 'ansichtKorrigieren',
  'ansichtSyncBackups', 'ansichtAlleRechnungen', 'ansichtRechnungenGesamt', 'ansichtGkv', 'ansichtMaske', 'ansichtEinstellungen'].forEach(name=>{
   const basis = window[name]; if(typeof basis !== 'function') return;
@@ -19207,6 +19331,8 @@ try{ themaAnwenden(); }catch(e){}
 try{ dunkelModusAutoSyncEinrichten(); }catch(e){}
 try{ ansichtStart(); }catch(e){}
 try{
+  if(ersterStart && einrSchonEingerichtet()) ersterStart = false;   // einstellungen.ini schon da -> nicht noetig
+  if(ersterStart) LS.set('einrichtung_auto', true);
   if(ersterStart || LS.get('einrichtung_schritt', null)) setTimeout(()=>{ if(aktuelleAnsichtIstHauptbildschirm) ansichtEinrichtung(); }, 300);
 }catch(_){}
 // Schnellstart aus dem App-Symbol (Rechtsklick in der Taskleiste / langes Druecken): ?neu=dienst|rechnung|ls|pt|gkv, ?seite=fahrtenbuch
