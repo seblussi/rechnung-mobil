@@ -1804,6 +1804,10 @@ try{
   .fbx-ortnr{display:inline-flex; width:17px; height:17px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; align-items:center; justify-content:center; margin-right:4px; vertical-align:1px;}
   .fbx-ortnr.ls{background:var(--ls-farbe);} .fbx-ortnr.pt{background:var(--pt-farbe);} .fbx-ortnr.gkv{background:#7d4e9e;}
   .mini-ebenen{position:relative;}
+  .mini-stil{position:absolute; top:104px; right:8px; z-index:5; width:46px; height:36px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .mini-stil svg{width:18px; height:18px;}
+  .mini-menue{top:8px; right:62px; max-height:calc(100% - 16px); overflow:auto; font-size:13.5px;}
   .mini-gross{position:absolute; right:8px; bottom:8px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .mini-gross svg{width:20px; height:20px;}
@@ -14571,6 +14575,7 @@ function miniKarteVektor(w, cfg){
     if(!aktiv) return; aktiv = false;
     try{ map && map.remove(); }catch(_){}
     w._vkFehler = !!grund; w._mk = null; f.innerHTML = '';
+    w.querySelectorAll('.mini-stil, .vk-menue').forEach(x=> x.remove());
     miniKarteStarten(w);
   };
   const ansichtJetzt = ()=>{ if(!map) return ansicht; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
@@ -14620,8 +14625,36 @@ function miniKarteVektor(w, cfg){
     map.on('click', ()=>{ if(gezogen || !opt.gross) return; opt.gross('osm', ansichtJetzt()); });
     // Stilwechsel im Nachtmodus / in der grossen Karte uebernehmen
     w._mk.stilPruefen = ()=>{ const s = vkStil(); if(s !== stil && map){ stil = s; vkStilJson(s).then(o=> map.setStyle(o, { diff: false })).catch(()=>{}); } };
+    // Stil-/Ebenen-Knopf wie in der grossen Karte
+    if(!w.querySelector('.mini-stil')){
+      const sk = document.createElement('button'); sk.type = 'button'; sk.className = 'mini-stil'; sk.setAttribute('aria-label', 'Kartenstil und Ebenen');
+      sk.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
+      const menue = document.createElement('div'); menue.className = 'vk-menue mini-menue'; menue.hidden = true;
+      w.appendChild(sk); w.appendChild(menue);
+      sk.addEventListener('click', (ev)=>{ ev.stopPropagation(); if(!menue.hidden){ menue.hidden = true; return; } vkMenueFuellen(menue, ()=> stil, (neu)=>{ vkStilSetzen(neu); vkAlleMinisStil(); }, (id, an)=>{ vkAlleMinisEbene(id, an); }); menue.hidden = false; });
+      menue.addEventListener('click', (ev)=> ev.stopPropagation());
+      f.addEventListener('pointerdown', ()=>{ menue.hidden = true; });
+    }
+    w._mk.ebeneSichtbar = (id, an)=>{ if(map && map.getLayer(id)) map.setLayoutProperty(id, 'visibility', an ? 'visible' : 'none'); };
   }).catch(()=> zuRaster(true));
 }
+// Menue Kartenstil/Ebenen/Offline (kleine Karte; die grosse hat ihr eigenes)
+function vkMenueFuellen(menue, stilJetzt, stilNeu, ebeneNeu){
+  const e = vkEbenen(), st = stilJetzt();
+  menue.innerHTML = '<div class="vk-m-titel">Kartenstil' + (vkNacht() ? ' <small>(Nachtmodus)</small>' : '') + '</div><div class="vk-m-stile">' +
+    Object.entries(VK_STILE).map(([k, l])=> '<button type="button" class="vk-m-stil' + (k === st ? ' an' : '') + '" data-vkst="' + k + '"><span class="vk-m-vorschau ' + k + '"></span>' + l + '</button>').join('') + '</div>' +
+    '<div class="vk-m-titel">Ebenen</div>' +
+    [['med', 'Medizinisch'], ['park', 'Parkplätze'], ['hnr', 'Hausnummern']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
+    '<div class="vk-m-titel">Offline</div><div class="vk-m-off">' + htmlEsc(vkOffText()) + '</div><button type="button" class="btn-sekundaer vk-m-offknopf">' + (vkOffInfo() ? 'Offline-Karte verwalten …' : 'Offline-Karte laden …') + '</button>';
+  menue.querySelectorAll('[data-vkst]').forEach(b=> b.onclick = ()=>{ menue.hidden = true; if(b.dataset.vkst !== stilJetzt()) stilNeu(b.dataset.vkst); });
+  menue.querySelectorAll('[data-vkeb]').forEach(c=> c.onchange = ()=>{
+    const e2 = vkEbenen(); e2[c.dataset.vkeb] = c.checked; LS.set('vk_ebenen', e2);
+    ebeneNeu({ med: 'vk-med', park: 'vk-park', hnr: 'vk-hnr' }[c.dataset.vkeb], c.checked);
+  });
+  menue.querySelector('.vk-m-offknopf').onclick = ()=>{ menue.hidden = true; vkOfflineDialog(); };
+}
+function vkAlleMinisStil(){ document.querySelectorAll('.mini-ebenen').forEach(w=>{ if(w._mk && w._mk.stilPruefen) w._mk.stilPruefen(); }); }
+function vkAlleMinisEbene(id, an){ document.querySelectorAll('.mini-ebenen').forEach(w=>{ if(w._mk && w._mk.ebeneSichtbar) w._mk.ebeneSichtbar(id, an); }); }
 function miniKartenNeu(){
   const aus = LS.get('karte_zonen', true) === false;
   document.querySelectorAll('.mini-ebenen').forEach(w=>{ const a = w.querySelector('.karte-auge'); if(a) a.classList.toggle('aus', aus); if(w._mk && w._mk.neu) w._mk.neu(); });
@@ -15414,11 +15447,13 @@ function vektorKarteOverlay(d, text, opt){
         const neu = b.dataset.vkst; if(neu === stil){ menue.hidden = true; return; }
         stil = neu; vkStilSetzen(neu); menue.hidden = true;
         vkStilJson(neu).then(o=> map.setStyle(o, { diff: false })).catch(()=> appToastAnzeigen('Kartenstil nicht erreichbar (offline?).', 2500));
+        vkAlleMinisStil();
       });
       menue.querySelectorAll('[data-vkeb]').forEach(c=> c.onchange = ()=>{
         const e2 = vkEbenen(); e2[c.dataset.vkeb] = c.checked; LS.set('vk_ebenen', e2);
         const id = { med: 'vk-med', park: 'vk-park', hnr: 'vk-hnr' }[c.dataset.vkeb];
         if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', c.checked ? 'visible' : 'none');
+        vkAlleMinisEbene(id, c.checked);
       });
     };
     sk.onclick = (ev)=>{ ev.stopPropagation(); if(menue.hidden){ menueZeichnen(); menue.hidden = false; } else menue.hidden = true; };
@@ -16518,7 +16553,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v243';
+const APP_VERSION = 'v244';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
