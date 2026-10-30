@@ -1633,7 +1633,12 @@ try{
   /* Zoomknoepfe ausblenden, wenn die Karte zu niedrig ist (sonst ueber dem Stil-Knopf) */
   .vk-overlay .nfp-rahmen, .ok-karte .nfp-rahmen{container-type:size;}
   @container (max-height: 460px){ .ok-zoom{display:none !important;} }
-  .ok-aed{background:#00924a !important; color:#fff !important; border-color:#00924a !important; font-weight:700;}
+  .vk-aed-knopf{position:absolute; top:182px; right:10px; z-index:5; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#00924a; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; cursor:pointer; font-size:9.5px; font-weight:800; line-height:1;}
+  .vk-aed-knopf svg{width:22px; height:22px;}
+  .mini-aed{position:absolute; top:148px; right:8px; z-index:5; width:46px; height:36px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .mini-aed svg{width:20px; height:20px;}
   .vk-aed-info{font-size:13.5px; line-height:1.35; color:#222;} .vk-aed-info .vk-navi{display:inline-block; margin:6px 0 2px; padding:6px 10px; font-size:13px;}
   .vk-ziehbar{width:22px !important; height:22px !important; cursor:grab;}
   .mini-fenster > .mini-vk, .mini-fenster > .mini-vk.maplibregl-map{position:absolute; inset:0; width:100%; height:100%;}
@@ -14052,6 +14057,8 @@ async function nfpOsmKarteSpeichern(){
 }
 const KARTE_ZOOM_KNOEPFE = '<div class="ok-zoom"><button type="button" data-zoom="1" aria-label="näher"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" data-zoom="-1" aria-label="weiter weg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button></div>';
 const VK_ATTR_HTML = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · Daten: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende';
+const VK_AED_KNOPF_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21C4.5 15.6 2 11.3 2 8.2 2 5.3 4.2 3 7 3c2 0 3.6 1.1 5 2.9C13.4 4.1 15 3 17 3c2.8 0 5 2.3 5 5.2 0 3.1-2.5 7.4-10 12.8z" fill="#00924a"/><path d="M13.4 6.5 9.2 12.6h2.7l-1.3 5 4.4-6.6h-2.7z" fill="#fff"/></svg>';
+let vkAedAutostart = false;   // kleine Karte: AED-Knopf oeffnet die grosse Karte und sucht dort sofort
 const OSM_ATTR_HTML = '<span class="osm-attr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende</span>';
 async function nfpHintergrund(){
   const eigen = typeof nfpKarteBildUrl === 'function' ? await nfpKarteBildUrl() : null;
@@ -14486,7 +14493,8 @@ function miniKarteHtml(d, opt){
     .replace('<span></span>', '<span>' + (e === 'osm' ? 'KVBW' : 'OSM') + '</span>');
   const auge = KARTE_AUGE_KNOPF.replace('class="karte-auge"', 'class="karte-auge' + (LS.get('karte_zonen', true) === false ? ' aus' : '') + '"');
   const grossKnopf = opt.gross ? '<button type="button" class="mini-gross" aria-label="Große Karte (Vollbild)" title="Große Karte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>' : '';
-  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + auge + grossKnopf + '</div>' +
+  const aedKnopf = opt.gross ? '<button type="button" class="mini-aed" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '</button>' : '';
+  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + auge + aedKnopf + grossKnopf + '</div>' +
     '<div class="sk-hinweis mini-attr">' + OSM_ATTR_HTML + ' · Zoom: zwei Finger bzw. Mausrad</div>';
 }
 function miniKarteAnsicht(el){
@@ -14586,7 +14594,7 @@ function miniKarteStarten(w){
   }, { passive: false });
   // Tippen: Fall oeffnen bzw. grosse Karte (mit derselben Ansicht)
   w.addEventListener('click', (ev)=>{
-    if(ev.target.closest('.mini-ebene-knopf, .karte-auge, .mini-stil')) return;
+    if(ev.target.closest('.mini-ebene-knopf, .karte-auge, .mini-stil, .mini-aed')) return;
     if(gezogen){ ev.stopPropagation(); return; }
     const t = ev.target.closest('[data-fall]');
     if(t && opt.fallKlick){ ev.stopPropagation(); opt.fallKlick(+t.dataset.fall); return; }
@@ -14693,7 +14701,7 @@ function vkMenueFuellen(menue, stilJetzt, stilNeu, ebeneNeu){
   menue.innerHTML = '<div class="vk-m-titel">Kartenstil' + (vkNacht() ? ' <small>(Nachtmodus)</small>' : '') + '</div><div class="vk-m-stile">' +
     Object.entries(VK_STILE).map(([k, l])=> '<button type="button" class="vk-m-stil' + (k === st ? ' an' : '') + '" data-vkst="' + k + '"><span class="vk-m-vorschau ' + k + '"></span>' + l + '</button>').join('') + '</div>' +
     '<div class="vk-m-titel">Ebenen</div>' +
-    [['med', 'Medizinisch'], ['park', 'Parkplätze'], ['aed', 'AED (Defibrillatoren)']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
+    [['med', 'Medizinisch'], ['park', 'Parkplätze'], ['aed', 'AED dauerhaft anzeigen']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
     '<div class="vk-m-titel">Offline</div><div class="vk-m-off">' + htmlEsc(vkOffText()) + '</div><button type="button" class="btn-sekundaer vk-m-offknopf">' + (vkOffInfo() ? 'Offline-Karte verwalten …' : 'Offline-Karte laden …') + '</button>';
   menue.querySelectorAll('[data-vkst]').forEach(b=> b.onclick = ()=>{ menue.hidden = true; if(b.dataset.vkst !== stilJetzt()) stilNeu(b.dataset.vkst); });
   menue.querySelectorAll('[data-vkeb]').forEach(c=> c.onchange = ()=>{
@@ -14730,6 +14738,16 @@ new MutationObserver((liste)=>{
     }
   }
 }).observe(document.documentElement, { childList: true, subtree: true });
+// AED-Knopf der kleinen Karte: grosse (Vektor-)Karte oeffnen und dort den naechsten AED suchen
+document.addEventListener('click', (ev)=>{
+  const k = ev.target.closest && ev.target.closest('.mini-aed'); if(!k) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const w = k.closest('.mini-ebenen'); const cfg = w && MINI_KARTEN.get(w.dataset.mk); if(!cfg || !cfg.opt.gross) return;
+  if(!vkAn()){ appToastAnzeigen('AED-Suche gibt es nur in der Vektorkarte (Einstellungen).', 3000); return; }
+  vkAedAutostart = true;
+  cfg.opt.gross('osm', w._mk ? w._mk.ansicht() : null);
+  setTimeout(()=>{ vkAedAutostart = false; }, 4000);
+}, true);
 // Vollbild-Knopf unten rechts: grosse Karte mit gleichem Ausschnitt
 document.addEventListener('click', (ev)=>{
   const g = ev.target.closest && ev.target.closest('.mini-gross'); if(!g) return;
@@ -15630,8 +15648,8 @@ function vkZusatzEbenen(map, st){
     paint: { 'text-color': dunkel ? '#ff8a8a' : '#c0262d', 'text-halo-color': halo, 'text-halo-width': 1.5, 'icon-opacity': 1 } });
   // AED (Defibrillatoren) aus OpenStreetMap, ganz oben (immer sichtbar, auch bei Ueberschneidung)
   if(!map.getSource('vk-aed')) map.addSource('vk-aed', { type: 'geojson', data: map._aedFc || { type: 'FeatureCollection', features: [] } });
-  map.addLayer({ id: 'vk-aed', type: 'symbol', source: 'vk-aed', minzoom: 11,
-    layout: { visibility: e.aed ? 'visible' : 'none', 'icon-image': 'vko-aed', 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.7, 15, 1, 18, 1.25],
+  map.addLayer({ id: 'vk-aed', type: 'symbol', source: 'vk-aed', minzoom: 10,
+    layout: { visibility: e.aed || map._aedImmer ? 'visible' : 'none', 'icon-image': 'vko-aed', 'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.55, 12, 0.75, 15, 1, 18, 1.25],
       'icon-allow-overlap': true, 'icon-ignore-placement': true } });
   if(map._aedLaden) setTimeout(map._aedLaden, 0);
   if(map._aedWeg) vkAedWegZeigen(map);
@@ -15734,6 +15752,24 @@ async function vkAedZelleHolen(x, y){
   const p = vkAedAbfrage(vkAedZellBox(x, y)).then(l=> vkAedSpeichern(x, y, l)).catch(()=> d || null).finally(()=> VK_AED_LAEUFT.delete(k));
   VK_AED_LAEUFT.set(k, p); return p;
 }
+// gespeicherte Zellen (Geraet) in den Speicher holen, ohne Netz
+async function vkAedAusCache(zellen){
+  let c = null; try{ c = await caches.open(VK_AED_CACHE); }catch(_){ return; }
+  for(const [x, y] of zellen){ const k = x + '/' + y; if(VK_AED_MEM.has(k)) continue;
+    try{ const r = await c.match(vkAedSchl(x, y)); if(r) VK_AED_MEM.set(k, await r.json()); }catch(_){} }
+}
+// Beim App-Start: AEDs im Umkreis (ca. 20 km um Standort bzw. Ausgangspunkt) mit einer Abfrage vorladen,
+// sofern nicht schon aktuell im Geraet gespeichert
+let vkAedVorgeladen = false;
+async function vkAedVorladen(m){
+  if(vkAedVorgeladen || !m || navigator.onLine === false) return;   // auch bei ausgeschalteter Dauer-Anzeige (fuer den AED-Knopf)
+  vkAedVorgeladen = true;
+  const [x, y] = vkAedZelle(m.lon, m.lat);
+  await vkAedAusCache([[x, y]]);
+  const d = VK_AED_MEM.get(x + '/' + y);
+  if(d && Date.now() - d.am < VK_AED_ALTER) return;
+  try{ await vkAedOfflineLaden(m, 20); vkAedAlleNeu(); }catch(_){ vkAedVorgeladen = false; }
+}
 function vkAedFc(){
   const features = [], doppelt = new Set();
   VK_AED_MEM.forEach(d=> (d.f || []).forEach(a=>{ const s = a.lon + ',' + a.lat; if(doppelt.has(s)) return; doppelt.add(s);
@@ -15747,10 +15783,11 @@ function vkAedAnbinden(map, mitInfo){
   const zeigen = ()=>{ map._aedFc = vkAedFc(); try{ const q = map.getSource('vk-aed'); if(q) q.setData(map._aedFc); }catch(_){} };
   map._aedLaden = async ()=>{
     if(!document.body.contains(map.getContainer())){ VK_AED_KARTEN.delete(map); return; }
-    if(!vkEbenen().aed || map.getZoom() < 10.5) return;
+    if(!(vkEbenen().aed || map._aedImmer) || map.getZoom() < 9.5) return;
     const b = map.getBounds(), a = vkAedZelle(b.getWest(), b.getNorth()), z = vkAedZelle(b.getEast(), b.getSouth());
     const zellen = [];
     for(let x = a[0]; x <= z[0]; x++) for(let y = a[1]; y <= z[1]; y++) zellen.push([x, y]);
+    await vkAedAusCache(zellen); zeigen();   // Gespeichertes sofort zeigen
     if(zellen.length > 12) return;   // zu weit draussen: keine Massenabfrage
     const nr = ++lauf;
     for(const [x, y] of zellen){ await vkAedZelleHolen(x, y); if(nr !== lauf) return; zeigen(); }
@@ -15811,9 +15848,10 @@ function vektorKarteOverlay(d, text, opt){
       '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
     '<div class="nfp-rahmen"><div class="vk-karte"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF +
       '<button type="button" class="vk-stil-knopf" aria-label="Kartenstil und Ebenen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>' +
+      '<button type="button" class="vk-aed-knopf" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '<span>AED</span></button>' +
       '<div class="vk-menue" hidden></div>' + KARTE_ZOOM_KNOEPFE + '<button type="button" class="gross-zu" aria-label="Karte verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>' + '</div>' +
     '<div class="nfp-fuss"><div class="nfp-info" id="vkInfo">' + (text ? htmlEsc(text) : 'Vektorkarte wird geladen …') + '</div>' +
-      '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button><button type="button" class="ok-aed">Nächster AED</button></div>' +
+      '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button></div>' +
       '<div class="ok-attr">' + VK_ATTR_HTML + '</div></div>';
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
@@ -15874,7 +15912,7 @@ function vektorKarteOverlay(d, text, opt){
       menue.innerHTML = '<div class="vk-m-titel">Kartenstil' + (vkNacht() ? ' <small>(Nachtmodus)</small>' : '') + '</div><div class="vk-m-stile">' +
         Object.entries(VK_STILE).map(([k, l])=> '<button type="button" class="vk-m-stil' + (k === stil ? ' an' : '') + '" data-vkst="' + k + '"><span class="vk-m-vorschau ' + k + '"></span>' + l + '</button>').join('') + '</div>' +
         '<div class="vk-m-titel">Ebenen</div>' +
-        [['med', 'Medizinisch (Kliniken, Praxen, Heime, Apotheken)'], ['park', 'Parkplätze'], ['aed', 'AED (Defibrillatoren, aus OpenStreetMap)']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
+        [['med', 'Medizinisch (Kliniken, Praxen, Heime, Apotheken)'], ['park', 'Parkplätze'], ['aed', 'AED (Defibrillatoren) dauerhaft anzeigen – sonst nur über den AED-Knopf']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
         '<div class="vk-m-titel">Offline</div><div class="vk-m-off">' + htmlEsc(vkOffText()) + '</div><button type="button" class="btn-sekundaer vk-m-offknopf">' + (vkOffInfo() ? 'Offline-Karte verwalten …' : 'Offline-Karte laden …') + '</button>';
       menue.querySelector('.vk-m-offknopf').onclick = ()=>{ menue.hidden = true; vkOfflineDialog(); };
       menue.querySelectorAll('[data-vkst]').forEach(b=> b.onclick = ()=>{
@@ -15930,7 +15968,8 @@ function vektorKarteOverlay(d, text, opt){
     };
     // ---- Naechster AED: vom gesetzten Punkt, sonst vom eigenen Standort; Fussweg + Google Maps ----
     let aedNr = 0;
-    ov.querySelector('.ok-aed').onclick = async ()=>{
+    const aedKnopf = ov.querySelector('.vk-aed-knopf');
+    aedKnopf.onclick = async ()=>{
       const nr = ++aedNr;
       let start = null, woher = '';
       if(zielMarke){ const q = zielMarke.getLngLat(); start = { lat: q.lat, lon: q.lng }; woher = 'vom gesetzten Punkt'; }
@@ -15941,7 +15980,8 @@ function vektorKarteOverlay(d, text, opt){
         else { const c = map.getCenter(); start = { lat: c.lat, lon: c.lng }; woher = 'von der Kartenmitte'; }
       }
       info.textContent = 'Nächster AED wird gesucht …';
-      const e2 = vkEbenen(); if(!e2.aed){ e2.aed = true; LS.set('vk_ebenen', e2); if(map.getLayer('vk-aed')) map.setLayoutProperty('vk-aed', 'visibility', 'visible'); }
+      // Dauer-Anzeige aus (Stil-Menue)? Dann nur in dieser Karte einblenden, Einstellung bleibt
+      map._aedImmer = true; if(map.getLayer('vk-aed')) map.setLayoutProperty('vk-aed', 'visibility', 'visible'); if(map._aedLaden) map._aedLaden();
       let r = null;
       try{ r = await vkAedNaechster(start); }catch(_){ r = null; }
       if(nr !== aedNr || !document.body.contains(ov)) return;
@@ -15961,6 +16001,7 @@ function vektorKarteOverlay(d, text, opt){
         '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + a.lat.toFixed(6) + '" data-lon="' + a.lon.toFixed(6) + '" data-art="fuss" data-name="AED">Route anzeigen</button>' +
         '<a class="vk-navi vk-navi-g" href="' + gUrl + '" target="_blank" rel="noopener">Google Maps</a></div></div>';
     };
+    if(vkAedAutostart){ vkAedAutostart = false; const los = ()=> aedKnopf.onclick(); if(map.loaded()) setTimeout(los, 0); else map.once('load', los); }
     // ---- Adresse suchen / Ort setzen (lange druecken), Punkt verschiebbar -> Luftlinie, Wegepauschale, Route ----
     let zielMarke = null, zielNr = 0;
     const datenNeu = ()=>{
@@ -16163,6 +16204,7 @@ async function standortKarteZeichnen(info, mitDialog){
   const ohneDienst = !info || !info.fenster;
   box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Standort</b><small>wird ermittelt …</small></span></div>';
   const [hg, pos] = await Promise.all([nfpHintergrund(), standortHolen({ still: !mitDialog })]);
+  try{ const m = pos || gkvStartGeo() || (typeof vkOffInfo === 'function' && vkOffInfo()); if(m) vkAedVorladen({ lat: m.lat, lon: m.lon }); }catch(_){}
   if(!aktuell()) return;
   const ich = pos ? nfpGeoZuPixel(pos.lat, pos.lon) : null;
   const ichDrin = !!(ich && nfpImBild(ich));
@@ -17072,7 +17114,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v264';
+const APP_VERSION = 'v265';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
