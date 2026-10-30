@@ -14644,7 +14644,7 @@ function vkMenueFuellen(menue, stilJetzt, stilNeu, ebeneNeu){
   menue.innerHTML = '<div class="vk-m-titel">Kartenstil' + (vkNacht() ? ' <small>(Nachtmodus)</small>' : '') + '</div><div class="vk-m-stile">' +
     Object.entries(VK_STILE).map(([k, l])=> '<button type="button" class="vk-m-stil' + (k === st ? ' an' : '') + '" data-vkst="' + k + '"><span class="vk-m-vorschau ' + k + '"></span>' + l + '</button>').join('') + '</div>' +
     '<div class="vk-m-titel">Ebenen</div>' +
-    [['med', 'Medizinisch'], ['park', 'Parkplätze'], ['hnr', 'Hausnummern']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
+    [['med', 'Medizinisch'], ['park', 'Parkplätze']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
     '<div class="vk-m-titel">Offline</div><div class="vk-m-off">' + htmlEsc(vkOffText()) + '</div><button type="button" class="btn-sekundaer vk-m-offknopf">' + (vkOffInfo() ? 'Offline-Karte verwalten …' : 'Offline-Karte laden …') + '</button>';
   menue.querySelectorAll('[data-vkst]').forEach(b=> b.onclick = ()=>{ menue.hidden = true; if(b.dataset.vkst !== stilJetzt()) stilNeu(b.dataset.vkst); });
   menue.querySelectorAll('[data-vkeb]').forEach(c=> c.onchange = ()=>{
@@ -15345,7 +15345,7 @@ async function vkOfflineDialog(){
   }
 }
 // Zusatz-Ebenen aus den OpenFreeMap-Kacheln (Schema OpenMapTiles): medizinische Orte, Parkplaetze, Hausnummern
-function vkEbenen(){ return Object.assign({ med: true, park: true, hnr: true }, LS.get('vk_ebenen', {}) || {}); }
+function vkEbenen(){ return Object.assign({ med: true, park: true }, LS.get('vk_ebenen', {}) || {}, { hnr: true }); }   // Hausnummern immer an
 const VK_MED_SUB = ['hospital', 'clinic', 'doctors', 'dentist', 'pharmacy', 'nursing_home', 'social_facility', 'physiotherapist'];
 function vkZusatzEbenen(map, st){
   const dunkel = st === 'dark', e = vkEbenen();
@@ -15467,7 +15467,7 @@ function vektorKarteOverlay(d, text, opt){
       menue.innerHTML = '<div class="vk-m-titel">Kartenstil' + (vkNacht() ? ' <small>(Nachtmodus)</small>' : '') + '</div><div class="vk-m-stile">' +
         Object.entries(VK_STILE).map(([k, l])=> '<button type="button" class="vk-m-stil' + (k === stil ? ' an' : '') + '" data-vkst="' + k + '"><span class="vk-m-vorschau ' + k + '"></span>' + l + '</button>').join('') + '</div>' +
         '<div class="vk-m-titel">Ebenen</div>' +
-        [['med', 'Medizinisch (Kliniken, Praxen, Heime, Apotheken)'], ['park', 'Parkplätze'], ['hnr', 'Hausnummern']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
+        [['med', 'Medizinisch (Kliniken, Praxen, Heime, Apotheken)'], ['park', 'Parkplätze']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
         '<div class="vk-m-titel">Offline</div><div class="vk-m-off">' + htmlEsc(vkOffText()) + '</div><button type="button" class="btn-sekundaer vk-m-offknopf">' + (vkOffInfo() ? 'Offline-Karte verwalten …' : 'Offline-Karte laden …') + '</button>';
       menue.querySelector('.vk-m-offknopf').onclick = ()=>{ menue.hidden = true; vkOfflineDialog(); };
       menue.querySelectorAll('[data-vkst]').forEach(b=> b.onclick = ()=>{
@@ -16580,7 +16580,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v245';
+const APP_VERSION = 'v246';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -17367,7 +17367,7 @@ function ansichtEinstellungen(){
       <button type="button" class="btn-sekundaer" id="btnEinrichtungBrief" style="margin-top:8px;">Briefversand einrichten (eigene Azure-Weiterleitung)</button>
       <div class="einstellung-zeile" style="margin-top:14px;">
         <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor ? ' checked' : ''}>
-        <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Im Nachtmodus automatisch dunkel; in der Karte über ◐ Stil und Ebenen (Medizinisch, Parkplätze, Hausnummern) umschaltbar. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
+        <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Im Nachtmodus automatisch dunkel; in der Karte über ◐ Stil und Ebenen (Medizinisch, Parkplätze) umschaltbar; Hausnummern immer sichtbar. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
       </div>
       <div class="fb-chips" id="vkStile" style="margin-top:6px;">${['liberty', 'detail', 'bright'].map(k=> '<button type="button" class="fb-chip' + (((ladeEinstellungen() || {}).karteVektorStil || 'liberty') === k ? ' an' : '') + '" data-vkstil="' + k + '">' + { liberty: 'Hell', detail: 'Detail', bright: 'Bunt' }[k] + '</button>').join('')}</div>
       <div class="design-hinweis" id="vkOffEinst" style="margin-top:8px;">${htmlEsc(vkOffText())}</div>
