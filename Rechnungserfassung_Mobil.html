@@ -15160,13 +15160,27 @@ async function vkStilJson(st){
   stil = JSON.parse(JSON.stringify(stil));
   if((st || vkStil()) === 'dark'){ vkDunkelKontrast(stil); vkBiome(stil, VK_BIOME_DUNKEL); }
   if((st || vkStil()) === 'detail') vkDetailKontrast(stil);
-  if((st || vkStil()) === 'bright') vkBuntGebaeude(stil);
+  if((st || vkStil()) === 'bright') vkBuntAnpassen(stil);
   if(typeof stil.sprite === 'string') stil.sprite = vkZuProt(stil.sprite); else if(Array.isArray(stil.sprite)) stil.sprite.forEach(s=> s.url = vkZuProt(s.url));
   stil.glyphs = vkZuProt(stil.glyphs);
   Object.values(stil.sources || {}).forEach(s=>{ if(s.url) s.url = vkZuProt(s.url); if(s.tiles) s.tiles = s.tiles.map(vkZuProt); });
   return stil;
 }
-// "Bunt": Haeuser in denselben Farben wie "Hell" (flach, ohne versetzte Dachflaeche)
+// "Bunt": Haeuser wie "Hell", Wald am dunkelsten gruen, Spiel-/Sportplaetze wie "Detail"
+function vkBuntAnpassen(stil){
+  const F = {
+    'landcover-wood': { 'fill-color': '#86b96f', 'fill-opacity': 0.85, 'fill-outline-color': 'hsla(100,30%,35%,0.25)' },
+    'landcover-grass': { 'fill-color': '#cfe5bb', 'fill-opacity': 0.9 },
+    'landcover-grass-park': { 'fill-color': '#dcecc9', 'fill-opacity': 0.8 },
+    'park': { 'fill-color': '#e2efd3' }
+  };
+  (stil.layers || []).forEach(l=>{ const f = F[l.id]; if(f) l.paint = Object.assign({}, l.paint || {}, f); });
+  const pos = stil.layers.findIndex(l=> l.id === 'landcover-grass-park') + 1 || stil.layers.length;
+  stil.layers.splice(pos, 0,
+    { id: 'vkbu-sport', type: 'fill', source: 'openmaptiles', 'source-layer': 'landuse', filter: ['match', ['get', 'class'], ['pitch', 'track', 'playground'], true, false],
+      paint: { 'fill-color': '#DEE3CD', 'fill-outline-color': 'hsl(75,18%,72%)' } });
+  vkBuntGebaeude(stil);
+}
 function vkBuntGebaeude(stil){
   stil.layers = (stil.layers || []).filter(l=> l.id !== 'building-top');
   stil.layers.forEach(l=>{
@@ -16669,7 +16683,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v252';
+const APP_VERSION = 'v253';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
