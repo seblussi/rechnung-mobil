@@ -1570,6 +1570,8 @@ try{
   .luft-wahl button{width:auto; margin:0; padding:7px 10px; border-radius:14px; border:1px solid var(--rand); background:var(--karte); color:var(--text); font-size:13px; text-align:left; line-height:1.25;}
   .luft-wahl button.an{background:#1a55c9; border-color:#1a55c9; color:#fff;}
   .luft-wahl button small{display:block; font-size:11.5px; opacity:.8;}
+  .luft-weg-gps{fill:none; stroke:#8e2bd6; stroke-width:4; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke;} .luft-weg-gps-rand{fill:none; stroke:#fff; stroke-width:7; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke;}
+  .weg-farbe{display:inline-block; width:14px; height:4px; border-radius:2px; vertical-align:middle; margin-right:5px; background:#1a55c9;} .weg-farbe.gps{background:#8e2bd6;}
   .luft-weg{fill:none; stroke:#1a55c9; stroke-width:4; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; opacity:.9;}
   .luft-linie{stroke:#111; stroke-width:2.5; stroke-dasharray:7 6; vector-effect:non-scaling-stroke;}
   .luft-start{fill:#1a55c9; stroke:#fff; stroke-width:2.5; vector-effect:non-scaling-stroke;}
@@ -1626,6 +1628,17 @@ try{
   .vk-overlay .maplibregl-ctrl-group{border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9;}
   .vk-overlay .maplibregl-ctrl-group button{width:46px; height:46px;}
   .vk-overlay .maplibregl-ctrl-group button .maplibregl-ctrl-icon{background-size:30px 30px;}
+  .vk-navi-knoepfe{display:flex; flex-direction:column; gap:6px; flex:none;} .vk-navi-knoepfe .vk-navi{justify-content:center; border:none; margin:0; cursor:pointer;}
+  .vk-navi-app{background:#0b7a3e !important;}
+  .vk-navi-panel{display:flex; flex-direction:column; gap:6px;}
+  .vk-navi-zeile{display:flex; align-items:center; gap:12px;} .vk-navi-pf{flex:none; width:52px; height:52px; border-radius:12px; background:#0b5ed7; color:#fff; font-size:32px; line-height:52px; text-align:center; font-weight:700;}
+  .vk-navi-txt{font-size:16px; line-height:1.3;} .vk-navi-txt b{font-size:19px;}
+  .vk-navi-fuss{display:flex; align-items:center; gap:8px; flex-wrap:wrap;} .vk-navi-rest{flex:1; min-width:150px; font-size:14px;}
+  .vk-navi-fuss button{margin:0; padding:8px 12px; border-radius:10px; font-size:14px;} .vk-navi-ende{background:#c0262d !important; color:#fff !important; border-color:#c0262d !important; font-weight:700;}
+  .vk-navi-ich{box-shadow:0 0 0 10px rgba(47,128,237,.3), 0 1px 4px rgba(0,0,0,.4);}
+  /* Zoomknoepfe ausblenden, wenn die Karte zu niedrig ist (sonst ueber dem Stil-Knopf) */
+  .vk-overlay .nfp-rahmen, .ok-karte .nfp-rahmen{container-type:size;}
+  @container (max-height: 460px){ .ok-zoom{display:none !important;} }
   .ok-aed{background:#00924a !important; color:#fff !important; border-color:#00924a !important; font-weight:700;}
   .vk-aed-info{font-size:13.5px; line-height:1.35; color:#222;} .vk-aed-info .vk-navi{display:inline-block; margin:6px 0 2px; padding:6px 10px; font-size:13px;}
   .vk-ziehbar{width:22px !important; height:22px !important; cursor:grab;}
@@ -13968,6 +13981,145 @@ async function routeMitWeg(start, ziel){
   if(!data.routes || !data.routes.length) return [];
   return data.routes.map(r=> ({ km: r.distance / 1000, minuten: r.duration / 60, coords: (r.geometry && r.geometry.coordinates) || [] }));
 }
+// ---------- In-App-Navigation (Vektorkarte) ----------
+// Route mit Abbiegehinweisen (OSRM; Auto: router.project-osrm.org, zu Fuss: FOSSGIS),
+// Standort laufend (watchPosition), Karte folgt, Restweg/-zeit, neue Route beim
+// Verlassen der Strecke, Ansagen per Sprachausgabe (abschaltbar), Bildschirm bleibt an.
+async function vkNaviRoute(a, b, art){
+  const basis = art === 'fuss' ? 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/' : 'https://router.project-osrm.org/route/v1/driving/';
+  const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), 15000);
+  try{
+    const r = await fetch(basis + a.lon + ',' + a.lat + ';' + b.lon + ',' + b.lat + '?overview=full&geometries=geojson&steps=true', { signal: ac.signal });
+    const j = await r.json(), w = j.routes && j.routes[0]; if(!w) return null;
+    const steps = []; let cum = 0;
+    ((w.legs && w.legs[0] && w.legs[0].steps) || []).forEach(st=>{ steps.push({ m: st.maneuver || {}, name: st.name || '', ref: st.ref || '', bei: cum }); cum += st.distance || 0; });
+    return { coords: (w.geometry && w.geometry.coordinates) || [], meter: w.distance, sek: w.duration, steps };
+  }catch(_){ return null; } finally{ clearTimeout(tm); }
+}
+function vkNaviAnweisung(st){
+  const m = st.m || {}, t = m.type, mod = m.modifier || '';
+  const R = { left: 'links', right: 'rechts', 'slight left': 'leicht links', 'slight right': 'leicht rechts', 'sharp left': 'scharf links', 'sharp right': 'scharf rechts', straight: 'geradeaus', uturn: 'wenden' };
+  const r = R[mod] || '', str = st.name || st.ref || '';
+  const pf = { left: '←', right: '→', 'slight left': '↖', 'slight right': '↗', 'sharp left': '↙', 'sharp right': '↘', straight: '↑', uturn: '↶' }[mod] || '↑';
+  let txt;
+  if(t === 'arrive') return { pf: '⚑', txt: 'Ziel erreicht' };
+  if(t === 'depart') txt = 'Losfahren' + (str ? ' auf ' + str : '');
+  else if(t === 'roundabout' || t === 'rotary') return { pf: '⟳', txt: 'Im Kreisverkehr ' + (m.exit ? 'die ' + m.exit + '. Ausfahrt' : 'abfahren') + (str ? ' auf ' + str : '') };
+  else if(t === 'end of road') txt = 'Am Ende der Straße ' + r + ' abbiegen';
+  else if(t === 'fork') txt = 'An der Gabelung ' + r + ' halten';
+  else if(t === 'merge') txt = r ? r + ' einfädeln' : 'Einfädeln';
+  else if(t === 'on ramp') txt = 'Auffahrt ' + r + ' nehmen';
+  else if(t === 'off ramp') txt = 'Ausfahrt ' + r + ' nehmen';
+  else if(t === 'continue' || t === 'new name') txt = mod === 'straight' || !r ? 'Weiter geradeaus' : 'Weiter ' + r;
+  else txt = mod === 'uturn' ? 'Wenden' : (mod === 'straight' ? 'Geradeaus' : r + ' abbiegen');
+  if(str && t !== 'depart') txt += ' auf ' + str;
+  return { pf, txt: txt.charAt(0).toUpperCase() + txt.slice(1) };
+}
+// Lage eines Punkts auf der Route: zurueckgelegte Meter und Abstand zur Linie
+function vkNaviLage(coords, g){
+  const kx = 111320 * Math.cos(g.lat * Math.PI / 180), ky = 110540;
+  let best = { ab: Infinity, entlang: 0 }, summe = 0;
+  for(let i = 1; i < coords.length; i++){
+    const ax = (coords[i - 1][0] - g.lon) * kx, ay = (coords[i - 1][1] - g.lat) * ky, bx = (coords[i][0] - g.lon) * kx, by = (coords[i][1] - g.lat) * ky;
+    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, len = Math.sqrt(l2);
+    const t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+    const px = ax + t * dx, py = ay + t * dy, ab = Math.sqrt(px * px + py * py);
+    if(ab < best.ab) best = { ab, entlang: summe + t * len };
+    summe += len;
+  }
+  best.gesamt = summe; return best;
+}
+async function vkNaviStarten(map, ov, info, ziel, art, name){
+  if(!navigator.geolocation){ appToastAnzeigen('Dieses Gerät kann den Standort nicht ermitteln.', 3000); return; }
+  if(ov._navStopp) ov._navStopp();
+  const start = await standortHolen({ still: false }); if(!start) return;
+  const altInfo = info.innerHTML;
+  let route = null, pos = start, folgen = true, stumm = LS.get('navi_stumm', false), watch = null, wake = null, aus = false, neuAb = 0, angesagt = {}, holt = false;
+  const ml = window.maplibregl;
+  const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = '<span class="vk-ich vk-navi-ich"></span>';
+  const ich = new ml.Marker({ element: el }).setLngLat([start.lon, start.lat]).addTo(map);
+  const linieSetzen = ()=>{
+    const fc = { type: 'FeatureCollection', features: route && route.coords.length > 1 ? [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: route.coords } }] : [] };
+    const q = map.getSource('vk-navi'); if(q){ q.setData(fc); return; }
+    map.addSource('vk-navi', { type: 'geojson', data: fc });
+    map.addLayer({ id: 'vk-navi-rand', type: 'line', source: 'vk-navi', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 11 } });
+    map.addLayer({ id: 'vk-navi', type: 'line', source: 'vk-navi', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': art === 'fuss' ? '#00924a' : '#1a73e8', 'line-width': 7 } });
+  };
+  const stilNeu = ()=> setTimeout(()=>{ if(!aus) try{ linieSetzen(); }catch(_){} }, 50);
+  map.on('style.load', stilNeu);
+  const sprich = (t)=>{ if(stumm || !window.speechSynthesis) return; try{ const u = new SpeechSynthesisUtterance(t); u.lang = 'de-DE'; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(_){} };
+  const fmt = (m)=> m < 1000 ? (m < 100 ? Math.round(m / 10) * 10 : Math.round(m / 50) * 50) + ' m' : (m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.', ',') + ' km';
+  info.innerHTML = '<div class="vk-navi-panel"><div class="vk-navi-zeile"><span class="vk-navi-pf">…</span><div class="vk-navi-txt"><b>Route wird berechnet …</b><br><small>' + htmlEsc(name || '') + '</small></div></div>' +
+    '<div class="vk-navi-fuss"><span class="vk-navi-rest"></span><button type="button" class="vk-navi-mitte" hidden>Zentrieren</button><button type="button" class="vk-navi-ton">' + (stumm ? '🔇' : '🔈') + '</button><button type="button" class="vk-navi-ende">Beenden</button></div></div>';
+  const q = (s)=> info.querySelector(s);
+  const holen = async (von)=>{
+    if(holt) return; holt = true;
+    const r = await vkNaviRoute(von, ziel, art); holt = false;
+    if(aus) return;
+    if(!r){ if(!route) q('.vk-navi-txt').innerHTML = '<b>Route nicht verfügbar</b><br><small>Offline? – „Google Maps“ nutzen.</small>'; return; }
+    route = r; angesagt = {}; linieSetzen(); aktualisieren();
+  };
+  const aktualisieren = ()=>{
+    if(aus || !route) return;
+    ich.setLngLat([pos.lon, pos.lat]);
+    if(folgen) map.easeTo({ center: [pos.lon, pos.lat], zoom: Math.max(map.getZoom(), art === 'fuss' ? 17 : 16), duration: 600 });
+    const l = vkNaviLage(route.coords, pos);
+    const zielAb = kmLuftlinieEinfach(pos, ziel) * 1000;
+    if(zielAb < (art === 'fuss' ? 15 : 35)){
+      q('.vk-navi-pf').textContent = '⚑'; q('.vk-navi-txt').innerHTML = '<b>Ziel erreicht</b>' + (name ? '<br><small>' + htmlEsc(name) + '</small>' : '');
+      q('.vk-navi-rest').textContent = ''; if(!angesagt.ziel){ angesagt.ziel = true; sprich('Sie haben Ihr Ziel erreicht.'); }
+      return;
+    }
+    if(l.ab > (art === 'fuss' ? 40 : 70) && Date.now() - neuAb > 12000){ neuAb = Date.now(); q('.vk-navi-txt').innerHTML = '<b>Neue Route …</b>'; holen(pos); return; }
+    const rest = Math.max(0, l.gesamt - l.entlang), sek = route.meter ? route.sek * rest / route.meter : 0;
+    const an = new Date(Date.now() + sek * 1000);
+    q('.vk-navi-rest').innerHTML = 'noch <b>' + fmt(rest) + '</b> · ca. ' + Math.max(1, Math.round(sek / 60)) + ' min · an ' + String(an.getHours()).padStart(2, '0') + ':' + String(an.getMinutes()).padStart(2, '0');
+    const i = route.steps.findIndex((st, k)=> k > 0 && st.bei > l.entlang + 3);
+    const st = i >= 0 ? route.steps[i] : null;
+    if(!st){ q('.vk-navi-pf').textContent = '↑'; q('.vk-navi-txt').innerHTML = '<b>Weiter bis zum Ziel</b><br><small>' + fmt(rest) + '</small>'; return; }
+    const a = vkNaviAnweisung(st), bis = st.bei - l.entlang;
+    q('.vk-navi-pf').textContent = a.pf;
+    q('.vk-navi-txt').innerHTML = '<b>In ' + fmt(bis) + '</b><br>' + htmlEsc(a.txt);
+    const nah = art === 'fuss' ? 30 : 60, fern = art === 'fuss' ? 120 : 400;
+    if(bis < nah && !angesagt[i + 'n']){ angesagt[i + 'n'] = angesagt[i + 'f'] = true; sprich(a.txt); }
+    else if(bis < fern && bis > nah * 2 && !angesagt[i + 'f']){ angesagt[i + 'f'] = true; sprich('In ' + fmt(bis).replace(' m', ' Metern').replace(' km', ' Kilometern') + ': ' + a.txt); }
+  };
+  const stopp = ()=>{
+    if(aus) return; aus = true; ov._navStopp = null;
+    try{ if(watch != null) navigator.geolocation.clearWatch(watch); }catch(_){}
+    try{ wake && wake.release(); }catch(_){}
+    try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(_){}
+    try{ ich.remove(); }catch(_){}
+    try{ map.off('style.load', stilNeu); ['vk-navi', 'vk-navi-rand'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); }); if(map.getSource('vk-navi')) map.removeSource('vk-navi'); }catch(_){}
+    document.removeEventListener('visibilitychange', sichtbar);
+    if(document.body.contains(info)) info.innerHTML = altInfo;
+  };
+  ov._navStopp = stopp;
+  q('.vk-navi-ende').onclick = stopp;
+  q('.vk-navi-ton').onclick = ()=>{ stumm = !stumm; LS.set('navi_stumm', stumm); q('.vk-navi-ton').textContent = stumm ? '🔇' : '🔈'; if(stumm && window.speechSynthesis) speechSynthesis.cancel(); };
+  q('.vk-navi-mitte').onclick = ()=>{ folgen = true; q('.vk-navi-mitte').hidden = true; aktualisieren(); };
+  map.on('dragstart', ()=>{ if(aus) return; folgen = false; const b = q('.vk-navi-mitte'); if(b) b.hidden = false; });
+  // Bildschirm anlassen (auch nach dem Zurueckkehren in die App)
+  const wachHalten = async ()=>{ try{ if(navigator.wakeLock && !aus) wake = await navigator.wakeLock.request('screen'); }catch(_){} };
+  const sichtbar = ()=>{ if(document.visibilityState === 'visible') wachHalten(); };
+  document.addEventListener('visibilitychange', sichtbar); wachHalten();
+  watch = navigator.geolocation.watchPosition((p)=>{ pos = { lat: p.coords.latitude, lon: p.coords.longitude }; aktualisieren(); }, ()=>{}, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+  await holen(start);
+}
+// Fahrstrecke vom aktuellen GPS-Standort zu einem gesetzten Punkt (fuer beide grossen Karten)
+// -> { pos, km, minuten, coords } | { pos, luft } (ohne Route) | null (kein Standort)
+async function wegVomStandort(g){
+  const pos = await standortHolen({ still: true }); if(!pos) return null;
+  const luft = kmLuftlinieEinfach(pos, g);
+  if(luft < 0.03) return { pos, km: 0, minuten: 0, coords: [], hier: true };
+  try{ const r = await routeMitWeg(pos, g); if(r && r.length) return Object.assign({ pos, luft }, r[0]); }catch(_){}
+  return { pos, luft };
+}
+function wegVomStandortText(w){
+  if(!w) return '<span class="weg-farbe gps"></span>Weg von deinem Standort: Standort nicht freigegeben/verfügbar („📍 Position“ tippen).';
+  if(w.hier) return '<span class="weg-farbe gps"></span>Du bist schon dort.';
+  return '<span class="weg-farbe gps"></span>Von deinem Standort: ' + (w.km != null ? '<b>' + nfpKmText(w.km) + ' km</b>' + (w.minuten ? ' (ca. ' + Math.round(w.minuten) + ' min)' : '') : 'Luftlinie ' + nfpKmText(w.luft) + ' km (Route nicht verfügbar)');
+}
 // Routenkarte (Wegegeld-Karte NFP mit Fahrstrecke) in einen Container zeichnen
 // -- genutzt von LS, PT und GKV. Ohne "weg" wird die Strecke selbst geholt.
 // Jeder Aufruf ersetzt den Inhalt; ein veralteter, noch laufender Aufruf
@@ -14246,6 +14398,7 @@ function osmAusschnitt(d, opt){
   // KVBW-Ebene: Kartenbild immer zeigen (das Auge schaltet nur die Zonenfarben der OSM-Ebene)
   if(d.rahmen && typeof NFP_KARTE !== 'undefined' && (opt.zonen !== false || (opt.ebene === 'kvbw' && opt.kvbwUrl))) svg += osmKartenBereichSvg(z, opt.ebene === 'kvbw' && opt.kvbwUrl ? opt.kvbwUrl : null);
   (d.wegAlt || []).forEach(w=>{ if(w && w.length > 1) svg += '<polyline class="luft-weg-alt" points="' + w.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>'; });
+  if(d.gpsWeg && d.gpsWeg.length > 1) svg += '<polyline class="luft-weg-gps-rand" points="' + d.gpsWeg.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/><polyline class="luft-weg-gps" points="' + d.gpsWeg.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>';
   if(d.weg && d.weg.length > 1) svg += '<polyline class="luft-weg" points="' + d.weg.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>';
   if(d.linie && d.linie[0] && d.linie[1]){ const a = P(d.linie[0]), b = P(d.linie[1]); svg += '<line class="luft-linie" x1="' + f(a.x) + '" y1="' + f(a.y) + '" x2="' + f(b.x) + '" y2="' + f(b.y) + '"/>'; }
   if(d.nfp && typeof NFP_KARTE !== 'undefined'){
@@ -14871,7 +15024,7 @@ function osmKarteOverlay(d, text, opt){
     d.linie = startGeo ? [startGeo, g] : null; d.weg = [];
     const zf = NFP_ZONEN[wahl.zone];
     info.innerHTML = (woher ? htmlEsc(woher) + ': ' : '') + '<b' + (zf ? ' style="color:' + zf.farbe + '"' : '') + '>' + htmlEsc(wahl.text) + '</b> → Wegepauschale <b>' +
-      htmlEsc(nfpStufeLabel(wahl.stufe)) + '</b><br><small>' + htmlEsc(wahl.kmText) + '<span id="okWegInfo"></span></small>';
+      htmlEsc(nfpStufeLabel(wahl.stufe)) + '</b><br><small>' + htmlEsc(wahl.kmText) + '<span id="okWegInfo">' + (startGeo ? ' · Fahrstrecke wird berechnet …' : '') + '</span></small><br><small id="okGpsInfo"></small>';
     const okB = ov.querySelector('.nfp-ok'); if(okB) okB.disabled = false;
     neu();
     if(startGeo){
@@ -14879,7 +15032,16 @@ function osmKarteOverlay(d, text, opt){
       routeMitWeg(startGeo, g).then(r=>{
         if(wahl !== merk || !r || !r.length || !document.body.contains(ov)) return;
         d.weg = r[0].coords; neu();
-        const wi = ov.querySelector('#okWegInfo'); if(wi) wi.textContent = ' · Fahrstrecke ' + nfpKmText(r[0].km * 2) + ' km Hin+Rück';
+        const wi = ov.querySelector('#okWegInfo'); if(wi) wi.innerHTML = '<br><span class="weg-farbe"></span>Fahrstrecke ab ' + htmlEsc(startGeo.adr || 'Ausgangspunkt') + ' <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
+      }).catch(()=>{ const wi = ov.querySelector('#okWegInfo'); if(wi) wi.textContent = ' · Fahrstrecke nicht verfügbar (offline?)'; });
+    }
+    // Weg vom eigenen GPS-Standort (violett)
+    if(!W){
+      const merk = wahl; d.gpsWeg = [];
+      wegVomStandort(g).then(w=>{
+        if(wahl !== merk || !document.body.contains(ov)) return;
+        if(w && w.coords && w.coords.length > 1){ d.gpsWeg = w.coords; d.pois = d.pois.filter(q=> q.kl !== 'ich').concat([{ lat: w.pos.lat, lon: w.pos.lon, kl: 'ich' }]); neu(); }
+        const gi = ov.querySelector('#okGpsInfo'); if(gi) gi.innerHTML = wegVomStandortText(w);
       }).catch(()=>{});
     }
   };
@@ -15784,7 +15946,7 @@ function vektorKarteOverlay(d, text, opt){
   document.body.classList.add('nfp-offen');
   const info = ov.querySelector('#vkInfo'), box = ov.querySelector('.vk-karte');
   let map = null;
-  const zu = ()=>{ try{ map && map.remove(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(null); };
+  const zu = ()=>{ try{ ov._navStopp && ov._navStopp(); }catch(_){} try{ map && map.remove(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(null); };
   ov.querySelector('.nfp-zu').onclick = zu;
   ov.querySelector('.gross-zu').onclick = zu;   // zurueck zur kleinen Karte
   const ansichtJetzt = ()=>{ if(!map) return opt.ansicht || null; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
@@ -15821,6 +15983,9 @@ function vektorKarteOverlay(d, text, opt){
       map.addLayer({ id: 'vk-alt', type: 'line', source: 'vk-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#6b7686', 'line-width': 4, 'line-dasharray': [2, 1.6], 'line-opacity': 0.85 } });
       map.addSource('vk-weg', { type: 'geojson', data: { type: 'FeatureCollection', features: d.weg && d.weg.length > 1 ? [linie(d.weg)] : [] } });
       map.addLayer({ id: 'vk-weg', type: 'line', source: 'vk-weg', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1a55c9', 'line-width': 5, 'line-opacity': 0.9 } });
+      map.addSource('vk-gps', { type: 'geojson', data: { type: 'FeatureCollection', features: d.gpsWeg && d.gpsWeg.length > 1 ? [linie(d.gpsWeg)] : [] } });
+      map.addLayer({ id: 'vk-gps-rand', type: 'line', source: 'vk-gps', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 8 } });
+      map.addLayer({ id: 'vk-gps', type: 'line', source: 'vk-gps', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#8e2bd6', 'line-width': 4.5 } });
       map.addSource('vk-luft', { type: 'geojson', data: { type: 'FeatureCollection', features: d.linie && d.linie[0] && d.linie[1] ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] } });
       map.addLayer({ id: 'vk-luft', type: 'line', source: 'vk-luft', paint: { 'line-color': '#111', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
       sichtbar();
@@ -15920,15 +16085,33 @@ function vektorKarteOverlay(d, text, opt){
         '<br>' + (r.weg ? 'Fußweg <b>' + m(r.meter) + '</b> (ca. ' + Math.max(1, Math.round(r.minuten)) + ' min) · ' : '') + 'Luftlinie ' + m(r.luft) +
         (r.weg ? '' : '<br><small>Fußweg nicht verfügbar – gerade Linie.</small>') +
         (a.z ? '<br><small>' + htmlEsc(a.z) + '</small>' : '<br><small>Zugang/Öffnungszeiten unbekannt</small>') + '</div>' +
-        '<a class="vk-navi" href="' + gUrl + '" target="_blank" rel="noopener">🧭 Google Maps</a></div>';
+        '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + a.lat.toFixed(6) + '" data-lon="' + a.lon.toFixed(6) + '" data-art="fuss" data-name="AED">▶ Navigation</button>' +
+        '<a class="vk-navi vk-navi-g" href="' + gUrl + '" target="_blank" rel="noopener">Google Maps</a></div></div>';
     };
     // ---- Adresse suchen / Ort setzen (lange druecken), Punkt verschiebbar -> Luftlinie, Wegepauschale, Route ----
     let zielMarke = null, zielNr = 0;
     const datenNeu = ()=>{
       const s1 = map.getSource('vk-luft'); if(s1) s1.setData({ type: 'FeatureCollection', features: d.linie ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] });
       const s2 = map.getSource('vk-weg'); if(s2) s2.setData({ type: 'FeatureCollection', features: d.weg && d.weg.length > 1 ? [linie(d.weg)] : [] });
+      const s3 = map.getSource('vk-gps'); if(s3) s3.setData({ type: 'FeatureCollection', features: d.gpsWeg && d.gpsWeg.length > 1 ? [linie(d.gpsWeg)] : [] });
     };
-    const naviLink = (g)=> '<a class="vk-navi" href="https://www.google.com/maps/dir/?api=1&destination=' + g.lat.toFixed(6) + ',' + g.lon.toFixed(6) + '&travelmode=driving" target="_blank" rel="noopener">🧭 Navigation</a>';
+    // Weg vom eigenen GPS-Standort zum gesetzten Punkt (violett)
+    const gpsWegHolen = (g, nr)=>{
+      d.gpsWeg = []; datenNeu();
+      wegVomStandort(g).then(w=>{
+        if(nr !== zielNr || !document.body.contains(ov)) return;
+        if(w){ if(ichMarke) ichMarke.remove(); ichMarke = marke('<span class="vk-ich"></span>', w.pos); }
+        if(w && w.coords && w.coords.length > 1){ d.gpsWeg = w.coords; datenNeu(); }
+        const gi = ov.querySelector('#vkGpsInfo'); if(gi) gi.innerHTML = wegVomStandortText(w);
+      }).catch(()=>{});
+    };
+    const naviLink = (g)=> '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + g.lat.toFixed(6) + '" data-lon="' + g.lon.toFixed(6) + '" data-art="auto">▶ Navigation</button>' +
+      '<a class="vk-navi vk-navi-g" href="https://www.google.com/maps/dir/?api=1&destination=' + g.lat.toFixed(6) + ',' + g.lon.toFixed(6) + '&travelmode=driving" target="_blank" rel="noopener">Google Maps</a></div>';
+    // In-App-Navigation (Knoepfe im Info-Bereich, auch beim AED)
+    info.addEventListener('click', (ev)=>{
+      const b = ev.target.closest && ev.target.closest('.vk-navi-app'); if(!b) return;
+      ev.preventDefault(); vkNaviStarten(map, ov, info, { lat: +b.dataset.lat, lon: +b.dataset.lon }, b.dataset.art || 'auto', b.dataset.name || '');
+    });
     const zielSetzen = (g, woher, adrText, ohneMarke)=>{
       const nr = ++zielNr;
       if(ohneMarke){ /* Punkt ist schon als Fall-Markierung zu sehen */ }
@@ -15939,21 +16122,22 @@ function vektorKarteOverlay(d, text, opt){
       } else zielMarke.setLngLat(ll(g));
       const s = gkvStartGeo();
       d.linie = s ? [s, g] : null; d.weg = []; datenNeu();
+      gpsWegHolen(g, nr);
       const kopf = (woher ? '<b>' + htmlEsc(woher) + '</b>' + (adrText ? ': ' + htmlEsc(adrText) : '') : '');
-      if(!s){ info.innerHTML = '<div class="vk-ziel-info"><div>' + kopf + '<br><small>Kein Ausgangspunkt eingestellt – keine Luftlinie/Wegepauschale.</small></div>' + naviLink(g) + '</div>'; return; }
+      if(!s){ info.innerHTML = '<div class="vk-ziel-info"><div>' + kopf + '<br><small>Kein Ausgangspunkt eingestellt – keine Luftlinie/Wegepauschale.</small><br><small id="vkGpsInfo"></small></div>' + naviLink(g) + '</div>'; return; }
       const km = kmLuftlinieEinfach(s, g);
       const p = nfpGeoZuPixel(g.lat, g.lon);
       let b = nfpImBild(p) ? nfpBewertung(p) : null;
       const stufe = b && b.stufe && km <= 50 ? b.stufe : gkvStufeFuerKm(km);
       info.innerHTML = '<div class="vk-ziel-info"><div>' + (kopf ? kopf + '<br>' : '') +
         'Luftlinie <b>' + htmlEsc(nfpKmText(km)) + ' km</b> ab ' + htmlEsc(s.adr || 'Ausgangspunkt') + ' · Wegepauschale <b>' + htmlEsc(nfpStufeLabel(stufe)) + '</b>' +
-        '<br><small id="vkWegInfo">Fahrstrecke wird berechnet …</small></div>' + naviLink(g) + '</div>';
+        '<br><small id="vkWegInfo">Fahrstrecke wird berechnet …</small><br><small id="vkGpsInfo"></small></div>' + naviLink(g) + '</div>';
       routeMitWeg(s, g).then(r=>{
         if(nr !== zielNr || !document.body.contains(ov)) return;
         const wi = ov.querySelector('#vkWegInfo');
         if(!r || !r.length){ if(wi) wi.textContent = 'Fahrstrecke nicht verfügbar (offline?)'; return; }
         d.weg = r[0].coords; datenNeu();
-        if(wi) wi.innerHTML = 'Fahrstrecke <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
+        if(wi) wi.innerHTML = '<span class="weg-farbe"></span>Fahrstrecke ab ' + htmlEsc(s.adr || 'Ausgangspunkt') + ' <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
       }).catch(()=>{ const wi = ov.querySelector('#vkWegInfo'); if(wi) wi.textContent = 'Fahrstrecke nicht verfügbar (offline?)'; });
     };
     const adresseZu = async (g)=>{
@@ -16996,7 +17180,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v261';
+const APP_VERSION = 'v263';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
