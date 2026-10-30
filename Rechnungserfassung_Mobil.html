@@ -15153,10 +15153,22 @@ async function vkStilJson(st){
   stil = JSON.parse(JSON.stringify(stil));
   if((st || vkStil()) === 'dark'){ vkDunkelKontrast(stil); vkBiome(stil, VK_BIOME_DUNKEL); }
   if((st || vkStil()) === 'detail') vkDetailKontrast(stil);
+  if((st || vkStil()) === 'bright') vkBuntGebaeude(stil);
   if(typeof stil.sprite === 'string') stil.sprite = vkZuProt(stil.sprite); else if(Array.isArray(stil.sprite)) stil.sprite.forEach(s=> s.url = vkZuProt(s.url));
   stil.glyphs = vkZuProt(stil.glyphs);
   Object.values(stil.sources || {}).forEach(s=>{ if(s.url) s.url = vkZuProt(s.url); if(s.tiles) s.tiles = s.tiles.map(vkZuProt); });
   return stil;
+}
+// "Bunt": Haeuser in denselben Farben wie "Hell" (flach, ohne versetzte Dachflaeche)
+function vkBuntGebaeude(stil){
+  stil.layers = (stil.layers || []).filter(l=> l.id !== 'building-top');
+  stil.layers.forEach(l=>{
+    if(l.id !== 'building') return;
+    l.paint = { 'fill-antialias': true,
+      'fill-color': ['step', ['zoom'], 'hsl(35,8%,85%)', 14, '#dcd6cf'],
+      'fill-outline-color': ['step', ['zoom'], 'hsla(35,6%,79%,0.32)', 14, '#c9c1b8'] };
+    l.minzoom = 13;
+  });
 }
 // Der dunkle Stil von OpenFreeMap ist sehr kontrastarm (fast schwarz in schwarz) --
 // eigene Nacht-Palette: Strassen, Wasser, Gruen und Beschriftungen deutlich sichtbar,
@@ -16650,7 +16662,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v250';
+const APP_VERSION = 'v251';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
