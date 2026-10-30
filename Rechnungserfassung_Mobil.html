@@ -1629,13 +1629,7 @@ try{
   .vk-overlay .maplibregl-ctrl-group button{width:46px; height:46px;}
   .vk-overlay .maplibregl-ctrl-group button .maplibregl-ctrl-icon{background-size:30px 30px;}
   .vk-navi-knoepfe{display:flex; flex-direction:column; gap:6px; flex:none;} .vk-navi-knoepfe .vk-navi{justify-content:center; border:none; margin:0; cursor:pointer;}
-  .vk-navi-app{background:#0b7a3e !important;}
-  .vk-navi-panel{display:flex; flex-direction:column; gap:6px;}
-  .vk-navi-zeile{display:flex; align-items:center; gap:12px;} .vk-navi-pf{flex:none; width:52px; height:52px; border-radius:12px; background:#0b5ed7; color:#fff; font-size:32px; line-height:52px; text-align:center; font-weight:700;}
-  .vk-navi-txt{font-size:16px; line-height:1.3;} .vk-navi-txt b{font-size:19px;}
-  .vk-navi-fuss{display:flex; align-items:center; gap:8px; flex-wrap:wrap;} .vk-navi-rest{flex:1; min-width:150px; font-size:14px;}
-  .vk-navi-fuss button{margin:0; padding:8px 12px; border-radius:10px; font-size:14px;} .vk-navi-ende{background:#c0262d !important; color:#fff !important; border-color:#c0262d !important; font-weight:700;}
-  .vk-navi-ich{box-shadow:0 0 0 10px rgba(47,128,237,.3), 0 1px 4px rgba(0,0,0,.4);}
+  .vk-navi-app{background:#5b6b80 !important;}
   /* Zoomknoepfe ausblenden, wenn die Karte zu niedrig ist (sonst ueber dem Stil-Knopf) */
   .vk-overlay .nfp-rahmen, .ok-karte .nfp-rahmen{container-type:size;}
   @container (max-height: 460px){ .ok-zoom{display:none !important;} }
@@ -13981,131 +13975,6 @@ async function routeMitWeg(start, ziel){
   if(!data.routes || !data.routes.length) return [];
   return data.routes.map(r=> ({ km: r.distance / 1000, minuten: r.duration / 60, coords: (r.geometry && r.geometry.coordinates) || [] }));
 }
-// ---------- In-App-Navigation (Vektorkarte) ----------
-// Route mit Abbiegehinweisen (OSRM; Auto: router.project-osrm.org, zu Fuss: FOSSGIS),
-// Standort laufend (watchPosition), Karte folgt, Restweg/-zeit, neue Route beim
-// Verlassen der Strecke, Ansagen per Sprachausgabe (abschaltbar), Bildschirm bleibt an.
-async function vkNaviRoute(a, b, art){
-  const basis = art === 'fuss' ? 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/' : 'https://router.project-osrm.org/route/v1/driving/';
-  const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), 15000);
-  try{
-    const r = await fetch(basis + a.lon + ',' + a.lat + ';' + b.lon + ',' + b.lat + '?overview=full&geometries=geojson&steps=true', { signal: ac.signal });
-    const j = await r.json(), w = j.routes && j.routes[0]; if(!w) return null;
-    const steps = []; let cum = 0;
-    ((w.legs && w.legs[0] && w.legs[0].steps) || []).forEach(st=>{ steps.push({ m: st.maneuver || {}, name: st.name || '', ref: st.ref || '', bei: cum }); cum += st.distance || 0; });
-    return { coords: (w.geometry && w.geometry.coordinates) || [], meter: w.distance, sek: w.duration, steps };
-  }catch(_){ return null; } finally{ clearTimeout(tm); }
-}
-function vkNaviAnweisung(st){
-  const m = st.m || {}, t = m.type, mod = m.modifier || '';
-  const R = { left: 'links', right: 'rechts', 'slight left': 'leicht links', 'slight right': 'leicht rechts', 'sharp left': 'scharf links', 'sharp right': 'scharf rechts', straight: 'geradeaus', uturn: 'wenden' };
-  const r = R[mod] || '', str = st.name || st.ref || '';
-  const pf = { left: '←', right: '→', 'slight left': '↖', 'slight right': '↗', 'sharp left': '↙', 'sharp right': '↘', straight: '↑', uturn: '↶' }[mod] || '↑';
-  let txt;
-  if(t === 'arrive') return { pf: '⚑', txt: 'Ziel erreicht' };
-  if(t === 'depart') txt = 'Losfahren' + (str ? ' auf ' + str : '');
-  else if(t === 'roundabout' || t === 'rotary') return { pf: '⟳', txt: 'Im Kreisverkehr ' + (m.exit ? 'die ' + m.exit + '. Ausfahrt' : 'abfahren') + (str ? ' auf ' + str : '') };
-  else if(t === 'end of road') txt = 'Am Ende der Straße ' + r + ' abbiegen';
-  else if(t === 'fork') txt = 'An der Gabelung ' + r + ' halten';
-  else if(t === 'merge') txt = r ? r + ' einfädeln' : 'Einfädeln';
-  else if(t === 'on ramp') txt = 'Auffahrt ' + r + ' nehmen';
-  else if(t === 'off ramp') txt = 'Ausfahrt ' + r + ' nehmen';
-  else if(t === 'continue' || t === 'new name') txt = mod === 'straight' || !r ? 'Weiter geradeaus' : 'Weiter ' + r;
-  else txt = mod === 'uturn' ? 'Wenden' : (mod === 'straight' ? 'Geradeaus' : r + ' abbiegen');
-  if(str && t !== 'depart') txt += ' auf ' + str;
-  return { pf, txt: txt.charAt(0).toUpperCase() + txt.slice(1) };
-}
-// Lage eines Punkts auf der Route: zurueckgelegte Meter und Abstand zur Linie
-function vkNaviLage(coords, g){
-  const kx = 111320 * Math.cos(g.lat * Math.PI / 180), ky = 110540;
-  let best = { ab: Infinity, entlang: 0 }, summe = 0;
-  for(let i = 1; i < coords.length; i++){
-    const ax = (coords[i - 1][0] - g.lon) * kx, ay = (coords[i - 1][1] - g.lat) * ky, bx = (coords[i][0] - g.lon) * kx, by = (coords[i][1] - g.lat) * ky;
-    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, len = Math.sqrt(l2);
-    const t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
-    const px = ax + t * dx, py = ay + t * dy, ab = Math.sqrt(px * px + py * py);
-    if(ab < best.ab) best = { ab, entlang: summe + t * len };
-    summe += len;
-  }
-  best.gesamt = summe; return best;
-}
-async function vkNaviStarten(map, ov, info, ziel, art, name){
-  if(!navigator.geolocation){ appToastAnzeigen('Dieses Gerät kann den Standort nicht ermitteln.', 3000); return; }
-  if(ov._navStopp) ov._navStopp();
-  const start = await standortHolen({ still: false }); if(!start) return;
-  const altInfo = info.innerHTML;
-  let route = null, pos = start, folgen = true, stumm = LS.get('navi_stumm', false), watch = null, wake = null, aus = false, neuAb = 0, angesagt = {}, holt = false;
-  const ml = window.maplibregl;
-  const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = '<span class="vk-ich vk-navi-ich"></span>';
-  const ich = new ml.Marker({ element: el }).setLngLat([start.lon, start.lat]).addTo(map);
-  const linieSetzen = ()=>{
-    const fc = { type: 'FeatureCollection', features: route && route.coords.length > 1 ? [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: route.coords } }] : [] };
-    const q = map.getSource('vk-navi'); if(q){ q.setData(fc); return; }
-    map.addSource('vk-navi', { type: 'geojson', data: fc });
-    map.addLayer({ id: 'vk-navi-rand', type: 'line', source: 'vk-navi', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 11 } });
-    map.addLayer({ id: 'vk-navi', type: 'line', source: 'vk-navi', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': art === 'fuss' ? '#00924a' : '#1a73e8', 'line-width': 7 } });
-  };
-  const stilNeu = ()=> setTimeout(()=>{ if(!aus) try{ linieSetzen(); }catch(_){} }, 50);
-  map.on('style.load', stilNeu);
-  const sprich = (t)=>{ if(stumm || !window.speechSynthesis) return; try{ const u = new SpeechSynthesisUtterance(t); u.lang = 'de-DE'; speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(_){} };
-  const fmt = (m)=> m < 1000 ? (m < 100 ? Math.round(m / 10) * 10 : Math.round(m / 50) * 50) + ' m' : (m / 1000).toFixed(m < 10000 ? 1 : 0).replace('.', ',') + ' km';
-  info.innerHTML = '<div class="vk-navi-panel"><div class="vk-navi-zeile"><span class="vk-navi-pf">…</span><div class="vk-navi-txt"><b>Route wird berechnet …</b><br><small>' + htmlEsc(name || '') + '</small></div></div>' +
-    '<div class="vk-navi-fuss"><span class="vk-navi-rest"></span><button type="button" class="vk-navi-mitte" hidden>Zentrieren</button><button type="button" class="vk-navi-ton">' + (stumm ? '🔇' : '🔈') + '</button><button type="button" class="vk-navi-ende">Beenden</button></div></div>';
-  const q = (s)=> info.querySelector(s);
-  const holen = async (von)=>{
-    if(holt) return; holt = true;
-    const r = await vkNaviRoute(von, ziel, art); holt = false;
-    if(aus) return;
-    if(!r){ if(!route) q('.vk-navi-txt').innerHTML = '<b>Route nicht verfügbar</b><br><small>Offline? – „Google Maps“ nutzen.</small>'; return; }
-    route = r; angesagt = {}; linieSetzen(); aktualisieren();
-  };
-  const aktualisieren = ()=>{
-    if(aus || !route) return;
-    ich.setLngLat([pos.lon, pos.lat]);
-    if(folgen) map.easeTo({ center: [pos.lon, pos.lat], zoom: Math.max(map.getZoom(), art === 'fuss' ? 17 : 16), duration: 600 });
-    const l = vkNaviLage(route.coords, pos);
-    const zielAb = kmLuftlinieEinfach(pos, ziel) * 1000;
-    if(zielAb < (art === 'fuss' ? 15 : 35)){
-      q('.vk-navi-pf').textContent = '⚑'; q('.vk-navi-txt').innerHTML = '<b>Ziel erreicht</b>' + (name ? '<br><small>' + htmlEsc(name) + '</small>' : '');
-      q('.vk-navi-rest').textContent = ''; if(!angesagt.ziel){ angesagt.ziel = true; sprich('Sie haben Ihr Ziel erreicht.'); }
-      return;
-    }
-    if(l.ab > (art === 'fuss' ? 40 : 70) && Date.now() - neuAb > 12000){ neuAb = Date.now(); q('.vk-navi-txt').innerHTML = '<b>Neue Route …</b>'; holen(pos); return; }
-    const rest = Math.max(0, l.gesamt - l.entlang), sek = route.meter ? route.sek * rest / route.meter : 0;
-    const an = new Date(Date.now() + sek * 1000);
-    q('.vk-navi-rest').innerHTML = 'noch <b>' + fmt(rest) + '</b> · ca. ' + Math.max(1, Math.round(sek / 60)) + ' min · an ' + String(an.getHours()).padStart(2, '0') + ':' + String(an.getMinutes()).padStart(2, '0');
-    const i = route.steps.findIndex((st, k)=> k > 0 && st.bei > l.entlang + 3);
-    const st = i >= 0 ? route.steps[i] : null;
-    if(!st){ q('.vk-navi-pf').textContent = '↑'; q('.vk-navi-txt').innerHTML = '<b>Weiter bis zum Ziel</b><br><small>' + fmt(rest) + '</small>'; return; }
-    const a = vkNaviAnweisung(st), bis = st.bei - l.entlang;
-    q('.vk-navi-pf').textContent = a.pf;
-    q('.vk-navi-txt').innerHTML = '<b>In ' + fmt(bis) + '</b><br>' + htmlEsc(a.txt);
-    const nah = art === 'fuss' ? 30 : 60, fern = art === 'fuss' ? 120 : 400;
-    if(bis < nah && !angesagt[i + 'n']){ angesagt[i + 'n'] = angesagt[i + 'f'] = true; sprich(a.txt); }
-    else if(bis < fern && bis > nah * 2 && !angesagt[i + 'f']){ angesagt[i + 'f'] = true; sprich('In ' + fmt(bis).replace(' m', ' Metern').replace(' km', ' Kilometern') + ': ' + a.txt); }
-  };
-  const stopp = ()=>{
-    if(aus) return; aus = true; ov._navStopp = null;
-    try{ if(watch != null) navigator.geolocation.clearWatch(watch); }catch(_){}
-    try{ wake && wake.release(); }catch(_){}
-    try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(_){}
-    try{ ich.remove(); }catch(_){}
-    try{ map.off('style.load', stilNeu); ['vk-navi', 'vk-navi-rand'].forEach(id=>{ if(map.getLayer(id)) map.removeLayer(id); }); if(map.getSource('vk-navi')) map.removeSource('vk-navi'); }catch(_){}
-    document.removeEventListener('visibilitychange', sichtbar);
-    if(document.body.contains(info)) info.innerHTML = altInfo;
-  };
-  ov._navStopp = stopp;
-  q('.vk-navi-ende').onclick = stopp;
-  q('.vk-navi-ton').onclick = ()=>{ stumm = !stumm; LS.set('navi_stumm', stumm); q('.vk-navi-ton').textContent = stumm ? '🔇' : '🔈'; if(stumm && window.speechSynthesis) speechSynthesis.cancel(); };
-  q('.vk-navi-mitte').onclick = ()=>{ folgen = true; q('.vk-navi-mitte').hidden = true; aktualisieren(); };
-  map.on('dragstart', ()=>{ if(aus) return; folgen = false; const b = q('.vk-navi-mitte'); if(b) b.hidden = false; });
-  // Bildschirm anlassen (auch nach dem Zurueckkehren in die App)
-  const wachHalten = async ()=>{ try{ if(navigator.wakeLock && !aus) wake = await navigator.wakeLock.request('screen'); }catch(_){} };
-  const sichtbar = ()=>{ if(document.visibilityState === 'visible') wachHalten(); };
-  document.addEventListener('visibilitychange', sichtbar); wachHalten();
-  watch = navigator.geolocation.watchPosition((p)=>{ pos = { lat: p.coords.latitude, lon: p.coords.longitude }; aktualisieren(); }, ()=>{}, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
-  await holen(start);
-}
 // Fahrstrecke vom aktuellen GPS-Standort zu einem gesetzten Punkt (fuer beide grossen Karten)
 // -> { pos, km, minuten, coords } | { pos, luft } (ohne Route) | null (kein Standort)
 async function wegVomStandort(g){
@@ -15440,9 +15309,9 @@ function vkOsmCarto(stil){
     fl('handel', 'landuse', ['retail'], '#ffd6d1', '#e8bdb7'),
     fl('industrie', 'landuse', ['industrial', 'garages'], '#ebdbe8', '#d9c4d4'));
   const posW = L.findIndex(l=> l.id === 'landcover_wood') + 1;
-  if(posW > 0) L.splice(posW, 0, { id: 'vko-baeume', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', minzoom: 13,
-    // Baumsymbole erst ab der Zoomstufe, ab der die Strassen in Orten sichtbar werden
-    filter: ['==', kl, 'wood'], paint: { 'fill-pattern': 'vko-baum', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0.5, 14, 1] } });
+  if(posW > 0) L.splice(posW, 0, { id: 'vko-baeume', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', minzoom: 12,
+    // Baumsymbole genau so lange wie die Strassen in Orten (Nebenstrassen blenden bei Zoom 12-12,5 aus)
+    filter: ['==', kl, 'wood'], paint: { 'fill-pattern': 'vko-baum', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0, 12.5, 1] } });
   const posS = L.findIndex(l=> l.id === 'landuse_track') + 1 || pos + 4;
   L.splice(posS, 0, fl('spiel', 'landuse', ['playground'], '#dffce2', '#8ad3af'),
     fl('parkplatz', 'landuse', ['parking', 'garages', 'bus_station'], '#eeeeee', '#c8c8c8'),
@@ -15786,7 +15655,7 @@ async function vkFussweg(a, b){
 // Naechster AED: Kandidaten im Umkreis (online 2 km, dann 6 km; offline aus gespeicherten Zellen),
 // die 3 naechsten per Luftlinie, davon der mit dem kuerzesten Fussweg
 async function vkAedNaechster(g){
-  let liste = null, radius = 6000;
+  let liste = null, radius = 6000, offline = false;
   for(const rad of [2000, 6000]){
     try{
       const q = { s: g.lat - rad / 111320, n: g.lat + rad / 111320, w: g.lon - rad / (111320 * Math.cos(g.lat * Math.PI / 180)), e: g.lon + rad / (111320 * Math.cos(g.lat * Math.PI / 180)) };
@@ -15802,9 +15671,9 @@ async function vkAedNaechster(g){
       if(d){ gefunden = true; liste = liste.concat(d.f || []); }
     }
     if(!gefunden) return null;
-    radius = 25000;
+    radius = 25000; offline = true;
   }
-  if(!liste.length) return { aed: null, radius };
+  if(!liste.length) return { aed: null, radius, offline };
   const kand = liste.map(a=> Object.assign({ luft: kmLuftlinieEinfach(g, a) * 1000 }, a)).sort((p, q)=> p.luft - q.luft).slice(0, 3);
   const wege = await Promise.all(kand.map(a=> vkFussweg(g, a)));
   let best = null;
@@ -15818,7 +15687,8 @@ async function vkAedNaechster(g){
 // Patientendaten). Ergebnis je Zelle (Kachel Zoom 10, ca. 25 km) 14 Tage im Geraet
 // gespeichert, damit es auch offline und ohne erneute Abfrage verfuegbar ist.
 const VK_AED_CACHE = 'vk-aed-v1', VK_AED_Z = 10, VK_AED_ALTER = 14 * 86400000;
-const VK_AED_SERVER = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+const VK_AED_SERVER = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+let vkAedLetzterFehler = '';
 const VK_AED_MEM = new Map(), VK_AED_LAEUFT = new Map(), VK_AED_KARTEN = new Set();
 const vkAedSchl = (x, y)=> 'https://vk-offline.local/aed/' + VK_AED_Z + '/' + x + '/' + y;
 function vkAedZelle(lon, lat){ const n = Math.pow(2, VK_AED_Z), r = lat * Math.PI / 180;
@@ -15833,17 +15703,20 @@ function vkAedText(t){
 }
 async function vkAedAbfrage(box, ms){
   const q = '[out:json][timeout:' + Math.round((ms || 25000) / 1000) + '];nwr["emergency"="defibrillator"](' + [box.s, box.w, box.n, box.e].map(v=> v.toFixed(5)).join(',') + ');out center tags qt;';
-  let letzt = null;
-  for(const url of VK_AED_SERVER){
+  let letzt = null; const fehler = [];
+  for(const url of VK_AED_SERVER) for(const get of [false, true]){
     const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), (ms || 25000) + 5000);
     try{
-      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal });
+      const r = get ? await fetch(url + '?data=' + encodeURIComponent(q), { signal: ac.signal, cache: 'no-store' })
+        : await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal });
       if(!r.ok) throw new Error('HTTP ' + r.status);
-      const j = await r.json();
+      const j = await r.json(); vkAedLetzterFehler = '';
       return (j.elements || []).map(el=>{ const lat = el.lat != null ? el.lat : el.center && el.center.lat, lon = el.lon != null ? el.lon : el.center && el.center.lon;
         return lat == null ? null : Object.assign({ lat: +lat.toFixed(6), lon: +lon.toFixed(6) }, vkAedText(el.tags || {})); }).filter(Boolean);
-    }catch(e){ letzt = e; } finally{ clearTimeout(tm); }
+    }catch(e){ letzt = e; fehler.push(url.split('/')[2] + (get ? ' (GET)' : '') + ': ' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e && e.message) || e)); } finally{ clearTimeout(tm); }
   }
+  vkAedLetzterFehler = fehler.join(' · ');
+  try{ console.warn('AED-Abfrage fehlgeschlagen', vkAedLetzterFehler); }catch(_){}
   throw letzt || new Error('Overpass nicht erreichbar');
 }
 async function vkAedSpeichern(x, y, liste){
@@ -15946,7 +15819,7 @@ function vektorKarteOverlay(d, text, opt){
   document.body.classList.add('nfp-offen');
   const info = ov.querySelector('#vkInfo'), box = ov.querySelector('.vk-karte');
   let map = null;
-  const zu = ()=>{ try{ ov._navStopp && ov._navStopp(); }catch(_){} try{ map && map.remove(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(null); };
+  const zu = ()=>{ try{ map && map.remove(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(null); };
   ov.querySelector('.nfp-zu').onclick = zu;
   ov.querySelector('.gross-zu').onclick = zu;   // zurueck zur kleinen Karte
   const ansichtJetzt = ()=>{ if(!map) return opt.ansicht || null; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
@@ -16072,8 +15945,8 @@ function vektorKarteOverlay(d, text, opt){
       let r = null;
       try{ r = await vkAedNaechster(start); }catch(_){ r = null; }
       if(nr !== aedNr || !document.body.contains(ov)) return;
-      if(!r){ info.textContent = 'AED-Standorte nicht erreichbar (offline?) und keine gespeicherten Daten für diese Gegend.'; return; }
-      if(!r.aed){ info.textContent = 'Kein AED im Umkreis von ' + (r.radius / 1000) + ' km in OpenStreetMap eingetragen.'; return; }
+      if(!r){ info.innerHTML = 'AED-Standorte nicht erreichbar (offline?) und keine gespeicherten Daten für diese Gegend.' + (vkAedLetzterFehler ? '<br><small>Grund: ' + htmlEsc(vkAedLetzterFehler) + '</small>' : ''); return; }
+      if(!r.aed){ info.innerHTML = 'Kein AED im Umkreis von ' + (r.radius / 1000) + ' km in OpenStreetMap eingetragen.' + (r.offline ? '<br><small>(nur gespeicherte Daten – Abfrage nicht möglich: ' + htmlEsc(vkAedLetzterFehler || 'offline') + ')</small>' : ''); return; }
       const a = r.aed, s = start;
       map._aedWeg = { type: 'FeatureCollection', features: [linie(r.weg && r.weg.length > 1 ? r.weg : [ll(s), ll(a)])] };
       vkAedWegZeigen(map);
@@ -16085,7 +15958,7 @@ function vektorKarteOverlay(d, text, opt){
         '<br>' + (r.weg ? 'Fußweg <b>' + m(r.meter) + '</b> (ca. ' + Math.max(1, Math.round(r.minuten)) + ' min) · ' : '') + 'Luftlinie ' + m(r.luft) +
         (r.weg ? '' : '<br><small>Fußweg nicht verfügbar – gerade Linie.</small>') +
         (a.z ? '<br><small>' + htmlEsc(a.z) + '</small>' : '<br><small>Zugang/Öffnungszeiten unbekannt</small>') + '</div>' +
-        '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + a.lat.toFixed(6) + '" data-lon="' + a.lon.toFixed(6) + '" data-art="fuss" data-name="AED">▶ Navigation</button>' +
+        '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + a.lat.toFixed(6) + '" data-lon="' + a.lon.toFixed(6) + '" data-art="fuss" data-name="AED">Route anzeigen</button>' +
         '<a class="vk-navi vk-navi-g" href="' + gUrl + '" target="_blank" rel="noopener">Google Maps</a></div></div>';
     };
     // ---- Adresse suchen / Ort setzen (lange druecken), Punkt verschiebbar -> Luftlinie, Wegepauschale, Route ----
@@ -16105,12 +15978,31 @@ function vektorKarteOverlay(d, text, opt){
         const gi = ov.querySelector('#vkGpsInfo'); if(gi) gi.innerHTML = wegVomStandortText(w);
       }).catch(()=>{});
     };
-    const naviLink = (g)=> '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + g.lat.toFixed(6) + '" data-lon="' + g.lon.toFixed(6) + '" data-art="auto">▶ Navigation</button>' +
+    const naviLink = (g)=> '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + g.lat.toFixed(6) + '" data-lon="' + g.lon.toFixed(6) + '" data-art="auto">Route anzeigen</button>' +
       '<a class="vk-navi vk-navi-g" href="https://www.google.com/maps/dir/?api=1&destination=' + g.lat.toFixed(6) + ',' + g.lon.toFixed(6) + '&travelmode=driving" target="_blank" rel="noopener">Google Maps</a></div>';
-    // In-App-Navigation (Knoepfe im Info-Bereich, auch beim AED)
-    info.addEventListener('click', (ev)=>{
+    // "Route anzeigen": Weg vom eigenen Standort zum Ziel in der Karte zeigen (Navigation ueber Google Maps)
+    info.addEventListener('click', async (ev)=>{
       const b = ev.target.closest && ev.target.closest('.vk-navi-app'); if(!b) return;
-      ev.preventDefault(); vkNaviStarten(map, ov, info, { lat: +b.dataset.lat, lon: +b.dataset.lon }, b.dataset.art || 'auto', b.dataset.name || '');
+      ev.preventDefault();
+      const ziel = { lat: +b.dataset.lat, lon: +b.dataset.lon }, fuss = b.dataset.art === 'fuss';
+      let coords = fuss ? ((map._aedWeg && map._aedWeg.features[0] && map._aedWeg.features[0].geometry.coordinates) || null) : (d.gpsWeg && d.gpsWeg.length > 1 ? d.gpsWeg : null);
+      if(!coords){
+        b.disabled = true; const alt = b.textContent; b.textContent = 'Route …';
+        const pos = await standortHolen({ still: false });
+        if(pos){
+          if(ichMarke) ichMarke.remove(); ichMarke = marke('<span class="vk-ich"></span>', pos);
+          const w = fuss ? await vkFussweg(pos, ziel) : await wegVomStandort(ziel);
+          if(w && w.coords && w.coords.length > 1){
+            coords = w.coords;
+            if(fuss){ map._aedWeg = { type: 'FeatureCollection', features: [linie(coords)] }; vkAedWegZeigen(map); }
+            else { d.gpsWeg = coords; datenNeu(); const gi = ov.querySelector('#vkGpsInfo'); if(gi) gi.innerHTML = wegVomStandortText(w); }
+          } else coords = [ll(pos), ll(ziel)];
+        }
+        b.disabled = false; b.textContent = alt;
+        if(!coords){ appToastAnzeigen('Ohne Standort keine Route – „📍 Position“ freigeben.', 3000); return; }
+      }
+      const bb = new ml.LngLatBounds(coords[0], coords[0]); coords.forEach(k=> bb.extend(k)); bb.extend(ll(ziel));
+      map.fitBounds(bb, { padding: 60, maxZoom: 16.5, duration: 500 });
     });
     const zielSetzen = (g, woher, adrText, ohneMarke)=>{
       const nr = ++zielNr;
@@ -17180,7 +17072,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v263';
+const APP_VERSION = 'v264';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
