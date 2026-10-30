@@ -15268,17 +15268,17 @@ function vkOsmCarto(stil){
     fl('handel', 'landuse', ['retail'], '#ffd6d1', '#e8bdb7'),
     fl('industrie', 'landuse', ['industrial', 'garages'], '#ebdbe8', '#d9c4d4'));
   const posW = L.findIndex(l=> l.id === 'landcover_wood') + 1;
-  if(posW > 0) L.splice(posW, 0, { id: 'vko-baeume', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', minzoom: 13,
-    filter: ['==', kl, 'wood'], paint: { 'fill-pattern': 'vko-baum', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0.5, 14.5, 1] } });
+  if(posW > 0) L.splice(posW, 0, { id: 'vko-baeume', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', minzoom: 9,
+    filter: ['==', kl, 'wood'], paint: { 'fill-pattern': 'vko-baum', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0.45, 11, 0.8, 12, 1] } });
   const posS = L.findIndex(l=> l.id === 'landuse_track') + 1 || pos + 4;
   L.splice(posS, 0, fl('spiel', 'landuse', ['playground'], '#dffce2', '#8ad3af'),
     fl('parkplatz', 'landuse', ['parking', 'garages', 'bus_station'], '#eeeeee', '#c8c8c8'),
     fl('bildung', 'landuse', ['kindergarten', 'university', 'college'], '#ffffe5', '#e0d9b5'));
   // Feldwege braun gestrichelt
   const posT = L.findIndex(l=> l.id === 'road_service_track') + 1;
-  if(posT > 0) L.splice(posT, 0, { id: 'vko-feldweg', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', minzoom: 12,
+  if(posT > 0) L.splice(posT, 0, { id: 'vko-feldweg', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', minzoom: 10,
     filter: ['==', kl, 'track'], layout: { 'line-cap': 'butt', 'line-join': 'round' },
-    paint: { 'line-color': '#996600', 'line-opacity': 0.75, 'line-dasharray': [3, 1.5], 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.6, 16, 1.6, 20, 3] } });
+    paint: { 'line-color': '#996600', 'line-opacity': 0.75, 'line-dasharray': [3, 1.5], 'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 12, 0.7, 16, 1.6, 20, 3] } });
 }
 // "Bunt": Haeuser wie "Hell", Wald am dunkelsten gruen, Spiel-/Sportplaetze wie "Detail"
 function vkBuntAnpassen(stil){
@@ -16797,7 +16797,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v257';
+const APP_VERSION = 'v258';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
