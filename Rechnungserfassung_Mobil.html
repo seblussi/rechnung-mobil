@@ -1628,6 +1628,8 @@ try{
   .vk-m-stil.an{border-color:#2f6fd6;}
   .vk-m-vorschau{display:block; width:44px; height:32px; border-radius:7px; border:1px solid rgba(0,0,0,.2);}
   .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
+  .vk-m-off{font-size:12.5px; opacity:.8; margin-bottom:6px;} .vk-m-offknopf{width:100%; margin:0; padding:8px 10px; font-size:14px;}
+  .vk-off-radien .fb-chip{display:flex; flex-direction:column; align-items:center; gap:2px;} .vk-off-radien .fb-chip small{font-size:11px; font-weight:400; opacity:.8;}
   .vk-m-ebene{display:flex; align-items:flex-start; gap:8px; padding:5px 0; line-height:1.3;} .vk-m-ebene input{width:18px; height:18px; flex:none; margin-top:1px;}
   .vk-fall{display:flex; width:24px; height:24px; border-radius:50%; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:800; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); background:var(--ls-farbe); line-height:1;}
   .vk-fall.pt{background:var(--pt-farbe);} .vk-fall.gkv{background:#7d4e9e;}
@@ -14508,13 +14510,14 @@ function miniKarteVektor(w, cfg){
     ebeneSetzen: (e)=>{ if(e === 'kvbw'){ w._ansichtStart = ansichtJetzt(); w.dataset.ebene = 'kvbw'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'kvbw'); zuRaster(false); } },
     weg: ()=>{ aktiv = false; try{ map && map.remove(); }catch(_){} }
   };
-  vkMaplibreHolen().then((ml)=>{
+  vkMaplibreHolen().then(async (ml)=>{
     if(!aktiv) return;
     const box = document.createElement('div'); box.className = 'mini-vk'; f.appendChild(box);
     let stil = vkStil();
     const W = f.clientWidth || fit.bw;
     const start = ansicht || { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2(W / fit.bw) };
-    map = new ml.Map({ container: box, style: vkStilUrl(stil), center: [start.lon, start.lat], zoom: Math.max(0, start.z - 1),
+    const stilObj = await vkStilJson(stil); if(!aktiv) return;
+    map = new ml.Map({ container: box, style: stilObj, center: [start.lon, start.lat], zoom: Math.max(0, start.z - 1),
       attributionControl: false, cooperativeGestures: true, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5,
       locale: { 'CooperativeGesturesHandler.WindowsHelpText': 'Strg + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MacHelpText': '⌘ + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MobileHelpText': 'Mit zwei Fingern verschieben/zoomen' } });
     map.touchZoomRotate.disableRotation();
@@ -14546,7 +14549,7 @@ function miniKarteVektor(w, cfg){
     map.on('moveend', ()=>{ setTimeout(()=> gezogen = false, 300); });
     map.on('click', ()=>{ if(gezogen || !opt.gross) return; opt.gross('osm', ansichtJetzt()); });
     // Stilwechsel im Nachtmodus / in der grossen Karte uebernehmen
-    w._mk.stilPruefen = ()=>{ const s = vkStil(); if(s !== stil && map){ stil = s; map.setStyle(vkStilUrl(s), { diff: false }); } };
+    w._mk.stilPruefen = ()=>{ const s = vkStil(); if(s !== stil && map){ stil = s; vkStilJson(s).then(o=> map.setStyle(o, { diff: false })).catch(()=>{}); } };
   }).catch(()=> zuRaster(true));
 }
 function miniKartenNeu(){
@@ -14894,7 +14897,7 @@ function vkMaplibreHolen(){
   vkLaden = new Promise((ok, fehler)=>{
     const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'lib/maplibre/maplibre-gl.css'; document.head.appendChild(css);
     const s = document.createElement('script'); s.src = 'lib/maplibre/maplibre-gl.js';
-    s.onload = ()=> window.maplibregl ? ok(window.maplibregl) : fehler(new Error('MapLibre fehlt'));
+    s.onload = ()=>{ if(!window.maplibregl) return fehler(new Error('MapLibre fehlt')); try{ maplibregl.addProtocol('vkofm', vkProtokoll); }catch(_){} ok(window.maplibregl); };
     s.onerror = ()=>{ vkLaden = null; fehler(new Error('MapLibre konnte nicht geladen werden')); };
     document.head.appendChild(s);
   });
@@ -14913,6 +14916,160 @@ function vkStilSetzen(st){
   if(vkNacht()) LS.set('vk_stil_nacht', st); else { const e = ladeEinstellungen(); e.karteVektorStil = st; speichereEinstellungen(e); }
 }
 function vkStilUrl(st){ return 'https://tiles.openfreemap.org/styles/' + (st || vkStil()); }
+// ---------- Offline-Karte: Gebiet um Wache/Ausgangspunkt im Geraet ----------
+// Alle Kartenabrufe laufen ueber das Protokoll vkofm:// (MapLibre addProtocol):
+// Kacheln aus dem geladenen Gebiet kommen aus dem Geraet (spart Daten, geht
+// offline), alles andere aus dem Netz mit Rueckfall auf die gespeicherte Kopie.
+// Grenzen laut Nutzungsbedingungen von OpenFreeMap: je Download hoechstens
+// 3.000 Kacheln bzw. 50 MB und hoechstens 4 parallele Abrufe.
+const VK_OFF_CACHE = 'vk-offline-v1', VK_OFF_MAX_KACHELN = 3000, VK_OFF_MAX_BYTES = 50 * 1024 * 1024, VK_OFF_PARALLEL = 4;
+const VK_OFF_BEREICHE = ['0-255', '256-511', '8192-8447'];
+function vkOffInfo(){ return LS.get('vk_offline', null); }
+const vkKachelSchl = (z, x, y)=> 'https://vk-offline.local/kachel/' + z + '/' + x + '/' + y;
+const vkResSchl = (url)=> 'https://vk-offline.local/res/' + encodeURIComponent(url);
+async function vkOffCache(){ try{ return ('caches' in window) ? await caches.open(VK_OFF_CACHE) : null; }catch(_){ return null; } }
+const vkZuProt = (u)=> typeof u === 'string' ? u.replace(/^https:\/\//, 'vkofm://') : u;
+async function vkProtokoll(params, abort){
+  const url = params.url.replace(/^vkofm:\/\//, 'https://');
+  const c = await vkOffCache();
+  const m = /tiles\.openfreemap\.org\/planet\/[^/]+\/(\d+)\/(\d+)\/(\d+)\.pbf/.exec(url);
+  let r = null;
+  if(m && c) r = await c.match(vkKachelSchl(m[1], m[2], m[3]));
+  if(!r){
+    try{ r = await fetch(url, { signal: abort && abort.signal }); if(!r.ok) r = null; }
+    catch(e){ if(abort && abort.signal && abort.signal.aborted) throw e; r = null; }
+    if(!r && c && !m) r = await c.match(vkResSchl(url));
+  }
+  if(!r){ if(m) return { data: new ArrayBuffer(0) }; throw new Error('Karte offline nicht verfügbar'); }
+  if(params.type === 'json'){
+    const j = await r.json();
+    if(j && Array.isArray(j.tiles)) j.tiles = j.tiles.map(vkZuProt);   // TileJSON: Kacheln ebenfalls ueber vkofm
+    return { data: j };
+  }
+  return { data: await r.arrayBuffer() };
+}
+async function vkHolen(url, ms){
+  const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), ms || 10000);
+  try{ const r = await fetch(url, { signal: ac.signal }); if(!r.ok) throw new Error('HTTP ' + r.status); return r; } finally{ clearTimeout(tm); }
+}
+// Kartenstil als Objekt (Netz, sonst gespeicherte Kopie), alle Adressen auf vkofm://
+async function vkStilJson(st){
+  const url = vkStilUrl(st);
+  let stil = null;
+  try{ stil = await (await vkHolen(url, 6000)).json(); }catch(_){}
+  if(!stil){ const c = await vkOffCache(); const r = c && await c.match(vkResSchl(url)); if(r) stil = await r.json(); }
+  if(!stil) throw new Error('Kartenstil nicht erreichbar');
+  stil = JSON.parse(JSON.stringify(stil));
+  if(typeof stil.sprite === 'string') stil.sprite = vkZuProt(stil.sprite); else if(Array.isArray(stil.sprite)) stil.sprite.forEach(s=> s.url = vkZuProt(s.url));
+  stil.glyphs = vkZuProt(stil.glyphs);
+  Object.values(stil.sources || {}).forEach(s=>{ if(s.url) s.url = vkZuProt(s.url); if(s.tiles) s.tiles = s.tiles.map(vkZuProt); });
+  return stil;
+}
+// Kacheln (Zoom 5..zMax) im Quadrat um den Kreis, ab Zoom 10 nur, was den Kreis beruehrt
+function vkKachelListe(m, radiusKm, zMax){
+  const dLat = radiusKm / 111.32, dLon = radiusKm / (111.32 * Math.cos(m.lat * Math.PI / 180)), liste = [];
+  for(let z = 5; z <= zMax; z++){
+    const n = Math.pow(2, z);
+    const tx = (lon)=> Math.floor((lon + 180) / 360 * n);
+    const ty = (lat)=>{ const r = lat * Math.PI / 180; return Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n); };
+    const lonV = (x)=> x / n * 360 - 180, latV = (y)=> Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI;
+    for(let x = tx(m.lon - dLon); x <= tx(m.lon + dLon); x++) for(let y = ty(m.lat + dLat); y <= ty(m.lat - dLat); y++){
+      if(z >= 10){
+        const lo = Math.max(lonV(x), Math.min(lonV(x + 1), m.lon)), la = Math.max(latV(y + 1), Math.min(latV(y), m.lat));
+        if(kmLuftlinieEinfach(m, { lat: la, lon: lo }) > radiusKm) continue;
+      }
+      liste.push([z, x, y]);
+    }
+  }
+  return liste;
+}
+function vkOffPlan(m, radiusKm){
+  for(const zMax of [14, 13, 12]){ const l = vkKachelListe(m, radiusKm, zMax); if(l.length <= VK_OFF_MAX_KACHELN) return { zMax, liste: l }; }
+  return { zMax: 12, liste: vkKachelListe(m, radiusKm, 12).slice(0, VK_OFF_MAX_KACHELN) };
+}
+function vkOffMitte(){
+  const s = typeof gkvStartGeo === 'function' && gkvStartGeo(); if(s) return s;
+  try{ const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); return { adr: 'NFP', lat: n.lat, lon: n.lon }; }catch(_){ return null; }
+}
+async function vkOfflineLaden(m, radiusKm, melde, abgebrochen){
+  if(!('caches' in window)) throw new Error('Dieser Browser kann keine Offline-Karte speichern.');
+  const plan = vkOffPlan(m, radiusKm);
+  try{ await caches.delete(VK_OFF_CACHE); }catch(_){}
+  const c = await caches.open(VK_OFF_CACHE);
+  try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(_){}
+  let bytes = 0;
+  const merke = async (schl, r)=>{ const b = await r.arrayBuffer(); bytes += b.byteLength; await c.put(schl, new Response(b, { headers: { 'Content-Type': r.headers.get('Content-Type') || 'application/octet-stream' } })); };
+  // 1) Stile, Symbole, Schriften, Kachel-Verzeichnis
+  melde('Kartenstile und Schriften …', 0);
+  const res = new Set(['https://tiles.openfreemap.org/planet']);
+  for(const st of Object.keys(VK_STILE)){
+    const url = vkStilUrl(st); res.add(url);
+    try{
+      const s = await (await vkHolen(url)).json();
+      const sp = typeof s.sprite === 'string' ? [s.sprite] : (Array.isArray(s.sprite) ? s.sprite.map(x=> x.url) : []);
+      sp.forEach(b=> ['.json', '.png', '@2x.json', '@2x.png'].forEach(e=> res.add(b + e)));
+      const fonts = new Set(); (s.layers || []).forEach(l=>{ const f = l.layout && l.layout['text-font']; if(Array.isArray(f) && typeof f[0] === 'string') fonts.add(f.join(',')); });
+      if(s.glyphs) fonts.forEach(f=> VK_OFF_BEREICHE.forEach(b=> res.add(s.glyphs.replace('{fontstack}', f).replace('{range}', b))));
+    }catch(_){}
+  }
+  for(const url of res){ if(abgebrochen()) throw new Error('abgebrochen'); try{ await merke(vkResSchl(url), await vkHolen(url)); }catch(_){} }
+  const tj = await (await c.match(vkResSchl('https://tiles.openfreemap.org/planet'))).json();
+  const vorlage = (tj.tiles || [])[0]; if(!vorlage) throw new Error('Kachel-Verzeichnis nicht erreichbar.');
+  // 2) Kacheln: hoechstens 4 gleichzeitig, Abbruch bei 50 MB
+  let i = 0, fertig = 0, fehler = 0, voll = false;
+  const arbeiter = async ()=>{
+    while(i < plan.liste.length && !abgebrochen() && !voll){
+      const [z, x, y] = plan.liste[i++];
+      try{ await merke(vkKachelSchl(z, x, y), await vkHolen(vorlage.replace('{z}', z).replace('{x}', x).replace('{y}', y), 20000)); }catch(_){ fehler++; }
+      fertig++;
+      if(bytes > VK_OFF_MAX_BYTES) voll = true;
+      if(fertig % 10 === 0 || fertig === plan.liste.length) melde('Kacheln ' + fertig + ' / ' + plan.liste.length + ' · ' + (bytes / 1048576).toFixed(1) + ' MB', fertig / plan.liste.length);
+    }
+  };
+  await Promise.all(Array.from({ length: VK_OFF_PARALLEL }, arbeiter));
+  if(abgebrochen()) throw new Error('abgebrochen');
+  const info = { lat: m.lat, lon: m.lon, radius: radiusKm, zMax: plan.zMax, kacheln: fertig - fehler, fehler, mb: +(bytes / 1048576).toFixed(1), am: new Date().toISOString(), voll };
+  LS.set('vk_offline', info);
+  return info;
+}
+function vkOffText(){
+  const o = vkOffInfo(); if(!o) return 'Keine Offline-Karte geladen.';
+  return 'Offline-Karte: ' + o.radius + ' km um den Ausgangspunkt, Stand ' + new Date(o.am).toLocaleDateString('de-DE') + ' (' + o.mb + ' MB' + (o.zMax >= 14 ? ', mit Hausnummern' : '') + ')';
+}
+async function vkOfflineDialog(){
+  const m = vkOffMitte();
+  if(!m){ betaOverlay.meldung('Kein Ausgangspunkt festgelegt (Wache/Dienstprofil) – darum lässt sich das Gebiet nicht bestimmen.'); return false; }
+  const radien = [15, 30, 50];
+  const zeile = (r)=>{ const p = vkOffPlan(m, r); return '<button type="button" class="fb-chip' + (r === ((vkOffInfo() || {}).radius || 30) ? ' an' : '') + '" data-vkr="' + r + '"><b>' + r + ' km</b><small>' + p.liste.length + ' Kacheln' + (p.zMax >= 14 ? ', mit Hausnummern' : ', ohne Hausnummern') + '</small></button>'; };
+  const html = '<div class="fb-dialog"><div class="fb-info">' + htmlEsc(vkOffText()) + '</div>' +
+    '<div class="fb-lbl">Gebiet um ' + htmlEsc(m.adr || 'den Ausgangspunkt') + '</div><div class="fb-chips vk-off-radien">' + radien.map(zeile).join('') + '</div>' +
+    '<div class="fb-info">Die Karte wird im Gerät gespeichert (bis 50 MB) und dann auch ohne Internet angezeigt – in allen drei Kartenstilen. Adresssuche und Route brauchen weiterhin Internet. Am besten im WLAN laden.</div></div>';
+  const kn = [{ label: 'Abbrechen', akt: 'nein' }];
+  if(vkOffInfo()) kn.push({ label: 'Löschen', akt: 'weg' });
+  kn.push({ label: vkOffInfo() ? 'Neu laden' : 'Laden', akt: 'ok', primaer: true });
+  let radius = (vkOffInfo() || {}).radius || 30;
+  const warte = betaOverlay.ergebnis('Offline-Karte', html, kn);
+  document.querySelectorAll('.beta-overlay [data-vkr]').forEach(b=> b.onclick = ()=>{ radius = +b.dataset.vkr; document.querySelectorAll('.beta-overlay [data-vkr]').forEach(x=> x.classList.toggle('an', x === b)); });
+  const akt = await warte;
+  if(akt === 'weg'){ betaOverlay.schliessen(); try{ await caches.delete(VK_OFF_CACHE); }catch(_){} LS.set('vk_offline', null); appToastAnzeigen('Offline-Karte gelöscht.', 2000); return true; }
+  if(akt !== 'ok'){ betaOverlay.schliessen(); return false; }
+  let abbruch = false;
+  betaOverlay.zeigen('Offline-Karte wird geladen');
+  const textEl = document.querySelector('.beta-overlay .beta-overlay-text'), knEl = document.querySelector('.beta-overlay .beta-overlay-knoepfe');
+  const stopp = document.createElement('button'); stopp.type = 'button'; stopp.className = 'btn-sekundaer'; stopp.textContent = 'Abbrechen'; stopp.onclick = ()=>{ abbruch = true; stopp.disabled = true; };
+  knEl.appendChild(stopp);
+  try{
+    const info = await vkOfflineLaden(m, radius, (t, a)=>{ if(textEl) textEl.textContent = t; betaOverlay.fortschritt(a); }, ()=> abbruch);
+    betaOverlay.schliessen();
+    await betaOverlay.meldung('Fertig: ' + info.kacheln + ' Kacheln, ' + info.mb + ' MB' + (info.fehler ? ' (' + info.fehler + ' nicht geladen – später „Neu laden“)' : '') + (info.voll ? '. Die 50-MB-Grenze war erreicht – ein kleinerer Umkreis hat mehr Details.' : '.'), 'Offline-Karte');
+    return true;
+  }catch(e){
+    betaOverlay.schliessen();
+    try{ await caches.delete(VK_OFF_CACHE); }catch(_){} LS.set('vk_offline', null);
+    if(String(e.message) !== 'abgebrochen') betaOverlay.meldung('Laden fehlgeschlagen: ' + (e.message || e) + '. Internet prüfen.');
+    return false;
+  }
+}
 // Zusatz-Ebenen aus den OpenFreeMap-Kacheln (Schema OpenMapTiles): medizinische Orte, Parkplaetze, Hausnummern
 function vkEbenen(){ return Object.assign({ med: true, park: true, hnr: true }, LS.get('vk_ebenen', {}) || {}); }
 const VK_MED_SUB = ['hospital', 'clinic', 'doctors', 'dentist', 'pharmacy', 'nursing_home', 'social_facility', 'physiotherapist'];
@@ -14993,11 +15150,12 @@ function vektorKarteOverlay(d, text, opt){
   const auge = ov.querySelector('.karte-auge');
   const zonenAn = ()=> LS.get('karte_zonen', true) !== false;
   auge.classList.toggle('aus', !zonenAn());
-  vkMaplibreHolen().then((ml)=>{
+  vkMaplibreHolen().then(async (ml)=>{
     const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]);
     const a = opt.ansicht;
     let stil = vkStil();
-    map = new ml.Map({ container: box, style: vkStilUrl(stil), center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
+    const stilObj = await vkStilJson(stil);
+    map = new ml.Map({ container: box, style: stilObj, center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
       attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5 });
     map.touchZoomRotate.disableRotation();
     map.addControl(new ml.NavigationControl({ showCompass: false }), 'bottom-right');
@@ -15034,11 +15192,13 @@ function vektorKarteOverlay(d, text, opt){
       menue.innerHTML = '<div class="vk-m-titel">Kartenstil' + (vkNacht() ? ' <small>(Nachtmodus)</small>' : '') + '</div><div class="vk-m-stile">' +
         Object.entries(VK_STILE).map(([k, l])=> '<button type="button" class="vk-m-stil' + (k === stil ? ' an' : '') + '" data-vkst="' + k + '"><span class="vk-m-vorschau ' + k + '"></span>' + l + '</button>').join('') + '</div>' +
         '<div class="vk-m-titel">Ebenen</div>' +
-        [['med', 'Medizinisch (Kliniken, Praxen, Heime, Apotheken)'], ['park', 'Parkplätze'], ['hnr', 'Hausnummern']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('');
+        [['med', 'Medizinisch (Kliniken, Praxen, Heime, Apotheken)'], ['park', 'Parkplätze'], ['hnr', 'Hausnummern']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
+        '<div class="vk-m-titel">Offline</div><div class="vk-m-off">' + htmlEsc(vkOffText()) + '</div><button type="button" class="btn-sekundaer vk-m-offknopf">' + (vkOffInfo() ? 'Offline-Karte verwalten …' : 'Offline-Karte laden …') + '</button>';
+      menue.querySelector('.vk-m-offknopf').onclick = ()=>{ menue.hidden = true; vkOfflineDialog(); };
       menue.querySelectorAll('[data-vkst]').forEach(b=> b.onclick = ()=>{
         const neu = b.dataset.vkst; if(neu === stil){ menue.hidden = true; return; }
         stil = neu; vkStilSetzen(neu); menue.hidden = true;
-        map.setStyle(vkStilUrl(neu), { diff: false });
+        vkStilJson(neu).then(o=> map.setStyle(o, { diff: false })).catch(()=> appToastAnzeigen('Kartenstil nicht erreichbar (offline?).', 2500));
       });
       menue.querySelectorAll('[data-vkeb]').forEach(c=> c.onchange = ()=>{
         const e2 = vkEbenen(); e2[c.dataset.vkeb] = c.checked; LS.set('vk_ebenen', e2);
@@ -16143,7 +16303,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v239';
+const APP_VERSION = 'v240';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'standard'; }
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -16930,6 +17090,8 @@ function ansichtEinstellungen(){
         <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Im Nachtmodus automatisch dunkel; in der Karte über ◐ Stil und Ebenen (Medizinisch, Parkplätze, Hausnummern) umschaltbar. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
       </div>
       <div class="fb-chips" id="vkStile" style="margin-top:6px;">${['liberty', 'bright'].map(k=> '<button type="button" class="fb-chip' + (((ladeEinstellungen() || {}).karteVektorStil || 'liberty') === k ? ' an' : '') + '" data-vkstil="' + k + '">' + { liberty: 'Hell', bright: 'Bunt' }[k] + '</button>').join('')}</div>
+      <div class="design-hinweis" id="vkOffEinst" style="margin-top:8px;">${htmlEsc(vkOffText())}</div>
+      <button type="button" class="btn-sekundaer" id="btnVkOffline" style="margin-top:6px;">Offline-Karte für das Dienstgebiet …</button>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Excel-Dateien öffnen</div>
@@ -16949,6 +17111,7 @@ function ansichtEinstellungen(){
   document.getElementById('btnEinrichtung').onclick = ()=> ansichtEinrichtung('start');
   document.getElementById('btnEinrichtungBrief').onclick = ()=> ansichtEinrichtung('brief');
   document.getElementById('chkKarteVektor').onchange = (ev)=>{ const e = ladeEinstellungen(); e.karteVektor = ev.target.checked; speichereEinstellungen(e); if(ev.target.checked) vkMaplibreHolen().catch(()=>{}); };
+  document.getElementById('btnVkOffline').onclick = async ()=>{ await vkOfflineDialog(); const x = document.getElementById('vkOffEinst'); if(x) x.textContent = vkOffText(); };
   document.querySelectorAll('[data-vkstil]').forEach(b=> b.onclick = ()=>{ const e = ladeEinstellungen(); e.karteVektorStil = b.dataset.vkstil; speichereEinstellungen(e); document.querySelectorAll('[data-vkstil]').forEach(x=> x.classList.toggle('an', x === b)); });
   // Alle Einstellungen wirken sofort, wie am PC -- kein separater
   // "Speichern"-Schritt.
