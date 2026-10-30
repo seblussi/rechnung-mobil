@@ -15170,15 +15170,18 @@ async function vkStilJson(st){
 }
 // Eigene Kartensymbole (im Geraet gezeichnet, keine Downloads): Baummuster, Parkplatz-P, Spielplatz
 const VKO_BILDER = {
-  'vko-baum': (c)=>{ // zwei Baeume je Kachel, versetzt
-    c.strokeStyle = '#6f9b5c'; c.lineWidth = 1.2; c.lineCap = 'round';
-    [[10, 12], [42, 22], [24, 46], [56, 54]].forEach(([x, y])=>{ c.beginPath(); c.arc(x, y, 3.6, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.moveTo(x, y + 3.6); c.lineTo(x, y + 7); c.stroke(); });
+  'vko-baum': (c)=>{ // Mischwald: abwechselnd Laubbaum (Kreis mit Stamm) und Tanne
+    c.strokeStyle = '#6f9b5c'; c.lineWidth = 1.2; c.lineCap = 'round'; c.lineJoin = 'round';
+    const laub = (x, y)=>{ c.beginPath(); c.arc(x, y, 3.6, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.moveTo(x, y + 3.6); c.lineTo(x, y + 7); c.stroke(); };
+    const tanne = (x, y)=>{ c.beginPath(); c.moveTo(x, y - 4.5); c.lineTo(x + 3.6, y + 3); c.lineTo(x - 3.6, y + 3); c.closePath(); c.stroke(); c.beginPath(); c.moveTo(x, y + 3); c.lineTo(x, y + 6.5); c.stroke(); };
+    laub(10, 12); tanne(42, 21); tanne(24, 45); laub(56, 54);
   },
   'vko-p': (c)=>{ c.fillStyle = '#0092da'; c.font = 'bold 15px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('P', 9, 10); },
-  'vko-spiel': (c)=>{ // Schaukel
-    c.strokeStyle = '#2c9a3b'; c.lineWidth = 1.6; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(2, 16); c.lineTo(6, 3); c.lineTo(12, 3); c.lineTo(16, 16); c.stroke();
-    c.beginPath(); c.moveTo(9, 3); c.lineTo(9, 11); c.stroke(); c.fillStyle = '#2c9a3b'; c.fillRect(6.5, 11, 5, 2);
+  'vko-spiel': (c)=>{ // Wippe
+    c.strokeStyle = '#2c9a3b'; c.fillStyle = '#2c9a3b'; c.lineWidth = 1.8; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(2, 13); c.lineTo(16, 7); c.stroke();                       // Brett, schraeg
+    c.beginPath(); c.moveTo(9, 10); c.lineTo(6, 16); c.lineTo(12, 16); c.closePath(); c.fill(); // Bock
+    c.beginPath(); c.arc(3.5, 9.5, 1.8, 0, Math.PI * 2); c.fill(); c.beginPath(); c.arc(14.5, 3.5, 1.8, 0, Math.PI * 2); c.fill(); // Kinder
   }
 };
 const VKO_GROESSE = { 'vko-baum': 64, 'vko-p': 18, 'vko-spiel': 18 };
@@ -15265,7 +15268,9 @@ function vkOsmCarto(stil){
   if(posW > 0) L.splice(posW, 0, { id: 'vko-baeume', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', minzoom: 13,
     filter: ['==', kl, 'wood'], paint: { 'fill-pattern': 'vko-baum', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0.5, 14.5, 1] } });
   const posS = L.findIndex(l=> l.id === 'landuse_track') + 1 || pos + 4;
-  L.splice(posS, 0, fl('spiel', 'landuse', ['playground'], '#dffce2', '#8ad3af'));
+  L.splice(posS, 0, fl('spiel', 'landuse', ['playground'], '#dffce2', '#8ad3af'),
+    fl('parkplatz', 'landuse', ['parking', 'garages', 'bus_station'], '#eeeeee', '#c8c8c8'),
+    fl('bildung', 'landuse', ['kindergarten', 'university', 'college'], '#ffffe5', '#e0d9b5'));
   // Feldwege braun gestrichelt
   const posT = L.findIndex(l=> l.id === 'road_service_track') + 1;
   if(posT > 0) L.splice(posT, 0, { id: 'vko-feldweg', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', minzoom: 12,
@@ -16789,7 +16794,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v255';
+const APP_VERSION = 'v256';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
