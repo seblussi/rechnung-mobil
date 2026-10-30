@@ -1626,6 +1626,7 @@ try{
   .vk-overlay .maplibregl-ctrl-group{border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9;}
   .vk-overlay .maplibregl-ctrl-group button{width:46px; height:46px;}
   .vk-overlay .maplibregl-ctrl-group button .maplibregl-ctrl-icon{background-size:30px 30px;}
+  .ok-aed{background:#00924a !important; color:#fff !important; border-color:#00924a !important; font-weight:700;}
   .vk-aed-info{font-size:13.5px; line-height:1.35; color:#222;} .vk-aed-info .vk-navi{display:inline-block; margin:6px 0 2px; padding:6px 10px; font-size:13px;}
   .vk-ziehbar{width:22px !important; height:22px !important; cursor:grab;}
   .mini-fenster > .mini-vk, .mini-fenster > .mini-vk.maplibregl-map{position:absolute; inset:0; width:100%; height:100%;}
@@ -15602,6 +15603,53 @@ function vkZusatzEbenen(map, st){
     layout: { visibility: e.aed ? 'visible' : 'none', 'icon-image': 'vko-aed', 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.7, 15, 1, 18, 1.25],
       'icon-allow-overlap': true, 'icon-ignore-placement': true } });
   if(map._aedLaden) setTimeout(map._aedLaden, 0);
+  if(map._aedWeg) vkAedWegZeigen(map);
+}
+function vkAedWegZeigen(map){
+  const q = map.getSource('vk-aed-weg');
+  if(q){ q.setData(map._aedWeg); return; }
+  map.addSource('vk-aed-weg', { type: 'geojson', data: map._aedWeg });
+  map.addLayer({ id: 'vk-aed-weg-rand', type: 'line', source: 'vk-aed-weg', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 8 } }, map.getLayer('vk-aed') ? 'vk-aed' : undefined);
+  map.addLayer({ id: 'vk-aed-weg', type: 'line', source: 'vk-aed-weg', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#00924a', 'line-width': 4.5 } }, map.getLayer('vk-aed') ? 'vk-aed' : undefined);
+}
+// Fussweg (OSRM-Fussgaenger-Router der FOSSGIS; nur Start- und Zielkoordinaten gehen hinaus)
+async function vkFussweg(a, b){
+  const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), 12000);
+  try{
+    const r = await fetch('https://routing.openstreetmap.de/routed-foot/route/v1/driving/' + a.lon + ',' + a.lat + ';' + b.lon + ',' + b.lat + '?overview=full&geometries=geojson', { signal: ac.signal });
+    const j = await r.json(); const w = j.routes && j.routes[0];
+    return w ? { meter: w.distance, minuten: w.duration / 60, coords: (w.geometry && w.geometry.coordinates) || [] } : null;
+  }catch(_){ return null; } finally{ clearTimeout(tm); }
+}
+// Naechster AED: Kandidaten im Umkreis (online 2 km, dann 6 km; offline aus gespeicherten Zellen),
+// die 3 naechsten per Luftlinie, davon der mit dem kuerzesten Fussweg
+async function vkAedNaechster(g){
+  let liste = null, radius = 6000;
+  for(const rad of [2000, 6000]){
+    try{
+      const q = { s: g.lat - rad / 111320, n: g.lat + rad / 111320, w: g.lon - rad / (111320 * Math.cos(g.lat * Math.PI / 180)), e: g.lon + rad / (111320 * Math.cos(g.lat * Math.PI / 180)) };
+      liste = (await vkAedAbfrage(q, 20000)).filter(a=> kmLuftlinieEinfach(g, a) * 1000 <= rad); radius = rad;
+      if(liste.length) break;
+    }catch(_){ liste = null; break; }
+  }
+  if(liste === null){   // offline: gespeicherte Zellen um den Punkt
+    const [x0, y0] = vkAedZelle(g.lon, g.lat); liste = []; let gefunden = false;
+    for(let x = x0 - 1; x <= x0 + 1; x++) for(let y = y0 - 1; y <= y0 + 1; y++){
+      let d = VK_AED_MEM.get(x + '/' + y);
+      if(!d){ try{ const c = await caches.open(VK_AED_CACHE); const r = await c.match(vkAedSchl(x, y)); if(r){ d = await r.json(); VK_AED_MEM.set(x + '/' + y, d); } }catch(_){} }
+      if(d){ gefunden = true; liste = liste.concat(d.f || []); }
+    }
+    if(!gefunden) return null;
+    radius = 25000;
+  }
+  if(!liste.length) return { aed: null, radius };
+  const kand = liste.map(a=> Object.assign({ luft: kmLuftlinieEinfach(g, a) * 1000 }, a)).sort((p, q)=> p.luft - q.luft).slice(0, 3);
+  const wege = await Promise.all(kand.map(a=> vkFussweg(g, a)));
+  let best = null;
+  kand.forEach((a, i)=>{ const w = wege[i]; const wert = w ? w.minuten : a.luft / 70;   // ohne Weg: ca. 70 m/min
+    if(!best || wert < best.wert) best = { wert, aed: a, weg: w && w.coords, meter: w && w.meter, minuten: w && w.minuten, luft: a.luft }; });
+  best.radius = radius;
+  return best;
 }
 // ---------- AED-Standorte (Defibrillatoren) aus OpenStreetMap ----------
 // Abfrage ueber die Overpass-API (nur der Kartenausschnitt wird gesendet, keine
@@ -15730,7 +15778,7 @@ function vektorKarteOverlay(d, text, opt){
       '<button type="button" class="vk-stil-knopf" aria-label="Kartenstil und Ebenen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>' +
       '<div class="vk-menue" hidden></div>' + KARTE_ZOOM_KNOEPFE + '<button type="button" class="gross-zu" aria-label="Karte verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>' + '</div>' +
     '<div class="nfp-fuss"><div class="nfp-info" id="vkInfo">' + (text ? htmlEsc(text) : 'Vektorkarte wird geladen …') + '</div>' +
-      '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button></div>' +
+      '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button><button type="button" class="ok-aed">Nächster AED</button></div>' +
       '<div class="ok-attr">' + VK_ATTR_HTML + '</div></div>';
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
@@ -15841,6 +15889,38 @@ function vektorKarteOverlay(d, text, opt){
       if(ichMarke) ichMarke.remove();
       ichMarke = marke('<span class="vk-ich"></span>', g);
       map.easeTo({ center: ll(g), zoom: Math.max(map.getZoom(), 13.5) });
+    };
+    // ---- Naechster AED: vom gesetzten Punkt, sonst vom eigenen Standort; Fussweg + Google Maps ----
+    let aedNr = 0;
+    ov.querySelector('.ok-aed').onclick = async ()=>{
+      const nr = ++aedNr;
+      let start = null, woher = '';
+      if(zielMarke){ const q = zielMarke.getLngLat(); start = { lat: q.lat, lon: q.lng }; woher = 'vom gesetzten Punkt'; }
+      else {
+        info.textContent = 'Standort wird bestimmt …';
+        start = await standortHolen({ still: false });
+        if(start){ woher = 'von deinem Standort'; if(ichMarke) ichMarke.remove(); ichMarke = marke('<span class="vk-ich"></span>', start); }
+        else { const c = map.getCenter(); start = { lat: c.lat, lon: c.lng }; woher = 'von der Kartenmitte'; }
+      }
+      info.textContent = 'Nächster AED wird gesucht …';
+      const e2 = vkEbenen(); if(!e2.aed){ e2.aed = true; LS.set('vk_ebenen', e2); if(map.getLayer('vk-aed')) map.setLayoutProperty('vk-aed', 'visibility', 'visible'); }
+      let r = null;
+      try{ r = await vkAedNaechster(start); }catch(_){ r = null; }
+      if(nr !== aedNr || !document.body.contains(ov)) return;
+      if(!r){ info.textContent = 'AED-Standorte nicht erreichbar (offline?) und keine gespeicherten Daten für diese Gegend.'; return; }
+      if(!r.aed){ info.textContent = 'Kein AED im Umkreis von ' + (r.radius / 1000) + ' km in OpenStreetMap eingetragen.'; return; }
+      const a = r.aed, s = start;
+      map._aedWeg = { type: 'FeatureCollection', features: [linie(r.weg && r.weg.length > 1 ? r.weg : [ll(s), ll(a)])] };
+      vkAedWegZeigen(map);
+      const b = new ml.LngLatBounds(ll(s), ll(s)); b.extend(ll(a)); (r.weg || []).forEach(k=> b.extend(k));
+      map.fitBounds(b, { padding: 70, maxZoom: 17, duration: 500 });
+      const m = (x)=> x < 1000 ? Math.round(x / 10) * 10 + ' m' : (x / 1000).toFixed(1).replace('.', ',') + ' km';
+      const gUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + s.lat.toFixed(6) + ',' + s.lon.toFixed(6) + '&destination=' + a.lat.toFixed(6) + ',' + a.lon.toFixed(6) + '&travelmode=walking';
+      info.innerHTML = '<div class="vk-ziel-info"><div><b>Nächster AED</b> ' + htmlEsc(woher) + (a.n ? ': ' + htmlEsc(a.n) : '') + (a.o ? '<br>' + htmlEsc(a.o) : '') +
+        '<br>' + (r.weg ? 'Fußweg <b>' + m(r.meter) + '</b> (ca. ' + Math.max(1, Math.round(r.minuten)) + ' min) · ' : '') + 'Luftlinie ' + m(r.luft) +
+        (r.weg ? '' : '<br><small>Fußweg nicht verfügbar – gerade Linie.</small>') +
+        (a.z ? '<br><small>' + htmlEsc(a.z) + '</small>' : '<br><small>Zugang/Öffnungszeiten unbekannt</small>') + '</div>' +
+        '<a class="vk-navi" href="' + gUrl + '" target="_blank" rel="noopener">🧭 Google Maps</a></div>';
     };
     // ---- Adresse suchen / Ort setzen (lange druecken), Punkt verschiebbar -> Luftlinie, Wegepauschale, Route ----
     let zielMarke = null, zielNr = 0;
@@ -16916,7 +16996,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v260';
+const APP_VERSION = 'v261';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
