@@ -1607,8 +1607,9 @@ try{
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} .karte-auge.aus{opacity:.85;}
   .mini-ebenen .karte-auge{width:46px; height:36px; top:60px; right:8px; border-radius:9px;} .mini-ebenen .karte-auge svg{width:18px; height:18px;}
-  .ok-zoom{position:absolute; right:10px; bottom:14px; z-index:4; display:flex; flex-direction:column; gap:6px;}
-  .ok-zoom button{width:46px; height:46px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; font-size:24px; font-weight:700; line-height:1;}
+  .ok-zoom{position:absolute; right:10px; bottom:68px; z-index:5; display:flex; flex-direction:column; gap:10px;}
+  .ok-zoom button{width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .ok-zoom button svg{width:22px; height:22px;}
   .ok-karte .nfp-knoepfe{flex-wrap:wrap;}
   .ok-attr{font-size:11px; color:var(--text-schwach); margin-top:6px;} .ok-attr a{color:inherit;}
   .vk-karte{flex:1; min-height:0; position:relative;}
@@ -1618,10 +1619,9 @@ try{
   .vk-ziel-info{display:flex; align-items:center; gap:10px; justify-content:space-between;} .vk-ziel-info > div{min-width:0;}
   .vk-navi{flex:none; display:inline-flex; align-items:center; gap:4px; padding:9px 12px; border-radius:10px; background:#1a73e8; color:#fff !important; font-weight:700; font-size:14px; text-decoration:none; white-space:nowrap;}
   /* grosse Karte: Knopf zum Verkleinern unten rechts, Zoom darueber, alles fingertauglich */
-  .gross-zu{position:absolute; right:10px; bottom:14px; z-index:6; width:46px; height:46px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
+  .gross-zu{position:absolute; right:10px; bottom:14px; z-index:6; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .gross-zu svg{width:22px; height:22px;}
-  .ok-karte .ok-zoom{bottom:72px;}
   .vk-overlay .maplibregl-ctrl-bottom-right{bottom:62px;}
   .vk-overlay .maplibregl-ctrl-group{border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9;}
   .vk-overlay .maplibregl-ctrl-group button{width:46px; height:46px;}
@@ -1812,9 +1812,9 @@ try{
   .mini-stil svg{width:18px; height:18px;}
   .karte-auge.kvbw-grau, .mini-stil.kvbw-grau, .vk-stil-knopf.kvbw-grau{opacity:1 !important; background:#dcdad6; color:#a3a3a3; border-color:#eee; cursor:default; box-shadow:0 1px 4px rgba(0,0,0,.2);}
   .mini-menue{top:8px; right:62px; max-height:calc(100% - 16px); overflow:auto; font-size:13.5px;}
-  .mini-gross{position:absolute; right:8px; bottom:8px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
+  .mini-gross{position:absolute; right:8px; bottom:8px; z-index:5; width:46px; height:36px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
-  .mini-gross svg{width:20px; height:20px;}
+  .mini-gross svg{width:18px; height:18px;}
   .mini-fenster{position:relative; width:100%; overflow:hidden; border:1px solid var(--rand); border-radius:10px; background:#f2efe9; touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:pointer;}
   .mini-attr{margin-top:3px;}
   .mini-ebenen .karte-ebene{width:46px; height:46px; top:8px; right:8px; font-size:9.5px; border-radius:9px;}
@@ -14027,6 +14027,8 @@ async function nfpOsmKarteSpeichern(){
   document.body.appendChild(a); a.click(); a.remove();
   appToastAnzeigen('Gespeichert als „' + NFP_OSM_DATEI + '“ – bitte ins GitHub-Repo neben die App-Datei hochladen.', 5000);
 }
+const KARTE_ZOOM_KNOEPFE = '<div class="ok-zoom"><button type="button" data-zoom="1" aria-label="näher"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" data-zoom="-1" aria-label="weiter weg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button></div>';
+const VK_ATTR_HTML = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · Daten: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende';
 const OSM_ATTR_HTML = '<span class="osm-attr">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-Mitwirkende</span>';
 async function nfpHintergrund(){
   const eigen = typeof nfpKarteBildUrl === 'function' ? await nfpKarteBildUrl() : null;
@@ -14741,7 +14743,7 @@ function osmKarteOverlay(d, text, opt){
       '<input type="text" id="nfpPlzOrt" enterkeyhint="search" autocomplete="off" placeholder="PLZ Ort" value="' + htmlEsc(at.plzOrt) + '">' +
       '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
     '<div class="nfp-rahmen"><div class="nfp-scroll osm-scroll"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF +
-      '<div class="ok-zoom"><button type="button" data-zoom="1" aria-label="näher">+</button><button type="button" data-zoom="-1" aria-label="weiter weg">−</button></div>' + '<button type="button" class="gross-zu" aria-label="Karte verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>' + '</div>' +
+      KARTE_ZOOM_KNOEPFE + '<button type="button" class="gross-zu" aria-label="Karte verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>' + '</div>' +
     '<div class="nfp-fuss"><div class="nfp-info" id="okInfo">' + (W ? 'Adresse suchen, Position holen, auf die Einsatzstelle tippen oder lange drücken und den Punkt mit dem Finger verschieben.' : (text ? htmlEsc(text) + '<br>' : '') + '<small>Adresse suchen oder lange auf die Karte drücken, um einen Ort zu setzen (mit dem Finger verschiebbar).</small>') + '</div>' +
       '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button>' +
         (W ? '<button type="button" class="btn-primaer nfp-ok" disabled>Übernehmen</button>' : '') + '</div>' +
@@ -15461,9 +15463,10 @@ function vektorKarteOverlay(d, text, opt){
       '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
     '<div class="nfp-rahmen"><div class="vk-karte"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF +
       '<button type="button" class="vk-stil-knopf" aria-label="Kartenstil und Ebenen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>' +
-      '<div class="vk-menue" hidden></div>' + '<button type="button" class="gross-zu" aria-label="Karte verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>' + '</div>' +
+      '<div class="vk-menue" hidden></div>' + KARTE_ZOOM_KNOEPFE + '<button type="button" class="gross-zu" aria-label="Karte verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>' + '</div>' +
     '<div class="nfp-fuss"><div class="nfp-info" id="vkInfo">' + (text ? htmlEsc(text) : 'Vektorkarte wird geladen …') + '</div>' +
-      '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button></div></div>';
+      '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button></div>' +
+      '<div class="ok-attr">' + VK_ATTR_HTML + '</div></div>';
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
   const info = ov.querySelector('#vkInfo'), box = ov.querySelector('.vk-karte');
@@ -15484,9 +15487,9 @@ function vektorKarteOverlay(d, text, opt){
     let stil = vkStil();
     const stilObj = await vkStilJson(stil);
     map = new ml.Map({ container: box, style: stilObj, center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
-      attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5 });
+      attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5 });
     map.touchZoomRotate.disableRotation();
-    map.addControl(new ml.NavigationControl({ showCompass: false }), 'bottom-right');
+    ov.querySelectorAll('.ok-zoom [data-zoom]').forEach(b=> b.onclick = ()=>{ if(b.dataset.zoom === '1') map.zoomIn(); else map.zoomOut(); });
     map.on('error', (e)=>{ if(e && e.error && /style|fetch/i.test(String(e.error.message || ''))) info.textContent = 'Vektorkarte nicht erreichbar (Internet?).'; });
     const ll = (g)=> [g.lon, g.lat];
     const linie = (koords)=> ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: koords } });
@@ -16647,7 +16650,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v249';
+const APP_VERSION = 'v250';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
