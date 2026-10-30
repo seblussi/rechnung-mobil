@@ -14841,7 +14841,14 @@ function osmKarteOverlay(d, text, opt){
   const kvbwLaden = async ()=>{ eb.classList.add('laedt'); kvbwUrl = kvbwUrl || await nfpKarteBildUrl(); eb.classList.remove('laedt'); return !!kvbwUrl; };
   eb.onclick = async ()=>{
     if(ebene === 'zonen'){ if(!await kvbwLaden()){ appToastAnzeigen('Das KVBW-Kartenbild konnte nicht geladen werden.', 3200); return; } ebene = 'kvbw'; }
-    else ebene = 'zonen';
+    else {
+      // kam von der Vektorkarte: zurueck dorthin (mit Stil-Knopf), gleicher Ausschnitt
+      if(opt.vonVektor && !W && vkAn()){
+        const m = akt ? mitteJetzt() : mitte, a = m ? { lat: m.lat, lon: m.lon, z } : null;
+        ov.remove(); vektorKarteOverlay(d, text, { ansicht: a, titel: opt.titel }); fertigRes(null); return;
+      }
+      ebene = 'zonen';
+    }
     karteEbeneKnopfSetzen(eb, ebene === 'kvbw' ? 'kvbw' : 'osm'); neu();
   };
   // Auge: Zonenfarben bzw. KVBW-Bild ein/aus (gilt fuer alle Karten)
@@ -15489,7 +15496,7 @@ function vektorKarteOverlay(d, text, opt){
   const ansichtJetzt = ()=>{ if(!map) return opt.ansicht || null; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
   // KVBW: in die normale Karte wechseln (gleicher Ausschnitt)
   const eb = ov.querySelector('.karte-ebene'); karteEbeneKnopfSetzen(eb, 'osm');
-  eb.onclick = ()=>{ const a = ansichtJetzt(); zu(); osmKarteOverlay(d, text, { ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true }); };
+  eb.onclick = ()=>{ const a = ansichtJetzt(); zu(); osmKarteOverlay(d, text, { ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true, vonVektor: true }); };
   const auge = ov.querySelector('.karte-auge');
   const zonenAn = ()=> LS.get('karte_zonen', true) !== false;
   auge.classList.toggle('aus', !zonenAn());
@@ -16662,7 +16669,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v251';
+const APP_VERSION = 'v252';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
