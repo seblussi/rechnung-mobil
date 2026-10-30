@@ -14620,7 +14620,7 @@ function miniKarteVektor(w, cfg){
     map = new ml.Map({ container: box, style: stilObj, center: [start.lon, start.lat], zoom: Math.max(0, start.z - 1),
       attributionControl: false, cooperativeGestures: true, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5,
       locale: { 'CooperativeGesturesHandler.WindowsHelpText': 'Strg + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MacHelpText': '⌘ + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MobileHelpText': 'Mit zwei Fingern verschieben/zoomen' } });
-    map.touchZoomRotate.disableRotation();
+    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map);
     let geladen = false;
     const fehlerZeit = setTimeout(()=>{ if(!geladen) zuRaster(true); }, 8000);
     map.on('error', (e)=>{ if(!geladen && e && e.error && /style|fetch|Failed/i.test(String(e.error.message || e.error))) { clearTimeout(fehlerZeit); zuRaster(true); } });
@@ -15168,6 +15168,28 @@ async function vkStilJson(st){
   Object.values(stil.sources || {}).forEach(s=>{ if(s.url) s.url = vkZuProt(s.url); if(s.tiles) s.tiles = s.tiles.map(vkZuProt); });
   return stil;
 }
+// Eigene Kartensymbole (im Geraet gezeichnet, keine Downloads): Baummuster, Parkplatz-P, Spielplatz
+const VKO_BILDER = {
+  'vko-baum': (c)=>{ // zwei Baeume je Kachel, versetzt
+    c.strokeStyle = '#6f9b5c'; c.lineWidth = 1.2; c.lineCap = 'round';
+    [[10, 12], [42, 22], [24, 46], [56, 54]].forEach(([x, y])=>{ c.beginPath(); c.arc(x, y, 3.6, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.moveTo(x, y + 3.6); c.lineTo(x, y + 7); c.stroke(); });
+  },
+  'vko-p': (c)=>{ c.fillStyle = '#0092da'; c.font = 'bold 15px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('P', 9, 10); },
+  'vko-spiel': (c)=>{ // Schaukel
+    c.strokeStyle = '#2c9a3b'; c.lineWidth = 1.6; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(2, 16); c.lineTo(6, 3); c.lineTo(12, 3); c.lineTo(16, 16); c.stroke();
+    c.beginPath(); c.moveTo(9, 3); c.lineTo(9, 11); c.stroke(); c.fillStyle = '#2c9a3b'; c.fillRect(6.5, 11, 5, 2);
+  }
+};
+const VKO_GROESSE = { 'vko-baum': 64, 'vko-p': 18, 'vko-spiel': 18 };
+function vkBilderAnmelden(map){
+  map.on('styleimagemissing', (e)=>{
+    const f = VKO_BILDER[e.id]; if(!f || map.hasImage(e.id)) return;
+    const g = VKO_GROESSE[e.id] || 18, r = 2, cv = document.createElement('canvas'); cv.width = cv.height = g * r;
+    const c = cv.getContext('2d'); c.scale(r, r); f(c);
+    try{ map.addImage(e.id, c.getImageData(0, 0, g * r, g * r), { pixelRatio: r }); }catch(_){}
+  });
+}
 // "OSM": Nachbildung der bekannten OpenStreetMap-Karte (Wald, Wiese, Sportplaetze,
 // graue Wohngebiete, farbige Strassenklassen, Feldwege braun, Fusswege lachsrot)
 function vkOsmCarto(stil){
@@ -15201,10 +15223,20 @@ function vkOsmCarto(stil){
     'minor': { 'line-color': '#ffffff' }, 'street': { 'line-color': '#ffffff' },
     'minor_casing': { 'line-color': '#bbbbbb' }, 'street_casing': { 'line-color': '#bbbbbb' },
     'service_track_casing': { 'line-color': '#bbbbbb' },
-    'path_pedestrian': { 'line-color': '#fa8072', 'line-dasharray': [1, 1] },
+    'path_pedestrian': { 'line-color': '#fa8072', 'line-dasharray': [1.3, 1.5], 'line-width': ['interpolate', ['exponential', 1.2], ['zoom'], 14, 1, 16, 1.7, 18, 2.4, 20, 3.4] },
     'path_pedestrian_casing': { 'line-color': 'rgba(255,255,255,0.6)' },
     'major_rail': { 'line-color': '#8a8a8a' }, 'transit_rail': { 'line-color': '#9a9a9a' },
     'major_rail_hatching': { 'line-color': '#8a8a8a' }, 'transit_rail_hatching': { 'line-color': '#9a9a9a' }
+  };
+  // Strassenbreiten wie in der OSM-Karte (deutlich breitere Haupt- und Wohnstrassen)
+  const iz = (...w)=> ['interpolate', ['exponential', 1.2], ['zoom'], ...w];
+  const B = {
+    'trunk_primary': iz(5, 0, 7, 1, 12, 3, 14, 6, 16, 11, 18, 18, 20, 28),
+    'trunk_primary_casing': iz(5, 0.4, 7, 1.75, 12, 4.5, 14, 8, 16, 13.5, 18, 21, 20, 31),
+    'secondary_tertiary': iz(6.5, 0, 8, 0.5, 12, 2.5, 14, 5, 16, 9, 18, 15, 20, 24),
+    'secondary_tertiary_casing': iz(8, 1.5, 12, 3.8, 14, 6.5, 16, 11, 18, 17.5, 20, 26.5),
+    'minor': iz(13.5, 0, 14, 3, 16, 6.5, 18, 12, 20, 20), 'street': iz(13.5, 0, 14, 3, 16, 6.5, 18, 12, 20, 20),
+    'minor_casing': iz(12, 0.5, 13, 1, 14, 4.5, 16, 8.3, 18, 14, 20, 22.5), 'street_casing': iz(12, 0.5, 13, 1, 14, 4.5, 16, 8.3, 18, 14, 20, 22.5)
   };
   const ohneTrack = (f)=> JSON.parse(JSON.stringify(f).split('["service","track"]').join('"service"'));
   L.forEach(l=>{
@@ -15212,6 +15244,10 @@ function vkOsmCarto(stil){
     const m = /^(tunnel|road|bridge)_(.+)$/.exec(l.id);
     if(!f && m) f = S[m[2]];
     if(f) l.paint = Object.assign({}, l.paint || {}, f);
+    if(m && B[m[2]] && l.paint && l.paint['line-width']) l.paint['line-width'] = B[m[2]];
+    // Symbole wie in der OSM-Karte: Parkplatz als blaues P, Spielplatz gruen, Sportplaetze ohne Symbol
+    if(/^poi_r/.test(l.id) && l.layout && l.layout['icon-image'])
+      l.layout['icon-image'] = ['match', ['get', 'class'], 'parking', 'vko-p', 'playground', 'vko-spiel', ['pitch', 'sports', 'stadium'], '', l.layout['icon-image']];
     if(l.id === 'landuse_residential') delete l.maxzoom;
     if(l.id === 'building') delete l.maxzoom;
     if(m && /^service_track/.test(m[2]) && l.filter) l.filter = ohneTrack(l.filter);   // Feldwege extra (braun)
@@ -15225,6 +15261,9 @@ function vkOsmCarto(stil){
     fl('gewerbe', 'landuse', ['commercial'], '#f2dad9', '#e6c4c3'),
     fl('handel', 'landuse', ['retail'], '#ffd6d1', '#e8bdb7'),
     fl('industrie', 'landuse', ['industrial', 'garages'], '#ebdbe8', '#d9c4d4'));
+  const posW = L.findIndex(l=> l.id === 'landcover_wood') + 1;
+  if(posW > 0) L.splice(posW, 0, { id: 'vko-baeume', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', minzoom: 13,
+    filter: ['==', kl, 'wood'], paint: { 'fill-pattern': 'vko-baum', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 13, 0.5, 14.5, 1] } });
   const posS = L.findIndex(l=> l.id === 'landuse_track') + 1 || pos + 4;
   L.splice(posS, 0, fl('spiel', 'landuse', ['playground'], '#dffce2', '#8ad3af'));
   // Feldwege braun gestrichelt
@@ -15523,7 +15562,7 @@ function vkZusatzEbenen(map, st){
   // Parkplaetze schon ab Zoom 14
   map.addLayer({ id: 'vk-park', type: 'symbol', source: quelle, 'source-layer': 'poi', minzoom: 14,
     filter: ['all', punkt, ['any', ['==', ['get', 'class'], 'parking'], ['in', ['get', 'subclass'], ['literal', ['parking', 'parking_garage', 'parking_space']]]]],
-    layout: { visibility: e.park ? 'visible' : 'none', 'icon-image': ['match', ['get', 'subclass'], 'parking_garage', 'parking_garage', 'parking'], 'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 17, 1.1], 'icon-allow-overlap': false, 'icon-padding': 1,
+    layout: { visibility: e.park ? 'visible' : 'none', 'icon-image': st === 'osm' ? 'vko-p' : ['match', ['get', 'subclass'], 'parking_garage', 'parking_garage', 'parking'], 'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 17, 1.1], 'icon-allow-overlap': false, 'icon-padding': 1,
       'text-field': ['step', ['zoom'], '', 17, ['coalesce', ['get', 'name'], '']], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'text-offset': [0, 1.1], 'text-anchor': 'top', 'text-optional': true },
     paint: { 'text-color': '#2a63c7', 'text-halo-color': halo, 'text-halo-width': 1.2 } });
   // Medizinische Orte bevorzugt (oberste Ebene = Vorrang bei Ueberschneidungen), ab Zoom 12
@@ -15588,7 +15627,7 @@ function vektorKarteOverlay(d, text, opt){
     const stilObj = await vkStilJson(stil);
     map = new ml.Map({ container: box, style: stilObj, center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
       attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5 });
-    map.touchZoomRotate.disableRotation();
+    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map);
     ov.querySelectorAll('.ok-zoom [data-zoom]').forEach(b=> b.onclick = ()=>{ if(b.dataset.zoom === '1') map.zoomIn(); else map.zoomOut(); });
     map.on('error', (e)=>{ if(e && e.error && /style|fetch/i.test(String(e.error.message || ''))) info.textContent = 'Vektorkarte nicht erreichbar (Internet?).'; });
     const ll = (g)=> [g.lon, g.lat];
@@ -16750,7 +16789,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v254';
+const APP_VERSION = 'v255';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
