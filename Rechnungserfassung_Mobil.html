@@ -1638,7 +1638,7 @@ try{
   .vk-m-stil{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; margin:0; padding:6px 4px; border-radius:10px; border:2px solid transparent; background:none; color:inherit; font:inherit; font-size:12.5px; cursor:pointer;}
   .vk-m-stil.an{border-color:#2f6fd6;}
   .vk-m-vorschau{display:block; width:44px; height:32px; border-radius:7px; border:1px solid rgba(0,0,0,.2);}
-  .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.detail{background:linear-gradient(135deg, #f6f1ea 30%, #8fc06f 30%, #8fc06f 55%, #7aa5f0 55%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
+  .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.osm{background:linear-gradient(135deg, #e0dfdf 35%, #add19e 35%, #add19e 60%, #fcd6a4 60%, #fcd6a4 72%, #f2efe9 72%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.detail{background:linear-gradient(135deg, #f6f1ea 30%, #8fc06f 30%, #8fc06f 55%, #7aa5f0 55%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
   .vk-m-off{font-size:12.5px; opacity:.8; margin-bottom:6px;} .vk-m-offknopf{width:100%; margin:0; padding:8px 10px; font-size:14px;}
   .vk-off-stufe .fb-chip{display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left;} .vk-off-stufe .fb-chip small{font-size:11.5px; font-weight:400; opacity:.85;}
   .vk-off-regler{display:flex; align-items:center; gap:12px; margin:6px 0 2px;} .vk-off-regler input{flex:1; accent-color:#2f6fd6;} .vk-off-regler b{min-width:56px; text-align:right; font-size:16px;}
@@ -15097,9 +15097,10 @@ function vkMaplibreHolen(){
 }
 function vkAn(){ return (ladeEinstellungen() || {}).karteVektor !== false; }   // Vorauswahl: an
 // Kartenstile: im Nachtmodus automatisch dunkel (in der Karte umschaltbar, getrennt gemerkt)
-const VK_STILE = { liberty: 'Hell', detail: 'Detail', bright: 'Bunt', dark: 'Dunkel' };
+const VK_STILE = { liberty: 'Hell', osm: 'OSM', detail: 'Detail', bright: 'Bunt', dark: 'Dunkel' };
 // "Detail" = Hell (liberty) mit kraeftigen Flaechen: Wald, Wiese, Acker, Wohn-/Gewerbegebiete deutlich unterscheidbar
-const vkStilBasis = (st)=> st === 'detail' ? 'liberty' : st;
+// "OSM" = Hell (liberty) in den Farben der bekannten OpenStreetMap-Karte
+const vkStilBasis = (st)=> (st === 'detail' || st === 'osm') ? 'liberty' : st;
 function vkNacht(){ return document.body.classList.contains('dunkel'); }
 function vkStil(){
   if(vkNacht()){ const n = LS.get('vk_stil_nacht', 'dark'); return VK_STILE[n] ? n : 'dark'; }
@@ -15161,10 +15162,76 @@ async function vkStilJson(st){
   if((st || vkStil()) === 'dark'){ vkDunkelKontrast(stil); vkBiome(stil, VK_BIOME_DUNKEL); }
   if((st || vkStil()) === 'detail') vkDetailKontrast(stil);
   if((st || vkStil()) === 'bright') vkBuntAnpassen(stil);
+  if((st || vkStil()) === 'osm') vkOsmCarto(stil);
   if(typeof stil.sprite === 'string') stil.sprite = vkZuProt(stil.sprite); else if(Array.isArray(stil.sprite)) stil.sprite.forEach(s=> s.url = vkZuProt(s.url));
   stil.glyphs = vkZuProt(stil.glyphs);
   Object.values(stil.sources || {}).forEach(s=>{ if(s.url) s.url = vkZuProt(s.url); if(s.tiles) s.tiles = s.tiles.map(vkZuProt); });
   return stil;
+}
+// "OSM": Nachbildung der bekannten OpenStreetMap-Karte (Wald, Wiese, Sportplaetze,
+// graue Wohngebiete, farbige Strassenklassen, Feldwege braun, Fusswege lachsrot)
+function vkOsmCarto(stil){
+  const L = stil.layers || [], kl = ['get', 'class'];
+  const F = {
+    'background': { 'background-color': '#f2efe9' },
+    'park': { 'fill-color': '#c8facc', 'fill-opacity': 1, 'fill-outline-color': '#a5d8a8' },
+    'park_outline': { 'line-color': '#a5d8a8', 'line-opacity': 0.6 },
+    'landuse_residential': { 'fill-color': '#e0dfdf', 'fill-opacity': 1 },
+    'landcover_wood': { 'fill-color': '#add19e', 'fill-opacity': 1, 'fill-antialias': true, 'fill-outline-color': '#9cc28c' },
+    'landcover_grass': { 'fill-color': '#cdebb0', 'fill-opacity': 1 },
+    'landuse_pitch': { 'fill-color': '#88e0be', 'fill-outline-color': '#6ec7a3' },
+    'landuse_track': { 'fill-color': '#74dcba', 'fill-outline-color': '#5fc29f' },
+    'landuse_cemetery': { 'fill-color': '#aacbaf' }, 'landuse_hospital': { 'fill-color': '#ffffe5', 'fill-outline-color': '#e0d9b5' },
+    'landuse_school': { 'fill-color': '#ffffe5', 'fill-outline-color': '#e0d9b5' },
+    'landcover_sand': { 'fill-color': '#f5e9c6' },
+    'water': { 'fill-color': '#aad3df' },
+    'waterway_river': { 'line-color': '#aad3df' }, 'waterway_other': { 'line-color': '#aad3df' }, 'waterway_tunnel': { 'line-color': '#aad3df' },
+    'waterway_line_label': { 'text-color': '#4d80b3' }, 'water_name_point_label': { 'text-color': '#4d80b3' }, 'water_name_line_label': { 'text-color': '#4d80b3' },
+    'building': { 'fill-color': '#d9d0c9', 'fill-outline-color': '#c4b6ab' }
+  };
+  // Strassen: gleiche Farben fuer Tunnel, Strasse und Bruecke
+  const S = {
+    'motorway': { 'line-color': '#e892a2' }, 'motorway_casing': { 'line-color': '#c24e6b' },
+    'motorway_link': { 'line-color': '#e892a2' }, 'motorway_link_casing': { 'line-color': '#c24e6b' },
+    'trunk_primary': { 'line-color': ['match', kl, 'trunk', '#f9b29c', '#fcd6a4'] },
+    'trunk_primary_casing': { 'line-color': ['match', kl, 'trunk', '#c84e2f', '#c08a4a'] },
+    'secondary_tertiary': { 'line-color': ['match', kl, 'secondary', '#f7fabf', '#ffffff'] },
+    'secondary_tertiary_casing': { 'line-color': ['match', kl, 'secondary', '#a8ae5c', '#a5a5a5'] },
+    'link': { 'line-color': '#fcd6a4' }, 'link_casing': { 'line-color': '#c08a4a' },
+    'minor': { 'line-color': '#ffffff' }, 'street': { 'line-color': '#ffffff' },
+    'minor_casing': { 'line-color': '#bbbbbb' }, 'street_casing': { 'line-color': '#bbbbbb' },
+    'service_track_casing': { 'line-color': '#bbbbbb' },
+    'path_pedestrian': { 'line-color': '#fa8072', 'line-dasharray': [1, 1] },
+    'path_pedestrian_casing': { 'line-color': 'rgba(255,255,255,0.6)' },
+    'major_rail': { 'line-color': '#8a8a8a' }, 'transit_rail': { 'line-color': '#9a9a9a' },
+    'major_rail_hatching': { 'line-color': '#8a8a8a' }, 'transit_rail_hatching': { 'line-color': '#9a9a9a' }
+  };
+  const ohneTrack = (f)=> JSON.parse(JSON.stringify(f).split('["service","track"]').join('"service"'));
+  L.forEach(l=>{
+    let f = F[l.id];
+    const m = /^(tunnel|road|bridge)_(.+)$/.exec(l.id);
+    if(!f && m) f = S[m[2]];
+    if(f) l.paint = Object.assign({}, l.paint || {}, f);
+    if(l.id === 'landuse_residential') delete l.maxzoom;
+    if(l.id === 'building') delete l.maxzoom;
+    if(m && /^service_track/.test(m[2]) && l.filter) l.filter = ohneTrack(l.filter);   // Feldwege extra (braun)
+  });
+  // fehlende Flaechen der OSM-Karte: Acker, Gewerbe, Einzelhandel, Industrie, Spielplatz
+  const pos = Math.max(1, L.findIndex(l=> l.id === 'landcover_wood'));
+  const fl = (id, sl, klassen, farbe, rand)=> ({ id: 'vko-' + id, type: 'fill', source: 'openmaptiles', 'source-layer': sl,
+    filter: ['match', kl, klassen, true, false], paint: Object.assign({ 'fill-color': farbe }, rand ? { 'fill-outline-color': rand } : {}) });
+  L.splice(pos, 0,
+    fl('acker', 'landcover', ['farmland'], '#eef0d5'),
+    fl('gewerbe', 'landuse', ['commercial'], '#f2dad9', '#e6c4c3'),
+    fl('handel', 'landuse', ['retail'], '#ffd6d1', '#e8bdb7'),
+    fl('industrie', 'landuse', ['industrial', 'garages'], '#ebdbe8', '#d9c4d4'));
+  const posS = L.findIndex(l=> l.id === 'landuse_track') + 1 || pos + 4;
+  L.splice(posS, 0, fl('spiel', 'landuse', ['playground'], '#dffce2', '#8ad3af'));
+  // Feldwege braun gestrichelt
+  const posT = L.findIndex(l=> l.id === 'road_service_track') + 1;
+  if(posT > 0) L.splice(posT, 0, { id: 'vko-feldweg', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', minzoom: 12,
+    filter: ['==', kl, 'track'], layout: { 'line-cap': 'butt', 'line-join': 'round' },
+    paint: { 'line-color': '#996600', 'line-opacity': 0.75, 'line-dasharray': [3, 1.5], 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.6, 16, 1.6, 20, 3] } });
 }
 // "Bunt": Haeuser wie "Hell", Wald am dunkelsten gruen, Spiel-/Sportplaetze wie "Detail"
 function vkBuntAnpassen(stil){
@@ -15445,7 +15512,7 @@ function vkZusatzEbenen(map, st){
     map.setLayoutProperty(l.id, 'visibility', 'none');
     if(!map.getLayer('vk-gebaeude') && l['source-layer'] === 'building')
       map.addLayer({ id: 'vk-gebaeude', type: 'fill', source: l.source, 'source-layer': 'building', minzoom: 13,
-        paint: { 'fill-color': dunkel ? '#2b3038' : '#dcd6cf', 'fill-outline-color': dunkel ? '#3a404a' : '#c9c1b8' } }, l.id);
+        paint: { 'fill-color': dunkel ? '#2b3038' : (st === 'osm' ? '#d9d0c9' : '#dcd6cf'), 'fill-outline-color': dunkel ? '#3a404a' : (st === 'osm' ? '#c4b6ab' : '#c9c1b8') } }, l.id);
   });
   const halo = dunkel ? '#10151c' : '#ffffff';
   const punkt = ['match', ['geometry-type'], ['Point', 'MultiPoint'], true, false];
@@ -16683,7 +16750,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v253';
+const APP_VERSION = 'v254';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
