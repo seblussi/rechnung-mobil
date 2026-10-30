@@ -1615,6 +1615,8 @@ try{
   .vk-test{font-weight:500; font-size:11.5px; color:var(--text-schwach); margin-left:6px;}
   .vk-overlay .karte-ebene, .vk-overlay .karte-auge{z-index:5;}
   .vk-marke{line-height:0;}
+  .vk-ziel-info{display:flex; align-items:center; gap:10px; justify-content:space-between;} .vk-ziel-info > div{min-width:0;}
+  .vk-navi{flex:none; display:inline-flex; align-items:center; gap:4px; padding:9px 12px; border-radius:10px; background:#1a73e8; color:#fff !important; font-weight:700; font-size:14px; text-decoration:none; white-space:nowrap;}
   /* grosse Karte: Knopf zum Verkleinern unten rechts, Zoom darueber, alles fingertauglich */
   .gross-zu{position:absolute; right:10px; bottom:14px; z-index:6; width:46px; height:46px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
@@ -15491,13 +15493,21 @@ function vektorKarteOverlay(d, text, opt){
       // NFP, Wache, Einsatzorte
       symbol('nfp', n);
       const wache = gkvStartGeo(); if(wache) symbol('rtw', wache);
+      const einZiel = (d.pois || []).filter(q=> q.kl !== 'start' && q.kl !== 'ich').length === 1 && !opt.ansicht;
       (d.pois || []).forEach(q=>{
         if(q.kl === 'start' && wache && kmLuftlinieEinfach(wache, q) < 0.05) return;
         if(q.kl === 'ich'){ ichMarke = marke('<span class="vk-ich"></span>', q); return; }
+        if(q.kl === 'ziel' && einZiel) return;   // kommt gleich als verschiebbarer Punkt
         if(q.kl === 'start' || q.kl === 'ziel'){ marke('<span class="vk-punkt ' + q.kl + '"></span>', q); return; }
         marke('<span class="vk-fall ' + q.kl + '">' + (q.nr || '') + '</span>', q, q.idx != null && d.fallKlick ? ()=>{ zu(); d.fallKlick(q.idx); } : null);
       });
-      if(!opt.ansicht) uebersicht();
+      // genau ein Ziel (Adresse einer Rechnung, eines Falls, einer Suche) -> nah heran mit Luftlinie/Fahrstrecke/Navigation
+      const fokus = (d.pois || []).filter(q=> q.kl !== 'start' && q.kl !== 'ich');
+      if(fokus.length === 1 && !opt.ansicht){
+        const q = fokus[0];
+        map.jumpTo({ center: ll(q), zoom: 16.5 });
+        zielSetzen({ lat: q.lat, lon: q.lon }, q.kl === 'ziel' ? (text || 'Adresse') : 'Einsatzort', '', q.kl !== 'ziel');
+      } else if(!opt.ansicht) uebersicht();
     });
     const uebersicht = ()=>{
       const g = osmGeoListe(d);
@@ -15518,27 +15528,33 @@ function vektorKarteOverlay(d, text, opt){
       const s1 = map.getSource('vk-luft'); if(s1) s1.setData({ type: 'FeatureCollection', features: d.linie ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] });
       const s2 = map.getSource('vk-weg'); if(s2) s2.setData({ type: 'FeatureCollection', features: d.weg && d.weg.length > 1 ? [linie(d.weg)] : [] });
     };
-    const zielSetzen = (g, woher, adrText)=>{
+    const naviLink = (g)=> '<a class="vk-navi" href="https://www.google.com/maps/dir/?api=1&destination=' + g.lat.toFixed(6) + ',' + g.lon.toFixed(6) + '&travelmode=driving" target="_blank" rel="noopener">🧭 Navigation</a>';
+    const zielSetzen = (g, woher, adrText, ohneMarke)=>{
       const nr = ++zielNr;
-      if(!zielMarke){
+      if(ohneMarke){ /* Punkt ist schon als Fall-Markierung zu sehen */ }
+      else if(!zielMarke){
         const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = '<span class="vk-punkt ziel vk-ziehbar"></span>';
         zielMarke = new ml.Marker({ element: el, draggable: true }).setLngLat(ll(g)).addTo(map);
         zielMarke.on('dragend', ()=>{ const p = zielMarke.getLngLat(); zielSetzen({ lat: p.lat, lon: p.lng }, 'Verschoben'); adresseZu({ lat: p.lat, lon: p.lng }); });
       } else zielMarke.setLngLat(ll(g));
       const s = gkvStartGeo();
       d.linie = s ? [s, g] : null; d.weg = []; datenNeu();
-      if(!s){ info.innerHTML = (woher ? htmlEsc(woher) + (adrText ? ': ' + htmlEsc(adrText) : '') : '') + '<br><small>Kein Ausgangspunkt eingestellt – keine Wegepauschale.</small>'; return; }
+      const kopf = (woher ? '<b>' + htmlEsc(woher) + '</b>' + (adrText ? ': ' + htmlEsc(adrText) : '') : '');
+      if(!s){ info.innerHTML = '<div class="vk-ziel-info"><div>' + kopf + '<br><small>Kein Ausgangspunkt eingestellt – keine Luftlinie/Wegepauschale.</small></div>' + naviLink(g) + '</div>'; return; }
       const km = kmLuftlinieEinfach(s, g);
       const p = nfpGeoZuPixel(g.lat, g.lon);
       let b = nfpImBild(p) ? nfpBewertung(p) : null;
       const stufe = b && b.stufe && km <= 50 ? b.stufe : gkvStufeFuerKm(km);
-      info.innerHTML = (woher ? htmlEsc(woher) + (adrText ? ': ' + htmlEsc(adrText) : '') + '<br>' : '') + 'Wegepauschale <b>' + htmlEsc(nfpStufeLabel(stufe)) + '</b>' +
-        '<br><small>Luftlinie ' + htmlEsc(nfpKmText(km)) + ' km ab ' + htmlEsc(s.adr || 'Ausgangspunkt') + '<span id="vkWegInfo"></span></small>';
+      info.innerHTML = '<div class="vk-ziel-info"><div>' + (kopf ? kopf + '<br>' : '') +
+        'Luftlinie <b>' + htmlEsc(nfpKmText(km)) + ' km</b> ab ' + htmlEsc(s.adr || 'Ausgangspunkt') + ' · Wegepauschale <b>' + htmlEsc(nfpStufeLabel(stufe)) + '</b>' +
+        '<br><small id="vkWegInfo">Fahrstrecke wird berechnet …</small></div>' + naviLink(g) + '</div>';
       routeMitWeg(s, g).then(r=>{
-        if(nr !== zielNr || !r || !r.length || !document.body.contains(ov)) return;
+        if(nr !== zielNr || !document.body.contains(ov)) return;
+        const wi = ov.querySelector('#vkWegInfo');
+        if(!r || !r.length){ if(wi) wi.textContent = 'Fahrstrecke nicht verfügbar (offline?)'; return; }
         d.weg = r[0].coords; datenNeu();
-        const wi = ov.querySelector('#vkWegInfo'); if(wi) wi.textContent = ' · Fahrstrecke ' + nfpKmText(r[0].km * 2) + ' km Hin+Rück';
-      }).catch(()=>{});
+        if(wi) wi.innerHTML = 'Fahrstrecke <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
+      }).catch(()=>{ const wi = ov.querySelector('#vkWegInfo'); if(wi) wi.textContent = 'Fahrstrecke nicht verfügbar (offline?)'; });
     };
     const adresseZu = async (g)=>{
       try{
@@ -15559,7 +15575,7 @@ function vektorKarteOverlay(d, text, opt){
       try{ g = await gkvOrtSuchen(a); }catch(_){ info.textContent = 'Keine Verbindung zum Kartendienst.'; return; }
       if(!g){ info.textContent = 'Adresse nicht gefunden – bitte prüfen oder lange auf die Karte drücken.'; return; }
       st.blur(); po.blur();
-      map.easeTo({ center: ll(g), zoom: Math.max(map.getZoom(), 15) });
+      map.easeTo({ center: ll(g), zoom: Math.max(map.getZoom(), 16.5) });
       zielSetzen(g, 'Adresse', g.gefunden || a);
     };
     ov.querySelector('.nfp-such-knopf').onclick = suchen;
@@ -16580,7 +16596,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v246';
+const APP_VERSION = 'v247';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
