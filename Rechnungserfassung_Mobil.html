@@ -1640,6 +1640,7 @@ try{
   .vk-m-vorschau{display:block; width:44px; height:32px; border-radius:7px; border:1px solid rgba(0,0,0,.2);}
   .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.detail{background:linear-gradient(135deg, #f6f1ea 30%, #8fc06f 30%, #8fc06f 55%, #7aa5f0 55%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
   .vk-m-off{font-size:12.5px; opacity:.8; margin-bottom:6px;} .vk-m-offknopf{width:100%; margin:0; padding:8px 10px; font-size:14px;}
+  .vk-off-stufe .fb-chip{display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left;} .vk-off-stufe .fb-chip small{font-size:11.5px; font-weight:400; opacity:.85;}
   .vk-off-regler{display:flex; align-items:center; gap:12px; margin:6px 0 2px;} .vk-off-regler input{flex:1; accent-color:#2f6fd6;} .vk-off-regler b{min-width:56px; text-align:right; font-size:16px;}
   .vk-off-schaetzung{font-size:14px; font-weight:600; margin:2px 0 8px;}
   .vk-off-radien .fb-chip{display:flex; flex-direction:column; align-items:center; gap:2px;} .vk-off-radien .fb-chip small{font-size:11px; font-weight:400; opacity:.8;}
@@ -15102,12 +15103,16 @@ async function vkProtokoll(params, abort){
   if(!r){
     try{ r = await fetch(url, { signal: abort && abort.signal }); if(!r.ok) r = null; }
     catch(e){ if(abort && abort.signal && abort.signal.aborted) throw e; r = null; }
-    if(!r && c && !m) r = await c.match(vkResSchl(url));
+    if(!r && c && !m){ r = await c.match(vkResSchl(url)); if(r) r.ausGeraet = true; }
   }
   if(!r){ if(m) return { data: new ArrayBuffer(0) }; throw new Error('Karte offline nicht verfügbar'); }
   if(params.type === 'json'){
     const j = await r.json();
-    if(j && Array.isArray(j.tiles)) j.tiles = j.tiles.map(vkZuProt);   // TileJSON: Kacheln ebenfalls ueber vkofm
+    if(j && Array.isArray(j.tiles)){
+      j.tiles = j.tiles.map(vkZuProt);   // TileJSON: Kacheln ebenfalls ueber vkofm
+      // offline mit einer Offline-Karte ohne Feinstufe: bis zur gespeicherten Stufe laden und darueber vergroessern
+      const o = vkOffInfo(); if(r.ausGeraet && o && o.zMax < 14) j.maxzoom = o.zMax;
+    }
     return { data: j };
   }
   return { data: await r.arrayBuffer() };
@@ -15248,23 +15253,37 @@ function vkKachelListe(m, radiusKm, zMax){
 }
 // immer bis Zoom 14 (nur dort stecken Hausnummern und alle POI); der Umkreis ist
 // dadurch durch die 3.000-Kachel-Grenze begrenzt (in Deutschland ca. 30-35 km)
-function vkOffPlan(m, radiusKm){ return { zMax: 14, liste: vkKachelListe(m, radiusKm, 14) }; }
-function vkOffMaxRadius(m, kb){
+// zMax 14 = mit Hausnummern/POI; 13 = nur Strassen und Orte (Hausnummern/POI dann nur online), viel groesserer Umkreis.
+// Je Zoomstufe von innen nach aussen sortiert: bricht der Download an der 50-MB-Grenze ab, ist das Innere vollstaendig.
+function vkOffPlan(m, radiusKm, zMax){
+  zMax = zMax || 14;
+  const n = (z)=> Math.pow(2, z);
+  const mitte = (z, x, y)=>{ const N = n(z); return { lon: (x + 0.5) / N * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * (y + 0.5) / N))) * 180 / Math.PI }; };
+  const liste = vkKachelListe(m, radiusKm, zMax).map(k=> ({ k, d: k[0] * 1e6 + kmLuftlinieEinfach(m, mitte(k[0], k[1], k[2])) })).sort((a, b)=> a.d - b.d).map(x=> x.k);
+  return { zMax, liste };
+}
+function vkOffMaxRadius(m, kb, zMax){
+  zMax = zMax || 14;
   // Grenze: 3.000 Kacheln UND geschaetzt hoechstens 48 MB
   const maxN = Math.min(VK_OFF_MAX_KACHELN, Math.floor(48 * 1024 / (kb || 30)));
-  let lo = 2, hi = 60;
-  while(hi - lo > 0.5){ const mid = (lo + hi) / 2; if(vkKachelListe(m, mid, 14).length <= maxN) lo = mid; else hi = mid; }
+  let lo = 2, hi = zMax >= 14 ? 60 : 120;
+  while(hi - lo > 0.5){ const mid = (lo + hi) / 2; if(vkKachelListe(m, mid, zMax).length <= maxN) lo = mid; else hi = mid; }
   return Math.floor(lo);
 }
 // MB-Schaetzung: Durchschnitt der letzten Offline-Karte, sonst ca. 30 KB je Kachel
-function vkOffKbJeKachel(){ const o = vkOffInfo(); return o && o.kacheln > 50 && o.mb ? Math.max(8, o.mb * 1024 / o.kacheln) : 30; }
+function vkOffKbJeKachel(zMax){
+  zMax = zMax || 14;
+  const o = vkOffInfo();
+  if(o && o.kacheln > 50 && o.mb && (o.zMax || 14) === zMax) return Math.max(8, o.mb * 1024 / o.kacheln);
+  return zMax >= 14 ? 30 : 20;   // Schaetzwert je Kachel
+}
 function vkOffMitte(){
   const s = typeof gkvStartGeo === 'function' && gkvStartGeo(); if(s) return s;
   try{ const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); return { adr: 'NFP', lat: n.lat, lon: n.lon }; }catch(_){ return null; }
 }
-async function vkOfflineLaden(m, radiusKm, melde, abgebrochen){
+async function vkOfflineLaden(m, radiusKm, melde, abgebrochen, zMax){
   if(!('caches' in window)) throw new Error('Dieser Browser kann keine Offline-Karte speichern.');
-  const plan = vkOffPlan(m, radiusKm);
+  const plan = vkOffPlan(m, radiusKm, zMax);
   try{ await caches.delete(VK_OFF_CACHE); }catch(_){}
   const c = await caches.open(VK_OFF_CACHE);
   try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(_){}
@@ -15305,27 +15324,39 @@ async function vkOfflineLaden(m, radiusKm, melde, abgebrochen){
 }
 function vkOffText(){
   const o = vkOffInfo(); if(!o) return 'Keine Offline-Karte geladen.';
-  return 'Offline-Karte: ' + o.radius + ' km um den Ausgangspunkt, Stand ' + new Date(o.am).toLocaleDateString('de-DE') + ' (' + o.mb + ' MB, ' + o.kacheln + ' Kacheln)';
+  return 'Offline-Karte: ' + o.radius + ' km um den Ausgangspunkt' + ((o.zMax || 14) < 14 ? ' (ohne Hausnummern/Orte)' : '') + ', Stand ' + new Date(o.am).toLocaleDateString('de-DE') + ' (' + o.mb + ' MB, ' + o.kacheln + ' Kacheln)';
 }
 async function vkOfflineDialog(){
   const m = vkOffMitte();
   if(!m){ betaOverlay.meldung('Kein Ausgangspunkt festgelegt (Wache/Dienstprofil) – darum lässt sich das Gebiet nicht bestimmen.'); return false; }
-  const kb = vkOffKbJeKachel(), rMax = vkOffMaxRadius(m, kb);
-  let radius = Math.min(rMax, (vkOffInfo() || {}).radius || Math.min(25, rMax));
-  const schaetzung = (r)=>{ const n = vkOffPlan(m, r).liste.length; return { n, mb: Math.max(1, Math.round(n * kb / 1024)) }; };
+  let zMax = ((vkOffInfo() || {}).zMax) === 13 ? 13 : 14;
+  const grenze = (z)=> vkOffMaxRadius(m, vkOffKbJeKachel(z), z);
+  let radius = Math.min(grenze(zMax), (vkOffInfo() || {}).radius || 25);
   const html = '<div class="fb-dialog"><div class="fb-info">' + htmlEsc(vkOffText()) + '</div>' +
+    '<div class="fb-lbl">Detail offline</div><div class="fb-chips vk-off-stufe">' +
+      '<button type="button" class="fb-chip" data-vkz="14"><b>Alles</b><small>mit Hausnummern und Orten · bis ' + grenze(14) + ' km</small></button>' +
+      '<button type="button" class="fb-chip" data-vkz="13"><b>Weiter Umkreis</b><small>Straßen und Orte · bis ' + grenze(13) + ' km</small></button></div>' +
     '<div class="fb-lbl">Umkreis um ' + htmlEsc(m.adr || 'den Ausgangspunkt') + '</div>' +
-    '<div class="vk-off-regler"><input type="range" id="vkOffR" min="3" max="' + rMax + '" step="1" value="' + radius + '"><b id="vkOffKm"></b></div>' +
+    '<div class="vk-off-regler"><input type="range" id="vkOffR" min="3" step="1"><b id="vkOffKm"></b></div>' +
     '<div class="vk-off-schaetzung" id="vkOffS"></div>' +
-    '<div class="fb-info">Immer mit Hausnummern und allen Orten (Kliniken, Praxen, Apotheken, Parkplätze …). Größter Umkreis hier: ' + rMax + ' km – mehr erlaubt der Kartendienst pro Download nicht (3.000 Kacheln / 50 MB). ' +
-      'Die Karte wird im Gerät gespeichert und dann auch ohne Internet angezeigt – in allen drei Stilen. Am besten im WLAN laden.</div></div>';
+    '<div class="fb-info" id="vkOffHinweis"></div>' +
+    '<div class="fb-info">Mehr erlaubt der Kartendienst pro Download nicht (3.000 Kacheln / 50 MB). Die Karte wird im Gerät gespeichert und auch ohne Internet angezeigt – in allen Stilen. Am besten im WLAN laden.</div></div>';
   const kn = [{ label: 'Abbrechen', akt: 'nein' }];
   if(vkOffInfo()) kn.push({ label: 'Löschen', akt: 'weg' });
   kn.push({ label: vkOffInfo() ? 'Neu laden' : 'Laden', akt: 'ok', primaer: true });
   const warte = betaOverlay.ergebnis('Offline-Karte', html, kn);
   const regler = document.getElementById('vkOffR');
-  const zeigen = ()=>{ radius = +regler.value; const s = schaetzung(radius); document.getElementById('vkOffKm').textContent = radius + ' km'; document.getElementById('vkOffS').textContent = s.n + ' Kacheln · ca. ' + s.mb + ' MB' + (kb === 30 ? ' (Schätzung)' : ' (Schätzung nach der letzten Offline-Karte)'); };
-  regler.oninput = zeigen; zeigen();
+  const zeigen = ()=>{
+    const rMax = grenze(zMax), kb = vkOffKbJeKachel(zMax);
+    regler.max = rMax; if(+regler.value > rMax || !regler.value) regler.value = Math.min(rMax, radius); radius = +regler.value;
+    const n = vkOffPlan(m, radius, zMax).liste.length;
+    document.getElementById('vkOffKm').textContent = radius + ' km';
+    document.getElementById('vkOffS').textContent = n + ' Kacheln · ca. ' + Math.max(1, Math.round(n * kb / 1024)) + ' MB (Schätzung)';
+    document.getElementById('vkOffHinweis').textContent = zMax >= 14 ? 'Hausnummern, Praxen, Apotheken, Parkplätze usw. sind offline dabei.' : 'Offline: Straßen, Orte, Wald/Wasser bis Straßenebene (beim Heranzoomen vergrößert). Hausnummern und Orte wie Praxen/Apotheken kommen nur mit Internet.';
+    document.querySelectorAll('.beta-overlay [data-vkz]').forEach(b=> b.classList.toggle('an', +b.dataset.vkz === zMax));
+  };
+  document.querySelectorAll('.beta-overlay [data-vkz]').forEach(b=> b.onclick = ()=>{ zMax = +b.dataset.vkz; regler.value = Math.min(grenze(zMax), zMax === 13 ? Math.max(radius, 60) : radius); zeigen(); });
+  regler.value = radius; regler.oninput = ()=>{ radius = +regler.value; zeigen(); }; zeigen();
   const akt = await warte;
   if(akt === 'weg'){ betaOverlay.schliessen(); try{ await caches.delete(VK_OFF_CACHE); }catch(_){} LS.set('vk_offline', null); appToastAnzeigen('Offline-Karte gelöscht.', 2000); return true; }
   if(akt !== 'ok'){ betaOverlay.schliessen(); return false; }
@@ -15335,7 +15366,7 @@ async function vkOfflineDialog(){
   const stopp = document.createElement('button'); stopp.type = 'button'; stopp.className = 'btn-sekundaer'; stopp.textContent = 'Abbrechen'; stopp.onclick = ()=>{ abbruch = true; stopp.disabled = true; };
   knEl.appendChild(stopp);
   try{
-    const info = await vkOfflineLaden(m, radius, (t, a)=>{ if(textEl) textEl.textContent = t; betaOverlay.fortschritt(a); }, ()=> abbruch);
+    const info = await vkOfflineLaden(m, radius, (t, a)=>{ if(textEl) textEl.textContent = t; betaOverlay.fortschritt(a); }, ()=> abbruch, zMax);
     betaOverlay.schliessen();
     await betaOverlay.meldung('Fertig: ' + info.kacheln + ' Kacheln, ' + info.mb + ' MB' + (info.fehler ? ' (' + info.fehler + ' nicht geladen – später „Neu laden“)' : '') + (info.voll ? '. Die 50-MB-Grenze war erreicht – ein kleinerer Umkreis hat mehr Details.' : '.'), 'Offline-Karte');
     return true;
@@ -16596,7 +16627,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v247';
+const APP_VERSION = 'v248';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
