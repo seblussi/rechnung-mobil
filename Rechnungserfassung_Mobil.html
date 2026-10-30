@@ -1626,6 +1626,7 @@ try{
   .vk-overlay .maplibregl-ctrl-group{border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9;}
   .vk-overlay .maplibregl-ctrl-group button{width:46px; height:46px;}
   .vk-overlay .maplibregl-ctrl-group button .maplibregl-ctrl-icon{background-size:30px 30px;}
+  .vk-aed-info{font-size:13.5px; line-height:1.35; color:#222;} .vk-aed-info .vk-navi{display:inline-block; margin:6px 0 2px; padding:6px 10px; font-size:13px;}
   .vk-ziehbar{width:22px !important; height:22px !important; cursor:grab;}
   .mini-fenster > .mini-vk, .mini-fenster > .mini-vk.maplibregl-map{position:absolute; inset:0; width:100%; height:100%;}
   .mini-vk .maplibregl-cooperative-gesture-screen{font-size:14px;}
@@ -14620,7 +14621,7 @@ function miniKarteVektor(w, cfg){
     map = new ml.Map({ container: box, style: stilObj, center: [start.lon, start.lat], zoom: Math.max(0, start.z - 1),
       attributionControl: false, cooperativeGestures: true, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5,
       locale: { 'CooperativeGesturesHandler.WindowsHelpText': 'Strg + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MacHelpText': '⌘ + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MobileHelpText': 'Mit zwei Fingern verschieben/zoomen' } });
-    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map);
+    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map); vkAedAnbinden(map, false);
     let geladen = false;
     const fehlerZeit = setTimeout(()=>{ if(!geladen) zuRaster(true); }, 8000);
     map.on('error', (e)=>{ if(!geladen && e && e.error && /style|fetch|Failed/i.test(String(e.error.message || e.error))) { clearTimeout(fehlerZeit); zuRaster(true); } });
@@ -14669,12 +14670,13 @@ function vkMenueFuellen(menue, stilJetzt, stilNeu, ebeneNeu){
   menue.innerHTML = '<div class="vk-m-titel">Kartenstil' + (vkNacht() ? ' <small>(Nachtmodus)</small>' : '') + '</div><div class="vk-m-stile">' +
     Object.entries(VK_STILE).map(([k, l])=> '<button type="button" class="vk-m-stil' + (k === st ? ' an' : '') + '" data-vkst="' + k + '"><span class="vk-m-vorschau ' + k + '"></span>' + l + '</button>').join('') + '</div>' +
     '<div class="vk-m-titel">Ebenen</div>' +
-    [['med', 'Medizinisch'], ['park', 'Parkplätze']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
+    [['med', 'Medizinisch'], ['park', 'Parkplätze'], ['aed', 'AED (Defibrillatoren)']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
     '<div class="vk-m-titel">Offline</div><div class="vk-m-off">' + htmlEsc(vkOffText()) + '</div><button type="button" class="btn-sekundaer vk-m-offknopf">' + (vkOffInfo() ? 'Offline-Karte verwalten …' : 'Offline-Karte laden …') + '</button>';
   menue.querySelectorAll('[data-vkst]').forEach(b=> b.onclick = ()=>{ menue.hidden = true; if(b.dataset.vkst !== stilJetzt()) stilNeu(b.dataset.vkst); });
   menue.querySelectorAll('[data-vkeb]').forEach(c=> c.onchange = ()=>{
     const e2 = vkEbenen(); e2[c.dataset.vkeb] = c.checked; LS.set('vk_ebenen', e2);
-    ebeneNeu({ med: 'vk-med', park: 'vk-park', hnr: 'vk-hnr' }[c.dataset.vkeb], c.checked);
+    ebeneNeu({ med: 'vk-med', park: 'vk-park', hnr: 'vk-hnr', aed: 'vk-aed' }[c.dataset.vkeb], c.checked);
+    if(c.dataset.vkeb === 'aed' && c.checked) vkAedAlleNeu();
   });
   menue.querySelector('.vk-m-offknopf').onclick = ()=>{ menue.hidden = true; vkOfflineDialog(); };
 }
@@ -15178,6 +15180,13 @@ const VKO_BILDER = {
     [[6, 7, 0], [27, 4, 1], [47, 11, 0], [16, 24, 1], [38, 28, 0], [58, 31, 1], [6, 42, 0], [27, 47, 1], [48, 51, 0], [17, 60, 1], [58, 60, 0]]
       .forEach(([x, y, t])=> t ? tanne(x, y) : laub(x, y));
   },
+  'vko-aed': (c)=>{ // gruenes Feld, weisses Herz mit Blitz (wie AED-Schilder)
+    c.fillStyle = '#ffffff'; c.beginPath(); c.roundRect ? c.roundRect(0.5, 0.5, 21, 21, 4.5) : c.rect(0.5, 0.5, 21, 21); c.fill();
+    c.fillStyle = '#00924a'; c.beginPath(); c.roundRect ? c.roundRect(1.5, 1.5, 19, 19, 3.5) : c.rect(1.5, 1.5, 19, 19); c.fill();
+    c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(11, 18); c.bezierCurveTo(3, 12.5, 3.2, 5, 7.6, 5); c.bezierCurveTo(9.3, 5, 10.4, 6, 11, 7.2);
+    c.bezierCurveTo(11.6, 6, 12.7, 5, 14.4, 5); c.bezierCurveTo(18.8, 5, 19, 12.5, 11, 18); c.fill();
+    c.fillStyle = '#00924a'; c.beginPath(); c.moveTo(12.2, 6.8); c.lineTo(8.6, 12); c.lineTo(10.9, 12); c.lineTo(9.8, 16.2); c.lineTo(13.6, 10.6); c.lineTo(11.3, 10.6); c.closePath(); c.fill();
+  },
   'vko-p': (c)=>{ c.fillStyle = '#0092da'; c.font = 'bold 15px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('P', 9, 10); },
   'vko-spiel': (c)=>{ // Wippe
     c.strokeStyle = '#2c9a3b'; c.fillStyle = '#2c9a3b'; c.lineWidth = 1.8; c.lineCap = 'round';
@@ -15186,7 +15195,7 @@ const VKO_BILDER = {
     c.beginPath(); c.arc(3.5, 9.5, 1.8, 0, Math.PI * 2); c.fill(); c.beginPath(); c.arc(14.5, 3.5, 1.8, 0, Math.PI * 2); c.fill(); // Kinder
   }
 };
-const VKO_GROESSE = { 'vko-baum': 64, 'vko-p': 18, 'vko-spiel': 18 };
+const VKO_GROESSE = { 'vko-baum': 64, 'vko-p': 18, 'vko-spiel': 18, 'vko-aed': 22 };
 function vkBilderAnmelden(map){
   map.on('styleimagemissing', (e)=>{
     const f = VKO_BILDER[e.id]; if(!f || map.hasImage(e.id)) return;
@@ -15488,13 +15497,16 @@ async function vkOfflineLaden(m, radiusKm, melde, abgebrochen, zMax){
   };
   await Promise.all(Array.from({ length: VK_OFF_PARALLEL }, arbeiter));
   if(abgebrochen()) throw new Error('abgebrochen');
-  const info = { lat: m.lat, lon: m.lon, radius: radiusKm, zMax: plan.zMax, kacheln: fertig - fehler, fehler, mb: +(bytes / 1048576).toFixed(1), am: new Date().toISOString(), voll };
+  // 3) AED-Standorte im Gebiet (eine Abfrage, Fehler hier brechen den Download nicht ab)
+  let aed = null;
+  if(vkEbenen().aed){ melde('AED-Standorte …', 1); try{ aed = await vkAedOfflineLaden(m, radiusKm); }catch(_){} }
+  const info = { lat: m.lat, lon: m.lon, radius: radiusKm, zMax: plan.zMax, kacheln: fertig - fehler, fehler, mb: +(bytes / 1048576).toFixed(1), am: new Date().toISOString(), voll, aed };
   LS.set('vk_offline', info);
   return info;
 }
 function vkOffText(){
   const o = vkOffInfo(); if(!o) return 'Keine Offline-Karte geladen.';
-  return 'Offline-Karte: ' + o.radius + ' km um den Ausgangspunkt' + ((o.zMax || 14) < 14 ? ' (ohne Hausnummern/Orte)' : '') + ', Stand ' + new Date(o.am).toLocaleDateString('de-DE') + ' (' + o.mb + ' MB, ' + o.kacheln + ' Kacheln)';
+  return 'Offline-Karte: ' + o.radius + ' km um den Ausgangspunkt' + ((o.zMax || 14) < 14 ? ' (ohne Hausnummern/Orte)' : '') + ', Stand ' + new Date(o.am).toLocaleDateString('de-DE') + ' (' + o.mb + ' MB, ' + o.kacheln + ' Kacheln' + (o.aed != null ? ', ' + o.aed + ' AED' : '') + ')';
 }
 async function vkOfflineDialog(){
   const m = vkOffMitte();
@@ -15548,13 +15560,13 @@ async function vkOfflineDialog(){
   }
 }
 // Zusatz-Ebenen aus den OpenFreeMap-Kacheln (Schema OpenMapTiles): medizinische Orte, Parkplaetze, Hausnummern
-function vkEbenen(){ return Object.assign({ med: true, park: true }, LS.get('vk_ebenen', {}) || {}, { hnr: true }); }   // Hausnummern immer an
+function vkEbenen(){ return Object.assign({ med: true, park: true, aed: true }, LS.get('vk_ebenen', {}) || {}, { hnr: true }); }   // Hausnummern immer an
 const VK_MED_SUB = ['hospital', 'clinic', 'doctors', 'dentist', 'pharmacy', 'nursing_home', 'social_facility', 'physiotherapist'];
 function vkZusatzEbenen(map, st){
   const dunkel = st === 'dark', e = vkEbenen();
   const quelle = map.getSource('openmaptiles') ? 'openmaptiles' : null; if(!quelle) return;
   const weg = (id)=>{ if(map.getLayer(id)) map.removeLayer(id); };
-  ['vk-hnr', 'vk-park', 'vk-med'].forEach(weg);
+  ['vk-hnr', 'vk-park', 'vk-med', 'vk-aed'].forEach(weg);
   // kein 3D: hochgezogene Gebaeude durch flache Flaechen ersetzen
   (map.getStyle().layers || []).filter(l=> l.type === 'fill-extrusion').forEach(l=>{
     map.setLayoutProperty(l.id, 'visibility', 'none');
@@ -15584,6 +15596,111 @@ function vkZusatzEbenen(map, st){
       'text-field': ['step', ['zoom'], ['match', ['get', 'subclass'], 'hospital', ['coalesce', ['get', 'name'], ''], ''], 14, ['coalesce', ['get', 'name'], '']],
       'text-font': ['Noto Sans Bold'], 'text-size': ['interpolate', ['linear'], ['zoom'], 12, 11, 17, 13], 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true, 'text-max-width': 9 },
     paint: { 'text-color': dunkel ? '#ff8a8a' : '#c0262d', 'text-halo-color': halo, 'text-halo-width': 1.5, 'icon-opacity': 1 } });
+  // AED (Defibrillatoren) aus OpenStreetMap, ganz oben (immer sichtbar, auch bei Ueberschneidung)
+  if(!map.getSource('vk-aed')) map.addSource('vk-aed', { type: 'geojson', data: map._aedFc || { type: 'FeatureCollection', features: [] } });
+  map.addLayer({ id: 'vk-aed', type: 'symbol', source: 'vk-aed', minzoom: 11,
+    layout: { visibility: e.aed ? 'visible' : 'none', 'icon-image': 'vko-aed', 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 0.7, 15, 1, 18, 1.25],
+      'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+  if(map._aedLaden) setTimeout(map._aedLaden, 0);
+}
+// ---------- AED-Standorte (Defibrillatoren) aus OpenStreetMap ----------
+// Abfrage ueber die Overpass-API (nur der Kartenausschnitt wird gesendet, keine
+// Patientendaten). Ergebnis je Zelle (Kachel Zoom 10, ca. 25 km) 14 Tage im Geraet
+// gespeichert, damit es auch offline und ohne erneute Abfrage verfuegbar ist.
+const VK_AED_CACHE = 'vk-aed-v1', VK_AED_Z = 10, VK_AED_ALTER = 14 * 86400000;
+const VK_AED_SERVER = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+const VK_AED_MEM = new Map(), VK_AED_LAEUFT = new Map(), VK_AED_KARTEN = new Set();
+const vkAedSchl = (x, y)=> 'https://vk-offline.local/aed/' + VK_AED_Z + '/' + x + '/' + y;
+function vkAedZelle(lon, lat){ const n = Math.pow(2, VK_AED_Z), r = lat * Math.PI / 180;
+  return [Math.floor((lon + 180) / 360 * n), Math.floor((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n)]; }
+function vkAedZellBox(x, y){ const n = Math.pow(2, VK_AED_Z), lat = (yy)=> Math.atan(Math.sinh(Math.PI * (1 - 2 * yy / n))) * 180 / Math.PI;
+  return { w: x / n * 360 - 180, e: (x + 1) / n * 360 - 180, n: lat(y), s: lat(y + 1) }; }
+function vkAedText(t){
+  const ort = t['defibrillator:location:de'] || t['defibrillator:location'] || t.description || '';
+  const zeit = t.opening_hours === '24/7' ? 'rund um die Uhr zugänglich' : (t.opening_hours ? 'Öffnungszeiten: ' + t.opening_hours : '');
+  const zug = { yes: 'öffentlich', public: 'öffentlich', permissive: 'öffentlich', customers: 'nur für Kunden', private: 'nicht öffentlich', no: 'nicht öffentlich' }[t.access] || '';
+  return { n: t.name || t.operator || '', o: ort, z: [zeit, zug, t.indoor === 'yes' ? 'innen' : (t.indoor === 'no' ? 'außen' : '')].filter(Boolean).join(' · ') };
+}
+async function vkAedAbfrage(box, ms){
+  const q = '[out:json][timeout:' + Math.round((ms || 25000) / 1000) + '];nwr["emergency"="defibrillator"](' + [box.s, box.w, box.n, box.e].map(v=> v.toFixed(5)).join(',') + ');out center tags qt;';
+  let letzt = null;
+  for(const url of VK_AED_SERVER){
+    const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), (ms || 25000) + 5000);
+    try{
+      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal });
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      return (j.elements || []).map(el=>{ const lat = el.lat != null ? el.lat : el.center && el.center.lat, lon = el.lon != null ? el.lon : el.center && el.center.lon;
+        return lat == null ? null : Object.assign({ lat: +lat.toFixed(6), lon: +lon.toFixed(6) }, vkAedText(el.tags || {})); }).filter(Boolean);
+    }catch(e){ letzt = e; } finally{ clearTimeout(tm); }
+  }
+  throw letzt || new Error('Overpass nicht erreichbar');
+}
+async function vkAedSpeichern(x, y, liste){
+  const d = { am: Date.now(), f: liste }; VK_AED_MEM.set(x + '/' + y, d);
+  try{ const c = await caches.open(VK_AED_CACHE); await c.put(vkAedSchl(x, y), new Response(JSON.stringify(d), { headers: { 'Content-Type': 'application/json' } })); }catch(_){}
+  return d;
+}
+async function vkAedZelleHolen(x, y){
+  const k = x + '/' + y;
+  let d = VK_AED_MEM.get(k);
+  if(!d){ try{ const c = await caches.open(VK_AED_CACHE); const r = await c.match(vkAedSchl(x, y)); if(r){ d = await r.json(); VK_AED_MEM.set(k, d); } }catch(_){} }
+  if(d && Date.now() - d.am < VK_AED_ALTER) return d;
+  if(navigator.onLine === false) return d || null;
+  if(VK_AED_LAEUFT.has(k)) return VK_AED_LAEUFT.get(k);
+  const p = vkAedAbfrage(vkAedZellBox(x, y)).then(l=> vkAedSpeichern(x, y, l)).catch(()=> d || null).finally(()=> VK_AED_LAEUFT.delete(k));
+  VK_AED_LAEUFT.set(k, p); return p;
+}
+function vkAedFc(){
+  const features = [], doppelt = new Set();
+  VK_AED_MEM.forEach(d=> (d.f || []).forEach(a=>{ const s = a.lon + ',' + a.lat; if(doppelt.has(s)) return; doppelt.add(s);
+    features.push({ type: 'Feature', properties: { n: a.n, o: a.o, z: a.z }, geometry: { type: 'Point', coordinates: [a.lon, a.lat] } }); }));
+  return { type: 'FeatureCollection', features };
+}
+function vkAedAlleNeu(){ VK_AED_KARTEN.forEach(m=>{ try{ m._aedLaden && m._aedLaden(); }catch(_){} }); }
+function vkAedAnbinden(map, mitInfo){
+  VK_AED_KARTEN.add(map);
+  let t = null, lauf = 0;
+  const zeigen = ()=>{ map._aedFc = vkAedFc(); try{ const q = map.getSource('vk-aed'); if(q) q.setData(map._aedFc); }catch(_){} };
+  map._aedLaden = async ()=>{
+    if(!document.body.contains(map.getContainer())){ VK_AED_KARTEN.delete(map); return; }
+    if(!vkEbenen().aed || map.getZoom() < 10.5) return;
+    const b = map.getBounds(), a = vkAedZelle(b.getWest(), b.getNorth()), z = vkAedZelle(b.getEast(), b.getSouth());
+    const zellen = [];
+    for(let x = a[0]; x <= z[0]; x++) for(let y = a[1]; y <= z[1]; y++) zellen.push([x, y]);
+    if(zellen.length > 12) return;   // zu weit draussen: keine Massenabfrage
+    const nr = ++lauf;
+    for(const [x, y] of zellen){ await vkAedZelleHolen(x, y); if(nr !== lauf) return; zeigen(); }
+  };
+  map.on('moveend', ()=>{ clearTimeout(t); t = setTimeout(map._aedLaden, 500); });
+  map.on('remove', ()=> VK_AED_KARTEN.delete(map));
+  if(mitInfo && window.maplibregl){
+    map.on('click', 'vk-aed', (ev)=>{
+      const f = ev.features && ev.features[0]; if(!f) return;
+      if(ev.originalEvent) ev.originalEvent.stopPropagation();
+      ev.preventDefault && ev.preventDefault();
+      const [lon, lat] = f.geometry.coordinates, p = f.properties || {};
+      const html = '<div class="vk-aed-info"><b>AED (Defibrillator)</b>' + (p.n ? '<br>' + htmlEsc(p.n) : '') + (p.o ? '<br>' + htmlEsc(p.o) : '') +
+        (p.z ? '<br><small>' + htmlEsc(p.z) + '</small>' : '<br><small>Zugang/Öffnungszeiten unbekannt</small>') +
+        '<br><a class="vk-navi" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lon + '&travelmode=walking">Hin navigieren</a>' +
+        '<br><small>Quelle: OpenStreetMap – ohne Gewähr</small></div>';
+      new maplibregl.Popup({ closeButton: true, maxWidth: '260px', offset: 14 }).setLngLat([lon, lat]).setHTML(html).addTo(map);
+    });
+    map.on('mouseenter', 'vk-aed', ()=> map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseleave', 'vk-aed', ()=> map.getCanvas().style.cursor = '');
+  }
+}
+// Offline-Download: AEDs im ganzen Gebiet mit einer Abfrage holen und je Zelle speichern
+async function vkAedOfflineLaden(m, radiusKm){
+  const dLat = radiusKm / 111.32, dLon = radiusKm / (111.32 * Math.cos(m.lat * Math.PI / 180));
+  const a = vkAedZelle(m.lon - dLon, m.lat + dLat), z = vkAedZelle(m.lon + dLon, m.lat - dLat);
+  const w = vkAedZellBox(a[0], a[1]), e = vkAedZellBox(z[0], z[1]);
+  const liste = await vkAedAbfrage({ w: w.w, n: w.n, e: e.e, s: e.s }, 90000);
+  const je = new Map();
+  for(let x = a[0]; x <= z[0]; x++) for(let y = a[1]; y <= z[1]; y++) je.set(x + '/' + y, []);
+  liste.forEach(p=>{ const [x, y] = vkAedZelle(p.lon, p.lat), k = x + '/' + y; if(je.has(k)) je.get(k).push(p); });
+  for(const [k, l] of je){ const [x, y] = k.split('/').map(Number); await vkAedSpeichern(x, y, l); }
+  return liste.length;
 }
 // Zonen als Geo-Polygone (Zone k = Ring k ohne Ring k-1), passend zu nfpZonenRinge (inkl. eigener Korrekturen)
 function vkZonenGeo(){
@@ -15636,7 +15753,7 @@ function vektorKarteOverlay(d, text, opt){
     const stilObj = await vkStilJson(stil);
     map = new ml.Map({ container: box, style: stilObj, center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
       attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5 });
-    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map);
+    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map); vkAedAnbinden(map, true);
     ov.querySelectorAll('.ok-zoom [data-zoom]').forEach(b=> b.onclick = ()=>{ if(b.dataset.zoom === '1') map.zoomIn(); else map.zoomOut(); });
     map.on('error', (e)=>{ if(e && e.error && /style|fetch/i.test(String(e.error.message || ''))) info.textContent = 'Vektorkarte nicht erreichbar (Internet?).'; });
     const ll = (g)=> [g.lon, g.lat];
@@ -15671,7 +15788,7 @@ function vektorKarteOverlay(d, text, opt){
       menue.innerHTML = '<div class="vk-m-titel">Kartenstil' + (vkNacht() ? ' <small>(Nachtmodus)</small>' : '') + '</div><div class="vk-m-stile">' +
         Object.entries(VK_STILE).map(([k, l])=> '<button type="button" class="vk-m-stil' + (k === stil ? ' an' : '') + '" data-vkst="' + k + '"><span class="vk-m-vorschau ' + k + '"></span>' + l + '</button>').join('') + '</div>' +
         '<div class="vk-m-titel">Ebenen</div>' +
-        [['med', 'Medizinisch (Kliniken, Praxen, Heime, Apotheken)'], ['park', 'Parkplätze']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
+        [['med', 'Medizinisch (Kliniken, Praxen, Heime, Apotheken)'], ['park', 'Parkplätze'], ['aed', 'AED (Defibrillatoren, aus OpenStreetMap)']].map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkeb="' + k + '"' + (e[k] ? ' checked' : '') + '> ' + l + '</label>').join('') +
         '<div class="vk-m-titel">Offline</div><div class="vk-m-off">' + htmlEsc(vkOffText()) + '</div><button type="button" class="btn-sekundaer vk-m-offknopf">' + (vkOffInfo() ? 'Offline-Karte verwalten …' : 'Offline-Karte laden …') + '</button>';
       menue.querySelector('.vk-m-offknopf').onclick = ()=>{ menue.hidden = true; vkOfflineDialog(); };
       menue.querySelectorAll('[data-vkst]').forEach(b=> b.onclick = ()=>{
@@ -15682,9 +15799,10 @@ function vektorKarteOverlay(d, text, opt){
       });
       menue.querySelectorAll('[data-vkeb]').forEach(c=> c.onchange = ()=>{
         const e2 = vkEbenen(); e2[c.dataset.vkeb] = c.checked; LS.set('vk_ebenen', e2);
-        const id = { med: 'vk-med', park: 'vk-park', hnr: 'vk-hnr' }[c.dataset.vkeb];
+        const id = { med: 'vk-med', park: 'vk-park', hnr: 'vk-hnr', aed: 'vk-aed' }[c.dataset.vkeb];
         if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', c.checked ? 'visible' : 'none');
         vkAlleMinisEbene(id, c.checked);
+        if(c.dataset.vkeb === 'aed' && c.checked) vkAedAlleNeu();
       });
     };
     sk.onclick = (ev)=>{ ev.stopPropagation(); if(menue.hidden){ menueZeichnen(); menue.hidden = false; } else menue.hidden = true; };
@@ -16798,7 +16916,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v259';
+const APP_VERSION = 'v260';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
