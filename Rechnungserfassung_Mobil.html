@@ -1636,7 +1636,7 @@ try{
   .vk-m-stil{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; margin:0; padding:6px 4px; border-radius:10px; border:2px solid transparent; background:none; color:inherit; font:inherit; font-size:12.5px; cursor:pointer;}
   .vk-m-stil.an{border-color:#2f6fd6;}
   .vk-m-vorschau{display:block; width:44px; height:32px; border-radius:7px; border:1px solid rgba(0,0,0,.2);}
-  .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.detail{background:linear-gradient(135deg, #9fca86 35%, #efe6c4 35%, #efe6c4 60%, #8dbde8 60%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
+  .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.detail{background:linear-gradient(135deg, #f6f1ea 30%, #8fc06f 30%, #8fc06f 55%, #7aa5f0 55%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
   .vk-m-off{font-size:12.5px; opacity:.8; margin-bottom:6px;} .vk-m-offknopf{width:100%; margin:0; padding:8px 10px; font-size:14px;}
   .vk-off-regler{display:flex; align-items:center; gap:12px; margin:6px 0 2px;} .vk-off-regler input{flex:1; accent-color:#2f6fd6;} .vk-off-regler b{min-width:56px; text-align:right; font-size:16px;}
   .vk-off-schaetzung{font-size:14px; font-weight:600; margin:2px 0 8px;}
@@ -15123,7 +15123,7 @@ async function vkStilJson(st){
   if(!stil) throw new Error('Kartenstil nicht erreichbar');
   stil = JSON.parse(JSON.stringify(stil));
   if((st || vkStil()) === 'dark'){ vkDunkelKontrast(stil); vkBiome(stil, VK_BIOME_DUNKEL); }
-  if((st || vkStil()) === 'detail') vkBiome(stil, VK_BIOME_HELL);
+  if((st || vkStil()) === 'detail') vkDetailKontrast(stil);
   if(typeof stil.sprite === 'string') stil.sprite = vkZuProt(stil.sprite); else if(Array.isArray(stil.sprite)) stil.sprite.forEach(s=> s.url = vkZuProt(s.url));
   stil.glyphs = vkZuProt(stil.glyphs);
   Object.values(stil.sources || {}).forEach(s=>{ if(s.url) s.url = vkZuProt(s.url); if(s.tiles) s.tiles = s.tiles.map(vkZuProt); });
@@ -15198,6 +15198,33 @@ function vkBiome(stil, pal){
     paint: { 'fill-color': farbe, 'fill-opacity': deck, 'fill-antialias': false }
   }));
   L.splice(pos, 0, ...neu);
+}
+// "Detail": Farben wie "Hell", nur deutlich kontrastreicher (Wald, Wiese, Parks,
+// Wohngebiete, Wasser, Gebaeude kraeftiger; Aecker und Gewerbe dezent abgesetzt)
+function vkDetailKontrast(stil){
+  const L = stil.layers || [];
+  const F = {
+    'background': { 'background-color': '#f6f1ea' },
+    'landcover_wood': { 'fill-color': 'hsl(98,42%,60%)', 'fill-opacity': 0.8 },
+    'landcover_grass': { 'fill-color': 'rgb(168,208,140)', 'fill-opacity': 0.7 },
+    'park': { 'fill-color': '#bfdc9f', 'fill-opacity': 0.9, 'fill-outline-color': '#6fb35f' },
+    'landuse_residential': { 'fill-color': 'hsl(35,38%,83%)', 'fill-opacity': 0.85 },
+    'landuse_cemetery': { 'fill-color': 'hsl(85,32%,70%)' }, 'landuse_hospital': { 'fill-color': '#f9cfe0' }, 'landuse_school': { 'fill-color': 'rgb(228,232,180)' },
+    'landcover_sand': { 'fill-color': 'rgb(240,226,160)' },
+    'water': { 'fill-color': 'rgb(122,165,240)' },
+    'waterway_river': { 'line-color': '#6fa3e3' }, 'waterway_other': { 'line-color': '#6fa3e3' }, 'waterway_tunnel': { 'line-color': '#6fa3e3' },
+    'building': { 'fill-color': 'hsl(35,10%,77%)', 'fill-outline-color': 'hsl(35,8%,64%)' }
+  };
+  L.forEach(l=>{
+    const f = F[l.id]; if(f) l.paint = Object.assign({}, l.paint || {}, f);
+    if(l.id === 'landuse_residential') delete l.maxzoom;   // Wohngebiete auch nah sichtbar
+    if(l.id === 'building') delete l.maxzoom;
+  });
+  // Aecker und Gewerbe/Industrie fehlen in "Hell" -- dezent ergaenzen (unter dem Wald)
+  const pos = Math.max(1, L.findIndex(l=> l.id === 'landcover_wood'));
+  L.splice(pos, 0,
+    { id: 'vkd-acker', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', filter: ['==', ['get', 'class'], 'farmland'], paint: { 'fill-color': '#efe6c8', 'fill-opacity': 0.9, 'fill-antialias': false } },
+    { id: 'vkd-gewerbe', type: 'fill', source: 'openmaptiles', 'source-layer': 'landuse', filter: ['match', ['get', 'class'], ['commercial', 'retail', 'industrial'], true, false], paint: { 'fill-color': 'hsl(320,18%,88%)', 'fill-opacity': 0.85, 'fill-antialias': false } });
 }
 // Kacheln (Zoom 5..zMax) im Quadrat um den Kreis, ab Zoom 10 nur, was den Kreis beruehrt
 function vkKachelListe(m, radiusKm, zMax){
@@ -16553,7 +16580,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v244';
+const APP_VERSION = 'v245';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
