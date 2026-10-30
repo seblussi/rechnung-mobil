@@ -1810,6 +1810,7 @@ try{
   .mini-stil{position:absolute; top:104px; right:8px; z-index:5; width:46px; height:36px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .mini-stil svg{width:18px; height:18px;}
+  .karte-auge.kvbw-grau, .mini-stil.kvbw-grau, .vk-stil-knopf.kvbw-grau{opacity:1 !important; background:#dcdad6; color:#a3a3a3; border-color:#eee; cursor:default; box-shadow:0 1px 4px rgba(0,0,0,.2);}
   .mini-menue{top:8px; right:62px; max-height:calc(100% - 16px); overflow:auto; font-size:13.5px;}
   .mini-gross{position:absolute; right:8px; bottom:8px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
@@ -14415,6 +14416,25 @@ function karteEbeneKnopfSetzen(btn, aktuell){
   const ziel = aktuell === 'osm' ? 'kvbw' : 'osm';
   btn.dataset.ziel = ziel; btn.querySelector('span').textContent = ziel === 'osm' ? 'OSM' : 'KVBW';
   btn.setAttribute('aria-label', ziel === 'osm' ? 'Zur OpenStreetMap-Karte wechseln' : 'Zur KVBW-Karte wechseln');
+  karteKvbwGrau(btn.parentElement, aktuell === 'kvbw');
+}
+// Auf der KVBW-Ebene bleiben Stil- und Auge-Knopf sichtbar, nur ausgegraut (ohne Funktion)
+function karteKvbwGrau(box, kvbw){
+  if(!box) return;
+  const mini = box.classList.contains('mini-ebenen');
+  const auge = box.querySelector('.karte-auge');
+  if(auge){ auge.disabled = kvbw; auge.classList.toggle('kvbw-grau', kvbw); }
+  box.querySelectorAll('.kvbw-stil-grau').forEach(x=> x.remove());
+  if(kvbw){
+    box.querySelectorAll('.vk-menue').forEach(m=> m.hidden = true);
+    if(!box.querySelector(mini ? '.mini-stil' : '.vk-stil-knopf')){
+      const sk = document.createElement('button'); sk.type = 'button'; sk.disabled = true;
+      sk.className = (mini ? 'mini-stil' : 'vk-stil-knopf') + ' kvbw-grau kvbw-stil-grau';
+      sk.setAttribute('aria-label', 'Kartenstil (nur auf der OSM-Karte)'); sk.title = 'Kartenstil nur auf der OSM-Karte';
+      sk.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
+      box.appendChild(sk);
+    }
+  }
 }
 // ---------- kleine Karte (live): OSM oder KVBW, Zwei-Finger-Zoom/-Verschieben ----------
 // Beide Ebenen werden im selben OSM-Raster gezeichnet (KVBW-Bild lagerichtig im
@@ -14540,7 +14560,7 @@ function miniKarteStarten(w){
   }, { passive: false });
   // Tippen: Fall oeffnen bzw. grosse Karte (mit derselben Ansicht)
   w.addEventListener('click', (ev)=>{
-    if(ev.target.closest('.mini-ebene-knopf, .karte-auge')) return;
+    if(ev.target.closest('.mini-ebene-knopf, .karte-auge, .mini-stil')) return;
     if(gezogen){ ev.stopPropagation(); return; }
     const t = ev.target.closest('[data-fall]');
     if(t && opt.fallKlick){ ev.stopPropagation(); opt.fallKlick(+t.dataset.fall); return; }
@@ -14578,7 +14598,7 @@ function miniKarteVektor(w, cfg){
     if(!aktiv) return; aktiv = false;
     try{ map && map.remove(); }catch(_){}
     w._vkFehler = !!grund; w._mk = null; f.innerHTML = '';
-    w.querySelectorAll('.mini-stil, .vk-menue').forEach(x=> x.remove());
+    w.querySelectorAll('.mini-stil:not(.kvbw-stil-grau), .vk-menue').forEach(x=> x.remove()); karteKvbwGrau(w, w.dataset.ebene === 'kvbw');
     miniKarteStarten(w);
   };
   const ansichtJetzt = ()=>{ if(!map) return ansicht; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
@@ -16627,7 +16647,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v248';
+const APP_VERSION = 'v249';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
