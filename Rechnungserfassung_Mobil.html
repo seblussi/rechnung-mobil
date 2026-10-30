@@ -1632,11 +1632,11 @@ try{
   .vk-menue{position:absolute; top:10px; right:74px; z-index:6; width:min(280px, calc(100% - 90px)); background:var(--karte-bg, #fff); color:var(--text, #222); border-radius:12px; box-shadow:0 4px 18px rgba(0,0,0,.35); padding:10px 12px; font-size:14px;}
   body.dunkel .vk-menue{background:#1d232b; color:#e6e9ee;}
   .vk-m-titel{font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.04em; opacity:.7; margin:4px 0 6px;} .vk-m-titel small{text-transform:none; font-weight:500;}
-  .vk-m-stile{display:flex; gap:8px; margin-bottom:8px;}
+  .vk-m-stile{display:grid; grid-template-columns:repeat(4, 1fr); gap:4px; margin-bottom:8px;}
   .vk-m-stil{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; margin:0; padding:6px 4px; border-radius:10px; border:2px solid transparent; background:none; color:inherit; font:inherit; font-size:12.5px; cursor:pointer;}
   .vk-m-stil.an{border-color:#2f6fd6;}
   .vk-m-vorschau{display:block; width:44px; height:32px; border-radius:7px; border:1px solid rgba(0,0,0,.2);}
-  .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
+  .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.detail{background:linear-gradient(135deg, #9fca86 35%, #efe6c4 35%, #efe6c4 60%, #8dbde8 60%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);}
   .vk-m-off{font-size:12.5px; opacity:.8; margin-bottom:6px;} .vk-m-offknopf{width:100%; margin:0; padding:8px 10px; font-size:14px;}
   .vk-off-regler{display:flex; align-items:center; gap:12px; margin:6px 0 2px;} .vk-off-regler input{flex:1; accent-color:#2f6fd6;} .vk-off-regler b{min-width:56px; text-align:right; font-size:16px;}
   .vk-off-schaetzung{font-size:14px; font-weight:600; margin:2px 0 8px;}
@@ -15032,7 +15032,9 @@ function vkMaplibreHolen(){
 }
 function vkAn(){ return (ladeEinstellungen() || {}).karteVektor !== false; }   // Vorauswahl: an
 // Kartenstile: im Nachtmodus automatisch dunkel (in der Karte umschaltbar, getrennt gemerkt)
-const VK_STILE = { liberty: 'Hell', bright: 'Bunt', dark: 'Dunkel' };
+const VK_STILE = { liberty: 'Hell', detail: 'Detail', bright: 'Bunt', dark: 'Dunkel' };
+// "Detail" = Hell (liberty) mit kraeftigen Flaechen: Wald, Wiese, Acker, Wohn-/Gewerbegebiete deutlich unterscheidbar
+const vkStilBasis = (st)=> st === 'detail' ? 'liberty' : st;
 function vkNacht(){ return document.body.classList.contains('dunkel'); }
 function vkStil(){
   if(vkNacht()){ const n = LS.get('vk_stil_nacht', 'dark'); return VK_STILE[n] ? n : 'dark'; }
@@ -15042,7 +15044,7 @@ function vkStilSetzen(st){
   if(!VK_STILE[st]) return;
   if(vkNacht()) LS.set('vk_stil_nacht', st); else { const e = ladeEinstellungen(); e.karteVektorStil = st; speichereEinstellungen(e); }
 }
-function vkStilUrl(st){ return 'https://tiles.openfreemap.org/styles/' + (st || vkStil()); }
+function vkStilUrl(st){ return 'https://tiles.openfreemap.org/styles/' + vkStilBasis(st || vkStil()); }
 // ---------- Offline-Karte: Gebiet um Wache/Ausgangspunkt im Geraet ----------
 // Alle Kartenabrufe laufen ueber das Protokoll vkofm:// (MapLibre addProtocol):
 // Kacheln aus dem geladenen Gebiet kommen aus dem Geraet (spart Daten, geht
@@ -15087,7 +15089,8 @@ async function vkStilJson(st){
   if(!stil){ const c = await vkOffCache(); const r = c && await c.match(vkResSchl(url)); if(r) stil = await r.json(); }
   if(!stil) throw new Error('Kartenstil nicht erreichbar');
   stil = JSON.parse(JSON.stringify(stil));
-  if((st || vkStil()) === 'dark') vkDunkelKontrast(stil);
+  if((st || vkStil()) === 'dark'){ vkDunkelKontrast(stil); vkBiome(stil, VK_BIOME_DUNKEL); }
+  if((st || vkStil()) === 'detail') vkBiome(stil, VK_BIOME_HELL);
   if(typeof stil.sprite === 'string') stil.sprite = vkZuProt(stil.sprite); else if(Array.isArray(stil.sprite)) stil.sprite.forEach(s=> s.url = vkZuProt(s.url));
   stil.glyphs = vkZuProt(stil.glyphs);
   Object.values(stil.sources || {}).forEach(s=>{ if(s.url) s.url = vkZuProt(s.url); if(s.tiles) s.tiles = s.tiles.map(vkZuProt); });
@@ -15121,6 +15124,47 @@ function vkDunkelKontrast(stil){
       l.paint = Object.assign({}, l.paint || {}, { 'text-color': /city|town|state|country/.test(l.id) ? '#eef1f5' : '#cfd6df', 'text-halo-color': '#14171c', 'text-halo-width': 1.4, 'icon-opacity': 1 });
     }
   });
+}
+// Flaechen ("Biome") mit deutlichem Kontrast: vorhandene Ebenen umfaerben, fehlende
+// Klassen (Acker, Fels, Gewerbe ...) als eigene Ebenen direkt ueber den Wohngebieten ergaenzen
+const VK_BIOME_HELL = {
+  hintergrund: '#f4f0e6', wasser: '#8dbde8', fluss: '#6faadf',
+  flaechen: [
+    ['landcover', 'farmland', '#efe6c4', 0.85], ['landcover', 'grass', '#cbe5a9', 0.85], ['landcover', 'wood', '#9fca86', 0.9],
+    ['landcover', 'rock', '#ddd6cb', 0.8], ['landcover', 'sand', '#f3e8b8', 0.9], ['landcover', 'wetland', '#bcd9c9', 0.8],
+    ['landuse', 'residential', '#e6ddd2', 0.75], ['landuse', 'commercial', '#efdccf', 0.75], ['landuse', 'retail', '#f0d6cf', 0.75],
+    ['landuse', 'industrial', '#e3d7e6', 0.75], ['landuse', 'quarry', '#d9d2c8', 0.8], ['landuse', 'military', '#ead2d2', 0.6],
+    ['landuse', 'hospital', '#f6d2dc', 0.9], ['landuse', 'cemetery', '#c5d8b4', 0.9], ['park', null, '#b8dc9c', 0.85]
+  ]
+};
+const VK_BIOME_DUNKEL = {
+  hintergrund: '#1e2228', wasser: '#173250', fluss: '#2b5680',
+  flaechen: [
+    ['landcover', 'farmland', '#2a2a22', 0.9], ['landcover', 'grass', '#20301f', 0.9], ['landcover', 'wood', '#183a24', 0.95],
+    ['landcover', 'rock', '#2b2b2e', 0.8], ['landcover', 'sand', '#34301f', 0.8], ['landcover', 'wetland', '#1b302d', 0.85],
+    ['landuse', 'residential', '#2a2f37', 0.9], ['landuse', 'commercial', '#30293a', 0.85], ['landuse', 'retail', '#352a30', 0.85],
+    ['landuse', 'industrial', '#2e2a38', 0.85], ['landuse', 'quarry', '#2c2a28', 0.8], ['landuse', 'military', '#332626', 0.6],
+    ['landuse', 'hospital', '#3a2630', 0.9], ['landuse', 'cemetery', '#1f3326', 0.9], ['park', null, '#1f3d29', 0.9]
+  ]
+};
+function vkBiome(stil, pal){
+  const L = stil.layers || [], quelle = 'openmaptiles';
+  const bg = L.find(l=> l.type === 'background'); if(bg) bg.paint = Object.assign({}, bg.paint, { 'background-color': pal.hintergrund });
+  // bestehende Flaechen-Ebenen der betroffenen Klassen ausblenden, eigene einsetzen
+  const istFlaeche = (l)=> l.type === 'fill' && (l['source-layer'] === 'landcover' || l['source-layer'] === 'landuse' || l['source-layer'] === 'park');
+  L.forEach(l=>{
+    if(istFlaeche(l)) l.layout = Object.assign({}, l.layout, { visibility: 'none' });
+    if(l.type === 'fill' && l['source-layer'] === 'water') l.paint = Object.assign({}, l.paint, { 'fill-color': pal.wasser });
+    if(l.type === 'line' && l['source-layer'] === 'waterway') l.paint = Object.assign({}, l.paint, { 'line-color': pal.fluss });
+  });
+  // nach der letzten Flaechen-Ebene bzw. vor dem Wasser einsetzen (Strassen/Gebaeude bleiben darueber)
+  let pos = L.findIndex(l=> l['source-layer'] === 'water' || l['source-layer'] === 'waterway'); if(pos < 0) pos = 1;
+  const neu = pal.flaechen.map(([sl, klasse, farbe, deck])=> ({
+    id: 'vkb-' + sl + '-' + (klasse || 'alle'), type: 'fill', source: quelle, 'source-layer': sl,
+    filter: klasse ? ['==', ['get', 'class'], klasse] : ['match', ['geometry-type'], ['Polygon', 'MultiPolygon'], true, false],
+    paint: { 'fill-color': farbe, 'fill-opacity': deck, 'fill-antialias': false }
+  }));
+  L.splice(pos, 0, ...neu);
 }
 // Kacheln (Zoom 5..zMax) im Quadrat um den Kreis, ab Zoom 10 nur, was den Kreis beruehrt
 function vkKachelListe(m, radiusKm, zMax){
@@ -15167,7 +15211,7 @@ async function vkOfflineLaden(m, radiusKm, melde, abgebrochen){
   // 1) Stile, Symbole, Schriften, Kachel-Verzeichnis
   melde('Kartenstile und Schriften …', 0);
   const res = new Set(['https://tiles.openfreemap.org/planet']);
-  for(const st of Object.keys(VK_STILE)){
+  for(const st of new Set(Object.keys(VK_STILE).map(vkStilBasis))){
     const url = vkStilUrl(st); res.add(url);
     try{
       const s = await (await vkHolen(url)).json();
@@ -16474,7 +16518,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v242';
+const APP_VERSION = 'v243';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -17263,7 +17307,7 @@ function ansichtEinstellungen(){
         <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor ? ' checked' : ''}>
         <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Im Nachtmodus automatisch dunkel; in der Karte über ◐ Stil und Ebenen (Medizinisch, Parkplätze, Hausnummern) umschaltbar. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
       </div>
-      <div class="fb-chips" id="vkStile" style="margin-top:6px;">${['liberty', 'bright'].map(k=> '<button type="button" class="fb-chip' + (((ladeEinstellungen() || {}).karteVektorStil || 'liberty') === k ? ' an' : '') + '" data-vkstil="' + k + '">' + { liberty: 'Hell', bright: 'Bunt' }[k] + '</button>').join('')}</div>
+      <div class="fb-chips" id="vkStile" style="margin-top:6px;">${['liberty', 'detail', 'bright'].map(k=> '<button type="button" class="fb-chip' + (((ladeEinstellungen() || {}).karteVektorStil || 'liberty') === k ? ' an' : '') + '" data-vkstil="' + k + '">' + { liberty: 'Hell', detail: 'Detail', bright: 'Bunt' }[k] + '</button>').join('')}</div>
       <div class="design-hinweis" id="vkOffEinst" style="margin-top:8px;">${htmlEsc(vkOffText())}</div>
       <button type="button" class="btn-sekundaer" id="btnVkOffline" style="margin-top:6px;">Offline-Karte für das Dienstgebiet …</button>
     </div>
