@@ -15171,10 +15171,12 @@ async function vkStilJson(st){
 // Eigene Kartensymbole (im Geraet gezeichnet, keine Downloads): Baummuster, Parkplatz-P, Spielplatz
 const VKO_BILDER = {
   'vko-baum': (c)=>{ // Mischwald: abwechselnd Laubbaum (Kreis mit Stamm) und Tanne
-    c.strokeStyle = '#6f9b5c'; c.lineWidth = 1.2; c.lineCap = 'round'; c.lineJoin = 'round';
-    const laub = (x, y)=>{ c.beginPath(); c.arc(x, y, 3.6, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.moveTo(x, y + 3.6); c.lineTo(x, y + 7); c.stroke(); };
-    const tanne = (x, y)=>{ c.beginPath(); c.moveTo(x, y - 4.5); c.lineTo(x + 3.6, y + 3); c.lineTo(x - 3.6, y + 3); c.closePath(); c.stroke(); c.beginPath(); c.moveTo(x, y + 3); c.lineTo(x, y + 6.5); c.stroke(); };
-    laub(10, 12); tanne(42, 21); tanne(24, 45); laub(56, 54);
+    // klein, dicht und unregelmaessig wie in der OSM-Karte
+    c.strokeStyle = '#7aa66a'; c.lineWidth = 0.9; c.lineCap = 'round'; c.lineJoin = 'round';
+    const laub = (x, y)=>{ c.beginPath(); c.arc(x, y, 2.3, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.moveTo(x, y + 2.3); c.lineTo(x, y + 4.8); c.stroke(); };
+    const tanne = (x, y)=>{ c.beginPath(); c.moveTo(x, y - 3); c.lineTo(x + 2.3, y + 2.2); c.lineTo(x - 2.3, y + 2.2); c.closePath(); c.stroke(); c.beginPath(); c.moveTo(x, y + 2.2); c.lineTo(x, y + 4.5); c.stroke(); };
+    [[6, 7, 0], [27, 4, 1], [47, 11, 0], [16, 24, 1], [38, 28, 0], [58, 31, 1], [6, 42, 0], [27, 47, 1], [48, 51, 0], [17, 60, 1], [58, 60, 0]]
+      .forEach(([x, y, t])=> t ? tanne(x, y) : laub(x, y));
   },
   'vko-p': (c)=>{ c.fillStyle = '#0092da'; c.font = 'bold 15px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('P', 9, 10); },
   'vko-spiel': (c)=>{ // Wippe
@@ -15188,9 +15190,10 @@ const VKO_GROESSE = { 'vko-baum': 64, 'vko-p': 18, 'vko-spiel': 18 };
 function vkBilderAnmelden(map){
   map.on('styleimagemissing', (e)=>{
     const f = VKO_BILDER[e.id]; if(!f || map.hasImage(e.id)) return;
-    const g = VKO_GROESSE[e.id] || 18, r = 2, cv = document.createElement('canvas'); cv.width = cv.height = g * r;
-    const c = cv.getContext('2d'); c.scale(r, r); f(c);
-    try{ map.addImage(e.id, c.getImageData(0, 0, g * r, g * r), { pixelRatio: r }); }catch(_){}
+    const g = VKO_GROESSE[e.id] || 18, r = Math.max(1, Math.min(4, window.devicePixelRatio || 2)), n = Math.round(g * r);
+    const cv = document.createElement('canvas'); cv.width = cv.height = n;
+    const c = cv.getContext('2d'); c.scale(n / g, n / g); f(c);
+    try{ map.addImage(e.id, c.getImageData(0, 0, n, n), { pixelRatio: n / g }); }catch(_){}
   });
 }
 // "OSM": Nachbildung der bekannten OpenStreetMap-Karte (Wald, Wiese, Sportplaetze,
@@ -16794,7 +16797,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v256';
+const APP_VERSION = 'v257';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
