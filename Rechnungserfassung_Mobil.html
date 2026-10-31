@@ -1637,7 +1637,7 @@ try{
   .vk-overlay .maplibregl-ctrl-group button{width:46px; height:46px;}
   .vk-overlay .maplibregl-ctrl-group button .maplibregl-ctrl-icon{background-size:30px 30px;}
   .vk-navi-knoepfe{display:flex; flex-direction:column; gap:6px; flex:none;} .vk-navi-knoepfe .vk-navi{justify-content:center; border:none; margin:0; cursor:pointer;}
-  .vk-navi-app{background:#5b6b80 !important;} .vk-navi-ok{background:#111 !important; padding:11px 12px !important; font-size:15px !important;}
+  .vk-navi-app{background:#5b6b80 !important;} .vk-off-details{display:flex; flex-direction:column; gap:2px; margin:6px 0 4px; padding:8px 10px; border:1px solid var(--rand, #ddd); border-radius:12px;} .vk-off-details[hidden]{display:none;} .vk-off-immer{opacity:.65;} .vk-navi-ok{background:#111 !important; padding:11px 12px !important; font-size:15px !important;}
   /* Zoomknoepfe ausblenden, wenn die Karte zu niedrig ist (sonst ueber dem Stil-Knopf) */
   .vk-overlay .nfp-rahmen, .ok-karte .nfp-rahmen{container-type:size;}
   @container (max-height: 460px){ .ok-zoom{display:none !important;} }
@@ -15467,8 +15467,60 @@ function vkEigenKachelListe(m, radiusKm){
   }
   return l;
 }
+// ---------- Offline-Karte: Details (individuell) ----------
+// Je Detail die Ebenen der Kacheln (Schema OpenMapTiles) und der grobe Anteil an der Datenmenge
+const VK_OFF_DETAILS = [
+  ['geb', 'Gebäude', ['building'], 0.30],
+  ['hnr', 'Hausnummern', ['housenumber'], 0.07],
+  ['poi', 'Orte: Praxen, Apotheken, Geschäfte, Parkplätze …', ['poi'], 0.08],
+  ['snam', 'Straßennamen', ['transportation_name'], 0.07],
+  ['ort', 'Orts- und Stadtteilnamen', ['place'], 0.01],
+  ['natur', 'Wald, Wiesen, Felder, Parks', ['landcover', 'landuse', 'park'], 0.20],
+  ['wasser', 'Gewässer', ['water', 'waterway', 'water_name'], 0.06],
+  ['sonst', 'Sonstiges: Gipfel, Flugplätze, Grenzen', ['mountain_peak', 'aerodrome_label', 'aeroway', 'boundary'], 0.02]
+];
+const VK_OFF_IMMER = 0.19;   // Strassen und Wege (immer dabei)
+function vkOffDetailsLaden(){
+  const alle = VK_OFF_DETAILS.map(x=> x[0]).concat('aed'), d = LS.get('vk_off_details', null);
+  return Array.isArray(d) ? d.filter(k=> alle.includes(k)) : alle;
+}
+function vkOffBehalten(details){
+  if(!details) return null;
+  const b = new Set(['transportation']); VK_OFF_DETAILS.forEach(([k, , l])=>{ if(details.includes(k)) l.forEach(n=> b.add(n)); }); return b;
+}
+function vkOffAnteil(details){ return details ? VK_OFF_IMMER + VK_OFF_DETAILS.reduce((a, x)=> a + (details.includes(x[0]) ? x[3] : 0), 0) : 1; }
+// Vektorkachel (Protobuf): nur die gewuenschten Ebenen behalten -- die Ebenen werden als Ganzes uebernommen, nichts neu kodiert
+function vkMvtFeld(u8, cb){
+  let p = 0; const rv = ()=>{ let v = 0, f = 1, b; do{ b = u8[p++]; v += (b & 0x7f) * f; f *= 128; }while(b & 0x80 && p < u8.length); return v; };
+  while(p < u8.length){
+    const st = p, key = rv(), wt = key & 7, fe = Math.floor(key / 8);
+    if(wt === 2){ const len = rv(), a = p; p += len; if(cb(fe, st, a, p) === false) return; }
+    else if(wt === 0){ rv(); cb(fe, st, -1, p); }
+    else if(wt === 1){ p += 8; cb(fe, st, -1, p); }
+    else if(wt === 5){ p += 4; cb(fe, st, -1, p); }
+    else throw new Error('Kachel unbekannt');
+  }
+}
+function vkMvtEbenenFiltern(u8, behalten){
+  const teile = []; let n = 0;
+  vkMvtFeld(u8, (fe, st, a, e)=>{
+    if(fe === 3 && a >= 0){
+      let name = null; const l = u8.subarray(a, e);
+      vkMvtFeld(l, (f2, s2, a2, e2)=>{ if(f2 === 1 && a2 >= 0){ name = new TextDecoder().decode(l.subarray(a2, e2)); return false; } });
+      if(name != null && !behalten.has(name)) return;
+    }
+    teile.push(u8.subarray(st, e)); n += e - st;
+  });
+  const out = new Uint8Array(n); let o = 0; teile.forEach(t=>{ out.set(t, o); o += t.length; }); return out;
+}
+async function vkKachelFiltern(buf, gz, behalten){
+  const roh = new Uint8Array(gz ? await vkGunzip(buf) : buf);
+  const f = vkMvtEbenenFiltern(roh, behalten);
+  if(typeof CompressionStream !== 'function') return { daten: f, gz: false };
+  return { daten: await new Response(new Blob([f]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer(), gz: true };
+}
 // Download des Ausschnitts: Verzeichnisse lesen, benachbarte Kacheln zu grossen Abrufen buendeln
-async function vkEigeneKarteLaden(m, radiusKm, c, melde, abgebrochen){
+async function vkEigeneKarteLaden(m, radiusKm, c, melde, abgebrochen, behalten){
   const pm = await vkPmtOeffnen(vkKarteBasis());
   const liste = vkEigenKachelListe(m, radiusKm), ziele = [];
   melde('Verzeichnis der Karte …', 0.02);
@@ -15494,7 +15546,11 @@ async function vkEigeneKarteLaden(m, radiusKm, c, melde, abgebrochen){
       for(let v = 0; v < 3 && !buf; v++){ try{ buf = await pm.lies(l.start, l.ende - l.start); }catch(e){ if(v === 2) throw e; await new Promise(r=> setTimeout(r, 1500 * (v + 1))); } }
       for(const t of l.k){
         const teil = buf.slice(t.off - l.start, t.off - l.start + t.len);
-        try{ await c.put(vkKachelSchl(t.z, t.x, t.y), new Response(teil, { headers: { 'Content-Type': 'application/x-protobuf', 'X-VK-Gz': pm.h.kachelGz ? '1' : '0' } })); bytes += t.len; fertig++; }
+        try{
+          let daten = teil, gz = pm.h.kachelGz;
+          if(behalten){ try{ const k = await vkKachelFiltern(teil, gz, behalten); daten = k.daten; gz = k.gz; }catch(_){} }
+          await c.put(vkKachelSchl(t.z, t.x, t.y), new Response(daten, { headers: { 'Content-Type': 'application/x-protobuf', 'X-VK-Gz': gz ? '1' : '0' } })); bytes += daten.byteLength; fertig++;
+        }
         catch(_){ fehler++; }
       }
       geladen += l.ende - l.start;
@@ -15895,7 +15951,8 @@ function vkOffMitte(){
   const s = typeof gkvStartGeo === 'function' && gkvStartGeo(); if(s) return s;
   try{ const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); return { adr: 'NFP', lat: n.lat, lon: n.lon }; }catch(_){ return null; }
 }
-async function vkOfflineLaden(m, radiusKm, melde, abgebrochen, zMax){
+async function vkOfflineLaden(m, radiusKm, melde, abgebrochen, zMax, details){
+  const behalten = vkOffBehalten(details), mitAed = details ? details.includes('aed') : true;
   if(!('caches' in window)) throw new Error('Dieser Browser kann keine Offline-Karte speichern.');
   const plan = vkOffPlan(m, radiusKm, zMax);
   try{ await caches.delete(VK_OFF_CACHE); }catch(_){}
@@ -15918,23 +15975,28 @@ async function vkOfflineLaden(m, radiusKm, melde, abgebrochen, zMax){
   }
   for(const url of res){ if(abgebrochen()) throw new Error('abgebrochen'); try{ await merke(vkResSchl(url), await vkHolen(url)); }catch(_){} }
   if(zMax === 'eigen'){
-    const e = await vkEigeneKarteLaden(m, radiusKm, c, melde, abgebrochen);
+    const e = await vkEigeneKarteLaden(m, radiusKm, c, melde, abgebrochen, behalten);
     let aed = null;
-    if(vkEbenen().aed){ melde('AED-Standorte …', 1); try{ aed = await vkAedOfflineLaden(m, Math.min(radiusKm, 60)); }catch(_){} }
-    const info = { lat: m.lat, lon: m.lon, radius: radiusKm, zMax: 14, eigen: true, stand: e.stand, kacheln: e.kacheln, fehler: e.fehler, mb: +(e.bytes / 1048576).toFixed(1), am: new Date().toISOString(), voll: false, aed };
+    if(mitAed){ melde('AED-Standorte …', 1); try{ aed = await vkAedOfflineLaden(m, Math.min(radiusKm, 60)); }catch(_){} }
+    const info = { lat: m.lat, lon: m.lon, radius: radiusKm, zMax: 14, eigen: true, stand: e.stand, kacheln: e.kacheln, fehler: e.fehler, mb: +(e.bytes / 1048576).toFixed(1), am: new Date().toISOString(), voll: false, aed, details: details || null };
     LS.set('vk_offline', info);
     return info;
   }
   const tj = await (await c.match(vkResSchl('https://tiles.openfreemap.org/planet'))).json();
   const vorlage = (tj.tiles || [])[0]; if(!vorlage) throw new Error('Kachel-Verzeichnis nicht erreichbar.');
   // 2) Kacheln: hoechstens 4 gleichzeitig, Abbruch bei 50 MB
-  let i = 0, fertig = 0, fehler = 0, voll = false;
+  let i = 0, fertig = 0, fehler = 0, voll = false, netz = 0;
   const arbeiter = async ()=>{
     while(i < plan.liste.length && !abgebrochen() && !voll){
       const [z, x, y] = plan.liste[i++];
-      try{ await merke(vkKachelSchl(z, x, y), await vkHolen(vorlage.replace('{z}', z).replace('{x}', x).replace('{y}', y), 20000)); }catch(_){ fehler++; }
+      try{
+        const r = await vkHolen(vorlage.replace('{z}', z).replace('{x}', x).replace('{y}', y), 20000);
+        if(behalten){ const ab = await r.arrayBuffer(); netz += ab.byteLength; const k = await vkKachelFiltern(ab, false, behalten); bytes += k.daten.byteLength;
+          await c.put(vkKachelSchl(z, x, y), new Response(k.daten, { headers: { 'Content-Type': 'application/x-protobuf', 'X-VK-Gz': k.gz ? '1' : '0' } })); }
+        else { const vor = bytes; await merke(vkKachelSchl(z, x, y), r); netz += bytes - vor; }
+      }catch(_){ fehler++; }
       fertig++;
-      if(bytes > VK_OFF_MAX_BYTES) voll = true;
+      if(netz > VK_OFF_MAX_BYTES) voll = true;   // Grenze des Kartendienstes gilt fuer die geladene Menge
       if(fertig % 10 === 0 || fertig === plan.liste.length) melde('Kacheln ' + fertig + ' / ' + plan.liste.length + ' · ' + (bytes / 1048576).toFixed(1) + ' MB', fertig / plan.liste.length);
     }
   };
@@ -15942,68 +16004,79 @@ async function vkOfflineLaden(m, radiusKm, melde, abgebrochen, zMax){
   if(abgebrochen()) throw new Error('abgebrochen');
   // 3) AED-Standorte im Gebiet (eine Abfrage, Fehler hier brechen den Download nicht ab)
   let aed = null;
-  if(vkEbenen().aed){ melde('AED-Standorte …', 1); try{ aed = await vkAedOfflineLaden(m, radiusKm); }catch(_){} }
-  const info = { lat: m.lat, lon: m.lon, radius: radiusKm, zMax: plan.zMax, kacheln: fertig - fehler, fehler, mb: +(bytes / 1048576).toFixed(1), am: new Date().toISOString(), voll, aed };
+  if(mitAed){ melde('AED-Standorte …', 1); try{ aed = await vkAedOfflineLaden(m, radiusKm); }catch(_){} }
+  const info = { lat: m.lat, lon: m.lon, radius: radiusKm, zMax: plan.zMax, kacheln: fertig - fehler, fehler, mb: +(bytes / 1048576).toFixed(1), am: new Date().toISOString(), voll, aed, details: details || null };
   LS.set('vk_offline', info);
   return info;
 }
 function vkOffText(){
   const o = vkOffInfo(); if(!o) return 'Keine Offline-Karte geladen.';
-  return 'Offline-Karte: ' + o.radius + ' km um den Ausgangspunkt' + (o.eigen ? ' (vollständig, Kartenstand ' + new Date(o.stand).toLocaleDateString('de-DE') + ')' : '') + ((o.zMax || 14) < 14 ? ' (ohne Hausnummern/Orte)' : '') + ', Stand ' + new Date(o.am).toLocaleDateString('de-DE') + ' (' + o.mb + ' MB, ' + o.kacheln + ' Kacheln' + (o.aed != null ? ', ' + o.aed + ' AED' : '') + ')';
+  const ohne = Array.isArray(o.details) ? VK_OFF_DETAILS.filter(x=> !o.details.includes(x[0])).map(x=> ({ geb: 'Gebäude', hnr: 'Hausnummern', poi: 'Praxen/Geschäfte', snam: 'Straßennamen', ort: 'Ortsnamen', natur: 'Wald/Wiesen', wasser: 'Gewässer', sonst: 'Sonstiges' })[x[0]]).concat(o.details.includes('aed') ? [] : ['AED']) : [];
+  const art = Array.isArray(o.details) ? (ohne.length ? 'individuell, ohne ' + ohne.join(', ') : 'individuell, alle Details') : 'vollständig';
+  return 'Offline-Karte: ' + o.radius + ' km um den Ausgangspunkt (' + art + ((o.zMax || 14) < 14 ? ', ohne Hausnummern/Orte' : '') + ')' + (o.eigen ? ', Kartenstand ' + new Date(o.stand).toLocaleDateString('de-DE') : '') + ', geladen am ' + new Date(o.am).toLocaleDateString('de-DE') + ' (' + o.mb + ' MB, ' + o.kacheln + ' Kacheln' + (o.aed != null ? ', ' + o.aed + ' AED' : '') + ')';
 }
 async function vkOfflineDialog(){
   const m = vkOffMitte();
   if(!m){ betaOverlay.meldung('Kein Ausgangspunkt festgelegt (Wache/Dienstprofil) – darum lässt sich das Gebiet nicht bestimmen.'); return false; }
-  let zMax = (vkOffInfo() || {}).eigen ? 'eigen' : (((vkOffInfo() || {}).zMax) === 13 ? 13 : 14);
-  let eigen = null;   // Info zur eigenen Karte (wird im Hintergrund geprueft)
+  const alt = vkOffInfo() || {};
+  let art = Array.isArray(alt.details) ? 'indiv' : 'voll';
+  let details = vkOffDetailsLaden();
+  let eigen = null;   // eigene Karte (karten-bw): wird im Hintergrund geprueft; sonst OpenFreeMap mit Download-Grenze
   const VK_EIGEN_MAX = 100;
-  const grenze = (z)=> z === 'eigen' ? VK_EIGEN_MAX : vkOffMaxRadius(m, vkOffKbJeKachel(z), z);
-  let radius = Math.min(grenze(zMax), (vkOffInfo() || {}).radius || 25);
+  const eigenOk = ()=> !!(eigen && !eigen.fehler);
+  const grenze = ()=> eigenOk() ? VK_EIGEN_MAX : vkOffMaxRadius(m, vkOffKbJeKachel(14), 14);
+  let radius = Math.min(grenze(), alt.radius || 25);
   const html = '<div class="fb-dialog"><div class="fb-info">' + htmlEsc(vkOffText()) + '</div>' +
-    '<div class="fb-lbl">Detail offline</div><div class="fb-chips vk-off-stufe">' +
-      '<button type="button" class="fb-chip" data-vkz="14"><b>Alles</b><small>mit Hausnummern und Orten · bis ' + grenze(14) + ' km</small></button>' +
-      '<button type="button" class="fb-chip" data-vkz="13"><b>Weiter Umkreis</b><small>Straßen und Orte · bis ' + grenze(13) + ' km</small></button>' +
-      '<button type="button" class="fb-chip" data-vkz="eigen" disabled><b>Vollständig</b><small id="vkOffEigen">eigene Karte wird geprüft …</small></button></div>' +
+    '<div class="fb-lbl">Details offline</div><div class="fb-chips vk-off-stufe">' +
+      '<button type="button" class="fb-chip" data-vkart="voll"><b>Vollständig</b><small>alles wie online</small></button>' +
+      '<button type="button" class="fb-chip" data-vkart="indiv"><b>Individuell</b><small>Details selbst wählen</small></button></div>' +
+    '<div class="vk-off-details" id="vkOffDet" hidden>' +
+      '<label class="vk-m-ebene vk-off-immer"><input type="checkbox" checked disabled> Straßen und Wege (immer dabei)</label>' +
+      VK_OFF_DETAILS.map(([k, l])=> '<label class="vk-m-ebene"><input type="checkbox" data-vkdet="' + k + '"' + (details.includes(k) ? ' checked' : '') + '> ' + htmlEsc(l) + '</label>').join('') +
+      '<label class="vk-m-ebene"><input type="checkbox" data-vkdet="aed"' + (details.includes('aed') ? ' checked' : '') + '> AED-Standorte</label></div>' +
     '<div class="fb-lbl">Umkreis um ' + htmlEsc(m.adr || 'den Ausgangspunkt') + '</div>' +
     '<div class="vk-off-regler"><input type="range" id="vkOffR" min="3" step="1"><b id="vkOffKm"></b></div>' +
     '<div class="vk-off-schaetzung" id="vkOffS"></div>' +
-    '<div class="fb-info" id="vkOffHinweis"></div>' +
-    '<div class="fb-info" id="vkOffGrenze"></div><div class="fb-info">Die Karte wird im Gerät gespeichert und auch ohne Internet angezeigt – in allen Stilen. Am besten im WLAN laden.</div></div>';
+    '<div class="fb-info" id="vkOffGrenze">Eigene Karte wird geprüft …</div><div class="fb-info">Die Karte wird im Gerät gespeichert und auch ohne Internet angezeigt – in allen Stilen. Am besten im WLAN laden.</div></div>';
   const kn = [{ label: 'Abbrechen', akt: 'nein' }];
   if(vkOffInfo()) kn.push({ label: 'Löschen', akt: 'weg' });
   kn.push({ label: vkOffInfo() ? 'Neu laden' : 'Laden', akt: 'ok', primaer: true });
   const warte = betaOverlay.ergebnis('Offline-Karte', html, kn);
   const regler = document.getElementById('vkOffR');
   const zeigen = ()=>{
-    if(zMax === 'eigen' && !(eigen && !eigen.fehler)) zMax = 14;
-    const rMax = grenze(zMax), kb = zMax === 'eigen' ? eigen.kbJeKachel : vkOffKbJeKachel(zMax);
+    const rMax = grenze(), d = art === 'indiv' ? details : null;
     regler.max = rMax; if(+regler.value > rMax || !regler.value) regler.value = Math.min(rMax, radius); radius = +regler.value;
-    const n = zMax === 'eigen' ? vkEigenKachelListe(m, radius).length : vkOffPlan(m, radius, zMax).liste.length;
-    document.getElementById('vkOffGrenze').textContent = zMax === 'eigen' ? 'Eigene Karte aus OpenStreetMap-Daten (Stand ' + new Date(eigen.stand).toLocaleDateString('de-DE') + ') – ohne Download-Grenze, mit allen Details.' : 'Mehr erlaubt der Kartendienst pro Download nicht (3.000 Kacheln / 50 MB).';
+    const n = eigenOk() ? vkEigenKachelListe(m, radius).length : vkOffPlan(m, radius, 14).liste.length;
+    const kb = (eigenOk() ? eigen.kbJeKachel : vkOffKbJeKachel(14)) * vkOffAnteil(d);
     document.getElementById('vkOffKm').textContent = radius + ' km';
-    document.getElementById('vkOffS').textContent = n + ' Kacheln · ca. ' + Math.max(1, Math.round(n * kb / 1024)) + ' MB (Schätzung)';
-    document.getElementById('vkOffHinweis').textContent = zMax === 'eigen' || zMax >= 14 ? 'Hausnummern, Praxen, Apotheken, Parkplätze usw. sind offline dabei.' : 'Offline: Straßen, Orte, Wald/Wasser bis Straßenebene (beim Heranzoomen vergrößert). Hausnummern und Orte wie Praxen/Apotheken kommen nur mit Internet.';
-    document.querySelectorAll('.beta-overlay [data-vkz]').forEach(b=> b.classList.toggle('an', String(b.dataset.vkz) === String(zMax)));
+    document.getElementById('vkOffS').textContent = n + ' Kacheln · ca. ' + Math.max(1, Math.round(n * kb / 1024)) + ' MB im Gerät (Schätzung)';
+    if(eigen) document.getElementById('vkOffGrenze').textContent = eigenOk()
+      ? 'Eigene Karte aus OpenStreetMap-Daten (Stand ' + new Date(eigen.stand).toLocaleDateString('de-DE') + ') – ohne Download-Grenze, bis ' + VK_EIGEN_MAX + ' km.' + (d ? ' Geladen wird die ganze Karte des Umkreises, gespeichert nur die gewählten Details.' : '')
+      : 'Eigene Karte hier nicht verfügbar – Kartendienst OpenFreeMap: höchstens 3.000 Kacheln / 50 MB je Download.' + (d ? ' Die Grenze gilt für die geladene Menge – weniger Details sparen nur Platz im Gerät.' : '');
+    document.querySelectorAll('.beta-overlay [data-vkart]').forEach(b=> b.classList.toggle('an', b.dataset.vkart === art));
+    document.getElementById('vkOffDet').hidden = art !== 'indiv';
   };
-  document.querySelectorAll('.beta-overlay [data-vkz]').forEach(b=> b.onclick = ()=>{ zMax = b.dataset.vkz === 'eigen' ? 'eigen' : +b.dataset.vkz; regler.max = grenze(zMax); regler.value = Math.min(grenze(zMax), zMax === 13 || zMax === 'eigen' ? Math.max(radius, zMax === 'eigen' ? 75 : 60) : radius); zeigen(); });
+  document.querySelectorAll('.beta-overlay [data-vkart]').forEach(b=> b.onclick = ()=>{ art = b.dataset.vkart; zeigen(); });
+  document.querySelectorAll('.beta-overlay [data-vkdet]').forEach(cb=> cb.onchange = ()=>{ details = [...document.querySelectorAll('.beta-overlay [data-vkdet]:checked')].map(x=> x.dataset.vkdet); zeigen(); });
   regler.value = radius; regler.oninput = ()=>{ radius = +regler.value; zeigen(); }; zeigen();
   vkEigeneKarteInfo().then(i=>{
-    eigen = i; const b = document.querySelector('.beta-overlay [data-vkz="eigen"]'), t = document.getElementById('vkOffEigen'); if(!b || !t) return;
-    if(i.fehler){ t.textContent = 'nicht verfügbar'; b.title = i.fehler; return; }
-    b.disabled = false; t.textContent = 'alles, ohne Grenze · bis ' + VK_EIGEN_MAX + ' km';
-    if((vkOffInfo() || {}).eigen || !vkOffInfo()){ zMax = 'eigen'; regler.max = VK_EIGEN_MAX; regler.value = Math.max(radius, 75); radius = +regler.value; }
+    const bx = i && i.box; if(!i.fehler && Array.isArray(bx) && !(m.lon >= bx[0] && m.lat >= bx[1] && m.lon <= bx[2] && m.lat <= bx[3])) i = { fehler: 'Ausgangspunkt liegt außerhalb der eigenen Karte' };
+    eigen = i; if(!document.getElementById('vkOffR')) return;
+    if(eigenOk() && (alt.eigen || !alt.radius)){ radius = Math.max(radius, 75); regler.max = VK_EIGEN_MAX; regler.value = radius; }
     zeigen();
   });
   const akt = await warte;
   if(akt === 'weg'){ betaOverlay.schliessen(); try{ await caches.delete(VK_OFF_CACHE); }catch(_){} LS.set('vk_offline', null); appToastAnzeigen('Offline-Karte gelöscht.', 2000); return true; }
   if(akt !== 'ok'){ betaOverlay.schliessen(); return false; }
+  LS.set('vk_off_details', details);
+  const zMax = eigenOk() ? 'eigen' : 14, wahl = art === 'indiv' ? details.slice() : null;
   let abbruch = false;
   betaOverlay.zeigen('Offline-Karte wird geladen');
   const textEl = document.querySelector('.beta-overlay .beta-overlay-text'), knEl = document.querySelector('.beta-overlay .beta-overlay-knoepfe');
   const stopp = document.createElement('button'); stopp.type = 'button'; stopp.className = 'btn-sekundaer'; stopp.textContent = 'Abbrechen'; stopp.onclick = ()=>{ abbruch = true; stopp.disabled = true; };
   knEl.appendChild(stopp);
   try{
-    const info = await vkOfflineLaden(m, radius, (t, a)=>{ if(textEl) textEl.textContent = t; betaOverlay.fortschritt(a); }, ()=> abbruch, zMax);
+    const info = await vkOfflineLaden(m, radius, (t, a)=>{ if(textEl) textEl.textContent = t; betaOverlay.fortschritt(a); }, ()=> abbruch, zMax, wahl);
     betaOverlay.schliessen();
     await betaOverlay.meldung('Fertig: ' + info.kacheln + ' Kacheln, ' + info.mb + ' MB' + (info.fehler ? ' (' + info.fehler + ' nicht geladen – später „Neu laden“)' : '') + (info.voll && !info.eigen ? '. Die 50-MB-Grenze war erreicht – ein kleinerer Umkreis hat mehr Details.' : '.'), 'Offline-Karte');
     return true;
@@ -17639,7 +17712,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v288';
+const APP_VERSION = 'v289';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
