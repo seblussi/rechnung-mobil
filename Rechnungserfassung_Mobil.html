@@ -1505,6 +1505,9 @@ try{
   .ds-weiter > svg{width:20px; height:20px; flex:0 0 auto; stroke-width:2.2;}
   .ds-weiter-icon{width:40px; height:40px; flex:0 0 auto; border-radius:12px; background:color-mix(in srgb, var(--ds-primaer-text) 16%, transparent); display:flex; align-items:center; justify-content:center;}
   .ds-weiter-icon svg{width:20px; height:20px;}
+  .ds-weiter-block{margin-bottom:16px;} .ds-weiter-zeile{display:flex; align-items:stretch; gap:8px; margin-top:12px;} .ds-weiter-zeile .ds-weiter{margin-top:0; flex:1; min-width:0;}
+  .ds-weiter-weg{flex:0 0 56px; margin:0; padding:0; border:1px solid var(--rand); border-radius:18px; background:var(--karte); color:#c0262d; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .ds-weiter-weg svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
   .ds-weiter-text{flex:1; min-width:0; display:flex; flex-direction:column;}
   .ds-weiter-text span{font-size:12px; font-weight:600; opacity:.75;}
   .ds-weiter-text b{font-size:16px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -14269,7 +14272,7 @@ function osmOfflineHtml(z, x0, y0, bw, bh){
 }
 function osmWelt(lat, lon, z){ const n = 256 * Math.pow(2, z), r = lat * Math.PI / 180; return { x: (lon + 180) / 360 * n, y: (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n }; }
 function osmGeo(x, y, z){ const n = 256 * Math.pow(2, z); return { lon: x / n * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI }; }
-function osmGeoListe(d){ const a = (d.pois || []).slice(); (d.weg || []).forEach(c=> a.push({ lat: c[1], lon: c[0] })); return a; }
+function osmGeoListe(d){ const a = (d.pois || []).slice(); (d.weg || []).forEach(c=> a.push({ lat: c[1], lon: c[0] })); (d.linie || []).forEach(g=>{ if(g && isFinite(g.lat)) a.push({ lat: g.lat, lon: g.lon }); }); return a; }
 function osmZoomFuer(d, bw, bh){
   const g = osmGeoListe(d); if(!g.length) return 12;
   for(let z = 14; z >= 3; z--){
@@ -14860,7 +14863,7 @@ function osmKarteOverlay(d, text, opt){
   const alles = ()=>{
     const liste = osmGeoListe(d);
     if(!liste.length){ const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); mitte = { lat: n.lat, lon: n.lon }; z = 11; zeichnen(); return; }
-    z = osmZoomFuer(d, Math.max(200, sc.clientWidth - 60), Math.max(200, sc.clientHeight - 60));
+    z = osmZoomFuer(d, Math.max(200, sc.clientWidth - 170), Math.max(200, sc.clientHeight - 110));   // Rand fuer die Knoepfe rechts
     const ps = liste.map(p=> osmWelt(p.lat, p.lon, z));
     mitte = osmGeo((Math.min.apply(null, ps.map(p=> p.x)) + Math.max.apply(null, ps.map(p=> p.x))) / 2, (Math.min.apply(null, ps.map(p=> p.y)) + Math.max.apply(null, ps.map(p=> p.y))) / 2, z);
     zeichnen();
@@ -14955,8 +14958,10 @@ function osmKarteOverlay(d, text, opt){
       const merk = wahl;
       routeMitWeg(startGeo, g).then(r=>{
         if(wahl !== merk || !r || !r.length || !document.body.contains(ov)) return;
-        d.weg = r[0].coords; neu();
-        const wi = ov.querySelector('#okWegInfo'); if(wi) wi.innerHTML = '<br><span class="weg-farbe"></span>Fahrstrecke ab ' + htmlEsc(startGeo.adr || 'Ausgangspunkt') + ' <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
+        // Wegegeld-Auswahl: Route immer ab Wache; sonst nur, wenn keine Route vom GPS-Standort da ist
+        wahl._wacheWeg = r[0].coords;
+        if(W || wahl._gpsFertig && !(d.gpsWeg && d.gpsWeg.length > 1)){ d.weg = r[0].coords; neu(); if(W && wahl._uebersicht) alles(); }
+        const wi = ov.querySelector('#okWegInfo'); if(wi) wi.innerHTML = '<br>Fahrstrecke ab ' + htmlEsc(startGeo.adr || 'Ausgangspunkt') + ' <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
       }).catch(()=>{ const wi = ov.querySelector('#okWegInfo'); if(wi) wi.textContent = ' · Fahrstrecke nicht verfügbar (offline?)'; });
     }
     // Weg vom eigenen GPS-Standort (violett)
@@ -14964,7 +14969,9 @@ function osmKarteOverlay(d, text, opt){
       const merk = wahl; d.gpsWeg = [];
       wegVomStandort(g).then(w=>{
         if(wahl !== merk || !document.body.contains(ov)) return;
-        if(w && w.coords && w.coords.length > 1){ d.gpsWeg = w.coords; d.pois = d.pois.filter(q=> q.kl !== 'ich').concat([{ lat: w.pos.lat, lon: w.pos.lon, kl: 'ich' }]); neu(); }
+        merk._gpsFertig = true;
+        if(w && w.coords && w.coords.length > 1){ d.gpsWeg = w.coords; d.weg = []; d.pois = d.pois.filter(q=> q.kl !== 'ich').concat([{ lat: w.pos.lat, lon: w.pos.lon, kl: 'ich' }]); neu(); }
+        else if(merk._wacheWeg){ d.weg = merk._wacheWeg; neu(); }
         const gi = ov.querySelector('#okGpsInfo'); if(gi) gi.innerHTML = wegVomStandortText(w);
       }).catch(()=>{});
     }
@@ -14978,6 +14985,7 @@ function osmKarteOverlay(d, text, opt){
     try{ g = await gkvOrtSuchen(a); }catch(_){ info.textContent = 'Keine Verbindung zum Kartendienst – bitte auf die Einsatzstelle tippen.'; return; }
     if(!g){ info.textContent = 'Adresse nicht gefunden – bitte prüfen oder auf die Einsatzstelle tippen.'; return; }
     hinZu(g, 13.5); waehlen(g, 'Adresse' + (g.gefunden ? ' (' + g.gefunden + ')' : ''), a);
+    if(W && wahl){ wahl._uebersicht = true; alles(); }
   };
   ov.querySelector('.nfp-such-knopf').onclick = suchen;
   ov.querySelector('#nfpPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); suchen(); } };
@@ -14991,7 +14999,7 @@ function osmKarteOverlay(d, text, opt){
     if(!g){ if(!still) info.textContent = 'Kein Standort verfügbar.'; return; }
     d.pois = d.pois.filter(q=> q.kl !== 'ich').concat([{ lat: g.lat, lon: g.lon, kl: 'ich' }]);
     hinZu(g, 14);
-    if(W) waehlen(g, 'Standort'); else info.textContent = 'Dein Standort';
+    if(W){ waehlen(g, 'Standort'); if(wahl){ wahl._uebersicht = true; alles(); } } else info.textContent = 'Dein Standort';
   };
   ov.querySelector('.ok-position').onclick = ()=> position(false);
   sc.addEventListener('click', (ev)=>{
@@ -15098,7 +15106,7 @@ function osmKarteOverlay(d, text, opt){
       else if(W && W.adresse && W.adresse.lat){ mitte = { lat: W.adresse.lat, lon: W.adresse.lon }; z = 13.5; zeichnen(); }
       else alles();
       if(W){
-        if(W.adresse && W.adresse.lat) waehlen(W.adresse, 'Adresse', W.adresseText || '');
+        if(W.adresse && W.adresse.lat){ waehlen(W.adresse, 'Adresse', W.adresseText || ''); if(wahl){ wahl._uebersicht = true; alles(); } }
         else if(W.adresseText) suchen();
         else if(W.gps) position(true);
       }
@@ -16311,12 +16319,16 @@ function vektorKarteOverlay(d, text, opt){
       const s3 = map.getSource('vk-gps'); if(s3) s3.setData({ type: 'FeatureCollection', features: d.gpsWeg && d.gpsWeg.length > 1 ? [linie(d.gpsWeg)] : [] });
     };
     // Weg vom eigenen GPS-Standort zum gesetzten Punkt (violett)
+    let wacheWeg = null, gpsFertig = false;
     const gpsWegHolen = (g, nr)=>{
-      d.gpsWeg = []; datenNeu();
+      d.gpsWeg = []; wacheWeg = null; gpsFertig = false; datenNeu();
       wegVomStandort(g).then(w=>{
         if(nr !== zielNr || !document.body.contains(ov)) return;
         if(w){ if(ichMarke) ichMarke.remove(); ichMarke = marke('<span class="vk-ich"></span>', w.pos); }
-        if(w && w.coords && w.coords.length > 1){ d.gpsWeg = w.coords; datenNeu(); }
+        // mit GPS: nur die Route vom Standort zeichnen (Zahlen der Wache bleiben im Text)
+        if(w && w.coords && w.coords.length > 1){ d.gpsWeg = w.coords; d.weg = []; datenNeu(); }
+        else if(wacheWeg){ d.weg = wacheWeg; datenNeu(); }
+        gpsFertig = true;
         const gi = ov.querySelector('#vkGpsInfo'); if(gi) gi.innerHTML = wegVomStandortText(w);
       }).catch(()=>{});
     };
@@ -16372,8 +16384,9 @@ function vektorKarteOverlay(d, text, opt){
         if(nr !== zielNr || !document.body.contains(ov)) return;
         const wi = ov.querySelector('#vkWegInfo');
         if(!r || !r.length){ if(wi) wi.textContent = 'Fahrstrecke nicht verfügbar (offline?)'; return; }
-        d.weg = r[0].coords; datenNeu();
-        if(wi) wi.innerHTML = '<span class="weg-farbe"></span>Fahrstrecke ab ' + htmlEsc(s.adr || 'Ausgangspunkt') + ' <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
+        wacheWeg = r[0].coords;
+        if(gpsFertig && !(d.gpsWeg && d.gpsWeg.length > 1)){ d.weg = wacheWeg; datenNeu(); }   // ohne GPS: Route ab Wache zeichnen
+        if(wi) wi.innerHTML = 'Fahrstrecke ab ' + htmlEsc(s.adr || 'Ausgangspunkt') + ' <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
       }).catch(()=>{ const wi = ov.querySelector('#vkWegInfo'); if(wi) wi.textContent = 'Fahrstrecke nicht verfügbar (offline?)'; });
     };
     const adresseZu = async (g)=>{
@@ -17417,7 +17430,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v279';
+const APP_VERSION = 'v280';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -17822,6 +17835,17 @@ function designOffeneFaelle(){
   }catch(_){}
   return out;
 }
+// alle unfertigen Faelle (GKV in Erfassung + unfertige LS/PT) -- je mit Weitermachen und Verwerfen
+function designWeiterFaelle(){
+  const out = [];
+  try{
+    if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim())
+      out.push({ art: 'gkv', name: gkvEntwurf.name || 'GKV-Patient', titel: (gkvEntwurf.name || 'GKV-Patient') + ' · GKV', oeffnen: ()=> ansichtGkv(), verwerfen: ()=>{ gkvEntwurf = null; } });
+    betaEntwuerfe().forEach(e=>{ const n = ((e.werte || {}).txtName || '').trim() || 'ohne Namen';
+      out.push({ art: e.art, name: n, titel: n + ' · ' + String(e.art).toUpperCase(), oeffnen: ()=> betaEntwurfOeffnen(e, null), verwerfen: ()=> betaEntwurfEntfernen(e.id) }); });
+  }catch(_){}
+  return out;
+}
 function designWeiterFall(){
   try{
     if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim())
@@ -18137,9 +18161,16 @@ function designStartErgaenzen(){
     // schmale Zeile ueber den Kacheln: Dienst starten (nur wenn keiner laeuft/geplant ist)
     if(info.modus !== 'laufend' && info.modus !== 'geplant')
       vor('<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>');
-    if(w) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand"><button type="button" class="ds-weiter" id="dsWeiter"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten</span><b>' + htmlEsc(w.titel) + '</b></span>' + DS_ICON.pfeil + '</button></div>');
+    const ws = designWeiterFaelle();
+    if(ws.length) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand ds-weiter-block">' + ws.map((x, i)=> '<div class="ds-weiter-zeile"><button type="button" class="ds-weiter" data-wf="' + i + '"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten · unfertig</span><b>' + htmlEsc(x.titel) + '</b></span>' + DS_ICON.pfeil + '</button>' +
+      '<button type="button" class="ds-weiter-weg" data-wfweg="' + i + '" aria-label="Unfertigen Fall verwerfen" title="Verwerfen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button></div>').join('') + '</div>');
     // Leiste unten kommt global (designGlobalNav), damit sie auf allen Seiten steht
-    if(w) document.getElementById('dsWeiter').onclick = w.oeffnen;
+    app.querySelectorAll('[data-wf]').forEach(b=> b.onclick = ()=> ws[+b.dataset.wf].oeffnen());
+    app.querySelectorAll('[data-wfweg]').forEach(b=> b.onclick = async ()=>{
+      const x = ws[+b.dataset.wfweg]; if(!x) return;
+      if(!await betaFrage('Unfertigen Fall „' + x.name + '“ (' + String(x.art).toUpperCase() + ') verwerfen? Die Eingaben gehen verloren.', 'Verwerfen', 'Abbrechen')) return;
+      x.verwerfen(); appToastAnzeigen('Unfertiger Fall verworfen.', 2000); ansichtStart();
+    });
     const dst = document.getElementById('dsDienstStart');
     if(dst) dst.onclick = async ()=>{ if(await liveDienstDialog()) ansichtStart(); };
   }
