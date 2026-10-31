@@ -1585,7 +1585,7 @@ try{
   .luft-karte-legende{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--text-schwach); margin-top:6px;}
   .luft-karte-legende i{display:inline-block; width:12px; height:12px; margin-right:5px; vertical-align:-1px; border-radius:50%;}
   .luft-karte-legende i.ich{background:#2f80ed; box-shadow:0 0 0 3px rgba(47,128,237,.3);} .luft-karte-legende i.f.ls{background:var(--ls-farbe);} .luft-karte-legende i.f.pt{background:var(--pt-farbe);} .luft-karte-legende i.f.gkv{background:#7d4e9e;}
-  .luft-karte-legende i.g{height:4px; border-radius:2px; background:#8e2bd6; width:16px;} .luft-karte-legende i.aed{border-radius:3px; background:#00924a;} .luft-karte-legende i.kr{height:0; border-radius:0; border-top:2.5px dashed #1a55c9; width:16px;} .luft-karte-legende i.zo{border-radius:3px; background:linear-gradient(90deg,#4caf50,#ffeb3b,#ff9800,#e53935);}
+  .luft-karte-legende i.g{height:4px; border-radius:2px; background:#8e2bd6; width:16px;} .luft-karte-legende i.aed{border-radius:3px; background:#00924a;} .luft-karte-legende i.kr{height:3px; border-radius:0; width:18px; background:repeating-linear-gradient(90deg,#e6c800 0 3px,transparent 3px 4px,#2f8fd6 4px 7px,transparent 7px 8px,#2fa84f 8px 11px,transparent 11px 12px,#d9609f 12px 15px,transparent 15px 16px,#4aa6cf 16px 18px);} .luft-karte-legende i.zo{border-radius:3px; background:linear-gradient(90deg,#4caf50,#ffeb3b,#ff9800,#e53935);}
   .vk-legende{margin:4px 0 2px;}
   .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='5' fill='%23111'/%3E%3Cpath d='M6 12h12M12 6v12' stroke='%23fff' stroke-width='3.6' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:13px; height:13px;}
   .luft-karte-legende i.rtw{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 20'%3E%3Cpath d='M1 2H21V6H27L33 11V16H1Z' fill='%23111'/%3E%3Ccircle cx='8' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Ccircle cx='26' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Cpath d='M7 9h8M11 5v8' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:20px; height:12px;}
@@ -1615,7 +1615,7 @@ try{
   .karte-ebene.laedt{opacity:.55;}
   .karte-auge{position:absolute; top:74px; right:10px; z-index:4; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
-  .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} .karte-auge.kreise{box-shadow:0 0 0 3px #1a55c9, 0 2px 8px rgba(0,0,0,.35);} .karte-auge.kreise svg{color:#1a55c9;} .karte-auge.aus{opacity:.85;}
+  .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} .karte-auge.kreise{box-shadow:0 0 0 3px #2fa84f, 0 2px 8px rgba(0,0,0,.35);} .karte-auge.kreise svg{color:#2fa84f;} .karte-auge.aus{opacity:.85;}
   .mini-ebenen .karte-auge{width:40px; height:40px; top:54px; right:8px; border-radius:9px;} .mini-ebenen .karte-auge svg{width:18px; height:18px;}
   .ok-zoom{position:absolute; right:10px; bottom:76px; z-index:5; display:flex; flex-direction:column; gap:10px;}
   .ok-zoom button{width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
@@ -14277,6 +14277,8 @@ function augeKlasse(el){ if(!el) return; const m = karteModus(); el.classList.to
   el.title = { an: 'Zonen (antippen: nur km-Kreise)', kreise: 'nur km-Kreise (antippen: aus)', aus: 'aus (antippen: Zonen)' }[m]; }
 // km-Kreise um die Notfallpraxis (wie der 50-km-Kreis): Stufen der Wegepauschale
 const KM_KREISE = [2, 5, 10, 20, 30];
+// Farben wie die Zonen der KVBW-Karte (2-km-Zone ... 30-km-Zone)
+const kmKreisFarbe = (R)=>{ const i = KM_KREISE.indexOf(R) + 1; return (typeof NFP_ZONEN !== 'undefined' && NFP_ZONEN[i] && NFP_ZONEN[i].farbe) || '#555'; };
 function nfpKreis(R){
   nfpKreis.c = nfpKreis.c || {}; if(nfpKreis.c[R]) return nfpKreis.c[R];
   const m = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]), p = [];
@@ -14293,8 +14295,8 @@ function vkKreiseGeo(){
   if(typeof NFP_KARTE === 'undefined') return { type: 'FeatureCollection', features: [] };
   const f = [];
   KM_KREISE.forEach(R=>{ const k = nfpKreis(R);
-    f.push({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: k.map(g=> [g.lon, g.lat]) } });
-    f.push({ type: 'Feature', properties: { t: R + ' km' }, geometry: { type: 'Point', coordinates: [k[0].lon, k[0].lat] } }); });
+    f.push({ type: 'Feature', properties: { farbe: kmKreisFarbe(R) }, geometry: { type: 'LineString', coordinates: k.map(g=> [g.lon, g.lat]) } });
+    f.push({ type: 'Feature', properties: { t: R + ' km', farbe: kmKreisFarbe(R) }, geometry: { type: 'Point', coordinates: [k[0].lon, k[0].lat] } }); });
   return { type: 'FeatureCollection', features: f };
 }
 function vkKreiseEbenen(map){
@@ -14302,9 +14304,9 @@ function vkKreiseEbenen(map){
   const an = karteModus() === 'kreise' ? 'visible' : 'none';
   map.addSource('vk-kreise', { type: 'geojson', data: vkKreiseGeo() });
   map.addLayer({ id: 'vk-kreise-li', type: 'line', source: 'vk-kreise', filter: ['==', ['geometry-type'], 'LineString'], layout: { visibility: an },
-    paint: { 'line-color': '#1a55c9', 'line-width': 2, 'line-dasharray': [3, 2], 'line-opacity': 0.85 } });
+    paint: { 'line-color': ['get', 'farbe'], 'line-width': 2.5, 'line-dasharray': [3, 2], 'line-opacity': 0.95 } });
   map.addLayer({ id: 'vk-kreise-tx', type: 'symbol', source: 'vk-kreise', filter: ['==', ['geometry-type'], 'Point'], layout: { visibility: an, 'text-field': ['get', 't'], 'text-font': ['Noto Sans Bold'], 'text-size': 12, 'text-allow-overlap': true },
-    paint: { 'text-color': '#1a55c9', 'text-halo-color': '#ffffff', 'text-halo-width': 2 } });
+    paint: { 'text-color': ['get', 'farbe'], 'text-halo-color': '#ffffff', 'text-halo-width': 2 } });
 }
 function vkModusAnwenden(map){
   if(!map) return; const m = karteModus();
@@ -14422,8 +14424,8 @@ function osmAusschnitt(d, opt){
   if(d.linie && d.linie[0] && d.linie[1]){ const a = P(d.linie[0]), b = P(d.linie[1]); svg += '<line class="luft-linie" x1="' + f(a.x) + '" y1="' + f(a.y) + '" x2="' + f(b.x) + '" y2="' + f(b.y) + '"/>'; }
   if(d.nfp && typeof NFP_KARTE !== 'undefined' && opt.kreise){
     KM_KREISE.forEach(R=>{ const k = nfpKreis(R).map(P);
-      svg += '<polyline class="km-kreis" points="' + k.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '"/>' +
-        '<text x="' + f(k[0].x) + '" y="' + f(k[0].y - r * 0.5) + '" class="km-kreis-text" font-size="' + f(Math.max(r * 1.2, 10)) + '">' + R + ' km</text>'; });
+      svg += '<polyline class="km-kreis" style="stroke:' + kmKreisFarbe(R) + '" points="' + k.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '"/>' +
+        '<text x="' + f(k[0].x) + '" y="' + f(k[0].y - r * 0.5) + '" class="km-kreis-text" style="fill:' + kmKreisFarbe(R) + '" font-size="' + f(Math.max(r * 1.2, 10)) + '">' + R + ' km</text>'; });
   }
   if(d.nfp && typeof NFP_KARTE !== 'undefined'){
     const k = nfp50Kreis().map(P);
@@ -17603,7 +17605,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v284';
+const APP_VERSION = 'v285';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
