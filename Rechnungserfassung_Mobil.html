@@ -1640,6 +1640,7 @@ try{
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .mini-aed svg{width:20px; height:20px;}
   .vk-defimap a{color:#00924a; font-weight:600;}
+  .adr-zwei{display:flex; flex-direction:column; gap:6px;} .adr-zwei input{width:100%; box-sizing:border-box;} .adr-zwei-hinweis{color:var(--warn, #b3261e); min-height:0;} .adr-zwei-hinweis:empty{display:none;}
   .vk-aed-info{font-size:13.5px; line-height:1.35; color:#222;} .vk-aed-info .vk-navi{display:inline-block; margin:6px 0 2px; padding:6px 10px; font-size:13px;}
   .vk-ziehbar{width:22px !important; height:22px !important; cursor:grab;}
   .mini-fenster > .mini-vk, .mini-fenster > .mini-vk.maplibregl-map{position:absolute; inset:0; width:100%; height:100%;}
@@ -12719,6 +12720,38 @@ function gkvAdrTeile(a){
   return { strasse: a.slice(0, i).trim(), plzOrt: a.slice(i + 1).trim() };
 }
 function gkvAdrZusammen(s, p){ s = String(s || '').trim(); p = String(p || '').trim(); return s && p ? s + ', ' + p : (s || p); }
+// ---------- Einzeilige Adressfelder (Praxis, Wache/Ausgangspunkt, Dienstprofil) zweizeilig ----------
+// Das urspruengliche Feld bleibt (versteckt) erhalten und wird mitgefuehrt ("Straße Nr., PLZ Ort"),
+// damit Speichern/ini unveraendert funktionieren. Dazu die ueblichen Pruefungen: Grossschreibung,
+// "str" -> "straße", PLZ <-> Ort ergaenzen.
+const ADR_ZWEIZEILIG = '#txtPraxisadresse, #ini_GKV_STARTADRESSE, #ini_PRAXISADRESSE, #dpAdr, input[data-ini="GKV_STARTADRESSE"], input[data-ini="PRAXISADRESSE"]';
+let adrZweiNr = 0;
+function adrZweizeiligMachen(el){
+  if(!el || el.dataset.adrZwei || el.tagName !== 'INPUT') return;
+  el.dataset.adrZwei = '1';
+  const basis = el.id || ('adr2_' + (++adrZweiNr)), t = gkvAdrTeile(el.value);
+  const box = document.createElement('div'); box.className = 'adr-zwei';
+  const str = document.createElement('input'), ort = document.createElement('input'), hin = document.createElement('small');
+  str.type = ort.type = 'text'; str.autocomplete = ort.autocomplete = 'off';
+  str.id = basis + '_str'; ort.id = basis + '_ort'; str.placeholder = 'Straße Nr.'; ort.placeholder = 'PLZ Ort';
+  str.setAttribute('aria-label', 'Straße und Hausnummer'); ort.setAttribute('aria-label', 'PLZ und Ort');
+  if(document.getElementById('plzOrtListe')) ort.setAttribute('list', 'plzOrtListe');
+  str.value = t.strasse; ort.value = t.plzOrt; hin.className = 'adr-zwei-hinweis';
+  GROSS_FELDER[str.id] = 's'; GROSS_FELDER[ort.id] = 'g';
+  const sync = (art)=>{ const v = gkvAdrZusammen(str.value, ort.value); if(el.value !== v){ el.value = v; el.dispatchEvent(new Event(art || 'input', { bubbles: true })); } };
+  str.addEventListener('input', ()=> sync('input')); ort.addEventListener('input', ()=> sync('input'));
+  str.addEventListener('change', ()=> sync('change'));
+  ort.addEventListener('blur', async ()=>{
+    try{ await gkvPlzOrtErgaenzen(str, ort, hin); }catch(_){}
+    if(ort.value.trim() && !plzAusText(ort.value) && !hin.textContent) hin.textContent = 'Bitte PLZ ergänzen.';
+    sync('change');
+  });
+  el.style.display = 'none'; el.tabIndex = -1;
+  box.append(str, ort, hin); el.insertAdjacentElement('afterend', box);
+}
+function adrZweizeiligAlle(root){ (root || document).querySelectorAll(ADR_ZWEIZEILIG).forEach(adrZweizeiligMachen); }
+let adrZweiGeplant = false;
+new MutationObserver(()=>{ if(adrZweiGeplant) return; adrZweiGeplant = true; requestAnimationFrame(()=>{ adrZweiGeplant = false; adrZweizeiligAlle(); }); }).observe(document.documentElement, { childList: true, subtree: true });
 // Wie in der Rechnungsmaske: nur PLZ -> Ort ergaenzen, nur Ort -> PLZ ergaenzen
 async function gkvPlzOrtErgaenzen(strFeld, feld, infoEl){
   const setzeInfo = (t)=>{ if(infoEl) infoEl.textContent = t || ''; };
@@ -17384,7 +17417,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v278';
+const APP_VERSION = 'v279';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
