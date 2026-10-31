@@ -15377,7 +15377,7 @@ function vkGrauKontrast(stil){
   const F = {
     'background': { 'background-color': '#3a3f47' },
     'water': { 'fill-color': '#2f6496' }, 'waterway': { 'line-color': '#4a83bb' },
-    'building': { 'fill-color': '#5a616d', 'fill-outline-color': '#6c7481' },
+    'building': { 'fill-color': '#858d99', 'fill-outline-color': '#9aa2ad' },
     'highway_path': { 'line-color': '#8d95a1', 'line-opacity': 1 },
     'highway_minor': { 'line-color': '#9aa2ae', 'line-opacity': 1 },
     'highway_major_casing': { 'line-color': '#262a30' }, 'highway_major_inner': { 'line-color': '#c9cfd8' }, 'highway_major_subtle': { 'line-color': '#b3bac4' },
@@ -15663,7 +15663,7 @@ function vkZusatzEbenen(map, st){
     map.setLayoutProperty(l.id, 'visibility', 'none');
     if(!map.getLayer('vk-gebaeude') && l['source-layer'] === 'building')
       map.addLayer({ id: 'vk-gebaeude', type: 'fill', source: l.source, 'source-layer': 'building', minzoom: 13,
-        paint: { 'fill-color': dunkel ? (grau ? '#5a616d' : '#2b3038') : (st === 'osm' ? '#d9d0c9' : '#dcd6cf'), 'fill-outline-color': dunkel ? (grau ? '#6c7481' : '#3a404a') : (st === 'osm' ? '#c4b6ab' : '#c9c1b8') } }, l.id);
+        paint: { 'fill-color': dunkel ? (grau ? '#858d99' : '#2b3038') : (st === 'osm' ? '#d9d0c9' : '#dcd6cf'), 'fill-outline-color': dunkel ? (grau ? '#9aa2ad' : '#3a404a') : (st === 'osm' ? '#c4b6ab' : '#c9c1b8') } }, l.id);
   });
   const halo = dunkel ? (grau ? '#262a30' : '#10151c') : '#ffffff';
   const punkt = ['match', ['geometry-type'], ['Point', 'MultiPoint'], true, false];
@@ -17219,7 +17219,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v271';
+const APP_VERSION = 'v272';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
