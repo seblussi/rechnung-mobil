@@ -15577,11 +15577,12 @@ const VK_BIOME_GRAU = {
 const VK_BIOME_DUNKEL = {
   hintergrund: '#1e2228', wasser: '#173250', fluss: '#2b5680',
   flaechen: [
+    ['park', { nicht: ['nature_reserve', 'national_park', 'protected_area', 'nature_park', 'naturpark'] }, '#1f3d29', 0.9],   // zuerst, ohne Schutzgebiete (s. Dunkelgrau)
     ['landcover', 'farmland', '#2a2a22', 0.9], ['landcover', 'grass', '#20301f', 0.9], ['landcover', 'wood', '#183a24', 0.95],
     ['landcover', 'rock', '#2b2b2e', 0.8], ['landcover', 'sand', '#34301f', 0.8], ['landcover', 'wetland', '#1b302d', 0.85],
     ['landuse', 'residential', '#2a2f37', 0.9], ['landuse', 'commercial', '#30293a', 0.85], ['landuse', 'retail', '#352a30', 0.85],
     ['landuse', 'industrial', '#2e2a38', 0.85], ['landuse', 'quarry', '#2c2a28', 0.8], ['landuse', 'military', '#332626', 0.6],
-    ['landuse', 'hospital', '#3a2630', 0.9], ['landuse', 'cemetery', '#1f3326', 0.9], ['park', null, '#1f3d29', 0.9]
+    ['landuse', 'hospital', '#3a2630', 0.9], ['landuse', 'cemetery', '#1f3326', 0.9]
   ]
 };
 function vkBiome(stil, pal){
@@ -17368,7 +17369,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v275';
+const APP_VERSION = 'v276';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
