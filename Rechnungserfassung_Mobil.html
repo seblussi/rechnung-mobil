@@ -1654,6 +1654,9 @@ try{
   .mini-pos{position:absolute; bottom:8px; right:54px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .mini-pos svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round;}
   .vk-defimap a{color:#00924a; font-weight:600;}
+  .praxen-liste{display:flex; flex-direction:column; gap:10px; margin:6px 0 8px;} .praxis-zeile{border:1px solid var(--rand); border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;} .praxis-zeile.an{border-color:#1a55c9; box-shadow:0 0 0 1px #1a55c9;}
+  .praxis-kopf{display:flex; align-items:center; gap:8px;} .praxis-wahl{display:flex; align-items:center; gap:4px; font-size:12.5px; white-space:nowrap; margin:0;} .praxis-wahl input{width:18px; height:18px; margin:0;}
+  .praxis-name{flex:1; min-width:0;} .praxis-weg{width:34px; height:34px; margin:0; padding:0; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:#c0262d; font-size:20px; line-height:1;} .praxis-neu{width:auto;}
   .adr-zwei{display:flex; flex-direction:column; gap:6px;} .adr-zwei input{width:100%; box-sizing:border-box;} .adr-zwei-hinweis{color:var(--warn, #b3261e); min-height:0;} .adr-zwei-hinweis:empty{display:none;}
   .vk-aed-info{font-size:13.5px; line-height:1.35; color:#222;} .vk-aed-info .vk-navi{display:inline-block; margin:6px 0 2px; padding:6px 10px; font-size:13px;}
   .vk-ziehbar{width:22px !important; height:22px !important; cursor:grab;}
@@ -7835,6 +7838,57 @@ function iniCacheSpeichern(werte){ LS.set(INI_CACHE_SCHLUESSEL, {werte, geladenA
 
 // Laedt die ini und uebernimmt PRAXISADRESSE/REISE_BASIS_LUFTLINIE in die
 // App-Einstellungen (gleiche Bedeutung wie am PC).
+// ---------- Mehrere Wachen/Praxen (Einstellungen) ----------
+// e.praxen = [{ name, adresse }], e.praxisAktiv = Index; e.praxisadresse = Adresse der aktiven (wie bisher ueberall genutzt)
+function praxenLaden(e){
+  e = e || ladeEinstellungen();
+  let l = Array.isArray(e.praxen) ? e.praxen.filter(x=> x && typeof x === 'object') : [];
+  if(!l.length) l = [{ name: 'Wache/Praxis', adresse: e.praxisadresse || '' }];
+  let i = Number.isInteger(e.praxisAktiv) && l[e.praxisAktiv] ? e.praxisAktiv : 0;
+  const pa = (e.praxisadresse || '').trim();
+  if(pa && (l[i].adresse || '').trim() !== pa){   // aktive Adresse wurde woanders geaendert (PC/ini, Assistent)
+    const j = l.findIndex(x=> (x.adresse || '').trim() === pa);
+    if(j >= 0) i = j; else if(!(l[i].adresse || '').trim()) l[i].adresse = pa; else { l.push({ name: 'Wache/Praxis ' + (l.length + 1), adresse: pa }); i = l.length - 1; }
+  }
+  return { liste: l, aktiv: i };
+}
+function praxenListeZeichnen(){
+  const box = document.getElementById('praxenListe'), versteckt = document.getElementById('txtPraxisadresse'); if(!box || !versteckt) return;
+  const { liste, aktiv } = praxenLaden();
+  box.innerHTML = liste.map((x, i)=> '<div class="praxis-zeile' + (i === aktiv ? ' an' : '') + '" data-pi="' + i + '">' +
+    '<div class="praxis-kopf"><label class="praxis-wahl"><input type="radio" name="praxisAktiv" value="' + i + '"' + (i === aktiv ? ' checked' : '') + '> ' + (i === aktiv ? 'aktiv' : 'wählen') + '</label>' +
+    '<input type="text" class="praxis-name" placeholder="Name, z. B. Wache Offenburg" value="' + htmlEsc(x.name || '') + '">' +
+    (liste.length > 1 ? '<button type="button" class="praxis-weg" aria-label="Entfernen" title="Entfernen">×</button>' : '') + '</div>' +
+    '<input type="text" class="praxis-adr" id="praxisAdr_' + i + '_' + Date.now() + '" value="' + htmlEsc(x.adresse || '') + '" placeholder="Straße Nr., PLZ Ort"></div>').join('');
+  const lesen = ()=>{
+    const l = [...box.querySelectorAll('.praxis-zeile')].map(z=> ({ name: z.querySelector('.praxis-name').value.trim(), adresse: z.querySelector('.praxis-adr').value.trim() }));
+    const r = box.querySelector('input[name="praxisAktiv"]:checked'); return { l, a: r ? +r.value : 0 };
+  };
+  const sichern = (neuZeichnen)=>{
+    const { l, a } = lesen(); const adr = praxenSpeichern(l, a);
+    if(versteckt.value !== adr){ versteckt.value = adr; versteckt.dispatchEvent(new Event('blur')); }
+    if(neuZeichnen) praxenListeZeichnen();
+  };
+  box.querySelectorAll('input[name="praxisAktiv"]').forEach(r=> r.onchange = ()=> sichern(true));
+  box.querySelectorAll('.praxis-name').forEach(n=> n.addEventListener('change', ()=> sichern(false)));
+  box.querySelectorAll('.praxis-adr').forEach(n=> n.addEventListener('change', ()=> sichern(false)));
+  box.querySelectorAll('.praxis-weg').forEach(b=> b.onclick = async ()=>{
+    const z = b.closest('.praxis-zeile'), name = z.querySelector('.praxis-name').value.trim() || z.querySelector('.praxis-adr').value.trim() || 'diese Wache/Praxis';
+    if(!await betaFrage('„' + name + '“ entfernen?', 'Entfernen', 'Abbrechen')) return;
+    const { l, a } = lesen(), i = +z.dataset.pi; l.splice(i, 1);
+    praxenSpeichern(l, a === i ? 0 : (a > i ? a - 1 : a)); const adr = ladeEinstellungen().praxisadresse || '';
+    if(versteckt.value !== adr){ versteckt.value = adr; versteckt.dispatchEvent(new Event('blur')); }
+    praxenListeZeichnen();
+  });
+  const neu = document.getElementById('praxisNeu');
+  if(neu) neu.onclick = ()=>{ const { l, a } = lesen(); l.push({ name: '', adresse: '' }); praxenSpeichern(l, a); praxenListeZeichnen(); const z = box.querySelector('.praxis-zeile:last-child .praxis-name'); if(z) z.focus(); };
+}
+function praxenSpeichern(liste, aktiv){
+  const e = ladeEinstellungen();
+  e.praxen = liste; e.praxisAktiv = aktiv; e.praxisadresse = ((liste[aktiv] || {}).adresse || '').trim();
+  speichereEinstellungen(e);
+  return e.praxisadresse;
+}
 async function iniVonOneDriveLaden(){
   const token = await msGraphTokenHolen();
   if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv (Einstellungen > Microsoft/OneDrive-Anmeldung).');
@@ -8258,7 +8312,7 @@ function betaEinstellungenWiring(){
       const ini = await iniVonOneDriveLaden();
       betaIniBasis = {...ini.werte};
       if(!betaIniBearbeitet || !stumm){ betaIniFormularFuellen(ini.werte); betaIniBearbeitet = false; }
-      const pa = document.getElementById('txtPraxisadresse'); if(pa) pa.value = ladeEinstellungen().praxisadresse || '';
+      const pa = document.getElementById('txtPraxisadresse'); if(pa){ pa.value = ladeEinstellungen().praxisadresse || ''; praxenListeZeichnen(); }
       const rb = document.getElementById('chkReiseBasisLuftlinie'); if(rb) rb.checked = !ladeEinstellungen().reiseBasisLuftlinie;
       statusSetzen();
       if(!stumm) meldung(ini.vorhanden ? 'Geladen.' : 'Es gibt noch keine einstellungen.ini in OneDrive -- sie wird beim Speichern angelegt.', true);
@@ -12706,7 +12760,8 @@ async function gkvProfilBearbeiten(id){
 // Praxisadresse. Nur die Adresse (ohne Namen) geht an den Kartendienst.
 function gkvStartAdresse(){
   const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {};
-  return String(w.GKV_STARTADRESSE || w.PRAXISADRESSE || (ladeEinstellungen() || {}).praxisadresse || '').trim();
+  // die in den Einstellungen gewaehlte Wache/Praxis gilt -- erst danach die ini (aeltere Eintraege)
+  return String((ladeEinstellungen() || {}).praxisadresse || w.GKV_STARTADRESSE || w.PRAXISADRESSE || '').trim();
 }
 // Suche in der Region zuerst (Ortenau und Umgebung), damit auch ein reiner
 // Ortsteil ohne Strasse/PLZ ("Riedle", "Ulm", "Bühl") den richtigen Ort trifft;
@@ -12738,7 +12793,7 @@ function gkvAdrZusammen(s, p){ s = String(s || '').trim(); p = String(p || '').t
 // Das urspruengliche Feld bleibt (versteckt) erhalten und wird mitgefuehrt ("Straße Nr., PLZ Ort"),
 // damit Speichern/ini unveraendert funktionieren. Dazu die ueblichen Pruefungen: Grossschreibung,
 // "str" -> "straße", PLZ <-> Ort ergaenzen.
-const ADR_ZWEIZEILIG = '#txtPraxisadresse, #ini_GKV_STARTADRESSE, #ini_PRAXISADRESSE, #dpAdr, input[data-ini="GKV_STARTADRESSE"], input[data-ini="PRAXISADRESSE"]';
+const ADR_ZWEIZEILIG = '.praxis-adr, #ini_GKV_STARTADRESSE, #ini_PRAXISADRESSE, #dpAdr, input[data-ini="GKV_STARTADRESSE"], input[data-ini="PRAXISADRESSE"]';
 let adrZweiNr = 0;
 function adrZweizeiligMachen(el){
   if(!el || el.dataset.adrZwei || el.tagName !== 'INPUT') return;
@@ -17548,7 +17603,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v283';
+const APP_VERSION = 'v284';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18336,8 +18391,10 @@ function ansichtEinstellungen(){
         <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br><span style="display:block; margin-top:5px;">Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></span></div>
       </div>
       <div class="feld" style="margin-top:14px;">
-        <label for="txtPraxisadresse">Adresse Wache/Praxis (Startpunkt für km-Berechnung)</label>
-        <input type="text" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}" placeholder="Straße Hausnummer, PLZ Ort">
+        <label>Wachen/Praxen (Startpunkt für km-Berechnung)</label>
+        <div id="praxenListe" class="praxen-liste"></div>
+        <button type="button" class="btn-sekundaer praxis-neu" id="praxisNeu">+ Wache/Praxis hinzufügen</button>
+        <input type="hidden" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}">
       </div>
     </div>
     ${betaEinstellungenHtml()}
@@ -18406,11 +18463,13 @@ function ansichtEinstellungen(){
     // chkReiseBasisLuftlinie.checked) am PC).
     e.reiseBasisLuftlinie = !document.getElementById('chkReiseBasisLuftlinie').checked;
     e.praxisadresse = document.getElementById('txtPraxisadresse').value.trim();
+    { const fr = ladeEinstellungen(); e.praxen = fr.praxen; e.praxisAktiv = fr.praxisAktiv; }   // Liste der Wachen/Praxen nicht mit altem Stand ueberschreiben
     speichereEinstellungen(e); themaAnwenden();
   };
   if(document.getElementById('chkDunkel')) document.getElementById('chkDunkel').onchange = anwenden;
   document.getElementById('chkReiseBasisLuftlinie').onchange = anwenden;
   document.getElementById('txtPraxisadresse').addEventListener('blur', anwenden);
+  praxenListeZeichnen();
 
   document.getElementById('zReise').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkReiseBasisLuftlinie').click(); } };
   msGraphAbschnittWiring();
