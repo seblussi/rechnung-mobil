@@ -1584,6 +1584,7 @@ try{
   .luft-nfp{fill:#111; stroke:#fff; stroke-width:2; vector-effect:non-scaling-stroke;}
   .luft-karte-legende{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--text-schwach); margin-top:6px;}
   .luft-karte-legende i{display:inline-block; width:12px; height:12px; margin-right:5px; vertical-align:-1px; border-radius:50%;}
+  .luft-karte-legende i.ich{background:#2f80ed; box-shadow:0 0 0 3px rgba(47,128,237,.3);} .luft-karte-legende i.f.ls{background:var(--ls-farbe);} .luft-karte-legende i.f.pt{background:var(--pt-farbe);} .luft-karte-legende i.f.gkv{background:#7d4e9e;}
   .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='5' fill='%23111'/%3E%3Cpath d='M6 12h12M12 6v12' stroke='%23fff' stroke-width='3.6' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:13px; height:13px;}
   .luft-karte-legende i.rtw{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 20'%3E%3Cpath d='M1 2H21V6H27L33 11V16H1Z' fill='%23111'/%3E%3Ccircle cx='8' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Ccircle cx='26' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Cpath d='M7 9h8M11 5v8' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:20px; height:12px;}
   .luft-karte-legende i.l{height:0; border-radius:0; border-top:2.5px dashed var(--text); width:16px;} .luft-karte-legende i.w{height:4px; border-radius:2px; background:#1a55c9; width:16px;}
@@ -14044,11 +14045,12 @@ async function routenKarteSetzen(el, start, ziel, weg, zielText){
   if(weg === undefined){
     try{ const r = await routeMitWeg(start, ziel); weg = (r && r.length) ? r[0].coords : null; }catch(_){ weg = null; }
   }
-  try{ await luftKarteZeigen(rahmen, start, ziel, weg, zielText); }catch(_){}
+  try{ await luftKarteZeigen(rahmen, start, ziel, weg, zielText, undefined, { wegegeld: true }); }catch(_){}
 }
 // Ausschnitt der Wegegeld-Karte NFP unter dem Ergebnis: Start, Ziel, NFP,
 // Luftlinie (gestrichelt) und berechnete Fahrstrecke
-async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText, wegAlt){
+async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText, wegAlt, kopt){
+  kopt = kopt || {};
   if(!ziel_el || typeof NFP_KARTE === 'undefined') return;
   const W = NFP_KARTE.bild[0], H = NFP_KARTE.bild[1];
   const pS = nfpGeoZuPixel(start.lat, start.lon), pZ = nfpGeoZuPixel(ziel.lat, ziel.lon), pN = { x: NFP_KARTE.nfp[0], y: NFP_KARTE.nfp[1] };
@@ -14058,19 +14060,15 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText, wegAlt){
   // Startansicht: KVBW, wenn alles darauf liegt, sonst OSM.
   const osmDaten = { pois: [{ lat: start.lat, lon: start.lon, kl: 'start' }, { lat: ziel.lat, lon: ziel.lon, kl: 'ziel' }], weg: weg || [], wegAlt: wegAlt || [], linie: [start, ziel], nfp: true, rahmen: true };
   const allesDrin = nfpImBild(pS) && nfpImBild(pZ) && !wegP.some(p=> !nfpImBild(p));
-  const legende = '<div class="luft-karte-legende"><span><i class="s"></i>Start</span><span><i class="z"></i>Ziel</span><span><i class="l"></i>Luftlinie</span>' +
     (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + ((wegAlt || []).length ? '<span><i class="r"></i>andere Varianten</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="rtw"></i>Wache</span><span><i class="k50"></i>50 km</span></div>';
   const kvbwOk = nfpImBild(pS) || nfpImBild(pZ);
   const gross = (ebene, ansicht)=>{
-    osmKarteOverlay(osmDaten, zielText, { ansicht, ebene: ebene === 'kvbw' && kvbwOk ? 'kvbw' : 'zonen', titel: 'Route' });
+    osmKarteOverlay(osmDaten, zielText, { ansicht, ebene: ebene === 'kvbw' && kvbwOk ? 'kvbw' : 'zonen', titel: kopt.wegegeld ? 'Wegegeld' : 'Route', nurWache: !!kopt.wegegeld, ohneAed: !!kopt.wegegeld });
   };
   const kb = nfpImBild(pZ) ? nfpBewertung(pZ) : null;
-  box.innerHTML = '<div class="luft-karte-kopf"><b>Karte</b>' + (kb ? ' · Ziel: ' + htmlEsc(kb.text) : kvbwOk ? '' : ' · außerhalb der Wegegeld-Karte NFP') +
-      '<button type="button" class="luft-karte-gross">Große Karte</button></div>' + miniKarteHtml(osmDaten, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk, gross }) + legende;
-  box.querySelector('.luft-karte-gross').onclick = ()=>{
-    const w = box.querySelector('.mini-ebenen');
-    gross(w && w._mk ? w._mk.ebene() : 'osm', miniKarteAnsicht(box));
-  };
+  // Kopf wie auf der Startseite; vergroessern ueber den Vollbild-Knopf der Karte
+  box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Karte</b><small>' + (kb ? 'Ziel: ' + htmlEsc(kb.text) : kvbwOk ? '' : 'außerhalb der Wegegeld-Karte NFP') + '</small></span></div>' +
+    miniKarteHtml(osmDaten, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk, gross });
 }
 
 // ---------- Ersatzkarte: OpenStreetMap mit den Zonen der NFP-Karte ----------
@@ -14516,6 +14514,19 @@ function osmMpp(lat, z){ return 156543.034 * Math.cos(lat * Math.PI / 180) / Mat
 function osmZAusMpp(lat, mpp){ return Math.log2(156543.034 * Math.cos(lat * Math.PI / 180) / mpp); }
 const MINI_KARTEN = new Map(); let miniKarteNr = 0;
 // d wie bei osmAusschnitt; opt: { start:'kvbw'|'osm', kvbwOk, mitte, z, w, h (Ausschnitt bei Zoom z), fallKlick(i), gross(ebene, ansicht) }
+// Legende passend zum Karteninhalt (unter jeder kleinen Karte)
+function karteLegendeHtml(d){
+  const k = new Set((d.pois || []).map(q=> q.kl)), t = [];
+  if(k.has('ich')) t.push('<span><i class="ich"></i>Standort</span>');
+  if(k.has('start')) t.push('<span><i class="s"></i>Start</span>');
+  if(k.has('ziel')) t.push('<span><i class="z"></i>Ziel</span>');
+  [['ls', 'Leichenschau'], ['pt', 'Privat'], ['gkv', 'GKV']].forEach(([a, l])=>{ if(k.has(a)) t.push('<span><i class="f ' + a + '"></i>' + l + '</span>'); });
+  if(d.linie) t.push('<span><i class="l"></i>Luftlinie</span>');
+  if(d.weg && d.weg.length > 1) t.push('<span><i class="w"></i>Fahrstrecke</span>');
+  if(d.wegAlt && d.wegAlt.length) t.push('<span><i class="r"></i>andere Varianten</span>');
+  if(d.nfp){ t.push('<span><i class="n"></i>NFP</span>'); if(typeof gkvStartGeo === 'function' && gkvStartGeo()) t.push('<span><i class="rtw"></i>Wache</span>'); t.push('<span><i class="k50"></i>50 km</span>'); }
+  return t.length ? '<div class="luft-karte-legende">' + t.join('') + '</div>' : '';
+}
 function miniKarteHtml(d, opt){
   opt = opt || {};
   const id = 'mk' + (++miniKarteNr);
@@ -14534,7 +14545,7 @@ function miniKarteHtml(d, opt){
   const grossKnopf = opt.gross ? '<button type="button" class="mini-gross" aria-label="Große Karte (Vollbild)" title="Große Karte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>' : '';
   const aedKnopf = opt.gross ? '<button type="button" class="mini-aed" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '</button>' : '';
   return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + auge + aedKnopf + grossKnopf + '</div>' +
-    '<div class="sk-hinweis mini-attr">' + OSM_ATTR_HTML + ' · Zoom: zwei Finger bzw. Mausrad</div>';
+    '<div class="sk-hinweis mini-attr">' + OSM_ATTR_HTML + ' · Zoom: zwei Finger bzw. Mausrad</div>' + (opt.ohneLegende ? '' : karteLegendeHtml(d));
 }
 function miniKarteAnsicht(el){
   const w = el && (el.classList && el.classList.contains('mini-ebenen') ? el : el.querySelector && el.querySelector('.mini-ebenen'));
@@ -14939,7 +14950,7 @@ function osmKarteOverlay(d, text, opt){
   // ---- Auswahl einer Einsatzstelle (GKV) ----
   let startGeo = gkvStartGeo();
   if(!startGeo && gkvStartAdresse()) gkvStartGeoHolen().then(s=>{ if(s) startGeo = s; }).catch(()=>{});
-  const waehlen = (g, woher, adresseText)=>{
+  const waehlen = (g, woher, adresseText, modus)=>{
     const p = nfpGeoZuPixel(g.lat, g.lon), drin = nfpImBild(p);
     const kmS = startGeo ? kmLuftlinieEinfach(startGeo, g) : null;
     let b;
@@ -14964,8 +14975,9 @@ function osmKarteOverlay(d, text, opt){
         const wi = ov.querySelector('#okWegInfo'); if(wi) wi.innerHTML = '<br>Fahrstrecke ab ' + htmlEsc(startGeo.adr || 'Ausgangspunkt') + ' <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
       }).catch(()=>{ const wi = ov.querySelector('#okWegInfo'); if(wi) wi.textContent = ' · Fahrstrecke nicht verfügbar (offline?)'; });
     }
-    // Weg vom eigenen GPS-Standort (violett)
-    if(!W){
+    // Weg vom eigenen GPS-Standort (violett) -- nicht bei Adresssuche/Wegegeld (dann Route ab Wache)
+    if(W || modus === 'wache' || opt.nurWache){ wahl._gpsFertig = true; d.gpsWeg = []; d.pois = d.pois.filter(q=> q.kl !== 'ich' || !!W); if(wahl._wacheWeg){ d.weg = wahl._wacheWeg; neu(); } }
+    else {
       const merk = wahl; d.gpsWeg = [];
       wegVomStandort(g).then(w=>{
         if(wahl !== merk || !document.body.contains(ov)) return;
@@ -14984,7 +14996,7 @@ function osmKarteOverlay(d, text, opt){
     let g = null;
     try{ g = await gkvOrtSuchen(a); }catch(_){ info.textContent = 'Keine Verbindung zum Kartendienst – bitte auf die Einsatzstelle tippen.'; return; }
     if(!g){ info.textContent = 'Adresse nicht gefunden – bitte prüfen oder auf die Einsatzstelle tippen.'; return; }
-    hinZu(g, 13.5); waehlen(g, 'Adresse' + (g.gefunden ? ' (' + g.gefunden + ')' : ''), a);
+    hinZu(g, 13.5); waehlen(g, 'Adresse' + (g.gefunden ? ' (' + g.gefunden + ')' : ''), a, 'wache');
     if(W && wahl){ wahl._uebersicht = true; alles(); }
   };
   ov.querySelector('.nfp-such-knopf').onclick = suchen;
@@ -15894,7 +15906,7 @@ function vkZusatzEbenen(map, st){
   // AED (Defibrillatoren) aus OpenStreetMap, ganz oben (immer sichtbar, auch bei Ueberschneidung)
   if(!map.getSource('vk-aed')) map.addSource('vk-aed', { type: 'geojson', data: map._aedFc || { type: 'FeatureCollection', features: [] } });
   map.addLayer({ id: 'vk-aed', type: 'symbol', source: 'vk-aed', minzoom: 10,
-    layout: { visibility: e.aed || map._aedImmer ? 'visible' : 'none', 'icon-image': 'vko-aed', 'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.55, 12, 0.75, 15, 1, 18, 1.25],
+    layout: { visibility: (e.aed || map._aedImmer) && !map._aedAus ? 'visible' : 'none', 'icon-image': 'vko-aed', 'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.55, 12, 0.75, 15, 1, 18, 1.25],
       'icon-allow-overlap': true, 'icon-ignore-placement': true } });
   if(map._aedLaden) setTimeout(map._aedLaden, 0);
   if(map._aedWeg) vkAedWegZeigen(map);
@@ -16126,7 +16138,7 @@ function vektorKarteOverlay(d, text, opt){
       '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
     '<div class="nfp-rahmen"><div class="vk-karte"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF +
       '<button type="button" class="vk-stil-knopf" aria-label="Kartenstil und Ebenen"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>' +
-      '<button type="button" class="vk-aed-knopf" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '<span>AED</span></button>' +
+      (opt.ohneAed ? '' : '<button type="button" class="vk-aed-knopf" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '<span>AED</span></button>') +
       '<div class="vk-menue" hidden></div>' + KARTE_ZOOM_KNOEPFE + '<button type="button" class="gross-zu" aria-label="Karte verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>' + '</div>' +
     '<div class="nfp-fuss"><div class="nfp-info" id="vkInfo">' + (text ? htmlEsc(text) : 'Vektorkarte wird geladen …') + '</div>' +
       '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button></div>' +
@@ -16228,7 +16240,7 @@ function vektorKarteOverlay(d, text, opt){
       if(fokus.length === 1 && !opt.ansicht){
         const q = fokus[0];
         map.jumpTo({ center: ll(q), zoom: 16.5 });
-        zielSetzen({ lat: q.lat, lon: q.lon }, q.kl === 'ziel' ? (text || 'Adresse') : 'Einsatzort', '', q.kl !== 'ziel');
+        zielSetzen({ lat: q.lat, lon: q.lon }, q.kl === 'ziel' ? (text || 'Adresse') : 'Einsatzort', '', q.kl !== 'ziel', q.kl === 'ziel' ? 'wache' : '');
       } else if(!opt.ansicht) uebersicht();
     });
     const uebersicht = ()=>{
@@ -16246,7 +16258,8 @@ function vektorKarteOverlay(d, text, opt){
     };
     // ---- Naechster AED: vom gesetzten Punkt, sonst vom eigenen Standort; Fussweg + Google Maps ----
     let aedNr = 0;
-    const aedKnopf = ov.querySelector('.vk-aed-knopf');
+    const aedKnopf = ov.querySelector('.vk-aed-knopf') || document.createElement('button');
+    if(opt.ohneAed) map._aedAus = true;
     aedKnopf.onclick = async ()=>{
       const nr = ++aedNr, aktuell = ()=> nr === aedNr && document.body.contains(ov);
       let start = null, woher = '';
@@ -16310,7 +16323,7 @@ function vektorKarteOverlay(d, text, opt){
       kand.forEach((a, i)=>{ const w = wege[i], wert = w ? w.minuten : a.luft / 70; if(!best || wert < best.wert) best = { wert, a, w }; });
       zeigen(best.a, best.w, best.w ? '' : 'Fußweg nicht verfügbar – gerade Linie.');
     };
-    if(vkAedAutostart){ vkAedAutostart = false; const los = ()=> aedKnopf.onclick(); if(map.loaded()) setTimeout(los, 0); else map.once('load', los); }
+    if(vkAedAutostart && !opt.ohneAed){ vkAedAutostart = false; const los = ()=> aedKnopf.onclick(); if(map.loaded()) setTimeout(los, 0); else map.once('load', los); }
     // ---- Adresse suchen / Ort setzen (lange druecken), Punkt verschiebbar -> Luftlinie, Wegepauschale, Route ----
     let zielMarke = null, zielNr = 0;
     const datenNeu = ()=>{
@@ -16358,8 +16371,11 @@ function vektorKarteOverlay(d, text, opt){
       const bb = new ml.LngLatBounds(coords[0], coords[0]); coords.forEach(k=> bb.extend(k)); bb.extend(ll(ziel));
       map.fitBounds(bb, { padding: 60, maxZoom: 16.5, duration: 500 });
     });
-    const zielSetzen = async (g, woher, adrText, ohneMarke)=>{
+    // modus 'wache': Route (gezeichnet) ab Wache -- bei Adresssuche und in der Wegegeld-Karte von LS/PT/GKV;
+    // sonst (langes Druecken, Verschieben, Einsatzort) Route vom GPS-Standort, ohne GPS ab Wache
+    const zielSetzen = async (g, woher, adrText, ohneMarke, modus)=>{
       const nr = ++zielNr;
+      const nurWache = modus === 'wache' || !!opt.nurWache;
       if(ohneMarke){ /* Punkt ist schon als Fall-Markierung zu sehen */ }
       else if(!zielMarke){
         const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = '<span class="vk-punkt ziel vk-ziehbar"></span>';
@@ -16370,7 +16386,7 @@ function vektorKarteOverlay(d, text, opt){
       let s = gkvStartGeo();
       if(!s && gkvStartAdresse()){ try{ s = await gkvStartGeoHolen(); }catch(_){ s = null; } if(nr !== zielNr) return; }
       d.linie = s ? [s, g] : null; d.weg = []; datenNeu();
-      gpsWegHolen(g, nr);
+      if(nurWache){ d.gpsWeg = []; wacheWeg = null; gpsFertig = true; datenNeu(); } else gpsWegHolen(g, nr);
       const kopf = (woher ? '<b>' + htmlEsc(woher) + '</b>' + (adrText ? ': ' + htmlEsc(adrText) : '') : '');
       if(!s){ info.innerHTML = '<div class="vk-ziel-info"><div>' + kopf + '<br><small>' + (gkvStartAdresse() ? 'Ausgangspunkt „' + htmlEsc(gkvStartAdresse()) + '“ nicht gefunden (offline?)' : 'Kein Ausgangspunkt eingestellt (Einstellungen: Praxis-/Startadresse)') + ' – keine Luftlinie/Wegepauschale.</small><br><small id="vkGpsInfo"></small></div>' + naviLink(g) + '</div>'; return; }
       const km = kmLuftlinieEinfach(s, g);
@@ -16379,7 +16395,7 @@ function vektorKarteOverlay(d, text, opt){
       const stufe = b && b.stufe && km <= 50 ? b.stufe : gkvStufeFuerKm(km);
       info.innerHTML = '<div class="vk-ziel-info"><div>' + (kopf ? kopf + '<br>' : '') +
         'Luftlinie <b>' + htmlEsc(nfpKmText(km)) + ' km</b> ab ' + htmlEsc(s.adr || 'Ausgangspunkt') + ' · Wegepauschale <b>' + htmlEsc(nfpStufeLabel(stufe)) + '</b>' +
-        '<br><small id="vkWegInfo">Fahrstrecke wird berechnet …</small><br><small id="vkGpsInfo"></small></div>' + naviLink(g) + '</div>';
+        '<br><small id="vkWegInfo">Fahrstrecke wird berechnet …</small>' + (nurWache ? '' : '<br><small id="vkGpsInfo"></small>') + '</div>' + naviLink(g) + '</div>';
       routeMitWeg(s, g).then(r=>{
         if(nr !== zielNr || !document.body.contains(ov)) return;
         const wi = ov.querySelector('#vkWegInfo');
@@ -16409,7 +16425,7 @@ function vektorKarteOverlay(d, text, opt){
       if(!g){ info.textContent = 'Adresse nicht gefunden – bitte prüfen oder lange auf die Karte drücken.'; return; }
       st.blur(); po.blur();
       map.easeTo({ center: ll(g), zoom: Math.max(map.getZoom(), 16.5) });
-      zielSetzen(g, 'Adresse', g.gefunden || a);
+      zielSetzen(g, 'Adresse', g.gefunden || a, false, 'wache');
     };
     ov.querySelector('.nfp-such-knopf').onclick = suchen;
     ov.querySelector('#vkPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); suchen(); } };
@@ -17430,7 +17446,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v280';
+const APP_VERSION = 'v281';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
