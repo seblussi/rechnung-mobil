@@ -1585,6 +1585,8 @@ try{
   .luft-karte-legende{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color:var(--text-schwach); margin-top:6px;}
   .luft-karte-legende i{display:inline-block; width:12px; height:12px; margin-right:5px; vertical-align:-1px; border-radius:50%;}
   .luft-karte-legende i.ich{background:#2f80ed; box-shadow:0 0 0 3px rgba(47,128,237,.3);} .luft-karte-legende i.f.ls{background:var(--ls-farbe);} .luft-karte-legende i.f.pt{background:var(--pt-farbe);} .luft-karte-legende i.f.gkv{background:#7d4e9e;}
+  .luft-karte-legende i.g{height:4px; border-radius:2px; background:#8e2bd6; width:16px;} .luft-karte-legende i.aed{border-radius:3px; background:#00924a;} .luft-karte-legende i.kr{height:0; border-radius:0; border-top:2.5px dashed #1a55c9; width:16px;} .luft-karte-legende i.zo{border-radius:3px; background:linear-gradient(90deg,#4caf50,#ffeb3b,#ff9800,#e53935);}
+  .vk-legende{margin:4px 0 2px;}
   .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='5' fill='%23111'/%3E%3Cpath d='M6 12h12M12 6v12' stroke='%23fff' stroke-width='3.6' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:13px; height:13px;}
   .luft-karte-legende i.rtw{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 20'%3E%3Cpath d='M1 2H21V6H27L33 11V16H1Z' fill='%23111'/%3E%3Ccircle cx='8' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Ccircle cx='26' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Cpath d='M7 9h8M11 5v8' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:20px; height:12px;}
   .luft-karte-legende i.l{height:0; border-radius:0; border-top:2.5px dashed var(--text); width:16px;} .luft-karte-legende i.w{height:4px; border-radius:2px; background:#1a55c9; width:16px;}
@@ -1614,7 +1616,7 @@ try{
   .karte-auge{position:absolute; top:74px; right:10px; z-index:4; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} .karte-auge.kreise{box-shadow:0 0 0 3px #1a55c9, 0 2px 8px rgba(0,0,0,.35);} .karte-auge.kreise svg{color:#1a55c9;} .karte-auge.aus{opacity:.85;}
-  .mini-ebenen .karte-auge{width:46px; height:36px; top:60px; right:8px; border-radius:9px;} .mini-ebenen .karte-auge svg{width:18px; height:18px;}
+  .mini-ebenen .karte-auge{width:40px; height:40px; top:54px; right:8px; border-radius:9px;} .mini-ebenen .karte-auge svg{width:18px; height:18px;}
   .ok-zoom{position:absolute; right:10px; bottom:76px; z-index:5; display:flex; flex-direction:column; gap:10px;}
   .ok-zoom button{width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .ok-zoom button svg{width:22px; height:22px;}
@@ -1646,9 +1648,11 @@ try{
   .vk-aed-knopf{position:static; width:52px; height:52px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#00924a; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; cursor:pointer; font-size:9.5px; font-weight:800; line-height:1;}
   .vk-aed-knopf svg{width:22px; height:22px;}
-  .mini-aed{position:absolute; top:50%; transform:translateY(-50%); right:11px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
+  .mini-aed{position:absolute; bottom:8px; right:100px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .mini-aed svg{width:20px; height:20px;}
+  .mini-pos{position:absolute; bottom:8px; right:54px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+  .mini-pos svg{width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round;}
   .vk-defimap a{color:#00924a; font-weight:600;}
   .adr-zwei{display:flex; flex-direction:column; gap:6px;} .adr-zwei input{width:100%; box-sizing:border-box;} .adr-zwei-hinweis{color:var(--warn, #b3261e); min-height:0;} .adr-zwei-hinweis:empty{display:none;}
   .vk-aed-info{font-size:13.5px; line-height:1.35; color:#222;} .vk-aed-info .vk-navi{display:inline-block; margin:6px 0 2px; padding:6px 10px; font-size:13px;}
@@ -1833,18 +1837,18 @@ try{
   .fbx-ortnr{display:inline-flex; width:17px; height:17px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; align-items:center; justify-content:center; margin-right:4px; vertical-align:1px;}
   .fbx-ortnr.ls{background:var(--ls-farbe);} .fbx-ortnr.pt{background:var(--pt-farbe);} .fbx-ortnr.gkv{background:#7d4e9e;}
   .mini-ebenen{position:relative;}
-  .mini-stil{position:absolute; top:104px; right:8px; z-index:5; width:46px; height:36px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
+  .mini-stil{position:absolute; top:100px; right:8px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .mini-stil svg{width:18px; height:18px;}
   .karte-auge.kvbw-grau, .mini-stil.kvbw-grau, .vk-stil-knopf.kvbw-grau{opacity:1 !important; background:#dcdad6; color:#a3a3a3; border-color:#eee; cursor:default; box-shadow:0 1px 4px rgba(0,0,0,.2);}
   .mini-menue{top:8px; right:62px; max-height:calc(100% - 16px); overflow:auto; font-size:13.5px;}
-  .mini-gross{position:absolute; right:11px; bottom:8px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
+  .mini-gross{position:absolute; right:8px; bottom:8px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
   .mini-gross svg{width:18px; height:18px;}
   .mini-fenster{position:relative; width:100%; overflow:hidden; border:1px solid var(--rand); border-radius:10px; background:#f2efe9; touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:pointer;}
   .mini-attr{margin-top:3px;}
-  .mini-ebenen .karte-ebene{width:46px; height:46px; top:8px; right:8px; font-size:9.5px; border-radius:9px;}
-  .mini-ebenen .karte-ebene svg{width:18px; height:18px;}
+  .mini-ebenen .karte-ebene{width:40px; height:40px; top:8px; right:8px; font-size:8.5px; border-radius:9px; gap:1px;}
+  .mini-ebenen .karte-ebene svg{width:16px; height:16px;}
   .nfp-start{background:#1a55c9;}
   .nfp-nfp{background:#111; border-radius:3px; width:14px; height:14px; margin:-7px 0 0 -7px;}
   .nfp-poi{display:flex; align-items:center; justify-content:center; color:#fff; font:700 10px sans-serif; width:20px; height:20px; margin:-10px 0 0 -10px;}
@@ -14074,7 +14078,7 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText, wegAlt, kopt
   const kb = nfpImBild(pZ) ? nfpBewertung(pZ) : null;
   // Kopf wie auf der Startseite; vergroessern ueber den Vollbild-Knopf der Karte
   box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Karte</b><small>' + (kb ? 'Ziel: ' + htmlEsc(kb.text) : kvbwOk ? '' : 'außerhalb der Wegegeld-Karte NFP') + '</small></span></div>' +
-    miniKarteHtml(osmDaten, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk, gross });
+    miniKarteHtml(osmDaten, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk, gross, ohneAed: !!kopt.wegegeld });
 }
 
 // ---------- Ersatzkarte: OpenStreetMap mit den Zonen der NFP-Karte ----------
@@ -14575,7 +14579,10 @@ function karteLegendeHtml(d){
   [['ls', 'Leichenschau'], ['pt', 'Privat'], ['gkv', 'GKV']].forEach(([a, l])=>{ if(k.has(a)) t.push('<span><i class="f ' + a + '"></i>' + l + '</span>'); });
   if(d.linie) t.push('<span><i class="l"></i>Luftlinie</span>');
   if(d.weg && d.weg.length > 1) t.push('<span><i class="w"></i>Fahrstrecke</span>');
+  if(d.gpsWeg && d.gpsWeg.length > 1) t.push('<span><i class="g"></i>Route vom Standort</span>');
   if(d.wegAlt && d.wegAlt.length) t.push('<span><i class="r"></i>andere Varianten</span>');
+  if(d.aed) t.push('<span><i class="aed"></i>AED</span>');
+  if(d.nfp){ const m = karteModus(); if(m === 'an') t.push('<span><i class="zo"></i>Zonen</span>'); else if(m === 'kreise') t.push('<span><i class="kr"></i>km-Kreise</span>'); }
   if(d.nfp){ t.push('<span><i class="n"></i>NFP</span>'); if(typeof gkvStartGeo === 'function' && gkvStartGeo()) t.push('<span><i class="rtw"></i>Wache</span>'); t.push('<span><i class="k50"></i>50 km</span>'); }
   return t.length ? '<div class="luft-karte-legende">' + t.join('') + '</div>' : '';
 }
@@ -14595,8 +14602,9 @@ function miniKarteHtml(d, opt){
     .replace('<span></span>', '<span>' + (e === 'osm' ? 'KVBW' : 'OSM') + '</span>');
   const auge = KARTE_AUGE_KNOPF.replace('class="karte-auge"', 'class="karte-auge' + ({ aus: ' aus', kreise: ' kreise' }[karteModus()] || '') + '"');
   const grossKnopf = opt.gross ? '<button type="button" class="mini-gross" aria-label="Große Karte (Vollbild)" title="Große Karte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>' : '';
-  const aedKnopf = opt.gross ? '<button type="button" class="mini-aed" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '</button>' : '';
-  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + auge + aedKnopf + grossKnopf + '</div>' +
+  const aedKnopf = opt.gross && !opt.ohneAed ? '<button type="button" class="mini-aed" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '</button>' : '';
+  const posKnopf = '<button type="button" class="mini-pos" aria-label="Eigene Position" title="Position"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>';
+  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + auge + aedKnopf + posKnopf + grossKnopf + '</div>' +
     '<div class="sk-hinweis mini-attr">' + OSM_ATTR_HTML + ' · Zoom: zwei Finger bzw. Mausrad</div>' + (opt.ohneLegende ? '' : karteLegendeHtml(d));
 }
 function miniKarteAnsicht(el){
@@ -14641,7 +14649,8 @@ function miniKarteStarten(w){
         w.dataset.ebene = 'osm'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'osm'); miniKarteStarten(w); return;
       }
       ebene = e; w.dataset.ebene = e; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), e); zeichnen();
-    }, kvbwOk: !!opt.kvbwOk };
+    }, kvbwOk: !!opt.kvbwOk,
+    zuPosition: (g)=>{ d.pois = (d.pois || []).filter(q=> q.kl !== 'ich').concat([{ lat: g.lat, lon: g.lon, kl: 'ich' }]); ansicht = { lat: g.lat, lon: g.lon, z: Math.max(ansicht ? ansicht.z : 13, 14) }; zeichnen(); } };
   // Geste: Bildschirmpunkt m0 wandert nach m, Faktor k
   let g = null, gezogen = false;
   const anwenden = (m, k)=>{
@@ -14696,7 +14705,7 @@ function miniKarteStarten(w){
   }, { passive: false });
   // Tippen: Fall oeffnen bzw. grosse Karte (mit derselben Ansicht)
   w.addEventListener('click', (ev)=>{
-    if(ev.target.closest('.mini-ebene-knopf, .karte-auge, .mini-stil, .mini-aed')) return;
+    if(ev.target.closest('.mini-ebene-knopf, .karte-auge, .mini-stil, .mini-aed, .mini-pos')) return;
     if(gezogen){ ev.stopPropagation(); return; }
     const t = ev.target.closest('[data-fall]');
     if(t && opt.fallKlick){ ev.stopPropagation(); opt.fallKlick(+t.dataset.fall); return; }
@@ -14743,7 +14752,9 @@ function miniKarteVektor(w, cfg){
     ansicht: ()=> ansichtJetzt(), ebene: ()=> 'osm', kvbwOk: !!opt.kvbwOk,
     neu: ()=>{ if(!map) return; vkModusAnwenden(map); try{ const q = map.getSource('vk-zonen'); if(q) q.setData(vkZonenGeo()); }catch(_){} },
     ebeneSetzen: (e)=>{ if(e === 'kvbw'){ w._ansichtStart = ansichtJetzt(); w.dataset.ebene = 'kvbw'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'kvbw'); zuRaster(false); } },
-    weg: ()=>{ aktiv = false; try{ map && map.remove(); }catch(_){} }
+    weg: ()=>{ aktiv = false; try{ map && map.remove(); }catch(_){} },
+    zuPosition: (g)=>{ if(!map) return; if(w._ich) w._ich.remove(); const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = '<span class="vk-ich"></span>';
+      w._ich = new maplibregl.Marker({ element: el }).setLngLat([g.lon, g.lat]).addTo(map); map.easeTo({ center: [g.lon, g.lat], zoom: Math.max(map.getZoom(), 13.5) }); }
   };
   vkMaplibreHolen().then(async (ml)=>{
     if(!aktiv) return;
@@ -14840,6 +14851,14 @@ new MutationObserver((liste)=>{
     }
   }
 }).observe(document.documentElement, { childList: true, subtree: true });
+// Position-Knopf der kleinen Karte: eigenen Standort zeigen
+document.addEventListener('click', async (ev)=>{
+  const k = ev.target.closest && ev.target.closest('.mini-pos'); if(!k) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const w = k.closest('.mini-ebenen'); if(!w || !w._mk || !w._mk.zuPosition) return;
+  const g = await standortHolen({ still: false }); if(!g) return;
+  w._mk.zuPosition(g);
+}, true);
 // AED-Knopf der kleinen Karte: grosse (Vektor-)Karte oeffnen und dort den naechsten AED suchen
 document.addEventListener('click', (ev)=>{
   const k = ev.target.closest && ev.target.closest('.mini-aed'); if(!k) return;
@@ -14892,7 +14911,7 @@ function osmKarteOverlay(d, text, opt){
     '<div class="nfp-fuss"><div class="nfp-info" id="okInfo">' + (W ? 'Adresse suchen, Position holen, auf die Einsatzstelle tippen oder lange drücken und den Punkt mit dem Finger verschieben.' : (text ? htmlEsc(text) + '<br>' : '') + '<small>Adresse suchen oder lange auf die Karte drücken, um einen Ort zu setzen (mit dem Finger verschiebbar).</small>') + '</div>' +
       '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button>' +
         (W ? '<button type="button" class="btn-primaer nfp-ok" disabled>Übernehmen</button>' : '') + '</div>' +
-      '<div class="ok-attr">' + OSM_ATTR_HTML + '</div></div>';
+      '<div class="luft-karte-legende vk-legende" id="okLegende"></div><div class="ok-attr">' + OSM_ATTR_HTML + '</div></div>';
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
   const sc = ov.querySelector('.osm-scroll'), info = ov.querySelector('#okInfo');
@@ -14911,7 +14930,9 @@ function osmKarteOverlay(d, text, opt){
     sc.scrollLeft = (m.x - akt.x0) * s - vw / 2; sc.scrollTop = (m.y - akt.y0) * s - vh / 2;
   };
   const mitteJetzt = ()=> osmGeo(akt.x0 + (sc.scrollLeft + sc.clientWidth / 2) / akt.s, akt.y0 + (sc.scrollTop + sc.clientHeight / 2) / akt.s, akt.zi);
-  const neu = ()=>{ if(akt) mitte = mitteJetzt(); zeichnen(); };
+  const legendeNeu = ()=>{ const el = ov.querySelector('#okLegende'); if(!el) return; const t = karteLegendeHtml(d); el.innerHTML = t ? t.replace(/^<div class="luft-karte-legende">|<\/div>$/g, '') : ''; };
+  const neu = ()=>{ if(akt) mitte = mitteJetzt(); zeichnen(); legendeNeu(); };
+  setTimeout(legendeNeu, 0);
   const geoAnBildschirm = (cx, cy)=>{ const r = sc.getBoundingClientRect(); return osmGeo(akt.x0 + (cx - r.left + sc.scrollLeft) / akt.s, akt.y0 + (cy - r.top + sc.scrollTop) / akt.s, akt.zi); };
   // Zoom so, dass der Punkt unter (cx, cy) dort stehen bleibt
   const zoomUm = (dz, cx, cy)=>{
@@ -16211,7 +16232,7 @@ function vektorKarteOverlay(d, text, opt){
         '<button type="button" class="ok-uebersicht vk-seiten-knopf" aria-label="Übersicht" title="Übersicht"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><circle cx="12" cy="12" r="2.5"/></svg><span>Übersicht</span></button></div>' +
       '<div class="vk-menue" hidden></div>' + KARTE_ZOOM_KNOEPFE + '<button type="button" class="gross-zu" aria-label="Karte verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>' + '</div>' +
     '<div class="nfp-fuss"><div class="nfp-info" id="vkInfo">' + (text ? htmlEsc(text) : 'Vektorkarte wird geladen …') + '</div>' +
-      '<div class="ok-attr">' + VK_ATTR_HTML + '</div></div>';
+      '<div class="luft-karte-legende vk-legende" id="vkLegende"></div><div class="ok-attr">' + VK_ATTR_HTML + '</div></div>';
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
   const info = ov.querySelector('#vkInfo'), box = ov.querySelector('.vk-karte');
@@ -16291,7 +16312,7 @@ function vektorKarteOverlay(d, text, opt){
     };
     sk.onclick = (ev)=>{ ev.stopPropagation(); if(menue.hidden){ menueZeichnen(); menue.hidden = false; } else menue.hidden = true; };
     box.addEventListener('pointerdown', ()=>{ menue.hidden = true; });
-    auge.onclick = ()=>{ karteModusWeiter(); augeKlasse(auge); sichtbar(); miniKartenNeu(); };
+    auge.onclick = ()=>{ karteModusWeiter(); augeKlasse(auge); sichtbar(); miniKartenNeu(); legendeNeu(); };
     map.on('load', ()=>{
       info.innerHTML = (text ? htmlEsc(text) + '<br>' : '') + '<small>Adresse suchen oder lange auf die Karte drücken, um einen Ort zu setzen (Punkt verschiebbar).</small>';
       // NFP, Wache, Einsatzorte
@@ -16323,7 +16344,7 @@ function vektorKarteOverlay(d, text, opt){
     ov.querySelector('.ok-position').onclick = async ()=>{
       const g = await standortHolen({ still: false }); if(!g) return;
       if(ichMarke) ichMarke.remove();
-      ichMarke = marke('<span class="vk-ich"></span>', g);
+      ichMarke = marke('<span class="vk-ich"></span>', g); if(ov._legendeNeu) ov._legendeNeu();
       map.easeTo({ center: ll(g), zoom: Math.max(map.getZoom(), 13.5) });
     };
     // ---- Naechster AED: vom gesetzten Punkt, sonst vom eigenen Standort; Fussweg + Google Maps ----
@@ -16400,7 +16421,18 @@ function vektorKarteOverlay(d, text, opt){
       const s1 = map.getSource('vk-luft'); if(s1) s1.setData({ type: 'FeatureCollection', features: d.linie ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] });
       const s2 = map.getSource('vk-weg'); if(s2) s2.setData({ type: 'FeatureCollection', features: d.weg && d.weg.length > 1 ? [linie(d.weg)] : [] });
       const s3 = map.getSource('vk-gps'); if(s3) s3.setData({ type: 'FeatureCollection', features: d.gpsWeg && d.gpsWeg.length > 1 ? [linie(d.gpsWeg)] : [] });
+      legendeNeu();
     };
+    // Legende passend zum Inhalt der grossen Karte
+    const legendeNeu = ()=>{
+      const el = ov.querySelector('#vkLegende'); if(!el) return;
+      const pois = (d.pois || []).filter(q=> q.kl !== 'ich' && q.kl !== 'ziel').slice();
+      if(ichMarke) pois.push({ kl: 'ich' }); if(zielMarke) pois.push({ kl: 'ziel' });
+      const aed = !map._aedAus && (vkEbenen().aed || map._aedImmer);
+      const t = karteLegendeHtml({ pois, linie: d.linie, weg: d.weg, gpsWeg: d.gpsWeg, wegAlt: d.wegAlt, nfp: true, aed });
+      el.innerHTML = t ? t.replace(/^<div class="luft-karte-legende">|<\/div>$/g, '') : '';
+    };
+    ov._legendeNeu = legendeNeu; setTimeout(legendeNeu, 0);
     // Weg vom eigenen GPS-Standort zum gesetzten Punkt (violett)
     let wacheWeg = null, gpsFertig = false;
     const gpsWegHolen = (g, nr)=>{
@@ -17516,7 +17548,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v282';
+const APP_VERSION = 'v283';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
