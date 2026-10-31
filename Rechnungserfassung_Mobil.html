@@ -15341,6 +15341,10 @@ async function vkStilJson(st){
   if((st || vkStil()) === 'detail') vkDetailKontrast(stil);
   if((st || vkStil()) === 'bright') vkBuntAnpassen(stil);
   if((st || vkStil()) === 'osm') vkOsmCarto(stil);
+  // Orte/Landmarken und Strassennamen frueher (weiter rausgezoomt) zeigen -- die Daten sind in den Kacheln
+  // ab Zoom 13/14 vorhanden, die Stile blenden sie aber erst spaet ein
+  const VK_FRUEHER = { poi_r1: 13.5, poi_r7: 14.5, poi_r20: 15.5, 'highway-name-minor': 14, 'highway-name-path': 14.5 };
+  (stil.layers || []).forEach(l=>{ const z = VK_FRUEHER[l.id]; if(z != null && (l.minzoom == null || l.minzoom > z)) l.minzoom = z; });
   if(typeof stil.sprite === 'string') stil.sprite = vkZuProt(stil.sprite); else if(Array.isArray(stil.sprite)) stil.sprite.forEach(s=> s.url = vkZuProt(s.url));
   stil.glyphs = vkZuProt(stil.glyphs);
   Object.values(stil.sources || {}).forEach(s=>{ if(s.url) s.url = vkZuProt(s.url); if(s.tiles) s.tiles = s.tiles.map(vkZuProt); });
@@ -17364,7 +17368,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v274';
+const APP_VERSION = 'v275';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
