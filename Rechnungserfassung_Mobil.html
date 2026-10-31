@@ -17639,7 +17639,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v286';
+const APP_VERSION = 'v287';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -17987,6 +17987,7 @@ async function liveDienstDialog(){
       '<div class="fb-lbl">Dienstzeit</div>' +
       (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis && !schicht ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace(/:00/g, '').replace('-', '–') + '</button>').join('') + '</div>' : '') +
       '<div class="fb-zeile"><label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
+      ((praxenLaden().liste.length > 1) ? (()=>{ const pl = praxenLaden(); return '<div class="fb-lbl">Wache / Praxis (Ausgangspunkt Wegegeld)</div><div class="fb-chips">' + pl.liste.map((pr, k)=> '<button type="button" class="fb-chip' + (k === pl.aktiv ? ' an' : '') + '" data-lpraxis="' + k + '" title="' + htmlEsc(pr.adresse || '') + '">' + htmlEsc(pr.name || pr.adresse || ('Wache/Praxis ' + (k + 1))) + '</button>').join('') + '</div>'; })() : '') +
       '<div class="fb-lbl">Vertretener Arzt (optional)</div>' +
       (aerzte.length ? '<div class="fb-chips">' + aerzte.slice(0, 12).map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-larzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-larztweg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>'
         : '<div class="fb-info">Noch keine bisherigen Ärzte bekannt' + ((typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') ? '.' : ' – mit OneDrive-Anmeldung kommen sie aus dem Fahrtenbuch.') + '</div>') +
@@ -18001,6 +18002,7 @@ async function liveDienstDialog(){
       schicht = b.dataset.lschicht || '';
       document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(x=> x.classList.toggle('an', x === b)); });
     ['liveVon', 'liveBis'].forEach(id=>{ const e = document.getElementById(id); if(e) e.addEventListener('input', ()=>{ schicht = ''; document.querySelectorAll('.beta-overlay [data-lschicht]').forEach(x=> x.classList.remove('an')); }); });
+    document.querySelectorAll('.beta-overlay [data-lpraxis]').forEach(b=> b.onclick = ()=>{ const pl = praxenLaden(); praxenSpeichern(pl.liste, +b.dataset.lpraxis); try{ osmKartenBereichSvg.cache = null; }catch(_){} document.querySelectorAll('.beta-overlay [data-lpraxis]').forEach(x=> x.classList.toggle('an', x === b)); });
     document.querySelectorAll('.beta-overlay [data-larzt]').forEach(b=> b.onclick = ()=>{ document.getElementById('liveArzt').value = b.dataset.larzt;
       document.querySelectorAll('.beta-overlay .fb-chip.arzt').forEach(x=> x.classList.toggle('an', x.contains(b))); });
     document.querySelectorAll('.beta-overlay [data-larztweg]').forEach(b=> b.onclick = ()=>{
