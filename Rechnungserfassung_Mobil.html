@@ -1615,7 +1615,7 @@ try{
   .karte-ebene.laedt{opacity:.55;}
   .karte-auge{position:absolute; top:74px; right:10px; z-index:4; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
-  .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} .karte-auge.kreise{box-shadow:0 0 0 3px #2fa84f, 0 2px 8px rgba(0,0,0,.35);} .karte-auge.kreise svg{color:#2fa84f;} .karte-auge.aus{opacity:.85;}
+  .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} :root{--kr-ring:conic-gradient(#e6c800,#2f8fd6,#2fa84f,#d9609f,#4aa6cf,#e6c800);} .karte-auge.kreise::after{content:''; position:absolute; inset:-6px; border-radius:14px; padding:4px; background:var(--kr-ring); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events:none;} .mini-ebenen .karte-auge.kreise::after{inset:-5px; padding:3px; border-radius:12px;} .karte-auge.aus{opacity:.85;}
   .mini-ebenen .karte-auge{width:40px; height:40px; top:54px; right:8px; border-radius:9px;} .mini-ebenen .karte-auge svg{width:18px; height:18px;}
   .ok-zoom{position:absolute; right:10px; bottom:76px; z-index:5; display:flex; flex-direction:column; gap:10px;}
   .ok-zoom button{width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
@@ -17639,7 +17639,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v287';
+const APP_VERSION = 'v288';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
