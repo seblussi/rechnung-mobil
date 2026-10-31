@@ -15686,16 +15686,6 @@ async function vkAedGespeichert(g){
   const m = VK_AED_MEM.get(x0 + '/' + y0);
   return { liste: vkAedSortiert(g, l), da, frisch: !!(m && Date.now() - m.am < VK_AED_ALTER) };
 }
-async function vkAedOnline(g){
-  const rad = 6000, kx = 111320 * Math.cos(g.lat * Math.PI / 180);
-  const l = await vkAedAbfrageSchnell({ s: g.lat - rad / 111320, n: g.lat + rad / 111320, w: g.lon - rad / kx, e: g.lon + rad / kx });
-  // in die gespeicherten Zellen einfuegen (nur ergaenzen)
-  const je = new Map(); l.forEach(a=>{ const [x, y] = vkAedZelle(a.lon, a.lat), k = x + '/' + y; if(!je.has(k)) je.set(k, []); je.get(k).push(a); });
-  for(const [k, neu] of je){ const [x, y] = k.split('/').map(Number); await vkAedAusCache([[x, y]]); const alt = (VK_AED_MEM.get(k) || {}).f || [];
-    const ges = new Set(alt.map(a=> a.lon + ',' + a.lat)); const zus = neu.filter(a=> !ges.has(a.lon + ',' + a.lat)); if(zus.length || !VK_AED_MEM.has(k)) await vkAedSpeichern(x, y, alt.concat(zus)); }
-  vkAedAlleNeu();
-  return vkAedSortiert(g, l).filter(a=> a.luft <= rad);
-}
 // schneller Standort: zuerst ungenau/zwischengespeichert (max. 2 min alt), sonst normal
 async function vkStandortSchnell(){
   try{
@@ -15706,27 +15696,6 @@ async function vkStandortSchnell(){
     }
   }catch(_){}
   return standortHolen({ still: false });
-}
-// Schnelle Abfrage fuer den AED-Knopf: zuerst 2 Server gleichzeitig (12 s), dann die uebrigen
-async function vkAedAbfrageSchnell(box){
-  const q = '[out:json][timeout:12];nwr["emergency"="defibrillator"](' + [box.s, box.w, box.n, box.e].map(v=> v.toFixed(5)).join(',') + ');out center tags qt;';
-  const fehler = [];
-  const eine = async (url)=>{
-    const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), 12000);
-    try{
-      const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal });
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      const j = await r.json(); vkAedRemarkPruefen(j);
-      return (j.elements || []).map(el=>{ const lat = el.lat != null ? el.lat : el.center && el.center.lat, lon = el.lon != null ? el.lon : el.center && el.center.lon;
-        return lat == null ? null : Object.assign({ lat: +lat.toFixed(6), lon: +lon.toFixed(6) }, vkAedText(el.tags || {})); }).filter(Boolean);
-    }catch(e){ fehler.push(url.split('/')[2] + ': ' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e && e.message) || e)); throw e; } finally{ clearTimeout(tm); }
-  };
-  const gruppen = [VK_AED_SERVER.slice(0, 2), VK_AED_SERVER.slice(2)];
-  for(const g of gruppen){
-    try{ const l = await Promise.any(g.map(eine)); vkAedLetzterFehler = ''; return l; }catch(_){}
-  }
-  vkAedLetzterFehler = fehler.join(' · ');
-  throw new Error('Overpass nicht erreichbar');
 }
 // ---------- AED-Standorte (Defibrillatoren) aus OpenStreetMap ----------
 // Abfrage ueber die Overpass-API (nur der Kartenausschnitt wird gesendet, keine
@@ -15747,23 +15716,64 @@ function vkAedText(t){
   const zug = { yes: 'öffentlich', public: 'öffentlich', permissive: 'öffentlich', customers: 'nur für Kunden', private: 'nicht öffentlich', no: 'nicht öffentlich' }[t.access] || '';
   return { n: t.name || t.operator || '', o: ort, z: [zeit, zug, t.indoor === 'yes' ? 'innen' : (t.indoor === 'no' ? 'außen' : '')].filter(Boolean).join(' · ') };
 }
-async function vkAedAbfrage(box, ms){
-  const q = '[out:json][timeout:' + Math.round((ms || 25000) / 1000) + '];nwr["emergency"="defibrillator"](' + [box.s, box.w, box.n, box.e].map(v=> v.toFixed(5)).join(',') + ');out center tags qt;';
+// Overpass erlaubt je Nutzer nur wenige gleichzeitige Abfragen (sonst Warten bzw. HTTP 429) --
+// deshalb je Server immer nur eine Abfrage gleichzeitig; der AED-Knopf hat Vorrang.
+const VK_OVP_SCHLANGE = new Map();
+function vkOverpassReihe(host, vorrang, f){
+  return new Promise((ok, fehler)=>{
+    let q = VK_OVP_SCHLANGE.get(host); if(!q){ q = { laeuft: false, warte: [] }; VK_OVP_SCHLANGE.set(host, q); }
+    const auftrag = async ()=>{ q.laeuft = true; try{ ok(await f()); }catch(e){ fehler(e); } finally{ q.laeuft = false; const n = q.warte.shift(); if(n) n(); } };
+    if(!q.laeuft) auftrag(); else if(vorrang) q.warte.unshift(auftrag); else q.warte.push(auftrag);
+  });
+}
+async function vkAedAbfrage(box, ms, vorrang){
+  ms = ms || 25000;
+  const q = '[out:json][timeout:' + Math.round(ms / 1000) + '];nwr["emergency"="defibrillator"](' + [box.s, box.w, box.n, box.e].map(v=> v.toFixed(5)).join(',') + ');out center tags qt;';
   let letzt = null; const fehler = [];
   for(const url of VK_AED_SERVER) for(const get of [false, true]){
-    const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), (ms || 25000) + 5000);
+    const host = url.split('/')[2];
     try{
-      const r = get ? await fetch(url + '?data=' + encodeURIComponent(q), { signal: ac.signal, cache: 'no-store' })
-        : await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal });
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      const j = await r.json(); vkAedRemarkPruefen(j); vkAedLetzterFehler = '';
+      const j = await vkOverpassReihe(host, vorrang, async ()=>{
+        const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), ms + 5000);
+        try{
+          const r = get ? await fetch(url + '?data=' + encodeURIComponent(q), { signal: ac.signal, cache: 'no-store' })
+            : await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal });
+          if(!r.ok) throw new Error('HTTP ' + r.status);
+          return await r.json();
+        } finally{ clearTimeout(tm); }
+      });
+      vkAedRemarkPruefen(j); vkAedLetzterFehler = '';
       return (j.elements || []).map(el=>{ const lat = el.lat != null ? el.lat : el.center && el.center.lat, lon = el.lon != null ? el.lon : el.center && el.center.lon;
         return lat == null ? null : Object.assign({ lat: +lat.toFixed(6), lon: +lon.toFixed(6) }, vkAedText(el.tags || {})); }).filter(Boolean);
-    }catch(e){ letzt = e; fehler.push(url.split('/')[2] + (get ? ' (GET)' : '') + ': ' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e && e.message) || e)); } finally{ clearTimeout(tm); }
+    }catch(e){ letzt = e; fehler.push(host + (get ? ' (GET)' : '') + ': ' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e && e.message) || e));
+      if(e && /HTTP 4\d\d/.test(e.message || '') && !/429/.test(e.message)) break; }   // Anfragefehler: GET hilft nicht
   }
   vkAedLetzterFehler = fehler.join(' · ');
   try{ console.warn('AED-Abfrage fehlgeschlagen', vkAedLetzterFehler); }catch(_){}
   throw letzt || new Error('Overpass nicht erreichbar');
+}
+// Mehrere Zellen mit EINER Abfrage holen (nur veraltete/fehlende; laufende werden mitbenutzt).
+// -> true, wenn alle Zellen danach Daten haben
+async function vkAedZellenHolen(zellen, vorrang){
+  await vkAedAusCache(zellen);
+  const laufend = [], fehlt = [];
+  zellen.forEach(([x, y])=>{ const k = x + '/' + y, d = VK_AED_MEM.get(k);
+    if(d && Date.now() - d.am < VK_AED_ALTER) return;
+    if(VK_AED_LAEUFT.has(k)) laufend.push(VK_AED_LAEUFT.get(k)); else fehlt.push([x, y]); });
+  if(fehlt.length && navigator.onLine !== false){
+    const xs = fehlt.map(z=> z[0]), ys = fehlt.map(z=> z[1]);
+    const a = vkAedZellBox(Math.min(...xs), Math.min(...ys)), e = vkAedZellBox(Math.max(...xs), Math.max(...ys));
+    const p = vkAedAbfrage({ w: a.w, n: a.n, e: e.e, s: e.s }, fehlt.length > 4 ? 60000 : 25000, vorrang).then(async (liste)=>{
+      const je = new Map(fehlt.map(([x, y])=> [x + '/' + y, []]));
+      liste.forEach(q=>{ const [x, y] = vkAedZelle(q.lon, q.lat), k = x + '/' + y; if(je.has(k)) je.get(k).push(q); });
+      for(const [k, l] of je){ const [x, y] = k.split('/').map(Number); await vkAedSpeichern(x, y, l); }
+      vkAedAlleNeu(); return true;
+    }).catch(()=> false).finally(()=> fehlt.forEach(([x, y])=> VK_AED_LAEUFT.delete(x + '/' + y)));
+    fehlt.forEach(([x, y])=> VK_AED_LAEUFT.set(x + '/' + y, p));
+    laufend.push(p);
+  }
+  await Promise.all(laufend);
+  return zellen.every(([x, y])=> VK_AED_MEM.has(x + '/' + y));
 }
 // Overpass meldet Zeitueberschreitung/Ueberlast mit HTTP 200 und leerer Liste -- das ist ein Fehler, kein "keine AEDs"
 function vkAedRemarkPruefen(j){ if(j && j.remark && /error|timed out|time out|out of memory|abort/i.test(j.remark)) throw new Error('Overpass: ' + String(j.remark).slice(0, 80)); }
@@ -15774,16 +15784,6 @@ async function vkAedSpeichern(x, y, liste){
   const d = { am: Date.now(), f: liste }; VK_AED_MEM.set(x + '/' + y, d);
   try{ const c = await caches.open(VK_AED_CACHE); await c.put(vkAedSchl(x, y), new Response(JSON.stringify(d), { headers: { 'Content-Type': 'application/json' } })); }catch(_){}
   return d;
-}
-async function vkAedZelleHolen(x, y){
-  const k = x + '/' + y;
-  let d = VK_AED_MEM.get(k);
-  if(!d){ try{ const c = await caches.open(VK_AED_CACHE); const r = await c.match(vkAedSchl(x, y)); if(r){ d = await r.json(); VK_AED_MEM.set(k, d); } }catch(_){} }
-  if(d && Date.now() - d.am < VK_AED_ALTER) return d;
-  if(navigator.onLine === false) return d || null;
-  if(VK_AED_LAEUFT.has(k)) return VK_AED_LAEUFT.get(k);
-  const p = vkAedAbfrage(vkAedZellBox(x, y)).then(l=> vkAedSpeichern(x, y, l)).catch(()=> d || null).finally(()=> VK_AED_LAEUFT.delete(k));
-  VK_AED_LAEUFT.set(k, p); return p;
 }
 // gespeicherte Zellen (Geraet) in den Speicher holen, ohne Netz
 async function vkAedAusCache(zellen){
@@ -15801,7 +15801,10 @@ async function vkAedVorladen(m){
   await vkAedAusCache([[x, y]]);
   const d = VK_AED_MEM.get(x + '/' + y);
   if(d && Date.now() - d.am < VK_AED_ALTER) return;
-  try{ await vkAedOfflineLaden(m, 20); vkAedAlleNeu(); }catch(_){ vkAedVorgeladen = false; }
+  const dLat = 20 / 111.32, dLon = 20 / (111.32 * Math.cos(m.lat * Math.PI / 180));
+  const a = vkAedZelle(m.lon - dLon, m.lat + dLat), z = vkAedZelle(m.lon + dLon, m.lat - dLat), zellen = [];
+  for(let xx = a[0]; xx <= z[0]; xx++) for(let yy = a[1]; yy <= z[1]; yy++) zellen.push([xx, yy]);
+  if(!await vkAedZellenHolen(zellen, false)) vkAedVorgeladen = false;
 }
 function vkAedFc(){
   const features = [], doppelt = new Set();
@@ -15823,7 +15826,7 @@ function vkAedAnbinden(map, mitInfo){
     await vkAedAusCache(zellen); zeigen();   // Gespeichertes sofort zeigen
     if(zellen.length > 12) return;   // zu weit draussen: keine Massenabfrage
     const nr = ++lauf;
-    for(const [x, y] of zellen){ await vkAedZelleHolen(x, y); if(nr !== lauf) return; zeigen(); }
+    await vkAedZellenHolen(zellen, false); if(nr !== lauf) return; zeigen();
   };
   map.on('moveend', ()=>{ clearTimeout(t); t = setTimeout(map._aedLaden, 500); });
   map.on('remove', ()=> VK_AED_KARTEN.delete(map));
@@ -16039,11 +16042,17 @@ function vektorKarteOverlay(d, text, opt){
       if(liste.length) zeigen(liste[0], null, gesp.frisch ? 'Fußweg wird berechnet …' : 'Gespeicherte Daten – wird online geprüft …');
       // b) online pruefen, wenn nichts Aktuelles oder nichts im Umkreis gespeichert ist
       if(!gesp.frisch || !liste.length){
-        try{ const on = await vkAedOnline(s); if(!aktuell()) return; liste = vkAedSortiert(s, liste.concat(on)); }
-        catch(_){
-          if(!aktuell()) return;
-          if(!liste.length){
-            const weiter = gesp.liste[0];
+        // nur die Zellen, die der 6-km-Umkreis beruehrt (meist 1-2) -- schneller als 3x3
+        const dLat = 6 / 111.32, dLon = 6 / (111.32 * Math.cos(s.lat * Math.PI / 180));
+        const za = vkAedZelle(s.lon - dLon, s.lat + dLat), zb = vkAedZelle(s.lon + dLon, s.lat - dLat), zellen = [];
+        for(let x = za[0]; x <= zb[0]; x++) for(let y = za[1]; y <= zb[1]; y++) zellen.push([x, y]);
+        if(!liste.length) info.innerHTML = 'Nächster AED wird gesucht … <small>(Abfrage bei OpenStreetMap)</small><br>' + VK_DEFIMAP_LINKS;
+        const ok = await vkAedZellenHolen(zellen, true);
+        if(!aktuell()) return;
+        const neu = await vkAedGespeichert(s); liste = neu.liste.filter(a=> a.luft <= 6000);
+        if(!ok && !liste.length){
+          {
+            const weiter = neu.liste[0] || gesp.liste[0];
             if(weiter){ zeigen(weiter, null, 'Abfrage nicht möglich (' + htmlEsc(vkAedLetzterFehler || 'offline') + ') – aus gespeicherten Daten, über 6 km.'); return; }
             info.innerHTML = 'AED-Standorte nicht erreichbar (offline?) und keine gespeicherten Daten für diese Gegend.' + (vkAedLetzterFehler ? '<br><small>Grund: ' + htmlEsc(vkAedLetzterFehler) + '</small>' : '') + '<br>' + VK_DEFIMAP_LINKS; return;
           }
@@ -17172,7 +17181,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v268';
+const APP_VERSION = 'v269';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
