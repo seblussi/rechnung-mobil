@@ -14901,7 +14901,8 @@ function osmKarteOverlay(d, text, opt){
   const auge = ov.querySelector('.karte-auge'); auge.classList.toggle('aus', !zonenAn());
   auge.onclick = ()=>{ LS.set('karte_zonen', !zonenAn()); auge.classList.toggle('aus', !zonenAn()); neu(); miniKartenNeu(); };
   // ---- Auswahl einer Einsatzstelle (GKV) ----
-  const startGeo = gkvStartGeo();
+  let startGeo = gkvStartGeo();
+  if(!startGeo && gkvStartAdresse()) gkvStartGeoHolen().then(s=>{ if(s) startGeo = s; }).catch(()=>{});
   const waehlen = (g, woher, adresseText)=>{
     const p = nfpGeoZuPixel(g.lat, g.lon), drin = nfpImBild(p);
     const kmS = startGeo ? kmLuftlinieEinfach(startGeo, g) : null;
@@ -16172,7 +16173,7 @@ function vektorKarteOverlay(d, text, opt){
       info.innerHTML = (text ? htmlEsc(text) + '<br>' : '') + '<small>Adresse suchen oder lange auf die Karte drücken, um einen Ort zu setzen (Punkt verschiebbar).</small>';
       // NFP, Wache, Einsatzorte
       symbol('nfp', n);
-      const wache = gkvStartGeo(); if(wache) symbol('rtw', wache);
+      const wache = gkvStartGeo(); if(wache) symbol('rtw', wache); else if(gkvStartAdresse()) gkvStartGeoHolen().then(w=>{ if(w && document.body.contains(ov)) symbol('rtw', w); }).catch(()=>{});
       const einZiel = (d.pois || []).filter(q=> q.kl !== 'start' && q.kl !== 'ich').length === 1 && !opt.ansicht;
       (d.pois || []).forEach(q=>{
         if(q.kl === 'start' && wache && kmLuftlinieEinfach(wache, q) < 0.05) return;
@@ -16312,7 +16313,7 @@ function vektorKarteOverlay(d, text, opt){
       const bb = new ml.LngLatBounds(coords[0], coords[0]); coords.forEach(k=> bb.extend(k)); bb.extend(ll(ziel));
       map.fitBounds(bb, { padding: 60, maxZoom: 16.5, duration: 500 });
     });
-    const zielSetzen = (g, woher, adrText, ohneMarke)=>{
+    const zielSetzen = async (g, woher, adrText, ohneMarke)=>{
       const nr = ++zielNr;
       if(ohneMarke){ /* Punkt ist schon als Fall-Markierung zu sehen */ }
       else if(!zielMarke){
@@ -16320,11 +16321,13 @@ function vektorKarteOverlay(d, text, opt){
         zielMarke = new ml.Marker({ element: el, draggable: true }).setLngLat(ll(g)).addTo(map);
         zielMarke.on('dragend', ()=>{ const p = zielMarke.getLngLat(); zielSetzen({ lat: p.lat, lon: p.lng }, 'Verschoben'); adresseZu({ lat: p.lat, lon: p.lng }); });
       } else zielMarke.setLngLat(ll(g));
-      const s = gkvStartGeo();
+      // Ausgangspunkt: gespeicherte Koordinaten, sonst die Adresse jetzt nachschlagen (war bisher nur beim Oeffnen ueber die Wegegeld-Karte passiert)
+      let s = gkvStartGeo();
+      if(!s && gkvStartAdresse()){ try{ s = await gkvStartGeoHolen(); }catch(_){ s = null; } if(nr !== zielNr) return; }
       d.linie = s ? [s, g] : null; d.weg = []; datenNeu();
       gpsWegHolen(g, nr);
       const kopf = (woher ? '<b>' + htmlEsc(woher) + '</b>' + (adrText ? ': ' + htmlEsc(adrText) : '') : '');
-      if(!s){ info.innerHTML = '<div class="vk-ziel-info"><div>' + kopf + '<br><small>Kein Ausgangspunkt eingestellt – keine Luftlinie/Wegepauschale.</small><br><small id="vkGpsInfo"></small></div>' + naviLink(g) + '</div>'; return; }
+      if(!s){ info.innerHTML = '<div class="vk-ziel-info"><div>' + kopf + '<br><small>' + (gkvStartAdresse() ? 'Ausgangspunkt „' + htmlEsc(gkvStartAdresse()) + '“ nicht gefunden (offline?)' : 'Kein Ausgangspunkt eingestellt (Einstellungen: Praxis-/Startadresse)') + ' – keine Luftlinie/Wegepauschale.</small><br><small id="vkGpsInfo"></small></div>' + naviLink(g) + '</div>'; return; }
       const km = kmLuftlinieEinfach(s, g);
       const p = nfpGeoZuPixel(g.lat, g.lon);
       let b = nfpImBild(p) ? nfpBewertung(p) : null;
@@ -17381,7 +17384,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v277';
+const APP_VERSION = 'v278';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
