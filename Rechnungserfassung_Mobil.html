@@ -1637,11 +1637,11 @@ try{
   .vk-overlay .maplibregl-ctrl-group button{width:46px; height:46px;}
   .vk-overlay .maplibregl-ctrl-group button .maplibregl-ctrl-icon{background-size:30px 30px;}
   .vk-navi-knoepfe{display:flex; flex-direction:column; gap:6px; flex:none;} .vk-navi-knoepfe .vk-navi{justify-content:center; border:none; margin:0; cursor:pointer;}
-  .vk-navi-app{background:#5b6b80 !important;}
+  .vk-navi-app{background:#5b6b80 !important;} .vk-navi-ok{background:#111 !important; padding:11px 12px !important; font-size:15px !important;}
   /* Zoomknoepfe ausblenden, wenn die Karte zu niedrig ist (sonst ueber dem Stil-Knopf) */
   .vk-overlay .nfp-rahmen, .ok-karte .nfp-rahmen{container-type:size;}
   @container (max-height: 460px){ .ok-zoom{display:none !important;} }
-  .vk-mitte-knoepfe{position:absolute; right:12px; top:50%; transform:translateY(-50%); z-index:5; display:flex; flex-direction:column; gap:8px;}
+  .vk-mitte-knoepfe{position:absolute; right:12px; top:max(calc(50% - 56px), 182px); z-index:5; display:flex; flex-direction:column; gap:8px;} .vk-mitte-knoepfe:has(.vk-aed-knopf){top:max(calc(50% - 86px), 182px);}
   .vk-seiten-knopf{width:52px; height:52px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; cursor:pointer; font-size:9.5px; font-weight:800; line-height:1;}
   .vk-seiten-knopf svg{width:21px; height:21px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round;}
@@ -14951,7 +14951,7 @@ document.addEventListener('click', (ev)=>{
 // Mit "waehlen": Adresse suchen, Stelle antippen oder Standort -> Zone, Luftlinie, Route.
 function osmKarteOverlay(d, text, opt){
   opt = opt || {};
-  if(!opt.waehlen && !opt.keinVektor && opt.ebene !== 'kvbw' && vkAn()) return vektorKarteOverlay(Object.assign({ nfp: true, rahmen: true }, d || {}), text, opt);
+  if(!opt.keinVektor && opt.ebene !== 'kvbw' && vkAn()) return vektorKarteOverlay(Object.assign({ nfp: true, rahmen: true }, d || {}), text, opt);
   d = Object.assign({ nfp: true, rahmen: true }, d || {});
   d.pois = (d.pois || []).slice(); d.weg = (d.weg || []).slice();
   const W = opt.waehlen || null;
@@ -15066,9 +15066,11 @@ function osmKarteOverlay(d, text, opt){
     if(ebene === 'zonen'){ if(!await kvbwLaden()){ appToastAnzeigen('Das KVBW-Kartenbild konnte nicht geladen werden.', 3200); return; } ebene = 'kvbw'; }
     else {
       // kam von der Vektorkarte: zurueck dorthin (mit Stil-Knopf), gleicher Ausschnitt
-      if(opt.vonVektor && !W && vkAn()){
+      if(opt.vonVektor && vkAn()){
         const m = akt ? mitteJetzt() : mitte, a = m ? { lat: m.lat, lon: m.lon, z } : null;
-        ov.remove(); vektorKarteOverlay(d, text, { ansicht: a, titel: opt.titel }); fertigRes(null); return;
+        ov.remove();
+        if(W){ const w2 = Object.assign({}, W, wahl ? { adresse: wahl.geo, adresseText: wahl.adresseText, gps: false } : {}); vektorKarteOverlay(d, text, { ansicht: a, titel: opt.titel, waehlen: w2 }).then(fertigRes); return; }
+        vektorKarteOverlay(d, text, { ansicht: a, titel: opt.titel }); fertigRes(null); return;
       }
       ebene = 'zonen';
     }
@@ -16275,6 +16277,10 @@ function vkZonenGeo(){
 }
 function vektorKarteOverlay(d, text, opt){
   opt = opt || {};
+  // Auswahl der Einsatzstelle (GKV-Wegegeld): Route immer ab Wache, kein AED, Rueckgabe der Wahl
+  const W = opt.waehlen || null;
+  if(W){ opt = Object.assign({}, opt, { nurWache: true, ohneAed: true, titel: opt.titel || 'Einsatzstelle wählen' }); }
+  let wahl = null;
   let fertigRes = null; const ergebnis = new Promise(r=> fertigRes = r);
   const ov = document.createElement('div');
   ov.className = 'nfp-overlay ok-karte vk-overlay';
@@ -16294,13 +16300,21 @@ function vektorKarteOverlay(d, text, opt){
   document.body.classList.add('nfp-offen');
   const info = ov.querySelector('#vkInfo'), box = ov.querySelector('.vk-karte');
   let map = null;
-  const zu = ()=>{ try{ map && map.remove(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(null); };
-  ov.querySelector('.nfp-zu').onclick = zu;
-  ov.querySelector('.gross-zu').onclick = zu;   // zurueck zur kleinen Karte
+  const zu = (erg)=>{ try{ map && map.remove(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(erg || null); };
+  ov.querySelector('.nfp-zu').onclick = ()=> zu();
+  ov.querySelector('.gross-zu').onclick = ()=> zu();   // zurueck zur kleinen Karte
   const ansichtJetzt = ()=>{ if(!map) return opt.ansicht || null; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
   // KVBW: in die normale Karte wechseln (gleicher Ausschnitt)
   const eb = ov.querySelector('.karte-ebene'); karteEbeneKnopfSetzen(eb, 'osm');
-  eb.onclick = ()=>{ const a = ansichtJetzt(); zu(); osmKarteOverlay(d, text, { ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true, vonVektor: true }); };
+  eb.onclick = ()=>{
+    const a = ansichtJetzt();
+    if(W){   // Auswahl in der KVBW-Karte fortsetzen, Ergebnis weiterreichen
+      const w2 = Object.assign({}, W, wahl ? { adresse: wahl.geo, adresseText: wahl.adresseText, gps: false } : {});
+      try{ map && map.remove(); }catch(_){} ov.remove();
+      osmKarteOverlay(d, text, { ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true, vonVektor: true, waehlen: w2 }).then(fertigRes); return;
+    }
+    zu(); osmKarteOverlay(d, text, { ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true, vonVektor: true });
+  };
   const auge = ov.querySelector('.karte-auge');
   const zonenAn = ()=> karteModus() === 'an';
   augeKlasse(auge);
@@ -16389,7 +16403,18 @@ function vektorKarteOverlay(d, text, opt){
         const q = fokus[0];
         map.jumpTo({ center: ll(q), zoom: 16.5 });
         zielSetzen({ lat: q.lat, lon: q.lon }, q.kl === 'ziel' ? (text || 'Adresse') : 'Einsatzort', '', q.kl !== 'ziel', q.kl === 'ziel' ? 'wache' : '');
-      } else if(!opt.ansicht) uebersicht();
+      } else if(!opt.ansicht && !W) uebersicht();
+      if(W){
+        const at = gkvAdrTeile(W.adresseText || '');
+        ov.querySelector('#vkStrasse').value = at.strasse; ov.querySelector('#vkPlzOrt').value = at.plzOrt;
+        const ueber = ()=>{ const s0 = gkvStartGeo(), pts = [s0, W.adresse].filter(q=> q && isFinite(q.lat)); if(pts.length > 1){ const bb = new ml.LngLatBounds(ll(pts[0]), ll(pts[0])); pts.forEach(q=> bb.extend(ll(q))); map.fitBounds(bb, { padding: { top: 60, bottom: 60, left: 60, right: 110 }, maxZoom: 15, duration: 0 }); } };
+        if(W.adresse && W.adresse.lat){ zielSetzen(W.adresse, 'Adresse', W.adresseText || '', false, 'wache'); ueber(); }
+        else if(W.adresseText) suchen();
+        else if(W.gps){ standortHolen({ still: true }).then(g=>{ if(!g) return; map.jumpTo({ center: ll(g), zoom: 15 }); zielSetzen(g, 'Standort', '', false, 'wache'); adresseZu(g); }); }
+        else info.textContent = 'Adresse suchen, auf die Einsatzstelle tippen oder lange drücken.';
+        // Tippen waehlt die Einsatzstelle
+        map.on('click', (ev)=>{ if(ev.defaultPrevented || Date.now() - (ov._langZeit || 0) < 1000) return; const p = ev.lngLat; zielSetzen({ lat: p.lat, lon: p.lng }, 'Gewählt', '', false, 'wache'); adresseZu({ lat: p.lat, lon: p.lng }); });
+      }
     });
     const uebersicht = ()=>{
       const g = osmGeoListe(d);
@@ -16505,7 +16530,9 @@ function vektorKarteOverlay(d, text, opt){
       }).catch(()=>{});
     };
     const naviLink = (g)=> '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + g.lat.toFixed(6) + '" data-lon="' + g.lon.toFixed(6) + '" data-art="auto">Route anzeigen</button>' +
-      '<a class="vk-navi vk-navi-g" href="https://www.google.com/maps/dir/?api=1&destination=' + g.lat.toFixed(6) + ',' + g.lon.toFixed(6) + '&travelmode=driving" target="_blank" rel="noopener">Google Maps</a></div>';
+      '<a class="vk-navi vk-navi-g" href="https://www.google.com/maps/dir/?api=1&destination=' + g.lat.toFixed(6) + ',' + g.lon.toFixed(6) + '&travelmode=driving" target="_blank" rel="noopener">Google Maps</a>' +
+      (W ? '<button type="button" class="vk-navi vk-navi-ok">Übernehmen</button>' : '') + '</div>';
+    if(W) info.addEventListener('click', (ev)=>{ if(ev.target.closest && ev.target.closest('.vk-navi-ok') && wahl){ ev.preventDefault(); zu(wahl); } });
     // "Route anzeigen": Weg vom eigenen Standort zum Ziel in der Karte zeigen (Navigation ueber Google Maps)
     info.addEventListener('click', async (ev)=>{
       const b = ev.target.closest && ev.target.closest('.vk-navi-app'); if(!b) return;
@@ -16550,6 +16577,11 @@ function vektorKarteOverlay(d, text, opt){
       if(!s){ info.innerHTML = '<div class="vk-ziel-info"><div>' + kopf + '<br><small>' + (gkvStartAdresse() ? 'Ausgangspunkt „' + htmlEsc(gkvStartAdresse()) + '“ nicht gefunden (offline?)' : 'Kein Ausgangspunkt eingestellt (Einstellungen: Praxis-/Startadresse)') + ' – keine Luftlinie/Wegepauschale.</small><br><small id="vkGpsInfo"></small></div>' + naviLink(g) + '</div>'; return; }
       const km = kmLuftlinieEinfach(s, g);
       const p = nfpGeoZuPixel(g.lat, g.lon);
+      if(W){
+        const drin = nfpImBild(p); let b0;
+        if(drin){ b0 = nfpBewertung(p); if(km > 50) b0.stufe = '50+'; } else b0 = { zone: null, stufe: gkvStufeFuerKm(km), text: 'außerhalb der Karte', km };
+        wahl = Object.assign({}, b0, { woher, geo: { lat: g.lat, lon: g.lon }, adresseText: adrText || '', kmText: nfpLuftlinieText(g, drin ? p : null) || ('Luftlinie ' + nfpKmText(km) + ' km') });
+      }
       let b = nfpImBild(p) ? nfpBewertung(p) : null;
       const stufe = b && b.stufe && km <= 50 ? b.stufe : gkvStufeFuerKm(km);
       info.innerHTML = '<div class="vk-ziel-info"><div>' + (kopf ? kopf + '<br>' : '') +
@@ -16570,7 +16602,7 @@ function vektorKarteOverlay(d, text, opt){
         const a = ((await res.json()) || {}).address || {};
         const str = [a.road || a.pedestrian || a.footway || a.path || '', a.house_number || ''].join(' ').trim();
         const ort = [a.postcode || '', (a.city || a.town || a.village || a.municipality || '').split('/')[0].trim()].join(' ').trim();
-        if(str || ort){ ov.querySelector('#vkStrasse').value = str; ov.querySelector('#vkPlzOrt').value = ort; }
+        if(str || ort){ ov.querySelector('#vkStrasse').value = str; ov.querySelector('#vkPlzOrt').value = ort; if(wahl && W) wahl.adresseText = [str, ort].filter(Boolean).join(', '); }
       }catch(_){}
     };
     const suchen = async ()=>{
@@ -16598,6 +16630,7 @@ function vektorKarteOverlay(d, text, opt){
       langT = setTimeout(()=>{
         const r = box.getBoundingClientRect(), p = map.unproject([langP.x - r.left, langP.y - r.top]);
         try{ navigator.vibrate && navigator.vibrate(25); }catch(_){}
+        ov._langZeit = Date.now();
         zielSetzen({ lat: p.lat, lon: p.lng }, 'Gesetzt'); adresseZu({ lat: p.lat, lon: p.lng });
       }, 600);
     });
@@ -16607,7 +16640,8 @@ function vektorKarteOverlay(d, text, opt){
     map.on('movestart', langAus);
   }).catch(()=>{
     // ohne MapLibre (offline o.ae.): normale Karte
-    zu(); osmKarteOverlay(d, text, Object.assign({}, opt, { keinVektor: true }));
+    try{ ov.remove(); }catch(_){}
+    osmKarteOverlay(d, text, Object.assign({}, opt, { keinVektor: true })).then(fertigRes);
   });
   return ergebnis;
 }
@@ -17605,7 +17639,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v285';
+const APP_VERSION = 'v286';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
