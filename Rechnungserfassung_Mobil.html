@@ -15675,34 +15675,37 @@ async function vkFussweg(a, b){
 }
 // Naechster AED: Kandidaten im Umkreis (online 2 km, dann 6 km; offline aus gespeicherten Zellen),
 // die 3 naechsten per Luftlinie, davon der mit dem kuerzesten Fussweg
-async function vkAedNaechster(g){
-  // 1) Gespeichertes (beim App-Start vorgeladen): sofort, ohne Netz
+// Kandidaten um g: gespeicherte Daten (sofort) und/oder eine schnelle Abfrage (6 km); Online-Ergebnisse werden je Zelle ergaenzt
+const vkAedSortiert = (g, l)=>{ const ges = new Set(); return l.filter(a=>{ const k = a.lon + ',' + a.lat; if(ges.has(k)) return false; ges.add(k); return true; })
+  .map(a=> Object.assign({}, a, { luft: kmLuftlinieEinfach(g, a) * 1000 })).sort((p, q)=> p.luft - q.luft); };
+async function vkAedGespeichert(g){
   const [x0, y0] = vkAedZelle(g.lon, g.lat), zellen = [];
   for(let x = x0 - 1; x <= x0 + 1; x++) for(let y = y0 - 1; y <= y0 + 1; y++) zellen.push([x, y]);
   await vkAedAusCache(zellen);
-  const mitte = VK_AED_MEM.get(x0 + '/' + y0), frisch = mitte && Date.now() - mitte.am < VK_AED_ALTER;
-  const ausCache = ()=>{ let l = []; zellen.forEach(([x, y])=>{ const d = VK_AED_MEM.get(x + '/' + y); if(d) l = l.concat(d.f || []); }); return l; };
-  let liste = null, radius = 6000, offline = false, quelle = 'online';
-  if(frisch){ liste = ausCache().filter(a=> kmLuftlinieEinfach(g, a) <= 6); quelle = 'gespeichert'; }
-  // 2) sonst eine Abfrage (6 km), die ersten Server parallel -- der schnellste gewinnt
-  if(liste === null){
-    const rad = 6000, kx = 111320 * Math.cos(g.lat * Math.PI / 180);
-    try{ liste = (await vkAedAbfrageSchnell({ s: g.lat - rad / 111320, n: g.lat + rad / 111320, w: g.lon - rad / kx, e: g.lon + rad / kx })).filter(a=> kmLuftlinieEinfach(g, a) * 1000 <= rad); }
-    catch(_){ liste = null; }
-  }
-  // 3) offline: aeltere gespeicherte Daten
-  if(liste === null){
-    if(!zellen.some(([x, y])=> VK_AED_MEM.has(x + '/' + y))) return null;
-    liste = ausCache(); radius = 25000; offline = true; quelle = 'gespeichert (alt)';
-  }
-  if(!liste.length) return { aed: null, radius, offline, quelle };
-  const kand = liste.map(a=> Object.assign({ luft: kmLuftlinieEinfach(g, a) * 1000 }, a)).sort((p, q)=> p.luft - q.luft).slice(0, 3);
-  const wege = await Promise.all(kand.map(a=> vkFussweg(g, a)));
-  let best = null;
-  kand.forEach((a, i)=>{ const w = wege[i]; const wert = w ? w.minuten : a.luft / 70;   // ohne Weg: ca. 70 m/min
-    if(!best || wert < best.wert) best = { wert, aed: a, weg: w && w.coords, meter: w && w.meter, minuten: w && w.minuten, luft: a.luft }; });
-  best.radius = radius; best.quelle = quelle;
-  return best;
+  let l = [], da = false; zellen.forEach(([x, y])=>{ const d = VK_AED_MEM.get(x + '/' + y); if(d){ da = true; l = l.concat(d.f || []); } });
+  const m = VK_AED_MEM.get(x0 + '/' + y0);
+  return { liste: vkAedSortiert(g, l), da, frisch: !!(m && Date.now() - m.am < VK_AED_ALTER) };
+}
+async function vkAedOnline(g){
+  const rad = 6000, kx = 111320 * Math.cos(g.lat * Math.PI / 180);
+  const l = await vkAedAbfrageSchnell({ s: g.lat - rad / 111320, n: g.lat + rad / 111320, w: g.lon - rad / kx, e: g.lon + rad / kx });
+  // in die gespeicherten Zellen einfuegen (nur ergaenzen)
+  const je = new Map(); l.forEach(a=>{ const [x, y] = vkAedZelle(a.lon, a.lat), k = x + '/' + y; if(!je.has(k)) je.set(k, []); je.get(k).push(a); });
+  for(const [k, neu] of je){ const [x, y] = k.split('/').map(Number); await vkAedAusCache([[x, y]]); const alt = (VK_AED_MEM.get(k) || {}).f || [];
+    const ges = new Set(alt.map(a=> a.lon + ',' + a.lat)); const zus = neu.filter(a=> !ges.has(a.lon + ',' + a.lat)); if(zus.length || !VK_AED_MEM.has(k)) await vkAedSpeichern(x, y, alt.concat(zus)); }
+  vkAedAlleNeu();
+  return vkAedSortiert(g, l).filter(a=> a.luft <= rad);
+}
+// schneller Standort: zuerst ungenau/zwischengespeichert (max. 2 min alt), sonst normal
+async function vkStandortSchnell(){
+  try{
+    const st = navigator.permissions && (await navigator.permissions.query({ name: 'geolocation' })).state;
+    if(st === 'granted'){
+      const p = await new Promise((ok, f)=> navigator.geolocation.getCurrentPosition(ok, f, { enableHighAccuracy: false, maximumAge: 120000, timeout: 4000 }));
+      return { lat: p.coords.latitude, lon: p.coords.longitude, genau: p.coords.accuracy };
+    }
+  }catch(_){}
+  return standortHolen({ still: false });
 }
 // Schnelle Abfrage fuer den AED-Knopf: zuerst 2 Server gleichzeitig (12 s), dann die uebrigen
 async function vkAedAbfrageSchnell(box){
@@ -15713,7 +15716,7 @@ async function vkAedAbfrageSchnell(box){
     try{
       const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal });
       if(!r.ok) throw new Error('HTTP ' + r.status);
-      const j = await r.json();
+      const j = await r.json(); vkAedRemarkPruefen(j);
       return (j.elements || []).map(el=>{ const lat = el.lat != null ? el.lat : el.center && el.center.lat, lon = el.lon != null ? el.lon : el.center && el.center.lon;
         return lat == null ? null : Object.assign({ lat: +lat.toFixed(6), lon: +lon.toFixed(6) }, vkAedText(el.tags || {})); }).filter(Boolean);
     }catch(e){ fehler.push(url.split('/')[2] + ': ' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e && e.message) || e)); throw e; } finally{ clearTimeout(tm); }
@@ -15753,7 +15756,7 @@ async function vkAedAbfrage(box, ms){
       const r = get ? await fetch(url + '?data=' + encodeURIComponent(q), { signal: ac.signal, cache: 'no-store' })
         : await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal });
       if(!r.ok) throw new Error('HTTP ' + r.status);
-      const j = await r.json(); vkAedLetzterFehler = '';
+      const j = await r.json(); vkAedRemarkPruefen(j); vkAedLetzterFehler = '';
       return (j.elements || []).map(el=>{ const lat = el.lat != null ? el.lat : el.center && el.center.lat, lon = el.lon != null ? el.lon : el.center && el.center.lon;
         return lat == null ? null : Object.assign({ lat: +lat.toFixed(6), lon: +lon.toFixed(6) }, vkAedText(el.tags || {})); }).filter(Boolean);
     }catch(e){ letzt = e; fehler.push(url.split('/')[2] + (get ? ' (GET)' : '') + ': ' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e && e.message) || e)); } finally{ clearTimeout(tm); }
@@ -15762,7 +15765,12 @@ async function vkAedAbfrage(box, ms){
   try{ console.warn('AED-Abfrage fehlgeschlagen', vkAedLetzterFehler); }catch(_){}
   throw letzt || new Error('Overpass nicht erreichbar');
 }
+// Overpass meldet Zeitueberschreitung/Ueberlast mit HTTP 200 und leerer Liste -- das ist ein Fehler, kein "keine AEDs"
+function vkAedRemarkPruefen(j){ if(j && j.remark && /error|timed out|time out|out of memory|abort/i.test(j.remark)) throw new Error('Overpass: ' + String(j.remark).slice(0, 80)); }
 async function vkAedSpeichern(x, y, liste){
+  // vorhandene Standorte nicht durch eine leere Antwort ersetzen (eher Stoerung als Abbau aller Geraete)
+  const alt = VK_AED_MEM.get(x + '/' + y);
+  if(!liste.length && alt && (alt.f || []).length) liste = alt.f;
   const d = { am: Date.now(), f: liste }; VK_AED_MEM.set(x + '/' + y, d);
   try{ const c = await caches.open(VK_AED_CACHE); await c.put(vkAedSchl(x, y), new Response(JSON.stringify(d), { headers: { 'Content-Type': 'application/json' } })); }catch(_){}
   return d;
@@ -15995,36 +16003,61 @@ function vektorKarteOverlay(d, text, opt){
     let aedNr = 0;
     const aedKnopf = ov.querySelector('.vk-aed-knopf');
     aedKnopf.onclick = async ()=>{
-      const nr = ++aedNr;
+      const nr = ++aedNr, aktuell = ()=> nr === aedNr && document.body.contains(ov);
       let start = null, woher = '';
       if(zielMarke){ const q = zielMarke.getLngLat(); start = { lat: q.lat, lon: q.lng }; woher = 'vom gesetzten Punkt'; }
       else {
         info.innerHTML = 'Standort wird bestimmt …<br>' + VK_DEFIMAP_LINKS;
-        start = await standortHolen({ still: false });
+        start = await vkStandortSchnell();
+        if(!aktuell()) return;
         if(start){ woher = 'von deinem Standort'; if(ichMarke) ichMarke.remove(); ichMarke = marke('<span class="vk-ich"></span>', start); }
         else { const c = map.getCenter(); start = { lat: c.lat, lon: c.lng }; woher = 'von der Kartenmitte'; }
       }
+      const s = start;
       info.innerHTML = 'Nächster AED wird gesucht …<br>' + VK_DEFIMAP_LINKS;
       // Dauer-Anzeige aus (Stil-Menue)? Dann nur in dieser Karte einblenden, Einstellung bleibt
       map._aedImmer = true; if(map.getLayer('vk-aed')) map.setLayoutProperty('vk-aed', 'visibility', 'visible'); if(map._aedLaden) map._aedLaden();
-      let r = null;
-      try{ r = await vkAedNaechster(start); }catch(_){ r = null; }
-      if(nr !== aedNr || !document.body.contains(ov)) return;
-      if(!r){ info.innerHTML = 'AED-Standorte nicht erreichbar (offline?) und keine gespeicherten Daten für diese Gegend.' + (vkAedLetzterFehler ? '<br><small>Grund: ' + htmlEsc(vkAedLetzterFehler) + '</small>' : '') + '<br>' + VK_DEFIMAP_LINKS; return; }
-      if(!r.aed){ info.innerHTML = 'Kein AED im Umkreis von ' + (r.radius / 1000) + ' km in OpenStreetMap eingetragen.<br>' + VK_DEFIMAP_LINKS + (r.offline ? '<br><small>(nur gespeicherte Daten – Abfrage nicht möglich: ' + htmlEsc(vkAedLetzterFehler || 'offline') + ')</small>' : ''); return; }
-      const a = r.aed, s = start;
-      map._aedWeg = { type: 'FeatureCollection', features: [linie(r.weg && r.weg.length > 1 ? r.weg : [ll(s), ll(a)])] };
-      vkAedWegZeigen(map);
-      const b = new ml.LngLatBounds(ll(s), ll(s)); b.extend(ll(a)); (r.weg || []).forEach(k=> b.extend(k));
-      map.fitBounds(b, { padding: 70, maxZoom: 17, duration: 500 });
       const m = (x)=> x < 1000 ? Math.round(x / 10) * 10 + ' m' : (x / 1000).toFixed(1).replace('.', ',') + ' km';
-      const gUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + s.lat.toFixed(6) + ',' + s.lon.toFixed(6) + '&destination=' + a.lat.toFixed(6) + ',' + a.lon.toFixed(6) + '&travelmode=walking';
-      info.innerHTML = '<div class="vk-ziel-info"><div><b>Nächster AED</b> ' + htmlEsc(woher) + (a.n ? ': ' + htmlEsc(a.n) : '') + (a.o ? '<br>' + htmlEsc(a.o) : '') +
-        (r.quelle && r.quelle !== 'online' ? ' <small>(' + htmlEsc(r.quelle) + ')</small>' : '') + '<br>' + (r.weg ? 'Fußweg <b>' + m(r.meter) + '</b> (ca. ' + Math.max(1, Math.round(r.minuten)) + ' min) · ' : '') + 'Luftlinie ' + m(r.luft) +
-        (r.weg ? '' : '<br><small>Fußweg nicht verfügbar – gerade Linie.</small>') +
-        (a.z ? '<br><small>' + htmlEsc(a.z) + '</small>' : '<br><small>Zugang/Öffnungszeiten unbekannt</small>') + '<br>' + VK_DEFIMAP_LINKS + '</div>' +
-        '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + a.lat.toFixed(6) + '" data-lon="' + a.lon.toFixed(6) + '" data-art="fuss" data-name="AED">Route anzeigen</button>' +
-        '<a class="vk-navi vk-navi-g" href="' + gUrl + '" target="_blank" rel="noopener">Google Maps</a></div></div>';
+      let gezeigt = null;
+      const zeigen = (a, w, hinweis)=>{
+        const neuerAed = !gezeigt || gezeigt.lat !== a.lat || gezeigt.lon !== a.lon; gezeigt = a;
+        map._aedWeg = { type: 'FeatureCollection', features: [linie(w && w.coords && w.coords.length > 1 ? w.coords : [ll(s), ll(a)])] };
+        vkAedWegZeigen(map);
+        if(neuerAed || w){ const b = new ml.LngLatBounds(ll(s), ll(s)); b.extend(ll(a)); ((w && w.coords) || []).forEach(k=> b.extend(k)); map.fitBounds(b, { padding: 70, maxZoom: 17, duration: 400 }); }
+        const gUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + s.lat.toFixed(6) + ',' + s.lon.toFixed(6) + '&destination=' + a.lat.toFixed(6) + ',' + a.lon.toFixed(6) + '&travelmode=walking';
+        info.innerHTML = '<div class="vk-ziel-info"><div><b>Nächster AED</b> ' + htmlEsc(woher) + (a.n ? ': ' + htmlEsc(a.n) : '') + (a.o ? '<br>' + htmlEsc(a.o) : '') +
+          '<br>' + (w && w.meter != null ? 'Fußweg <b>' + m(w.meter) + '</b> (ca. ' + Math.max(1, Math.round(w.minuten)) + ' min) · ' : '') + 'Luftlinie <b>' + m(a.luft) + '</b>' +
+          (hinweis ? '<br><small>' + hinweis + '</small>' : '') +
+          (a.z ? '<br><small>' + htmlEsc(a.z) + '</small>' : '<br><small>Zugang/Öffnungszeiten unbekannt</small>') + '<br>' + VK_DEFIMAP_LINKS + '</div>' +
+          '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + a.lat.toFixed(6) + '" data-lon="' + a.lon.toFixed(6) + '" data-art="fuss" data-name="AED">Route anzeigen</button>' +
+          '<a class="vk-navi vk-navi-g" href="' + gUrl + '" target="_blank" rel="noopener">Google Maps</a></div></div>';
+      };
+      // a) gespeicherte Daten: sofort
+      const gesp = await vkAedGespeichert(s);
+      if(!aktuell()) return;
+      let liste = gesp.liste.filter(a=> a.luft <= 6000);
+      if(liste.length) zeigen(liste[0], null, gesp.frisch ? 'Fußweg wird berechnet …' : 'Gespeicherte Daten – wird online geprüft …');
+      // b) online pruefen, wenn nichts Aktuelles oder nichts im Umkreis gespeichert ist
+      if(!gesp.frisch || !liste.length){
+        try{ const on = await vkAedOnline(s); if(!aktuell()) return; liste = vkAedSortiert(s, liste.concat(on)); }
+        catch(_){
+          if(!aktuell()) return;
+          if(!liste.length){
+            const weiter = gesp.liste[0];
+            if(weiter){ zeigen(weiter, null, 'Abfrage nicht möglich (' + htmlEsc(vkAedLetzterFehler || 'offline') + ') – aus gespeicherten Daten, über 6 km.'); return; }
+            info.innerHTML = 'AED-Standorte nicht erreichbar (offline?) und keine gespeicherten Daten für diese Gegend.' + (vkAedLetzterFehler ? '<br><small>Grund: ' + htmlEsc(vkAedLetzterFehler) + '</small>' : '') + '<br>' + VK_DEFIMAP_LINKS; return;
+          }
+        }
+      }
+      if(!liste.length){ info.innerHTML = 'Kein AED im Umkreis von 6 km in OpenStreetMap eingetragen.<br>' + VK_DEFIMAP_LINKS; map._aedWeg = { type: 'FeatureCollection', features: [] }; vkAedWegZeigen(map); return; }
+      zeigen(liste[0], null, 'Fußweg wird berechnet …');
+      // c) Fusswege zu den 3 naechsten (parallel, max. 8 s) -- kuerzester Fussweg gewinnt
+      const kand = liste.slice(0, 3);
+      const wege = await Promise.all(kand.map(a=> Promise.race([vkFussweg(s, a), new Promise(r=> setTimeout(()=> r(null), 8000))])));
+      if(!aktuell()) return;
+      let best = null;
+      kand.forEach((a, i)=>{ const w = wege[i], wert = w ? w.minuten : a.luft / 70; if(!best || wert < best.wert) best = { wert, a, w }; });
+      zeigen(best.a, best.w, best.w ? '' : 'Fußweg nicht verfügbar – gerade Linie.');
     };
     if(vkAedAutostart){ vkAedAutostart = false; const los = ()=> aedKnopf.onclick(); if(map.loaded()) setTimeout(los, 0); else map.once('load', los); }
     // ---- Adresse suchen / Ort setzen (lange druecken), Punkt verschiebbar -> Luftlinie, Wegepauschale, Route ----
@@ -17139,7 +17172,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v267';
+const APP_VERSION = 'v268';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
