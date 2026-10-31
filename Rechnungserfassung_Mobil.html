@@ -15345,6 +15345,18 @@ async function vkStilJson(st){
   // ab Zoom 13/14 vorhanden, die Stile blenden sie aber erst spaet ein
   const VK_FRUEHER = { poi_r1: 13.5, poi_r7: 14.5, poi_r20: 15.5, 'highway-name-minor': 14, 'highway-name-path': 14.5 };
   (stil.layers || []).forEach(l=>{ const z = VK_FRUEHER[l.id]; if(z != null && (l.minzoom == null || l.minzoom > z)) l.minzoom = z; });
+  // Wander-/Fusswege und Feld-/Wirtschaftswege frueher zeigen (die Stile beginnen erst bei Zoom 14-15,5)
+  const frueher = (l, z0, w0)=>{
+    if(l.minzoom != null && l.minzoom > z0) l.minzoom = z0;
+    const w = l.paint && l.paint['line-width'];
+    if(Array.isArray(w) && w[0] === 'interpolate' && Array.isArray(w[2]) && w[2][0] === 'zoom' && typeof w[3] === 'number' && w[3] > z0) w.splice(3, 0, z0, w0);
+  };
+  (stil.layers || []).forEach(l=>{
+    if(l.type !== 'line' || l['source-layer'] !== 'transportation' || !/path|track|service/.test(l.id) || /rail/.test(l.id)) return;
+    const f = JSON.stringify(l.filter || '');
+    if(/"path"/.test(f) && !/rail/.test(l.id)) frueher(l, 12.5, /casing/.test(l.id) ? 1.4 : 0.8);
+    else if(/"track"/.test(f)) frueher(l, 12.5, /casing/.test(l.id) ? 1.6 : 0.5);
+  });
   if(typeof stil.sprite === 'string') stil.sprite = vkZuProt(stil.sprite); else if(Array.isArray(stil.sprite)) stil.sprite.forEach(s=> s.url = vkZuProt(s.url));
   stil.glyphs = vkZuProt(stil.glyphs);
   Object.values(stil.sources || {}).forEach(s=>{ if(s.url) s.url = vkZuProt(s.url); if(s.tiles) s.tiles = s.tiles.map(vkZuProt); });
@@ -15818,7 +15830,7 @@ function vkZusatzEbenen(map, st){
   const halo = dunkel ? (grau ? '#262a30' : '#10151c') : '#ffffff';
   const punkt = ['match', ['geometry-type'], ['Point', 'MultiPoint'], true, false];
   // Hausnummern ab Zoom 16
-  map.addLayer({ id: 'vk-hnr', type: 'symbol', source: quelle, 'source-layer': 'housenumber', minzoom: 16,
+  map.addLayer({ id: 'vk-hnr', type: 'symbol', source: quelle, 'source-layer': 'housenumber', minzoom: 15.5,
     layout: { visibility: e.hnr ? 'visible' : 'none', 'text-field': ['to-string', ['get', 'housenumber']], 'text-font': ['Noto Sans Regular'], 'text-size': ['interpolate', ['linear'], ['zoom'], 16, 10, 19, 13], 'text-padding': 1, 'symbol-placement': 'point' },
     paint: { 'text-color': dunkel ? '#c9d1db' : '#5b4a3a', 'text-halo-color': halo, 'text-halo-width': 1.2 } });
   // Parkplaetze schon ab Zoom 14
@@ -17369,7 +17381,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v276';
+const APP_VERSION = 'v277';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
