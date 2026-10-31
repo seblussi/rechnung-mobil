@@ -15562,11 +15562,12 @@ const VK_BIOME_GRAU = {
   // Acker oliv, Wohngebiet grau-blau, Gewerbe/Industrie violett, Wasser kraeftig blau
   hintergrund: '#3a3f47', wasser: '#2f6496', fluss: '#4a83bb',
   flaechen: [
+    ['park', { nicht: ['nature_reserve', 'national_park', 'protected_area', 'nature_park', 'naturpark'] }, '#47804f', 0.95],   // zuerst und ohne Natur-/Schutzgebiete (Naturpark Schwarzwald waere sonst eine gruene Flaeche)
     ['landcover', 'farmland', '#5a5a3c', 0.95], ['landcover', 'grass', '#4f7448', 0.95], ['landcover', 'wood', '#141716', 1],
     ['landcover', 'rock', '#5e5e62', 0.9], ['landcover', 'sand', '#7a6d45', 0.9], ['landcover', 'wetland', '#3f6764', 0.9],
     ['landuse', 'residential', '#4c525d', 0.95], ['landuse', 'commercial', '#5d4c63', 0.9], ['landuse', 'retail', '#664c58', 0.9],
     ['landuse', 'industrial', '#544c6e', 0.9], ['landuse', 'quarry', '#5c5650', 0.9], ['landuse', 'military', '#5e4444', 0.7],
-    ['landuse', 'hospital', '#6e4458', 0.95], ['landuse', 'cemetery', '#4d6a4c', 0.95], ['park', null, '#47804f', 0.95]
+    ['landuse', 'hospital', '#6e4458', 0.95], ['landuse', 'cemetery', '#4d6a4c', 0.95]
   ]
 };
 const VK_BIOME_DUNKEL = {
@@ -15592,8 +15593,10 @@ function vkBiome(stil, pal){
   // nach der letzten Flaechen-Ebene bzw. vor dem Wasser einsetzen (Strassen/Gebaeude bleiben darueber)
   let pos = L.findIndex(l=> l['source-layer'] === 'water' || l['source-layer'] === 'waterway'); if(pos < 0) pos = 1;
   const neu = pal.flaechen.map(([sl, klasse, farbe, deck])=> ({
-    id: 'vkb-' + sl + '-' + (klasse || 'alle'), type: 'fill', source: quelle, 'source-layer': sl,
-    filter: klasse ? ['==', ['get', 'class'], klasse] : ['match', ['geometry-type'], ['Polygon', 'MultiPolygon'], true, false],
+    id: 'vkb-' + sl + '-' + (typeof klasse === 'string' ? klasse : 'alle'), type: 'fill', source: quelle, 'source-layer': sl,
+    filter: typeof klasse === 'string' ? ['==', ['get', 'class'], klasse]
+      : klasse && klasse.nicht ? ['all', ['match', ['geometry-type'], ['Polygon', 'MultiPolygon'], true, false], ['!', ['in', ['get', 'class'], ['literal', klasse.nicht]]]]
+      : ['match', ['geometry-type'], ['Polygon', 'MultiPolygon'], true, false],
     paint: { 'fill-color': farbe, 'fill-opacity': deck, 'fill-antialias': false }
   }));
   L.splice(pos, 0, ...neu);
@@ -17361,7 +17364,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v273';
+const APP_VERSION = 'v274';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
