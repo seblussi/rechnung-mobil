@@ -17626,10 +17626,11 @@ function aerzteAbweichungText(ist, soll){
 
 // ---------- Word-Datei aus der Vorlage ----------
 // Tabelle der Dienste im Stil der LS/PT-Rechnungen (Arial 10, feste Zeilenhoehe, Kopf fett mit Rahmen,
-// senkrechte Linien, Summe fett im Kasten). Spalten: Datum | Uhrzeit | Dienst | Betrag in EUR.
-// Betraege je Dienst nur, wenn sie zusammen die (evtl. von Hand geaenderte) Summe ergeben.
+// senkrechte Linien). Spalten: Datum | Uhrzeit | Dienst -- keine Betraege je Dienst (die KVBW-Abrechnung weicht
+// immer ab), darunter nur der Gesamtbetrag fett im Kasten.
 function aerzteTabelleXml(dienste, summe){
-  const tw = [66, 92, 255, 74].map(w=> Math.round(w * 20));
+  // Raster: Datum | Uhrzeit | Dienst (ueber 2 Rasterspalten) -- in der Summenzeile: "Gesamtbetrag" | Betrag im Kasten
+  const g = [66, 92, 219, 110].map(w=> Math.round(w * 20)), dienstB = g[2] + g[3];
   const linie = (an)=> an ? 'w:val="single" w:sz="6" w:space="0" w:color="000000"' : 'w:val="nil"';
   const zelle = (text, b, ausr, rand, o)=>{ o = o || {};
     return '<w:tc><w:tcPr><w:tcW w:w="' + b + '" w:type="dxa"/>' + (o.span ? '<w:gridSpan w:val="' + o.span + '"/>' : '') + '<w:tcBorders><w:top ' + linie(rand.t) + '/><w:left ' + linie(rand.l) + '/><w:bottom ' + linie(rand.b) + '/><w:right ' + linie(rand.r) + '/></w:tcBorders><w:noWrap/><w:vAlign w:val="bottom"/></w:tcPr>' +
@@ -17637,16 +17638,15 @@ function aerzteTabelleXml(dienste, summe){
       (String(text) === '' ? '' : '<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>' + (o.fett ? '<w:b/><w:bCs/>' : '') + '<w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve">' + rdXml(text) + '</w:t></w:r>') + '</w:p></w:tc>'; };
   const zeile = (z, kopf)=> '<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="' + RECHNUNG_ZEILENHOEHE_TWIPS + '" w:hRule="exact"/>' + (kopf ? '<w:tblHeader/>' : '') + '</w:trPr>' + z.join('') + '</w:tr>';
   const zahl = (v)=> (Math.round(Number(v) * 100) / 100).toFixed(2).replace('.', ',');
-  const mitBetrag = dienste.length && dienste.every(d=> d.betrag != null && isFinite(d.betrag)) && Math.abs(dienste.reduce((a, d)=> a + Number(d.betrag), 0) - Number(summe)) < 0.015;
   const teile = (d)=>{ if(d.datum) return d; const m = /^(\d{1,2}\.\d{1,2}\.\d{4})(?:,\s*(.*))?$/.exec(String(d.text || '').trim()); return m ? { datum: m[1], zeit: m[2] || '', art: d.art } : { datum: d.text || '', zeit: '', art: d.art }; };
-  const x = [zeile(['Datum', 'Uhrzeit', 'Dienst', 'Betrag in €'].map((t, i)=> zelle(t, tw[i], 'center', { t: 1, b: 1, l: i === 0, r: 1 }, { fett: true })), true)];
+  const x = [zeile([zelle('Datum', g[0], 'center', { t: 1, b: 1, l: 1, r: 1 }, { fett: true }), zelle('Uhrzeit', g[1], 'center', { t: 1, b: 1, r: 1 }, { fett: true }), zelle('Dienst', dienstB, 'center', { t: 1, b: 1, r: 1 }, { fett: true, span: 2 })], true)];
   dienste.forEach((d0, i)=>{ const d = teile(d0), letzte = i === dienste.length - 1;
-    x.push(zeile([zelle(d.datum || '', tw[0], 'center', { l: 1, r: 1, b: letzte }), zelle(d.zeit || '', tw[1], 'center', { l: 1, r: 1, b: letzte }),
-      zelle('Vertretung ' + (d.art || 'Bereitschaftsdienst'), tw[2], 'left', { l: 1, r: 1, b: letzte }), zelle(mitBetrag ? zahl(d0.betrag) : '', tw[3], 'right', { l: 1, r: 1, b: letzte })])); });
-  x.push(zeile([zelle('', tw[0], 'center', {}), zelle('', tw[1], 'center', {}), zelle('Summe', tw[2], 'right', { r: 1 }, { fett: true }), zelle(zahl(summe) + ' €', tw[3], 'right', { t: 1, b: 1, l: 1, r: 1 }, { fett: true })]));
-  return '<w:tbl><w:tblPr><w:tblW w:w="' + tw.reduce((a, b)=> a + b, 0) + '" w:type="dxa"/><w:tblInd w:w="0" w:type="dxa"/><w:tblLayout w:type="fixed"/>' +
+    x.push(zeile([zelle(d.datum || '', g[0], 'center', { l: 1, r: 1, b: letzte }), zelle(d.zeit || '', g[1], 'center', { l: 1, r: 1, b: letzte }),
+      zelle('Vertretung ' + (d.art || 'Bereitschaftsdienst'), dienstB, 'left', { l: 1, r: 1, b: letzte }, { span: 2 })])); });
+  x.push(zeile([zelle('', g[0] + g[1], 'center', {}, { span: 2 }), zelle('Gesamtbetrag', g[2], 'right', { r: 1 }, { fett: true }), zelle(zahl(summe) + ' €', g[3], 'right', { t: 1, b: 1, l: 1, r: 1 }, { fett: true })]));
+  return '<w:tbl><w:tblPr><w:tblW w:w="' + g.reduce((a, b)=> a + b, 0) + '" w:type="dxa"/><w:tblInd w:w="0" w:type="dxa"/><w:tblLayout w:type="fixed"/>' +
     '<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/></w:tblCellMar><w:tblLook w:val="0000"/></w:tblPr>' +
-    '<w:tblGrid>' + tw.map(w=> '<w:gridCol w:w="' + w + '"/>').join('') + '</w:tblGrid>' + x.join('') + '</w:tbl>';
+    '<w:tblGrid>' + g.map(w=> '<w:gridCol w:w="' + w + '"/>').join('') + '</w:tblGrid>' + x.join('') + '</w:tbl>';
 }
 async function aerzteDocxErzeugen(vorlage, daten){
   const zip = await JSZip.loadAsync(vorlage);
@@ -18184,7 +18184,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v310';
+const APP_VERSION = 'v311';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
