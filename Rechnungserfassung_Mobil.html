@@ -5274,8 +5274,10 @@ async function einrFehlt(){
   try{ if(!gkvStartAdresse()) daten.push('Ausgangspunkt (Wache/Praxis)'); }catch(_){}
   if(daten.length) f.push({ schritt: 'daten', text: 'Deine Daten: ' + daten.join(', ') });
   try{ if(typeof dienstprofile === 'function' && !dienstprofile().length && typeof ansichtEinrichtung === 'function' && /'dienst'/.test(String(ansichtEinrichtung))) f.push({ schritt: 'dienst', text: 'Dienstprofil (Ausgangspunkt fürs Wegegeld)' }); }catch(_){}
-  const eigeneWl = String(w.BRIEF_WEITERLEITUNG || '').trim() && (typeof LXP_WEITERLEITUNG_STANDARD === 'undefined' || w.BRIEF_WEITERLEITUNG.trim() !== LXP_WEITERLEITUNG_STANDARD);
-  if(!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY && eigeneWl)) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY) ? 'LetterXpress-Zugang' : '', !eigeneWl ? 'eigene Azure-Weiterleitung' : ''].filter(Boolean).join(' und ') });
+  // Weiterleitung: eigene Adresse, oder die Standard-Weiterleitung (leer bzw. Standard-Adresse) mit Zugangsdaten --
+  // die Standard-Weiterleitung laesst nur freigegebene LetterXpress-Benutzer durch; ob man dazugehoert, zeigt "Prüfen"/der Versand
+  const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY);
+  if(!zugang) f.push({ schritt: 'brief', text: 'Briefversand: LetterXpress-Zugang und Weiterleitung' });
   return f;
 }
 // unvollstaendig -> Hinweis und die fehlenden Schritte durchgehen (Vorhandenes ist vorausgefuellt)
@@ -18079,7 +18081,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v300';
+const APP_VERSION = 'v301';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
