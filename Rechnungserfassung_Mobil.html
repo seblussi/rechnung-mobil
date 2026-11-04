@@ -18077,7 +18077,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v298';
+const APP_VERSION = 'v299';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18220,8 +18220,8 @@ function sitzdienstSchichten(tag){
 // (Telemedizin AeBD April 2026 - Maerz 2027, docdirekt Plan Oktober 2026)
 function telemedizinSchichten(tag){
   const d = tag || new Date();
-  if(fahrdienstWochenendSatz(d)) return [{ label: 'Telearzt BD früh', von: '09:00', bis: '16:00' }, { label: 'Telearzt BD spät', von: '16:00', bis: '23:00' }];
-  return [{ label: 'docdirekt Vormittag', von: '08:00', bis: '13:00' }, { label: 'docdirekt Nachmittag', von: '13:00', bis: '19:00' }, { label: 'Telearzt BD', von: '19:00', bis: '23:00' }];
+  if(fahrdienstWochenendSatz(d)) return [{ label: 'Telearzt ÄBD früh', von: '09:00', bis: '16:00' }, { label: 'Telearzt ÄBD spät', von: '16:00', bis: '23:00' }];
+  return [{ label: 'docdirekt Vormittag', von: '08:00', bis: '13:00' }, { label: 'docdirekt Nachmittag', von: '13:00', bis: '19:00' }, { label: 'Telearzt ÄBD', von: '19:00', bis: '23:00' }];
 }
 // docdirekt (eigene Dienstart, ohne Foerderung): werktags Vormittag 8-13, Nachmittag 13-19
 function docdirektSchichten(tag){
@@ -18482,7 +18482,7 @@ async function liveDienstDialog(){
       '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
       (dienstSchichten(art, tagVon()).length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div>' + schichtZeilenHtml(dienstSchichten(art, tagVon()), schicht) : '') +
-      (art === 'Telemedizin' ? '<div class="fb-info"><b>docdirekt</b> (werktags 8–13 und 13–19) ist das telemedizinische Angebot der KVBW: Patienten melden sich über 116117 bzw. die docdirekt-App und werden per Telefon oder Video beraten und behandelt. docdirekt-Schichten werden <b>ohne Förderung</b> geführt. <b>Telearzt BD</b> (Telearzt-Bereitschaftsdienst; werktags 19–23, Wochenende und Feiertag 9–16 / 16–23) wird mit 50 €/h gefördert.</div>' : '') +
+      (art === 'Telemedizin' ? '<div class="fb-info"><b>docdirekt</b> (werktags 8–13 und 13–19) ist das telemedizinische Angebot der KVBW: Patienten melden sich über 116117 bzw. die docdirekt-App und werden per Telefon oder Video beraten und behandelt. docdirekt-Schichten werden <b>ohne Förderung</b> geführt. <b>Telearzt ÄBD</b> (ärztlicher Bereitschaftsdienst als Telearzt; werktags 19–23, Wochenende und Feiertag 9–16 / 16–23) wird mit 50 €/h gefördert.</div>' : '') +
       '<div class="fb-lbl">Dienstzeit</div>' +
       (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis && !schicht ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace(/:00/g, '').replace('-', '–') + '</button>').join('') + '</div>' : '') +
       '<div class="fb-zeile"><label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
