@@ -2746,7 +2746,7 @@ function fahrdienstZeilenAuswerten(zeilen){
       pruef++;
     }
 
-    let gesamt=0, gkv=0, ls=0, pt=0, pseudo=false;
+    let gesamt=0, gkv=0, ls=0, pt=0, pseudo=false, nGkv=0, nLs=0, nPt=0;
     for(let rIdx=blockStart; rIdx<=blockEnde; rIdx++){
       const rr = zeilen[rIdx] || [];
       if(!leer(rr[COL_D])){
@@ -2754,10 +2754,11 @@ function fahrdienstZeilenAuswerten(zeilen){
         if(!isFinite(wert)) wert = 0;
         const kategorie = String(rr[COL_E]==null ? '' : rr[COL_E]).trim().toUpperCase();
         gesamt += wert;
-        if(kategorie==='L' || kategorie==='LS') ls += wert;
-        else if(kategorie==='P' || kategorie==='PT') pt += wert;
-        else gkv += wert;
-        if(/^pseudo/i.test(String(rr[COL_D]).trim())) pseudo = true;
+        const istPseudo = /^pseudo/i.test(String(rr[COL_D]).trim());
+        if(kategorie==='L' || kategorie==='LS'){ ls += wert; nLs++; }
+        else if(kategorie==='P' || kategorie==='PT'){ pt += wert; nPt++; }
+        else { gkv += wert; if(!istPseudo) nGkv++; }
+        if(istPseudo) pseudo = true;
       }
     }
     // Foerderung (Mindesthonorar): GKV-Anteil mindestens Stunden x 21,43 €
@@ -2776,7 +2777,7 @@ function fahrdienstZeilenAuswerten(zeilen){
 
     bloecke.push({
       quartal, quartalKey, datumText, zeitLabel,
-      arzt, gesamt, stundenlohn, gkv, ls, pt,
+      arzt, gesamt, stundenlohn, gkv, ls, pt, nGkv, nLs, nPt,
       gkvRoh, pauschale, satz, satzFormel, zusatz, pseudo, dienstart, satzGrund: fahrdienstSatzGrund(r[COL_B], dienstart), dienststunden,
       zeileStart: blockStart + 1, zeileEnde: blockEnde + 1, zeitRoh: r[COL_C]
     });
@@ -3249,14 +3250,15 @@ function fahrdienstAuswertungRendern(daten){
   fahrdienstAuswertungRendernBasis({ bloecke: bl, quartale: qu });
   if(typeof aerzteKnoepfeEinfuegen === 'function' && msGraphStatus === 'angemeldet') aerzteKnoepfeEinfuegen(zielEl, bl, qu);
   const euro = (w)=> (Number(w)||0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
-  const s = bl.reduce((a, b)=>{ a.g += b.gesamt; a.k += b.gkv; a.l += b.ls; a.p += b.pt; a.h += (b.dienststunden || 0); return a; }, {g:0, k:0, l:0, p:0, h:0});
+  const s = bl.reduce((a, b)=>{ a.g += b.gesamt; a.k += b.gkv; a.l += b.ls; a.p += b.pt; a.h += (b.dienststunden || 0); a.f += Math.max(0, (b.gkv || 0) - (b.gkvRoh || 0)); a.nk += b.nGkv || 0; a.nl += b.nLs || 0; a.np += b.nPt || 0; return a; }, {g:0, k:0, l:0, p:0, h:0, f:0, nk:0, nl:0, np:0});
   const kopf = document.createElement('div');
   kopf.innerHTML = '<div class="fd-jahre">' + jahre.map(j=> '<button type="button" class="fb-chip' + (j === wahl ? ' an' : '') + '" data-jahr="' + j + '">' + j + '</button>').join('') +
     '<button type="button" class="fb-chip' + (wahl === 'alle' ? ' an' : '') + '" data-jahr="alle">Alle</button></div>' +
     '<div class="fd-jahr-summe"><b>' + (wahl === 'alle' ? 'Alle Jahre' : wahl) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
-    (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>GKV ' + euro(s.k) + ' · LS ' + euro(s.l) + ' · PT ' + euro(s.p) +
-    (()=>{ // Dienste je Dienstart
-      const n = {}; bl.forEach(b=>{ const a = b.dienstart || 'Fahrdienst'; n[a] = (n[a] || 0) + 1; });
+    ' (GKV ' + euro(s.k) + (s.f > 0.005 ? ', davon Förderung ' + euro(s.f) : '') + ' · PT ' + euro(s.p) + ' · LS ' + euro(s.l) + ')' +
+    (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>Fälle: ' + s.nk + ' GKV · ' + s.np + ' PT · ' + s.nl + ' LS' +
+    (()=>{ // Dienste je Dienstart (ohne Schicht)
+      const n = {}; bl.forEach(b=>{ const a = fbDienstartZerlegen(b.dienstart || 'Fahrdienst').art; n[a] = (n[a] || 0) + 1; });
       return Object.keys(n).length > 1 ? '<br>' + Object.entries(n).sort((x, y)=> y[1] - x[1]).map(([a, z])=> z + '× ' + htmlEsc(a)).join(' · ') : '';
     })() + '</div>';
   zielEl.insertBefore(kopf, zielEl.firstChild);
@@ -18077,7 +18079,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v299';
+const APP_VERSION = 'v300';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
