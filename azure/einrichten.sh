@@ -162,7 +162,22 @@ az functionapp deployment source config-zip -g "$RG" -n "$APP" --src "$TMP/paket
 az functionapp cors add -g "$RG" -n "$APP" --allowed-origins "$HERKUNFT" -o none 2>/dev/null || true
 rm -rf "$TMP"
 
-HOST="$(az functionapp show -g "$RG" -n "$APP" --query defaultHostName -o tsv)"
+# Adresse der Funktions-App: bei Flex-Verbrauch steht sie nicht immer in defaultHostName
+# (dann leer -> frueher "https:///api"). Mehrere Stellen abfragen, notfalls kurz warten.
+HOST=""
+for i in $(seq 1 12); do
+  for Q in defaultHostName "properties.defaultHostName" "hostNames[0]" "enabledHostNames[0]"; do
+    H="$(az functionapp show -g "$RG" -n "$APP" --query "$Q" -o tsv 2>/dev/null | tr -d '\r' || true)"
+    case "$H" in *.azurewebsites.net) HOST="$H"; break;; esac
+  done
+  [ -z "$HOST" ] && HOST="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query properties.defaultHostName -o tsv 2>/dev/null | tr -d '\r' || true)"
+  case "$HOST" in *.azurewebsites.net) break;; *) HOST=""; sleep 10;; esac
+done
+if [ -z "$HOST" ]; then
+  echo "Die Adresse der Funktions-App liess sich nicht ermitteln. Im Azure-Portal unter"
+  echo "Funktions-App '$APP' > Uebersicht steht die 'Standarddomaene' - diese mit /api am Ende eintragen."
+  exit 1
+fi
 URL="https://${HOST}/api"
 
 echo "6/6 Selbsttest ..."
