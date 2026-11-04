@@ -1972,6 +1972,8 @@ try{
   body.quer #fahrdienstInhalt.quer-breit > *{grid-column:2;}
   body.quer #fahrdienstInhalt.quer-breit > :first-child{grid-column:1 / -1;}
   body.quer #fahrdienstInhalt.quer-breit > .abschnitt:nth-child(2){grid-column:1; grid-row:2 / span 30;}
+  /* Herunterziehen am oberen Rand soll nicht die Seite neu laden (Chrome/Android, Edge) */
+  html, body{overscroll-behavior-y:none;}
 </style>
 </head>
 <body>
@@ -18114,7 +18116,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v305';
+const APP_VERSION = 'v306';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -21147,6 +21149,48 @@ function navZurueckAusfuehren(f){ f(); }
     return basis.apply(this, args);
   };
 });
+// ---------- Nach dem Neuladen (z. B. versehentlich heruntergezogen) auf derselben Seite bleiben ----------
+// Nur fuer diesen Tab (sessionStorage), 30 min gueltig. Neue LS/PT-Rechnungen kommen aus dem Entwurf zurueck,
+// ein neuer GKV-Patient aus dem gemerkten Zwischenstand.
+const ANSICHT_SCHL = 'reload_ansicht';
+let ansichtVorDemLaden = null; try{ ansichtVorDemLaden = JSON.parse(sessionStorage.getItem(ANSICHT_SCHL) || 'null'); }catch(_){}
+function ansichtMerken(x){ try{ sessionStorage.setItem(ANSICHT_SCHL, JSON.stringify(Object.assign({ am: Date.now() }, x))); }catch(_){} }
+(function(){
+  const huellen = { ansichtRechnungenGesamt: 'verwaltung', ansichtGkvVerwaltung: 'gkvVerwaltung', ansichtFahrtenbuch: 'fahrtenbuch', ansichtFahrdienstAuswertung: 'quartale',
+    ansichtLuftlinienTool: 'luftlinie', ansichtEinstellungen: 'einstellungen' };
+  Object.keys(huellen).forEach(n=>{ try{ const f = window[n]; if(typeof f !== 'function') return;
+    window[n] = function(){ ansichtMerken({ typ: huellen[n] }); return f.apply(this, arguments); }; }catch(_){} });
+  try{ const s0 = ansichtStart; ansichtStart = function(){ ansichtMerken({ typ: 'start' }); return s0.apply(this, arguments); }; }catch(_){}
+  try{ const m0 = ansichtMaske; ansichtMaske = function(art, idx){ ansichtMerken({ typ: 'maske', art, idx: idx === undefined ? null : idx }); return m0.apply(this, arguments); }; }catch(_){}
+  try{ const g0 = ansichtGkv; ansichtGkv = function(id){ ansichtMerken({ typ: 'gkv', id: id || null }); return g0.apply(this, arguments); }; }catch(_){}
+  // beim Verlassen: Entwurf-ID bzw. GKV-Zwischenstand mitschreiben
+  window.addEventListener('pagehide', ()=>{
+    try{
+      const x = JSON.parse(sessionStorage.getItem(ANSICHT_SCHL) || 'null'); if(!x) return;
+      if(x.typ === 'maske' && x.idx == null && typeof betaAktuellerEntwurf !== 'undefined' && betaAktuellerEntwurf) x.entwurf = betaAktuellerEntwurf.id;
+      if(x.typ === 'gkv' && !x.id && typeof gkvEntwurf !== 'undefined' && gkvEntwurf) x.gkv = gkvEntwurf;
+      sessionStorage.setItem(ANSICHT_SCHL, JSON.stringify(x));
+    }catch(_){}
+  });
+})();
+function ansichtWiederherstellen(){
+  const x = ansichtVorDemLaden; ansichtVorDemLaden = null;
+  if(!x || !x.typ || x.typ === 'start' || Date.now() - (x.am || 0) > 30 * 60000) return;
+  const ziel = { verwaltung: ()=> ansichtRechnungenGesamt(), gkvVerwaltung: ()=> ansichtGkvVerwaltung(), fahrtenbuch: ()=> ansichtFahrtenbuch(),
+    quartale: ()=> ansichtFahrdienstAuswertung(), luftlinie: ()=> ansichtLuftlinienTool(), einstellungen: ()=> ansichtEinstellungen() }[x.typ];
+  if(ziel){ ziel(); return; }
+  if(x.typ === 'maske'){
+    if(x.idx != null){ if(ladeFaelle(x.art)[x.idx]) ansichtMaske(x.art, x.idx); return; }
+    const e = x.entwurf && betaEntwuerfe().find(y=> y.id === x.entwurf);
+    if(e) betaEntwurfOeffnen(e, null); else ansichtMaske(x.art);
+    return;
+  }
+  if(x.typ === 'gkv'){
+    if(x.id){ ansichtGkv(x.id); return; }
+    if(x.gkv && typeof gkvEntwurf !== 'undefined'){ gkvEntwurf = x.gkv; }
+    ansichtGkv();
+  }
+}
 // Erster Start? VOR themaAnwenden/Dunkelmodus pruefen -- die speichern bei
 // dunklem Handy sofort 'einstellungen', dann sah die App nicht mehr "neu" aus.
 let ersterStart = false;
@@ -21157,6 +21201,7 @@ try{ ansichtStart(); }catch(e){}
 try{
   if(ersterStart && einrSchonEingerichtet()) ersterStart = false;   // einstellungen.ini schon da -> nicht noetig
   if(ersterStart) LS.set('einrichtung_auto', true);
+  if(!ersterStart && !LS.get('einrichtung_schritt', null)) setTimeout(()=>{ try{ if(aktuelleAnsichtIstHauptbildschirm) ansichtWiederherstellen(); }catch(_){} }, 0);
   if(ersterStart || LS.get('einrichtung_schritt', null)) setTimeout(()=>{ if(aktuelleAnsichtIstHauptbildschirm) ansichtEinrichtung(); }, 300);
   // schon (teilweise) eingerichtet: einmal pruefen, ob noch etwas fehlt (Dateien, Briefversand/Azure ...)
   else if(einrSchonEingerichtet() && !LS.get('einr_vollst_gefragt', false)) setTimeout(async ()=>{
