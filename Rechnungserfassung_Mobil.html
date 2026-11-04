@@ -1974,6 +1974,16 @@ try{
   body.quer #fahrdienstInhalt.quer-breit > .abschnitt:nth-child(2){grid-column:1; grid-row:2 / span 30;}
   /* Herunterziehen am oberen Rand soll nicht die Seite neu laden (Chrome/Android, Edge) */
   html, body{overscroll-behavior-y:none;}
+  /* App-Sperre (Fingerabdruck / Face ID) */
+  #appSperre{position:fixed; inset:0; z-index:2147483647; background:var(--bg, #fff); display:flex; align-items:center; justify-content:center; padding:24px;}
+  #appSperre[hidden]{display:none;}
+  html.app-gesperrt, html.app-gesperrt body{overflow:hidden;}
+  #appSperre .as-box{text-align:center; max-width:320px; color:var(--text, #111);}
+  #appSperre .as-symbol{color:var(--titelfarbe); margin-bottom:12px;}
+  #appSperre .as-titel{font-size:20px; font-weight:600; margin-bottom:6px;}
+  #appSperre .as-text{font-size:14px; opacity:.75; margin-bottom:20px;}
+  #appSperre button{font-size:16px; padding:12px 28px; border-radius:10px; border:0; background:var(--titelfarbe); color:#fff;}
+  .as-fehler{color:#c62828; font-size:13px; margin-top:12px; min-height:1em;}
 </style>
 </head>
 <body>
@@ -1991,6 +2001,118 @@ try{
 <div id="appToast" class="app-toast"></div>
 
 <script>
+// ---------- App-Sperre mit Fingerabdruck / Face ID (Passkey) ----------
+// Beim Start und nach einer einstellbaren Zeit im Hintergrund legt sich ein Sperrbildschirm
+// ueber die App. Entsperrt wird mit einem Passkey dieses Geraets (WebAuthn, "Nutzer
+// verifiziert" = Fingerabdruck, Gesicht oder ersatzweise die Geraete-PIN). Gespeichert
+// wird nur die Kennung des Passkeys (kein Geheimnis). Die Sperre schuetzt die geoeffnete
+// App vor fremden Blicken; die Daten selbst verschluesselt sie nicht.
+const AppSperre = (()=>{
+  const LSK = 'app_sperre';
+  let gesperrt = false, versteckt = 0, laeuft = false;
+  const b64 = (u8)=> btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(u8)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const ausB64 = (s)=>{ s = String(s).replace(/-/g, '+').replace(/_/g, '/'); while(s.length % 4) s += '='; return Uint8Array.from(atob(s), c=> c.charCodeAt(0)); };
+  function einst(){ try{ return JSON.parse(localStorage.getItem(LSK) || 'null') || {}; }catch(_){ return {}; } }
+  function einstSetzen(e){ try{ localStorage.setItem(LSK, JSON.stringify(e)); }catch(_){} }
+  function aktiv(){ const e = einst(); return !!(e.an && e.id); }
+  async function unterstuetzt(){
+    try{ return !!(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); }catch(_){ return false; }
+  }
+  function uvGesetzt(authData){ const d = new Uint8Array(authData); return d.length > 32 && (d[32] & 0x04) !== 0; }
+  async function einrichten(){
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      rp: { name: 'Rechnungserfassung' },
+      user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'App-Sperre Rechnungserfassung', displayName: 'App-Sperre Rechnungserfassung' },
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+      authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+      timeout: 60000, attestation: 'none'
+    } });
+    if(!cred) throw new Error('Kein Passkey angelegt.');
+    const e = einst(); einstSetzen(Object.assign(e, { an: true, id: b64(cred.rawId), minuten: e.minuten == null ? 5 : e.minuten, seit: Date.now() }));
+  }
+  async function pruefen(){
+    const e = einst(); if(!e.id) return false;
+    const a = await navigator.credentials.get({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials: [{ type: 'public-key', id: ausB64(e.id), transports: ['internal', 'hybrid'] }],
+      userVerification: 'required', timeout: 60000
+    } });
+    return !!(a && a.response && uvGesetzt(a.response.authenticatorData));
+  }
+  function fehlerText(err){
+    const n = err && err.name;
+    if(n === 'NotAllowedError') return 'Abgebrochen oder nicht erkannt. Nochmal versuchen.';
+    if(n === 'InvalidStateError') return 'Für dieses Gerät ist schon ein Passkey vorhanden.';
+    if(n === 'SecurityError') return 'Passkeys gehen nur über die normale App-Adresse (https).';
+    return (err && err.message) || String(err);
+  }
+  function bild(){
+    let el = document.getElementById('appSperre');
+    if(el) return el;
+    el = document.createElement('div'); el.id = 'appSperre';
+    el.innerHTML = '<div class="as-box"><div class="as-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 11v3a8 8 0 0 1-1.2 4.2"/><path d="M8.5 8.8A4.5 4.5 0 0 1 16.5 11v2.5a12 12 0 0 1-.7 4"/><path d="M5.6 7A8 8 0 0 1 20 11v1.5"/><path d="M4 11v1a12 12 0 0 0 .8 4.3"/><path d="M8 11v2a10 10 0 0 1-1.4 5.2"/><path d="M12 3.5A7.5 7.5 0 0 1 17.5 6"/></svg></div>' +
+      '<div class="as-titel">App gesperrt</div><div class="as-text">Mit Fingerabdruck oder Gesicht entsperren.</div>' +
+      '<button type="button" id="asAuf">Entsperren</button><div class="as-fehler" id="asFehler"></div></div>';
+    (document.body || document.documentElement).appendChild(el);
+    el.querySelector('#asAuf').onclick = ()=> entsperren();
+    return el;
+  }
+  function sperren(){
+    if(!aktiv()) return;
+    gesperrt = true; const el = bild(); el.hidden = false;
+    try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(_){}
+    document.documentElement.classList.add('app-gesperrt');
+  }
+  async function entsperren(){
+    if(laeuft) return; laeuft = true;
+    const f = document.getElementById('asFehler'); if(f) f.textContent = '';
+    try{
+      if(await pruefen()){ gesperrt = false; const el = document.getElementById('appSperre'); if(el) el.hidden = true; document.documentElement.classList.remove('app-gesperrt'); }
+      else if(f) f.textContent = 'Nicht bestätigt. Nochmal versuchen.';
+    }catch(err){ if(f) f.textContent = fehlerText(err); }
+    finally{ laeuft = false; }
+  }
+  // Beim Start sofort sperren (noch bevor etwas zu sehen ist) und gleich den Fingerabdruck anbieten
+  if(aktiv()){ sperren(); setTimeout(()=>{ if(gesperrt && document.visibilityState === 'visible') entsperren(); }, 300); }
+  document.addEventListener('visibilitychange', ()=>{
+    if(!aktiv()) return;
+    const min = Number(einst().minuten) || 0;
+    if(document.visibilityState === 'hidden'){ versteckt = Date.now(); if(min === 0) sperren(); }   // "sofort": auch im App-Umschalter nichts zu sehen
+    else if(gesperrt || (versteckt && Date.now() - versteckt >= min * 60000)){ sperren(); setTimeout(()=>{ if(gesperrt) entsperren(); }, 300); }
+  });
+  // ---------- Einstellungen ----------
+  function abschnittHtml(){
+    const e = einst(), an = aktiv();
+    const opt = [[0, 'sofort'], [1, 'nach 1 Minute'], [5, 'nach 5 Minuten'], [15, 'nach 15 Minuten'], [60, 'nach 1 Stunde']].map(([m, t])=> '<option value="' + m + '"' + ((e.minuten == null ? 5 : Number(e.minuten)) === m ? ' selected' : '') + '>' + t + '</option>').join('');
+    return '<div class="design-hinweis">Beim Öffnen der App und wenn sie eine Weile im Hintergrund war, fragt sie nach Fingerabdruck oder Gesicht (ersatzweise die Geräte-PIN). Technisch ist das ein Passkey auf diesem Gerät; ein Passwort brauchst du nicht.</div>' +
+      '<div id="asStatus" style="margin:8px 0; font-size:14px;">' + (an ? '✅ <b>Sperre ist an.</b>' : 'Sperre ist aus.') + '</div>' +
+      (an ? '<div class="feld" style="margin-bottom:8px;"><label for="asMinuten">Sperren, wenn die App im Hintergrund war</label><select id="asMinuten">' + opt + '</select></div>' +
+            '<div style="display:flex; gap:8px;"><button type="button" class="btn-sekundaer" id="asTesten" style="flex:1; margin-bottom:0;">Jetzt sperren</button><button type="button" class="btn-sekundaer" id="asAus" style="flex:1; margin-bottom:0;">Sperre ausschalten</button></div>'
+          : '<button type="button" class="btn-sekundaer" id="asEin">Fingerabdruck / Face ID einrichten</button>') +
+      '<div class="as-fehler" id="asEinstFehler" style="margin-top:6px;"></div>';
+  }
+  function abschnittWiring(neu){
+    const f = ()=> document.getElementById('asEinstFehler');
+    const ein = document.getElementById('asEin');
+    if(ein) ein.onclick = async ()=>{
+      f().textContent = '';
+      if(!await unterstuetzt()){ f().textContent = 'Dieses Gerät bzw. dieser Browser bietet keinen Fingerabdruck/Face ID für Web-Apps an.'; return; }
+      try{ await einrichten(); if(!await pruefen()) throw new Error('Nicht bestätigt.'); neu(); if(typeof appToastAnzeigen === 'function') appToastAnzeigen('App-Sperre ist eingerichtet.', 2200); }
+      catch(err){ const e = einst(); delete e.id; e.an = false; einstSetzen(e); f().textContent = fehlerText(err); }
+    };
+    const aus = document.getElementById('asAus');
+    if(aus) aus.onclick = async ()=>{
+      f().textContent = '';
+      try{ if(!await pruefen()){ f().textContent = 'Nicht bestätigt.'; return; } }catch(err){ f().textContent = fehlerText(err); return; }
+      einstSetzen({ minuten: einst().minuten }); neu();
+    };
+    const t = document.getElementById('asTesten'); if(t) t.onclick = ()=>{ sperren(); entsperren(); };
+    const m = document.getElementById('asMinuten'); if(m) m.onchange = ()=>{ const e = einst(); e.minuten = Number(m.value); einstSetzen(e); };
+  }
+  return { aktiv, sperren, entsperren, abschnittHtml, abschnittWiring, istGesperrt: ()=> gesperrt };
+})();
+
 /* ==========================================================
    Speicher / Grunddaten
    ========================================================== */
@@ -18316,7 +18438,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v317';
+const APP_VERSION = 'v318';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19181,6 +19303,10 @@ function ansichtEinstellungen(){
       ${betaOneDriveTestHtml()}
     </div>
     <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">App-Sperre</div>
+      <div id="asAbschnitt">${AppSperre.abschnittHtml()}</div>
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Wegegeld-Zonen</div>
       <div class="design-hinweis">Grenzen der Zonen auf der KVBW-Karte selbst nachzeichnen. Gilt sofort für Wegegeld und alle Karten; mit OneDrive-Anmeldung auf allen Geräten.${LS.get('nfp_zonen_eigen', null) ? ' <b>Eigene Korrekturen aktiv</b> (Stand ' + new Date(LS.get('nfp_zonen_eigen', {}).am || Date.now()).toLocaleDateString('de-DE') + ').' : ''}</div>
       <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:8px;">Zonen bearbeiten</button>
@@ -19250,6 +19376,7 @@ function ansichtEinstellungen(){
 
   document.getElementById('zReise').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkReiseBasisLuftlinie').click(); } };
   msGraphAbschnittWiring();
+  { const neu = ()=>{ const el = document.getElementById('asAbschnitt'); if(el){ el.innerHTML = AppSperre.abschnittHtml(); AppSperre.abschnittWiring(neu); } }; AppSperre.abschnittWiring(neu); }
   betaEinstellungenWiring();
   betaProfileWiring(()=>{ const y = window.scrollY; ansichtEinstellungen(); window.scrollTo(0, y); });
   betaEinstellungenEinklappen();
