@@ -6772,7 +6772,16 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
     if(m) zeilenAusVorlage = Math.max(0, parseInt(m[2], 10) - parseInt(m[1], 10) + 1);
   } catch(e){}
   // Privatrechnung: Text unter der Tabelle mit festem Abstand (5 Leerzeilen) statt auf feste Hoehe aufgefuellt -- wie bei der Leichenschau
-  const tabelleXml = rdTabelleXml(vorlage.kopf, tab, daten.art, gesamtLabel, daten.art === 'pt' ? tab.zeilen.length + 2 + 5 : zeilenAusVorlage);
+  // Viele Positionen: Abstand zum Text darunter verkleinern (bis auf 1 Leerzeile), damit alles auf eine Seite passt
+  // Tabellenzeilen inkl. Kopf, Gesamt und Leerzeilen: bis 22 steht der Text darunter noch ueber dem QR-Code;
+  // bis 24 belegten Zeilen wird der Text rechts eingerueckt und steht neben dem QR-Code (alles auf Seite 1).
+  // Noch mehr Positionen: QR-Code als eigener Absatz nach dem Text (dann ggf. auf Seite 2, nichts ueberlappt).
+  const RECHNUNG_ZEILEN_FREI = 22, RECHNUNG_ZEILEN_MAX = daten.art === 'ls' ? 23 : 24;   // Leichenschau: Tabelle beginnt etwas tiefer
+  const belegtZeilen = tab.zeilen.length + 2;
+  const wunschZeilen = daten.art === 'pt' ? belegtZeilen + 5 : (zeilenAusVorlage || RECHNUNG_LAYOUT[daten.art].zeilenGesamt);
+  const zielZeilen = belegtZeilen > RECHNUNG_ZEILEN_MAX ? belegtZeilen + 1 : Math.max(belegtZeilen, Math.min(wunschZeilen, Math.max(belegtZeilen + 1, RECHNUNG_ZEILEN_FREI)));
+  const qrModus = belegtZeilen > RECHNUNG_ZEILEN_MAX ? 'fliessend' : zielZeilen > RECHNUNG_ZEILEN_FREI ? 'daneben' : 'normal';
+  const tabelleXml = rdTabelleXml(vorlage.kopf, tab, daten.art, gesamtLabel, zielZeilen);
 
   const a = daten.arzt || {};
   const platzhalterKoerper = [
@@ -6838,7 +6847,7 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
   if(fussMitKonto.length && typeof document !== 'undefined' && typeof girocodePng === 'function' && (typeof ladeEinstellungen !== 'function' || (ladeEinstellungen() || {}).rechnungQr !== false)){
     try{
       const txt = girocodeText(a, rdRunden2(tab.summe), daten.renu);
-      if(txt) await rdGirocodeEinsetzen(zip, await girocodePng(txt));
+      if(txt) await rdGirocodeEinsetzen(zip, await girocodePng(txt, qrModus === 'fliessend'), qrModus === 'fliessend', qrModus === 'daneben');
     }catch(e){ console.warn('GiroCode', e); }
   }
   let ct = await zip.file('[Content_Types].xml').async('string');
@@ -15713,7 +15722,7 @@ async function rdFussAufFolgeseiten(zip){
     zip.file('word/document.xml', doc);
   }catch(e){ console.warn('Fusszeile Folgeseiten', e); }
 }
-async function rdGirocodeEinsetzen(zip, png, imText){
+async function rdGirocodeEinsetzen(zip, png, imText, textEinruecken){
   const cm = 360000, breite = Math.round((imText ? 3.4 : 2.5) * cm), hoehe = Math.round(breite * png.hoeheZuBreite), id = 'rIdGiroQr1';
   const name = 'word/document.xml';
   zip.file('word/media/girocode.png', png.daten);
@@ -15741,7 +15750,15 @@ async function rdGirocodeEinsetzen(zip, png, imText){
     '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
     '<pic:nvPicPr><pic:cNvPr id="9102" name="girocode.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="' + id + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
     '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + breite + '" cy="' + hoehe + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
-  const neu = imText ? ziel + inline : (/<\/w:pPr>/.test(ziel) ? ziel.replace('</w:pPr>', '</w:pPr>' + bild) : ziel.replace(/^<w:p([ >][^>]*>|>)/, (k)=> k + bild));
+  let zielP = ziel;
+  if(textEinruecken && !imText){
+    // viele Positionen: Text rechts so weit einruecken, dass er neben dem QR-Code endet statt darunter zu laufen
+    const rechts = Math.round(breite / 635) + 170;   // EMU -> Twips, plus ~3 mm Abstand
+    if(/<w:ind\b[^>]*\/>/.test(zielP)) zielP = zielP.replace(/<w:ind\b([^>]*?)\s*\/>/, (m, at)=> '<w:ind' + at.replace(/\s*w:right="[^"]*"/, '') + ' w:right="' + rechts + '"/>');
+    else if(/<w:pPr>/.test(zielP)) zielP = zielP.replace(/<w:pPr>([\s\S]*?)(<w:jc\b|<w:rPr>|<\/w:pPr>)/, (m, vor, nach)=> '<w:pPr>' + vor + '<w:ind w:right="' + rechts + '"/>' + nach);
+    else zielP = zielP.replace(/^<w:p([ >][^>]*>|>)/, (k)=> k + '<w:pPr><w:ind w:right="' + rechts + '"/></w:pPr>');
+  }
+  const neu = imText ? ziel + inline : (/<\/w:pPr>/.test(zielP) ? zielP.replace('</w:pPr>', '</w:pPr>' + bild) : zielP.replace(/^<w:p([ >][^>]*>|>)/, (k)=> k + bild));
   zip.file(name, x.replace(ziel, neu));
   return true;
 }
@@ -17728,7 +17745,7 @@ function aerzteAbweichungText(ist, soll){
 // immer ab), darunter nur der Gesamtbetrag fett im Kasten.
 function aerzteTabelleXml(dienste, summe){
   // Raster: Datum | Uhrzeit | Dienst (ueber 2 Rasterspalten) -- in der Summenzeile: "Gesamtbetrag" | Betrag im Kasten
-  const g = [66, 92, 219, 110].map(w=> Math.round(w * 20)), dienstB = g[2] + g[3];
+  const g = [66, 86, 160, 84].map(w=> Math.round(w * 20)), dienstB = g[2] + g[3];   // kompakt, mittig (nicht bis an die Raender)
   const linie = (an)=> an ? 'w:val="single" w:sz="6" w:space="0" w:color="000000"' : 'w:val="nil"';
   const zelle = (text, b, ausr, rand, o)=>{ o = o || {};
     return '<w:tc><w:tcPr><w:tcW w:w="' + b + '" w:type="dxa"/>' + (o.span ? '<w:gridSpan w:val="' + o.span + '"/>' : '') + '<w:tcBorders><w:top ' + linie(rand.t) + '/><w:left ' + linie(rand.l) + '/><w:bottom ' + linie(rand.b) + '/><w:right ' + linie(rand.r) + '/></w:tcBorders><w:noWrap/><w:vAlign w:val="bottom"/></w:tcPr>' +
@@ -17742,7 +17759,7 @@ function aerzteTabelleXml(dienste, summe){
     x.push(zeile([zelle(d.datum || '', g[0], 'center', { l: 1, r: 1, b: letzte }), zelle(d.zeit || '', g[1], 'center', { l: 1, r: 1, b: letzte }),
       zelle('Vertretung ' + (d.art || 'Bereitschaftsdienst'), dienstB, 'left', { l: 1, r: 1, b: letzte }, { span: 2 })])); });
   x.push(zeile([zelle('', g[0] + g[1], 'center', {}, { span: 2 }), zelle('Gesamtbetrag', g[2], 'right', { r: 1 }, { fett: true }), zelle(zahl(summe) + ' €', g[3], 'right', { t: 1, b: 1, l: 1, r: 1 }, { fett: true })]));
-  return '<w:tbl><w:tblPr><w:tblW w:w="' + g.reduce((a, b)=> a + b, 0) + '" w:type="dxa"/><w:tblInd w:w="0" w:type="dxa"/><w:tblLayout w:type="fixed"/>' +
+  return '<w:tbl><w:tblPr><w:tblW w:w="' + g.reduce((a, b)=> a + b, 0) + '" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/>' +
     '<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/></w:tblCellMar><w:tblLook w:val="0000"/></w:tblPr>' +
     '<w:tblGrid>' + g.map(w=> '<w:gridCol w:w="' + w + '"/>').join('') + '</w:tblGrid>' + x.join('') + '</w:tbl>';
 }
@@ -18282,7 +18299,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v313';
+const APP_VERSION = 'v314';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
