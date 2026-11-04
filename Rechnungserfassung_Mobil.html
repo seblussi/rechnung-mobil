@@ -2833,6 +2833,76 @@ function fbTabsHtml(akt){
 function fbTabsWiring(){
   document.querySelectorAll('[data-fbtab]').forEach(b=> b.onclick = ()=>{ if(b.dataset.fbtab === 'dienste') ansichtFahrtenbuch(); else ansichtFahrdienstAuswertung(); });
 }
+// ---------- Zwischenspeicher (verschluesselt, bleibt ueber App-Neustarts) ----------
+// Gelesenes Fahrtenbuch, Quartalsuebersicht und Rechnungsliste werden verschluesselt
+// in der IndexedDB abgelegt (AES-GCM 256). Schluessel: in der Launch-Version der
+// Tresor-Schluessel (nur bei geoeffnetem Tresor), sonst ein zufaelliger, NICHT
+// exportierbarer Geraeteschluessel -- er laesst sich auch per Skript nicht auslesen,
+// nur zum Ver-/Entschluesseln in dieser App benutzen. Verwendet wird ein Eintrag nur,
+// wenn er zum angemeldeten Konto passt; bei Aenderungen in OneDrive (Stempel) wird
+// neu gelesen. Abmelden loescht alles.
+const ZwSpeicher = (()=>{
+  const DB = 'rechnung-zwischenspeicher', ST = 'd', MAX_ALTER = 30 * 86400000;
+  let dbP = null, keyP = null;
+  const tresor = ()=> (typeof Tresor !== 'undefined' && Tresor && typeof Tresor.ver === 'function') ? Tresor : null;
+  function db(){
+    if(!dbP) dbP = new Promise((ok, no)=>{
+      const r = indexedDB.open(DB, 1);
+      r.onupgradeneeded = ()=> r.result.createObjectStore(ST);
+      r.onsuccess = ()=> ok(r.result); r.onerror = ()=> no(r.error);
+    }).catch(e=>{ dbP = null; throw e; });
+    return dbP;
+  }
+  async function tx(modus, f){
+    const d = await db();
+    return new Promise((ok, no)=>{ const t = d.transaction(ST, modus); const r = f(t.objectStore(ST)); t.oncomplete = ()=> ok(r && r.result); t.onerror = ()=> no(t.error); t.onabort = ()=> no(t.error); });
+  }
+  function geraeteSchluessel(){
+    if(!keyP) keyP = (async ()=>{
+      let k = await tx('readonly', s=> s.get('_schluessel'));
+      if(!k){ k = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']); await tx('readwrite', s=> s.put(k, '_schluessel')); }
+      return k;
+    })().catch(e=>{ keyP = null; throw e; });
+    return keyP;
+  }
+  async function ver(text){
+    const roh = new TextEncoder().encode(text);
+    const T = tresor();
+    if(T){ if(!T.offen()) throw new Error('Tresor gesperrt'); return { t: 1, d: await T.ver(roh) }; }
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    return { t: 0, iv, d: new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await geraeteSchluessel(), roh)) };
+  }
+  async function ent(p){
+    const T = tresor();
+    if(p.t === 1){ if(!T || !T.offen()) throw new Error('Tresor gesperrt'); return new TextDecoder().decode(await T.ent(p.d)); }
+    if(T) throw new Error('falscher Schluessel');
+    return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: p.iv }, await geraeteSchluessel(), p.d));
+  }
+  // Map/Date bleiben erhalten, Funktionen (z.B. "oeffnen") fallen weg
+  function ersetzen(k, v){ const o = this[k]; if(o instanceof Map) return { __map: Array.from(o) }; if(o instanceof Date) return { __date: o.getTime() }; if(typeof o === 'function') return undefined; return v; }
+  function beleben(k, v){ if(v && typeof v === 'object'){ if(Array.isArray(v.__map) && Object.keys(v).length === 1) return new Map(v.__map); if(typeof v.__date === 'number' && Object.keys(v).length === 1) return new Date(v.__date); } return v; }
+  function konto(){ try{ if(typeof msGraphKonto !== 'undefined' && msGraphKonto) return String(msGraphKonto.homeAccountId || msGraphKonto.username || ''); }catch(_){} return ''; }
+  async function setzen(name, obj){
+    try{
+      if(!obj || !window.indexedDB || !window.crypto || !crypto.subtle) return;
+      const paket = await ver(JSON.stringify({ konto: konto(), am: Date.now(), obj }, ersetzen));
+      await tx('readwrite', s=> s.put(paket, name));
+    }catch(e){ console.warn('Zwischenspeicher: Speichern ging nicht', name, e && e.message); }
+  }
+  async function holen(name){
+    try{
+      if(!window.indexedDB || !window.crypto || !crypto.subtle) return null;
+      const p = await tx('readonly', s=> s.get(name)); if(!p) return null;
+      const x = JSON.parse(await ent(p), beleben);
+      if(!x || Date.now() - (x.am || 0) > MAX_ALTER){ loeschen(name); return null; }
+      if(x.konto !== konto()) return null;   // anderes (oder noch kein) Konto angemeldet
+      return x.obj || null;
+    }catch(e){ return null; }
+  }
+  async function loeschen(name){ try{ await tx('readwrite', s=> s.delete(name)); }catch(_){} }
+  async function leeren(){ try{ await tx('readwrite', s=> s.clear()); }catch(_){} keyP = null; }
+  return { setzen, holen, loeschen, leeren };
+})();
 let fbBuchCache = null;
 function fbNameNorm(n){ return String(n || '').toLowerCase().replace(/[^a-zäöüß]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' '); }
 // Faelle auf dem Geraet (gespeichert, Entwurf, GKV in Erfassung) fuer das Fahrtenbuch
@@ -2914,7 +2984,14 @@ function fbLokalAuffrischen(buch){
   buch.dienste.forEach(d=> d.faelle.forEach(f=>{
     const nn = fbNameNorm(f.name);
     const x = lokal.find(y=> !y.imBuch && y.art === f.art && y.n === nn && Math.abs(y.t - d.tag) / 86400000 <= 1.5 && y.status !== 'unfertig');
-    if(x) x.imBuch = true;
+    if(x){
+      x.imBuch = true;
+      if(!f.oeffnen){   // nach dem Wiederherstellen aus dem Zwischenspeicher: Verknuepfung zum App-Fall neu setzen
+        f.oeffnen = x.oeffnen; if(!f.zeit) f.zeit = fbZeitAusZelle(x.zeit);
+        if(!f.geo) f.geo = x.geo || null; if(!f.adr) f.adr = x.adr || '';
+        if(!(f.ziffern && f.ziffern.length) && x.positionen) f.ziffern = x.positionen.map(g=> ({ gop: String(g), anz: 1 }));
+      }
+    }
   }));
   fbLokaleZuordnen(buch.dienste, lokal, buch.blatt);
 }
@@ -3010,8 +3087,13 @@ async function ansichtFahrtenbuch(blatt){
   try{
     if(!fbBuchCache || (blatt && fbBuchCache.blatt !== blatt)){
       const st = await odStempel(MSGRAPH_PFAD_FAHRTENBUCH);
-      fbBuchCache = await fbBuchLaden(blatt, (t)=> inhalt.innerHTML = '<div class="leer-hinweis">' + htmlEsc(t) + '</div>');
-      if(fbBuchCache) fbBuchCache.stempel = st;
+      // nach einem Neustart: verschluesselt gespeichertes Fahrtenbuch nehmen, wenn die Excel unveraendert ist
+      const alt = (!fbBuchCache && st) ? await ZwSpeicher.holen('fahrtenbuch') : null;
+      if(alt && alt.stempel === st && Array.isArray(alt.dienste) && (!blatt || alt.blatt === blatt)) fbBuchCache = alt;
+      else {
+        fbBuchCache = await fbBuchLaden(blatt, (t)=> inhalt.innerHTML = '<div class="leer-hinweis">' + htmlEsc(t) + '</div>');
+        if(fbBuchCache){ fbBuchCache.stempel = st; if(st) ZwSpeicher.setzen('fahrtenbuch', fbBuchCache); }
+      }
     } else {
       // schon gelesen: sofort zeigen, im Hintergrund pruefen, ob sich die Excel inzwischen geaendert hat
       const c = fbBuchCache;
@@ -3259,6 +3341,11 @@ async function ansichtFahrdienstAuswertung(){
   };
 
   // schon gelesen und die Excel unveraendert? Dann sofort zeigen und nicht neu lesen/schreiben
+  if(!fahrdienstAuswertungCache){
+    const alt = await ZwSpeicher.holen('quartale');
+    if(alt && alt.stempel && !fahrdienstAuswertungCache) fahrdienstAuswertungCache = alt;
+    if(!document.getElementById('fahrdienstInhalt')) return;
+  }
   const c0 = fahrdienstAuswertungCache;
   if(c0 && c0.stempel){
     fahrdienstAuswertungRendern(c0);
@@ -3270,7 +3357,8 @@ async function ansichtFahrdienstAuswertung(){
   if(fahrdienstAuswertungCache){
     const nach = await odStempel(MSGRAPH_PFAD_FAHRTENBUCH);   // nach dem Eintragen der Statistik
     fahrdienstAuswertungCache.stempel = nach;
-    if(fbBuchCache && vor && fbBuchCache.stempel === vor) fbBuchCache.stempel = nach;   // nur die eigene Statistik hat sich geaendert
+    if(nach) ZwSpeicher.setzen('quartale', fahrdienstAuswertungCache);
+    if(fbBuchCache && vor && fbBuchCache.stempel === vor){ fbBuchCache.stempel = nach; if(nach) ZwSpeicher.setzen('fahrtenbuch', fbBuchCache); }   // nur die eigene Statistik hat sich geaendert
   }
   if(document.getElementById('fahrdienstInhalt')) fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
 }
@@ -9008,6 +9096,14 @@ async function ansichtRechnungenGesamt(neuLaden){
   // Zuerst sofort die lokalen Faelle zeigen, Uebersicht laedt im Hintergrund
   const zeichnen = ()=> betaGesamtZeichnen(suchEl.value, ziel);
   suchEl.oninput = zeichnen;
+  if(!neuLaden && !betaGesamtCache){
+    // nach einem Neustart: verschluesselt gespeicherte Liste sofort zeigen, Stempel-Pruefung laeuft danach
+    const alt = await ZwSpeicher.holen('rechnungsliste');
+    if(alt && alt.zielKey === zk && alt.stempel && alt.ue && alt.dateien instanceof Map && !betaGesamtCache){
+      try{ alt.ana = uebersichtAuswerten(alt.ue); betaGesamtCache = alt; }catch(_){}
+    }
+    if(!document.getElementById('gesamtListe')) return;
+  }
   if(neuLaden || !betaGesamtCache || betaGesamtCache.zielKey !== zk){
     const lauf = ++betaGesamtLauf;   // nur der zuletzt gestartete Ladevorgang zaehlt
     const cache = { zielKey: zk, laedt: true, schritt: 'Anmeldung bei Microsoft …', seit: Date.now() };
@@ -9049,6 +9145,7 @@ async function ansichtRechnungenGesamt(neuLaden){
     clearInterval(ticker);
     if(lauf !== betaGesamtLauf) return;   // inzwischen neu gestartet
     betaGesamtCache = neu;
+    if(neu.stempel && !neu.fehler) ZwSpeicher.setzen('rechnungsliste', Object.assign({}, neu, { ana: undefined }));
     if(!document.getElementById('gesamtListe')) return; // inzwischen weggeklickt
   } else if(betaGesamtCache && betaGesamtCache.stempel && !betaGesamtCache.laedt){
     // schon gelesen: sofort zeigen, im Hintergrund pruefen, ob Uebersicht oder Rechnungsordner geaendert wurden
@@ -18185,7 +18282,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v312';
+const APP_VERSION = 'v313';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19377,7 +19474,8 @@ async function msGraphAnmelden(){
 function msGraphAbmelden(){
   if(!msGraphMsal) return;
   const konto = msGraphMsal.getActiveAccount();
-  msGraphMsal.logoutRedirect({ account: konto, postLogoutRedirectUri: MSGRAPH_REDIRECT_URI });
+  fbBuchCache = null; fahrdienstAuswertungCache = null; betaGesamtCache = null;
+  ZwSpeicher.leeren().finally(()=> msGraphMsal.logoutRedirect({ account: konto, postLogoutRedirectUri: MSGRAPH_REDIRECT_URI }));
 }
 
 // Baut den Inhalt des "OneDrive-Anmeldung"-Abschnitts passend zum
