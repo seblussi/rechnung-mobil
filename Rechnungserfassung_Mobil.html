@@ -1591,7 +1591,7 @@ try{
   .luft-karte-legende i.ich{background:#2f80ed; box-shadow:0 0 0 3px rgba(47,128,237,.3);} .luft-karte-legende i.f.ls{background:var(--ls-farbe);} .luft-karte-legende i.f.pt{background:var(--pt-farbe);} .luft-karte-legende i.f.gkv{background:#7d4e9e;}
   .luft-karte-legende i.g{height:4px; border-radius:2px; background:#8e2bd6; width:16px;} .luft-karte-legende i.aed{border-radius:3px; background:#00924a;} .luft-karte-legende i.kr{height:3px; border-radius:0; width:18px; background:repeating-linear-gradient(90deg,#e6c800 0 3px,transparent 3px 4px,#2f8fd6 4px 7px,transparent 7px 8px,#2fa84f 8px 11px,transparent 11px 12px,#d9609f 12px 15px,transparent 15px 16px,#4aa6cf 16px 18px);} .luft-karte-legende i.zo{border-radius:3px; background:linear-gradient(90deg,#4caf50,#ffeb3b,#ff9800,#e53935);}
   .vk-legende{margin:4px 0 2px;}
-  .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='5' fill='%23111'/%3E%3Cpath d='M8 6v12M16 6v12M8 12h8' stroke='%23fff' stroke-width='3.2' fill='none'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:13px; height:13px;}
+  .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M1.5 11 12 3.2 22.5 11v1.6h-2V21.5h-17v-8.9h-2z' fill='%23111'/%3E%3Cpath d='M10.5 10h3v3.3h3.3v3h-3.3v3.4h-3v-3.4H7.2v-3h3.3z' fill='%23fff'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:13px; height:13px;}
   .luft-karte-legende i.rtw{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 20'%3E%3Cpath d='M1 2H21V6H27L33 11V16H1Z' fill='%23111'/%3E%3Ccircle cx='8' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Ccircle cx='26' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Cpath d='M7 9h8M11 5v8' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:20px; height:12px;}
   .luft-karte-legende i.l{height:0; border-radius:0; border-top:2.5px dashed var(--text); width:16px;} .luft-karte-legende i.w{height:4px; border-radius:2px; background:#1a55c9; width:16px;}
   .luft-karte-hinweis{font-size:13px; color:var(--text-schwach); padding:6px 0;}
@@ -14732,11 +14732,13 @@ const KARTE_AUGE_KNOPF = '<button type="button" class="karte-auge" aria-label="F
 // Kartensymbole in Kartenkoordinaten (r = Grundgroesse): NFP = Krankenhaus (Kreuz), Wache = RTW
 function kartenSymbol(art, cx, cy, r){
   const f = (v)=> v.toFixed(1), sw = f(r * 0.22);
-  if(art === 'nfp'){
-    const a = r * 2.3, k = a * 0.28;
-    return '<g class="ks-nfp"><rect x="' + f(cx - a / 2) + '" y="' + f(cy - a / 2) + '" width="' + f(a) + '" height="' + f(a) + '" rx="' + f(a * 0.22) + '" fill="#111" stroke="#fff" stroke-width="' + sw + '"/>' +
-      '<path d="M' + f(cx - k) + ' ' + f(cy - k * 1.15) + 'V' + f(cy + k * 1.15) + 'M' + f(cx + k) + ' ' + f(cy - k * 1.15) + 'V' + f(cy + k * 1.15) + 'M' + f(cx - k) + ' ' + f(cy) + 'H' + f(cx + k) + '" stroke="#fff" stroke-width="' + f(a * 0.15) + '" stroke-linecap="square" fill="none"/></g>';
+  if(art === 'nfp'){   // Krankenhaus: Haus mit Kreuz
+    const a = r * 2.7, k = a / 24;
+    return '<g class="ks-nfp" transform="translate(' + f(cx - a / 2) + ' ' + f(cy - a / 2) + ') scale(' + k.toFixed(4) + ')">' +
+      '<path d="M1.5 11 12 3.2 22.5 11v1.6h-2V21.5h-17v-8.9h-2z" fill="#111" stroke="#fff" stroke-width="' + (r * 0.22 / k).toFixed(2) + '" stroke-linejoin="round"/>' +
+      '<path d="M10.5 10h3v3.3h3.3v3h-3.3v3.4h-3v-3.4H7.2v-3h3.3z" fill="#fff"/></g>';
   }
+
   const b = r * 3.3, h = r * 1.9, x0 = cx - b / 2, y0 = cy - h / 2, kr = h * 0.13;
   const kasten = 'M' + f(x0) + ' ' + f(y0 + h * 0.08) + 'H' + f(x0 + b * 0.62) + 'V' + f(y0 + h * 0.3) + 'H' + f(x0 + b * 0.82) + 'L' + f(x0 + b) + ' ' + f(y0 + h * 0.55) + 'V' + f(y0 + h * 0.82) + 'H' + f(x0) + 'Z';
   const kx = x0 + b * 0.31, ky = y0 + h * 0.44, kk = h * 0.2;
@@ -18075,7 +18077,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v296';
+const APP_VERSION = 'v297';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
