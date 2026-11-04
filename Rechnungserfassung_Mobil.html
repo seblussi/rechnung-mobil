@@ -15528,24 +15528,26 @@ function girocodeText(a, betrag, renu){
   return ['BCD', '002', '1', 'SCT', String((a && a.bic) || '').replace(/\s/g, '').toUpperCase(), name, iban,
     'EUR' + (Math.round(betrag * 100) / 100).toFixed(2), '', '', ('Rechnung ' + String(renu || '').trim()).trim().slice(0, 140)].join('\n');
 }
-async function girocodePng(text){
+async function girocodePng(text, ohneText){
   await libSkriptLaden('lib/qrcode/qrcode.js', ()=> typeof qrcode !== 'undefined');
   qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
   const q = qrcode(0, 'M'); q.addData(text, 'Byte'); q.make();
-  const n = q.getModuleCount(), m = 10, rand = 4, w = (n + rand * 2) * m, txtH = Math.round(w * 0.17);
+  const n = q.getModuleCount(), m = 10, rand = 4, w = (n + rand * 2) * m, txtH = ohneText ? 0 : Math.round(w * 0.17);
   const c = document.createElement('canvas'); c.width = w; c.height = w + txtH;
   const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#000';
   for(let r = 0; r < n; r++) for(let k = 0; k < n; k++) if(q.isDark(r, k)) g.fillRect((k + rand) * m, (r + rand) * m, m, m);
-  const t = 'Mit Banking-App scannen'; let fs = Math.round(txtH * 0.6);
-  do{ g.font = '600 ' + fs + 'px Arial, Helvetica, sans-serif'; fs--; }while(g.measureText(t).width > w * 0.94 && fs > 8);
-  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, w / 2, w - rand * m * 0.35 + txtH * 0.4);
+  if(!ohneText){
+    const t = 'QR-Code zum Bezahlen'; let fs = Math.round(txtH * 0.6);
+    do{ g.font = '600 ' + fs + 'px Arial, Helvetica, sans-serif'; fs--; }while(g.measureText(t).width > w * 0.94 && fs > 8);
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, w / 2, w - rand * m * 0.35 + txtH * 0.4);
+  }
   const blob = await new Promise(ok=> c.toBlob(ok, 'image/png'));
   return { daten: new Uint8Array(await blob.arrayBuffer()), hoeheZuBreite: c.height / c.width };
 }
 // QR-Bild schwebend unten rechts auf der Seite, knapp ueber der Bankverbindung (Fusszeile);
 // verankert am Absatz "Ich bitte Sie ... zu ueberweisen" (sonst am letzten Textabsatz)
 async function rdGirocodeEinsetzen(zip, png, imText){
-  const cm = 360000, breite = Math.round(2.5 * cm), hoehe = Math.round(breite * png.hoeheZuBreite), id = 'rIdGiroQr1';
+  const cm = 360000, breite = Math.round((imText ? 3.4 : 2.5) * cm), hoehe = Math.round(breite * png.hoeheZuBreite), id = 'rIdGiroQr1';
   const name = 'word/document.xml';
   zip.file('word/media/girocode.png', png.daten);
   const relsName = 'word/_rels/document.xml.rels';
@@ -15566,7 +15568,9 @@ async function rdGirocodeEinsetzen(zip, png, imText){
   const txt = (p)=> (p.match(/<w:t[^>]*>[^<]*<\/w:t>/g) || []).map(t=> t.replace(/<[^>]+>/g, '')).join('');
   const ziel = absaetze.find(p=> /Ich bitte Sie|überweisen/.test(txt(p))) || absaetze.filter(p=> txt(p).trim()).pop(); if(!ziel) return false;
   // imText: als eigener rechtsbuendiger Absatz nach dem Absatz (Laenge der Rechnung variiert, z. B. Aerzte-Rechnung)
-  const inline = '<w:p><w:pPr><w:jc w:val="right"/><w:spacing w:before="160" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + breite + '" cy="' + hoehe + '"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="9102" name="GiroCode" descr="GiroCode zum Bezahlen"/><wp:cNvGraphicFramePr/>' +
+  const hinweis = '<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/><w:spacing w:before="240" w:after="40"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:b/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">Bequem bezahlen per QR-Code (GiroCode)</w:t></w:r></w:p>' +
+    '<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/><w:spacing w:before="0" w:after="60"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="16"/></w:rPr><w:t xml:space="preserve">Mit der Banking-App scannen – Empfänger, IBAN, Betrag und Rechnungsnummer werden übernommen.</w:t></w:r></w:p>';
+  const inline = hinweis + '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + breite + '" cy="' + hoehe + '"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="9102" name="GiroCode" descr="GiroCode zum Bezahlen"/><wp:cNvGraphicFramePr/>' +
     '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
     '<pic:nvPicPr><pic:cNvPr id="9102" name="girocode.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="' + id + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
     '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + breite + '" cy="' + hoehe + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
@@ -17552,6 +17556,29 @@ function aerzteAbweichungText(ist, soll){
 }
 
 // ---------- Word-Datei aus der Vorlage ----------
+// Tabelle der Dienste im Stil der LS/PT-Rechnungen (Arial 10, feste Zeilenhoehe, Kopf fett mit Rahmen,
+// senkrechte Linien, Summe fett im Kasten). Spalten: Datum | Uhrzeit | Dienst | Betrag in EUR.
+// Betraege je Dienst nur, wenn sie zusammen die (evtl. von Hand geaenderte) Summe ergeben.
+function aerzteTabelleXml(dienste, summe){
+  const tw = [66, 92, 255, 74].map(w=> Math.round(w * 20));
+  const linie = (an)=> an ? 'w:val="single" w:sz="6" w:space="0" w:color="000000"' : 'w:val="nil"';
+  const zelle = (text, b, ausr, rand, o)=>{ o = o || {};
+    return '<w:tc><w:tcPr><w:tcW w:w="' + b + '" w:type="dxa"/>' + (o.span ? '<w:gridSpan w:val="' + o.span + '"/>' : '') + '<w:tcBorders><w:top ' + linie(rand.t) + '/><w:left ' + linie(rand.l) + '/><w:bottom ' + linie(rand.b) + '/><w:right ' + linie(rand.r) + '/></w:tcBorders><w:noWrap/><w:vAlign w:val="bottom"/></w:tcPr>' +
+      '<w:p><w:pPr><w:keepNext/><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="' + ausr + '"/><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/></w:rPr></w:pPr>' +
+      (String(text) === '' ? '' : '<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>' + (o.fett ? '<w:b/><w:bCs/>' : '') + '<w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr><w:t xml:space="preserve">' + rdXml(text) + '</w:t></w:r>') + '</w:p></w:tc>'; };
+  const zeile = (z, kopf)=> '<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="' + RECHNUNG_ZEILENHOEHE_TWIPS + '" w:hRule="exact"/>' + (kopf ? '<w:tblHeader/>' : '') + '</w:trPr>' + z.join('') + '</w:tr>';
+  const zahl = (v)=> (Math.round(Number(v) * 100) / 100).toFixed(2).replace('.', ',');
+  const mitBetrag = dienste.length && dienste.every(d=> d.betrag != null && isFinite(d.betrag)) && Math.abs(dienste.reduce((a, d)=> a + Number(d.betrag), 0) - Number(summe)) < 0.015;
+  const teile = (d)=>{ if(d.datum) return d; const m = /^(\d{1,2}\.\d{1,2}\.\d{4})(?:,\s*(.*))?$/.exec(String(d.text || '').trim()); return m ? { datum: m[1], zeit: m[2] || '', art: d.art } : { datum: d.text || '', zeit: '', art: d.art }; };
+  const x = [zeile(['Datum', 'Uhrzeit', 'Dienst', 'Betrag in €'].map((t, i)=> zelle(t, tw[i], 'center', { t: 1, b: 1, l: i === 0, r: 1 }, { fett: true })), true)];
+  dienste.forEach((d0, i)=>{ const d = teile(d0), letzte = i === dienste.length - 1;
+    x.push(zeile([zelle(d.datum || '', tw[0], 'center', { l: 1, r: 1, b: letzte }), zelle(d.zeit || '', tw[1], 'center', { l: 1, r: 1, b: letzte }),
+      zelle('Vertretung ' + (d.art || 'Bereitschaftsdienst'), tw[2], 'left', { l: 1, r: 1, b: letzte }), zelle(mitBetrag ? zahl(d0.betrag) : '', tw[3], 'right', { l: 1, r: 1, b: letzte })])); });
+  x.push(zeile([zelle('', tw[0], 'center', {}), zelle('', tw[1], 'center', {}), zelle('Summe', tw[2], 'right', { r: 1 }, { fett: true }), zelle(zahl(summe) + ' €', tw[3], 'right', { t: 1, b: 1, l: 1, r: 1 }, { fett: true })]));
+  return '<w:tbl><w:tblPr><w:tblW w:w="' + tw.reduce((a, b)=> a + b, 0) + '" w:type="dxa"/><w:tblInd w:w="0" w:type="dxa"/><w:tblLayout w:type="fixed"/>' +
+    '<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/></w:tblCellMar><w:tblLook w:val="0000"/></w:tblPr>' +
+    '<w:tblGrid>' + tw.map(w=> '<w:gridCol w:w="' + w + '"/>').join('') + '</w:tblGrid>' + x.join('') + '</w:tbl>';
+}
 async function aerzteDocxErzeugen(vorlage, daten){
   const zip = await JSZip.loadAsync(vorlage);
   const a = daten.arzt || {};
@@ -17598,7 +17625,7 @@ async function aerzteDocxErzeugen(vorlage, daten){
              .split('<w:tcW w:w="' + a + '" w:type="dxa"/>').join('<w:tcW w:w="' + (a + plus) + '" w:type="dxa"/>')
              .split('<w:tcW w:w="' + b + '" w:type="dxa"/>').join('<w:tcW w:w="' + (b - plus) + '" w:type="dxa"/>');
   }
-  doc = doc.slice(0, tStart) + tab + doc.slice(tEnde);
+  doc = doc.slice(0, tStart) + aerzteTabelleXml(daten.dienste || [], daten.summe) + doc.slice(tEnde);
   doc = rdPlatzhalterInXml(doc, ph);
   zip.file('word/document.xml', doc);
   for(const name of Object.keys(zip.files)){
@@ -17613,7 +17640,7 @@ async function aerzteDocxErzeugen(vorlage, daten){
     try{
       const txt = girocodeText(a, Math.round((Number(daten.summe) || 0) * 100) / 100, daten.renu);
       if(txt){
-        await rdGirocodeEinsetzen(zip, await girocodePng(txt), true);
+        await rdGirocodeEinsetzen(zip, await girocodePng(txt, true), true);
         let ct = await zip.file('[Content_Types].xml').async('string');
         if(!/Extension="png"/i.test(ct)){ ct = ct.replace('<Default ', '<Default Extension="png" ContentType="image/png"/><Default '); zip.file('[Content_Types].xml', ct); }
       }
@@ -17640,7 +17667,7 @@ async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
     vname: (alt && alt.vname) || adr.vname || arzt, adr1: (alt && alt.adr1) || adr.adr1 || '', adr2: (alt && alt.adr2) || adr.adr2 || '',
     kuerzel: adr.kuerzel || (alt && /^([A-ZÄÖÜ]+)-/.test(alt.renu || '') ? alt.renu.split('-')[0] : aerzteKuerzel(arzt)), renu: (alt && alt.renu) || '',
     datum: (alt && alt.datum) || (zz2(heute.getDate()) + '.' + zz2(heute.getMonth() + 1) + '.' + heute.getFullYear()),
-    dienste: bloecke.map(b=> ({ text: aerzteDienstText(b) })),
+    dienste: bloecke.map(b=>{ const z = fbZeitParsen(b.zeitRoh); return { text: aerzteDienstText(b), datum: b.datumText, zeit: z ? fbZeitText(z).replace('-', '–') + ' Uhr' : (b.zeitLabel || ''), art: b.dienstart || 'Fahrdienst', betrag: aerzteBetragVorschlag(b) }; }),
     summe: alt && alt.summe != null ? alt.summe : berechnet, berechnet
   };
   let fehler = '';
@@ -18087,7 +18114,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v304';
+const APP_VERSION = 'v305';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
