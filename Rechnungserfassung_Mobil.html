@@ -6682,7 +6682,8 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
     const m = rels.match(/oleObject"[^>]*Target="[^"]*![^"!]*!Z(\d+)S\d+:Z(\d+)S\d+"/) || rels.match(/Target="[^"]*![^"!]*!Z(\d+)S\d+:Z(\d+)S\d+"/);
     if(m) zeilenAusVorlage = Math.max(0, parseInt(m[2], 10) - parseInt(m[1], 10) + 1);
   } catch(e){}
-  const tabelleXml = rdTabelleXml(vorlage.kopf, tab, daten.art, gesamtLabel, zeilenAusVorlage);
+  // Privatrechnung: Text unter der Tabelle mit festem Abstand (5 Leerzeilen) statt auf feste Hoehe aufgefuellt -- wie bei der Leichenschau
+  const tabelleXml = rdTabelleXml(vorlage.kopf, tab, daten.art, gesamtLabel, daten.art === 'pt' ? tab.zeilen.length + 2 + 5 : zeilenAusVorlage);
 
   const a = daten.arzt || {};
   const platzhalterKoerper = [
@@ -18183,7 +18184,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v309';
+const APP_VERSION = 'v310';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
