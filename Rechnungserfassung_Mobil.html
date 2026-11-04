@@ -6687,6 +6687,7 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
     }
   }
 
+  await rdFussAufFolgeseiten(zip);
   // Dokumenteigenschaften: das Kopffeld "ATITEL ANAME" ist in der Vorlage an
   // dc:subject gebunden -- Word zeigt beim Oeffnen den Wert von dort an.
   if(zip.file('docProps/core.xml')){
@@ -15548,6 +15549,28 @@ async function girocodePng(text, ohneText){
 }
 // QR-Bild schwebend unten rechts auf der Seite, knapp ueber der Bankverbindung (Fusszeile);
 // verankert am Absatz "Ich bitte Sie ... zu ueberweisen" (sonst am letzten Textabsatz)
+// Fusszeile der ersten Seite (Bankverbindung) auch auf allen Folgeseiten: Kopie des "first"-Fussteils
+// als Standard-Fusszeile eintragen (die Vorlagen haben fuer Folgeseiten keine bzw. eine leere).
+async function rdFussAufFolgeseiten(zip){
+  try{
+    let doc = await zip.file('word/document.xml').async('string');
+    let rels = await zip.file('word/_rels/document.xml.rels').async('string');
+    const ziel = (id)=>{ const m = rels.match(new RegExp('<Relationship [^>]*Id="' + id + '"[^>]*/>')); return m ? (m[0].match(/Target="([^"]+)"/) || [])[1] : null; };
+    const erste = (doc.match(/<w:footerReference w:type="first" r:id="(rId[^"]+)"\/>/) || [])[1]; if(!erste || doc.indexOf('<w:titlePg') < 0) return;
+    const quelle = ziel(erste); if(!quelle || !zip.file('word/' + quelle)) return;
+    const stdM = doc.match(/<w:footerReference w:type="default" r:id="(rId[^"]+)"\/>/);
+    if(stdM){ const t = ziel(stdM[1]); const x = t && zip.file('word/' + t) ? await zip.file('word/' + t).async('string') : ''; if(/<w:t[ >][^<]*\S/.test(x)) return; }   // hat schon Inhalt
+    zip.file('word/footerFolge.xml', await zip.file('word/' + quelle).async('string'));
+    const qr = 'word/_rels/' + quelle + '.rels'; if(zip.file(qr)) zip.file('word/_rels/footerFolge.xml.rels', await zip.file(qr).async('string'));
+    if(rels.indexOf('Id="rIdFussFolge"') < 0) rels = rels.replace('</Relationships>', '<Relationship Id="rIdFussFolge" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footerFolge.xml"/></Relationships>');
+    zip.file('word/_rels/document.xml.rels', rels);
+    let ct = await zip.file('[Content_Types].xml').async('string');
+    if(ct.indexOf('/word/footerFolge.xml') < 0) ct = ct.replace('</Types>', '<Override PartName="/word/footerFolge.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>');
+    zip.file('[Content_Types].xml', ct);
+    doc = stdM ? doc.replace(stdM[0], '<w:footerReference w:type="default" r:id="rIdFussFolge"/>') : doc.replace(/<w:footerReference w:type="first"/, '<w:footerReference w:type="default" r:id="rIdFussFolge"/><w:footerReference w:type="first"');
+    zip.file('word/document.xml', doc);
+  }catch(e){ console.warn('Fusszeile Folgeseiten', e); }
+}
 async function rdGirocodeEinsetzen(zip, png, imText){
   const cm = 360000, breite = Math.round((imText ? 3.4 : 2.5) * cm), hoehe = Math.round(breite * png.hoeheZuBreite), id = 'rIdGiroQr1';
   const name = 'word/document.xml';
@@ -17637,6 +17660,7 @@ async function aerzteDocxErzeugen(vorlage, daten){
       if(y !== x) zip.file(name, y);
     }
   }
+  await rdFussAufFolgeseiten(zip);
   // GiroCode (Einstellung wie bei LS/PT): unter "Ich bitte Sie ... zu ueberweisen", rechtsbuendig
   if(typeof document !== 'undefined' && (ladeEinstellungen() || {}).rechnungQr !== false){
     try{
@@ -18116,7 +18140,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v306';
+const APP_VERSION = 'v307';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
