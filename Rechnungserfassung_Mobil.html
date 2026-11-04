@@ -8118,8 +8118,9 @@ async function iniAenderungenSchreiben(aenderungen, basisWerte){
 // (Einrichtungsassistent, Skript azure/einrichten.sh) -> ini BRIEF_WEITERLEITUNG.
 // Ohne Eintrag kein Briefversand (keine fest eingebaute Adresse mehr). Ein
 // frueherer Eintrag LXP_WEITERLEITUNG in der ini wird weiterhin ignoriert.
-// Die EBM-Werte (/ebm/werte, nur oeffentliche Daten) kommen ebenfalls von der eigenen Weiterleitung.
+// Die EBM-Werte (/ebm/werte, nur oeffentliche Daten) kommen von der eigenen Weiterleitung, ohne eigene vom EBM_DIENST.
 const LXP_WEITERLEITUNG_STANDARD = '';
+const EBM_DIENST = 'https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net/api';
 function lxpAdresseNormal(s){
   s = String(s || '').trim().replace(/\s+/g, '').replace(/\/+$/, '');
   if(!s) return '';
@@ -12576,7 +12577,7 @@ function ebmVorschlagBilden(j){
 }
 async function ebmWerteOnlineHolen(){
   let r;
-  let basis = ''; try{ basis = lxpBasisUrl(); }catch(e){ throw new Error('Werte-Prüfung braucht die eigene Azure-Weiterleitung (Einstellungen › „Briefversand einrichten“).'); }
+  let basis = ''; try{ basis = lxpBasisUrl(); }catch(e){ basis = EBM_DIENST; }   // eigene Weiterleitung, sonst Werte-Dienst
   try{ r = await fetch(basis + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
   catch(e){ throw new Error('Keine Verbindung zur Azure-Weiterleitung (Internet?).'); }
   if(r.status === 404) throw new Error('Die Azure-Weiterleitung kennt die Werte-Prüfung noch nicht – bitte einmal das neue Azure-Skript ausführen.');
@@ -18182,7 +18183,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v308';
+const APP_VERSION = 'v309';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
