@@ -2833,17 +2833,26 @@ function fbTabsHtml(akt){
 function fbTabsWiring(){
   document.querySelectorAll('[data-fbtab]').forEach(b=> b.onclick = ()=>{ if(b.dataset.fbtab === 'dienste') ansichtFahrtenbuch(); else ansichtFahrdienstAuswertung(); });
 }
-// ---------- Zwischenspeicher (verschluesselt, bleibt ueber App-Neustarts) ----------
-// Gelesenes Fahrtenbuch, Quartalsuebersicht und Rechnungsliste werden verschluesselt
-// in der IndexedDB abgelegt (AES-GCM 256). Schluessel: in der Launch-Version der
-// Tresor-Schluessel (nur bei geoeffnetem Tresor), sonst ein zufaelliger, NICHT
-// exportierbarer Geraeteschluessel -- er laesst sich auch per Skript nicht auslesen,
-// nur zum Ver-/Entschluesseln in dieser App benutzen. Verwendet wird ein Eintrag nur,
-// wenn er zum angemeldeten Konto passt; bei Aenderungen in OneDrive (Stempel) wird
-// neu gelesen. Abmelden loescht alles.
+// ---------- Zwischenspeicher (verschluesselt, nur fuer die laufende Sitzung) ----------
+// Gelesenes Fahrtenbuch, Quartalsuebersicht und Rechnungsliste ueberstehen ein Neuladen
+// der Seite, aber NICHT das Schliessen der App: Beim ersten Zugriff einer neuen Sitzung
+// (sessionStorage leer) wird alles geloescht, samt Schluessel. Abgelegt wird nur
+// verschluesselt (AES-GCM 256) in der IndexedDB. Schluessel: in der Launch-Version der
+// Tresor-Schluessel, sonst ein zufaelliger, NICHT exportierbarer Schluessel je Sitzung --
+// wer den Browserspeicher ausliest, kann mit den Daten nichts anfangen.
+// Abmelden loescht ebenfalls alles.
 const ZwSpeicher = (()=>{
-  const DB = 'rechnung-zwischenspeicher', ST = 'd', MAX_ALTER = 30 * 86400000;
-  let dbP = null, keyP = null;
+  const DB = 'rechnung-zwischenspeicher', ST = 'd', MAX_ALTER = 12 * 3600000, SITZUNG = 'zw_sitzung';
+  let dbP = null, keyP = null, sitzungP = null;
+  // neue Sitzung (App war geschlossen): Reste der letzten Sitzung samt Schluessel loeschen
+  function sitzung(){
+    if(!sitzungP) sitzungP = (async ()=>{
+      let neu = true;
+      try{ neu = !sessionStorage.getItem(SITZUNG); if(neu) sessionStorage.setItem(SITZUNG, '1'); }catch(_){}
+      if(neu) await leeren();
+    })();
+    return sitzungP;
+  }
   const tresor = ()=> (typeof Tresor !== 'undefined' && Tresor && typeof Tresor.ver === 'function') ? Tresor : null;
   function db(){
     if(!dbP) dbP = new Promise((ok, no)=>{
@@ -2885,13 +2894,16 @@ const ZwSpeicher = (()=>{
   async function setzen(name, obj){
     try{
       if(!obj || !window.indexedDB || !window.crypto || !crypto.subtle) return;
-      const paket = await ver(JSON.stringify({ konto: konto(), am: Date.now(), obj }, ersetzen));
+      const text = JSON.stringify({ konto: konto(), am: Date.now(), obj }, ersetzen);   // sofort, bevor sich obj aendert
+      await sitzung();
+      const paket = await ver(text);
       await tx('readwrite', s=> s.put(paket, name));
     }catch(e){ console.warn('Zwischenspeicher: Speichern ging nicht', name, e && e.message); }
   }
   async function holen(name){
     try{
       if(!window.indexedDB || !window.crypto || !crypto.subtle) return null;
+      await sitzung();
       const p = await tx('readonly', s=> s.get(name)); if(!p) return null;
       const x = JSON.parse(await ent(p), beleben);
       if(!x || Date.now() - (x.am || 0) > MAX_ALTER){ loeschen(name); return null; }
@@ -2901,6 +2913,7 @@ const ZwSpeicher = (()=>{
   }
   async function loeschen(name){ try{ await tx('readwrite', s=> s.delete(name)); }catch(_){} }
   async function leeren(){ try{ await tx('readwrite', s=> s.clear()); }catch(_){} keyP = null; }
+  try{ if(window.indexedDB) sitzung(); }catch(_){}   // beim Start gleich aufraeumen
   return { setzen, holen, loeschen, leeren };
 })();
 let fbBuchCache = null;
@@ -18300,7 +18313,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v315';
+const APP_VERSION = 'v316';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
