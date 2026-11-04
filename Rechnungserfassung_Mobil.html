@@ -2385,6 +2385,17 @@ const MSGRAPH_PFAD_FAHRTENBUCH = 'KVBW Onedrive/Fahrdienst Dokumentation.xlsx';
 // Segmente werden einzeln kodiert, damit Leerzeichen/Umlaute/Sonderzeichen
 // im Dateinamen nicht die URL zerschiessen; der abschliessende ":" gehoert
 // zur Graph-Pfadsyntax und bleibt unkodiert.
+// "Stempel" einer Datei/eines Ordners in OneDrive (cTag/eTag/Aenderungszeit): eine kleine Abfrage ohne Inhalt.
+// Gleicher Stempel = seit dem letzten Lesen nichts geaendert -> Gelesenes weiterverwenden.
+async function odStempel(pfad){
+  try{
+    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return null;
+    const token = await msGraphTokenHolen(); if(!token) return null;
+    const r = await fetch(msGraphPfadUrl(pfad) + '?$select=cTag,eTag,lastModifiedDateTime,size', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+    if(!r.ok) return null;
+    const j = await r.json(); return [j.cTag || '', j.eTag || '', j.lastModifiedDateTime || '', j.size || ''].join('|');
+  }catch(_){ return null; }
+}
 function msGraphPfadUrl(pfadRelativZuOneDrive){
   const segmente = pfadRelativZuOneDrive.split('/').map(encodeURIComponent).join('/');
   return 'https://graph.microsoft.com/v1.0/me/drive/root:/' + segmente + ':';
@@ -2997,7 +3008,17 @@ async function ansichtFahrtenbuch(blatt){
   fbTabsWiring();
   const inhalt = document.getElementById('fbxInhalt');
   try{
-    if(!fbBuchCache || (blatt && fbBuchCache.blatt !== blatt)) fbBuchCache = await fbBuchLaden(blatt, (t)=> inhalt.innerHTML = '<div class="leer-hinweis">' + htmlEsc(t) + '</div>');
+    if(!fbBuchCache || (blatt && fbBuchCache.blatt !== blatt)){
+      const st = await odStempel(MSGRAPH_PFAD_FAHRTENBUCH);
+      fbBuchCache = await fbBuchLaden(blatt, (t)=> inhalt.innerHTML = '<div class="leer-hinweis">' + htmlEsc(t) + '</div>');
+      if(fbBuchCache) fbBuchCache.stempel = st;
+    } else {
+      // schon gelesen: sofort zeigen, im Hintergrund pruefen, ob sich die Excel inzwischen geaendert hat
+      const c = fbBuchCache;
+      odStempel(MSGRAPH_PFAD_FAHRTENBUCH).then(st=>{
+        if(st && st !== c.stempel && fbBuchCache === c && document.getElementById('fbxInhalt')){ fbBuchCache = null; appToastAnzeigen('Fahrtenbuch wurde geändert – wird neu gelesen …', 2200); ansichtFahrtenbuch(blatt); }
+      });
+    }
   }catch(e){ inhalt.innerHTML = '<div class="gkv-warn">Fahrtenbuch konnte nicht gelesen werden: ' + htmlEsc(e.message || String(e)) + '</div>'; return; }
   const buch = fbBuchCache;
   fbLokalAuffrischen(buch);
@@ -3237,8 +3258,21 @@ async function ansichtFahrdienstAuswertung(){
       'https://1drv.ms/x/c/ea0a98e4272ed5c1/IQA8CIfNf6BKTrshLB4KiNB1Aezpq2X8jrVEiB5t1KDfT6U?e=dEKfDi');
   };
 
+  // schon gelesen und die Excel unveraendert? Dann sofort zeigen und nicht neu lesen/schreiben
+  const c0 = fahrdienstAuswertungCache;
+  if(c0 && c0.stempel){
+    fahrdienstAuswertungRendern(c0);
+    const st = await odStempel(MSGRAPH_PFAD_FAHRTENBUCH);
+    if(!st || st === c0.stempel || !document.getElementById('fahrdienstInhalt')) return;
+  }
+  const vor = await odStempel(MSGRAPH_PFAD_FAHRTENBUCH);
   fahrdienstAuswertungCache = await ladenMitStatistik();
-  fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
+  if(fahrdienstAuswertungCache){
+    const nach = await odStempel(MSGRAPH_PFAD_FAHRTENBUCH);   // nach dem Eintragen der Statistik
+    fahrdienstAuswertungCache.stempel = nach;
+    if(fbBuchCache && vor && fbBuchCache.stempel === vor) fbBuchCache.stempel = nach;   // nur die eigene Statistik hat sich geaendert
+  }
+  if(document.getElementById('fahrdienstInhalt')) fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
 }
 
 let fahrdienstJahrWahl = null; // null = aktuelles Jahr (bzw. neuestes vorhandenes), 'alle' = alle Jahre
@@ -8992,6 +9026,7 @@ async function ansichtRechnungenGesamt(neuLaden){
       if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
       if(!ziel.echt) await testUebersichtSicherstellen(token, false);
       schritt('Übersicht und Ordner werden gelesen …');
+      var stempelGesamt = Promise.all([odStempel(ziel.uebersicht), odStempel(ziel.ordner)]).then(a=> a.every(Boolean) ? a.join('#') : null);
       // Testablage: die am PC erstellten PDFs liegen nur im echten Ordner --
       // zum Anzeigen/Erkennen wird dort zusaetzlich nachgesehen (nur lesend).
       let ueFertig = false, ordFertig = false;
@@ -9004,7 +9039,7 @@ async function ansichtRechnungenGesamt(neuLaden){
         ziel.echt ? Promise.resolve(null) : ordnerDateien(token, MSGRAPH_PFAD_ZIEL_ORDNER).catch(()=> null)
       ]);
       if(echteDateien) echteDateien.forEach((v, k)=>{ if(!dateien.has(k)) dateien.set(k, v); });
-      neu = { zielKey: zk, ue, ana: uebersichtAuswerten(ue), dateien, geladenAm: Date.now() };
+      neu = { zielKey: zk, ue, ana: uebersichtAuswerten(ue), dateien, geladenAm: Date.now(), stempel: await stempelGesamt };
     }catch(e){
       neu = { zielKey: zk, fehler: (e.message || String(e)) + (cache.schritt ? ' (Schritt: ' + cache.schritt.replace(/ …$/, '') + ')' : '') };
     }
@@ -9012,6 +9047,13 @@ async function ansichtRechnungenGesamt(neuLaden){
     if(lauf !== betaGesamtLauf) return;   // inzwischen neu gestartet
     betaGesamtCache = neu;
     if(!document.getElementById('gesamtListe')) return; // inzwischen weggeklickt
+  } else if(betaGesamtCache && betaGesamtCache.stempel && !betaGesamtCache.laedt){
+    // schon gelesen: sofort zeigen, im Hintergrund pruefen, ob Uebersicht oder Rechnungsordner geaendert wurden
+    const c = betaGesamtCache;
+    Promise.all([odStempel(ziel.uebersicht), odStempel(ziel.ordner)]).then(a=>{
+      const st = a.every(Boolean) ? a.join('#') : null;
+      if(st && st !== c.stempel && betaGesamtCache === c && document.getElementById('gesamtListe')){ appToastAnzeigen('Rechnungsübersicht wurde geändert – wird neu gelesen …', 2200); ansichtRechnungenGesamt(true); }
+    });
   }
   zeichnen();
 }
@@ -18140,7 +18182,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v307';
+const APP_VERSION = 'v308';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
