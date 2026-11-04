@@ -8237,7 +8237,7 @@ function betaEinstellungenHtml(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Bankverbindung</div>
       ${gruppe('Bankverbindung').replace('<div class="sync-unter-titel">Bankverbindung</div>', '<div class="sync-unter-titel">Konto für Leichenschau- und Privatrechnungen</div>')}
-      <div class="einstellung-zeile" style="margin:6px 0 10px;"><input type="checkbox" id="chkRechnungQr"${ladeEinstellungen().rechnungQr !== false ? ' checked' : ''}><div class="txt">QR-Code zum Bezahlen auf Rechnungen<span class="hinweis">GiroCode unten rechts auf Leichenschau- und Privatrechnungen: Mit der Banking-App scannen – Empfänger, IBAN, Betrag und Rechnungsnummer sind dann schon ausgefüllt. Bank und BIC ergänzt die App beim Eintippen der IBAN selbst.</span></div></div>
+      <div class="einstellung-zeile" style="margin:6px 0 10px;"><input type="checkbox" id="chkRechnungQr"${ladeEinstellungen().rechnungQr !== false ? ' checked' : ''}><div class="txt">QR-Code zum Bezahlen auf Rechnungen<span class="hinweis">GiroCode auf Leichenschau-, Privat- und Vertretungsärzte-Rechnungen: Mit der Banking-App scannen – Empfänger, IBAN, Betrag und Rechnungsnummer sind dann schon ausgefüllt. Bank und BIC ergänzt die App beim Eintippen der IBAN selbst.</span></div></div>
       ${gruppe('Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)').replace('<div class="sync-unter-titel">Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)</div>',
         '<div class="sync-unter-titel" style="margin-top:14px;">Konto für Rechnungen an Vertretungsärzte</div><div class="hinweis" style="font-size:12.5px; color:var(--text-schwach); margin-bottom:6px;">Leer lassen, wenn dasselbe Konto wie oben gelten soll.</div>')}
       ${status}
@@ -15532,7 +15532,7 @@ async function girocodePng(text){
 }
 // QR-Bild schwebend unten rechts auf der Seite, knapp ueber der Bankverbindung (Fusszeile);
 // verankert am Absatz "Ich bitte Sie ... zu ueberweisen" (sonst am letzten Textabsatz)
-async function rdGirocodeEinsetzen(zip, png){
+async function rdGirocodeEinsetzen(zip, png, imText){
   const cm = 360000, breite = Math.round(2.5 * cm), hoehe = Math.round(breite * png.hoeheZuBreite), id = 'rIdGiroQr1';
   const name = 'word/document.xml';
   zip.file('word/media/girocode.png', png.daten);
@@ -15553,7 +15553,12 @@ async function rdGirocodeEinsetzen(zip, png){
   const absaetze = (x.match(/<w:p[ >][\s\S]*?<\/w:p>/g) || []).filter(p=> p.indexOf('<w:tbl') < 0 && p.indexOf('<w:drawing') < 0);
   const txt = (p)=> (p.match(/<w:t[^>]*>[^<]*<\/w:t>/g) || []).map(t=> t.replace(/<[^>]+>/g, '')).join('');
   const ziel = absaetze.find(p=> /Ich bitte Sie|überweisen/.test(txt(p))) || absaetze.filter(p=> txt(p).trim()).pop(); if(!ziel) return false;
-  const neu = /<\/w:pPr>/.test(ziel) ? ziel.replace('</w:pPr>', '</w:pPr>' + bild) : ziel.replace(/^<w:p([ >][^>]*>|>)/, (k)=> k + bild);
+  // imText: als eigener rechtsbuendiger Absatz nach dem Absatz (Laenge der Rechnung variiert, z. B. Aerzte-Rechnung)
+  const inline = '<w:p><w:pPr><w:jc w:val="right"/><w:spacing w:before="160" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + breite + '" cy="' + hoehe + '"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="9102" name="GiroCode" descr="GiroCode zum Bezahlen"/><wp:cNvGraphicFramePr/>' +
+    '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+    '<pic:nvPicPr><pic:cNvPr id="9102" name="girocode.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="' + id + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
+    '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + breite + '" cy="' + hoehe + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+  const neu = imText ? ziel + inline : (/<\/w:pPr>/.test(ziel) ? ziel.replace('</w:pPr>', '</w:pPr>' + bild) : ziel.replace(/^<w:p([ >][^>]*>|>)/, (k)=> k + bild));
   zip.file(name, x.replace(ziel, neu));
   return true;
 }
@@ -17591,6 +17596,17 @@ async function aerzteDocxErzeugen(vorlage, daten){
       if(y !== x) zip.file(name, y);
     }
   }
+  // GiroCode (Einstellung wie bei LS/PT): unter "Ich bitte Sie ... zu ueberweisen", rechtsbuendig
+  if(typeof document !== 'undefined' && (ladeEinstellungen() || {}).rechnungQr !== false){
+    try{
+      const txt = girocodeText(a, Math.round((Number(daten.summe) || 0) * 100) / 100, daten.renu);
+      if(txt){
+        await rdGirocodeEinsetzen(zip, await girocodePng(txt), true);
+        let ct = await zip.file('[Content_Types].xml').async('string');
+        if(!/Extension="png"/i.test(ct)){ ct = ct.replace('<Default ', '<Default Extension="png" ContentType="image/png"/><Default '); zip.file('[Content_Types].xml', ct); }
+      }
+    }catch(e){ console.warn('GiroCode', e); }
+  }
   if(zip.file('docProps/core.xml')){
     let core = await zip.file('docProps/core.xml').async('string');
     ph.forEach(([k, v])=>{ core = core.split(k).join(rdXml(String(v).replace(/[\r\n\u000b]+/g, ' '))); });
@@ -18059,7 +18075,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v295';
+const APP_VERSION = 'v296';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
