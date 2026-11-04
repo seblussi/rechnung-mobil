@@ -604,6 +604,9 @@ try{
   .ar-knoepfe button.ar-weg{background:#c0392b; border-color:#c0392b; color:#fff; padding:6px 10px;}
   .ar-liste{margin:2px 0 8px; padding-left:18px; font-size:13.5px;}
   .einr-fehlt{margin:6px 0 8px; padding-left:20px;} .einr-fehlt li{margin:2px 0;}
+  .einr-wichtig{margin:6px 0 10px; padding:10px 12px; border-radius:10px; background:#fff4e0; color:#5a3a00; border:1px solid #f0c27a; font-size:14px; line-height:1.4;}
+  body.dunkel .einr-wichtig{background:#3a2c12; color:#ffe3b0; border-color:#7a5a20;}
+  .einr-azure-link{display:block; box-sizing:border-box; width:100%; padding:14px 16px; text-align:center; text-decoration:none; margin:2px 0 6px;} .einr-azure-schritte{padding-left:20px; margin:0 0 10px;} .einr-azure-schritte li{margin:4px 0;}
   /* Am PC: Inhalt mittig in Handybreite, Maus statt Wischen */
   @media (min-width: 760px){
     main{max-width:680px; margin-left:auto; margin-right:auto;}
@@ -5345,8 +5348,14 @@ function ansichtEinrichtung(schritt){
       '<h3>1. LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren, AVV abschließen, unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
       '<label class="einr-feld"><span>LetterXpress-Benutzername</span><input type="text" id="einrLxpNutzer" autocomplete="off" value="' + htmlEsc(w.BRIEF_BENUTZER || '') + '"></label>' +
       '<label class="einr-feld"><span>API-Key</span><input type="password" id="einrLxpKey" autocomplete="off" value="' + htmlEsc(w.BRIEF_APIKEY || '') + '"></label>' +
-      '<h3>2. Azure-Konto</h3><p class="einr-klein">Auf <a href="https://azure.microsoft.com/de-de/free/" target="_blank" rel="noopener">azure.microsoft.com</a> ein Konto anlegen (Kreditkarte nötig). Die Weiterleitung kostet bei ein paar Briefen im Monat praktisch nichts (meist 0 €, höchstens wenige Cent für den Speicher).</p>' +
-      '<h3>3. Skript ausführen</h3><p class="einr-klein">Am besten am PC: <a href="https://shell.azure.com" target="_blank" rel="noopener">shell.azure.com</a> öffnen, mit dem Azure-Konto anmelden, <b>Bash</b> wählen (Frage nach Speicher: „Kein Speicherkonto erforderlich“). Dann diese Zeile einfügen (Rechtsklick › Einfügen) und Enter drücken:</p>' +
+      '<h3>2. Kostenloses Azure-Konto anlegen</h3>' +
+      '<div class="einr-wichtig"><b>Wichtig:</b> Ein normales Microsoft-Konto (Outlook, Hotmail, OneDrive) reicht <b>nicht</b>. Wer sich damit direkt in der Azure-Shell anmeldet, bekommt nur eine Fehlermeldung (kein Abonnement / „No subscriptions found“), und das Skript bricht ab. Zuerst muss dein Microsoft-Konto ein <b>Azure-Konto</b> bekommen – das ist kostenlos und dauert ca. 10 Minuten.</div>' +
+      '<p class="einr-klein"><a class="btn-primaer einr-azure-link" href="https://azure.microsoft.com/de-de/pricing/purchase-options/azure-account" target="_blank" rel="noopener">Kostenloses Azure-Konto anlegen</a></p>' +
+      '<ol class="einr-klein einr-azure-schritte"><li>„Kostenlos starten“ wählen und mit deinem Microsoft-Konto anmelden (dasselbe wie für OneDrive geht).</li>' +
+        '<li>Telefonnummer und <b>Kreditkarte</b> angeben – nur zur Identitätsprüfung, es wird nichts abgebucht (evtl. kurz 1 $ reserviert und wieder freigegeben). Prepaid-Karten gehen nicht.</li>' +
+        '<li>Warten, bis „Azure-Portal“ erscheint – dann ist das Abonnement da.</li>' +
+        '<li><b>Nach 30 Tagen</b> fragt Azure, ob du auf „nutzungsbasierte Bezahlung“ umstellen willst: <b>ja, umstellen</b> – sonst wird das Konto samt Weiterleitung abgeschaltet. Bezahlt wird nur, was über die kostenlosen Mengen hinausgeht; bei ein paar Briefen im Monat praktisch 0 € (höchstens wenige Cent für den Speicher).</li></ol>' +
+      '<h3>3. Skript ausführen</h3><p class="einr-klein">Erst wenn das Azure-Konto steht – am besten am PC: <a href="https://shell.azure.com" target="_blank" rel="noopener">shell.azure.com</a> öffnen, mit demselben Konto anmelden, <b>Bash</b> wählen (Frage nach Speicher: „Kein Speicherkonto erforderlich“). Dann diese Zeile einfügen (Rechtsklick › Einfügen) und Enter drücken:</p>' +
       '<div class="einr-code"><code id="einrSkript">' + htmlEsc(EINR_AZURE_BEFEHL) + '</code><button type="button" class="btn-sekundaer" id="einrKopieren">Kopieren</button></div>' +
       '<p class="einr-klein">Das dauert 3–5 Minuten. Am Ende steht dort „Diese Adresse in der App eintragen“ mit einer Adresse wie <i>https://lxp-weiterleitung-….azurewebsites.net/api</i>. Das Skript darf jederzeit erneut laufen (z. B. für Updates); es legt nichts doppelt an.</p>' +
       '<h3>4. Adresse eintragen und prüfen</h3>' +
@@ -18050,7 +18059,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v294';
+const APP_VERSION = 'v295';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}

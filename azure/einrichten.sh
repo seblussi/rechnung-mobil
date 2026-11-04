@@ -27,7 +27,11 @@ echo "== LetterXpress-Weiterleitung einrichten (Azure, Frankfurt) =="
 echo
 
 if ! az account show >/dev/null 2>&1; then
-  echo "Nicht bei Azure angemeldet. Bitte in der Azure Cloud Shell ausfuehren (https://shell.azure.com)."
+  echo "Kein Azure-Abonnement gefunden."
+  echo "Ein normales Microsoft-Konto reicht nicht: zuerst ein kostenloses Azure-Konto anlegen"
+  echo "  https://azure.microsoft.com/de-de/pricing/purchase-options/azure-account"
+  echo "(mit demselben Microsoft-Konto anmelden, Kreditkarte nur zur Pruefung)."
+  echo "Danach die Cloud Shell neu laden (https://shell.azure.com) und diese Zeile erneut ausfuehren."
   exit 1
 fi
 echo "Abonnement: $(az account show --query name -o tsv)"
