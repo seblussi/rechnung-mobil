@@ -624,6 +624,7 @@ try{
   .ar-dienst input{width:96px !important; display:inline-block !important; text-align:right; margin:0 !important;}
   .ar-summe{text-align:right; margin-top:8px; font-size:14.5px;}
   .fd-jahre{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 8px;}
+  .fd-fussnote{font-size:11.5px; line-height:1.45; color:var(--text-schwach); margin:18px 4px 8px; padding-top:10px; border-top:1px solid var(--rand);}
   .fd-jahr-summe{font-size:13px; background:var(--karte); border:1px solid var(--rand); border-radius:10px; padding:8px 10px; margin-bottom:10px; line-height:1.5;}
   .gkv-profile{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px;}
   .gkv-profil-hinweis{flex-basis:100%; font-size:12.5px; color:var(--text-schwach); margin-top:2px;}
@@ -3212,12 +3213,12 @@ async function ansichtFahrdienstAuswertung(){
   setTimeout(fbTabsWiring, 0);
   setzeTitel('Quartalsübersicht', ansichtStart);
   app.innerHTML = fbTabsHtml('quartale') + `
-    <div class="leer-hinweis" style="padding:10px 4px; margin-bottom:6px;">Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Förderung der KVBW greift (GKV-Anteil mindestens 21,43 €/h im Fahrdienst Mo–Fr = 300 € je 14-h-Dienst, 50 €/h an Wochenenden, Feiertagen, 24.12. und 31.12. sowie immer im Sitzdienst). Die Dienstart steht im Fahrtenbuch in Spalte B unter dem Datum.</div>
     <div style="display:flex; gap:8px; margin-bottom:12px;">
       <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="flex:1; margin-bottom:0;">Neu laden</button>
       <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">Fahrtenbuch öffnen</button>
     </div>
-    <div id="fahrdienstInhalt" class="quer-breit"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>`;
+    <div id="fahrdienstInhalt" class="quer-breit"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>
+    <div class="fd-fussnote">* Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Förderung der KVBW greift (GKV-Anteil mindestens 21,43 €/h im Fahrdienst Mo–Fr = 300 € je 14-h-Dienst, 50 €/h an Wochenenden, Feiertagen, 24.12. und 31.12. sowie immer im Sitzdienst und Telearzt ÄBD; am 24.12./31.12. zusätzlich 500 € je 24 h; docdirekt ohne Förderung). Die Dienstart steht im Fahrtenbuch in Spalte B unter dem Datum.</div>`;
 
   // Laden = auswerten UND Statistik rechts eintragen (bei Fehler nur lesen)
   const ladenMitStatistik = async ()=>{
@@ -3285,7 +3286,7 @@ function fahrdienstAuswertungRendernBasis(daten){
     '<th>Datum</th><th>Arzt</th><th>Zeit</th><th>Gesamt</th><th>Std.-Lohn</th><th>gesetzl.</th><th>LS+PT</th><th>LS</th><th>PT</th></tr>' +
     daten.bloecke.map(b=>`<tr>
       <td>${b.datumText}</td><td>${b.arzt}</td><td>${b.zeitLabel}</td>
-      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}${b.pauschale ? '<span class="fd-gp" title="Förderung ' + fahrdienstSatzText(b.satz) + ' €/h (' + b.satzGrund + ') statt ' + euro(b.gkvRoh) + '">GP</span>' : ''}${b.zusatz ? '<span class="fd-gp" title="Zusatzförderung 24.12./31.12.: 500 € je 24 h">+500</span>' : ''} ${b.pseudo ? '<span class="fd-gp" title="Dienst ohne GKV-Patient – Pseudo-Fall 99999 eingetragen (auch in der KV-Abrechnung anlegen)">Pseudo</span>' : ''}${!(b.gkvRoh > 0) && !b.pseudo && !fahrdienstOhneFoerderung(b.dienstart) ? '<span class="fd-gp fd-pseudo" title="Kein GKV-Fall in diesem Dienst: Für die Förderung muss ein Pseudo-Abrechnungsfall (GOP 99999, ICD Z02, Uhrzeit Dienstbeginn) angelegt werden.">99999?</span>' : ''}</td>
+      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}${b.pauschale ? '<span class="fd-gp" title="Förderung ' + fahrdienstSatzText(b.satz) + ' €/h (' + b.satzGrund + ') statt ' + euro(b.gkvRoh) + '">GP*</span>' : ''}${b.zusatz ? '<span class="fd-gp" title="Zusatzförderung 24.12./31.12.: 500 € je 24 h">+500</span>' : ''} ${b.pseudo ? '<span class="fd-gp" title="Dienst ohne GKV-Patient – Pseudo-Fall 99999 eingetragen (auch in der KV-Abrechnung anlegen)">Pseudo</span>' : ''}${!(b.gkvRoh > 0) && !b.pseudo && !fahrdienstOhneFoerderung(b.dienstart) ? '<span class="fd-gp fd-pseudo" title="Kein GKV-Fall in diesem Dienst: Für die Förderung muss ein Pseudo-Abrechnungsfall (GOP 99999, ICD Z02, Uhrzeit Dienstbeginn) angelegt werden.">99999?</span>' : ''}</td>
       <td>${euro(b.ls+b.pt)}</td><td>${euro(b.ls)}</td><td>${euro(b.pt)}</td>
     </tr>`).join('') + '</table></div></div>';
 
@@ -18084,7 +18085,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v302';
+const APP_VERSION = 'v303';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
