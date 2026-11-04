@@ -5279,8 +5279,8 @@ async function einrFehlt(){
   try{ if(typeof dienstprofile === 'function' && !dienstprofile().length && typeof ansichtEinrichtung === 'function' && /'dienst'/.test(String(ansichtEinrichtung))) f.push({ schritt: 'dienst', text: 'Dienstprofil (Ausgangspunkt fürs Wegegeld)' }); }catch(_){}
   // Weiterleitung: eigene Adresse, oder die Standard-Weiterleitung (leer bzw. Standard-Adresse) mit Zugangsdaten --
   // die Standard-Weiterleitung laesst nur freigegebene LetterXpress-Benutzer durch; ob man dazugehoert, zeigt "Prüfen"/der Versand
-  const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY);
-  if(!zugang) f.push({ schritt: 'brief', text: 'Briefversand: LetterXpress-Zugang und Weiterleitung' });
+  const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY), wl = !!String(w.BRIEF_WEITERLEITUNG || '').trim();
+  if(!zugang || !wl) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!zugang ? 'LetterXpress-Zugang' : '', !wl ? 'eigene Azure-Weiterleitung' : ''].filter(Boolean).join(' und ') });
   return f;
 }
 // unvollstaendig -> Hinweis und die fehlenden Schritte durchgehen (Vorhandenes ist vorausgefuellt)
@@ -5441,7 +5441,6 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key){
   const url = lxpAdresseNormal(adresse);
   if(!url){ z('Bitte die Adresse aus der Cloud Shell eintragen.', false); return { ok: false, zeilen }; }
   if(!/^https:\/\//.test(url)){ z('Die Adresse muss mit https:// beginnen.', false); return { ok: false, zeilen }; }
-  if(url === LXP_WEITERLEITUNG_STANDARD){ z('Das ist die Standard-Weiterleitung, nicht deine eigene. Bitte das Skript in deinem Azure-Konto ausführen und die dort angezeigte Adresse eintragen.', false); return { ok: false, zeilen, url }; }
   if(!/\.azurewebsites\.net\/api$/i.test(url)) z('Hinweis: Die Adresse endet nicht wie erwartet auf „.azurewebsites.net/api“.', null);
   if(typeof navigator !== 'undefined' && navigator.onLine === false){ z('Keine Internetverbindung.', false); return { ok: false, zeilen, url }; }
   let version = 0;
@@ -7876,7 +7875,7 @@ const INI_FELDER = [
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
   {k:'BRIEF_TESTMODUS',  typ:'bool', label:'Testmodus (es wird nichts gedruckt/berechnet)', standard:'1'},
-  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung in Azure (https://….azurewebsites.net/api; leer = Standard)'},
+  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung in Azure (https://….azurewebsites.net/api; nötig für den Briefversand)'},
 ];
 const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
@@ -8080,10 +8079,10 @@ async function iniAenderungenSchreiben(aenderungen, basisWerte){
 // der Weiterleitung, sondern werden wie am PC bei jedem Aufruf mitgeschickt.
 // Jeder Nutzer richtet seine EIGENE Weiterleitung im eigenen Azure-Konto ein
 // (Einrichtungsassistent, Skript azure/einrichten.sh) -> ini BRIEF_WEITERLEITUNG.
-// Ohne Eintrag gilt die Standard-Weiterleitung (Sergej, Frankfurt). Ein
+// Ohne Eintrag kein Briefversand (keine fest eingebaute Adresse mehr). Ein
 // frueherer Eintrag LXP_WEITERLEITUNG in der ini wird weiterhin ignoriert.
-// Die EBM-Werte (/ebm/werte, nur oeffentliche Daten) kommen immer vom Standard.
-const LXP_WEITERLEITUNG_STANDARD = 'https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net/api';
+// Die EBM-Werte (/ebm/werte, nur oeffentliche Daten) kommen ebenfalls von der eigenen Weiterleitung.
+const LXP_WEITERLEITUNG_STANDARD = '';
 function lxpAdresseNormal(s){
   s = String(s || '').trim().replace(/\s+/g, '').replace(/\/+$/, '');
   if(!s) return '';
@@ -8094,7 +8093,9 @@ function lxpAdresseNormal(s){
 }
 function lxpBasisUrl(w){
   if(!w){ const ini = iniCacheLaden(); w = ini ? ini.werte : {}; }
-  return lxpAdresseNormal(w && w.BRIEF_WEITERLEITUNG) || LXP_WEITERLEITUNG_STANDARD;
+  const eigen = lxpAdresseNormal(w && w.BRIEF_WEITERLEITUNG);
+  if(!eigen){ const e = new Error('Für den Briefversand fehlt noch die eigene Weiterleitung (Einstellungen › „Briefversand einrichten“).'); e.keineWeiterleitung = true; throw e; }
+  return eigen;
 }
 
 // ---------- Verbindungstest (Fehlersuche) ----------
@@ -12530,7 +12531,8 @@ function ebmVorschlagBilden(j){
 }
 async function ebmWerteOnlineHolen(){
   let r;
-  try{ r = await fetch(LXP_WEITERLEITUNG_STANDARD + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
+  let basis = ''; try{ basis = lxpBasisUrl(); }catch(e){ throw new Error('Werte-Prüfung braucht die eigene Azure-Weiterleitung (Einstellungen › „Briefversand einrichten“).'); }
+  try{ r = await fetch(basis + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
   catch(e){ throw new Error('Keine Verbindung zur Azure-Weiterleitung (Internet?).'); }
   if(r.status === 404) throw new Error('Die Azure-Weiterleitung kennt die Werte-Prüfung noch nicht – bitte einmal das neue Azure-Skript ausführen.');
   const j = await r.json().catch(()=> null);
@@ -18085,7 +18087,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v303';
+const APP_VERSION = 'v304';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
