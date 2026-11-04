@@ -1918,6 +1918,53 @@ try{
   body.design-einhand .karte .ds-plus{position:absolute; top:12px; right:12px;}
   body.design-einhand #app .kachelreihe.drei .karte{position:relative;}
   body.design-einhand .karte .ds-plus{top:auto; bottom:18px; right:12px;}
+
+  /* ---------- Querformat-Ansicht (Einstellung, zum Testen): Tablet/PC und Handy quer ---------- */
+  body.quer main:has(.quer-breit){max-width:min(1500px, calc(100% - 24px)) !important; margin-left:auto; margin-right:auto;}
+  body.quer header:has(~ main .quer-breit){padding-left:max(16px, calc(50% - 750px)); padding-right:max(16px, calc(50% - 750px));}
+  .quer-start{display:block;}
+  body.quer .quer-start{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr); gap:18px; align-items:start;}
+  body.quer .quer-start > .quer-sp > *:first-child{margin-top:0;}
+  body.quer .quer-sp3 .sk-karte{margin:0;}
+  body.quer .quer-sp3 .mini-fenster{aspect-ratio:auto !important; height:min(66vh, 620px);}
+  @media (max-width: 1050px){ body.quer .quer-start{grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);} body.quer .quer-sp3{grid-column:2;} body.quer .quer-sp3 .mini-fenster{height:min(70vh, 460px);} }
+  body.quer .quer-sp1 .kachelreihe.drei .karte{min-height:0;}
+  /* Erfassen: Formular links, Rechnungsvorschau rechts */
+  .quer-vorschau{display:none;}
+  body.quer .quer-maske{display:grid; grid-template-columns:minmax(0, 1fr) minmax(320px, 0.85fr); gap:22px; align-items:start;}
+  body.quer .quer-vorschau{display:block; position:sticky; top:76px; max-height:calc(100vh - 170px); overflow:auto;}
+  .qv-papier{background:#fff; color:#111; border:1px solid var(--rand); border-radius:10px; padding:18px 20px; box-shadow:0 2px 10px rgba(0,0,0,.08); font-size:13px; line-height:1.4;}
+  .qv-titel{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:12px;} .qv-titel b{font-size:17px; letter-spacing:.02em; text-transform:uppercase; color:#555;}
+  .qv-adr{margin-bottom:10px;} .qv-meta{color:#444; margin-bottom:10px;}
+  .qv-pos{width:100%; border-collapse:collapse; margin-top:6px; font-size:12.5px;} .qv-pos th{text-align:left; border-bottom:1px solid #999; padding:3px 4px; font-weight:700;}
+  .qv-pos td{padding:3px 4px; vertical-align:top; border-bottom:1px solid #eee;} .qv-pos td.b, .qv-pos th.b{text-align:right; white-space:nowrap;}
+  .qv-summe{display:flex; justify-content:flex-end; gap:14px; margin-top:8px; font-weight:800; font-size:15px;}
+  .qv-hinweis{margin-top:12px; font-size:11.5px; color:#777;} .qv-leer{color:#888; font-style:italic;}
+  /* Werkzeug Luftlinie/Wegegeld: Eingabe links, Ergebnis + Karte rechts */
+  body.quer .quer-luft{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.25fr); column-gap:22px; align-items:start;}
+  body.quer .quer-luft > *{grid-column:1;} body.quer .quer-luft > #luftErgebnis{grid-column:2; grid-row:1 / span 30;}
+  /* Rechnungsverwaltung: Liste links, Details rechts */
+  .quer-detail{display:none;}
+  body.quer .quer-verw{display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(300px, 0.9fr); gap:20px; align-items:start;}
+  body.quer .quer-detail{display:block; position:sticky; top:76px;}
+  .qd-karte{background:var(--karte); border:1px solid var(--rand); border-radius:12px; padding:16px;} .qd-karte h3{margin:0 0 6px; font-size:17px;}
+  .qd-zeile{display:flex; justify-content:space-between; gap:10px; padding:5px 0; border-bottom:1px solid var(--rand); font-size:14px;} .qd-zeile span{color:var(--text-schwach);}
+  .qd-knoepfe{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;} .qd-knoepfe button{width:auto; flex:1 1 140px; margin:0;}
+  body.quer .fall-zeile.qd-an{outline:2px solid var(--akzent, #1a55c9); outline-offset:-2px;}
+  /* Handy quer: Leiste unten flacher, damit mehr Platz bleibt */
+  @media (max-height: 520px){
+    body.quer.design-einhand .ds-nav{height:48px; bottom:calc(6px + env(safe-area-inset-bottom)); border-radius:24px;}
+    body.quer.design-einhand .ds-nav-btn{height:38px;}
+    body.quer.design-einhand .ds-nav-btn.gross{width:52px; height:52px; margin-top:-12px; border-radius:16px;}
+    body.quer.design-einhand .ds-nav-btn.gross svg{width:26px; height:26px;}
+    body.quer.ds-leiste-global main{padding-bottom:72px;}
+    body.quer .quer-vorschau, body.quer .quer-detail{top:64px; max-height:calc(100vh - 140px);}
+  }
+  /* Fahrtenbuch-Auswertung: Diensttage-Tabelle links, Quartale rechts */
+  body.quer #fahrdienstInhalt.quer-breit{display:grid; grid-template-columns:minmax(0, 1.7fr) minmax(280px, 1fr); gap:18px; align-items:start;}
+  body.quer #fahrdienstInhalt.quer-breit > *{grid-column:2;}
+  body.quer #fahrdienstInhalt.quer-breit > :first-child{grid-column:1 / -1;}
+  body.quer #fahrdienstInhalt.quer-breit > .abschnitt:nth-child(2){grid-column:1; grid-row:2 / span 30;}
 </style>
 </head>
 <body>
@@ -3163,7 +3210,7 @@ async function ansichtFahrdienstAuswertung(){
       <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="flex:1; margin-bottom:0;">Neu laden</button>
       <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">Fahrtenbuch öffnen</button>
     </div>
-    <div id="fahrdienstInhalt"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>`;
+    <div id="fahrdienstInhalt" class="quer-breit"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>`;
 
   // Laden = auswerten UND Statistik rechts eintragen (bei Fehler nur lesen)
   const ladenMitStatistik = async ()=>{
@@ -3204,12 +3251,9 @@ function fahrdienstAuswertungRendern(daten){
     '<button type="button" class="fb-chip' + (wahl === 'alle' ? ' an' : '') + '" data-jahr="alle">Alle</button></div>' +
     '<div class="fd-jahr-summe"><b>' + (wahl === 'alle' ? 'Alle Jahre' : wahl) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
     (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>GKV ' + euro(s.k) + ' · LS ' + euro(s.l) + ' · PT ' + euro(s.p) +
-    (()=>{ // Dienste je Dienstart, im laufenden Jahr hochgerechnet aufs ganze Jahr
+    (()=>{ // Dienste je Dienstart
       const n = {}; bl.forEach(b=>{ const a = b.dienstart || 'Fahrdienst'; n[a] = (n[a] || 0) + 1; });
-      const arten = Object.keys(n).length > 1 ? Object.entries(n).sort((x, y)=> y[1] - x[1]).map(([a, z])=> z + '× ' + htmlEsc(a)).join(' · ') : '';
-      const jetzt = new Date(), tag = Math.max(1, Math.floor((jetzt - new Date(jetzt.getFullYear(), 0, 1)) / 86400000) + 1);
-      const hoch = wahl === heute && tag < 360 && bl.length ? 'Hochrechnung ' + heute + ': ca. ' + Math.round(bl.length * 365 / tag) + ' Dienste' : '';
-      return (arten || hoch) ? '<br>' + [arten, hoch].filter(Boolean).join(' · ') : '';
+      return Object.keys(n).length > 1 ? '<br>' + Object.entries(n).sort((x, y)=> y[1] - x[1]).map(([a, z])=> z + '× ' + htmlEsc(a)).join(' · ') : '';
     })() + '</div>';
   zielEl.insertBefore(kopf, zielEl.firstChild);
   kopf.querySelectorAll('[data-jahr]').forEach(b=> b.onclick = ()=>{ fahrdienstJahrWahl = b.dataset.jahr; fahrdienstAuswertungRendern(daten); });
@@ -4552,7 +4596,7 @@ function ansichtLuftlinienTool(){
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtLuftlinienTool(); };
   setzeTitel('Luftlinie berechnen', ansichtStart);
   const e = ladeEinstellungen();
-  let html = `<div class="abschnitt">`;
+  let html = `<div class="abschnitt quer-breit quer-luft">`;
   html += `
       <div class="feld">
         <label for="txtLuftVonStr">Von</label>
@@ -8854,7 +8898,7 @@ async function ansichtRechnungenGesamt(neuLaden){
       </div>
       ${ziel.echt ? '' : '<div class="gesamt-ziel">Testablage (Beta-Test)</div>'}
     </div>
-    <div id="gesamtListe"></div>`;
+    <div class="quer-verw quer-breit"><div id="gesamtListe"></div><aside class="quer-detail" id="gesamtDetail"><div class="qd-karte"><span class="qv-leer">Rechnung antippen – Details erscheinen hier.</span></div></aside></div>`;
   const suchEl = document.getElementById('txtGesamtSuche');
   document.getElementById('btnGesamtNeu').onclick = ()=> ansichtRechnungenGesamt(true);
   document.getElementById('btnGesamtBackups').onclick = ansichtSyncBackups;
@@ -10245,7 +10289,14 @@ function betaGesamtZeichnen(suchtext, ziel){
   listeEl.querySelectorAll('.wisch-huelle[data-lokal]').forEach(h=>{
     const art = h.dataset.lokal.split(':')[0], zs = h.dataset.lokal.slice(3);
     const zeileEl = h.querySelector('.fall-zeile');
-    zeileEl.querySelector('.inhalt').onclick = ()=>{ const i = betaFallIndex(art, zs); if(i >= 0){ betaMaskeHerkunft = 'gesamt'; ansichtMaske(art, i); } };
+    zeileEl.querySelector('.inhalt').onclick = ()=>{
+      const i = betaFallIndex(art, zs); if(i < 0) return;
+      const oeffnen = ()=>{ betaMaskeHerkunft = 'gesamt'; ansichtMaske(art, i); };
+      const f = ladeFaelle(art)[i] || {}, w = f.werte || {};
+      if(querAn() && querDetailZeigen(zeileEl, w.txtName || 'ohne Namen', [['Art', art === 'ls' ? 'Leichenschau' : 'Privatrechnung'], ['Datum', w.txtDatum || ''], ['Adresse', [w.txtPAdresse1, w.txtPAdresse2].filter(Boolean).join(', ')], ['Betrag', w.txtBetrag ? w.txtBetrag + ' €' : ''], ['Status', 'noch nicht hochgeladen']],
+        [['Bearbeiten', oeffnen]])) return;
+      oeffnen();
+    };
     const hochEl = zeileEl.querySelector('[data-akt="hoch"]');
     if(hochEl) hochEl.onclick = async (ev)=>{
       ev.stopPropagation();
@@ -10276,8 +10327,14 @@ function betaGesamtZeichnen(suchtext, ziel){
     const terminEl = zeileEl.querySelector('[data-akt="termin"]');
     if(terminEl) terminEl.onclick = async (ev)=>{ ev.stopPropagation(); if(await betaTerminBearbeiten(e, ziel)) ansichtRechnungenGesamt(true); };
     zeileEl.querySelector('.inhalt').onclick = ()=>{
-      if(e.typ === 'ORIG') betaZeileBearbeiten(e.z, zuZeile.get(e.z.nr), ziel);
-      else if(e.pdf) betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl });
+      const bearbeiten = ()=>{ if(e.typ === 'ORIG') betaZeileBearbeiten(e.z, zuZeile.get(e.z.nr), ziel); else if(e.pdf) betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl }); };
+      // Querformat: zuerst die Details rechts zeigen
+      if(querAn() && querDetailZeigen(zeileEl, e.name, [
+          ['Art', e.art === 'ls' ? 'Leichenschau' : 'Privatrechnung'], ['Datum', e.datum], ['Betrag', e.betrag ? e.betrag + ' €' : ''], ['Rechnungsnr.', e.renu || 'ohne'],
+          ['Datei', e.datei], ['Versand', e.geplant ? 'geplant am ' + isoDe(e.geplant.datum) : (e.versendet ? 'verschickt' : '')],
+          ['Zahlung', !e.unter ? betaZahlungInfo(e) : '', true]],
+        [[e.typ === 'ORIG' ? 'Bearbeiten' : 'Öffnen', bearbeiten]].concat(e.pdf ? [['PDF ansehen', ()=> betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl })]] : []))) return;
+      bearbeiten();
     };
     betaWischen(zeileEl, async ()=>{
       const ok = await betaAktionLoeschen([e]);
@@ -17954,7 +18011,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v292';
+const APP_VERSION = 'v293';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -17973,6 +18030,44 @@ function designAnwenden(){
 // themaAnwenden (Sonne/Mond, Einstellungen) zieht das Design immer mit
 themaAnwenden = (function(basis){ return function(){ basis(); designAnwenden(); }; })(themaAnwenden);
 if(document.body) designAnwenden(); else document.addEventListener('DOMContentLoaded', designAnwenden);
+// ---------- Querformat-Ansicht ----------
+// Einstellung (zum Testen, Standard aus); aktiv, sobald das Geraet quer liegt (Tablet, PC, Handy quer).
+const QUER_MQ = window.matchMedia('(orientation: landscape) and (min-width: 640px)');
+function querEinst(){ return !!(ladeEinstellungen() || {}).querLayout; }
+function querAn(){ return document.body.classList.contains('quer'); }
+function querAnwenden(){
+  const an = querEinst() && QUER_MQ.matches, vor = querAn();
+  document.body.classList.toggle('quer', an);
+  if(vor !== an && typeof aktuelleAnsichtIstHauptbildschirm !== 'undefined' && aktuelleAnsichtIstHauptbildschirm) try{ ansichtStart(); }catch(_){}
+}
+try{ QUER_MQ.addEventListener('change', querAnwenden); }catch(_){ try{ QUER_MQ.addListener(querAnwenden); }catch(__){} }
+if(document.body) querAnwenden(); else document.addEventListener('DOMContentLoaded', querAnwenden);
+// Startseite: links Neuer Fall + unfertige Faelle + Verwaltung/Fahrtenbuch, Mitte laufender Dienst, rechts Karte
+function querStartAnordnen(){
+  if(!querAn()) return;
+  const app = document.getElementById('app'); if(!app || app.querySelector('.quer-start')) return;
+  const live = app.querySelector(':scope > .ds-live'); if(!live) return;
+  const karte = live.querySelector('#skKarte');
+  const kinder = [...app.children];
+  const kopf = kinder.find(k=> k.matches('.ds-start') && k.querySelector('.ds-zeile-oben'));
+  const w = document.createElement('div'); w.className = 'quer-start quer-breit';
+  const sp = (k)=>{ const d = document.createElement('div'); d.className = 'quer-sp ' + k; return d; };
+  const s1 = sp('quer-sp1'), s2 = sp('quer-sp2'), s3 = sp('quer-sp3 ds-live');
+  kinder.forEach(k=>{ if(k === kopf || k === live || k.matches('nav, .ds-nav, .ds-dock, script, style')) return; s1.appendChild(k); });
+  s2.appendChild(live); w.append(s1, s2);
+  if(karte){ s3.appendChild(karte); w.append(s3); }
+  if(kopf) kopf.after(w); else app.prepend(w);
+}
+// Rechnungsverwaltung: Details rechts (Querformat), "Bearbeiten" oeffnet wie bisher
+function querDetailZeigen(zeileEl, titel, zeilen, knoepfe){
+  const box = document.getElementById('gesamtDetail'); if(!box || !querAn()) return false;
+  document.querySelectorAll('.fall-zeile.qd-an').forEach(x=> x.classList.remove('qd-an')); if(zeileEl) zeileEl.classList.add('qd-an');
+  box.innerHTML = '<div class="qd-karte"><h3>' + htmlEsc(titel || 'Rechnung') + '</h3>' +
+    zeilen.filter(z=> z && z[1]).map(([k, v, roh])=> '<div class="qd-zeile"><span>' + htmlEsc(k) + '</span><b>' + (roh ? v : htmlEsc(v)) + '</b></div>').join('') +
+    '<div class="qd-knoepfe">' + knoepfe.map((k, i)=> '<button type="button" class="' + (i === 0 ? 'btn-primaer' : 'btn-sekundaer') + '" data-qd="' + i + '">' + htmlEsc(k[0]) + '</button>').join('') + '</div></div>';
+  box.querySelectorAll('[data-qd]').forEach(b=> b.onclick = ()=> knoepfe[+b.dataset.qd][1]());
+  return true;
+}
 
 function designWahlHtml(){
   const akt = designAktuell();
@@ -17984,6 +18079,9 @@ function designWahlHtml(){
           <span class="design-muster" aria-hidden="true">${x.farben.map(f=> `<i style="background:${f}"></i>`).join('')}</span>
           <span><b>${x.titel}</b><small>${x.text}</small></span></label>`).join('')}
       </div>
+      <div class="sync-unter-titel" style="margin-top:14px;">Querformat (Test)</div>
+      <div class="pos-stil-wahl live-wahl"><label class="pos-stil-option${querEinst() ? ' an' : ''}"><input type="checkbox" id="chkQuerLayout"${querEinst() ? ' checked' : ''}>
+        <span><b>Breite Ansicht im Querformat</b><small>Sobald Tablet, PC oder Handy quer liegen: Startseite in drei Spalten (Neuer Fall · Dienst · Karte), beim Erfassen rechts die Rechnungsvorschau, Rechnungsverwaltung mit Details rechts, Fahrtenbuch und Luftlinie-Werkzeug zweispaltig.</small></span></label></div>
       <div class="sync-unter-titel" style="margin-top:14px;">Live-Dienst-Anzeige auf der Startseite</div>
       <div class="design-hinweis">Optional, jede einzeln. Den Dienst wählst du durch Antippen der Anzeige; er füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.</div>
       <div class="pos-stil-wahl live-wahl">${LIVE_ANZEIGEN.map(x=> `
@@ -17993,6 +18091,7 @@ function designWahlHtml(){
       <div class="sync-unter-titel" style="margin-top:14px;">Darstellung der Rechnungspositionen (PT, LS, GKV)</div>`;
 }
 function designWahlWiring(){
+  { const q = document.getElementById('chkQuerLayout'); if(q) q.onchange = ()=>{ const e = ladeEinstellungen(); e.querLayout = q.checked; speichereEinstellungen(e); q.closest('.pos-stil-option').classList.toggle('an', q.checked); querAnwenden(); }; }
   document.querySelectorAll('input[name="liveAnzeige"]').forEach(c=> c.onchange = ()=>{
     const e = ladeEinstellungen(); e.liveDienst = { ...(e.liveDienst || {}), [c.value]: c.checked }; speichereEinstellungen(e);
     c.closest('.pos-stil-option').classList.toggle('an', c.checked);
@@ -18420,7 +18519,7 @@ const DS_KACHEL = {
 };
 
 // ---------- Startseite je Design ergaenzen ----------
-ansichtStart = (function(basis){ return function(){ basis(); try{ designStartErgaenzen(); }catch(e){ console.warn('Design', e); } }; })(ansichtStart);
+ansichtStart = (function(basis){ return function(){ basis(); try{ designStartErgaenzen(); }catch(e){ console.warn('Design', e); } try{ querStartAnordnen(); }catch(e){ console.warn('Querformat', e); } }; })(ansichtStart);
 
 function designNav(eintraege){
   return '<nav class="ds-nav" aria-label="Hauptnavigation">' + eintraege.map(x=>
@@ -19541,6 +19640,41 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   html += `</div>`;
 
   app.innerHTML = html;
+  // Querformat: Formular links, Rechnungsvorschau rechts (live)
+  if(querEinst()){
+    const w = document.createElement('div'); w.className = 'quer-maske quer-breit';
+    const haupt = document.createElement('div'); haupt.className = 'quer-maske-haupt';
+    while(app.firstChild) haupt.appendChild(app.firstChild);
+    const aside = document.createElement('aside'); aside.className = 'quer-vorschau'; aside.id = 'querVorschau';
+    w.append(haupt, aside); app.appendChild(w);
+    let qvT = null; const qvBald = ()=>{ clearTimeout(qvT); qvT = setTimeout(()=>{ try{ querVorschauZeichnen(); }catch(e){ console.warn('Vorschau', e); } }, 250); };
+    app.addEventListener('input', qvBald); app.addEventListener('change', qvBald); app.addEventListener('click', qvBald);
+    const qvTick = setInterval(()=>{ if(!document.getElementById('querVorschau')){ clearInterval(qvTick); return; } if(querAn()) qvBald(); }, 2000);
+    setTimeout(qvBald, 50);
+  }
+  function querVorschauZeichnen(){
+    const el = document.getElementById('querVorschau'); if(!el || !querAn()) return;
+    const w = werteEinsammeln(), v = (k)=> htmlEsc(w[k] || '');
+    const katalog = art==='ls' ? POSITIONEN_LS : POSITIONEN_PT, alle = allePositionenFlach(katalog);
+    const kmF = w.txtKmFahrstrecke || '', kmL = w.txtKmLuftlinie || '';
+    let auswahl = positionenAuswahl, vorschlag = false;
+    if(!auswahl){ try{ auswahl = automatischeAuswahl(katalog, w.txtDatumExcel || '', w.txtZeitLS || '', kmF, kmL, manuellerModus); vorschlag = true; }catch(_){ auswahl = null; } }
+    const zeilen = []; let summe = 0;
+    (auswahl ? [...auswahl] : []).forEach(z=>{
+      if(z === 'REISE'){ const r = reiseGesamtBetrag(kmF); summe += r.gesamt; zeilen.push(['', 'Reiseentschädigung' + (r.kmGerundet ? ' (' + r.kmGerundet + ' km)' : ''), r.gesamt]); return; }
+      const p = alle.find(x=> x.ziffer === z); if(!p) return;
+      const b = betaEffektivBetrag(art, p, auswahl.details); summe += b; zeilen.push([p.ziffer, p.bez || p.text || '', b]);
+    });
+    const euro = (x)=> (Number(x) || 0).toFixed(2).replace('.', ',');
+    const diag = art === 'pt' && Array.isArray(w.diagnosen) ? w.diagnosen.map(d=> d.text).filter(Boolean).join('; ') : '';
+    el.innerHTML = '<div class="qv-papier"><div class="qv-titel"><b>' + (art === 'ls' ? 'Leichenschau' : 'Privatrechnung') + '</b><span>' + v('txtDatum') + (w.txtZeitLS ? ' · ' + v('txtZeitLS') + ' Uhr' : '') + '</span></div>' +
+      '<div class="qv-adr">' + (w.txtName ? '<b>' + v('txtName') + '</b>' : '<span class="qv-leer">Name</span>') + '<br>' + (v('txtPAdresse1') || '<span class="qv-leer">Straße</span>') + '<br>' + (v('txtPAdresse2') || '<span class="qv-leer">PLZ Ort</span>') +
+        (art === 'ls' && w.txtBName ? '<br>c/o ' + v('txtBName') : '') + '</div>' +
+      '<div class="qv-meta">' + [w.txtGeda ? 'geb. ' + v('txtGeda') : '', diag ? 'Diagnose: ' + htmlEsc(diag) : '', w.txtKm ? 'Strecke: ' + v('txtKm') + ' km' : ''].filter(Boolean).join('<br>') + '</div>' +
+      (zeilen.length ? '<table class="qv-pos"><tr><th>Ziffer</th><th>Leistung</th><th class="b">€</th></tr>' + zeilen.map(z=> '<tr><td>' + htmlEsc(z[0]) + '</td><td>' + htmlEsc(z[1]) + '</td><td class="b">' + euro(z[2]) + '</td></tr>').join('') + '</table>' +
+        '<div class="qv-summe"><span>Gesamt</span><span>' + euro(summe) + ' €</span></div>' : '<div class="qv-leer">Noch keine Positionen.</div>') +
+      '<div class="qv-hinweis">' + (vorschlag ? 'Vorschlag der Automatik – „Rechnungspositionen auswählen“ prüft und übernimmt ihn. ' : '') + 'Vorschau; die Rechnung selbst entsteht wie bisher aus deiner Word-Vorlage.</div></div>';
+  }
 
   const feldIds = art==='ls'
     ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2','txtDokuId']
