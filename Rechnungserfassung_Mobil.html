@@ -1515,7 +1515,7 @@ try{
   body.design-einhand .ds-nav{position:fixed; left:16px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20; height:66px; border-radius:33px; background:var(--ds-nav);
     grid-template-columns:repeat(5, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
   .fb-schichten + .fb-schichten{margin-top:6px;}
-  .fb-chips.fb-schichten{justify-content:center;}
+  .fb-chips.fb-schichten{justify-content:flex-start;}
   .fb-schichten .fb-chip.schicht{display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; flex:0 0 calc((100% - 18px) / 4); min-width:0; box-sizing:border-box; padding-left:2px; padding-right:2px; text-align:center;}
   .fb-schichten .fb-chip.schicht small{font-size:11px; opacity:.75;}
   .ds-dienst-start{display:none;}
@@ -1587,7 +1587,7 @@ try{
   .luft-karte-legende i.ich{background:#2f80ed; box-shadow:0 0 0 3px rgba(47,128,237,.3);} .luft-karte-legende i.f.ls{background:var(--ls-farbe);} .luft-karte-legende i.f.pt{background:var(--pt-farbe);} .luft-karte-legende i.f.gkv{background:#7d4e9e;}
   .luft-karte-legende i.g{height:4px; border-radius:2px; background:#8e2bd6; width:16px;} .luft-karte-legende i.aed{border-radius:3px; background:#00924a;} .luft-karte-legende i.kr{height:3px; border-radius:0; width:18px; background:repeating-linear-gradient(90deg,#e6c800 0 3px,transparent 3px 4px,#2f8fd6 4px 7px,transparent 7px 8px,#2fa84f 8px 11px,transparent 11px 12px,#d9609f 12px 15px,transparent 15px 16px,#4aa6cf 16px 18px);} .luft-karte-legende i.zo{border-radius:3px; background:linear-gradient(90deg,#4caf50,#ffeb3b,#ff9800,#e53935);}
   .vk-legende{margin:4px 0 2px;}
-  .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='5' fill='%23111'/%3E%3Cpath d='M6 12h12M12 6v12' stroke='%23fff' stroke-width='3.6' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:13px; height:13px;}
+  .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='5' fill='%23111'/%3E%3Cpath d='M8 6v12M16 6v12M8 12h8' stroke='%23fff' stroke-width='3.2' fill='none'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:13px; height:13px;}
   .luft-karte-legende i.rtw{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 20'%3E%3Cpath d='M1 2H21V6H27L33 11V16H1Z' fill='%23111'/%3E%3Ccircle cx='8' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Ccircle cx='26' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Cpath d='M7 9h8M11 5v8' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:20px; height:12px;}
   .luft-karte-legende i.l{height:0; border-radius:0; border-top:2.5px dashed var(--text); width:16px;} .luft-karte-legende i.w{height:4px; border-radius:2px; background:#1a55c9; width:16px;}
   .luft-karte-hinweis{font-size:13px; color:var(--text-schwach); padding:6px 0;}
@@ -3203,7 +3203,14 @@ function fahrdienstAuswertungRendern(daten){
   kopf.innerHTML = '<div class="fd-jahre">' + jahre.map(j=> '<button type="button" class="fb-chip' + (j === wahl ? ' an' : '') + '" data-jahr="' + j + '">' + j + '</button>').join('') +
     '<button type="button" class="fb-chip' + (wahl === 'alle' ? ' an' : '') + '" data-jahr="alle">Alle</button></div>' +
     '<div class="fd-jahr-summe"><b>' + (wahl === 'alle' ? 'Alle Jahre' : wahl) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
-    (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>GKV ' + euro(s.k) + ' · LS ' + euro(s.l) + ' · PT ' + euro(s.p) + '</div>';
+    (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>GKV ' + euro(s.k) + ' · LS ' + euro(s.l) + ' · PT ' + euro(s.p) +
+    (()=>{ // Dienste je Dienstart, im laufenden Jahr hochgerechnet aufs ganze Jahr
+      const n = {}; bl.forEach(b=>{ const a = b.dienstart || 'Fahrdienst'; n[a] = (n[a] || 0) + 1; });
+      const arten = Object.keys(n).length > 1 ? Object.entries(n).sort((x, y)=> y[1] - x[1]).map(([a, z])=> z + '× ' + htmlEsc(a)).join(' · ') : '';
+      const jetzt = new Date(), tag = Math.max(1, Math.floor((jetzt - new Date(jetzt.getFullYear(), 0, 1)) / 86400000) + 1);
+      const hoch = wahl === heute && tag < 360 && bl.length ? 'Hochrechnung ' + heute + ': ca. ' + Math.round(bl.length * 365 / tag) + ' Dienste' : '';
+      return (arten || hoch) ? '<br>' + [arten, hoch].filter(Boolean).join(' · ') : '';
+    })() + '</div>';
   zielEl.insertBefore(kopf, zielEl.firstChild);
   kopf.querySelectorAll('[data-jahr]').forEach(b=> b.onclick = ()=>{ fahrdienstJahrWahl = b.dataset.jahr; fahrdienstAuswertungRendern(daten); });
 }
@@ -5418,9 +5425,12 @@ async function einrDateienPruefen(){
       try{ imRepo = (await fetch('./starter/' + encodeURIComponent(f.quelle), { method: 'HEAD', cache: 'no-cache' })).ok; }catch(_){}
       status.push({ art: 'datei', pfad: f.ziel, quelle: f.quelle, titel: f.titel, da: await einrVorhanden(token, f.ziel), imRepo });
     }
-    const zeichnen = ()=>{
+    const listeZeichnen = ()=>{
       liste.innerHTML = status.map(x=> zeile(x.art === 'ordner' && x.pfad === 'KVBW Onedrive' ? 'Ordner „KVBW Onedrive“' : x.titel,
-        x.da ? '✓ vorhanden' : x.art === 'datei' && !x.imRepo ? 'fehlt – Vorlage noch nicht im Starter-Paket' : 'fehlt', x.da ? 'ok' : 'fehlt')).join('');
+        x.da ? '✓ vorhanden' : x.laeuft ? '… wird angelegt' : x.fehler ? '✗ ' + htmlEsc(x.fehler) : x.art === 'datei' && !x.imRepo ? 'fehlt – Vorlage noch nicht im Starter-Paket' : 'fehlt', x.da ? 'ok' : 'fehlt')).join('');
+    };
+    const zeichnen = ()=>{
+      listeZeichnen();
       const fehlend = status.filter(x=> !x.da && (x.art === 'ordner' || x.imRepo));
       knopfBox.innerHTML = fehlend.length ? '<button type="button" class="btn-primaer" id="einrAnlegen">' + fehlend.length + ' fehlende anlegen</button>' : '';
       const ohneVorlage = status.filter(x=> !x.da && x.art === 'datei' && !x.imRepo);
@@ -5430,7 +5440,7 @@ async function einrDateienPruefen(){
       if(b) b.onclick = async ()=>{
         b.disabled = true;
         for(const x of fehlend){
-          b.textContent = x.titel + ' …';
+          b.textContent = x.titel + ' …'; x.laeuft = true; x.fehler = ''; listeZeichnen();
           try{
             if(x.art === 'ordner') await msGraphOrdnerSicherstellen(token, x.pfad);
             else {
@@ -5440,6 +5450,7 @@ async function einrDateienPruefen(){
             }
             x.da = await einrVorhanden(token, x.pfad);
           }catch(e){ x.fehler = e.message || String(e); }
+          x.laeuft = false; listeZeichnen();   // Haken sofort nach jeder Datei
         }
         zeichnen();
       };
@@ -6552,7 +6563,8 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
   platzhalterKoerper.push(['RENU', daten.renu], ['ATITEL', a.titel || ''], ['ANAME', a.name || ''],
     ['AFUNKTION', a.funktion || ''], ['AADRESSE1', a.adresse1 || ''], ['AADRESSE2', a.adresse2 || ''],
     ['AEMAIL', a.email || '']);
-  const platzhalterFuss = [['BANAME', a.bank || ''], ['BABIC', String(a.bic || '').replace(/\s/g, '').toUpperCase()], ['BAIBAN', a.iban || ''], ['ENAME', a.kontoinhaber || '']];
+  const platzhalterFuss = [['BANAME', a.bank || ''], ['BABIC', String(a.bic || '').replace(/\s/g, '').toUpperCase()], ['BAIBAN', typeof ibanFormat === 'function' ? ibanFormat(a.iban || '') : (a.iban || '')], ['ENAME', a.kontoinhaber || '']];
+  const fussMitKonto = [];
 
   // Hauptdokument
   let doc = await zip.file('word/document.xml').async('string');
@@ -6568,6 +6580,7 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
   for(const name of Object.keys(zip.files)){
     if(/^word\/(footer|header)\d+\.xml$/.test(name)){
       const x = await zip.file(name).async('string');
+      if(name.indexOf('footer') >= 0 && x.indexOf('BAIBAN') >= 0) fussMitKonto.push(name);
       const y = rdPlatzhalterInXml(x, name.indexOf('footer') >= 0 ? platzhalterFuss.concat(platzhalterKoerper) : platzhalterKoerper);
       if(y !== x) zip.file(name, y);
     }
@@ -6595,6 +6608,13 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
   rels = rels.replace(/<Relationship [^>]*Type="[^"]*vbaProject"[^>]*\/>/g, '');
   zip.file('word/_rels/document.xml.rels', rels);
   ['word/vbaProject.bin', 'word/vbaData.xml', 'word/_rels/vbaProject.bin.rels'].forEach(f=>{ if(zip.file(f)) zip.remove(f); });
+  // GiroCode (Einstellung, Standard an): nur im Browser, mit gueltiger IBAN und Betrag
+  if(fussMitKonto.length && typeof document !== 'undefined' && typeof girocodePng === 'function' && (typeof ladeEinstellungen !== 'function' || (ladeEinstellungen() || {}).rechnungQr !== false)){
+    try{
+      const txt = girocodeText(a, rdRunden2(tab.summe), daten.renu);
+      if(txt) await rdGirocodeEinsetzen(zip, await girocodePng(txt));
+    }catch(e){ console.warn('GiroCode', e); }
+  }
   let ct = await zip.file('[Content_Types].xml').async('string');
   ct = ct.replace('application/vnd.ms-word.document.macroEnabled.main+xml', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml')
          .replace('application/vnd.ms-word.template.macroEnabledTemplate.main+xml', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml')
@@ -8125,6 +8145,7 @@ function betaEinstellungenHtml(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Bankverbindung</div>
       ${gruppe('Bankverbindung').replace('<div class="sync-unter-titel">Bankverbindung</div>', '<div class="sync-unter-titel">Konto für Leichenschau- und Privatrechnungen</div>')}
+      <div class="einstellung-zeile" style="margin:6px 0 10px;"><input type="checkbox" id="chkRechnungQr"${ladeEinstellungen().rechnungQr !== false ? ' checked' : ''}><div class="txt">QR-Code zum Bezahlen auf Rechnungen<span class="hinweis">GiroCode unten rechts auf Leichenschau- und Privatrechnungen: Mit der Banking-App scannen – Empfänger, IBAN, Betrag und Rechnungsnummer sind dann schon ausgefüllt. Bank und BIC ergänzt die App beim Eintippen der IBAN selbst.</span></div></div>
       ${gruppe('Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)').replace('<div class="sync-unter-titel">Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)</div>',
         '<div class="sync-unter-titel" style="margin-top:14px;">Konto für Rechnungen an Vertretungsärzte</div><div class="hinweis" style="font-size:12.5px; color:var(--text-schwach); margin-bottom:6px;">Leer lassen, wenn dasselbe Konto wie oben gelten soll.</div>')}
       ${status}
@@ -8262,6 +8283,7 @@ function betaEinstellungenWiring(){
     cb.checked = !!an;
     ablageErgebnis(an ? '<b style="color:#c0392b;">Echtbetrieb ist an.</b>' : 'Testablage ist aktiv.');
   };
+  { const cq = document.getElementById('chkRechnungQr'); if(cq) cq.onchange = ()=>{ const e = ladeEinstellungen(); e.rechnungQr = cq.checked; speichereEinstellungen(e); }; }
   if(document.getElementById('chkBetaEchtbetrieb')){
   document.getElementById('chkBetaEchtbetrieb').onchange = (ev)=> echtSetzen(ev.target.checked);
   document.getElementById('zeileBetaEchtbetrieb').onclick = (ev)=>{
@@ -12818,7 +12840,22 @@ function adrZweizeiligMachen(el){
   el.style.display = 'none'; el.tabIndex = -1;
   box.append(str, ort, hin); el.insertAdjacentElement('afterend', box);
 }
-function adrZweizeiligAlle(root){ (root || document).querySelectorAll(ADR_ZWEIZEILIG).forEach(adrZweizeiligMachen); }
+// Einzelne "PLZ Ort"-Felder (Arztadresse in Einrichtung/Einstellungen, Aerzte-Rechnung): PLZ <-> Ort ergaenzen
+const PLZ_ORT_FELDER = 'input[data-ini="ARZTADRESSE2"], #ini_ARZTADRESSE2, #arAdr2';
+function plzOrtFeldMachen(el){
+  if(!el || el.dataset.plzOrt || el.tagName !== 'INPUT') return;
+  el.dataset.plzOrt = '1';
+  const hin = document.createElement('small'); hin.className = 'adr-zwei-hinweis'; el.insertAdjacentElement('afterend', hin);
+  if(document.getElementById('plzOrtListe')) el.setAttribute('list', 'plzOrtListe');
+  const strFeld = ()=> el.id === 'arAdr2' ? document.getElementById('arAdr1') : document.querySelector('input[data-ini="ARZTADRESSE1"], #ini_ARZTADRESSE1');
+  el.addEventListener('blur', async ()=>{
+    const vor = el.value;
+    try{ await gkvPlzOrtErgaenzen(strFeld(), el, hin); }catch(_){}
+    if(el.value.trim() && !plzAusText(el.value) && !hin.textContent) hin.textContent = 'Bitte PLZ ergänzen.';
+    if(el.value !== vor) el.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+function adrZweizeiligAlle(root){ (root || document).querySelectorAll(ADR_ZWEIZEILIG).forEach(adrZweizeiligMachen); (root || document).querySelectorAll(PLZ_ORT_FELDER).forEach(plzOrtFeldMachen); }
 let adrZweiGeplant = false;
 new MutationObserver(()=>{ if(adrZweiGeplant) return; adrZweiGeplant = true; requestAnimationFrame(()=>{ adrZweiGeplant = false; adrZweizeiligAlle(); }); }).observe(document.documentElement, { childList: true, subtree: true });
 // Wie in der Rechnungsmaske: nur PLZ -> Ort ergaenzen, nur Ort -> PLZ ergaenzen
@@ -14258,9 +14295,15 @@ async function nfpOsmZusammensetzen(fortschritt){
 // d = { pois:[{lat,lon,kl,nr}], weg:[[lon,lat]...], linie:[a,b], nfp:true, rahmen:true }
 // Kacheln werden als normale Bilder geladen (Kartenausschnitt, keine Patientendaten).
 // 50-km-Kreis um den NFP (Luftlinie; daruber 4x Wegepauschale) als Punktfolge
+// Mittelpunkt der Ringe (km-Kreise, 50 km): die aktuelle Wache/Praxis, ohne sie die Notfallpraxis
+function kreisMitte(){
+  try{ const s = typeof gkvStartGeo === 'function' && gkvStartGeo(); if(s && isFinite(s.lat) && isFinite(s.lon)) return { lat: +s.lat, lon: +s.lon }; }catch(_){}
+  return nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]);
+}
 function nfp50Kreis(){
-  if(nfp50Kreis.p) return nfp50Kreis.p;
-  const m = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]), R = 50, p = [];
+  const m = kreisMitte(), schl = m.lat.toFixed(5) + ',' + m.lon.toFixed(5);
+  if(nfp50Kreis.p && nfp50Kreis.k === schl) return nfp50Kreis.p;
+  nfp50Kreis.k = schl; const R = 50, p = [];
   const la = m.lat * Math.PI / 180, lo = m.lon * Math.PI / 180, d = R / 6371;
   for(let i = 0; i <= 180; i++){
     const t = i / 180 * 2 * Math.PI;
@@ -14280,8 +14323,10 @@ const KM_KREISE = [2, 5, 10, 20, 30];
 // Farben wie die Zonen der KVBW-Karte (2-km-Zone ... 30-km-Zone)
 const kmKreisFarbe = (R)=>{ const i = KM_KREISE.indexOf(R) + 1; return (typeof NFP_ZONEN !== 'undefined' && NFP_ZONEN[i] && NFP_ZONEN[i].farbe) || '#555'; };
 function nfpKreis(R){
-  nfpKreis.c = nfpKreis.c || {}; if(nfpKreis.c[R]) return nfpKreis.c[R];
-  const m = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]), p = [];
+  const m = kreisMitte(), schl = m.lat.toFixed(5) + ',' + m.lon.toFixed(5);
+  if(nfpKreis.k !== schl){ nfpKreis.c = {}; nfpKreis.k = schl; }
+  if(nfpKreis.c[R]) return nfpKreis.c[R];
+  const p = [];
   const la = m.lat * Math.PI / 180, lo = m.lon * Math.PI / 180, d = R / 6371;
   for(let i = 0; i <= 120; i++){
     const t = i / 120 * 2 * Math.PI;
@@ -14312,6 +14357,7 @@ function vkModusAnwenden(map){
   if(!map) return; const m = karteModus();
   ['vk-zonen-fl', 'vk-zonen-li'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', m === 'an' ? 'visible' : 'none'); });
   ['vk-kreise-li', 'vk-kreise-tx'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', m === 'kreise' ? 'visible' : 'none'); });
+  if(map.getLayer('vk-k50')) map.setLayoutProperty('vk-k50', 'visibility', m === 'aus' ? 'none' : 'visible');
 }
 // Zonen als SVG in Kartenpixeln (ueber der OSM-Ersatzkarte)
 function nfpZonenPixelSvg(){
@@ -14427,7 +14473,7 @@ function osmAusschnitt(d, opt){
       svg += '<polyline class="km-kreis" style="stroke:' + kmKreisFarbe(R) + '" points="' + k.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '"/>' +
         '<text x="' + f(k[0].x) + '" y="' + f(k[0].y - r * 0.5) + '" class="km-kreis-text" style="fill:' + kmKreisFarbe(R) + '" font-size="' + f(Math.max(r * 1.2, 10)) + '">' + R + ' km</text>'; });
   }
-  if(d.nfp && typeof NFP_KARTE !== 'undefined'){
+  if(d.nfp && typeof NFP_KARTE !== 'undefined' && karteModus() !== 'aus' && nfp50Kreis().length){
     const k = nfp50Kreis().map(P);
     svg += '<polyline class="km50" points="' + k.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '"/>';
     const top = k[0]; svg += '<text x="' + f(top.x) + '" y="' + f(top.y - r * 0.6) + '" class="km50-text" font-size="' + f(Math.max(r * 1.3, 11)) + '">50 km</text>';
@@ -14583,7 +14629,7 @@ function kartenSymbol(art, cx, cy, r){
   if(art === 'nfp'){
     const a = r * 2.3, k = a * 0.28;
     return '<g class="ks-nfp"><rect x="' + f(cx - a / 2) + '" y="' + f(cy - a / 2) + '" width="' + f(a) + '" height="' + f(a) + '" rx="' + f(a * 0.22) + '" fill="#111" stroke="#fff" stroke-width="' + sw + '"/>' +
-      '<path d="M' + f(cx - k) + ' ' + f(cy) + 'H' + f(cx + k) + 'M' + f(cx) + ' ' + f(cy - k) + 'V' + f(cy + k) + '" stroke="#fff" stroke-width="' + f(a * 0.17) + '" stroke-linecap="round"/></g>';
+      '<path d="M' + f(cx - k) + ' ' + f(cy - k * 1.15) + 'V' + f(cy + k * 1.15) + 'M' + f(cx + k) + ' ' + f(cy - k * 1.15) + 'V' + f(cy + k * 1.15) + 'M' + f(cx - k) + ' ' + f(cy) + 'H' + f(cx + k) + '" stroke="#fff" stroke-width="' + f(a * 0.15) + '" stroke-linecap="square" fill="none"/></g>';
   }
   const b = r * 3.3, h = r * 1.9, x0 = cx - b / 2, y0 = cy - h / 2, kr = h * 0.13;
   const kasten = 'M' + f(x0) + ' ' + f(y0 + h * 0.08) + 'H' + f(x0 + b * 0.62) + 'V' + f(y0 + h * 0.3) + 'H' + f(x0 + b * 0.82) + 'L' + f(x0 + b) + ' ' + f(y0 + h * 0.55) + 'V' + f(y0 + h * 0.82) + 'H' + f(x0) + 'Z';
@@ -14640,7 +14686,7 @@ function karteLegendeHtml(d){
   if(d.wegAlt && d.wegAlt.length) t.push('<span><i class="r"></i>andere Varianten</span>');
   if(d.aed) t.push('<span><i class="aed"></i>AED</span>');
   if(d.nfp){ const m = karteModus(); if(m === 'an') t.push('<span><i class="zo"></i>Zonen</span>'); else if(m === 'kreise') t.push('<span><i class="kr"></i>km-Kreise</span>'); }
-  if(d.nfp){ t.push('<span><i class="n"></i>NFP</span>'); if(typeof gkvStartGeo === 'function' && gkvStartGeo()) t.push('<span><i class="rtw"></i>Wache</span>'); t.push('<span><i class="k50"></i>50 km</span>'); }
+  if(d.nfp){ t.push('<span><i class="n"></i>NFP</span>'); if(typeof gkvStartGeo === 'function' && gkvStartGeo()) t.push('<span><i class="rtw"></i>Wache</span>'); if(karteModus() !== 'aus' && typeof NFP_KARTE !== 'undefined' && nfp50Kreis().length) t.push('<span><i class="k50"></i>50 km</span>'); }
   return t.length ? '<div class="luft-karte-legende">' + t.join('') + '</div>' : '';
 }
 function miniKarteHtml(d, opt){
@@ -14783,7 +14829,7 @@ function vkDatenEbenen(map, d){
   map.addLayer({ id: 'vk-zonen-fl', type: 'fill', source: 'vk-zonen', layout: { visibility: zonenAn ? 'visible' : 'none' }, paint: { 'fill-color': ['get', 'farbe'], 'fill-opacity': 0.28 } });
   map.addLayer({ id: 'vk-zonen-li', type: 'line', source: 'vk-zonen', layout: { visibility: zonenAn ? 'visible' : 'none' }, paint: { 'line-color': ['get', 'farbe'], 'line-width': 2 } });
   map.addSource('vk-k50', { type: 'geojson', data: linie(nfp50Kreis().map(ll)) });
-  map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
+  map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', layout: { visibility: karteModus() === 'aus' ? 'none' : 'visible' }, paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
   vkKreiseEbenen(map);
   map.addSource('vk-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: (d.wegAlt || []).filter(x=> x && x.length > 1).map(linie) } });
   map.addLayer({ id: 'vk-alt', type: 'line', source: 'vk-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#6b7686', 'line-width': 4, 'line-dasharray': [2, 1.6], 'line-opacity': 0.85 } });
@@ -15302,6 +15348,15 @@ document.addEventListener('input', (ev)=>{
   if(!el || !el.matches) return;
   const istBic = el.matches(SEL_BIC), istIban = el.matches(SEL_IBAN);
   if(!istBic && !istIban) return;
+  if(istIban){
+    // IBAN schon beim Tippen in 4er-Bloecken (Cursor bleibt hinter demselben Zeichen)
+    const pos = el.selectionStart == null ? el.value.length : el.selectionStart, n = el.value.slice(0, pos).replace(/\s/g, '').length;
+    const f = ibanFormat(el.value);
+    if(f !== el.value){ el.value = f; let i = 0, c = 0; while(i < f.length && c < n){ if(f[i] !== ' ') c++; i++; } try{ el.setSelectionRange(i, i); }catch(_){} }
+    ktoPruefenEl(el);
+    if(ibanPruefen(el.value) === '') ibanBankFuellen(el);
+    return;
+  }
   const neu = istBic ? el.value.replace(/\s/g, '').toUpperCase() : el.value.toUpperCase();
   if(neu !== el.value){
     const pos = el.selectionStart, vorher = el.value.slice(0, pos == null ? el.value.length : pos);
@@ -15316,7 +15371,86 @@ document.addEventListener('blur', (ev)=>{
   const el = ev.target; if(!el || !el.matches || !el.matches(SEL_IBAN) || !el.value.trim()) return;
   const f = ibanFormat(el.value); if(f !== el.value) el.value = f;
   ktoPruefenEl(el);
+  if(ibanPruefen(el.value) === '') ibanBankFuellen(el);
 }, true);
+// Skript bei Bedarf nachladen (gebuendelte Bibliotheken unter lib/)
+const libGeladen = {};
+function libSkriptLaden(src, da){
+  if(da && da()) return Promise.resolve();
+  return libGeladen[src] || (libGeladen[src] = new Promise((ok, fehler)=>{
+    const sc = document.createElement('script'); sc.src = src; sc.onload = ()=> ok(); sc.onerror = ()=>{ delete libGeladen[src]; fehler(new Error(src + ' nicht ladbar')); };
+    document.head.appendChild(sc);
+  }));
+}
+// Bank und BIC aus der IBAN (Bankleitzahl; Verzeichnis lib/banken.js fuer DE, AT, CH/LI)
+async function bankAusIban(iban){
+  const i = ibanNorm(iban); if(ibanPruefen(i) !== '') return null;
+  const land = i.slice(0, 2), len = { DE: 8, AT: 5, CH: 5, LI: 5 }[land]; if(!len) return null;
+  try{ await libSkriptLaden('lib/banken.js', ()=> !!window.BANKEN); }catch(_){ return null; }
+  const t = window.BANKEN && window.BANKEN[land === 'LI' ? 'CH' : land], x = t && t[i.slice(4, 4 + len)];
+  if(!x) return null;
+  const bic = String(x[1] || '').toUpperCase();
+  return { name: x[0], bic: bic.length === 11 && /XXX$/.test(bic) ? bic.slice(0, 8) : bic };
+}
+async function ibanBankFuellen(el){
+  const k = el.dataset.ini || String(el.id || '').replace(/^ini_/, ''), m = /^(.*)IBAN$/.exec(k); if(!m) return;
+  const jetzt = ibanNorm(el.value); if(el.dataset.bankFuer === jetzt) return; el.dataset.bankFuer = jetzt;
+  const b = await bankAusIban(jetzt); if(!b || ibanNorm(el.value) !== jetzt) return;
+  const bereich = el.closest('.einr, .beta-overlay, #app') || document;
+  const feld = (kk)=> bereich.querySelector('[data-ini="' + kk + '"], #ini_' + kk);
+  const setze = (f, v)=>{ if(!f || !v || f.value === v) return; f.value = v; f.dispatchEvent(new Event('input', { bubbles: true })); f.dispatchEvent(new Event('change', { bubbles: true })); };
+  setze(feld(m[1] + 'BANKNAME'), b.name); setze(feld(m[1] + 'BIC'), b.bic);
+  ktoHinweis(el, ''); const h = el.nextElementSibling; if(h && h.classList.contains('kto-hinweis')) h.textContent = '✓ ' + b.name + (b.bic ? ' · ' + b.bic : '') + ' (aus der IBAN)';
+}
+// ---------- GiroCode (EPC-QR) fuer Rechnungen ----------
+// Banking-Apps lesen daraus Empfaenger, IBAN, BIC, Betrag und Verwendungszweck (Rechnungsnummer).
+function girocodeText(a, betrag, renu){
+  const iban = ibanNorm(a && a.iban); if(ibanPruefen(iban) !== '' || !(betrag > 0)) return null;
+  const name = String((a && (a.kontoinhaber || a.name)) || '').replace(/\s+/g, ' ').trim().slice(0, 70); if(!name) return null;
+  return ['BCD', '002', '1', 'SCT', String((a && a.bic) || '').replace(/\s/g, '').toUpperCase(), name, iban,
+    'EUR' + (Math.round(betrag * 100) / 100).toFixed(2), '', '', ('Rechnung ' + String(renu || '').trim()).trim().slice(0, 140)].join('\n');
+}
+async function girocodePng(text){
+  await libSkriptLaden('lib/qrcode/qrcode.js', ()=> typeof qrcode !== 'undefined');
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+  const q = qrcode(0, 'M'); q.addData(text, 'Byte'); q.make();
+  const n = q.getModuleCount(), m = 10, rand = 4, w = (n + rand * 2) * m, txtH = Math.round(w * 0.17);
+  const c = document.createElement('canvas'); c.width = w; c.height = w + txtH;
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#000';
+  for(let r = 0; r < n; r++) for(let k = 0; k < n; k++) if(q.isDark(r, k)) g.fillRect((k + rand) * m, (r + rand) * m, m, m);
+  const t = 'Mit Banking-App scannen'; let fs = Math.round(txtH * 0.6);
+  do{ g.font = '600 ' + fs + 'px Arial, Helvetica, sans-serif'; fs--; }while(g.measureText(t).width > w * 0.94 && fs > 8);
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, w / 2, w - rand * m * 0.35 + txtH * 0.4);
+  const blob = await new Promise(ok=> c.toBlob(ok, 'image/png'));
+  return { daten: new Uint8Array(await blob.arrayBuffer()), hoeheZuBreite: c.height / c.width };
+}
+// QR-Bild schwebend unten rechts auf der Seite, knapp ueber der Bankverbindung (Fusszeile);
+// verankert am Absatz "Ich bitte Sie ... zu ueberweisen" (sonst am letzten Textabsatz)
+async function rdGirocodeEinsetzen(zip, png){
+  const cm = 360000, breite = Math.round(2.5 * cm), hoehe = Math.round(breite * png.hoeheZuBreite), id = 'rIdGiroQr1';
+  const name = 'word/document.xml';
+  zip.file('word/media/girocode.png', png.daten);
+  const relsName = 'word/_rels/document.xml.rels';
+  let rels = zip.file(relsName) ? await zip.file(relsName).async('string') : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>';
+  if(rels.indexOf(id) < 0) rels = rels.replace('</Relationships>', '<Relationship Id="' + id + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/girocode.png"/></Relationships>');
+  zip.file(relsName, rels);
+  let ct = await zip.file('[Content_Types].xml').async('string');
+  if(!/Extension="png"/i.test(ct)) ct = ct.replace('<Default ', '<Default Extension="png" ContentType="image/png"/><Default ');
+  zip.file('[Content_Types].xml', ct);
+  let x = await zip.file(name).async('string');
+  const bild = '<w:r><w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="251660288" behindDoc="0" locked="0" layoutInCell="0" allowOverlap="1">' +
+    '<wp:simplePos x="0" y="0"/><wp:positionH relativeFrom="margin"><wp:align>right</wp:align></wp:positionH><wp:positionV relativeFrom="page"><wp:posOffset>' + Math.round(26.35 * cm - hoehe) + '</wp:posOffset></wp:positionV>' +
+    '<wp:extent cx="' + breite + '" cy="' + hoehe + '"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/><wp:docPr id="9101" name="GiroCode" descr="GiroCode zum Bezahlen"/><wp:cNvGraphicFramePr/>' +
+    '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+    '<pic:nvPicPr><pic:cNvPr id="9101" name="girocode.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="' + id + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
+    '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + breite + '" cy="' + hoehe + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing></w:r>';
+  const absaetze = (x.match(/<w:p[ >][\s\S]*?<\/w:p>/g) || []).filter(p=> p.indexOf('<w:tbl') < 0 && p.indexOf('<w:drawing') < 0);
+  const txt = (p)=> (p.match(/<w:t[^>]*>[^<]*<\/w:t>/g) || []).map(t=> t.replace(/<[^>]+>/g, '')).join('');
+  const ziel = absaetze.find(p=> /Ich bitte Sie|überweisen/.test(txt(p))) || absaetze.filter(p=> txt(p).trim()).pop(); if(!ziel) return false;
+  const neu = /<\/w:pPr>/.test(ziel) ? ziel.replace('</w:pPr>', '</w:pPr>' + bild) : ziel.replace(/^<w:p([ >][^>]*>|>)/, (k)=> k + bild);
+  zip.file(name, x.replace(ziel, neu));
+  return true;
+}
 // ---------- Vektorkarte (Test, Einstellung "Große Karte als Vektorkarte") ----------
 // MapLibre GL + freie Vektorkacheln von OpenFreeMap (ohne Schluessel). Zeigt dieselben
 // Inhalte wie die normale grosse Karte (Zonen, Route, Varianten, Luftlinie, Einsatzorte,
@@ -15338,14 +15472,17 @@ function vkMaplibreHolen(){
 }
 function vkAn(){ return (ladeEinstellungen() || {}).karteVektor !== false; }   // Vorauswahl: an
 // Kartenstile: im Nachtmodus automatisch dunkel (in der Karte umschaltbar, getrennt gemerkt)
-const VK_STILE = { liberty: 'Hell', osm: 'OSM', detail: 'Detail', bright: 'Bunt', dark: 'Dunkel', dunkelgrau: 'Dunkelgrau' };
+const VK_STILE = { osm: 'OSM', dunkelgrau: 'Dunkelgrau', liberty: 'Hell', detail: 'Detail', bright: 'Bunt', dark: 'Dunkel' };
 // "Detail" = Hell (liberty) mit kraeftigen Flaechen: Wald, Wiese, Acker, Wohn-/Gewerbegebiete deutlich unterscheidbar
 // "OSM" = Hell (liberty) in den Farben der bekannten OpenStreetMap-Karte
 const vkStilBasis = (st)=> (st === 'detail' || st === 'osm') ? 'liberty' : (st === 'dunkelgrau' ? 'dark' : st);
 function vkNacht(){ return document.body.classList.contains('dunkel'); }
 function vkStil(){
   if(vkNacht()){ const n = LS.get('vk_stil_nacht', 'dark'); return VK_STILE[n] ? n : 'dark'; }
-  const st = (ladeEinstellungen() || {}).karteVektorStil; return VK_STILE[st] ? st : 'liberty';
+  const e = ladeEinstellungen() || {};
+  // einmalig: OSM wird Standard (vorher Hell)
+  if(!LS.get('vk_stil_osm_std', false)){ LS.set('vk_stil_osm_std', true); if(!e.karteVektorStil || e.karteVektorStil === 'liberty'){ e.karteVektorStil = 'osm'; try{ speichereEinstellungen(e); }catch(_){} } }
+  const st = e.karteVektorStil; return VK_STILE[st] ? st : 'osm';
 }
 function vkStilSetzen(st){
   if(!VK_STILE[st]) return;
@@ -16107,7 +16244,9 @@ function vkZusatzEbenen(map, st){
   // Hausnummern ab Zoom 16
   map.addLayer({ id: 'vk-hnr', type: 'symbol', source: quelle, 'source-layer': 'housenumber', minzoom: 14.5,
     layout: { visibility: e.hnr ? 'visible' : 'none', 'text-field': ['to-string', ['get', 'housenumber']], 'text-font': ['Noto Sans Regular'], 'text-size': ['interpolate', ['linear'], ['zoom'], 16, 10, 19, 13], 'text-padding': 1, 'symbol-placement': 'point' },
-    paint: { 'text-color': dunkel ? '#c9d1db' : '#5b4a3a', 'text-halo-color': halo, 'text-halo-width': 1.2 } });
+    paint: { 'text-color': dunkel ? '#ffffff' : '#5b4a3a', 'text-halo-color': halo, 'text-halo-width': dunkel ? 0 : 1.2 } });
+  // im Dunkeln: Hausnummern schlicht weiss ohne Umrandung (auch eine Hausnummern-Ebene des Stils)
+  if(dunkel) (map.getStyle().layers || []).filter(l=> l['source-layer'] === 'housenumber' && l.id !== 'vk-hnr' && l.type === 'symbol').forEach(l=>{ try{ map.setPaintProperty(l.id, 'text-color', '#ffffff'); map.setPaintProperty(l.id, 'text-halo-width', 0); }catch(_){} });
   // Parkplaetze schon ab Zoom 14
   map.addLayer({ id: 'vk-park', type: 'symbol', source: quelle, 'source-layer': 'poi', minzoom: 13,
     filter: ['all', punkt, ['any', ['==', ['get', 'class'], 'parking'], ['in', ['get', 'subclass'], ['literal', ['parking', 'parking_garage', 'parking_space']]]]],
@@ -16357,7 +16496,7 @@ function vektorKarteOverlay(d, text, opt){
   let fertigRes = null; const ergebnis = new Promise(r=> fertigRes = r);
   const ov = document.createElement('div');
   ov.className = 'nfp-overlay ok-karte vk-overlay';
-  ov.innerHTML = '<div class="nfp-kopf"><b>' + htmlEsc(opt.titel || 'Karte') + ' <small class="vk-test">Vektorkarte (Test)</small></b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
+  ov.innerHTML = '<div class="nfp-kopf"><b>' + htmlEsc(opt.titel || 'Karte') + '</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
     '<div class="nfp-suche"><input type="text" id="vkStrasse" autocomplete="off" placeholder="Straße Nr.">' +
       '<input type="text" id="vkPlzOrt" enterkeyhint="search" autocomplete="off" placeholder="PLZ Ort">' +
       '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
@@ -16413,7 +16552,7 @@ function vektorKarteOverlay(d, text, opt){
       map.addLayer({ id: 'vk-zonen-fl', type: 'fill', source: 'vk-zonen', paint: { 'fill-color': ['get', 'farbe'], 'fill-opacity': 0.28 } });
       map.addLayer({ id: 'vk-zonen-li', type: 'line', source: 'vk-zonen', paint: { 'line-color': ['get', 'farbe'], 'line-width': 2 } });
       map.addSource('vk-k50', { type: 'geojson', data: linie(nfp50Kreis().map(ll)) });
-      map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
+      map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', layout: { visibility: karteModus() === 'aus' ? 'none' : 'visible' }, paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
       vkKreiseEbenen(map);
       map.addSource('vk-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: (d.wegAlt || []).filter(w=> w && w.length > 1).map(linie) } });
       map.addLayer({ id: 'vk-alt', type: 'line', source: 'vk-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#6b7686', 'line-width': 4, 'line-dasharray': [2, 1.6], 'line-opacity': 0.85 } });
@@ -16489,9 +16628,27 @@ function vektorKarteOverlay(d, text, opt){
         map.on('click', (ev)=>{ if(ev.defaultPrevented || Date.now() - (ov._langZeit || 0) < 1000) return; const p = ev.lngLat; zielSetzen({ lat: p.lat, lon: p.lng }, 'Gewählt', '', false, 'wache'); adresseZu({ lat: p.lat, lon: p.lng }); });
       }
     });
+    // Ueberblick ueber eine Route samt Endpunkten: mittig, Abstand zu den Knoepfen rechts;
+    // einen Bildaufbau abwarten (die Infozeile unten waechst, die Karte wird dadurch niedriger)
+    let letzteAnsicht = null;
+    const ueberblick = (koords)=>{
+      const k = (koords || []).filter(c=> Array.isArray(c) && isFinite(c[0]) && isFinite(c[1])); if(!k.length) return;
+      letzteAnsicht = k;
+      requestAnimationFrame(()=>{ if(!document.body.contains(ov)) return; try{ map.resize(); }catch(_){}
+        const b = new ml.LngLatBounds(k[0], k[0]); k.forEach(c=> b.extend(c));
+        const hoch = box.clientHeight || 400, breit = box.clientWidth || 360, pv = Math.min(70, hoch * 0.14), ph = Math.min(56, breit * 0.12);
+        map.fitBounds(b, { padding: { top: pv, bottom: pv, left: ph, right: Math.min(ph + 50, breit * 0.3) }, maxZoom: 16.5, duration: 450 });
+      });
+    };
     const uebersicht = ()=>{
+      if(letzteAnsicht){ ueberblick(letzteAnsicht); return; }
       const g = osmGeoListe(d);
       if(!g.length){ map.easeTo({ center: [n.lon, n.lat], zoom: 9.5 }); return; }
+      // nur der eigene Standort: so weit heraus, dass oben bis unten etwa 50 km zu sehen sind
+      if(g.length === 1 && (d.pois || []).some(q=> q.kl === 'ich')){
+        const h = box.clientHeight || 500, z = Math.log2(78271.517 * Math.cos(g[0].lat * Math.PI / 180) * h / 50000);
+        map.easeTo({ center: ll(g[0]), zoom: Math.max(6, Math.min(13, z)), duration: 450 }); return;
+      }
       const b = new ml.LngLatBounds(ll(g[0]), ll(g[0])); g.forEach(p=> b.extend(ll(p)));
       map.fitBounds(b, { padding: 60, maxZoom: 14.5, duration: 400 });
     };
@@ -16527,7 +16684,7 @@ function vektorKarteOverlay(d, text, opt){
         const neuerAed = !gezeigt || gezeigt.lat !== a.lat || gezeigt.lon !== a.lon; gezeigt = a;
         map._aedWeg = { type: 'FeatureCollection', features: [linie(w && w.coords && w.coords.length > 1 ? w.coords : [ll(s), ll(a)])] };
         vkAedWegZeigen(map);
-        if(neuerAed || w){ const b = new ml.LngLatBounds(ll(s), ll(s)); b.extend(ll(a)); ((w && w.coords) || []).forEach(k=> b.extend(k)); map.fitBounds(b, { padding: 70, maxZoom: 17, duration: 400 }); }
+        if(neuerAed || w) ueberblick([ll(s), ll(a)].concat((w && w.coords) || []));
         const gUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + s.lat.toFixed(6) + ',' + s.lon.toFixed(6) + '&destination=' + a.lat.toFixed(6) + ',' + a.lon.toFixed(6) + '&travelmode=walking';
         info.innerHTML = '<div class="vk-ziel-info"><div><b>Nächster AED</b> ' + htmlEsc(woher) + (a.n ? ': ' + htmlEsc(a.n) : '') + (a.o ? '<br>' + htmlEsc(a.o) : '') +
           '<br>' + (w && w.meter != null ? 'Fußweg <b>' + m(w.meter) + '</b> (ca. ' + Math.max(1, Math.round(w.minuten)) + ' min) · ' : '') + 'Luftlinie <b>' + m(a.luft) + '</b>' +
@@ -16596,8 +16753,8 @@ function vektorKarteOverlay(d, text, opt){
         if(nr !== zielNr || !document.body.contains(ov)) return;
         if(w){ if(ichMarke) ichMarke.remove(); ichMarke = marke('<span class="vk-ich"></span>', w.pos); }
         // mit GPS: nur die Route vom Standort zeichnen (Zahlen der Wache bleiben im Text)
-        if(w && w.coords && w.coords.length > 1){ d.gpsWeg = w.coords; d.weg = []; datenNeu(); }
-        else if(wacheWeg){ d.weg = wacheWeg; datenNeu(); }
+        if(w && w.coords && w.coords.length > 1){ d.gpsWeg = w.coords; d.weg = []; datenNeu(); ueberblick(w.coords.concat([ll(g)])); }
+        else if(wacheWeg){ d.weg = wacheWeg; datenNeu(); ueberblick(wacheWeg.concat([ll(g)])); }
         gpsFertig = true;
         const gi = ov.querySelector('#vkGpsInfo'); if(gi) gi.innerHTML = wegVomStandortText(w);
       }).catch(()=>{});
@@ -16627,8 +16784,7 @@ function vektorKarteOverlay(d, text, opt){
         b.disabled = false; b.textContent = alt;
         if(!coords){ appToastAnzeigen('Ohne Standort keine Route – „📍 Position“ freigeben.', 3000); return; }
       }
-      const bb = new ml.LngLatBounds(coords[0], coords[0]); coords.forEach(k=> bb.extend(k)); bb.extend(ll(ziel));
-      map.fitBounds(bb, { padding: 60, maxZoom: 16.5, duration: 500 });
+      ueberblick(coords.concat([ll(ziel)]));
     });
     // modus 'wache': Route (gezeichnet) ab Wache -- bei Adresssuche und in der Wegegeld-Karte von LS/PT/GKV;
     // sonst (langes Druecken, Verschieben, Einsatzort) Route vom GPS-Standort, ohne GPS ab Wache
@@ -16644,7 +16800,7 @@ function vektorKarteOverlay(d, text, opt){
       // Ausgangspunkt: gespeicherte Koordinaten, sonst die Adresse jetzt nachschlagen (war bisher nur beim Oeffnen ueber die Wegegeld-Karte passiert)
       let s = gkvStartGeo();
       if(!s && gkvStartAdresse()){ try{ s = await gkvStartGeoHolen(); }catch(_){ s = null; } if(nr !== zielNr) return; }
-      d.linie = s ? [s, g] : null; d.weg = []; datenNeu();
+      d.linie = s && (W || opt.nurWache) ? [s, g] : null; d.weg = []; datenNeu(); letzteAnsicht = null;
       if(nurWache){ d.gpsWeg = []; wacheWeg = null; gpsFertig = true; datenNeu(); } else gpsWegHolen(g, nr);
       const kopf = (woher ? '<b>' + htmlEsc(woher) + '</b>' + (adrText ? ': ' + htmlEsc(adrText) : '') : '');
       if(!s){ info.innerHTML = '<div class="vk-ziel-info"><div>' + kopf + '<br><small>' + (gkvStartAdresse() ? 'Ausgangspunkt „' + htmlEsc(gkvStartAdresse()) + '“ nicht gefunden (offline?)' : 'Kein Ausgangspunkt eingestellt (Einstellungen: Praxis-/Startadresse)') + ' – keine Luftlinie/Wegepauschale.</small><br><small id="vkGpsInfo"></small></div>' + naviLink(g) + '</div>'; return; }
@@ -16665,7 +16821,7 @@ function vektorKarteOverlay(d, text, opt){
         const wi = ov.querySelector('#vkWegInfo');
         if(!r || !r.length){ if(wi) wi.textContent = 'Fahrstrecke nicht verfügbar (offline?)'; return; }
         wacheWeg = r[0].coords;
-        if(gpsFertig && !(d.gpsWeg && d.gpsWeg.length > 1)){ d.weg = wacheWeg; datenNeu(); }   // ohne GPS: Route ab Wache zeichnen
+        if(gpsFertig && !(d.gpsWeg && d.gpsWeg.length > 1)){ d.weg = wacheWeg; datenNeu(); ueberblick(wacheWeg.concat([ll(g), ll(s)])); }   // ohne GPS / Suche: Route ab Wache zeichnen und ganz zeigen
         if(wi) wi.innerHTML = 'Fahrstrecke ab ' + htmlEsc(s.adr || 'Ausgangspunkt') + ' <b>' + nfpKmText(r[0].km) + ' km</b>' + (r[0].minuten ? ' (ca. ' + Math.round(r[0].minuten) + ' min)' : '') + ' · Hin+Rück ' + nfpKmText(r[0].km * 2) + ' km';
       }).catch(()=>{ const wi = ov.querySelector('#vkWegInfo'); if(wi) wi.textContent = 'Fahrstrecke nicht verfügbar (offline?)'; });
     };
@@ -17067,14 +17223,7 @@ async function standortHolen(opt){
   try{ if(navigator.permissions && navigator.permissions.query) stand = (await navigator.permissions.query({ name: 'geolocation' })).state; }catch(_){}
   if(opt.still && stand !== 'granted') return null;
   if(stand === 'denied'){ await standortHilfe('gesperrt'); return null; }
-  if(stand === 'prompt'){
-    const ok = await betaOverlay.ergebnis('Standort freigeben',
-      '<div class="fb-info">Für die Position braucht die App den Standort. Android fragt gleich nach – bitte <b>„Bei Nutzung der App zulassen“</b> bzw. <b>„Zulassen“</b> wählen.</div>' +
-      '<div class="fb-info">Ist der Standort am Handy aus, bietet Android an, ihn einzuschalten – dann <b>„OK“</b> bzw. <b>„Einschalten“</b>.</div>',
-      [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Freigeben', akt: 'ja', primaer: true }]);
-    betaOverlay.schliessen();
-    if(ok !== 'ja') return null;
-  }
+  // keine eigene Vorab-Frage: Android/iOS fragen selbst (bei ausgeschaltetem Standort bietet Android das Einschalten an)
   for(let versuch = 0; ; versuch++){
     try{
       const pos = await new Promise((ok, fehler)=> navigator.geolocation.getCurrentPosition(ok, fehler, { enableHighAccuracy: true, timeout: 15000, maximumAge: versuch ? 0 : 60000 }));
@@ -17082,7 +17231,8 @@ async function standortHolen(opt){
     }catch(e){
       if(opt.still) return null;
       if(e && e.code === 1){ await standortHilfe('gesperrt'); return null; }
-      if(!await standortHilfe('aus')) return null;
+      // Standort am Geraet aus: Web-Apps koennen die Systemeinstellungen nicht selbst oeffnen -> kurzer Hinweis statt Dialog
+      appToastAnzeigen('Kein Standort – am Handy den Standort einschalten (oben herunterwischen › „Standort“) und nochmal tippen.', 4500); return null;
     }
   }
 }
@@ -17195,7 +17345,7 @@ async function aerzteDocxErzeugen(vorlage, daten){
     ['PADRESSE2', daten.adr2 || ''], ['DATE', daten.datum], ['RENU', daten.renu], ['GELDSUMME', aerzteZahlText(daten.summe)],
     ['ATITEL', a.titel || ''], ['ANAME', a.name || ''], ['AFUNKTION', a.funktion || ''], ['AADRESSE1', a.adresse1 || ''],
     ['AADRESSE2', a.adresse2 || ''], ['AEMAIL', a.email || '']];
-  const fuss = [['BANAME', a.bank || ''], ['BABIC', String(a.bic || '').replace(/\s/g, '').toUpperCase()], ['BAIBAN', a.iban || ''], ['ENAME', a.kontoinhaber || '']];
+  const fuss = [['BANAME', a.bank || ''], ['BABIC', String(a.bic || '').replace(/\s/g, '').toUpperCase()], ['BAIBAN', ibanFormat(a.iban || '')], ['ENAME', a.kontoinhaber || '']];
   let doc = await zip.file('word/document.xml').async('string');
   // Tabelle der Dienste: Zeile mit DIENSTDAT (+ leere Zeilen bis "SUMME") je Dienst
   const tStart = doc.lastIndexOf('<w:tbl>', doc.indexOf('DIENSTDAT'));
@@ -17712,7 +17862,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v289';
+const APP_VERSION = 'v290';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -17747,8 +17897,6 @@ function designWahlHtml(){
       <div class="pos-stil-wahl live-wahl">${LIVE_ANZEIGEN.map(x=> `
         <label class="pos-stil-option${liveEinst()[x.k] ? ' an' : ''}"><input type="checkbox" name="liveAnzeige" value="${x.k}"${liveEinst()[x.k] ? ' checked' : ''}>
           <span><b>${x.titel}</b><small>${x.text}</small></span></label>`).join('')}
-        <label class="pos-stil-option${liveEinst().auto ? ' an' : ''}"><input type="checkbox" name="liveAnzeige" value="auto"${liveEinst().auto ? ' checked' : ''}>
-          <span><b>Dienst automatisch erkennen</b><small>Aus dem Fahrtenbuch (mit OneDrive-Anmeldung) und den GKV-Fällen im üblichen Fahrdienstfenster. Ein von Hand gewählter Dienst hat Vorrang; „Dienst beenden“ schaltet zurück auf automatisch.</small></span></label>
       </div>
       <div class="sync-unter-titel" style="margin-top:14px;">Darstellung der Rechnungspositionen (PT, LS, GKV)</div>`;
 }
@@ -17851,7 +17999,7 @@ function liveEinst(){
   const dienst = l.dienst !== undefined ? !!l.dienst : !!(l.karte || l.zeile);
   return { dienst, ring: !!l.ring, standort: !!l.standort, auto: !!l.auto };
 }
-function liveAuto(){ return liveEinst().auto; }
+function liveAuto(){ return false; }   // frueher Einstellung "Dienst automatisch erkennen" -- ersetzt durch die Vorauswahl beim Dienststart
 // Standard-Fahrdienstfenster um einen Zeitpunkt: Werktag 18-08, Wochenende/Feiertag/24.12./31.12. 08-08
 function designDienstFenster(t){
   const tag = new Date(t.getFullYear(), t.getMonth(), t.getDate());
@@ -17884,6 +18032,22 @@ function liveDienstAuto(){
     if(t < fe.von || t >= fe.bis) continue;          // werktags tagsueber: kein Fahrdienstfenster
     if(jetzt >= fe.bis.getTime() + 12 * H) continue;
     return alsDienst(fe.von.getTime(), fe.bis.getTime(), 'Fahrdienst', '', 'gkv');
+  }
+  return null;
+}
+// Schicht, deren Beginn hoechstens 30 min von jetzt entfernt ist -- zuerst die zuletzt benutzte Dienstart,
+// bei mehreren gleichzeitigen Schichten (Frueh 1-4) die zuletzt gewaehlte
+function liveSchichtJetzt(){
+  const jetzt = new Date(), T = 30 * 60000, a0 = LS.get('fb_dienstart', 'Fahrdienst');
+  const arten = [a0].concat(FB_DIENSTARTEN.filter(a=> a !== a0)), letzte = LS.get('live_letzte_schicht', {}) || {};
+  for(const art of arten){
+    const treffer = [];
+    [0, -1, 1].forEach(off=>{
+      const tag = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate() + off);
+      dienstSchichten(art, tag).forEach(x=>{ const m = /^(\d{1,2}):(\d{2})$/.exec(x.von); if(!m) return; const st = new Date(tag); st.setHours(+m[1], +m[2], 0, 0);
+        if(Math.abs(st - jetzt) <= T) treffer.push({ art, datum: liveIso(tag), von: x.von, bis: x.bis, label: x.label }); });
+    });
+    if(treffer.length) return treffer.find(t=> t.label === letzte[art]) || treffer[0];
   }
   return null;
 }
@@ -18041,6 +18205,8 @@ async function liveDienstDialog(){
     return l.slice(0, 6);
   };
   const tagVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD; };
+  let passtJetzt = null;
+  if(!akt){ passtJetzt = liveSchichtJetzt(); if(passtJetzt){ datum = passtJetzt.datum; art = passtJetzt.art; von = passtJetzt.von; bis = passtJetzt.bis; schicht = passtJetzt.label; } }
   if(!von || !bis){ const v = vorschlaege()[0]; if(v){ [von, bis] = v.split('-'); } }
   // bisherige vertretene Aerzte (Fahrtenbuch, Merkliste, Aerzte-Rechnungen)
   if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet' && Date.now() - ((LS.get('fb_aerzte_historie', null) || {}).am || 0) > 6 * 3600000){
@@ -18052,11 +18218,13 @@ async function liveDienstDialog(){
     const vs = vorschlaege();
     const html = '<div class="fb-dialog">' +
       '<div class="fb-info">Der Dienst wird in der App angelegt und steuert die Live-Anzeige. Alle Fälle in seinem Zeitraum landen im Fahrtenbuch in diesem Dienst – ohne weitere Rückfrage.' +
-        (!akt && vorschlag ? ' Vorschlag: automatisch erkannt (' + (vorschlag.auto === 'fahrtenbuch' ? 'Fahrtenbuch' : 'GKV-Fälle') + ').' : '') + (akt && liveAuto() ? ' „Dienst beenden“ schaltet zurück auf automatisch.' : '') + '</div>' +
+        (!akt && vorschlag ? ' Vorschlag: automatisch erkannt (' + (vorschlag.auto === 'fahrtenbuch' ? 'Fahrtenbuch' : 'GKV-Fälle') + ').' : '') + (akt && liveAuto() ? ' „Dienst beenden“ schaltet zurück auf automatisch.' : '') +
+        (passtJetzt && schicht === passtJetzt.label && art === passtJetzt.art ? ' <b>Vorausgewählt: ' + htmlEsc(passtJetzt.art + ' · ' + passtJetzt.label) + '</b> (beginnt um ' + passtJetzt.von + ').' : '') + '</div>' +
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
       (dienstSchichten(art, tagVon()).length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div>' + schichtZeilenHtml(dienstSchichten(art, tagVon()), schicht) : '') +
+      (!dienstSchichten(art, tagVon()).length && art === 'docdirekt' ? '<div class="fb-info">docdirekt hat nur werktags Dienste (Vormittag 8–13, Nachmittag 13–19) – an Wochenenden und Feiertagen keine.</div>' : '') +
       '<div class="fb-lbl">Dienstzeit</div>' +
       (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis && !schicht ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace(/:00/g, '').replace('-', '–') + '</button>').join('') + '</div>' : '') +
       '<div class="fb-zeile"><label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
@@ -18096,6 +18264,7 @@ async function liveDienstDialog(){
     LS.set('live_dienst', { datum, von, bis, art, arzt, schicht, am: new Date().toISOString() });
     // ersetzt einen geaenderten Dienst (gleicher Tag, ueberlappend) bzw. legt ihn neu an
     try{ appDienstMerken({ datum, von, bis, art, arzt, schicht }); }catch(_){}
+    if(schicht){ const ls = LS.get('live_letzte_schicht', {}) || {}; ls[art] = schicht; LS.set('live_letzte_schicht', ls); }
     LS.set('fb_dienstart', art);
     // zuletzt benutzte Zeiten merken (je Dienstart, Werktag/Wochenende)
     try{
@@ -18523,10 +18692,10 @@ function ansichtEinstellungen(){
       <button type="button" class="btn-sekundaer" id="btnEinrichtung" style="margin-top:8px;">Einrichtungsassistent (neues Gerät / neuer Nutzer)</button>
       <button type="button" class="btn-sekundaer" id="btnEinrichtungBrief" style="margin-top:8px;">Briefversand einrichten (eigene Azure-Weiterleitung)</button>
       <div class="einstellung-zeile" style="margin-top:14px;">
-        <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor ? ' checked' : ''}>
-        <div class="txt">Große Karte als Vektorkarte (Test)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Im Nachtmodus automatisch dunkel; in der Karte über ◐ Stil und Ebenen (Medizinisch, Parkplätze) umschaltbar; Hausnummern immer sichtbar. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
+        <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor !== false ? ' checked' : ''}>
+        <div class="txt">Karten als Vektorkarte (Standard)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Im Nachtmodus automatisch dunkel; in der Karte über ◐ Stil und Ebenen (Medizinisch, Parkplätze) umschaltbar; Hausnummern immer sichtbar. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
       </div>
-      <div class="fb-chips" id="vkStile" style="margin-top:6px;">${['liberty', 'detail', 'bright'].map(k=> '<button type="button" class="fb-chip' + (((ladeEinstellungen() || {}).karteVektorStil || 'liberty') === k ? ' an' : '') + '" data-vkstil="' + k + '">' + { liberty: 'Hell', detail: 'Detail', bright: 'Bunt' }[k] + '</button>').join('')}</div>
+      <div class="fb-chips" id="vkStile" style="margin-top:6px;">${['osm', 'liberty', 'detail', 'bright'].map(k=> '<button type="button" class="fb-chip' + ((((ladeEinstellungen() || {}).karteVektorStil) || 'osm') === k ? ' an' : '') + '" data-vkstil="' + k + '">' + VK_STILE[k] + '</button>').join('')}</div>
       <div class="design-hinweis" id="vkOffEinst" style="margin-top:8px;">${htmlEsc(vkOffText())}</div>
       <button type="button" class="btn-sekundaer" id="btnVkOffline" style="margin-top:6px;">Offline-Karte für das Dienstgebiet …</button>
     </div>
