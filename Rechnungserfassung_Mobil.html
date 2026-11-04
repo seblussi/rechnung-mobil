@@ -1625,7 +1625,7 @@ try{
   .vk-karte{flex:1; min-height:0; position:relative;}
   .vk-test{font-weight:500; font-size:11.5px; color:var(--text-schwach); margin-left:6px;}
   .vk-overlay .karte-ebene, .vk-overlay .karte-auge{z-index:5;}
-  .vk-marke{line-height:0;}
+  .vk-marke{line-height:0;} .vk-marke > *{transform:scale(var(--vks, 1)); transform-origin:50% 50%;}
   .vk-ziel-info{display:flex; align-items:center; gap:10px; justify-content:space-between;} .vk-ziel-info > div{min-width:0;}
   .vk-navi{flex:none; display:inline-flex; align-items:center; gap:4px; padding:9px 12px; border-radius:10px; background:#1a73e8; color:#fff !important; font-weight:700; font-size:14px; text-decoration:none; white-space:nowrap;}
   /* grosse Karte: Knopf zum Verkleinern unten rechts, Zoom darueber, alles fingertauglich */
@@ -14730,7 +14730,7 @@ function miniKarteStarten(w){
     const nr = ++lauf;
     if(ebene === 'kvbw' && !kvbwUrl){ kvbwUrl = await nfpKarteBildUrl(); if(nr !== lauf) return; if(!kvbwUrl){ ebene = 'osm'; w.dataset.ebene = 'osm'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'osm'); } }
     const zi = Math.max(3, Math.min(18, Math.round(ansicht.z))), s = Math.pow(2, ansicht.z - zi);
-    const a = osmAusschnitt(d, { z: zi, mitte: ansicht, w: 3 * W / s, h: 3 * H / s, r: Math.max(W, H) / 55 / s, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', kvbwUrl, zonen: karteModus() === 'an', kreise: karteModus() === 'kreise' });
+    const a = osmAusschnitt(d, { z: zi, mitte: ansicht, w: 3 * W / s, h: 3 * H / s, r: Math.max(W, H) / 45 / s, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', kvbwUrl, zonen: karteModus() === 'an', kreise: karteModus() === 'kreise' });
     const tmp = document.createElement('div'); tmp.innerHTML = a.html;
     const fl = tmp.firstElementChild;
     Object.assign(fl.style, { position: 'absolute', width: (a.bw * s) + 'px', left: (-W) + 'px', top: (-H) + 'px', border: 'none', borderRadius: '0', transformOrigin: '0 0' });
@@ -14869,7 +14869,7 @@ function miniKarteVektor(w, cfg){
     map = new ml.Map({ container: box, style: stilObj, center: [start.lon, start.lat], zoom: Math.max(0, start.z - 1),
       attributionControl: false, cooperativeGestures: true, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5,
       locale: { 'CooperativeGesturesHandler.WindowsHelpText': 'Strg + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MacHelpText': '⌘ + Mausrad zum Zoomen', 'CooperativeGesturesHandler.MobileHelpText': 'Mit zwei Fingern verschieben/zoomen' } });
-    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map); vkAedAnbinden(map, false);
+    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map); vkAedAnbinden(map, false); vkSymbolSkalaAnbinden(map);
     let geladen = false;
     const fehlerZeit = setTimeout(()=>{ if(!geladen) zuRaster(true); }, 8000);
     map.on('error', (e)=>{ if(!geladen && e && e.error && /style|fetch|Failed/i.test(String(e.error.message || e.error))) { clearTimeout(fehlerZeit); zuRaster(true); } });
@@ -14882,7 +14882,7 @@ function miniKarteVektor(w, cfg){
       if(klick){ el.style.cursor = 'pointer'; el.addEventListener('click', (ev)=>{ ev.stopPropagation(); klick(); }); }
       return new ml.Marker({ element: el }).setLngLat([g.lon, g.lat]).addTo(map); };
     const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]);
-    marke('<svg viewBox="-20 -14 40 28" width="22" height="22">' + kartenSymbol('nfp', 0, 0, 6.5) + '</svg>', n);
+    marke('<svg viewBox="-20 -14 40 28" width="28" height="28">' + kartenSymbol('nfp', 0, 0, 6.5) + '</svg>', n);
     const wache = gkvStartGeo(); if(wache) marke('<svg viewBox="-20 -14 40 28" width="30" height="21">' + kartenSymbol('rtw', 0, 0, 6.5) + '</svg>', wache);
     (d.pois || []).forEach(q=>{
       if(q.kl === 'start' && wache && kmLuftlinieEinfach(wache, q) < 0.05) return;
@@ -15025,7 +15025,7 @@ function osmKarteOverlay(d, text, opt){
     const vw = sc.clientWidth || 360, vh = sc.clientHeight || 500;
     z = Math.max(3, Math.min(18.4, z));
     const zi = Math.max(3, Math.min(18, Math.round(z))), s = Math.pow(2, z - zi);
-    akt = osmAusschnitt(d, { z: zi, mitte, w: vw * 3 / s, h: vh * 3 / s, px: true, r: 9 / s, ebene, kvbwUrl, zonen: zonenAn(), kreise: karteModus() === 'kreise' });
+    akt = osmAusschnitt(d, { z: zi, mitte, w: vw * 3 / s, h: vh * 3 / s, px: true, r: 11.5 / s, ebene, kvbwUrl, zonen: zonenAn(), kreise: karteModus() === 'kreise' });
     akt.s = s; akt.zi = zi;
     sc.innerHTML = akt.html;
     if(s !== 1 && sc.firstElementChild) sc.firstElementChild.style.width = (akt.bw * s).toFixed(1) + 'px';
@@ -15783,6 +15783,11 @@ const VKO_BILDER = {
   }
 };
 const VKO_GROESSE = { 'vko-baum': 64, 'vko-p': 18, 'vko-spiel': 18, 'vko-aed': 22 };
+// Kartensymbole (NFP, Wache, Ziel, Faelle, Standort) wachsen beim Hineinzoomen mit (CSS-Variable --vks)
+function vkSymbolSkalaAnbinden(map){
+  const setze = ()=>{ try{ const z = map.getZoom(), f = Math.max(1, Math.min(2.1, 1 + (z - 10.5) * 0.19)); map.getContainer().style.setProperty('--vks', f.toFixed(2)); }catch(_){} };
+  map.on('zoom', setze); map.on('load', setze); setze();
+}
 function vkBilderAnmelden(map){
   map.on('styleimagemissing', (e)=>{
     const f = VKO_BILDER[e.id]; if(!f || map.hasImage(e.id)) return;
@@ -16250,7 +16255,7 @@ function vkZusatzEbenen(map, st){
   // Parkplaetze schon ab Zoom 14
   map.addLayer({ id: 'vk-park', type: 'symbol', source: quelle, 'source-layer': 'poi', minzoom: 13,
     filter: ['all', punkt, ['any', ['==', ['get', 'class'], 'parking'], ['in', ['get', 'subclass'], ['literal', ['parking', 'parking_garage', 'parking_space']]]]],
-    layout: { visibility: e.park ? 'visible' : 'none', 'icon-image': st === 'osm' ? 'vko-p' : ['match', ['get', 'subclass'], 'parking_garage', 'parking_garage', 'parking'], 'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.8, 17, 1.1], 'icon-allow-overlap': false, 'icon-padding': 1,
+    layout: { visibility: e.park ? 'visible' : 'none', 'icon-image': st === 'osm' ? 'vko-p' : ['match', ['get', 'subclass'], 'parking_garage', 'parking_garage', 'parking'], 'icon-size': ['interpolate', ['linear'], ['zoom'], 14, 0.85, 17, 1.3, 18.5, 1.6], 'icon-allow-overlap': false, 'icon-padding': 1,
       'text-field': ['step', ['zoom'], '', 17, ['coalesce', ['get', 'name'], '']], 'text-font': ['Noto Sans Regular'], 'text-size': 11, 'text-offset': [0, 1.1], 'text-anchor': 'top', 'text-optional': true },
     paint: { 'text-color': '#2a63c7', 'text-halo-color': halo, 'text-halo-width': 1.2 } });
   // Medizinische Orte bevorzugt (oberste Ebene = Vorrang bei Ueberschneidungen), ab Zoom 12
@@ -16258,7 +16263,7 @@ function vkZusatzEbenen(map, st){
     filter: ['all', punkt, ['any', ['in', ['get', 'class'], ['literal', ['hospital', 'pharmacy', 'doctors', 'dentist']]], ['in', ['get', 'subclass'], ['literal', VK_MED_SUB]]]],
     layout: { visibility: e.med ? 'visible' : 'none',
       'icon-image': ['match', ['get', 'subclass'], ['pharmacy'], 'pharmacy', ['doctors', 'physiotherapist'], 'doctors', ['dentist'], 'dentist', 'hospital'],
-      'icon-size': ['interpolate', ['linear'], ['zoom'], 12, ['match', ['get', 'subclass'], 'hospital', 1.1, 0.8], 16, 1.35],
+      'icon-size': ['interpolate', ['linear'], ['zoom'], 12, ['match', ['get', 'subclass'], 'hospital', 1.15, 0.85], 16, 1.55, 18, 1.9],
       'icon-allow-overlap': false, 'icon-padding': 0, 'symbol-sort-key': ['match', ['get', 'subclass'], 'hospital', 0, 'nursing_home', 1, 'social_facility', 1, 'pharmacy', 2, 3],
       'text-field': ['step', ['zoom'], ['match', ['get', 'subclass'], 'hospital', ['coalesce', ['get', 'name'], ''], ''], 14, ['coalesce', ['get', 'name'], '']],
       'text-font': ['Noto Sans Bold'], 'text-size': ['interpolate', ['linear'], ['zoom'], 12, 11, 17, 13], 'text-offset': [0, 1.2], 'text-anchor': 'top', 'text-optional': true, 'text-max-width': 9 },
@@ -16266,7 +16271,7 @@ function vkZusatzEbenen(map, st){
   // AED (Defibrillatoren) aus OpenStreetMap, ganz oben (immer sichtbar, auch bei Ueberschneidung)
   if(!map.getSource('vk-aed')) map.addSource('vk-aed', { type: 'geojson', data: map._aedFc || { type: 'FeatureCollection', features: [] } });
   map.addLayer({ id: 'vk-aed', type: 'symbol', source: 'vk-aed', minzoom: 10,
-    layout: { visibility: (e.aed || map._aedImmer) && !map._aedAus ? 'visible' : 'none', 'icon-image': 'vko-aed', 'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.55, 12, 0.75, 15, 1, 18, 1.25],
+    layout: { visibility: (e.aed || map._aedImmer) && !map._aedAus ? 'visible' : 'none', 'icon-image': 'vko-aed', 'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 12, 0.85, 15, 1.25, 18, 1.8],
       'icon-allow-overlap': true, 'icon-ignore-placement': true } });
   if(map._aedLaden) setTimeout(map._aedLaden, 0);
   if(map._aedWeg) vkAedWegZeigen(map);
@@ -16366,6 +16371,64 @@ async function vkAedAbfrage(box, ms, vorrang){
   try{ console.warn('AED-Abfrage fehlgeschlagen', vkAedLetzterFehler); }catch(_){}
   throw letzt || new Error('Overpass nicht erreichbar');
 }
+// Schnellabfrage fuer den AED-Knopf: nur der Umkreis (Standard 2,5 km = zu Fuss erreichbar), an zwei
+// Servern gleichzeitig, an der Warteschlange vorbei (die Hintergrund-Abfrage blockiert dann nicht), 10 s je Server.
+// Ergebnis wird in die Zellen eingemischt (ohne sie als vollstaendig aktualisiert zu markieren).
+async function vkAedSchnell(g, km){
+  km = km || 2.5;
+  const dLat = km / 111.32, dLon = km / (111.32 * Math.cos(g.lat * Math.PI / 180));
+  const q = '[out:json][timeout:10];nwr["emergency"="defibrillator"](' + [g.lat - dLat, g.lon - dLon, g.lat + dLat, g.lon + dLon].map(v=> v.toFixed(5)).join(',') + ');out center tags qt;';
+  const steuer = [], fehler = [];
+  const frage = (url)=>{ const ac = new AbortController(); steuer.push(ac); const tm = setTimeout(()=> ac.abort(), 10000);
+    return fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ac.signal })
+      .then(r=>{ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(j=>{ vkAedRemarkPruefen(j); return j; })
+      .catch(e=>{ fehler.push(url.split('/')[2] + ': ' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e && e.message) || e)); throw e; })
+      .finally(()=> clearTimeout(tm)); };
+  const erst = (urls)=> Promise.any(urls.map(frage));
+  let j = null;
+  try{ j = await erst(VK_AED_SERVER.slice(0, 2)); }
+  catch(_){ try{ j = await erst(VK_AED_SERVER.slice(2)); }catch(__){ vkAedLetzterFehler = fehler.join(' · '); return null; } }
+  steuer.forEach(ac=>{ try{ ac.abort(); }catch(_){} });
+  vkAedLetzterFehler = '';
+  const liste = (j.elements || []).map(el=>{ const lat = el.lat != null ? el.lat : el.center && el.center.lat, lon = el.lon != null ? el.lon : el.center && el.center.lon;
+    return lat == null ? null : Object.assign({ lat: +lat.toFixed(6), lon: +lon.toFixed(6) }, vkAedText(el.tags || {})); }).filter(Boolean);
+  // in die Zellen einmischen (fehlende Zelle: am = 0 -> wird im Hintergrund noch vollstaendig geholt)
+  liste.forEach(a=>{ const [x, y] = vkAedZelle(a.lon, a.lat), k = x + '/' + y, d = VK_AED_MEM.get(k) || { am: 0, f: [] };
+    if(!(d.f || []).some(b=> b.lat === a.lat && b.lon === a.lon)){ d.f = (d.f || []).concat([a]); VK_AED_MEM.set(k, d); } });
+  vkAedAlleNeu();
+  return liste;
+}
+// Fusswege zu den naechsten AEDs vorab (App-Start, alle paar Minuten), damit der AED-Knopf sofort die Route zeigt.
+// Nur mit bereits erteiltem Standort-Recht (keine Rueckfrage im Hintergrund).
+let vkAedVorab = null, vkAedVorabLaeuft = false;
+async function vkAedFussKandidaten(s, liste){
+  const kand = liste.filter(a=> a.luft <= 2500).slice(0, 3);
+  if(!kand.length) return null;
+  const wege = await Promise.all(kand.map(a=> Promise.race([vkFussweg(s, a), new Promise(r=> setTimeout(()=> r(null), 8000))])));
+  let best = null;
+  kand.forEach((a, i)=>{ const w = wege[i], wert = w ? w.minuten : a.luft / 70; if(!best || wert < best.wert) best = { wert, a, w }; });
+  return best;
+}
+async function vkAedVorabRechnen(){
+  if(vkAedVorabLaeuft || document.visibilityState === 'hidden' || navigator.onLine === false || !navigator.geolocation) return;
+  vkAedVorabLaeuft = true;
+  try{
+    let st = 'prompt'; try{ st = (await navigator.permissions.query({ name: 'geolocation' })).state; }catch(_){}
+    if(st !== 'granted'){ const w = typeof gkvStartGeo === 'function' && gkvStartGeo(); if(w) vkAedVorladen({ lat: w.lat, lon: w.lon }); return; }
+    const p = await new Promise((ok, f)=> navigator.geolocation.getCurrentPosition(ok, f, { enableHighAccuracy: false, maximumAge: 120000, timeout: 8000 })).catch(()=> null);
+    if(!p) return;
+    const s = { lat: p.coords.latitude, lon: p.coords.longitude };
+    if(vkAedVorab && kmLuftlinieEinfach(vkAedVorab.s, s) < 0.075 && Date.now() - vkAedVorab.am < 10 * 60000) return;
+    await vkAedVorladen(s);
+    let g = await vkAedGespeichert(s);
+    if(!g.liste.some(a=> a.luft <= 2500) && !g.frisch){ await vkAedSchnell(s); g = await vkAedGespeichert(s); }
+    const best = await vkAedFussKandidaten(s, g.liste);
+    vkAedVorab = { s, am: Date.now(), best };
+  }catch(_){} finally{ vkAedVorabLaeuft = false; }
+}
+setTimeout(vkAedVorabRechnen, 4000);
+setInterval(vkAedVorabRechnen, 4 * 60000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible') setTimeout(vkAedVorabRechnen, 1500); });
 // Mehrere Zellen mit EINER Abfrage holen (nur veraltete/fehlende; laufende werden mitbenutzt).
 // -> true, wenn alle Zellen danach Daten haben
 async function vkAedZellenHolen(zellen, vorrang){
@@ -16377,7 +16440,7 @@ async function vkAedZellenHolen(zellen, vorrang){
   if(fehlt.length && navigator.onLine !== false){
     const xs = fehlt.map(z=> z[0]), ys = fehlt.map(z=> z[1]);
     const a = vkAedZellBox(Math.min(...xs), Math.min(...ys)), e = vkAedZellBox(Math.max(...xs), Math.max(...ys));
-    const p = vkAedAbfrage({ w: a.w, n: a.n, e: e.e, s: e.s }, fehlt.length > 4 ? 60000 : 25000, vorrang).then(async (liste)=>{
+    const p = vkAedAbfrage({ w: a.w, n: a.n, e: e.e, s: e.s }, fehlt.length > 4 ? 40000 : 20000, vorrang).then(async (liste)=>{
       const je = new Map(fehlt.map(([x, y])=> [x + '/' + y, []]));
       liste.forEach(q=>{ const [x, y] = vkAedZelle(q.lon, q.lat), k = x + '/' + y; if(je.has(k)) je.get(k).push(q); });
       for(const [k, l] of je){ const [x, y] = k.split('/').map(Number); await vkAedSpeichern(x, y, l); }
@@ -16537,13 +16600,13 @@ function vektorKarteOverlay(d, text, opt){
     const stilObj = await vkStilJson(stil);
     map = new ml.Map({ container: box, style: stilObj, center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
       attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5 });
-    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map); vkAedAnbinden(map, true);
+    map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map); vkAedAnbinden(map, true); vkSymbolSkalaAnbinden(map);
     ov.querySelectorAll('.ok-zoom [data-zoom]').forEach(b=> b.onclick = ()=>{ if(b.dataset.zoom === '1') map.zoomIn(); else map.zoomOut(); });
     map.on('error', (e)=>{ if(e && e.error && /style|fetch/i.test(String(e.error.message || ''))) info.textContent = 'Vektorkarte nicht erreichbar (Internet?).'; });
     const ll = (g)=> [g.lon, g.lat];
     const linie = (koords)=> ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: koords } });
     const marke = (html, g, klick)=>{ const el = document.createElement('div'); el.className = 'vk-marke'; el.innerHTML = html; if(klick){ el.style.cursor = 'pointer'; el.onclick = (ev)=>{ ev.stopPropagation(); klick(); }; } return new ml.Marker({ element: el }).setLngLat(ll(g)).addTo(map); };
-    const symbol = (art, g)=> marke('<svg viewBox="-20 -14 40 28" width="' + (art === 'rtw' ? 38 : 26) + '" height="' + (art === 'rtw' ? 26 : 26) + '">' + kartenSymbol(art, 0, 0, 6.5) + '</svg>', g);
+    const symbol = (art, g)=> marke('<svg viewBox="-20 -14 40 28" width="' + (art === 'rtw' ? 46 : 32) + '" height="' + (art === 'rtw' ? 32 : 32) + '">' + kartenSymbol(art, 0, 0, 6.5) + '</svg>', g);
     let ichMarke = null;
     // eigene Ebenen: beim ersten Laden und nach jedem Stilwechsel neu anlegen
     const eigeneEbenen = ()=>{
@@ -16693,12 +16756,43 @@ function vektorKarteOverlay(d, text, opt){
           '<div class="vk-navi-knoepfe"><button type="button" class="vk-navi vk-navi-app" data-lat="' + a.lat.toFixed(6) + '" data-lon="' + a.lon.toFixed(6) + '" data-art="fuss" data-name="AED">Route anzeigen</button>' +
           '<a class="vk-navi vk-navi-g" href="' + gUrl + '" target="_blank" rel="noopener">Google Maps</a></div></div>';
       };
-      // a) gespeicherte Daten: sofort
+      // 0) im Hintergrund schon fuer diesen Standort berechnet (App-Start / alle 4 min): sofort mit Fussweg
+      const vb = vkAedVorab;
+      if(vb && vb.best && kmLuftlinieEinfach(vb.s, s) < 0.075 && Date.now() - vb.am < 15 * 60000){
+        const a = Object.assign({}, vb.best.a, { luft: kmLuftlinieEinfach(s, vb.best.a) * 1000 });
+        zeigen(a, vb.best.w, vb.best.w ? '' : 'Fußweg nicht verfügbar – gerade Linie.'); return;
+      }
+      // a) gespeicherte Daten: sofort -- Fusswege gleich berechnen, Online-Pruefung laeuft nebenher
       const gesp = await vkAedGespeichert(s);
       if(!aktuell()) return;
       let liste = gesp.liste.filter(a=> a.luft <= 6000);
+      if(liste.length && liste[0].luft <= 2500){
+        zeigen(liste[0], null, 'Fußweg wird berechnet …');
+        const best0 = await vkAedFussKandidaten(s, liste);
+        if(!aktuell()) return;
+        if(best0) zeigen(best0.a, best0.w, best0.w ? (gesp.frisch ? '' : 'Gespeicherte Daten – wird online geprüft …') : 'Fußweg nicht verfügbar – gerade Linie.');
+        if(gesp.frisch) return;
+        const neuL = await vkAedSchnell(s);
+        if(!aktuell() || !neuL) return;
+        const n2 = (await vkAedGespeichert(s)).liste;
+        if(n2[0] && best0 && n2[0].luft + 50 < best0.a.luft){ const b2 = await vkAedFussKandidaten(s, n2); if(aktuell() && b2) zeigen(b2.a, b2.w, ''); }
+        else if(aktuell() && best0) zeigen(best0.a, best0.w, best0.w ? '' : 'Fußweg nicht verfügbar – gerade Linie.');
+        return;
+      }
       if(liste.length) zeigen(liste[0], null, gesp.frisch ? 'Fußweg wird berechnet …' : 'Gespeicherte Daten – wird online geprüft …');
-      // b) online pruefen, wenn nichts Aktuelles oder nichts im Umkreis gespeichert ist
+      // b) online pruefen, wenn nichts Aktuelles oder nichts im Umkreis gespeichert ist:
+      //    zuerst schnell den Fussweg-Umkreis, erst ohne Treffer die Zellen bis 6 km
+      if(!gesp.frisch || !liste.length){
+        if(!liste.length) info.innerHTML = 'Nächster AED wird gesucht … <small>(Abfrage bei OpenStreetMap)</small><br>' + VK_DEFIMAP_LINKS;
+        const schnell = await vkAedSchnell(s);
+        if(!aktuell()) return;
+        if(schnell && schnell.length){
+          liste = (await vkAedGespeichert(s)).liste.filter(a=> a.luft <= 6000);
+          const b1 = await vkAedFussKandidaten(s, liste);
+          if(!aktuell()) return;
+          if(b1){ zeigen(b1.a, b1.w, b1.w ? '' : 'Fußweg nicht verfügbar – gerade Linie.'); return; }
+        }
+      }
       if(!gesp.frisch || !liste.length){
         // nur die Zellen, die der 6-km-Umkreis beruehrt (meist 1-2) -- schneller als 3x3
         const dLat = 6 / 111.32, dLon = 6 / (111.32 * Math.cos(s.lat * Math.PI / 180));
@@ -16719,11 +16813,8 @@ function vektorKarteOverlay(d, text, opt){
       if(!liste.length){ info.innerHTML = 'Kein AED im Umkreis von 6 km in OpenStreetMap eingetragen.<br>' + VK_DEFIMAP_LINKS; map._aedWeg = { type: 'FeatureCollection', features: [] }; vkAedWegZeigen(map); return; }
       zeigen(liste[0], null, 'Fußweg wird berechnet …');
       // c) Fusswege zu den 3 naechsten (parallel, max. 8 s) -- kuerzester Fussweg gewinnt
-      const kand = liste.slice(0, 3);
-      const wege = await Promise.all(kand.map(a=> Promise.race([vkFussweg(s, a), new Promise(r=> setTimeout(()=> r(null), 8000))])));
+      const best = (await vkAedFussKandidaten(s, liste)) || await (async ()=>{ const a = liste[0], w = await Promise.race([vkFussweg(s, a), new Promise(r=> setTimeout(()=> r(null), 8000))]); return { a, w }; })();
       if(!aktuell()) return;
-      let best = null;
-      kand.forEach((a, i)=>{ const w = wege[i], wert = w ? w.minuten : a.luft / 70; if(!best || wert < best.wert) best = { wert, a, w }; });
       zeigen(best.a, best.w, best.w ? '' : 'Fußweg nicht verfügbar – gerade Linie.');
     };
     if(vkAedAutostart && !opt.ohneAed){ vkAedAutostart = false; const los = ()=> aedKnopf.onclick(); if(map.loaded()) setTimeout(los, 0); else map.once('load', los); }
@@ -17862,7 +17953,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v290';
+const APP_VERSION = 'v291';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
