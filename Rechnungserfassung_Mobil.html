@@ -6847,7 +6847,7 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
   if(fussMitKonto.length && typeof document !== 'undefined' && typeof girocodePng === 'function' && (typeof ladeEinstellungen !== 'function' || (ladeEinstellungen() || {}).rechnungQr !== false)){
     try{
       const txt = girocodeText(a, rdRunden2(tab.summe), daten.renu);
-      if(txt) await rdGirocodeEinsetzen(zip, await girocodePng(txt, qrModus === 'fliessend'), qrModus === 'fliessend', qrModus === 'daneben');
+      if(txt) await rdGirocodeEinsetzen(zip, await girocodePng(txt, qrModus === 'fliessend'), qrModus === 'fliessend', qrModus === 'daneben', 240);
     }catch(e){ console.warn('GiroCode', e); }
   }
   let ct = await zip.file('[Content_Types].xml').async('string');
@@ -15722,7 +15722,7 @@ async function rdFussAufFolgeseiten(zip){
     zip.file('word/document.xml', doc);
   }catch(e){ console.warn('Fusszeile Folgeseiten', e); }
 }
-async function rdGirocodeEinsetzen(zip, png, imText, textEinruecken){
+async function rdGirocodeEinsetzen(zip, png, imText, textEinruecken, abstandVor){
   const cm = 360000, breite = Math.round((imText ? 3.4 : 2.5) * cm), hoehe = Math.round(breite * png.hoeheZuBreite), id = 'rIdGiroQr1';
   const name = 'word/document.xml';
   zip.file('word/media/girocode.png', png.daten);
@@ -15744,7 +15744,7 @@ async function rdGirocodeEinsetzen(zip, png, imText, textEinruecken){
   const txt = (p)=> (p.match(/<w:t[^>]*>[^<]*<\/w:t>/g) || []).map(t=> t.replace(/<[^>]+>/g, '')).join('');
   const ziel = absaetze.find(p=> /Ich bitte Sie|überweisen/.test(txt(p))) || absaetze.filter(p=> txt(p).trim()).pop(); if(!ziel) return false;
   // imText: als eigener rechtsbuendiger Absatz nach dem Absatz (Laenge der Rechnung variiert, z. B. Aerzte-Rechnung)
-  const hinweis = '<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/><w:spacing w:before="240" w:after="40"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:b/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">Bequem bezahlen per QR-Code (GiroCode)</w:t></w:r></w:p>' +
+  const hinweis = '<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/><w:spacing w:before="' + (abstandVor == null ? 600 : abstandVor) + '" w:after="40"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:b/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">Bequem bezahlen per QR-Code (GiroCode)</w:t></w:r></w:p>' +
     '<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/><w:spacing w:before="0" w:after="60"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="16"/></w:rPr><w:t xml:space="preserve">Mit der Banking-App scannen – Empfänger, IBAN, Betrag und Rechnungsnummer werden übernommen.</w:t></w:r></w:p>';
   const inline = hinweis + '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="' + breite + '" cy="' + hoehe + '"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="9102" name="GiroCode" descr="GiroCode zum Bezahlen"/><wp:cNvGraphicFramePr/>' +
     '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
@@ -17763,6 +17763,7 @@ function aerzteTabelleXml(dienste, summe){
     '<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/></w:tblCellMar><w:tblLook w:val="0000"/></w:tblPr>' +
     '<w:tblGrid>' + g.map(w=> '<w:gridCol w:w="' + w + '"/>').join('') + '</w:tblGrid>' + x.join('') + '</w:tbl>';
 }
+const AERZTE_QR_PLATZ_DIENSTE = 6;   // bis zu so vielen Diensten passt der QR-Code mit groesserem Abstand noch auf Seite 1
 async function aerzteDocxErzeugen(vorlage, daten){
   const zip = await JSZip.loadAsync(vorlage);
   const a = daten.arzt || {};
@@ -17825,7 +17826,7 @@ async function aerzteDocxErzeugen(vorlage, daten){
     try{
       const txt = girocodeText(a, Math.round((Number(daten.summe) || 0) * 100) / 100, daten.renu);
       if(txt){
-        await rdGirocodeEinsetzen(zip, await girocodePng(txt, true), true);
+        await rdGirocodeEinsetzen(zip, await girocodePng(txt, true), true, false, (daten.dienste || []).length > AERZTE_QR_PLATZ_DIENSTE ? 240 : 600);   // mit Abstand abgesetzt, ausser es wird eng
         let ct = await zip.file('[Content_Types].xml').async('string');
         if(!/Extension="png"/i.test(ct)){ ct = ct.replace('<Default ', '<Default Extension="png" ContentType="image/png"/><Default '); zip.file('[Content_Types].xml', ct); }
       }
@@ -18299,7 +18300,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v314';
+const APP_VERSION = 'v315';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
