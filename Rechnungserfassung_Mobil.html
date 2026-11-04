@@ -17776,6 +17776,7 @@ function aerzteTabelleXml(dienste, summe){
     '<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="' + RECHNUNG_ZELLRAND_TWIPS + '" w:type="dxa"/></w:tblCellMar><w:tblLook w:val="0000"/></w:tblPr>' +
     '<w:tblGrid>' + g.map(w=> '<w:gridCol w:w="' + w + '"/>').join('') + '</w:tblGrid>' + x.join('') + '</w:tbl>';
 }
+const AERZTE_QR_GROSS_MAX = 7, AERZTE_QR_KLEIN_MAX = 16;   // bis 7 Dienste grosser QR-Code; 8-16 kleiner wie bei PT/LS (Seite 1); darueber passt es ohnehin nicht -> gross auf Seite 2
 const AERZTE_QR_PLATZ_DIENSTE = 6;   // bis zu so vielen Diensten passt der QR-Code mit groesserem Abstand noch auf Seite 1
 async function aerzteDocxErzeugen(vorlage, daten){
   const zip = await JSZip.loadAsync(vorlage);
@@ -17839,7 +17840,9 @@ async function aerzteDocxErzeugen(vorlage, daten){
     try{
       const txt = girocodeText(a, Math.round((Number(daten.summe) || 0) * 100) / 100, daten.renu);
       if(txt){
-        await rdGirocodeEinsetzen(zip, await girocodePng(txt, true), true, false, (daten.dienste || []).length > AERZTE_QR_PLATZ_DIENSTE ? 240 : 600);   // mit Abstand abgesetzt, ausser es wird eng
+        const nD = (daten.dienste || []).length;
+        if(nD > AERZTE_QR_GROSS_MAX && nD <= AERZTE_QR_KLEIN_MAX) await rdGirocodeEinsetzen(zip, await girocodePng(txt), false, true);   // klein unten rechts wie bei PT/LS, Text daneben -> bleibt auf Seite 1
+        else await rdGirocodeEinsetzen(zip, await girocodePng(txt, true), true, false, nD > AERZTE_QR_PLATZ_DIENSTE ? 240 : 600);   // gross und mittig, mit Abstand abgesetzt, ausser es wird eng
         let ct = await zip.file('[Content_Types].xml').async('string');
         if(!/Extension="png"/i.test(ct)){ ct = ct.replace('<Default ', '<Default Extension="png" ContentType="image/png"/><Default '); zip.file('[Content_Types].xml', ct); }
       }
@@ -18313,7 +18316,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v316';
+const APP_VERSION = 'v317';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
