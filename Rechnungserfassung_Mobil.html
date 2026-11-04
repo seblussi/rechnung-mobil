@@ -603,6 +603,7 @@ try{
   .ar-knoepfe button[data-ar-erh].an{background:#1f8a4c; border-color:#1f8a4c; color:#fff;}
   .ar-knoepfe button.ar-weg{background:#c0392b; border-color:#c0392b; color:#fff; padding:6px 10px;}
   .ar-liste{margin:2px 0 8px; padding-left:18px; font-size:13.5px;}
+  .einr-fehlt{margin:6px 0 8px; padding-left:20px;} .einr-fehlt li{margin:2px 0;}
   /* Am PC: Inhalt mittig in Handybreite, Maus statt Wischen */
   @media (min-width: 760px){
     main{max-width:680px; margin-left:auto; margin-right:auto;}
@@ -5249,6 +5250,42 @@ async function einrVorhanden(token, pfad){
   return true;
 }
 function einrSchonEingerichtet(){ const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {}; return !!(w.ARZTNAME && w.ARZTADRESSE1); }
+// Was fehlt noch? -> [{ schritt, text }] (Dateien nur mit Anmeldung pruefbar)
+async function einrFehlt(){
+  const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {}, f = [];
+  try{
+    if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){
+      const token = await msGraphTokenHolen(), paket = await einrStarterLaden(), fehlen = [];
+      for(const o of paket.ordner) if(!await einrVorhanden(token, o)) fehlen.push('Ordner „' + (o.split('/').pop()) + '“');
+      for(const d of paket.dateien){
+        if(await einrVorhanden(token, d.ziel)) continue;
+        let imRepo = false; try{ imRepo = (await fetch('./starter/' + encodeURIComponent(d.quelle), { method: 'HEAD', cache: 'no-cache' })).ok; }catch(_){}
+        if(imRepo) fehlen.push(d.titel);
+      }
+      if(fehlen.length) f.push({ schritt: 'dateien', text: 'Dateien in OneDrive: ' + fehlen.join(', ') });
+    }
+  }catch(_){}
+  const daten = [['ARZTNAME', 'Name'], ['ARZTADRESSE1', 'Straße'], ['ARZTADRESSE2', 'PLZ Ort'], ['ARZTEMAIL', 'E-Mail'], ['ARZTIBAN', 'IBAN']].filter(([k])=> !String(w[k] || '').trim()).map(([, t])=> t);
+  try{ if(!gkvStartAdresse()) daten.push('Ausgangspunkt (Wache/Praxis)'); }catch(_){}
+  if(daten.length) f.push({ schritt: 'daten', text: 'Deine Daten: ' + daten.join(', ') });
+  try{ if(typeof dienstprofile === 'function' && !dienstprofile().length && typeof ansichtEinrichtung === 'function' && /'dienst'/.test(String(ansichtEinrichtung))) f.push({ schritt: 'dienst', text: 'Dienstprofil (Ausgangspunkt fürs Wegegeld)' }); }catch(_){}
+  const eigeneWl = String(w.BRIEF_WEITERLEITUNG || '').trim() && (typeof LXP_WEITERLEITUNG_STANDARD === 'undefined' || w.BRIEF_WEITERLEITUNG.trim() !== LXP_WEITERLEITUNG_STANDARD);
+  if(!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY && eigeneWl)) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY) ? 'LetterXpress-Zugang' : '', !eigeneWl ? 'eigene Azure-Weiterleitung' : ''].filter(Boolean).join(' und ') });
+  return f;
+}
+// unvollstaendig -> Hinweis und die fehlenden Schritte durchgehen (Vorhandenes ist vorausgefuellt)
+async function einrUnvollstaendigFragen(fehlt, nebenbei){
+  const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {};
+  const akt = await betaOverlay.ergebnis('Einrichtung unvollständig',
+    (w.ARZTNAME ? 'Deine Einstellungen (einstellungen.ini) sind da – <b>' + htmlEsc(w.ARZTNAME) + '</b>. ' : '') + 'Es fehlt noch:' +
+    '<ul class="einr-fehlt">' + fehlt.map(x=> '<li>' + htmlEsc(x.text) + '</li>').join('') + '</ul>' +
+    'Der Assistent springt zum ersten fehlenden Schritt und geht von dort weiter; was schon eingerichtet ist, ist vorausgefüllt.',
+    [{ label: nebenbei ? 'Später' : 'Zur Startseite', akt: 'ende' }, { label: 'Weiter einrichten', akt: 'weiter', primaer: true }]);
+  betaOverlay.schliessen();
+  if(akt === 'weiter'){ LS.set('einrichtung_fehlt', fehlt.map(x=> x.schritt)); ansichtEinrichtung(fehlt[0].schritt); return true; }
+  if(!nebenbei){ LS.set('einrichtung_schritt', null); ansichtStart(); }
+  return false;
+}
 async function einrSchonEingerichtetPruefen(){
   if(einrSchonEingerichtetPruefen.laeuft) return; einrSchonEingerichtetPruefen.laeuft = true;
   try{
@@ -5256,6 +5293,8 @@ async function einrSchonEingerichtetPruefen(){
     if(!einrSchonEingerichtet() || !LS.get('einrichtung_auto', false)) return;
     LS.set('einrichtung_auto', false);
     const w = (iniCacheLaden() || {}).werte || {};
+    const fehlt = await einrFehlt();
+    if(fehlt.length){ await einrUnvollstaendigFragen(fehlt, false); return; }
     const akt = await betaOverlay.ergebnis('Bereits eingerichtet', 'Für dein Konto gibt es schon Einstellungen (einstellungen.ini) mit deinen Daten – <b>' + htmlEsc(w.ARZTNAME) + '</b>, ' + htmlEsc(w.ARZTADRESSE1) + '. Der Einrichtungsassistent wird nicht gebraucht.',
       [{ label: 'Trotzdem durchgehen', akt: 'weiter' }, { label: 'Zur Startseite', akt: 'ende', primaer: true }]);
     betaOverlay.schliessen();
@@ -18011,7 +18050,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v293';
+const APP_VERSION = 'v294';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -21055,6 +21094,15 @@ try{
   if(ersterStart && einrSchonEingerichtet()) ersterStart = false;   // einstellungen.ini schon da -> nicht noetig
   if(ersterStart) LS.set('einrichtung_auto', true);
   if(ersterStart || LS.get('einrichtung_schritt', null)) setTimeout(()=>{ if(aktuelleAnsichtIstHauptbildschirm) ansichtEinrichtung(); }, 300);
+  // schon (teilweise) eingerichtet: einmal pruefen, ob noch etwas fehlt (Dateien, Briefversand/Azure ...)
+  else if(einrSchonEingerichtet() && !LS.get('einr_vollst_gefragt', false)) setTimeout(async ()=>{
+    try{
+      for(let i = 0; i < 10 && typeof msGraphStatus !== 'undefined' && msGraphStatus !== 'angemeldet' && msGraphStatus !== 'abgemeldet'; i++) await new Promise(r=> setTimeout(r, 1000));
+      if(!aktuelleAnsichtIstHauptbildschirm || document.querySelector('.beta-overlay')) return;
+      const fehlt = await einrFehlt(); LS.set('einr_vollst_gefragt', true);
+      if(fehlt.length && aktuelleAnsichtIstHauptbildschirm) einrUnvollstaendigFragen(fehlt, true);
+    }catch(_){}
+  }, 2500);
 }catch(_){}
 // Schnellstart aus dem App-Symbol (Rechtsklick in der Taskleiste / langes Druecken): ?neu=dienst|rechnung|ls|pt|gkv, ?seite=fahrtenbuch
 try{
