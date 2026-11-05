@@ -1675,7 +1675,7 @@ try{
   .karte-ebene.laedt{opacity:.55;}
   .karte-auge{position:absolute; top:74px; right:10px; z-index:4; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
-  .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} :root{--kr-ring:conic-gradient(#e6c800,#2f8fd6,#2fa84f,#d9609f,#4aa6cf,#e6c800);} .karte-auge.kreise::after, .karte-auge.beide::after{content:''; position:absolute; inset:-6px; border-radius:14px; padding:4px; background:var(--kr-ring); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events:none;} .mini-ebenen .karte-auge.kreise::after, .mini-ebenen .karte-auge.beide::after{inset:-5px; padding:3px; border-radius:12px;} .karte-auge.aus{opacity:.85;}
+  .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} :root{--kr-ring:conic-gradient(#e6c800,#2f8fd6,#2fa84f,#d9609f,#4aa6cf,#8e24aa,#e6c800);} .karte-auge.kreise::after, .karte-auge.beide::after{content:''; position:absolute; inset:-6px; border-radius:14px; padding:4px; background:var(--kr-ring); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events:none;} .mini-ebenen .karte-auge.kreise::after, .mini-ebenen .karte-auge.beide::after{inset:-5px; padding:3px; border-radius:12px;} .karte-auge.aus{opacity:.85;}
   .mini-ebenen .karte-auge{width:40px; height:40px; top:54px; right:8px; border-radius:9px;} .mini-ebenen .karte-auge svg{width:18px; height:18px;}
   .ok-zoom{position:absolute; right:10px; bottom:76px; z-index:5; display:flex; flex-direction:column; gap:10px;}
   .ok-zoom button{width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
@@ -14777,9 +14777,9 @@ function karteModusWeiter(){ const n = { an: 'kreise', kreise: 'beide', beide: '
 function augeKlasse(el){ if(!el) return; const m = karteModus(); el.classList.toggle('aus', m === 'aus'); el.classList.toggle('kreise', m === 'kreise'); el.classList.toggle('beide', m === 'beide');
   el.title = { an: 'Zonen (antippen: km-Ringe)', kreise: 'km-Ringe (antippen: Zonen + Ringe)', beide: 'Zonen + km-Ringe (antippen: aus)', aus: 'aus (antippen: Zonen)' }[m]; }
 // km-Kreise um die Notfallpraxis (wie der 50-km-Kreis): Stufen der Wegepauschale
-const KM_KREISE = [2, 5, 10, 20, 30];
+const KM_KREISE = [2, 5, 10, 20, 30, 50];   // 50 km als normaler Ring (wie Launch)
 // Farben wie die Zonen der KVBW-Karte (2-km-Zone ... 30-km-Zone)
-const kmKreisFarbe = (R)=>{ const i = KM_KREISE.indexOf(R) + 1; return (typeof NFP_ZONEN !== 'undefined' && NFP_ZONEN[i] && NFP_ZONEN[i].farbe) || '#555'; };
+const kmKreisFarbe = (R)=>{ if(R === 50) return '#8e24aa'; const i = KM_KREISE.indexOf(R) + 1; return (typeof NFP_ZONEN !== 'undefined' && NFP_ZONEN[i] && NFP_ZONEN[i].farbe) || '#555'; };
 function nfpKreis(R){
   const m = kreisMitte(), schl = m.lat.toFixed(5) + ',' + m.lon.toFixed(5);
   if(nfpKreis.k !== schl){ nfpKreis.c = {}; nfpKreis.k = schl; }
@@ -14815,7 +14815,7 @@ function vkModusAnwenden(map){
   if(!map) return; const m = karteModus();
   ['vk-zonen-fl', 'vk-zonen-li'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', (m === 'an' || m === 'beide') ? 'visible' : 'none'); });
   ['vk-kreise-li', 'vk-kreise-tx'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', (m === 'kreise' || m === 'beide') ? 'visible' : 'none'); });
-  if(map.getLayer('vk-k50')) map.setLayoutProperty('vk-k50', 'visibility', m === 'aus' ? 'none' : 'visible');
+  if(map.getLayer('vk-k50')) map.setLayoutProperty('vk-k50', 'visibility', m === 'an' ? 'visible' : 'none');
 }
 // Zonen als SVG in Kartenpixeln (ueber der OSM-Ersatzkarte)
 function nfpZonenPixelSvg(){
@@ -14931,7 +14931,7 @@ function osmAusschnitt(d, opt){
       svg += '<polyline class="km-kreis" style="stroke:' + kmKreisFarbe(R) + '" points="' + k.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '"/>' +
         '<text x="' + f(k[0].x) + '" y="' + f(k[0].y - r * 0.5) + '" class="km-kreis-text" style="fill:' + kmKreisFarbe(R) + '" font-size="' + f(Math.max(r * 1.2, 10)) + '">' + R + ' km</text>'; });
   }
-  if(d.nfp && typeof NFP_KARTE !== 'undefined' && karteModus() !== 'aus' && nfp50Kreis().length){
+  if(d.nfp && typeof NFP_KARTE !== 'undefined' && karteModus() === 'an' && nfp50Kreis().length){
     const k = nfp50Kreis().map(P);
     svg += '<polyline class="km50" points="' + k.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '"/>';
     const top = k[0]; svg += '<text x="' + f(top.x) + '" y="' + f(top.y - r * 0.6) + '" class="km50-text" font-size="' + f(Math.max(r * 1.3, 11)) + '">50 km</text>';
@@ -15152,7 +15152,7 @@ function karteLegendeHtml(d){
   if(d.wegAlt && d.wegAlt.length) t.push('<span><i class="r"></i>andere Varianten</span>');
   if(d.aed) t.push('<span><i class="aed"></i>AED</span>');
   if(d.nfp){ const m = karteModus(); if(m === 'an' || m === 'beide') t.push('<span><i class="zo"></i>Zonen</span>'); if(m === 'kreise' || m === 'beide') t.push('<span><i class="kr"></i>km-Ringe</span>'); }
-  if(d.nfp){ t.push('<span><i class="n"></i>NFP</span>'); if(typeof gkvStartGeo === 'function' && gkvStartGeo()) t.push('<span><i class="rtw"></i>Wache</span>'); if(karteModus() !== 'aus' && typeof NFP_KARTE !== 'undefined' && nfp50Kreis().length) t.push('<span><i class="k50"></i>50 km</span>'); }
+  if(d.nfp){ t.push('<span><i class="n"></i>NFP</span>'); if(typeof gkvStartGeo === 'function' && gkvStartGeo()) t.push('<span><i class="rtw"></i>Wache</span>'); if(karteModus() === 'an' && typeof NFP_KARTE !== 'undefined' && nfp50Kreis().length) t.push('<span><i class="k50"></i>50 km</span>'); }
   return t.length ? '<div class="luft-karte-legende">' + t.join('') + '</div>' : '';
 }
 function miniKarteHtml(d, opt){
@@ -15297,7 +15297,7 @@ function vkDatenEbenen(map, d){
   map.addLayer({ id: 'vk-zonen-fl', type: 'fill', source: 'vk-zonen', layout: { visibility: zonenAn ? 'visible' : 'none' }, paint: { 'fill-color': ['get', 'farbe'], 'fill-opacity': 0.28 } });
   map.addLayer({ id: 'vk-zonen-li', type: 'line', source: 'vk-zonen', layout: { visibility: zonenAn ? 'visible' : 'none' }, paint: { 'line-color': ['get', 'farbe'], 'line-width': 2 } });
   map.addSource('vk-k50', { type: 'geojson', data: linie(nfp50Kreis().map(ll)) });
-  map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', layout: { visibility: karteModus() === 'aus' ? 'none' : 'visible' }, paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
+  map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', layout: { visibility: karteModus() === 'an' ? 'visible' : 'none' }, paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
   vkKreiseEbenen(map);
   map.addSource('vk-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: (d.wegAlt || []).filter(x=> x && x.length > 1).map(linie) } });
   map.addLayer({ id: 'vk-alt', type: 'line', source: 'vk-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#6b7686', 'line-width': 4, 'line-dasharray': [2, 1.6], 'line-opacity': 0.85 } });
@@ -17159,7 +17159,7 @@ function vektorKarteOverlay(d, text, opt){
       map.addLayer({ id: 'vk-zonen-fl', type: 'fill', source: 'vk-zonen', paint: { 'fill-color': ['get', 'farbe'], 'fill-opacity': 0.28 } });
       map.addLayer({ id: 'vk-zonen-li', type: 'line', source: 'vk-zonen', paint: { 'line-color': ['get', 'farbe'], 'line-width': 2 } });
       map.addSource('vk-k50', { type: 'geojson', data: linie(nfp50Kreis().map(ll)) });
-      map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', layout: { visibility: karteModus() === 'aus' ? 'none' : 'visible' }, paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
+      map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', layout: { visibility: karteModus() === 'an' ? 'visible' : 'none' }, paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
       vkKreiseEbenen(map);
       map.addSource('vk-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: (d.wegAlt || []).filter(w=> w && w.length > 1).map(linie) } });
       map.addLayer({ id: 'vk-alt', type: 'line', source: 'vk-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#6b7686', 'line-width': 4, 'line-dasharray': [2, 1.6], 'line-opacity': 0.85 } });
@@ -18615,7 +18615,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v334';
+const APP_VERSION = 'v335';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
