@@ -1527,7 +1527,7 @@ try{
   .fb-schichten .fb-chip.schicht{display:inline-flex; flex-direction:column; align-items:center; line-height:1.15; flex:0 0 calc((100% - 18px) / 4); min-width:0; box-sizing:border-box; padding-left:2px; padding-right:2px; text-align:center;}
   .fb-schichten .fb-chip.schicht small{font-size:11px; opacity:.75;} .fb-schichten .fb-chip.schicht b.lang{font-size:12.5px; hyphens:manual;}
   .ds-dienst-start{display:none;}
-  body.design-einhand .ds-dienst-start{display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; margin:0 0 10px; padding:8px 12px; min-height:50px;
+  body.design-einhand .ds-dienst-start{display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; margin:10px 0 10px; padding:8px 12px; min-height:50px;
     border:0; border-radius:16px; background:#d9861a; color:#fff; font:inherit; font-size:16px; font-weight:800; text-align:left; cursor:pointer;}
   body.design-einhand .ds-dienst-start svg{fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;}
   body.design-einhand .ds-ds-icon{display:flex; width:34px; height:34px; align-items:center; justify-content:center; border-radius:10px; background:rgba(255,255,255,.2);}
@@ -18366,7 +18366,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v325';
+const APP_VERSION = 'v326';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19186,12 +19186,14 @@ function designStartErgaenzen(){
   if(d === 'einhand'){
     const w = designWeiterFall();
     vor('<div class="ds-start ds-einhand"><div class="ds-klein ds-neu-titel">NEUER FALL</div></div>');
-    // schmale Zeile ueber den Kacheln: Dienst starten (nur wenn keiner laeuft/geplant ist)
-    if(info.modus !== 'laufend' && info.modus !== 'geplant')
-      vor('<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>');
     const ws = designWeiterFaelle();
     if(ws.length) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand ds-weiter-block">' + ws.map((x, i)=> '<div class="ds-weiter-zeile wisch-huelle"><button type="button" class="ds-weiter" data-wf="' + i + '"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten · unfertig</span><b>' + htmlEsc(x.titel) + '</b></span>' + DS_ICON.pfeil + '</button>' +
       '</div>').join('') + '</div>');
+    // Dienst starten unter den Kacheln (und unter unfertigen Faellen) -- direkt ueber der Dienstanzeige; nur wenn keiner laeuft/geplant ist
+    if(info.modus !== 'laufend' && info.modus !== 'geplant'){
+      const nach = app.querySelector('.ds-weiter-block') || reihe;
+      nach.insertAdjacentHTML('afterend', '<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>');
+    }
     // Leiste unten kommt global (designGlobalNav), damit sie auf allen Seiten steht
     app.querySelectorAll('[data-wf]').forEach(b=>{
       b.onclick = ()=> ws[+b.dataset.wf].oeffnen();
