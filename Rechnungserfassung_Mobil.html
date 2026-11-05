@@ -18365,7 +18365,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v323';
+const APP_VERSION = 'v324';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18592,16 +18592,28 @@ function liveDienstAuto(){
 }
 // Schicht, deren Beginn hoechstens 30 min von jetzt entfernt ist -- zuerst die zuletzt benutzte Dienstart,
 // bei mehreren gleichzeitigen Schichten (Frueh 1-4) die zuletzt gewaehlte
+// Vorauswahl beim Dienststart: Dienst, der gerade laeuft (von 30 min vor Beginn bis Dienstende).
+// Bei der zuletzt benutzten Dienstart gilt die ganze Dienstspanne; eine andere Dienstart wird nur
+// vorgeschlagen, wenn einer ihrer Dienste gerade beginnt (+-30 min) -- sonst wuerde z.B. tagsueber
+// immer docdirekt statt des gewohnten Fahrdiensts vorausgewaehlt.
+// Mehrere passende Dienste: zuerst die gerade beginnenden, dann die zuletzt gewaehlte Schicht, sonst die erste.
 function liveSchichtJetzt(){
   const jetzt = new Date(), T = 30 * 60000, a0 = LS.get('fb_dienstart', 'Fahrdienst');
   const arten = [a0].concat(FB_DIENSTARTEN.filter(a=> a !== a0)), letzte = LS.get('live_letzte_schicht', {}) || {};
+  const zeit = (tag, hhmm)=>{ const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm || ''); if(!m) return null; const d = new Date(tag); d.setHours(+m[1], +m[2], 0, 0); return d; };
   for(const art of arten){
-    const treffer = [];
+    const beginnt = [], laeuft = [];
     [0, -1, 1].forEach(off=>{
       const tag = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate() + off);
-      dienstSchichten(art, tag).forEach(x=>{ const m = /^(\d{1,2}):(\d{2})$/.exec(x.von); if(!m) return; const st = new Date(tag); st.setHours(+m[1], +m[2], 0, 0);
-        if(Math.abs(st - jetzt) <= T) treffer.push({ art, datum: liveIso(tag), von: x.von, bis: x.bis, label: x.label }); });
+      dienstSchichten(art, tag).forEach(x=>{
+        const st = zeit(tag, x.von); let en = zeit(tag, x.bis); if(!st || !en) return;
+        if(en <= st) en = new Date(en.getTime() + 86400000);   // ueber Mitternacht
+        const t = { art, datum: liveIso(tag), von: x.von, bis: x.bis, label: x.label };
+        if(Math.abs(st - jetzt) <= T) beginnt.push(t);
+        else if(art === a0 && jetzt >= st - T && jetzt < en) laeuft.push(t);
+      });
     });
+    const treffer = beginnt.length ? beginnt : laeuft;
     if(treffer.length) return treffer.find(t=> t.label === letzte[art]) || treffer[0];
   }
   return null;
