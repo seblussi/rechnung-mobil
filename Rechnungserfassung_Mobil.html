@@ -1935,6 +1935,8 @@ try{
   body.quer .quer-start > .quer-sp > *:first-child{margin-top:0;}
   body.quer .quer-start.zwei{grid-template-columns:minmax(0, 1fr) minmax(0, 1.25fr);}
   .quer-sp[hidden]{display:none !important;}
+  body.quer .quer-sp1 .quer-uhr{margin:6px 0 0;}
+  body.quer .quer-sp1 .quer-uhr .ds-kopfzeile{margin-top:18px;}
   .fb-chip.schicht.passt{box-shadow:inset 0 0 0 2px #e08a1e;}   /* passt zur Uhrzeit, Nummer noch waehlen */
   /* Reiter GKV | PT/LS bleiben beim Wechsel an Ort und Stelle (PT/LS-Liste ist im Querformat breiter) */
   body.quer main:has(.quer-breit) .vw-seg{max-width:648px; margin-left:auto; margin-right:auto;}
@@ -3186,7 +3188,7 @@ async function ansichtFahrtenbuch(blatt){
       const dd = buch.dienste[+z.dataset.fbdienst]; if(!dd) return;
       if(dd.lokal){
         if(!await betaFrage('Den Dienst ' + fbTagText(dd.tag) + ' ' + (dd.zeitLabel || '') + ' aus der App entfernen?\n\nDie Fälle selbst bleiben erhalten.', 'Entfernen', 'Abbrechen')) return;
-        if(dd.appId === 'live') LS.set('live_dienst', null); else appDienstEntfernen(dd.appId);
+        if(dd.appId === 'live'){ LS.set('live_dienst', null); syncBaldSchreiben(); } else appDienstEntfernen(dd.appId);
         ansichtFahrtenbuch(buch.blatt); return;
       }
       fbLoeschen(dd._orig || dd, null);
@@ -10673,8 +10675,8 @@ function betaFallAblage(f){
 const ENTWURF_SCHLUESSEL = 'entwuerfe';
 let betaAktuellerEntwurf = null; // {art, id} der gerade offenen neuen Rechnung
 function betaEntwuerfe(){ const a = LS.get(ENTWURF_SCHLUESSEL, []); return Array.isArray(a) ? a : []; }
-function betaEntwurfSpeichern(e){ const a = betaEntwuerfe().filter(x=> x.id !== e.id); a.unshift(e); LS.set(ENTWURF_SCHLUESSEL, a); }
-function betaEntwurfEntfernen(id){ LS.set(ENTWURF_SCHLUESSEL, betaEntwuerfe().filter(x=> x.id !== id)); }
+function betaEntwurfSpeichern(e){ const a = betaEntwuerfe().filter(x=> x.id !== e.id); a.unshift(e); LS.set(ENTWURF_SCHLUESSEL, a); syncBaldSchreiben(); }
+function betaEntwurfEntfernen(id){ LS.set(ENTWURF_SCHLUESSEL, betaEntwuerfe().filter(x=> x.id !== id)); syncBaldSchreiben(); }
 // Nach erfolgreichem Speichern
 function betaEntwurfFertig(){
   if(betaAktuellerEntwurf) betaEntwurfEntfernen(betaAktuellerEntwurf.id);
@@ -18275,6 +18277,64 @@ function syncZusammenfuehren(entfernt){
   return { geaendert, daten: raus };
 }
 
+
+// ---------------------------------------------------------------------
+// Weitere Staende, die auf allen Geraeten gleich sein sollen (gleiche Datei):
+// gestarteter Dienst (live_dienst), angelegte Dienste (app_dienste) und
+// unfertige LS/PT-Faelle (entwuerfe). Je Eintrag gewinnt der neueste Stand,
+// Loeschungen (z.B. "Dienst beenden") gelten auch auf dem anderen Geraet.
+// Aenderungen werden beim Abgleich am Hash erkannt -- kein Eingriff in die
+// vielen Stellen, die diese Listen schreiben.
+// ---------------------------------------------------------------------
+const SYNC_SAETZE = {
+  live_dienst: {
+    laden: ()=>{ const d = LS.get('live_dienst', null); return d && typeof d === 'object' ? [Object.assign({}, d, { id: 'live' })] : []; },
+    setzen: (a)=>{ const d = a[0]; if(d){ const { id, ...rest } = d; LS.set('live_dienst', rest); } else LS.set('live_dienst', null); }
+  },
+  app_dienste: {
+    laden: ()=>{ const a = LS.get('app_dienste', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
+    setzen: (a)=>{ const v = (d)=>{ try{ return liveDienstFenster(d).von.getTime(); }catch(_){ return 0; } }; LS.set('app_dienste', a.slice().sort((x, y)=> v(x) - v(y))); }
+  },
+  entwuerfe: {
+    laden: ()=>{ const a = LS.get('entwuerfe', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
+    setzen: (a)=> LS.set('entwuerfe', a)
+  }
+};
+function syncSaetzeZusammenfuehren(entfernt){
+  const meta = LS.get('sync_saetze_meta', {}), weg = LS.get('sync_saetze_weg', {}), jetzt = Date.now();
+  const rS = (entfernt && entfernt.saetze) || {}, raus = {}, grenze = jetzt - 60 * 86400000;
+  let geaendert = false;
+  Object.keys(SYNC_SAETZE).forEach(k=>{
+    const def = SYNC_SAETZE[k], erst = !meta[k];
+    const m = meta[k] = meta[k] || {}, w = weg[k] = weg[k] || {};
+    // lokale Aenderungen/Loeschungen seit dem letzten Abgleich (beim allerersten Mal gilt der Bestand als alt)
+    const lokal = def.laden(), ids = new Set();
+    lokal.forEach(x=>{ const id = String(x.id), h = syncHash(x); ids.add(id); if(!m[id]) m[id] = { h, t: erst ? 1 : jetzt }; else if(m[id].h !== h) m[id] = { h, t: jetzt }; });
+    Object.keys(m).forEach(id=>{ if(!ids.has(id)){ w[id] = jetzt; delete m[id]; } });
+    const rW = (rS[k] && rS[k].geloescht) || {};
+    Object.keys(rW).forEach(id=>{ if(!w[id] || rW[id] > w[id]) w[id] = rW[id]; });
+    Object.keys(w).forEach(id=>{ if(w[id] < grenze) delete w[id]; });
+    const map = new Map();
+    lokal.forEach(x=> map.set(String(x.id), { x, t: m[String(x.id)].t, lokal: true }));
+    (Array.isArray(rS[k] && rS[k].liste) ? rS[k].liste : []).forEach(r=>{
+      if(!r || r.id == null) return;
+      const { _t, ...x } = r, id = String(x.id), t = Number(_t) || 0, da = map.get(id);
+      if(!da || t > da.t) map.set(id, { x, t, lokal: false, ersetzt: !!da });
+    });
+    let gA = false; const neu = [], liste = [];
+    map.forEach((e, id)=>{
+      if(w[id] && w[id] >= e.t){ if(e.lokal || e.ersetzt) gA = true; delete m[id]; return; }
+      if(w[id]) delete w[id];
+      if(!e.lokal){ gA = true; m[id] = { h: syncHash(e.x), t: e.t }; }
+      neu.push(e.x); liste.push({ ...e.x, _t: e.t });
+    });
+    if(gA){ geaendert = true; def.setzen(neu); }
+    raus[k] = { liste, geloescht: w };
+  });
+  LS.set('sync_saetze_meta', meta); LS.set('sync_saetze_weg', weg);
+  return { geaendert, saetze: raus };
+}
+
 let syncLaeuft = null, syncNochmal = false, syncTimer = null, syncZuletzt = 0;
 async function syncDateiLesen(token){
   const url = msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON);
@@ -18302,9 +18362,11 @@ async function faelleAbgleichen(schreiben){
         if(daten && Array.isArray(daten.bestatterAenderungen)) daten.bestatterAenderungen.forEach(b=>{ if(b && b.name) try{ bestatterEintragen(b.name, b.adr1, b.adr2); }catch(_){} });
         const { geaendert, daten: raus } = syncZusammenfuehren(daten);
         if(geaendert) geaendertGesamt = true;
+        const ss = syncSaetzeZusammenfuehren(daten);
+        raus.saetze = ss.saetze; if(ss.geaendert) geaendertGesamt = true;
         raus.bestatterAenderungen = ladeKatalog().filter(b=> b.herkunft === 'handy');
-        const vorher = daten ? JSON.stringify({ f: daten.faelle, g: daten.gkv, w: daten.geloescht }) : '';
-        const nachher = JSON.stringify({ f: raus.faelle, g: raus.gkv, w: raus.geloescht });
+        const vorher = daten ? JSON.stringify({ f: daten.faelle, g: daten.gkv, w: daten.geloescht, s: daten.saetze }) : '';
+        const nachher = JSON.stringify({ f: raus.faelle, g: raus.gkv, w: raus.geloescht, s: raus.saetze });
         if(vorher === nachher && !(schreiben && !daten)) break;   // Datei ist schon aktuell
         const kopf = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
         if(etag) kopf['If-Match'] = etag; else kopf['If-None-Match'] = '*';
@@ -18325,7 +18387,7 @@ async function faelleAbgleichen(schreiben){
 }
 function syncAnsichtAuffrischen(){
   try{
-    if(typeof appToastAnzeigen === 'function') appToastAnzeigen('Fälle von einem anderen Gerät übernommen.', 2600);
+    if(typeof appToastAnzeigen === 'function') appToastAnzeigen('Stand von einem anderen Gerät übernommen.', 2600);
     if(typeof einstellungenOffen !== 'undefined' && einstellungenOffen) return;
     if(typeof aktuelleAnsichtIstHauptbildschirm !== 'undefined' && aktuelleAnsichtIstHauptbildschirm) ansichtStart();
   }catch(_){}
@@ -18366,7 +18428,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v326';
+const APP_VERSION = 'v327';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18409,14 +18471,22 @@ function querStartAnordnen(){
   const sp = (k)=>{ const d = document.createElement('div'); d.className = 'quer-sp ' + k; return d; };
   const s1 = sp('quer-sp1'), s2 = sp('quer-sp2'), s3 = sp('quer-sp3 ds-live');
   kinder.forEach(k=>{ if(k === kopf || k === live || k.matches('nav, .ds-nav, .ds-dock, script, style')) return; s1.appendChild(k); });
+  // Uhr (Ring) links unter Neuer Fall; in der Mitte steht nur die Dienstuebersicht
+  const ring = live.querySelector(':scope > .ds-ring-block');
+  // (direkt unter den Kacheln bzw. den unfertigen Faellen, vor Hinweisen -- so bleibt sie sichtbar)
+  if(ring){
+    const u = document.createElement('div'); u.className = 'ds-live quer-uhr'; u.appendChild(ring);
+    const nach = s1.querySelector(':scope > .ds-weiter-block') || s1.querySelector(':scope > .kachelreihe');
+    if(nach) nach.after(u); else s1.appendChild(u);
+  }
   s2.appendChild(live);
-  // Mitte (Uhr/Dienst) bleibt immer im Dokument; ist sie leer (kein laufender Dienst), wird sie
+  // Mitte (Dienst) bleibt immer im Dokument; ist sie leer (kein laufender Dienst), wird sie
   // ausgeblendet und es gibt zwei Spalten. Fuellt sie sich (Inhalte kommen teils verzoegert), erscheint sie.
   w.append(s1, s2);
   const mitte = ()=>{
     if(!document.body.contains(w)) return;
     s2.hidden = false;   // erst sichtbar messen
-    const leer = !(typeof liveDienstLaden === 'function' && liveDienstLaden()) && live.offsetHeight < 4;
+    const leer = !live.querySelector('.ds-dz') && live.offsetHeight < 4;
     w.classList.toggle('zwei', leer); s2.hidden = leer;
   };
   mitte(); setTimeout(mitte, 600); setTimeout(mitte, 2000);
@@ -18630,7 +18700,9 @@ function liveIso(d){ return d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' 
 // {id, datum:'yyyy-mm-dd', von:'HH:MM', bis:'HH:MM', art, schicht, arzt}
 const APP_DIENSTE_KEY = 'app_dienste';
 function appDiensteLaden(){ const a = LS.get(APP_DIENSTE_KEY, []); return Array.isArray(a) ? a.filter(d=> d && liveDienstFenster(d)) : []; }
-function appDiensteSpeichern(a){ LS.set(APP_DIENSTE_KEY, a.slice(-400)); }
+function appDiensteSpeichern(a){ LS.set(APP_DIENSTE_KEY, a.slice(-400)); syncBaldSchreiben(); }
+// nach Aenderungen an Dienst/Entwuerfen gleich mit den anderen Geraeten abgleichen
+function syncBaldSchreiben(){ try{ if(typeof msGraphSyncSchreiben === 'function') msGraphSyncSchreiben(); }catch(_){} }
 function appDienstMerken(d){
   if(!d || !liveDienstFenster(d)) return null;
   const neu = { id: d.id || ('d' + Date.now().toString(36)), datum: d.datum, von: d.von, bis: d.bis, art: d.art || 'Fahrdienst', schicht: d.schicht || '', arzt: d.arzt || '' };
@@ -18829,14 +18901,14 @@ async function liveDienstDialog(){
     const a = await warte;
     lesen();
     if(a === 'neu'){ fehler = ''; continue; }
-    if(a === 'ende'){ betaOverlay.schliessen(); LS.set('live_dienst', null); return true; }
+    if(a === 'ende'){ betaOverlay.schliessen(); LS.set('live_dienst', null); syncBaldSchreiben(); return true; }
     if(a !== 'ok'){ betaOverlay.schliessen(); return false; }
     if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)){ fehler = 'Bitte den Tag des Dienstbeginns wählen.'; continue; }
     if(mehrere() && !schicht && (!von || !bis)){ fehler = 'Bitte deinen Dienst (Nummer) antippen – oder eigene Uhrzeiten eintragen.'; continue; }
     if(!/^\d{1,2}:\d{2}$/.test(von) || !/^\d{1,2}:\d{2}$/.test(bis)){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen.'; continue; }
     betaOverlay.schliessen();
     if(!dienstSchichten(art, tagVon()).length) schicht = '';
-    LS.set('live_dienst', { datum, von, bis, art, arzt, schicht, am: new Date().toISOString() });
+    LS.set('live_dienst', { datum, von, bis, art, arzt, schicht, am: new Date().toISOString() }); syncBaldSchreiben();
     // ersetzt einen geaenderten Dienst (gleicher Tag, ueberlappend) bzw. legt ihn neu an
     try{ appDienstMerken({ datum, von, bis, art, arzt, schicht }); }catch(_){}
     if(schicht){ const ls = LS.get('live_letzte_schicht', {}) || {}; ls[art] = schicht; LS.set('live_letzte_schicht', ls); }
@@ -19205,7 +19277,12 @@ function designStartErgaenzen(){
       });
     });
     const dst = document.getElementById('dsDienstStart');
-    if(dst) dst.onclick = async ()=>{ if(await liveDienstDialog()) ansichtStart(); };
+    // vorher kurz mit OneDrive abgleichen: laeuft auf einem anderen Geraet schon ein Dienst, wird er angezeigt statt doppelt angelegt
+    if(dst) dst.onclick = async ()=>{
+      if(!liveDienstLaden()){ try{ await Promise.race([(typeof Sync !== 'undefined' && Sync.status && Sync.status().an) ? Sync.jetzt() : faelleAbgleichen(false), new Promise(r=> setTimeout(r, 4000))]); }catch(_){} }
+      if(liveDienstLaden()){ if(typeof appToastAnzeigen === 'function') appToastAnzeigen('Auf einem anderen Gerät läuft schon ein Dienst.', 3200); ansichtStart(); return; }
+      if(await liveDienstDialog()) ansichtStart();
+    };
   }
   app.querySelectorAll('[data-live]').forEach(b=> b.onclick = async ()=>{ if(await liveDienstDialog()) ansichtStart(); });
   app.querySelectorAll('.ds-ein').forEach(b=> b.onclick = ()=> ansichtGkv(b.dataset.gkv));
