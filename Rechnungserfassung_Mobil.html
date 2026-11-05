@@ -15553,6 +15553,7 @@ function osmKarteOverlay(d, text, opt){
       if(opt.vonVektor && vkAn()){
         const m = akt ? mitteJetzt() : mitte, a = m ? { lat: m.lat, lon: m.lon, z } : null;
         ov.remove();
+        if(typeof opt.zurueck === 'function'){ opt.zurueck(a, W ? wahl : null); return; }   // versteckte Vektorkarte wieder zeigen
         if(W){ const w2 = Object.assign({}, W, wahl ? { adresse: wahl.geo, adresseText: wahl.adresseText, gps: false } : {}); vektorKarteOverlay(d, text, { ansicht: a, titel: opt.titel, waehlen: w2 }).then(fertigRes); return; }
         vektorKarteOverlay(d, text, { ansicht: a, titel: opt.titel }); fertigRes(null); return;
       }
@@ -17059,14 +17060,20 @@ function vektorKarteOverlay(d, text, opt){
   const ansichtJetzt = ()=>{ if(!map) return opt.ansicht || null; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
   // KVBW: in die normale Karte wechseln (gleicher Ausschnitt)
   const eb = ov.querySelector('.karte-ebene'); karteEbeneKnopfSetzen(eb, 'osm');
+  // Die Vektorkarte bleibt dabei (versteckt) erhalten: der Rueckweg ist sofort da, ohne Neuaufbau/Nachladen
   eb.onclick = ()=>{
     const a = ansichtJetzt();
-    if(W){   // Auswahl in der KVBW-Karte fortsetzen, Ergebnis weiterreichen
-      const w2 = Object.assign({}, W, wahl ? { adresse: wahl.geo, adresseText: wahl.adresseText, gps: false } : {});
-      try{ map && map.remove(); }catch(_){} ov.remove();
-      osmKarteOverlay(d, text, { ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true, vonVektor: true, waehlen: w2 }).then(fertigRes); return;
-    }
-    zu(); osmKarteOverlay(d, text, { ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true, vonVektor: true });
+    const w2 = W ? Object.assign({}, W, wahl ? { adresse: wahl.geo, adresseText: wahl.adresseText, gps: false } : {}) : null;
+    ov.style.display = 'none';
+    const zurueck = (a2, wahlR)=>{
+      ov.style.display = '';
+      try{ if(map){ map.resize(); if(a2 && isFinite(a2.lat)) map.jumpTo({ center: [a2.lon, a2.lat], zoom: a2.z - 1 }); } }catch(_){}
+      // in der KVBW-Karte eine andere Einsatzstelle gewaehlt -> hier uebernehmen
+      if(W && wahlR && wahlR.geo && ov._zielSetzen && !(wahl && wahl.geo && wahl.geo.lat === wahlR.geo.lat && wahl.geo.lon === wahlR.geo.lon)){
+        try{ ov._zielSetzen(wahlR.geo, wahlR.woher || 'Adresse', wahlR.adresseText || ''); }catch(_){}
+      }
+    };
+    osmKarteOverlay(d, text, Object.assign({ ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true, vonVektor: true, zurueck }, w2 ? { waehlen: w2 } : {})).then(erg=> zu(erg));
   };
   const auge = ov.querySelector('.karte-auge');
   const zonenAn = ()=> karteModus() === 'an';
@@ -17357,7 +17364,7 @@ function vektorKarteOverlay(d, text, opt){
     });
     // modus 'wache': Route (gezeichnet) ab Wache -- bei Adresssuche und in der Wegegeld-Karte von LS/PT/GKV;
     // sonst (langes Druecken, Verschieben, Einsatzort) Route vom GPS-Standort, ohne GPS ab Wache
-    const zielSetzen = async (g, woher, adrText, ohneMarke, modus)=>{
+    const zielSetzen = ov._zielSetzen = async (g, woher, adrText, ohneMarke, modus)=>{
       const nr = ++zielNr;
       const nurWache = modus === 'wache' || !!opt.nurWache;
       if(ohneMarke){ /* Punkt ist schon als Fall-Markierung zu sehen */ }
@@ -18542,7 +18549,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v331';
+const APP_VERSION = 'v332';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
