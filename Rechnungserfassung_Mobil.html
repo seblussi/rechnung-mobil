@@ -3188,7 +3188,7 @@ async function ansichtFahrtenbuch(blatt){
       const dd = buch.dienste[+z.dataset.fbdienst]; if(!dd) return;
       if(dd.lokal){
         if(!await betaFrage('Den Dienst ' + fbTagText(dd.tag) + ' ' + (dd.zeitLabel || '') + ' aus der App entfernen?\n\nDie Fälle selbst bleiben erhalten.', 'Entfernen', 'Abbrechen')) return;
-        if(dd.appId === 'live'){ LS.set('live_dienst', null); syncBaldSchreiben(); } else appDienstEntfernen(dd.appId);
+        if(dd.appId === 'live'){ liveDienstLeeren(); syncBaldSchreiben(); } else appDienstEntfernen(dd.appId);
         ansichtFahrtenbuch(buch.blatt); return;
       }
       fbLoeschen(dd._orig || dd, null);
@@ -18361,7 +18361,11 @@ function syncZusammenfuehren(entfernt){
 const SYNC_SAETZE = {
   live_dienst: {
     laden: ()=>{ const d = LS.get('live_dienst', null); return d && typeof d === 'object' ? [Object.assign({}, d, { id: 'live' })] : []; },
-    setzen: (a)=>{ const d = a[0]; if(d){ const { id, ...rest } = d; LS.set('live_dienst', rest); } else LS.set('live_dienst', null); }
+    setzen: (a)=>{ const d = a[0]; if(d){ const { id, ...rest } = d; LS.set('live_dienst', rest); } else LS.set('live_dienst', null); },
+    // es zaehlt der Zeitpunkt des Startens bzw. Beendens, nicht der des Abgleichs (wichtig nach einer Zeit ohne Netz)
+    zeit: (x)=> Date.parse(x.am || '') || 0,
+    wegZeit: ()=> Date.parse(LS.get('live_dienst_weg_am', '') || '') || 0,
+    ersetzt: (alt, neu)=> liveDienstErsetztHinweis(alt, neu)
   },
   app_dienste: {
     laden: ()=>{ const a = LS.get('app_dienste', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
@@ -18381,8 +18385,12 @@ function syncSaetzeZusammenfuehren(entfernt){
     const m = meta[k] = meta[k] || {}, w = weg[k] = weg[k] || {};
     // lokale Aenderungen/Loeschungen seit dem letzten Abgleich (beim allerersten Mal gilt der Bestand als alt)
     const lokal = def.laden(), ids = new Set();
-    lokal.forEach(x=>{ const id = String(x.id), h = syncHash(x); ids.add(id); if(!m[id]) m[id] = { h, t: erst ? 1 : jetzt }; else if(m[id].h !== h) m[id] = { h, t: jetzt }; });
-    Object.keys(m).forEach(id=>{ if(!ids.has(id)){ w[id] = jetzt; delete m[id]; } });
+    const neuLokal = new Set();
+    const tAend = (x)=> Math.min(jetzt, (def.zeit && def.zeit(x)) || jetzt);
+    lokal.forEach(x=>{ const id = String(x.id), h = syncHash(x); ids.add(id);
+      if(!m[id]){ m[id] = { h, t: erst ? 1 : tAend(x) }; if(!erst) neuLokal.add(id); }
+      else if(m[id].h !== h){ m[id] = { h, t: tAend(x) }; neuLokal.add(id); } });
+    Object.keys(m).forEach(id=>{ if(!ids.has(id)){ w[id] = Math.min(jetzt, (def.wegZeit && def.wegZeit()) || jetzt); delete m[id]; } });
     const rW = (rS[k] && rS[k].geloescht) || {};
     Object.keys(rW).forEach(id=>{ if(!w[id] || rW[id] > w[id]) w[id] = rW[id]; });
     Object.keys(w).forEach(id=>{ if(w[id] < grenze) delete w[id]; });
@@ -18391,7 +18399,9 @@ function syncSaetzeZusammenfuehren(entfernt){
     (Array.isArray(rS[k] && rS[k].liste) ? rS[k].liste : []).forEach(r=>{
       if(!r || r.id == null) return;
       const { _t, ...x } = r, id = String(x.id), t = Number(_t) || 0, da = map.get(id);
-      if(!da || t > da.t) map.set(id, { x, t, lokal: false, ersetzt: !!da });
+      if(!da || t > da.t){ map.set(id, { x, t, lokal: false, ersetzt: !!da });
+        // lokaler Stand vom anderen Geraet ersetzt -> Hinweis
+        if(da && def.ersetzt && syncHash(da.x) !== syncHash(x)){ const { id: _i, ...a } = da.x, { id: _j, ...nn } = x; def.ersetzt(a, nn); } }
     });
     let gA = false; const neu = [], liste = [];
     map.forEach((e, id)=>{
@@ -18477,6 +18487,8 @@ document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState === 'visible' && Date.now() - syncZuletzt > 15000) faelleAbgleichen(false);
 });
 setInterval(()=>{ if(document.visibilityState === 'visible' && Date.now() - syncZuletzt > 55000) faelleAbgleichen(false); }, 60000);
+// Netz wieder da -> sofort abgleichen (offline Gestartetes/Erfasstes hochladen, Stand der anderen Geraete holen)
+window.addEventListener('online', ()=> setTimeout(()=> faelleAbgleichen(true), 1500));
 
 // =====================================================================
 // Designs (Einstellungen > Allgemein > Design)
@@ -18500,7 +18512,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v328';
+const APP_VERSION = 'v329';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18805,11 +18817,36 @@ function liveDienstFenster(d){
   const bis = new Date(tag); bis.setHours(+zb[1], +zb[2], 0, 0); if(bis <= von) bis.setDate(bis.getDate() + 1);
   return { tag, von, bis, stunden: (bis - von) / 3600000, wochenende: fahrdienstWochenendSatz(tag) };
 }
+// Dienst entfernen und den Zeitpunkt merken (Abgleich zwischen Geraeten: ein spaeter auf einem anderen Geraet
+// gestarteter Dienst darf nicht von einem frueheren Beenden/Verfallen ueberschrieben werden)
+function liveDienstLeeren(wann){
+  LS.set('live_dienst', null);
+  LS.set('live_dienst_weg_am', new Date(Math.min(wann || Date.now(), Date.now())).toISOString());
+}
+// Zwei Geraete haben (z.B. offline) je einen Dienst gestartet -> der zuletzt gestartete gilt; das Geraet,
+// dessen Dienst ersetzt wurde, bekommt einen deutlichen Hinweis
+let liveErsetztOffen = '';
+function liveDienstErsetztHinweis(alt, neu){
+  try{
+    const a = typeof alt === 'string' ? JSON.parse(alt) : alt, n = typeof neu === 'string' ? JSON.parse(neu) : neu;
+    if(!a || !n || (a.datum === n.datum && a.von === n.von && a.bis === n.bis && a.art === n.art && (a.schicht || '') === (n.schicht || ''))) return;
+    const t = (d)=> (d.art || 'Dienst') + (d.schicht ? ' ' + d.schicht : '') + ' · ' + isoDe(d.datum) + ', ' + d.von + '–' + d.bis + ' Uhr';
+    liveErsetztOffen = 'Auf einem anderen Gerät wurde ein anderer Dienst gestartet oder dieser geändert (z. B. während kein Netz da war). Es gilt jetzt der zuletzt gestartete:\n\n' + t(n) +
+      '\n\nstatt\n\n' + t(a) + '\n\nPasst das nicht, tippe auf die Dienstanzeige und ändere ihn.';
+    setTimeout(liveErsetztZeigen, 400);
+  }catch(_){}
+}
+function liveErsetztZeigen(){
+  if(!liveErsetztOffen) return;
+  if(typeof aktuelleAnsichtIstHauptbildschirm === 'undefined' || !aktuelleAnsichtIstHauptbildschirm || (typeof einstellungenOffen !== 'undefined' && einstellungenOffen)) return;   // beim naechsten Oeffnen der Startseite
+  const t = liveErsetztOffen; liveErsetztOffen = '';
+  betaOverlay.meldung(t, 'Dienst vom anderen Gerät');
+}
 // gewaehlter Dienst; 12 h nach Dienstende verfaellt er
 function liveDienstLaden(){
   const d = LS.get('live_dienst', null); if(!d) return null;
-  const fe = liveDienstFenster(d); if(!fe){ LS.set('live_dienst', null); return null; }
-  if(Date.now() > fe.bis.getTime() + 12 * 3600000){ LS.set('live_dienst', null); return null; }
+  const fe = liveDienstFenster(d); if(!fe){ liveDienstLeeren(); return null; }
+  if(Date.now() > fe.bis.getTime() + 12 * 3600000){ liveDienstLeeren(fe.bis.getTime() + 12 * 3600000); return null; }
   return d;
 }
 // fuer die Abfrage "Neuer Dienst": gewaehlter Dienst, wenn der Fall hineinfaellt (1 h Spielraum)
@@ -18973,7 +19010,7 @@ async function liveDienstDialog(){
     const a = await warte;
     lesen();
     if(a === 'neu'){ fehler = ''; continue; }
-    if(a === 'ende'){ betaOverlay.schliessen(); LS.set('live_dienst', null); syncBaldSchreiben(); return true; }
+    if(a === 'ende'){ betaOverlay.schliessen(); liveDienstLeeren(); syncBaldSchreiben(); return true; }
     if(a !== 'ok'){ betaOverlay.schliessen(); return false; }
     if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)){ fehler = 'Bitte den Tag des Dienstbeginns wählen.'; continue; }
     if(mehrere() && !schicht && (!von || !bis)){ fehler = 'Bitte deinen Dienst (Nummer) antippen – oder eigene Uhrzeiten eintragen.'; continue; }
@@ -19361,6 +19398,7 @@ function designStartErgaenzen(){
   if(app.querySelector('.ds-nav')) designNavWiring(app);
   designGlobalNav();
   if(document.getElementById('dsRing')) designUhrStarten();
+  if(liveErsetztOffen) setTimeout(liveErsetztZeigen, 400);
 }
 
 // Uhr im Ring jede halbe Minute nachfuehren (nur solange die Startseite offen ist)
