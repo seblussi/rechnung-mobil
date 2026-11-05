@@ -75,7 +75,7 @@ try{
   // iOS ignoriert user-scalable=no -- Zwei-Finger-Zoom dort abfangen; am PC Strg+Mausrad
   document.addEventListener('gesturestart', function(ev){ ev.preventDefault(); });
   window.addEventListener('wheel', function(ev){ if(ev.ctrlKey && !(ev.target.closest && ev.target.closest('.mini-fenster, .nfp-scroll, .osm-scroll, .vk-karte'))) ev.preventDefault(); }, { passive: false });
-  var e0 = JSON.parse(localStorage.getItem('einstellungen') || '{}') || {};
+  var e0 = JSON.parse(localStorage.getItem('ui_vorlieben') || localStorage.getItem('einstellungen') || '{}') || {};
   // wie spaeter in der App: ohne manuelle Wahl folgt sie dem System-Dunkelmodus
   var dk0 = e0.design === 'nacht' || (e0.dunkelManuell ? !!e0.dunkel : (window.matchMedia ? matchMedia('(prefers-color-scheme: dark)').matches : !!e0.dunkel));
   if(dk0){
@@ -2000,150 +2000,22 @@ try{
 <main id="app"></main>
 <div id="appToast" class="app-toast"></div>
 
-<script>
-// ---------- App-Sperre mit Fingerabdruck / Face ID (Passkey) ----------
-// Beim Start und nach einer einstellbaren Zeit im Hintergrund legt sich ein Sperrbildschirm
-// ueber die App. Entsperrt wird mit einem Passkey dieses Geraets (WebAuthn, "Nutzer
-// verifiziert" = Fingerabdruck, Gesicht oder ersatzweise die Geraete-PIN). Gespeichert
-// wird nur die Kennung des Passkeys (kein Geheimnis). Die Sperre schuetzt die geoeffnete
-// App vor fremden Blicken; die Daten selbst verschluesselt sie nicht.
-const AppSperre = (()=>{
-  const LSK = 'app_sperre';
-  let gesperrt = false, versteckt = 0, laeuft = false;
-  const b64 = (u8)=> btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(u8)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  const ausB64 = (s)=>{ s = String(s).replace(/-/g, '+').replace(/_/g, '/'); while(s.length % 4) s += '='; return Uint8Array.from(atob(s), c=> c.charCodeAt(0)); };
-  function einst(){ try{ return JSON.parse(localStorage.getItem(LSK) || 'null') || {}; }catch(_){ return {}; } }
-  function einstSetzen(e){ try{ localStorage.setItem(LSK, JSON.stringify(e)); }catch(_){} }
-  function aktiv(){ const e = einst(); return !!(e.an && e.id); }
-  async function unterstuetzt(){
-    try{ return !!(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); }catch(_){ return false; }
-  }
-  function uvGesetzt(authData){ const d = new Uint8Array(authData); return d.length > 32 && (d[32] & 0x04) !== 0; }
-  async function einrichten(){
-    const cred = await navigator.credentials.create({ publicKey: {
-      challenge: crypto.getRandomValues(new Uint8Array(32)),
-      rp: { name: 'Rechnungserfassung' },
-      user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'App-Sperre Rechnungserfassung', displayName: 'App-Sperre Rechnungserfassung' },
-      pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
-      authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
-      timeout: 60000, attestation: 'none'
-    } });
-    if(!cred) throw new Error('Kein Passkey angelegt.');
-    const e = einst(); einstSetzen(Object.assign(e, { an: true, id: b64(cred.rawId), minuten: e.minuten == null ? 5 : e.minuten, seit: Date.now() }));
-  }
-  async function pruefen(){
-    const e = einst(); if(!e.id) return false;
-    const a = await navigator.credentials.get({ publicKey: {
-      challenge: crypto.getRandomValues(new Uint8Array(32)),
-      allowCredentials: [{ type: 'public-key', id: ausB64(e.id), transports: ['internal', 'hybrid'] }],
-      userVerification: 'required', timeout: 60000
-    } });
-    return !!(a && a.response && uvGesetzt(a.response.authenticatorData));
-  }
-  function fehlerText(err){
-    const n = err && err.name;
-    if(n === 'NotAllowedError') return 'Abgebrochen oder nicht erkannt. Nochmal versuchen.';
-    if(n === 'InvalidStateError') return 'Für dieses Gerät ist schon ein Passkey vorhanden.';
-    if(n === 'SecurityError') return 'Passkeys gehen nur über die normale App-Adresse (https).';
-    return (err && err.message) || String(err);
-  }
-  function bild(){
-    let el = document.getElementById('appSperre');
-    if(el) return el;
-    el = document.createElement('div'); el.id = 'appSperre';
-    el.innerHTML = '<div class="as-box"><div class="as-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 11v3a8 8 0 0 1-1.2 4.2"/><path d="M8.5 8.8A4.5 4.5 0 0 1 16.5 11v2.5a12 12 0 0 1-.7 4"/><path d="M5.6 7A8 8 0 0 1 20 11v1.5"/><path d="M4 11v1a12 12 0 0 0 .8 4.3"/><path d="M8 11v2a10 10 0 0 1-1.4 5.2"/><path d="M12 3.5A7.5 7.5 0 0 1 17.5 6"/></svg></div>' +
-      '<div class="as-titel">App gesperrt</div><div class="as-text">Mit Fingerabdruck oder Gesicht entsperren.</div>' +
-      '<button type="button" id="asAuf">Entsperren</button><div class="as-fehler" id="asFehler"></div></div>';
-    (document.body || document.documentElement).appendChild(el);
-    el.querySelector('#asAuf').onclick = ()=> entsperren();
-    return el;
-  }
-  function sperren(){
-    if(!aktiv()) return;
-    gesperrt = true; const el = bild(); el.hidden = false;
-    try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(_){}
-    document.documentElement.classList.add('app-gesperrt');
-  }
-  async function entsperren(){
-    if(laeuft) return; laeuft = true;
-    const f = document.getElementById('asFehler'); if(f) f.textContent = '';
-    try{
-      if(await pruefen()){ gesperrt = false; const el = document.getElementById('appSperre'); if(el) el.hidden = true; document.documentElement.classList.remove('app-gesperrt'); }
-      else if(f) f.textContent = 'Nicht bestätigt. Nochmal versuchen.';
-    }catch(err){ if(f) f.textContent = fehlerText(err); }
-    finally{ laeuft = false; }
-  }
-  // Beim Start sofort sperren (noch bevor etwas zu sehen ist) und gleich den Fingerabdruck anbieten
-  if(aktiv()){ sperren(); setTimeout(()=>{ if(gesperrt && document.visibilityState === 'visible') entsperren(); }, 300); }
-  document.addEventListener('visibilitychange', ()=>{
-    if(!aktiv()) return;
-    const min = Number(einst().minuten) || 0;
-    if(document.visibilityState === 'hidden'){ versteckt = Date.now(); if(min === 0) sperren(); }   // "sofort": auch im App-Umschalter nichts zu sehen
-    else if(gesperrt || (versteckt && Date.now() - versteckt >= min * 60000)){ sperren(); setTimeout(()=>{ if(gesperrt) entsperren(); }, 300); }
-  });
-  // ---------- Einstellungen ----------
-  function abschnittHtml(){
-    const e = einst(), an = aktiv();
-    const opt = [[0, 'sofort'], [1, 'nach 1 Minute'], [5, 'nach 5 Minuten'], [15, 'nach 15 Minuten'], [60, 'nach 1 Stunde']].map(([m, t])=> '<option value="' + m + '"' + ((e.minuten == null ? 5 : Number(e.minuten)) === m ? ' selected' : '') + '>' + t + '</option>').join('');
-    return '<div class="design-hinweis">Beim Öffnen der App und wenn sie eine Weile im Hintergrund war, fragt sie nach Fingerabdruck oder Gesicht (ersatzweise die Geräte-PIN). Technisch ist das ein Passkey auf diesem Gerät; ein Passwort brauchst du nicht.</div>' +
-      '<div id="asStatus" style="margin:8px 0; font-size:14px;">' + (an ? '✅ <b>Sperre ist an.</b>' : 'Sperre ist aus.') + '</div>' +
-      (an ? '<div class="feld" style="margin-bottom:8px;"><label for="asMinuten">Sperren, wenn die App im Hintergrund war</label><select id="asMinuten">' + opt + '</select></div>' +
-            '<div style="display:flex; gap:8px;"><button type="button" class="btn-sekundaer" id="asTesten" style="flex:1; margin-bottom:0;">Jetzt sperren</button><button type="button" class="btn-sekundaer" id="asAus" style="flex:1; margin-bottom:0;">Sperre ausschalten</button></div>'
-          : '<button type="button" class="btn-sekundaer" id="asEin">Fingerabdruck / Face ID einrichten</button>') +
-      '<div class="as-fehler" id="asEinstFehler" style="margin-top:6px;"></div>';
-  }
-  function abschnittWiring(neu){
-    const f = ()=> document.getElementById('asEinstFehler');
-    const ein = document.getElementById('asEin');
-    if(ein) ein.onclick = async ()=>{
-      f().textContent = '';
-      if(!await unterstuetzt()){ f().textContent = 'Dieses Gerät bzw. dieser Browser bietet keinen Fingerabdruck/Face ID für Web-Apps an.'; return; }
-      try{ await einrichten(); if(!await pruefen()) throw new Error('Nicht bestätigt.'); neu(); if(typeof appToastAnzeigen === 'function') appToastAnzeigen('App-Sperre ist eingerichtet.', 2200); }
-      catch(err){ const e = einst(); delete e.id; e.an = false; einstSetzen(e); f().textContent = fehlerText(err); }
-    };
-    const aus = document.getElementById('asAus');
-    if(aus) aus.onclick = async ()=>{
-      f().textContent = '';
-      try{ if(!await pruefen()){ f().textContent = 'Nicht bestätigt.'; return; } }catch(err){ f().textContent = fehlerText(err); return; }
-      einstSetzen({ minuten: einst().minuten }); neu();
-    };
-    const t = document.getElementById('asTesten'); if(t) t.onclick = ()=>{ sperren(); entsperren(); };
-    const m = document.getElementById('asMinuten'); if(m) m.onchange = ()=>{ const e = einst(); e.minuten = Number(m.value); einstSetzen(e); };
-  }
-  return { aktiv, sperren, entsperren, abschnittHtml, abschnittWiring, istGesperrt: ()=> gesperrt };
-})();
+<script type="text/plain" id="hauptskript">
 
 /* ==========================================================
    Speicher / Grunddaten
    ========================================================== */
+// Daten liegen verschluesselt in "Speicher" (siehe unten, vor dem Start entschluesselt)
 const LS = {
-  get(k, fallback){ try{ const v = localStorage.getItem(k); return v===null? fallback : JSON.parse(v);}catch(e){return fallback;} },
-  // KORREKTUR: Fehler beim Schreiben wurden bisher stumm verschluckt. Ist der
-  // Speicher des Browsers voll (u.a. durch die bis zu 20 Sync-Backups, die
-  // jeweils ALLE Faelle enthalten), ging eine neue/geaenderte Rechnung ohne
-  // jeden Hinweis verloren. Jetzt: zuerst die aeltesten Backups opfern und
-  // erneut versuchen; klappt es trotzdem nicht, deutlicher Hinweis.
+  get(k, fallback){ let v = Speicher.text(k); if(v === null){ try{ v = localStorage.getItem(k); }catch(_){ v = null; } } if(v === null) return fallback; try{ return JSON.parse(v); }catch(e){ return fallback; } },
   set(k, v){
     let text;
     try{ text = JSON.stringify(v); }catch(e){ return false; }
-    for(let versuch=0; versuch<25; versuch++){
-      try{ localStorage.setItem(k, text); return true; }
-      catch(e){
-        if(k === 'sync_backups') return false; // Backups sind verzichtbar
-        let b = [];
-        try{ b = JSON.parse(localStorage.getItem('sync_backups') || '[]'); }catch(_){ b = []; }
-        if(!Array.isArray(b) || !b.length) break;
-        b.pop(); // aeltestes Backup entfernen
-        try{
-          if(b.length) localStorage.setItem('sync_backups', JSON.stringify(b));
-          else localStorage.removeItem('sync_backups');
-        }catch(_){ try{ localStorage.removeItem('sync_backups'); }catch(__){} }
-      }
+    if(text === undefined) Speicher.loeschen(k); else Speicher.setzen(k, text);
+    if(k === 'einstellungen' && v && typeof v === 'object'){   // nur Anzeige-Vorlieben fuer den Startbildschirm, unverschluesselt
+      try{ localStorage.setItem('ui_vorlieben', JSON.stringify({ design: v.design || '', dunkel: !!v.dunkel, dunkelManuell: !!v.dunkelManuell })); }catch(_){}
     }
-    if(String(k).indexOf('faelle_') === 0 || String(k).indexOf('katalog') >= 0){
-      try{ alert('Achtung: Der Speicher dieser App ist voll -- die letzte \u00c4nderung konnte NICHT gespeichert werden.\n\nBitte jetzt synchronisieren bzw. exportieren und erledigte F\u00e4lle l\u00f6schen.'); }catch(_){}
-    }
-    return false;
+    return true;
   }
 };
 function ladeFaelle(art){ return LS.get('faelle_'+art, []); }
@@ -18438,7 +18310,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v318';
+const APP_VERSION = 'v319';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -21522,7 +21394,7 @@ function ansichtWiederherstellen(){
 // Erster Start? VOR themaAnwenden/Dunkelmodus pruefen -- die speichern bei
 // dunklem Handy sofort 'einstellungen', dann sah die App nicht mehr "neu" aus.
 let ersterStart = false;
-try{ ersterStart = localStorage.getItem('einstellungen') === null && !LS.get('einrichtung_gesehen', false) && !ladeFaelle('ls').length && !ladeFaelle('pt').length; }catch(_){}
+try{ ersterStart = LS.get('einstellungen', null) === null && !LS.get('einrichtung_gesehen', false) && !ladeFaelle('ls').length && !ladeFaelle('pt').length; }catch(_){}
 try{ themaAnwenden(); }catch(e){}
 try{ dunkelModusAutoSyncEinrichten(); }catch(e){}
 try{ ansichtStart(); }catch(e){}
@@ -21627,6 +21499,213 @@ if('serviceWorker' in navigator && (location.protocol==='https:' || location.hos
 window.addEventListener('online', ()=>{
   try{ synchronisiereAlle(); }catch(e){}
 });
+</script>
+<script>
+// ---------- App-Sperre mit Fingerabdruck / Face ID (Passkey) ----------
+// Beim Start und nach einer einstellbaren Zeit im Hintergrund legt sich ein Sperrbildschirm
+// ueber die App. Entsperrt wird mit einem Passkey dieses Geraets (WebAuthn, "Nutzer
+// verifiziert" = Fingerabdruck, Gesicht oder ersatzweise die Geraete-PIN). Gespeichert
+// wird nur die Kennung des Passkeys (kein Geheimnis). Die Sperre schuetzt die geoeffnete
+// App vor fremden Blicken; die gespeicherten Daten sind unabhaengig davon verschluesselt (Speicher).
+const AppSperre = (()=>{
+  const LSK = 'app_sperre';
+  let gesperrt = false, versteckt = 0, laeuft = false;
+  const b64 = (u8)=> btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(u8)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const ausB64 = (s)=>{ s = String(s).replace(/-/g, '+').replace(/_/g, '/'); while(s.length % 4) s += '='; return Uint8Array.from(atob(s), c=> c.charCodeAt(0)); };
+  function einst(){ try{ return JSON.parse(localStorage.getItem(LSK) || 'null') || {}; }catch(_){ return {}; } }
+  function einstSetzen(e){ try{ localStorage.setItem(LSK, JSON.stringify(e)); }catch(_){} }
+  function aktiv(){ const e = einst(); return !!(e.an && e.id); }
+  async function unterstuetzt(){
+    try{ return !!(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); }catch(_){ return false; }
+  }
+  function uvGesetzt(authData){ const d = new Uint8Array(authData); return d.length > 32 && (d[32] & 0x04) !== 0; }
+  async function einrichten(){
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      rp: { name: 'Rechnungserfassung' },
+      user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'App-Sperre Rechnungserfassung', displayName: 'App-Sperre Rechnungserfassung' },
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+      authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+      timeout: 60000, attestation: 'none'
+    } });
+    if(!cred) throw new Error('Kein Passkey angelegt.');
+    const e = einst(); einstSetzen(Object.assign(e, { an: true, id: b64(cred.rawId), minuten: e.minuten == null ? 5 : e.minuten, seit: Date.now() }));
+  }
+  async function pruefen(){
+    const e = einst(); if(!e.id) return false;
+    const a = await navigator.credentials.get({ publicKey: {
+      challenge: crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials: [{ type: 'public-key', id: ausB64(e.id), transports: ['internal', 'hybrid'] }],
+      userVerification: 'required', timeout: 60000
+    } });
+    return !!(a && a.response && uvGesetzt(a.response.authenticatorData));
+  }
+  function fehlerText(err){
+    const n = err && err.name;
+    if(n === 'NotAllowedError') return 'Abgebrochen oder nicht erkannt. Nochmal versuchen.';
+    if(n === 'InvalidStateError') return 'Für dieses Gerät ist schon ein Passkey vorhanden.';
+    if(n === 'SecurityError') return 'Passkeys gehen nur über die normale App-Adresse (https).';
+    return (err && err.message) || String(err);
+  }
+  function bild(){
+    let el = document.getElementById('appSperre');
+    if(el) return el;
+    el = document.createElement('div'); el.id = 'appSperre';
+    el.innerHTML = '<div class="as-box"><div class="as-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 11v3a8 8 0 0 1-1.2 4.2"/><path d="M8.5 8.8A4.5 4.5 0 0 1 16.5 11v2.5a12 12 0 0 1-.7 4"/><path d="M5.6 7A8 8 0 0 1 20 11v1.5"/><path d="M4 11v1a12 12 0 0 0 .8 4.3"/><path d="M8 11v2a10 10 0 0 1-1.4 5.2"/><path d="M12 3.5A7.5 7.5 0 0 1 17.5 6"/></svg></div>' +
+      '<div class="as-titel">App gesperrt</div><div class="as-text">Mit Fingerabdruck oder Gesicht entsperren.</div>' +
+      '<button type="button" id="asAuf">Entsperren</button><div class="as-fehler" id="asFehler"></div></div>';
+    (document.body || document.documentElement).appendChild(el);
+    el.querySelector('#asAuf').onclick = ()=> entsperren();
+    return el;
+  }
+  function sperren(){
+    if(!aktiv()) return;
+    gesperrt = true; const el = bild(); el.hidden = false;
+    try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(_){}
+    document.documentElement.classList.add('app-gesperrt');
+  }
+  async function entsperren(){
+    if(laeuft) return; laeuft = true;
+    const f = document.getElementById('asFehler'); if(f) f.textContent = '';
+    try{
+      if(await pruefen()){ gesperrt = false; const el = document.getElementById('appSperre'); if(el) el.hidden = true; document.documentElement.classList.remove('app-gesperrt'); }
+      else if(f) f.textContent = 'Nicht bestätigt. Nochmal versuchen.';
+    }catch(err){ if(f) f.textContent = fehlerText(err); }
+    finally{ laeuft = false; }
+  }
+  // Beim Start sofort sperren (noch bevor etwas zu sehen ist) und gleich den Fingerabdruck anbieten
+  if(aktiv()){ sperren(); setTimeout(()=>{ if(gesperrt && document.visibilityState === 'visible') entsperren(); }, 300); }
+  document.addEventListener('visibilitychange', ()=>{
+    if(!aktiv()) return;
+    const min = Number(einst().minuten) || 0;
+    if(document.visibilityState === 'hidden'){ versteckt = Date.now(); if(min === 0) sperren(); }   // "sofort": auch im App-Umschalter nichts zu sehen
+    else if(gesperrt || (versteckt && Date.now() - versteckt >= min * 60000)){ sperren(); setTimeout(()=>{ if(gesperrt) entsperren(); }, 300); }
+  });
+  // ---------- Einstellungen ----------
+  function abschnittHtml(){
+    const e = einst(), an = aktiv();
+    const opt = [[0, 'sofort'], [1, 'nach 1 Minute'], [5, 'nach 5 Minuten'], [15, 'nach 15 Minuten'], [60, 'nach 1 Stunde']].map(([m, t])=> '<option value="' + m + '"' + ((e.minuten == null ? 5 : Number(e.minuten)) === m ? ' selected' : '') + '>' + t + '</option>').join('');
+    return '<div class="design-hinweis">Beim Öffnen der App und wenn sie eine Weile im Hintergrund war, fragt sie nach Fingerabdruck oder Gesicht (ersatzweise die Geräte-PIN). Technisch ist das ein Passkey auf diesem Gerät; ein Passwort brauchst du nicht.</div>' +
+      '<div id="asStatus" style="margin:8px 0; font-size:14px;">' + (an ? '✅ <b>Sperre ist an.</b>' : 'Sperre ist aus.') + '</div>' +
+      (an ? '<div class="feld" style="margin-bottom:8px;"><label for="asMinuten">Sperren, wenn die App im Hintergrund war</label><select id="asMinuten">' + opt + '</select></div>' +
+            '<div style="display:flex; gap:8px;"><button type="button" class="btn-sekundaer" id="asTesten" style="flex:1; margin-bottom:0;">Jetzt sperren</button><button type="button" class="btn-sekundaer" id="asAus" style="flex:1; margin-bottom:0;">Sperre ausschalten</button></div>'
+          : '<button type="button" class="btn-sekundaer" id="asEin">Fingerabdruck / Face ID einrichten</button>') +
+      '<div class="as-fehler" id="asEinstFehler" style="margin-top:6px;"></div>';
+  }
+  function abschnittWiring(neu){
+    const f = ()=> document.getElementById('asEinstFehler');
+    const ein = document.getElementById('asEin');
+    if(ein) ein.onclick = async ()=>{
+      f().textContent = '';
+      if(!await unterstuetzt()){ f().textContent = 'Dieses Gerät bzw. dieser Browser bietet keinen Fingerabdruck/Face ID für Web-Apps an.'; return; }
+      try{ await einrichten(); if(!await pruefen()) throw new Error('Nicht bestätigt.'); neu(); if(typeof appToastAnzeigen === 'function') appToastAnzeigen('App-Sperre ist eingerichtet.', 2200); }
+      catch(err){ const e = einst(); delete e.id; e.an = false; einstSetzen(e); f().textContent = fehlerText(err); }
+    };
+    const aus = document.getElementById('asAus');
+    if(aus) aus.onclick = async ()=>{
+      f().textContent = '';
+      try{ if(!await pruefen()){ f().textContent = 'Nicht bestätigt.'; return; } }catch(err){ f().textContent = fehlerText(err); return; }
+      einstSetzen({ minuten: einst().minuten }); neu();
+    };
+    const t = document.getElementById('asTesten'); if(t) t.onclick = ()=>{ sperren(); entsperren(); };
+    const m = document.getElementById('asMinuten'); if(m) m.onchange = ()=>{ const e = einst(); e.minuten = Number(m.value); einstSetzen(e); };
+  }
+  return { aktiv, sperren, entsperren, abschnittHtml, abschnittWiring, istGesperrt: ()=> gesperrt };
+})();
+
+// =====================================================================
+// Verschluesselter Speicher (Privatversion)
+// =====================================================================
+// Alle App-Daten (Faelle, Entwuerfe, Einstellungen, Kataloge ...) liegen NUR
+// verschluesselt im Browser (IndexedDB, AES-GCM 256). Der Schluessel ist ein
+// zufaelliger, NICHT exportierbarer Geraeteschluessel: Er laesst sich auch per
+// Skript nicht auslesen, nur von dieser App zum Ver-/Entschluesseln benutzen.
+// Wer den Browserspeicher kopiert, findet nur unlesbare Daten.
+// Beim Start wird alles einmal entschluesselt in den Arbeitsspeicher geladen
+// (daher bleibt LS.get synchron); jede Aenderung wird sofort verschluesselt
+// geschrieben. Bestehende Daten aus dem localStorage werden beim ersten Start
+// uebernommen und dort geloescht.
+// Unverschluesselt bleiben nur: die Microsoft-Anmeldung (MSAL), Anzeige-Vorlieben
+// fuer den Startbildschirm ('ui_vorlieben'), die Kennung des Passkeys der
+// App-Sperre und der oeffentliche GOAE-Katalog-Cache.
+const Speicher = (()=>{
+  const DB = 'rechnung-daten', V = 1;
+  const BLEIBT = /^(msal\.|server-telemetry|app_sperre$|ui_vorlieben$|hauptversion_v1$|beta___init$|positionsKatalogCache_v2$|einst_offen$)|login\.microsoftonline|login\.windows\.net|login\.live\.com/;
+  const mem = new Map(), schreibt = new Map();
+  let db = null, key = null, bereit = false, fehler = null;
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  function oeffnen(){
+    return new Promise((ok, no)=>{
+      const r = indexedDB.open(DB, V);
+      r.onupgradeneeded = ()=>{ const d = r.result; if(!d.objectStoreNames.contains('kv')) d.createObjectStore('kv'); if(!d.objectStoreNames.contains('meta')) d.createObjectStore('meta'); };
+      r.onsuccess = ()=> ok(r.result); r.onerror = ()=> no(r.error); r.onblocked = ()=> no(new Error('Speicher blockiert (App in einem zweiten Fenster offen?)'));
+    });
+  }
+  function tx(store, modus, f){
+    return new Promise((ok, no)=>{ const t = db.transaction(store, modus); const r = f(t.objectStore(store)); t.oncomplete = ()=> ok(r && r.result); t.onerror = ()=> no(t.error); t.onabort = ()=> no(t.error || new Error('abgebrochen')); });
+  }
+  async function ver(text){ const iv = crypto.getRandomValues(new Uint8Array(12)); return { iv, d: new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(text))) }; }
+  async function ent(p){ return dec.decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: p.iv }, key, p.d)); }
+  async function start(){
+    db = await oeffnen();
+    key = await tx('meta', 'readonly', s=> s.get('schluessel'));
+    if(!key){
+      key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+      await tx('meta', 'readwrite', s=> s.put(key, 'schluessel'));
+    }
+    // alles entschluesseln
+    const [schluessel, werte] = await new Promise((ok, no)=>{ const t = db.transaction('kv', 'readonly'); const s = t.objectStore('kv'); const a = s.getAllKeys(), b = s.getAll(); t.oncomplete = ()=> ok([a.result, b.result]); t.onerror = ()=> no(t.error); });
+    const kaputt = [];
+    await Promise.all(schluessel.map(async (k, i)=>{ try{ mem.set(k, await ent(werte[i])); }catch(_){ kaputt.push(k); } }));
+    if(kaputt.length) console.warn('Speicher: nicht lesbar', kaputt);
+    // Umzug aus dem localStorage (erster Start bzw. Reste, z.B. von einer alten, noch offenen Seite)
+    const alt = [];
+    try{ for(let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if(k && !BLEIBT.test(k)) alt.push(k); } }catch(_){}
+    for(const k of alt){
+      const v = localStorage.getItem(k); if(v === null) continue;
+      mem.set(k, v); await schreiben(k);   // erst verschluesselt sichern, dann im Klartext loeschen
+      localStorage.removeItem(k);
+    }
+    try{ if(localStorage.getItem('ui_vorlieben') === null && mem.has('einstellungen')){ const v = JSON.parse(mem.get('einstellungen')) || {}; localStorage.setItem('ui_vorlieben', JSON.stringify({ design: v.design || '', dunkel: !!v.dunkel, dunkelManuell: !!v.dunkelManuell })); } }catch(_){}
+    try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(_){}
+    bereit = true;
+  }
+  async function schreiben(k){
+    const t = mem.get(k);
+    if(t == null) await tx('kv', 'readwrite', s=> s.delete(k));
+    else { const p = await ver(t); await tx('kv', 'readwrite', s=> s.put(p, k)); }
+  }
+  function einreihen(k){
+    let z = schreibt.get(k); if(!z){ z = { laeuft: false, nochmal: false, p: null }; schreibt.set(k, z); }
+    if(z.laeuft){ z.nochmal = true; return z.p; }
+    z.laeuft = true;
+    z.p = (async ()=>{
+      try{ do{ z.nochmal = false; await schreiben(k); } while(z.nochmal); }
+      catch(e){ console.error('Speicher: Schreiben fehlgeschlagen', k, e); try{ appToastAnzeigen('Speichern fehlgeschlagen: ' + (e.message || e), 4000); }catch(_){} }
+      finally{ z.laeuft = false; }
+    })();
+    return z.p;
+  }
+  return {
+    start, bereit: ()=> bereit,
+    text(k){ return mem.has(k) ? mem.get(k) : null; },
+    setzen(k, text){ if(mem.get(k) === text) return; mem.set(k, text); einreihen(k); },
+    loeschen(k){ if(!mem.has(k)) return; mem.delete(k); einreihen(k); },
+    schluesselListe(){ return Array.from(mem.keys()); },
+    warten(){ return Promise.all(Array.from(schreibt.values()).map(z=> z.p).filter(Boolean)); }
+  };
+})();
+
+// Start: Daten entschluesseln, dann die eigentliche App ausfuehren
+(function(){
+  function appLos(){ const q = document.getElementById('hauptskript'); const sk = document.createElement('script'); sk.textContent = q.textContent; document.body.appendChild(sk); }
+  function fehlerZeigen(e){
+    const app = document.getElementById('app');
+    if(app) app.innerHTML = '<div style="padding:24px; font-family:sans-serif;"><h3>Daten konnten nicht geöffnet werden</h3><p>' + String((e && e.message) || e).replace(/[<>&]/g, '') + '</p><p>Bitte die App einmal ganz schließen und neu öffnen. Ist sie noch in einem zweiten Fenster/Tab offen, dieses schließen.</p><button onclick="location.reload()">Neu laden</button></div>';
+  }
+  if(!window.indexedDB || !window.crypto || !crypto.subtle){ fehlerZeigen(new Error('Dieser Browser kann die Daten nicht verschlüsselt speichern.')); return; }
+  Speicher.start().then(appLos, fehlerZeigen);
+})();
 </script>
 </body>
 </html>
