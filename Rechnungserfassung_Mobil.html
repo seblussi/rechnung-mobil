@@ -1732,7 +1732,7 @@ try{
   .wisch-huelle > .gv-fall{position:relative; z-index:1; touch-action:pan-y;}
   .wisch-huelle[data-gvid] .wisch-hinter{inset:2px; border-radius:10px;}
   .gv-fall .ds-fall-marke{width:32px; height:32px; padding:0; display:flex; align-items:center; justify-content:center; border-radius:8px; background:#7d4e9e; color:#fff; font-size:10.5px; font-weight:700;}
-  .gv-fall.pseudo{opacity:.65;}
+  .gv-fall.pseudo > *{opacity:.65;}   /* nur den Inhalt blasser -- die Zeile selbst bleibt deckend, sonst scheint das rote "Löschen" beim Wischen durch */
   .gv-zeit{font-variant-numeric:tabular-nums; color:var(--text-schwach); font-size:13.5px;}
   .gv-mitte{display:flex; flex-direction:column; min-width:0;} .gv-mitte b{font-size:15.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .gv-mitte small{font-size:12px; color:var(--text-schwach); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -1933,6 +1933,27 @@ try{
   .quer-start{display:block;}
   body.quer .quer-start{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr); gap:18px; align-items:start;}
   body.quer .quer-start > .quer-sp > *:first-child{margin-top:0;}
+  body.quer .quer-start.zwei{grid-template-columns:minmax(0, 1fr) minmax(0, 1.25fr);}
+  body.quer .quer-start.zwei .quer-sp3{grid-column:auto;}
+  /* GKV-Maske im Querformat: zwei Spalten */
+  body.quer .quer-gkv{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.1fr); gap:22px; align-items:start;}
+  body.quer .quer-gkv-links .gkv-kopf{margin-top:0;}
+  /* Quartalsuebersicht: Knoepfe rechts in der Jahreszeile */
+  .fd-jahre{align-items:center;}
+  .fd-aktionen{margin-left:auto; display:flex; gap:6px;}
+  .fd-aktionen button{flex:none !important; width:auto !important; margin:0 !important; padding:6px 12px !important; min-height:0 !important; font-size:13px !important; border-radius:16px !important;}
+  /* Fahrtenbuch "Dienste" im Querformat: links der gewaehlte Dienst, rechts die Liste */
+  .fbx-quer{display:block;}
+  body.quer .fbx-quer{display:grid; grid-template-columns:minmax(0, 1.45fr) minmax(280px, 1fr); gap:18px; align-items:start;}
+  body.quer .fbx-quer > .fbx-karte{margin:0;}
+  .fbx-quer-liste{display:flex; flex-direction:column; gap:6px;}
+  body.quer .fbx-quer-liste{position:sticky; top:8px; max-height:calc(100vh - 210px); overflow:auto; padding-right:2px;}
+  .fbx-qzeile{display:flex; justify-content:space-between; align-items:center; gap:10px; width:100%; padding:9px 12px; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text); text-align:left; font:inherit; cursor:pointer;}
+  .fbx-qzeile.an{border-color:var(--titelfarbe); box-shadow:inset 0 0 0 1px var(--titelfarbe);}
+  .fbx-qzeile.laeuft{border-left:4px solid #e08a1e;}
+  .fbx-qt{display:flex; flex-direction:column; min-width:0;}
+  .fbx-qt small{color:var(--text-schwach); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .fbx-qb{font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums;}
   body.quer .quer-sp3 .sk-karte{margin:0;}
   body.quer .quer-sp3 .mini-fenster{aspect-ratio:auto !important; height:min(66vh, 620px);}
   @media (max-width: 1050px){ body.quer .quer-start{grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);} body.quer .quer-sp3{grid-column:2;} body.quer .quer-sp3 .mini-fenster{height:min(70vh, 460px);} }
@@ -3147,9 +3168,11 @@ async function ansichtFahrtenbuch(blatt){
     const kopf = (buchS.dienste.length !== voll.dienste.length) ? '<div class="fbx-summe-filter">' + buchS.dienste.length + (buchS.dienste.length === 1 ? ' Dienst · ' : ' Dienste · ') + betaEuro(summe) + '</div>' : '';
     {
     const buch = buchS;
-    inhalt.innerHTML = ansicht === 'b' ? fbAnsichtB(buch) : ansicht === 'c' ? fbAnsichtC(buch) : fbAnsichtA(buch);
+    const aQuer = ansicht === 'a' && querAn();
+    inhalt.innerHTML = ansicht === 'b' ? fbAnsichtB(buch) : ansicht === 'c' ? fbAnsichtC(buch) : aQuer ? fbAnsichtAQuer(buch) : fbAnsichtA(buch);
+    if(aQuer){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
     if(ansicht === 'c'){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
-    if(ansicht === 'a' && buch.dienste.length) setTimeout(()=> fbTagKarteZeichnen(buch.dienste[0], 0).catch(()=>{}), 0);
+    if(ansicht === 'a' && !aQuer && buch.dienste.length) setTimeout(()=> fbTagKarteZeichnen(buch.dienste[0], 0).catch(()=>{}), 0);
     inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=>{ if(k._lang){ k._lang = false; return; } k.closest('.fbx-karte').classList.toggle('zu'); });
     inhalt.querySelectorAll('[data-fbtag]').forEach(k=> k.onclick = ()=>{ LS.set('fb_tag', k.dataset.fbtag); zeichnen(); });
     // Loeschen nur durch langes Druecken (Handy) bzw. Rechtsklick (PC), jeweils mit Nachfrage
@@ -3268,6 +3291,20 @@ function fbAnsichtA(buch){
       '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art, f) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
       '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + (di ? '' : '<div class="fbx-ortkarte" id="fbxKarte"></div>') + '</div></div>').join('');
 }
+// A im Querformat: links der gewaehlte Dienst aufgeklappt (Faelle + Karte), rechts die Liste aller Dienste
+function fbAnsichtAQuer(buch){
+  let wahl = Number(LS.get('fb_tag', 0)); if(!(wahl >= 0 && wahl < buch.dienste.length)) wahl = 0;
+  const d = buch.dienste[wahl];
+  const links = '<div class="fbx-karte fbx-quer-detail' + (fbLaufend(d) ? ' laeuft' : '') + '">' +
+    '<div class="fbx-kopf" data-fbdienst="' + wahl + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '<small>' + (fbLaufend(d) ? 'bisher' : 'gesamt') + '</small></span></div>' +
+    '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '">' +
+      '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art, f) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
+      '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + '<div class="fbx-ortkarte" id="fbxKarte"></div></div></div>';
+  const rechts = '<div class="fbx-quer-liste">' + buch.dienste.map((x, i)=> '<button type="button" class="fbx-qzeile' + (i === wahl ? ' an' : '') + (fbLaufend(x) ? ' laeuft' : '') + '" data-fbtag="' + i + '">' +
+    '<span class="fbx-qt"><b>' + fbTagText(x.tag) + '</b><small>' + htmlEsc(x.dienstart || 'Fahrdienst') + ' ' + htmlEsc(x.zeitLabel || '') + ' · ' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle' + (x.lokal ? ' · noch nicht in der Excel' : '') + '</small></span>' +
+    '<span class="fbx-qb">' + betaEuro(x.gesamt) + '</span></button>').join('') + '</div>';
+  return '<div class="fbx-quer quer-breit">' + links + rechts + '</div>';
+}
 // B: Tabelle wie die Excel
 function fbAnsichtB(buch){
   return '<div class="fbx-tab"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div>' +
@@ -3326,13 +3363,14 @@ async function ansichtFahrdienstAuswertung(){
   setTimeout(fbTabsWiring, 0);
   setzeTitel('Quartalsübersicht', ansichtStart);
   app.innerHTML = fbTabsHtml('quartale') + `
-    <div style="display:flex; gap:8px; margin-bottom:12px;">
+    <div style="display:flex; gap:8px; margin-bottom:12px;" id="fdAktionen">
       <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="flex:1; margin-bottom:0;">Neu laden</button>
       <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">Fahrtenbuch öffnen</button>
     </div>
     <div id="fahrdienstInhalt" class="quer-breit"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>
     <div class="fd-fussnote" id="fdFussnote" hidden>* Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Förderung der KVBW greift (GKV-Anteil mindestens 21,43 €/h im Fahrdienst Mo–Fr = 300 € je 14-h-Dienst, 50 €/h an Wochenenden, Feiertagen, 24.12. und 31.12. sowie immer im Sitzdienst und Telearzt ÄBD; am 24.12./31.12. zusätzlich 500 € je 24 h; docdirekt ohne Förderung). Die Dienstart steht im Fahrtenbuch in Spalte B unter dem Datum.</div>`;
 
+  fdAktionenEl = document.getElementById('fdAktionen');
   // Laden = auswerten UND Statistik rechts eintragen (bei Fehler nur lesen)
   const ladenMitStatistik = async ()=>{
     try{ return await fahrdienstStatistikSchreiben(t=>{ const el = document.getElementById('fahrdienstInhalt'); if(el) el.innerHTML = '<div class="leer-hinweis">' + htmlEsc(t) + '</div>'; }); }
@@ -3371,6 +3409,7 @@ async function ansichtFahrdienstAuswertung(){
   if(document.getElementById('fahrdienstInhalt')) fahrdienstAuswertungRendern(fahrdienstAuswertungCache);
 }
 
+let fdAktionenEl = null;   // Knopfleiste der Quartalsuebersicht (wandert in die Jahreszeile)
 let fahrdienstJahrWahl = null; // null = aktuelles Jahr (bzw. neuestes vorhandenes), 'alle' = alle Jahre
 function fahrdienstJahrVon(b){ const m = /(\d{4})$/.exec(String(b.datumText || '')); return m ? m[1] : '?'; }
 function fahrdienstAuswertungRendern(daten){
@@ -3397,6 +3436,8 @@ function fahrdienstAuswertungRendern(daten){
       return Object.keys(n).length > 1 ? '<br>' + Object.entries(n).sort((x, y)=> y[1] - x[1]).map(([a, z])=> z + '× ' + htmlEsc(a)).join(' · ') : '';
     })() + '</div>';
   zielEl.insertBefore(kopf, zielEl.firstChild);
+  // "Neu laden" / "Fahrtenbuch öffnen" rechts in die Zeile der Jahre (spart eine ganze Zeile)
+  if(fdAktionenEl && document.body.contains(zielEl)){ fdAktionenEl.removeAttribute('style'); fdAktionenEl.className = 'fd-aktionen'; kopf.querySelector('.fd-jahre').appendChild(fdAktionenEl); }
   kopf.querySelectorAll('[data-jahr]').forEach(b=> b.onclick = ()=>{ fahrdienstJahrWahl = b.dataset.jahr; fahrdienstAuswertungRendern(daten); });
 }
 function fahrdienstAuswertungRendernBasis(daten){
@@ -13943,6 +13984,16 @@ function ansichtGkv(bearbeitenId){
     <div class="gesamt-abschnitt">Zuletzt erfasst</div>
     <div id="gkvVerlauf"></div>
     <div class="gkv-platz"></div>`;
+  // Querformat: links Patient/Wegepauschale (+ zuletzt erfasst), rechts die Ziffern mit Summe
+  if(querAn()){
+    const q = (sel)=> app.querySelector(sel);
+    const w = document.createElement('div'); w.className = 'quer-gkv quer-breit';
+    const li = document.createElement('div'); li.className = 'quer-gkv-links';
+    const re = document.createElement('div'); re.className = 'quer-gkv-rechts';
+    [q('.gkv-kopf'), q('#gkvPseudo'), q('.gesamt-abschnitt'), q('#gkvVerlauf')].forEach(x=> x && li.appendChild(x));
+    [q('#gkvProfile'), q('#gkvListe'), q('.gkv-stand'), q('#gkvWerteHinweis'), q('#gkvHinweise'), q('.gkv-summe-leiste'), q('#gkvMeldung')].forEach(x=> x && re.appendChild(x));
+    w.append(li, re); app.prepend(w);
+  }
 
   const el = (id)=> document.getElementById(id);
   function zeichnen(){
@@ -18311,7 +18362,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v320';
+const APP_VERSION = 'v321';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18354,7 +18405,9 @@ function querStartAnordnen(){
   const sp = (k)=>{ const d = document.createElement('div'); d.className = 'quer-sp ' + k; return d; };
   const s1 = sp('quer-sp1'), s2 = sp('quer-sp2'), s3 = sp('quer-sp3 ds-live');
   kinder.forEach(k=>{ if(k === kopf || k === live || k.matches('nav, .ds-nav, .ds-dock, script, style')) return; s1.appendChild(k); });
-  s2.appendChild(live); w.append(s1, s2);
+  s2.appendChild(live);
+  const liveLeer = live.offsetHeight < 4;   // nichts sichtbar (kein laufender Dienst)
+  w.append(s1); if(!liveLeer) w.append(s2); else w.classList.add('zwei');   // kein laufender Dienst: zwei Spalten statt einer leeren Mitte
   if(karte){ s3.appendChild(karte); w.append(s3); }
   if(kopf) kopf.after(w); else app.prepend(w);
 }
