@@ -184,6 +184,7 @@ try{
   .abschnitt.einklappbar.zu{padding-bottom:0;}
   .abschnitt.einklappbar.zu > .trennlinie{margin-bottom:0; border-radius:11px;}
   .abschnitt.einklappbar.zu > .abschnitt-inhalt{display:none;}
+  #app .abschnitt.einklappbar{margin-top:0 !important; margin-bottom:8px;}   /* Reiter dicht untereinander */
   .abschnitt.einklappbar > .trennlinie:focus-visible{outline:2px solid #fff; outline-offset:-4px;}
   /* Rechnungspositionen: Faktor, Begruendung, Summe unten fest */
   .pos-fuss{position:sticky; bottom:0; z-index:5; background:var(--bg); padding:2px 0 calc(10px + env(safe-area-inset-bottom));
@@ -15790,7 +15791,7 @@ function vkMaplibreHolen(){
 }
 function vkAn(){ return (ladeEinstellungen() || {}).karteVektor !== false; }   // Vorauswahl: an
 // Kartenstile: im Nachtmodus automatisch dunkel (in der Karte umschaltbar, getrennt gemerkt)
-const VK_STILE = { osm: 'OSM', dunkelgrau: 'Dunkelgrau', liberty: 'Hell', detail: 'Detail', bright: 'Bunt', dark: 'Dunkel' };
+const VK_STILE = { osm: 'OSM', liberty: 'Hell', detail: 'Detail', bright: 'Bunt', dunkelgrau: 'Dunkelgrau', dark: 'Dunkel' };   // Reihenfolge = Auswahl: oben die hellen, darunter die dunklen
 // "Detail" = Hell (liberty) mit kraeftigen Flaechen: Wald, Wiese, Acker, Wohn-/Gewerbegebiete deutlich unterscheidbar
 // "OSM" = Hell (liberty) in den Farben der bekannten OpenStreetMap-Karte
 const vkStilBasis = (st)=> (st === 'detail' || st === 'osm') ? 'liberty' : (st === 'dunkelgrau' ? 'dark' : st);
@@ -18310,7 +18311,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v319';
+const APP_VERSION = 'v320';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18332,7 +18333,7 @@ if(document.body) designAnwenden(); else document.addEventListener('DOMContentLo
 // ---------- Querformat-Ansicht ----------
 // Einstellung (zum Testen, Standard aus); aktiv, sobald das Geraet quer liegt (Tablet, PC, Handy quer).
 const QUER_MQ = window.matchMedia('(orientation: landscape) and (min-width: 640px)');
-function querEinst(){ return !!(ladeEinstellungen() || {}).querLayout; }
+function querEinst(){ return (ladeEinstellungen() || {}).querLayout !== false; }   // Standard an (abschaltbar)
 function querAn(){ return document.body.classList.contains('quer'); }
 function querAnwenden(){
   const an = querEinst() && QUER_MQ.matches, vor = querAn();
