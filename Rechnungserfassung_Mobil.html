@@ -8957,7 +8957,7 @@ function uebersichtZeileAlsFall(z, ziel){
   const eigenePositionen = { ...betaEigeneSnapshot(art, positionen), ...zus.eigene };
   return { art, werte: w, positionen, rechnungsnummer: renu, eigenePositionen, positionsDetails: zus.details || undefined,
            zeitstempel: new Date().toISOString().replace('Z', '') + Math.floor(Math.random() * 1000) + 'Z',
-           bezug: { renu }, ausUebersicht: true,
+           bezug: { renu }, ausUebersicht: true, fbEingetragen: fbStelleAusWerten(w) || undefined,
            hochgeladen: { renu, ziel: betaZielKey(ziel), am: new Date().toISOString() } };
 }
 
@@ -13787,6 +13787,49 @@ async function fbFussAnpassen(fb, alteLetzte, n){
 // opt.fragen=false -> ohne passenden Dienst nichts anlegen (nur Hinweis)
 // -> {zeile, neuerDienst, aktualisiert, ohneSpalte:[], dienst:'14.10.2026 18-23'} oder {uebersprungen:true, grund}
 const fbBuchKopfGeschrieben = {};
+// Fall wurde mit anderem Datum/anderer Uhrzeit schon einmal eingetragen (fall.vorher = {datum: Date, zeit, name}):
+// liegt die alte Stelle in einem ANDEREN Dienst, wird die alte Zeile dort entfernt (wie "Loeschen" im Fahrtenbuch),
+// damit der Fall nicht doppelt steht. Laeuft NACH dem Eintragen an der neuen Stelle (frisch gelesen, Zeilen koennen sich
+// verschoben haben) -- wird der Fall nicht neu eingetragen (abgebrochen), bleibt die alte Zeile stehen.
+async function fbAlteZeileEntfernen(kx, fall, dt, meldung){
+  const v = fall.vorher; if(!v || !(v.datum instanceof Date) || isNaN(v.datum)) return null;
+  const zm = /^(\d{1,2}):(\d{2})/.exec(String(v.zeit || ''));
+  const odt = new Date(v.datum.getFullYear(), v.datum.getMonth(), v.datum.getDate(), zm ? +zm[1] : 12, zm ? +zm[2] : 0);
+  if(odt.getTime() === dt.getTime()) return null;
+  let blaetter = [kx.info.blaetter[0]];
+  if(kx.info.jahresModus){
+    const y = odt.getFullYear();
+    blaetter = [String(y)].concat(odt.getMonth() === 0 && odt.getDate() <= 2 ? [String(y - 1)] : []).filter(n=> kx.info.blaetter.includes(n));
+  }
+  const norm = (t)=> String(t == null ? '' : t).trim().toLowerCase().replace(/\s+/g, ' ');
+  const namen = [fall.name].concat(fall.namen || [], v.name ? [v.name] : [], v.namen || []).map(norm).filter(Boolean);
+  for(const n of blaetter){
+    const f = await fbLesen(meldung, kx, n);
+    const alt = fbDienstFinden(f, odt); if(!alt) continue;
+    const neu = fbDienstFinden(f, dt);
+    if(neu && neu.zeileStart === alt.zeileStart) return null;   // derselbe Dienst: die Zeile wurde dort aktualisiert
+    let zeile = 0;
+    for(let r = alt.zeileStart; r <= alt.zeileEnde; r++){
+      const zr = f.werte[r - 1] || [];
+      const kat = String(zr[FB_COL.E] == null ? '' : zr[FB_COL.E]).trim().toUpperCase();
+      const katGleich = (fall.kat === 'LS' ? (kat === 'L' || kat === 'LS') : fall.kat === 'P' ? (kat === 'P' || kat === 'PT') : kat === '');
+      if(katGleich && namen.includes(norm(zr[FB_COL.D]))){ zeile = r; break; }
+    }
+    if(!zeile) return null;
+    meldung && meldung('Alte Zeile im Dienst ' + alt.datumText + ' wird entfernt …');
+    if(zeile <= alt.zeileStart + 1){
+      // Kopfzeilen des Diensts (Datum/Zeit, Dienstart/Arzt) bleiben, nur der Fall wird geleert
+      await gx(f.token, 'PATCH', f.blattUrl + "/range(address='D" + zeile + ':AG' + zeile + "')", { values: [new Array(FB_COL.AG - FB_COL.D + 1).fill('')] });
+      await gx(f.token, 'PATCH', f.blattUrl + "/range(address='AS" + zeile + "')", { values: [['']] });
+    } else {
+      await gx(f.token, 'POST', f.blattUrl + "/range(address='A" + zeile + ':AG' + zeile + "')/delete", { shift: 'Up' });
+      await gx(f.token, 'POST', f.blattUrl + "/range(address='AS" + zeile + ':AS' + zeile + "')/delete", { shift: 'Up' });
+    }
+    const zt = fbZeitParsen(alt.zeitRoh);
+    return { blatt: f.blatt, zeile, geschoben: zeile > alt.zeileStart + 1, dienst: alt.datumText + ' ' + (zt ? fbZeitText(zt) : String(alt.zeitRoh || '')) };
+  }
+  return null;
+}
 async function fahrtenbuchEintragen(fall, meldung, opt){
   opt = opt || {};
   const kx = await fbKontext(meldung);
@@ -13908,9 +13951,15 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
     if(zt) await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='AS" + ziel + "')", { values: [[zt]], numberFormat: [['@']] });
     if(!fbBuchKopfGeschrieben[fb.blatt]){ await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='AS4')", { values: [['Uhrzeit']] }); fbBuchKopfGeschrieben[fb.blatt] = true; }
   }catch(_){}
+  // Datum/Uhrzeit geaendert und dadurch anderer Dienst: alte Zeile entfernen (keine Dopplung)
+  let verschoben = null, verschiebFehler = '';
+  if(fall.vorher){ try{ verschoben = await fbAlteZeileEntfernen(kx, fall, dt, meldung); }catch(e){ verschiebFehler = e.message || String(e); } }
   // Statistik rechts nachziehen (verschobene Blockenden, Quartalssummen)
   try{ await fahrdienstStatistikSchreiben(meldung, { blatt: fb.blatt }); }catch(e){}
-  return { zeile: ziel, blatt: kx.info.jahresModus ? fb.blatt : '', neuerDienst, aktualisiert, ohneSpalte,
+  if(verschoben && verschoben.blatt && verschoben.blatt !== fb.blatt) try{ await fahrdienstStatistikSchreiben(meldung, { blatt: verschoben.blatt }); }catch(e){}
+  if(verschoben || verschiebFehler) fbBuchCache = null;
+  if(verschoben && verschoben.geschoben && verschoben.blatt === fb.blatt && verschoben.zeile < ziel) ziel--;   // Zeile darueber entfernt
+  return { zeile: ziel, blatt: kx.info.jahresModus ? fb.blatt : '', neuerDienst, aktualisiert, ohneSpalte, verschoben, verschiebFehler,
            dienst: block.datumText + ' ' + (fbZeitParsen(block.zeitRoh) ? fbZeitText(fbZeitParsen(block.zeitRoh)) : String(block.zeitRoh || '')) + (block.arzt ? ' · ' + block.arzt : '') };
 }
 function fahrtenbuchErgebnisText(r){
@@ -13918,9 +13967,19 @@ function fahrtenbuchErgebnisText(r){
   if(r.uebersprungen) return '– Fahrtenbuch: ' + r.grund;
   return '✓ Fahrtenbuch: ' + (r.blatt ? 'Blatt ' + r.blatt + ', ' : '') + (r.aktualisiert ? 'Zeile ' + r.zeile + ' aktualisiert' : 'Zeile ' + r.zeile + ' eingetragen') +
     ' (Dienst ' + r.dienst + (r.neuerDienst ? ', neu angelegt' : '') + ')' +
-    (r.ohneSpalte && r.ohneSpalte.length ? ' · ohne eigene Spalte, nur im Betrag: ' + r.ohneSpalte.join(', ') : '');
+    (r.ohneSpalte && r.ohneSpalte.length ? ' · ohne eigene Spalte, nur im Betrag: ' + r.ohneSpalte.join(', ') : '') +
+    (r.verschoben ? ' · aus Dienst ' + r.verschoben.dienst + ' entfernt' : '') +
+    (r.verschiebFehler ? ' · ⚠ alte Zeile im vorigen Dienst konnte nicht entfernt werden (' + r.verschiebFehler + ') – bitte im Fahrtenbuch löschen' : '');
 }
 
+// Stelle eines LS/PT-Falls im Fahrtenbuch (Datum/Uhrzeit/Name), aus den Formularwerten
+function fbStelleAusWerten(w){
+  try{
+    const d = fbDatumAusText(normalisiereDatum((w && w.txtDatumExcel) || '') || ''); if(!d) return null;
+    const { nachname, vorname } = nameAufteilen(w.txtName);
+    return { datum: liveIso(d), zeit: normalisiereZeit(w.txtZeitLS || '') || String(w.txtZeitLS || ''), name: nachname + ', ' + vorname, namen: [vorname + ' ' + nachname, nachname] };
+  }catch(_){ return null; }
+}
 // PT/LS nach dem Erstellen der Rechnung (aus betaFaelleHochladen)
 async function fahrtenbuchAusRechnung(fall, erg, meldung){
   if(fall.fahrtenbuch === 'nein') return '';
@@ -13929,12 +13988,17 @@ async function fahrtenbuchAusRechnung(fall, erg, meldung){
   if(!d) return '';
   const { nachname, vorname } = nameAufteilen(w.txtName);
   const alter = (Date.now() - d.getTime()) / 86400000;
+  const zeit = normalisiereZeit(w.txtZeitLS || '') || String(w.txtZeitLS || '');
+  const name = nachname + ', ' + vorname, namen = [vorname + ' ' + nachname, nachname];
+  // zuletzt eingetragene Stelle (Datum/Uhrzeit/Name) -> bei Aenderung wird die alte Zeile entfernt
+  const fe = fall.fbEingetragen, feD = fe && /^(\d{4})-(\d{2})-(\d{2})$/.exec(fe.datum || '');
+  const vorher = feD ? { datum: new Date(+feD[1], +feD[2] - 1, +feD[3]), zeit: fe.zeit || '', name: fe.name || '', namen: fe.namen || [] } : null;
   const r = await fahrtenbuchEintragen({
-    kat: fall.art === 'ls' ? 'LS' : 'P', name: nachname + ', ' + vorname,
-    namen: [vorname + ' ' + nachname, nachname], datum: d, zeit: normalisiereZeit(w.txtZeitLS || '') || String(w.txtZeitLS || ''),
-    euro: erg.summe
+    kat: fall.art === 'ls' ? 'LS' : 'P', name, namen, datum: d, zeit, euro: erg.summe, vorher
   }, meldung, { fragen: alter < 14 });
   if(r.abgelehnt && fall.zeitstempel && typeof betaFallAendern === 'function') betaFallAendern(fall.art, fall.zeitstempel, x=>{ x.fahrtenbuch = 'nein'; });
+  if(!r.uebersprungen && fall.zeitstempel && typeof betaFallAendern === 'function')
+    betaFallAendern(fall.art, fall.zeitstempel, x=>{ x.fbEingetragen = { datum: liveIso(d), zeit, name, namen }; });
   return fahrtenbuchErgebnisText(r);
 }
 
@@ -14254,7 +14318,13 @@ function ansichtGkv(bearbeitenId){
       euro: betaRund2(pos.reduce((s, p)=> s + p.euro, 0)), status: 'offen', alterName: null,
       adresse: st.adresse || '', geo: st.kmGeo && st.kmGeo.lat ? { lat: +(+st.kmGeo.lat).toFixed(5), lon: +(+st.kmGeo.lon).toFixed(5) } : null, dokuId: st.dokuId || null };
     const i = arr.findIndex(x=> x.id === eintrag.id);
-    if(i >= 0){ eintrag.alterName = arr[i].name !== eintrag.name ? arr[i].name : (arr[i].alterName || null); eintrag.zeile = arr[i].zeile; arr[i] = eintrag; }
+    if(i >= 0){
+      eintrag.alterName = arr[i].name !== eintrag.name ? arr[i].name : (arr[i].alterName || null); eintrag.zeile = arr[i].zeile;
+      // schon im Fahrtenbuch und Datum/Uhrzeit geaendert -> beim Eintragen die alte Zeile im anderen Dienst entfernen
+      const vor = arr[i].vorher || (arr[i].status === 'eingetragen' ? { datum: arr[i].datum, zeit: arr[i].zeit, name: arr[i].name } : null);
+      if(vor && (vor.datum !== eintrag.datum || vor.zeit !== eintrag.zeit)) eintrag.vorher = vor;
+      arr[i] = eintrag;
+    }
     else arr.push(eintrag);
     gkvFaelleSpeichern(arr);
     gkvEntwurf = null;
@@ -14272,13 +14342,15 @@ function ansichtGkv(bearbeitenId){
     let text = '';
     try{
       const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(x.datum);
+      const mv = x.vorher && /^(\d{4})-(\d{2})-(\d{2})$/.exec(x.vorher.datum || '');
+      const vorher = mv ? { datum: new Date(+mv[1], +mv[2] - 1, +mv[3]), zeit: x.vorher.zeit || '', name: x.vorher.name || '' } : null;
       const r = await fahrtenbuchEintragen({ kat: '', name: x.name, namen: x.alterName ? [x.alterName] : [], datum: new Date(+m[1], +m[2] - 1, +m[3]),
-        zeit: x.zeit, euro: x.euro, positionen: x.positionen }, t=> betaOverlay.schritt(t));
+        zeit: x.zeit, euro: x.euro, positionen: x.positionen, vorher }, t=> betaOverlay.schritt(t));
       text = fahrtenbuchErgebnisText(r);
       const a2 = gkvFaelleLaden(), y = a2.find(z=> z.id === id);
       if(y){
         if(r.uebersprungen){ y.fehler = r.grund; }
-        else { y.status = 'eingetragen'; y.zeile = r.zeile; y.blatt = r.blatt || ''; delete y.fehler; delete y.alterName; }
+        else { y.status = 'eingetragen'; y.zeile = r.zeile; y.blatt = r.blatt || ''; delete y.fehler; delete y.alterName; if(!r.verschiebFehler) delete y.vorher; }
         gkvFaelleSpeichern(a2);
       }
       betaOverlay.schliessen();
@@ -18428,7 +18500,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v327';
+const APP_VERSION = 'v328';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
