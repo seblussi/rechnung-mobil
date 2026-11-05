@@ -1613,6 +1613,19 @@ try{
   .osm-scroll .luft-karte-flaeche{border:none; border-radius:0;}
   .nfp-ueber{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
   .nfp-rahmen{position:relative; flex:1; min-height:0; display:flex;}
+  /* Querformat: Suche schwebt oben links ueber der Karte */
+  .nfp-suche.schwebend{position:absolute; top:10px; left:10px; z-index:6; width:min(400px, calc(100% - 100px)); box-sizing:border-box; grid-template-columns:1fr 1fr auto; grid-template-rows:auto; gap:6px; padding:8px; border:1px solid var(--rand); border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.18); background:var(--karte);}
+  .nfp-suche.schwebend #nfpStrasse, .nfp-suche.schwebend #vkStrasse{grid-column:1; grid-row:1;}
+  .nfp-suche.schwebend #nfpPlzOrt, .nfp-suche.schwebend #vkPlzOrt{grid-column:2; grid-row:1;}
+  .nfp-suche.schwebend{align-items:center;}
+  .nfp-suche.schwebend .nfp-such-knopf{grid-column:3; grid-row:1; align-self:center; height:40px; min-height:0; padding:0 12px;}
+  .nfp-suche.schwebend input{height:40px; font-size:15px;}
+  @media (min-width: 1100px){ .nfp-suche.schwebend{width:520px;} }
+  .karte-quer .nfp-fuss{display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; padding-top:6px; padding-bottom:calc(6px + env(safe-area-inset-bottom));}
+  .karte-quer .nfp-info{flex:1 1 280px; margin:0; min-height:0; font-size:13px;}
+  .karte-quer .nfp-knoepfe{order:3;}
+  .karte-quer .vk-legende, .karte-quer .luft-karte-legende{order:4; margin:0;}
+  .karte-quer .ok-attr{order:5; margin:0; flex-basis:100%;}
   .nfp-rahmen > .nfp-scroll{flex:1;}
   .nfp-rahmen .nfp-osm-attr{right:6px; bottom:6px;}
   .karte-ebene{position:absolute; top:10px; right:10px; z-index:4; width:56px; height:56px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
@@ -15410,6 +15423,15 @@ document.addEventListener('click', (ev)=>{
 // opt: { ansicht:{lat,lon,z}, ebene:'kvbw'|'zonen', titel,
 //        waehlen:{ adresse:{lat,lon}, adresseText, gps } }  -> Promise(Auswahl | null)
 // Mit "waehlen": Adresse suchen, Stelle antippen oder Standort -> Zone, Luftlinie, Route.
+// Querformat: Adresssuche nicht als volle Zeile ueber der Karte, sondern als kleine Box oben links IN der Karte
+function karteSucheSchweben(ov){
+  try{
+    if(typeof querAn !== 'function' || !querAn()) return;
+    const su = ov.querySelector(':scope > .nfp-suche'), ra = ov.querySelector(':scope > .nfp-rahmen');
+    if(su && ra){ su.classList.add('schwebend'); ra.appendChild(su); }
+    ov.classList.add('karte-quer');   // Fusszeile kompakt in einer Zeile
+  }catch(_){}
+}
 function osmKarteOverlay(d, text, opt){
   opt = opt || {};
   if(!opt.keinVektor && opt.ebene !== 'kvbw' && vkAn()) return vektorKarteOverlay(Object.assign({ nfp: true, rahmen: true }, d || {}), text, opt);
@@ -15432,6 +15454,7 @@ function osmKarteOverlay(d, text, opt){
       '<div class="luft-karte-legende vk-legende" id="okLegende"></div><div class="ok-attr">' + OSM_ATTR_HTML + '</div></div>';
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
+  karteSucheSchweben(ov);
   const sc = ov.querySelector('.osm-scroll'), info = ov.querySelector('#okInfo');
   let z = 12, mitte = null, akt = null, ebene = opt.ebene === 'kvbw' ? 'kvbw' : 'zonen', kvbwUrl = null, wahl = null, zieh = null, gezogen = false;
   const zonenAn = ()=> karteModus() === 'an';
@@ -17027,6 +17050,7 @@ function vektorKarteOverlay(d, text, opt){
       '<div class="luft-karte-legende vk-legende" id="vkLegende"></div><div class="ok-attr">' + VK_ATTR_HTML + '</div></div>';
   document.body.appendChild(ov);
   document.body.classList.add('nfp-offen');
+  karteSucheSchweben(ov);
   const info = ov.querySelector('#vkInfo'), box = ov.querySelector('.vk-karte');
   let map = null;
   const zu = (erg)=>{ try{ map && map.remove(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(erg || null); };
@@ -18518,7 +18542,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v330';
+const APP_VERSION = 'v331';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
