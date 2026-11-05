@@ -1613,6 +1613,38 @@ try{
   .osm-scroll .luft-karte-flaeche{border:none; border-radius:0;}
   .nfp-ueber{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
   .nfp-rahmen{position:relative; flex:1; min-height:0; display:flex;}
+  /* Zonen zeichnen (frei, auf der Karte) */
+  .karte-auge.beide{background:linear-gradient(135deg, rgba(47,143,214,.35), rgba(217,96,159,.35));}
+  .wf-leiste{padding:8px 12px; border-bottom:1px solid var(--rand); background:var(--karte); display:flex; flex-direction:column; gap:6px;}
+  .wf-stufen{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding-bottom:2px;}
+  .wf-stufen button{flex:0 0 auto; margin:0; min-height:36px; padding:4px 11px; border-radius:18px; border:2px solid var(--zf); background:var(--karte); color:var(--text); font-size:13.5px; font-weight:600; white-space:nowrap;}
+  .wf-stufen button.an{background:var(--zf); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.45);}
+  .wf-stufen small{font-size:9px; vertical-align:middle;}
+  .wf-werkzeug{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
+  .wf-werkzeug button{margin:0; min-height:36px; padding:4px 11px; border-radius:9px; border:1px solid var(--rand); background:var(--karte); color:var(--text); font-size:13.5px;}
+  .wf-werkzeug button.an{background:#2b6cb0; color:#fff; border-color:#2b6cb0;}
+  .wf-werkzeug .wf-luecke{flex:1;}
+  .wf-werkzeug button:disabled{opacity:.45;}
+  .wf-farbe{display:inline-flex; width:36px; height:36px; border-radius:9px; overflow:hidden; border:1px solid var(--rand); flex:0 0 auto;}
+  .wf-farbe input{width:52px; height:52px; margin:-8px; border:0; padding:0; background:none; cursor:pointer;}
+  .wf-rahmen{overflow:hidden; background:#f2efe9; touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none;}
+  .wf-rahmen.zeichnen{cursor:crosshair;}
+  .wf-inhalt{position:absolute; left:0; top:0; will-change:transform;}
+  .wf-inhalt > .osm-flaeche{position:relative;}
+  .wf-svg{position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; overflow:visible;}
+  .wf-schwebe{position:absolute; top:10px; right:10px; z-index:5; display:flex; flex-direction:column; gap:8px;}
+  .wf-schwebe button{margin:0; width:52px; height:44px; padding:0; border-radius:10px; border:2px solid #fff; background:rgba(255,255,255,.92); color:#2b3a55; font-weight:700; font-size:13px; box-shadow:0 2px 8px rgba(0,0,0,.2);}
+  .wf-schwebe button.an{background:#2b3a55; color:#fff;}
+  .wf-schwebe button.laedt{opacity:.5;}
+  .wf-modus{display:flex; flex-direction:column; gap:4px; margin-top:6px;}
+  .wf-modus .wf-cb{display:flex; align-items:center; gap:10px; margin:0; padding:6px 0; font-size:15px; text-align:left; cursor:pointer;}
+  .wf-modus .wf-cb input{width:20px; height:20px; margin:0; flex:0 0 auto; accent-color:#2b6cb0;}
+  .wf-modus .wf-cb small{color:var(--text-grau, #777);}
+  .wf-modus .wf-vorrang{display:flex; flex-direction:column; gap:4px; margin:4px 0 0; font-size:14px;}
+  .wf-modus .wf-vorrang[hidden]{display:none;}
+  .wf-modus select{width:100%; min-height:40px; padding:6px 8px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text); font-size:15px;}
+  body.quer .wf-leiste{flex-direction:row; align-items:center; flex-wrap:wrap;}
+  body.quer .wf-stufen{flex:1 1 360px;}
   /* Querformat: Suche schwebt oben links ueber der Karte */
   .nfp-suche.schwebend{position:absolute; top:10px; left:10px; z-index:6; width:min(400px, calc(100% - 100px)); box-sizing:border-box; grid-template-columns:1fr 1fr auto; grid-template-rows:auto; gap:6px; padding:8px; border:1px solid var(--rand); border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,.18); background:var(--karte);}
   .nfp-suche.schwebend #nfpStrasse, .nfp-suche.schwebend #vkStrasse{grid-column:1; grid-row:1;}
@@ -1636,7 +1668,7 @@ try{
   .karte-ebene.laedt{opacity:.55;}
   .karte-auge{position:absolute; top:74px; right:10px; z-index:4; width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff;
     box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
-  .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} :root{--kr-ring:conic-gradient(#e6c800,#2f8fd6,#2fa84f,#d9609f,#4aa6cf,#e6c800);} .karte-auge.kreise::after{content:''; position:absolute; inset:-6px; border-radius:14px; padding:4px; background:var(--kr-ring); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events:none;} .mini-ebenen .karte-auge.kreise::after{inset:-5px; padding:3px; border-radius:12px;} .karte-auge.aus{opacity:.85;}
+  .karte-auge svg{width:22px; height:22px;} .karte-auge .strich{display:none;} .karte-auge.aus .strich{display:inline;} :root{--kr-ring:conic-gradient(#e6c800,#2f8fd6,#2fa84f,#d9609f,#4aa6cf,#e6c800);} .karte-auge.kreise::after, .karte-auge.beide::after{content:''; position:absolute; inset:-6px; border-radius:14px; padding:4px; background:var(--kr-ring); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); pointer-events:none;} .mini-ebenen .karte-auge.kreise::after, .mini-ebenen .karte-auge.beide::after{inset:-5px; padding:3px; border-radius:12px;} .karte-auge.aus{opacity:.85;}
   .mini-ebenen .karte-auge{width:40px; height:40px; top:54px; right:8px; border-radius:9px;} .mini-ebenen .karte-auge svg{width:18px; height:18px;}
   .ok-zoom{position:absolute; right:10px; bottom:76px; z-index:5; display:flex; flex-direction:column; gap:10px;}
   .ok-zoom button{width:56px; height:44px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; display:flex; align-items:center; justify-content:center; cursor:pointer;}
@@ -14245,10 +14277,10 @@ function ansichtGkv(bearbeitenId){
     const kp = nfpGeoZuPixel(r.ziel.lat, r.ziel.lon), kb = nfpImBild(kp) ? nfpBewertung(kp) : null;
     st.kmGeo = r.ziel;
     const llText = (r.ziel.gefunden ? 'gefunden: ' + htmlEsc(r.ziel.gefunden) + ' · ' : '') + (r.km == null ? htmlEsc(nfpLuftlinieText(r.ziel, kp)) : 'Luftlinie <b>' + nfpKmText(r.km) + ' km</b> ab ' + htmlEsc(r.start));
-    if(kb && (kb.quelle === 'karte' || r.km == null)){
+    if(kb && (kb.quelle === 'karte' || kb.quelle === 'zonen' || r.km == null)){
       // mehr als 50 km Luftlinie: 4x
-      const stufe = (r.km != null && r.km > 50) ? '50+' : kb.stufe;
-      kmUebernehmen(stufe, 'Karte NFP: <b>' + htmlEsc(kb.text) + '</b> → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(stufe)) + '</b>' + (llText ? ' · ' + llText : ''));
+      const stufe = wfUeber50(kb.stufe, r.km);
+      kmUebernehmen(stufe, (kb.quelle === 'zonen' ? '' : 'Karte NFP: ') + '<b>' + htmlEsc(kb.text) + '</b> → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(stufe)) + '</b>' + (llText ? ' · ' + llText : ''));
     } else if(r.km == null){
       st.kmInfo = ''; el('gkvKmInfo').innerHTML = '<span class="gkv-km-fehler">Kein Ausgangspunkt hinterlegt und Adresse außerhalb der Karte – bitte die Stufe unten von Hand wählen.</span>';
     } else {
@@ -14734,10 +14766,12 @@ function nfp50Kreis(){
   return (nfp50Kreis.p = p);
 }
 // Auge-Knopf mit drei Stufen: Zonen -> nur km-Kreise -> aus
-function karteModus(){ const v = LS.get('karte_zonen', true); return v === false ? 'aus' : (v === 'kreise' ? 'kreise' : 'an'); }
-function karteModusWeiter(){ const n = { an: 'kreise', kreise: 'aus', aus: 'an' }[karteModus()]; LS.set('karte_zonen', n === 'an' ? true : (n === 'aus' ? false : 'kreise')); return n; }
-function augeKlasse(el){ if(!el) return; const m = karteModus(); el.classList.toggle('aus', m === 'aus'); el.classList.toggle('kreise', m === 'kreise');
-  el.title = { an: 'Zonen (antippen: nur km-Kreise)', kreise: 'nur km-Kreise (antippen: aus)', aus: 'aus (antippen: Zonen)' }[m]; }
+function karteModus(){ const v = LS.get('karte_zonen', true); return v === false ? 'aus' : (v === 'kreise' ? 'kreise' : (v === 'beide' ? 'beide' : 'an')); }
+function karteZonenSichtbar(){ const m = karteModus(); return m === 'an' || m === 'beide'; }
+function karteKreiseSichtbar(){ const m = karteModus(); return m === 'kreise' || m === 'beide'; }
+function karteModusWeiter(){ const n = { an: 'kreise', kreise: 'beide', beide: 'aus', aus: 'an' }[karteModus()]; LS.set('karte_zonen', n === 'an' ? true : (n === 'aus' ? false : n)); return n; }
+function augeKlasse(el){ if(!el) return; const m = karteModus(); el.classList.toggle('aus', m === 'aus'); el.classList.toggle('kreise', m === 'kreise'); el.classList.toggle('beide', m === 'beide');
+  el.title = { an: 'Zonen (antippen: km-Ringe)', kreise: 'km-Ringe (antippen: Zonen + Ringe)', beide: 'Zonen + km-Ringe (antippen: aus)', aus: 'aus (antippen: Zonen)' }[m]; }
 // km-Kreise um die Notfallpraxis (wie der 50-km-Kreis): Stufen der Wegepauschale
 const KM_KREISE = [2, 5, 10, 20, 30];
 // Farben wie die Zonen der KVBW-Karte (2-km-Zone ... 30-km-Zone)
@@ -14766,7 +14800,7 @@ function vkKreiseGeo(){
 }
 function vkKreiseEbenen(map){
   if(map.getSource('vk-kreise')) return;
-  const an = karteModus() === 'kreise' ? 'visible' : 'none';
+  const an = karteKreiseSichtbar() ? 'visible' : 'none';
   map.addSource('vk-kreise', { type: 'geojson', data: vkKreiseGeo() });
   map.addLayer({ id: 'vk-kreise-li', type: 'line', source: 'vk-kreise', filter: ['==', ['geometry-type'], 'LineString'], layout: { visibility: an },
     paint: { 'line-color': ['get', 'farbe'], 'line-width': 2.5, 'line-dasharray': [3, 2], 'line-opacity': 0.95 } });
@@ -14775,8 +14809,8 @@ function vkKreiseEbenen(map){
 }
 function vkModusAnwenden(map){
   if(!map) return; const m = karteModus();
-  ['vk-zonen-fl', 'vk-zonen-li'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', m === 'an' ? 'visible' : 'none'); });
-  ['vk-kreise-li', 'vk-kreise-tx'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', m === 'kreise' ? 'visible' : 'none'); });
+  ['vk-zonen-fl', 'vk-zonen-li'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', (m === 'an' || m === 'beide') ? 'visible' : 'none'); });
+  ['vk-kreise-li', 'vk-kreise-tx'].forEach(id=>{ if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', (m === 'kreise' || m === 'beide') ? 'visible' : 'none'); });
   if(map.getLayer('vk-k50')) map.setLayoutProperty('vk-k50', 'visibility', m === 'aus' ? 'none' : 'visible');
 }
 // Zonen als SVG in Kartenpixeln (ueber der OSM-Ersatzkarte)
@@ -15113,7 +15147,7 @@ function karteLegendeHtml(d){
   if(d.gpsWeg && d.gpsWeg.length > 1) t.push('<span><i class="g"></i>Route vom Standort</span>');
   if(d.wegAlt && d.wegAlt.length) t.push('<span><i class="r"></i>andere Varianten</span>');
   if(d.aed) t.push('<span><i class="aed"></i>AED</span>');
-  if(d.nfp){ const m = karteModus(); if(m === 'an') t.push('<span><i class="zo"></i>Zonen</span>'); else if(m === 'kreise') t.push('<span><i class="kr"></i>km-Kreise</span>'); }
+  if(d.nfp){ const m = karteModus(); if(m === 'an' || m === 'beide') t.push('<span><i class="zo"></i>Zonen</span>'); if(m === 'kreise' || m === 'beide') t.push('<span><i class="kr"></i>km-Ringe</span>'); }
   if(d.nfp){ t.push('<span><i class="n"></i>NFP</span>'); if(typeof gkvStartGeo === 'function' && gkvStartGeo()) t.push('<span><i class="rtw"></i>Wache</span>'); if(karteModus() !== 'aus' && typeof NFP_KARTE !== 'undefined' && nfp50Kreis().length) t.push('<span><i class="k50"></i>50 km</span>'); }
   return t.length ? '<div class="luft-karte-legende">' + t.join('') + '</div>' : '';
 }
@@ -15131,7 +15165,7 @@ function miniKarteHtml(d, opt){
   const e = 'osm';   // Vorauswahl immer OSM; KVBW ueber den Knopf oben rechts
   const knopf = KARTE_EBENE_KNOPF.replace('class="karte-ebene"', 'class="karte-ebene mini-ebene-knopf" data-ziel="' + (e === 'osm' ? 'kvbw' : 'osm') + '"')
     .replace('<span></span>', '<span>' + (e === 'osm' ? 'KVBW' : 'OSM') + '</span>');
-  const auge = KARTE_AUGE_KNOPF.replace('class="karte-auge"', 'class="karte-auge' + ({ aus: ' aus', kreise: ' kreise' }[karteModus()] || '') + '"');
+  const auge = KARTE_AUGE_KNOPF.replace('class="karte-auge"', 'class="karte-auge' + ({ aus: ' aus', kreise: ' kreise', beide: ' beide' }[karteModus()] || '') + '"');
   const grossKnopf = opt.gross ? '<button type="button" class="mini-gross" aria-label="Große Karte (Vollbild)" title="Große Karte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>' : '';
   const aedKnopf = opt.gross && !opt.ohneAed ? '<button type="button" class="mini-aed" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '</button>' : '';
   const posKnopf = '<button type="button" class="mini-pos" aria-label="Eigene Position" title="Position"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>';
@@ -15158,7 +15192,7 @@ function miniKarteStarten(w){
     const nr = ++lauf;
     if(ebene === 'kvbw' && !kvbwUrl){ kvbwUrl = await nfpKarteBildUrl(); if(nr !== lauf) return; if(!kvbwUrl){ ebene = 'osm'; w.dataset.ebene = 'osm'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'osm'); } }
     const zi = Math.max(3, Math.min(18, Math.round(ansicht.z))), s = Math.pow(2, ansicht.z - zi);
-    const a = osmAusschnitt(d, { z: zi, mitte: ansicht, w: 3 * W / s, h: 3 * H / s, r: Math.max(W, H) / 45 / s, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', kvbwUrl, zonen: karteModus() === 'an', kreise: karteModus() === 'kreise' });
+    const a = osmAusschnitt(d, { z: zi, mitte: ansicht, w: 3 * W / s, h: 3 * H / s, r: Math.max(W, H) / 45 / s, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', kvbwUrl, zonen: karteZonenSichtbar(), kreise: karteKreiseSichtbar() });
     const tmp = document.createElement('div'); tmp.innerHTML = a.html;
     const fl = tmp.firstElementChild;
     Object.assign(fl.style, { position: 'absolute', width: (a.bw * s) + 'px', left: (-W) + 'px', top: (-H) + 'px', border: 'none', borderRadius: '0', transformOrigin: '0 0' });
@@ -15252,7 +15286,7 @@ function vkDatenEbenen(map, d){
   if(map.getSource('vk-zonen')) return;
   const ll = (g)=> [g.lon, g.lat];
   const linie = (koords)=> ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: koords } });
-  const zonenAn = karteModus() === 'an';
+  const zonenAn = karteZonenSichtbar();
   map.addSource('vk-zonen', { type: 'geojson', data: vkZonenGeo() });
   map.addLayer({ id: 'vk-zonen-fl', type: 'fill', source: 'vk-zonen', layout: { visibility: zonenAn ? 'visible' : 'none' }, paint: { 'fill-color': ['get', 'farbe'], 'fill-opacity': 0.28 } });
   map.addLayer({ id: 'vk-zonen-li', type: 'line', source: 'vk-zonen', layout: { visibility: zonenAn ? 'visible' : 'none' }, paint: { 'line-color': ['get', 'farbe'], 'line-width': 2 } });
@@ -15457,13 +15491,13 @@ function osmKarteOverlay(d, text, opt){
   karteSucheSchweben(ov);
   const sc = ov.querySelector('.osm-scroll'), info = ov.querySelector('#okInfo');
   let z = 12, mitte = null, akt = null, ebene = opt.ebene === 'kvbw' ? 'kvbw' : 'zonen', kvbwUrl = null, wahl = null, zieh = null, gezogen = false;
-  const zonenAn = ()=> karteModus() === 'an';
+  const zonenAn = ()=> karteZonenSichtbar();
   // z darf gebrochen sein: Kacheln der naechsten ganzen Stufe, passend skaliert
   const zeichnen = ()=>{
     const vw = sc.clientWidth || 360, vh = sc.clientHeight || 500;
     z = Math.max(3, Math.min(18.4, z));
     const zi = Math.max(3, Math.min(18, Math.round(z))), s = Math.pow(2, z - zi);
-    akt = osmAusschnitt(d, { z: zi, mitte, w: vw * 3 / s, h: vh * 3 / s, px: true, r: 11.5 / s, ebene, kvbwUrl, zonen: zonenAn(), kreise: karteModus() === 'kreise' });
+    akt = osmAusschnitt(d, { z: zi, mitte, w: vw * 3 / s, h: vh * 3 / s, px: true, r: 11.5 / s, ebene, kvbwUrl, zonen: zonenAn(), kreise: karteKreiseSichtbar() });
     akt.s = s; akt.zi = zi;
     sc.innerHTML = akt.html;
     if(s !== 1 && sc.firstElementChild) sc.firstElementChild.style.width = (akt.bw * s).toFixed(1) + 'px';
@@ -15571,7 +15605,7 @@ function osmKarteOverlay(d, text, opt){
     const p = nfpGeoZuPixel(g.lat, g.lon), drin = nfpImBild(p);
     const kmS = startGeo ? kmLuftlinieEinfach(startGeo, g) : null;
     let b;
-    if(drin){ b = nfpBewertung(p); if(kmS != null && kmS > 50) b.stufe = '50+'; }
+    if(drin){ b = nfpBewertung(p); b.stufe = wfUeber50(b.stufe, kmS); }
     else if(kmS != null) b = { zone: null, stufe: gkvStufeFuerKm(kmS), text: 'außerhalb der Karte', km: kmS };
     else { info.textContent = 'Dieser Ort liegt außerhalb der Karte und es ist kein Ausgangspunkt eingestellt.'; return; }
     wahl = { ...b, woher, geo: { lat: g.lat, lon: g.lon }, adresseText: adresseText || '', kmText: nfpLuftlinieText(g, drin ? p : null) || (kmS != null ? 'Luftlinie ' + nfpKmText(kmS) + ' km' : '') };
@@ -17076,7 +17110,7 @@ function vektorKarteOverlay(d, text, opt){
     osmKarteOverlay(d, text, Object.assign({ ansicht: a, ebene: 'kvbw', titel: opt.titel, keinVektor: true, vonVektor: true, zurueck }, w2 ? { waehlen: w2 } : {})).then(erg=> zu(erg));
   };
   const auge = ov.querySelector('.karte-auge');
-  const zonenAn = ()=> karteModus() === 'an';
+  const zonenAn = ()=> karteZonenSichtbar();
   augeKlasse(auge);
   vkMaplibreHolen().then(async (ml)=>{
     const n = nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]);
@@ -17384,7 +17418,7 @@ function vektorKarteOverlay(d, text, opt){
       const p = nfpGeoZuPixel(g.lat, g.lon);
       if(W){
         const drin = nfpImBild(p); let b0;
-        if(drin){ b0 = nfpBewertung(p); if(km > 50) b0.stufe = '50+'; } else b0 = { zone: null, stufe: gkvStufeFuerKm(km), text: 'außerhalb der Karte', km };
+        if(drin){ b0 = nfpBewertung(p); b0.stufe = wfUeber50(b0.stufe, km); } else b0 = { zone: null, stufe: gkvStufeFuerKm(km), text: 'außerhalb der Karte', km };
         wahl = Object.assign({}, b0, { woher, geo: { lat: g.lat, lon: g.lon }, adresseText: adrText || '', kmText: nfpLuftlinieText(g, drin ? p : null) || ('Luftlinie ' + nfpKmText(km) + ' km') });
       }
       let b = nfpImBild(p) ? nfpBewertung(p) : null;
@@ -17683,7 +17717,9 @@ async function zonenEditorOeffnen(){
     if(pinch && ev.touches.length === 2){
       ev.preventDefault();
       zoom = Math.max(1, Math.min(10, pinch.z * abst(ev.touches) / pinch.d)); fl.style.width = (zoom * 100) + '%';
-      sc.scrollLeft = pinch.fx * fl.clientWidth - pinch.sx; sc.scrollTop = pinch.fy * fl.clientHeight - pinch.sy;
+      // Mittelpunkt der Finger folgt: zwei Finger zoomen UND verschieben
+      const sr = sc.getBoundingClientRect(), mx = (ev.touches[0].clientX + ev.touches[1].clientX) / 2 - sr.left, my = (ev.touches[0].clientY + ev.touches[1].clientY) / 2 - sr.top;
+      sc.scrollLeft = pinch.fx * fl.clientWidth - mx; sc.scrollTop = pinch.fy * fl.clientHeight - my;
     }
   }, { passive: false });
   sc.addEventListener('touchend', (ev)=>{ if(ev.touches.length < 2) pinch = null; });
@@ -18411,6 +18447,11 @@ const SYNC_SAETZE = {
   entwuerfe: {
     laden: ()=>{ const a = LS.get('entwuerfe', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
     setzen: (a)=> LS.set('entwuerfe', a)
+  },
+  // gezeichnete Wegegeld-Zonen (je Flaeche ein Eintrag, dazu '_modus')
+  weg_flaechen: {
+    laden: ()=>{ const a = LS.get('weg_flaechen', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
+    setzen: (a)=> LS.set('weg_flaechen', a)
   }
 };
 function syncSaetzeZusammenfuehren(entfernt){
@@ -18549,7 +18590,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v332';
+const APP_VERSION = 'v333';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19491,7 +19532,8 @@ function ansichtEinstellungen(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Wegegeld-Zonen</div>
       <div class="design-hinweis">Grenzen der Zonen auf der KVBW-Karte selbst nachzeichnen. Gilt sofort für Wegegeld und alle Karten; mit OneDrive-Anmeldung auf allen Geräten.${LS.get('nfp_zonen_eigen', null) ? ' <b>Eigene Korrekturen aktiv</b> (Stand ' + new Date(LS.get('nfp_zonen_eigen', {}).am || Date.now()).toLocaleDateString('de-DE') + ').' : ''}</div>
-      <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:8px;">Zonen bearbeiten</button>
+      <div id="wfEinst"></div>
+      <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:8px;">KVBW-Zonen auf dem Kartenbild korrigieren</button>
       <button type="button" class="btn-sekundaer" id="btnZonenLaden" style="margin-top:8px;">Eigene Zonen mit OneDrive abgleichen</button>
       <div class="design-hinweis" id="zonenLadenInfo"></div>
       <button type="button" class="btn-sekundaer" id="btnEinrichtung" style="margin-top:8px;">Einrichtungsassistent (neues Gerät / neuer Nutzer)</button>
@@ -19519,6 +19561,7 @@ function ansichtEinstellungen(){
     '');
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
   document.getElementById('btnZonenBearbeiten').onclick = async ()=>{ await nfpZonenEigeneLaden(); zonenEditorOeffnen(); };
+  try{ wfEinstellungenZeichnen(); }catch(e){ console.warn('Zonen-Einstellungen', e); }
   document.getElementById('btnZonenLaden').onclick = async ()=>{
     const info = document.getElementById('zonenLadenInfo'); info.textContent = 'Wird geladen …';
     const r = await nfpZonenEigeneLaden();
@@ -21810,6 +21853,375 @@ if('serviceWorker' in navigator && (location.protocol==='https:' || location.hos
 window.addEventListener('online', ()=>{
   try{ synchronisiereAlle(); }catch(e){}
 });
+
+// =====================================================================
+// Gezeichnete Wegegeld-Zonen: frei auf der Karte gezeichnete Flaechen (Geo-Koordinaten).
+// Jede Flaeche bekommt eine Stufe aus der Tabelle (km-Bezeichnung, Farbe, GOP/Betrag).
+// Wegegeld nach Zonen, km-Ringen (Luftlinie) oder beidem; bei beidem gilt die
+// guenstigere Stufe oder die bevorzugte Art. Die Anbindung (Speicherort, Stufen,
+// Ringe, Ausgangspunkt) liefert wfKontext() der jeweiligen Version.
+// =====================================================================
+let wfUnterdrueckt = false;
+function wfPunktIn(g, pts){
+  const x = g.lon, y = g.lat; let drin = false;
+  for(let i = 0, j = pts.length - 1; i < pts.length; j = i++){
+    const yi = pts[i][0], xi = pts[i][1], yj = pts[j][0], xj = pts[j][1];
+    if(((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-12) + xi)) drin = !drin;
+  }
+  return drin;
+}
+function wfStufeIndex(k, c){ return (c || wfKontext()).stufen.findIndex(s=> s.k === k); }
+// Zone an einem Punkt: bei ueberlappenden Flaechen gilt die innere (niedrigere) Stufe
+function wfZoneFuer(g, c){
+  c = c || wfKontext(); let best = null;
+  c.flaechen.forEach(f=>{ if(!wfPunktIn(g, f.pts)) return; const i = wfStufeIndex(f.k, c); if(i < 0) return; if(!best || i < best.i) best = { i, f }; });
+  return best ? { stufe: best.f.k, label: c.stufen[best.i].label, farbe: c.stufen[best.i].farbe, flaeche: best.f } : null;
+}
+function wfFlaechenAktiv(c){ c = c || wfKontext(); return !!(c.modus.zonen && c.flaechen.length); }
+// Douglas-Peucker in Pixelkoordinaten {x,y}
+function wfVereinfachen(p, tol){
+  if(p.length < 4) return p.slice();
+  const d2 = (q, a, b)=>{ const dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy; let t = l ? ((q.x - a.x) * dx + (q.y - a.y) * dy) / l : 0; t = Math.max(0, Math.min(1, t)); const x = a.x + t * dx - q.x, y = a.y + t * dy - q.y; return x * x + y * y; };
+  const behalten = new Uint8Array(p.length); behalten[0] = behalten[p.length - 1] = 1;
+  const stapel = [[0, p.length - 1]];
+  while(stapel.length){
+    const [a, b] = stapel.pop(); let m = -1, md = tol * tol;
+    for(let i = a + 1; i < b; i++){ const d = d2(p[i], p[a], p[b]); if(d > md){ md = d; m = i; } }
+    if(m >= 0){ behalten[m] = 1; stapel.push([a, m], [m, b]); }
+  }
+  return p.filter((_, i)=> behalten[i]);
+}
+// --- Wegegeld-Entscheidung: nfpBewertung/nfpImBild werden umhuellt ---
+const wfBewertungBasis = nfpBewertung, wfImBildBasis = nfpImBild;
+nfpImBild = function(p){
+  if(wfImBildBasis(p)) return true;
+  if(!p) return false;
+  try{ const c = wfKontext(); return wfFlaechenAktiv(c) || (c.modus.ringe && !!wfRingErgebnis(nfpPixelZuGeo(p.x, p.y))); }catch(_){ return false; }
+};
+nfpBewertung = function(p){
+  let c; try{ c = wfKontext(); }catch(_){ return wfBewertungBasis(p); }
+  const g = nfpPixelZuGeo(p.x, p.y), basis = wfImBildBasis(p) ? wfBewertungBasis(p) : null;
+  // Zonen: eigene Flaechen, sonst (wo vorhanden) die Zonen der Vorlage (KVBW-Karte)
+  let zo = null;
+  if(c.modus.zonen){
+    if(c.flaechen.length){ const z = wfZoneFuer(g, c); if(z) zo = { stufe: z.stufe, text: 'Zone ' + z.label }; }
+    else if(c.kvbwBasis && basis && basis.quelle === 'karte') zo = { stufe: basis.stufe, text: basis.text };
+  }
+  const ri = (c.modus.ringe || !zo) ? wfRingErgebnis(g) : null;   // Ringe -- ausserhalb der Zonen auch als Rueckfall
+  let wahl = zo ? 'z' : (ri ? 'r' : null), zusatz = '';
+  if(zo && ri && c.modus.ringe){
+    const iz = wfStufeIndex(zo.stufe, c), ir = wfStufeIndex(ri.stufe, c);
+    if(c.modus.vorrang === 'guenstig'){ wahl = ir > iz ? 'r' : 'z'; if(ir !== iz) zusatz = ' (günstiger als ' + (wahl === 'r' ? zo.text : ri.text) + ')'; }
+    else wahl = c.modus.vorrang === 'ringe' ? 'r' : 'z';
+  }
+  if(!wahl) return basis || { x: p.x, y: p.y, zone: 9, stufe: '', text: 'keine Zone und kein Ausgangspunkt', km: null, quelle: 'luftlinie' };
+  const e = wahl === 'z' ? zo : ri;
+  if(wahl === 'r' && c.modus.zonen && !zo && (c.flaechen.length || c.kvbwBasis)) zusatz += ' – außerhalb der Zonen';
+  return { x: p.x, y: p.y, zone: wahl === 'z' ? 1 : 9, stufe: e.stufe, text: e.text + zusatz, km: ri ? ri.km : (basis ? basis.km : null), grenz: wahl === 'r' && ri ? ri.grenz : false, quelle: 'zonen', art: wahl === 'z' ? 'zone' : 'ring' };
+};
+// --- Anzeige: Flaechen statt der Vorlage-Zonen (Raster- und Vektorkarte) ---
+function wfFlaechenSvg(z, c){
+  const f = (v)=> v.toFixed(1);
+  const liste = c.flaechen.map(fl=> ({ fl, i: wfStufeIndex(fl.k, c) })).filter(x=> x.i >= 0).sort((a, b)=> b.i - a.i);
+  let out = '';
+  liste.forEach(({ fl, i })=>{
+    const d = 'M' + fl.pts.map(q=>{ const w = osmWelt(q[0], q[1], z); return f(w.x) + ' ' + f(w.y); }).join('L') + 'Z';
+    out += '<path d="' + d + '" fill="' + c.stufen[i].farbe + '" fill-opacity=".22" stroke="' + c.stufen[i].farbe + '" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
+  });
+  return out;
+}
+const wfBereichBasis = osmKartenBereichSvg;
+osmKartenBereichSvg = function(z, kvbwUrl){
+  if(wfUnterdrueckt || kvbwUrl) return wfBereichBasis(z, kvbwUrl);
+  let c; try{ c = wfKontext(); }catch(_){ return wfBereichBasis(z, kvbwUrl); }
+  return wfFlaechenAktiv(c) ? wfFlaechenSvg(z, c) : wfBereichBasis(z, kvbwUrl);
+};
+const wfVkBasis = vkZonenGeo;
+vkZonenGeo = function(){
+  let c; try{ c = wfKontext(); }catch(_){ return wfVkBasis(); }
+  if(!wfFlaechenAktiv(c)) return wfVkBasis();
+  const features = c.flaechen.map(fl=> ({ fl, i: wfStufeIndex(fl.k, c) })).filter(x=> x.i >= 0).sort((a, b)=> b.i - a.i).map(({ fl, i })=>{
+    const ring = fl.pts.map(q=> [+q[1].toFixed(6), +q[0].toFixed(6)]); ring.push(ring[0]);
+    return { type: 'Feature', properties: { farbe: c.stufen[i].farbe, k: fl.k }, geometry: { type: 'Polygon', coordinates: [ring] } };
+  });
+  return { type: 'FeatureCollection', features };
+};
+// --- Einstellungen: Wegegeld nach Zonen / Ringen / beidem ---
+function wfModusHtml(m, hatFlaechen){
+  return '<div class="wf-modus">' +
+    '<label class="wf-cb"><input type="checkbox" id="wfZonen"' + (m.zonen ? ' checked' : '') + '> Gezeichnete Zonen' + (hatFlaechen ? '' : ' <small>(noch keine gezeichnet)</small>') + '</label>' +
+    '<label class="wf-cb"><input type="checkbox" id="wfRinge"' + (m.ringe ? ' checked' : '') + '> km-Ringe (Luftlinie ab Ausgangspunkt)</label>' +
+    '<label class="wf-vorrang"' + (m.zonen && m.ringe ? '' : ' hidden') + '><span>Wenn beides passt, gilt</span><select id="wfVorrang">' +
+      [['guenstig', 'die günstigere Stufe'], ['zonen', 'immer die Zone'], ['ringe', 'immer der km-Ring']].map(([k, t])=> '<option value="' + k + '"' + (m.vorrang === k ? ' selected' : '') + '>' + t + '</option>').join('') +
+    '</select></label><div class="fb-info wf-modus-info">Außerhalb aller Zonen gilt immer der km-Ring.</div></div>';
+}
+function wfModusLesen(alt){
+  const z = document.getElementById('wfZonen'), r = document.getElementById('wfRinge'), v = document.getElementById('wfVorrang');
+  if(!z || !r) return alt;
+  const m = { zonen: z.checked, ringe: r.checked, vorrang: v ? v.value : (alt && alt.vorrang) || 'guenstig' };
+  if(!m.zonen && !m.ringe) m.ringe = true;
+  return m;
+}
+function wfModusVerdrahten(beiAenderung){
+  const z = document.getElementById('wfZonen'), r = document.getElementById('wfRinge'), v = document.getElementById('wfVorrang');
+  const sicht = ()=>{ const l = document.querySelector('.wf-vorrang'); if(l) l.hidden = !(z.checked && r.checked); };
+  [z, r, v].forEach(el=>{ if(el) el.addEventListener('change', ()=>{ if(el !== v && !z.checked && !r.checked) (el === z ? r : z).checked = true; sicht(); if(beiAenderung) beiAenderung(); }); });
+}
+// --- Zeichnen ---
+async function wegZonenZeichnen(p){
+  const c = wfKontext(p);
+  let fl = JSON.parse(JSON.stringify(c.flaechen)), farben = Object.assign({}, c.farben || {});
+  let vorlageGenutzt = false;
+  if(!fl.length && c.vorlage){ try{ fl = c.vorlage(); vorlageGenutzt = fl.length > 0; }catch(_){ fl = []; } }
+  const stufen = ()=> c.stufen.map(s=> Object.assign({}, s, farben[s.k] ? { farbe: farben[s.k] } : {}));
+  const st = (k)=> stufen().find(s=> s.k === k) || { k, label: k, farbe: '#777' };
+  let k = (stufen()[1] || stufen()[0] || {}).k, modus = 'zeichnen', verlauf = [], geaendert = vorlageGenutzt;
+  let ringeAn = LS.get('wf_ringe', true) !== false, kvbwAn = false, kvbwUrl = null;
+  let z = 11.5, mitte = c.mitte && isFinite(c.mitte.lat) ? { lat: +c.mitte.lat, lon: +c.mitte.lon } : { lat: 51, lon: 10 };
+  if(!(c.mitte && isFinite(c.mitte.lat))) z = 6;
+  const ov = document.createElement('div');
+  ov.className = 'nfp-overlay wf-overlay';
+  ov.innerHTML = '<div class="nfp-kopf"><b>Zonen zeichnen</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div>' +
+    '<div class="wf-leiste"><div class="wf-stufen"></div>' +
+      '<div class="wf-werkzeug"><label class="wf-farbe" title="Farbe der gewählten Stufe"><input type="color"></label><button type="button" class="wf-modus-knopf"></button>' +
+      '<button type="button" class="wf-undo" aria-label="Rückgängig">↶</button><span class="wf-luecke"></span><button type="button" class="wf-weg">🗑 Zone</button>' + (c.vorlage ? '<button type="button" class="wf-vorlage">Vorlage</button>' : '') + '</div></div>' +
+    '<div class="nfp-rahmen wf-rahmen"><div class="wf-inhalt"></div><div class="wf-schwebe"><button type="button" class="wf-s-ringe" aria-label="km-Ringe ein/aus">km</button>' +
+      (c.kvbwBild ? '<button type="button" class="wf-s-kvbw" aria-label="KVBW-Kartenbild ein/aus">KVBW</button>' : '') + '</div></div>' +
+    '<div class="nfp-fuss"><div class="nfp-info wf-info"></div><div class="nfp-knoepfe"><button type="button" data-zoom="-1">−</button><button type="button" data-zoom="1">+</button>' +
+      '<button type="button" class="btn-primaer wf-speichern">Übernehmen</button></div></div>';
+  document.body.appendChild(ov); document.body.classList.add('nfp-offen');
+  try{ if(typeof querAn === 'function' && querAn()) ov.classList.add('karte-quer'); }catch(_){}
+  const rahmen = ov.querySelector('.wf-rahmen'), inhalt = ov.querySelector('.wf-inhalt'), info = ov.querySelector('.wf-info');
+  let fertig = null; const ergebnis = new Promise(r=> fertig = r);
+  const hinweis = (t)=> info.innerHTML = t;
+  const standardHinweis = ()=>{
+    const s = st(k), anz = fl.filter(x=> x.k === k).length;
+    hinweis(modus === 'zeichnen'
+      ? '<b style="color:' + s.farbe + '">' + htmlEsc(s.label) + '</b>: ' + (anz ? 'Grenze ändern: <b>auf der Grenze ansetzen</b>, neue Linie ziehen, <b>wieder auf der Grenze</b> loslassen. Oder eine weitere Fläche als geschlossene Linie zeichnen.' : 'Fläche als <b>geschlossene Linie</b> umfahren (Ende beim Anfang).')
+      : 'Karte verschieben, mit zwei Fingern, Mausrad oder −/+ zoomen. Zum Zeichnen „✏ Zeichnen“ tippen.');
+  };
+  // --- Darstellung ---
+  let akt = null, basisLinks = 0, basisOben = 0;
+  const P = (q)=> osmWelt(q[0], q[1], akt.zi);
+  const zeichnen = (strich)=>{
+    if(!akt) return;
+    const f = (v)=> v.toFixed(1), S = stufen(), idx = (kk)=> S.findIndex(s=> s.k === kk);
+    let h = '';
+    if(ringeAn && c.mitte && isFinite(c.mitte.lat)){
+      (c.ringe || []).forEach(r=>{
+        const kr = geoKreisPunkte(c.mitte, r.km).map(g=> osmWelt(g.lat, g.lon, akt.zi));
+        h += '<polygon points="' + kr.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '" fill="none" stroke="' + r.farbe + '" stroke-width="2" stroke-dasharray="8 5" vector-effect="non-scaling-stroke"/>';
+        h += '<text x="' + f(kr[0].x) + '" y="' + f(kr[0].y - 4 / akt.s) + '" text-anchor="middle" font-size="' + f(13 / akt.s) + '" font-weight="700" fill="' + r.farbe + '" stroke="#fff" stroke-width="' + f(3 / akt.s) + '" paint-order="stroke">' + String(r.km).replace('.', ',') + ' km</text>';
+      });
+      const m = osmWelt(c.mitte.lat, c.mitte.lon, akt.zi); h += '<circle cx="' + f(m.x) + '" cy="' + f(m.y) + '" r="' + f(6 / akt.s) + '" fill="#111" stroke="#fff" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+    }
+    fl.map(x=> ({ x, i: idx(x.k) })).filter(e=> e.i >= 0).sort((a, b)=> b.i - a.i).forEach(({ x, i })=>{
+      const an = x.k === k, s = S[i];
+      h += '<path d="M' + x.pts.map(q=>{ const w = P(q); return f(w.x) + ' ' + f(w.y); }).join('L') + 'Z" fill="' + s.farbe + '" fill-opacity="' + (an ? .3 : .16) + '" stroke="' + s.farbe + '" stroke-width="' + (an ? 4 : 2) + '" stroke-opacity="' + (an ? 1 : .7) + '" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
+    });
+    if(strich && strich.length > 1) h += '<polyline points="' + strich.map(q=> f(q.x) + ',' + f(q.y)).join(' ') + '" fill="none" stroke="#111" stroke-width="3" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>';
+    const svg = inhalt.querySelector('.wf-svg'); if(svg) svg.innerHTML = h;
+  };
+  const render = ()=>{
+    const vw = rahmen.clientWidth || 360, vh = rahmen.clientHeight || 500;
+    z = Math.max(4, Math.min(18.4, z));
+    const zi = Math.max(4, Math.min(18, Math.round(z))), s = Math.pow(2, z - zi);
+    wfUnterdrueckt = true;
+    let a;
+    try{ a = osmAusschnitt({ pois: [], nfp: !!c.nfpSymbol, rahmen: kvbwAn }, { z: zi, mitte, w: vw * 2 / s, h: vh * 2 / s, px: true, r: 9 / s, ebene: kvbwAn ? 'kvbw' : 'zonen', kvbwUrl: kvbwAn ? kvbwUrl : null, zonen: false }); }
+    finally{ wfUnterdrueckt = false; }
+    akt = { x0: a.x0, y0: a.y0, bw: a.bw, bh: a.bh, zi, s };
+    inhalt.innerHTML = a.html + '<svg class="wf-svg" viewBox="' + a.x0.toFixed(1) + ' ' + a.y0.toFixed(1) + ' ' + a.bw.toFixed(1) + ' ' + a.bh.toFixed(1) + '" preserveAspectRatio="none"></svg>';
+    const fl0 = inhalt.firstElementChild; if(fl0) fl0.style.width = (a.bw * s).toFixed(1) + 'px';
+    inhalt.style.width = (a.bw * s).toFixed(1) + 'px'; inhalt.style.height = (a.bh * s).toFixed(1) + 'px';
+    const m = osmWelt(mitte.lat, mitte.lon, zi);
+    basisLinks = vw / 2 - (m.x - a.x0) * s; basisOben = vh / 2 - (m.y - a.y0) * s;
+    inhalt.style.left = basisLinks + 'px'; inhalt.style.top = basisOben + 'px'; inhalt.style.transform = '';
+    zeichnen();
+  };
+  // Bildschirm -> Weltpixel (Stufe akt.zi)
+  const welt = (cx, cy)=>{ const r = rahmen.getBoundingClientRect(); return { x: akt.x0 + (cx - r.left - basisLinks) / akt.s, y: akt.y0 + (cy - r.top - basisOben) / akt.s }; };
+  // Zoom um einen Bildschirmpunkt (relativ zum Rahmen)
+  // (dx, dy): der Punkt wandert zusaetzlich mit (Verschieben mit zwei Fingern)
+  const zoomUm = (zNeu, px, py, dx, dy)=>{
+    const r = rahmen.getBoundingClientRect(), vw = r.width, vh = r.height;
+    const w = welt(r.left + px, r.top + py), g = osmGeo(w.x, w.y, akt.zi);
+    zNeu = Math.max(4, Math.min(18.4, zNeu));
+    const n = osmWelt(g.lat, g.lon, zNeu);
+    mitte = osmGeo(n.x + (vw / 2 - px - (dx || 0)), n.y + (vh / 2 - py - (dy || 0)), zNeu); z = zNeu; render();
+  };
+  ov.querySelectorAll('[data-zoom]').forEach(b=> b.onclick = ()=>{ const r = rahmen.getBoundingClientRect(); zoomUm(z + (b.dataset.zoom === '1' ? 0.7 : -0.7), r.width / 2, r.height / 2); });
+  rahmen.addEventListener('wheel', (ev)=>{ ev.preventDefault(); const r = rahmen.getBoundingClientRect(); zoomUm(z - Math.sign(ev.deltaY) * 0.35, ev.clientX - r.left, ev.clientY - r.top); }, { passive: false });
+  // --- Zeiger: Zeichnen / Verschieben / Pinch ---
+  const zeiger = new Map(); let zug = null, pinch = null, strich = null;
+  const abst = (a, b)=> Math.hypot(a.x - b.x, a.y - b.y);
+  rahmen.addEventListener('pointerdown', (ev)=>{
+    if(ev.target.closest('.wf-schwebe') || !akt) return;
+    try{ rahmen.setPointerCapture(ev.pointerId); }catch(_){}
+    zeiger.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if(zeiger.size === 2){
+      strich = null; zug = null;
+      const [a, b] = [...zeiger.values()], r = rahmen.getBoundingClientRect();
+      pinch = { d: abst(a, b) || 1, px: (a.x + b.x) / 2 - r.left, py: (a.y + b.y) / 2 - r.top, f: 1, dx: 0, dy: 0 };
+      inhalt.style.transformOrigin = (pinch.px - basisLinks) + 'px ' + (pinch.py - basisOben) + 'px';
+      zeichnen(); return;
+    }
+    if(zeiger.size === 1){
+      if(modus === 'zeichnen' && ev.button !== 1 && ev.button !== 2){ strich = [welt(ev.clientX, ev.clientY)]; zeichnen(strich); }
+      else zug = { x: ev.clientX, y: ev.clientY, dx: 0, dy: 0 };
+    }
+  });
+  rahmen.addEventListener('pointermove', (ev)=>{
+    if(!zeiger.has(ev.pointerId)) return;
+    zeiger.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if(pinch && zeiger.size >= 2){
+      const [a, b] = [...zeiger.values()], r = rahmen.getBoundingClientRect();
+      pinch.f = abst(a, b) / pinch.d; pinch.dx = (a.x + b.x) / 2 - r.left - pinch.px; pinch.dy = (a.y + b.y) / 2 - r.top - pinch.py;
+      inhalt.style.transform = 'translate(' + pinch.dx.toFixed(1) + 'px,' + pinch.dy.toFixed(1) + 'px) scale(' + pinch.f.toFixed(4) + ')'; return;
+    }
+    if(strich){ const q = welt(ev.clientX, ev.clientY), l = strich[strich.length - 1]; if(Math.hypot(q.x - l.x, q.y - l.y) * akt.s >= 3){ strich.push(q); zeichnen(strich); } return; }
+    if(zug){ zug.dx = ev.clientX - zug.x; zug.dy = ev.clientY - zug.y; inhalt.style.transform = 'translate(' + zug.dx + 'px,' + zug.dy + 'px)'; }
+  });
+  const loslassen = (ev)=>{
+    if(!zeiger.has(ev.pointerId)) return;
+    zeiger.delete(ev.pointerId);
+    if(pinch){ if(zeiger.size < 2){ const p0 = pinch; pinch = null; inhalt.style.transform = ''; zoomUm(z + Math.log2(p0.f || 1), p0.px, p0.py, p0.dx, p0.dy); zeiger.clear(); } return; }
+    if(zug){ const zz = zug; zug = null; if(Math.abs(zz.dx) + Math.abs(zz.dy) > 1){ const m = osmWelt(mitte.lat, mitte.lon, z); mitte = osmGeo(m.x - zz.dx, m.y - zz.dy, z); render(); } else inhalt.style.transform = ''; return; }
+    if(strich){ const s = strich; strich = null; if(ev.type === 'pointerup') s.push(welt(ev.clientX, ev.clientY)); strichFertig(s); }
+  };
+  rahmen.addEventListener('pointerup', loslassen); rahmen.addEventListener('pointercancel', loslassen);
+  const zuGeo = (pts)=> wfVereinfachen(pts, 1.2 / akt.s).map(q=>{ const g = osmGeo(q.x, q.y, akt.zi); return [+g.lat.toFixed(6), +g.lon.toFixed(6)]; });
+  const strichFertig = (s)=>{
+    if(s.length < 3){ zeichnen(); return; }
+    const tol = 30 / akt.s;
+    const eigene = fl.map((x, i)=> ({ x, i })).filter(e=> e.x.k === k);
+    const ringeW = eigene.map(e=> e.x.pts.map(q=>{ const w = P(q); return { x: w.x, y: w.y }; }));
+    const erg = ringeW.length ? grenzeErsetzen(ringeW, s, tol) : null;
+    if(erg){
+      const ri = erg.findIndex((r, i)=> r !== ringeW[i]);
+      if(ri >= 0){ verlauf.push(JSON.stringify(fl)); fl[eigene[ri].i] = Object.assign({}, fl[eigene[ri].i], { pts: zuGeo(erg[ri]) }); geaendert = true; zeichnen(); knoepfe(); hinweis('Grenze übernommen. Weiter zeichnen oder „Übernehmen“.'); return; }
+    }
+    const zu = Math.hypot(s[0].x - s[s.length - 1].x, s[0].y - s[s.length - 1].y) <= tol * 2.5;
+    let laenge = 0; for(let i = 1; i < s.length; i++) laenge += Math.hypot(s[i].x - s[i - 1].x, s[i].y - s[i - 1].y);
+    if((zu || !eigene.length) && laenge * akt.s > 80){
+      verlauf.push(JSON.stringify(fl));
+      fl.push({ id: 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), k, pts: zuGeo(s) });
+      geaendert = true; zeichnen(); knoepfe(); hinweis('Fläche angelegt. Grenzen lassen sich nachzeichnen, weitere Flächen dazu zeichnen.'); return;
+    }
+    zeichnen();
+    hinweis('<span style="color:#c0392b">Nicht übernommen:</span> Zum Ändern die Linie <b>auf der Grenze</b> der gewählten Stufe ansetzen und dort wieder loslassen; für eine neue Fläche die Linie schließen (Ende beim Anfang).');
+  };
+  // --- Leiste ---
+  const knoepfe = ()=>{
+    const S = stufen();
+    ov.querySelector('.wf-stufen').innerHTML = S.map(s=> '<button type="button" data-wfk="' + htmlEsc(s.k) + '" class="' + (s.k === k ? 'an' : '') + '" style="--zf:' + s.farbe + '">' + htmlEsc(s.label) +
+      (fl.some(x=> x.k === s.k) ? ' <small>●</small>' : '') + '</button>').join('');
+    ov.querySelectorAll('[data-wfk]').forEach(b=> b.onclick = ()=>{ k = b.dataset.wfk; knoepfe(); zeichnen(); });
+    const mk = ov.querySelector('.wf-modus-knopf'); mk.textContent = modus === 'zeichnen' ? '✏ Zeichnen' : '✋ Verschieben'; mk.classList.toggle('an', modus === 'zeichnen');
+    ov.querySelector('.wf-undo').disabled = !verlauf.length;
+    ov.querySelector('.wf-weg').disabled = !fl.some(x=> x.k === k);
+    ov.querySelector('.wf-farbe input').value = st(k).farbe;
+    ov.querySelector('.wf-s-ringe').classList.toggle('an', ringeAn);
+    const kb = ov.querySelector('.wf-s-kvbw'); if(kb) kb.classList.toggle('an', kvbwAn);
+    rahmen.classList.toggle('zeichnen', modus === 'zeichnen');
+    standardHinweis();
+  };
+  ov.querySelector('.wf-modus-knopf').onclick = ()=>{ modus = modus === 'zeichnen' ? 'verschieben' : 'zeichnen'; knoepfe(); };
+  ov.querySelector('.wf-undo').onclick = ()=>{ if(!verlauf.length) return; fl = JSON.parse(verlauf.pop()); geaendert = true; zeichnen(); knoepfe(); };
+  ov.querySelector('.wf-weg').onclick = async ()=>{
+    const n = fl.filter(x=> x.k === k).length; if(!n) return;
+    if(!await betaFrage((n > 1 ? 'Alle ' + n + ' Flächen' : 'Die Fläche') + ' der Stufe „' + st(k).label + '“ löschen?', 'Löschen', 'Abbrechen')) return;
+    verlauf.push(JSON.stringify(fl)); fl = fl.filter(x=> x.k !== k); geaendert = true; zeichnen(); knoepfe();
+  };
+  const vl = ov.querySelector('.wf-vorlage');
+  if(vl) vl.onclick = async ()=>{
+    if(fl.length && !await betaFrage('Alle gezeichneten Zonen durch die KVBW-Zonen ersetzen?', 'Ersetzen', 'Abbrechen')) return;
+    verlauf.push(JSON.stringify(fl)); fl = c.vorlage(); geaendert = true; zeichnen(); knoepfe();
+  };
+  ov.querySelector('.wf-farbe input').addEventListener('input', (ev)=>{ farben[k] = ev.target.value; geaendert = true; zeichnen(); knoepfe(); });
+  ov.querySelector('.wf-s-ringe').onclick = ()=>{ ringeAn = !ringeAn; LS.set('wf_ringe', ringeAn); knoepfe(); zeichnen(); };
+  const kvKn = ov.querySelector('.wf-s-kvbw');
+  if(kvKn) kvKn.onclick = async ()=>{
+    if(!kvbwAn && !kvbwUrl){ kvKn.classList.add('laedt'); try{ kvbwUrl = await c.kvbwBild(); }catch(_){ kvbwUrl = null; } kvKn.classList.remove('laedt'); if(!kvbwUrl){ appToastAnzeigen('Das KVBW-Kartenbild konnte nicht geladen werden.', 3000); return; } }
+    kvbwAn = !kvbwAn; knoepfe(); render();
+  };
+  const schliessen = (erg)=>{ ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertig(erg); };
+  ov.querySelector('.nfp-zu').onclick = async ()=>{ if(geaendert && !await betaFrage('Änderungen verwerfen?', 'Verwerfen', 'Zurück')) return; schliessen(false); };
+  ov.querySelector('.wf-speichern').onclick = ()=>{
+    const m = Object.assign({}, c.modus);
+    if(fl.length && !c.modus.zonen){ m.zonen = true; if(m.ringe && !m.vorrang) m.vorrang = 'guenstig'; }
+    c.speichern(fl, m, farben);
+    try{ if(typeof miniKartenNeu === 'function') miniKartenNeu(); }catch(_){}
+    appToastAnzeigen(fl.length ? fl.length + (fl.length === 1 ? ' Zone' : ' Zonen') + ' übernommen' + (m.zonen && !c.modus.zonen ? ' – Wegegeld nach Zonen ist jetzt eingeschaltet' : '') + '.' : 'Keine gezeichneten Zonen mehr.', 3800);
+    schliessen(true);
+  };
+  window.addEventListener('resize', function rs(){ if(!document.body.contains(ov)){ window.removeEventListener('resize', rs); return; } render(); });
+  knoepfe();
+  requestAnimationFrame(()=>{ render(); if(vorlageGenutzt) hinweis('Als Vorlage sind die KVBW-Zonen eingezeichnet. Grenzen nachzeichnen, Flächen löschen oder neue zeichnen.'); });
+  return ergebnis;
+}
+// Kreis (Geo) fuer die km-Ringe im Editor
+function geoKreisPunkte(m, R){
+  const la = m.lat * Math.PI / 180, lo = m.lon * Math.PI / 180, d = R / 6371, p = [];
+  for(let i = 0; i <= 96; i++){
+    const t = i / 96 * 2 * Math.PI;
+    const lat2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(t));
+    const lon2 = lo + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(lat2));
+    p.push({ lat: lat2 * 180 / Math.PI, lon: lon2 * 180 / Math.PI });
+  }
+  return p;
+}
+// Ueber 50 km Luftlinie: hoechste Stufe (Aufrufer setzten bisher fest '50+')
+function wfUeber50(stufe, km){ return km != null && km > 50 ? wfStufeUeber50() : stufe; }
+
+// ---------- Gezeichnete Zonen: Anbindung privat (KVBW-Stufen, Speicher weg_flaechen, Abgleich ueber OneDrive) ----------
+const WF_FARBEN_PRIVAT = { '2': '#f57c00', '5': '#e6c800', '10': '#2f8fd6', '10+': '#2fa84f', '20+': '#d9609f', '30+': '#4aa6cf', '50+': '#8e24aa' };
+function wfKontext(){
+  const roh = LS.get('weg_flaechen', []), a = Array.isArray(roh) ? roh : [];
+  const mo = a.find(x=> x && x.id === '_modus') || {};
+  const farben = mo.farben && typeof mo.farben === 'object' ? mo.farben : {};
+  return {
+    flaechen: a.filter(x=> x && x.id !== '_modus' && Array.isArray(x.pts) && x.pts.length > 2),
+    modus: { zonen: mo.zonen !== false, ringe: !!mo.ringe, vorrang: mo.vorrang || 'guenstig' },
+    farben,
+    stufen: EBM_GRUPPEN.weg.stufen.map(s=> ({ k: s.k, label: s.label, farbe: farben[s.k] || WF_FARBEN_PRIVAT[s.k] || '#777' })),
+    mitte: kreisMitte(),
+    ringe: KM_KREISE.map(R=> ({ km: R, farbe: kmKreisFarbe(R) })),
+    kvbwBasis: true, nfpSymbol: true,
+    kvbwBild: ()=> nfpKarteBildUrl(),
+    vorlage: wfAusKvbw,
+    speichern: (fl, m, farben)=>{
+      LS.set('weg_flaechen', fl.concat([Object.assign({ id: '_modus' }, { zonen: !!m.zonen, ringe: !!m.ringe, vorrang: m.vorrang || 'guenstig' }, { farben: farben || {} })]));
+      try{ syncBaldSchreiben(); }catch(_){}
+    }
+  };
+}
+function wfRingErgebnis(g){
+  const m = kreisMitte(); if(!m || !g) return null;
+  const km = kmLuftlinieEinfach(m, g), s = gkvStartGeo();
+  return { stufe: km > 50 ? '50+' : gkvStufeFuerKm(km), km, text: 'Luftlinie ' + nfpKmText(km) + ' km' + (s ? '' : ' ab NFP') };
+}
+function wfStufeUeber50(){ return '50+'; }
+// Vorlage: die (ggf. selbst korrigierten) Zonen der KVBW-Karte als Flaechen
+function wfAusKvbw(){
+  const ringe = nfpZonenRinge(), out = [];
+  ['1', '2', '3', '4', '5'].forEach(k=>{
+    (ringe[k] || []).forEach((r, i)=>{
+      const v = wfVereinfachen(r, 1.2); if(v.length < 3) return;
+      out.push({ id: 'kv' + k + '_' + i, k: NFP_ZONEN[k].stufe, pts: v.map(q=>{ const g = nfpPixelZuGeo(q.x, q.y); return [+g.lat.toFixed(6), +g.lon.toFixed(6)]; }) });
+    });
+  });
+  return out;
+}
+function wfEinstellungenZeichnen(){
+  const box = document.getElementById('wfEinst'); if(!box) return;
+  const c = wfKontext();
+  box.innerHTML = wfModusHtml(c.modus, c.flaechen.length > 0) +
+    '<div class="design-hinweis">' + (c.flaechen.length ? '<b>' + c.flaechen.length + ' gezeichnete ' + (c.flaechen.length === 1 ? 'Zone' : 'Zonen') + '</b> – gelten statt der KVBW-Zonen.' : 'Noch keine eigenen Zonen gezeichnet – es gelten die Zonen der KVBW-Karte. Beim ersten Zeichnen werden sie als Vorlage übernommen.') + '</div>' +
+    '<button type="button" class="btn-sekundaer" id="btnWfZeichnen" style="margin-top:8px;">Zonen zeichnen</button>';
+  wfModusVerdrahten(()=>{ const c2 = wfKontext(); c2.speichern(c2.flaechen, wfModusLesen(c2.modus), c2.farben); try{ miniKartenNeu(); }catch(_){} });
+  document.getElementById('btnWfZeichnen').onclick = async ()=>{ await wegZonenZeichnen(); wfEinstellungenZeichnen(); };
+}
 </script>
 <script>
 // ---------- App-Sperre mit Fingerabdruck / Face ID (Passkey) ----------
