@@ -1934,6 +1934,7 @@ try{
   body.quer .quer-start{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr); gap:18px; align-items:start;}
   body.quer .quer-start > .quer-sp > *:first-child{margin-top:0;}
   body.quer .quer-start.zwei{grid-template-columns:minmax(0, 1fr) minmax(0, 1.25fr);}
+  .quer-sp[hidden]{display:none !important;}
   body.quer .quer-start.zwei .quer-sp3{grid-column:auto;}
   /* GKV-Maske im Querformat: zwei Spalten */
   body.quer .quer-gkv{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.1fr); gap:22px; align-items:start;}
@@ -18362,7 +18363,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v321';
+const APP_VERSION = 'v322';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18406,8 +18407,16 @@ function querStartAnordnen(){
   const s1 = sp('quer-sp1'), s2 = sp('quer-sp2'), s3 = sp('quer-sp3 ds-live');
   kinder.forEach(k=>{ if(k === kopf || k === live || k.matches('nav, .ds-nav, .ds-dock, script, style')) return; s1.appendChild(k); });
   s2.appendChild(live);
-  const liveLeer = live.offsetHeight < 4;   // nichts sichtbar (kein laufender Dienst)
-  w.append(s1); if(!liveLeer) w.append(s2); else w.classList.add('zwei');   // kein laufender Dienst: zwei Spalten statt einer leeren Mitte
+  // Mitte (Uhr/Dienst) bleibt immer im Dokument; ist sie leer (kein laufender Dienst), wird sie
+  // ausgeblendet und es gibt zwei Spalten. Fuellt sie sich (Inhalte kommen teils verzoegert), erscheint sie.
+  w.append(s1, s2);
+  const mitte = ()=>{
+    if(!document.body.contains(w)) return;
+    s2.hidden = false;   // erst sichtbar messen
+    const leer = !(typeof liveDienstLaden === 'function' && liveDienstLaden()) && live.offsetHeight < 4;
+    w.classList.toggle('zwei', leer); s2.hidden = leer;
+  };
+  mitte(); setTimeout(mitte, 600); setTimeout(mitte, 2000);
   if(karte){ s3.appendChild(karte); w.append(s3); }
   if(kopf) kopf.after(w); else app.prepend(w);
 }
