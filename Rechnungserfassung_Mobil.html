@@ -18698,7 +18698,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v340';
+const APP_VERSION = 'v341';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -22587,8 +22587,9 @@ const AppSperre = (()=>{
     if(warteRest() > 0) return false;
     const ok = (await pinHash(pin, ausB64(e.pin.s), e.pin.n || PIN_RUNDEN)) === e.pin.h;
     const e2 = einst();
-    if(ok){ delete e2.fehl; delete e2.warteBis; }
-    else { e2.fehl = (Number(e2.fehl) || 0) + 1; if(e2.fehl >= 5) e2.warteBis = Date.now() + Math.min(15 * 60000, 30000 * Math.pow(2, e2.fehl - 5)); }
+    if(ok){ delete e2.fehl; delete e2.warteBis; delete e2.fehlAm; }
+    else { if(Date.now() - (Number(e2.fehlAm) || 0) > 24 * 3600000) e2.fehl = 0;   // 24 h ohne Fehlversuch -> Zaehler verfaellt
+      e2.fehl = (Number(e2.fehl) || 0) + 1; e2.fehlAm = Date.now(); if(e2.fehl >= 5) e2.warteBis = Date.now() + Math.min(15 * 60000, 30000 * Math.pow(2, e2.fehl - 5)); }
     einstSetzen(e2); return ok;
   }
   // aktuelle Art bestaetigen (Passkey: Fingerabdruck; PIN: Eingabe im Dialog)
