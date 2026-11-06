@@ -1637,6 +1637,21 @@ try{
   .wf-schwebe button.an{background:#2b3a55; color:#fff;}
   .wf-schwebe button.laedt{opacity:.5;}
   .wf-modus{display:flex; flex-direction:column; gap:4px; margin-top:6px;}
+  /* Datensicherung */
+  .ods-liste{margin-top:8px; display:flex; flex-direction:column; gap:6px;}
+  .ods-eintrag{border:1px solid var(--rand); border-radius:10px; overflow:hidden; background:var(--karte);}
+  .ods-kopf{display:flex; align-items:center; gap:8px; width:100%; margin:0; padding:10px 12px; background:none; border:0; color:var(--text); font-size:15px; text-align:left;}
+  .ods-kopf span{flex:1;} .ods-kopf small{opacity:.65; font-size:12px;} .ods-pfeil{transition:transform .15s;}
+  .ods-eintrag.offen .ods-pfeil{transform:rotate(90deg);}
+  .ods-dateien{border-top:1px solid var(--rand); padding:6px 10px;}
+  .ods-datei{display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:8px 0; border-bottom:1px solid var(--rand);}
+  .ods-datei:last-child{border-bottom:0;}
+  .ods-datei > div{flex:1 1 100%; min-width:0;} .ods-datei small{display:block; opacity:.65; font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .ods-datei button.btn-sekundaer{margin:0 !important; padding:6px 10px; font-size:13.5px; min-height:36px; flex:1 1 0; width:auto !important;}
+  .ods-inhalt{flex:1; min-height:0; overflow:auto; background:var(--karte);}
+  .ods-frame{width:100%; height:100%; border:0; display:block;}
+  .ods-kurz{padding:12px 14px; font-size:14px; line-height:1.5; border-bottom:1px solid var(--rand);}
+  .ods-text{margin:0; padding:12px 14px; font-size:12px; white-space:pre-wrap; word-break:break-word;}
   .wf-modus .wf-cb{display:flex; align-items:center; gap:10px; margin:0; padding:6px 0; font-size:15px; text-align:left; cursor:pointer;}
   .wf-modus .wf-cb input{width:20px; height:20px; margin:0; flex:0 0 auto; accent-color:#2b6cb0;}
   .wf-modus .wf-cb small{color:var(--text-grau, #777);}
@@ -18683,7 +18698,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v338';
+const APP_VERSION = 'v339';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19648,6 +19663,10 @@ function ansichtEinstellungen(){
       ${betaOneDriveTestHtml()}
     </div>
     <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Datensicherung</div>
+      <div id="odsAbschnitt"></div>
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">App-Sperre</div>
       <div id="asAbschnitt">${AppSperre.abschnittHtml()}</div>
     </div>
@@ -19724,6 +19743,7 @@ function ansichtEinstellungen(){
 
   document.getElementById('zReise').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkReiseBasisLuftlinie').click(); } };
   msGraphAbschnittWiring();
+  try{ odsAbschnittZeichnen(); }catch(e){ console.warn('Datensicherung', e); }
   { const neu = ()=>{ const el = document.getElementById('asAbschnitt'); if(el){ el.innerHTML = AppSperre.abschnittHtml(); AppSperre.abschnittWiring(neu); } }; AppSperre.abschnittWiring(neu); }
   betaEinstellungenWiring();
   betaProfileWiring(()=>{ const y = window.scrollY; ansichtEinstellungen(); window.scrollTo(0, y); });
@@ -19953,6 +19973,7 @@ async function msGraphInitialisieren(){
       inst.setActiveAccount(konten[0]);
       msGraphKonto = { name: konten[0].name || '', username: konten[0].username || '' };
       msGraphStatus = 'angemeldet';
+      setTimeout(()=>{ odsAutomatisch().catch(e=> console.warn('Sicherung', e)); }, 30000);
       setTimeout(()=>{ gkvAdressenNachtragen().then(n=>{ if(n && typeof appToastAnzeigen === 'function') appToastAnzeigen('Fahrtenbuch: Adressen von ' + n + ' GKV-Fällen nachgetragen.', 3500); }).catch(e=> console.warn('Adressen nachtragen', e)); }, 15000);
       setTimeout(()=>{ try{ nfpZonenEigeneLaden().then(r=>{ if(r && r.status === 'hochgeladen' && typeof appToastAnzeigen === 'function') appToastAnzeigen('Eigene Wegegeld-Zonen von diesem Gerät in OneDrive gesichert.', 4000); }); }catch(_){} }, 1500);
       // Nur direkt nach einem FRISCHEN Login (Rueckkehr vom Redirect) sofort
@@ -22344,6 +22365,169 @@ function wfEinstellungenZeichnen(){
     '<button type="button" class="btn-sekundaer" id="btnWfZeichnen" style="margin-top:8px;">Zonen zeichnen</button>';
   wfModusVerdrahten(()=>{ const c2 = wfKontext(); c2.speichern(c2.flaechen, wfModusLesen(c2.modus), c2.farben); try{ miniKartenNeu(); }catch(_){} });
   document.getElementById('btnWfZeichnen').onclick = async ()=>{ await wegZonenZeichnen(); wfEinstellungenZeichnen(); };
+}
+
+// =====================================================================
+// Datensicherung in OneDrive: Kopien der wichtigen Dateien in
+// "KVBW Onedrive/Sicherungen/<Datum Uhrzeit>" -- automatisch einmal pro Woche
+// (beim Start, angemeldet), von Hand jederzeit. Die letzten 10 bleiben.
+// Vorschau (Excel im Browser, Text/JSON als Kurzansicht) und Wiederherstellen
+// (vorher wird der aktuelle Stand der Datei gesichert).
+// =====================================================================
+const ODS_ORDNER = 'KVBW Onedrive/Sicherungen', ODS_BEHALTEN = 10, ODS_TAGE = 7;
+const ODS_DATEIEN = [
+  [MSGRAPH_PFAD_FAHRTENBUCH, 'Fahrtenbuch'],
+  [MSGRAPH_PFAD_UEBERSICHT, 'Rechnungsübersicht'],
+  [MSGRAPH_PFAD_SYNC_JSON, 'Abgleich (Fälle, Dienste, Zonen)'],
+  [MSGRAPH_PFAD_INI, 'Einstellungen (ini)'],
+  [EIGENE_POS_PFAD, 'Eigene Positionen'],
+  [NFP_ZONEN_PFAD, 'Wegegeld-Zonen (KVBW-Karte)']
+];
+async function odsAbruf(token, url, opt){
+  opt = opt || {};
+  const h = { Authorization: 'Bearer ' + token }; if(opt.body) h['Content-Type'] = 'application/json';
+  return fetch(url, { method: opt.method || 'GET', headers: h, body: opt.body ? JSON.stringify(opt.body) : undefined, cache: 'no-store' });
+}
+const odsStempel = (d)=> d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate()) + ' ' + zz2(d.getHours()) + '.' + zz2(d.getMinutes());
+function odsDatum(name){ const m = /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2})\.(\d{2}))?/.exec(name || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)) : null; }
+async function odsListe(token){
+  const r = await odsAbruf(token, msGraphPfadUrl(ODS_ORDNER) + '/children?$select=name,id,folder,parentReference,webUrl&$top=200');
+  if(r.status === 404) return [];
+  if(!r.ok) throw new Error('Sicherungen nicht lesbar (HTTP ' + r.status + ')');
+  return ((await r.json()).value || []).filter(x=> x.folder && odsDatum(x.name)).sort((a, b)=> b.name.localeCompare(a.name));
+}
+async function odsInhalt(token, id){
+  const r = await odsAbruf(token, 'https://graph.microsoft.com/v1.0/me/drive/items/' + id + '/children?$select=name,id,size,webUrl,file,parentReference&$top=100');
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  return (await r.json()).value || [];
+}
+// Ordner anlegen und die Dateien hineinkopieren (Kopieren laeuft bei OneDrive im Hintergrund weiter)
+async function odsAnlegen(zusatz, nurPfade){
+  const token = await msGraphTokenHolen(); if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+  await msGraphOrdnerSicherstellen(token, ODS_ORDNER);
+  const name = odsStempel(new Date()) + (zusatz ? ' (' + zusatz + ')' : '');
+  const r = await odsAbruf(token, msGraphPfadUrl(ODS_ORDNER) + '/children', { method: 'POST', body: { name, folder: {}, '@microsoft.graph.conflictBehavior': 'rename' } });
+  if(!r.ok) throw new Error('Sicherungsordner nicht angelegt (HTTP ' + r.status + ')');
+  const ordner = await r.json();
+  const ziel = { driveId: ordner.parentReference && ordner.parentReference.driveId, id: ordner.id };
+  let kopiert = 0; const fehlt = [];
+  for(const [pfad, titel] of ODS_DATEIEN){
+    if(nurPfade && !nurPfade.includes(pfad)) continue;
+    const k = await odsAbruf(token, msGraphPfadUrl(pfad) + '/copy', { method: 'POST', body: { parentReference: ziel, name: pfad.split('/').pop() } });
+    if(k.status === 202 || k.ok) kopiert++; else if(k.status === 404) fehlt.push(titel); else fehlt.push(titel + ' (HTTP ' + k.status + ')');
+  }
+  // aeltere Sicherungen aufraeumen (nur ganze Datums-Ordner)
+  try{
+    const alle = await odsListe(token);
+    for(const x of alle.slice(ODS_BEHALTEN)) await odsAbruf(token, 'https://graph.microsoft.com/v1.0/me/drive/items/' + x.id, { method: 'DELETE' });
+  }catch(_){}
+  LS.set('ods_zuletzt', Date.now());
+  return { name, kopiert, fehlt };
+}
+async function odsAutomatisch(){
+  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return;
+  const token = await msGraphTokenHolen(); if(!token) return;
+  const liste = await odsListe(token);
+  const neueste = liste.length ? odsDatum(liste[0].name) : null;
+  if(neueste && Date.now() - neueste.getTime() < ODS_TAGE * 86400000) return;
+  const e = await odsAnlegen('automatisch');
+  if(typeof appToastAnzeigen === 'function') appToastAnzeigen('Wöchentliche Sicherung in OneDrive angelegt (' + e.kopiert + ' Dateien).', 3500);
+}
+// Vorschau: Excel per OneDrive-Vorschau im Fenster, Text/JSON als Kurzansicht
+async function odsVorschau(datei){
+  const token = await msGraphTokenHolen();
+  const ov = document.createElement('div'); ov.className = 'nfp-overlay ods-vorschau';
+  ov.innerHTML = '<div class="nfp-kopf"><b>' + htmlEsc(datei.name) + '</b><button type="button" class="nfp-zu" aria-label="schließen">×</button></div><div class="ods-inhalt"><div class="design-hinweis" style="padding:16px;">Vorschau wird geladen …</div></div>' +
+    '<div class="nfp-fuss"><div class="nfp-knoepfe">' + (datei.webUrl ? '<a class="btn-sekundaer" href="' + htmlEsc(datei.webUrl) + '" target="_blank" rel="noopener" style="text-align:center; text-decoration:none;">In OneDrive öffnen</a>' : '') + '</div></div>';
+  document.body.appendChild(ov); document.body.classList.add('nfp-offen');
+  const zu = ()=>{ ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); };
+  ov.querySelector('.nfp-zu').onclick = zu;
+  const box = ov.querySelector('.ods-inhalt');
+  try{
+    if(/\.(json|ini|txt)$/i.test(datei.name)){
+      const r = await odsAbruf(token, 'https://graph.microsoft.com/v1.0/me/drive/items/' + datei.id + '/content');
+      const t = /\.ini$/i.test(datei.name) ? iniDekodieren(await r.arrayBuffer()) : await r.text();
+      let kurz = '';
+      if(/\.json$/i.test(datei.name)){
+        try{
+          const d = JSON.parse(t);
+          if(d.faelle || d.gkv){
+            const n = (a)=> (d.faelle || []).filter(x=> x.art === a).length;
+            const s = d.saetze || {};
+            kurz = '<div class="ods-kurz"><b>Stand:</b> ' + (d.am ? new Date(d.am).toLocaleString('de-DE') : '?') + '<br>LS-Fälle: <b>' + n('ls') + '</b> · PT-Fälle: <b>' + n('pt') + '</b> · GKV-Fälle: <b>' + (d.gkv || []).length + '</b>' +
+              '<br>Unfertige Fälle: ' + ((s.entwuerfe && s.entwuerfe.liste) || []).length + ' · angelegte Dienste: ' + ((s.app_dienste && s.app_dienste.liste) || []).length + ' · gezeichnete Zonen: ' + ((s.weg_flaechen && s.weg_flaechen.liste) || []).filter(x=> x.id !== '_modus').length +
+              ((d.gkv || []).length ? '<br><br><b>Letzte GKV-Fälle:</b><br>' + (d.gkv || []).slice(-15).reverse().map(x=> htmlEsc((x.datum || '') + ' ' + (x.zeit || '') + ' · ' + (x.name || '') + (x.adresse ? ' · ' + x.adresse : ''))).join('<br>') : '') + '</div>';
+          } else if(d.kontur) kurz = '<div class="ods-kurz">Zonen-Datei, Stand ' + (d.am ? new Date(d.am).toLocaleString('de-DE') : '?') + '</div>';
+          else if(Array.isArray(d)) kurz = '<div class="ods-kurz">' + d.length + ' Einträge</div>';
+        }catch(_){}
+      }
+      box.innerHTML = kurz + '<pre class="ods-text">' + htmlEsc(t.length > 20000 ? t.slice(0, 20000) + '\n…' : t) + '</pre>';
+    } else {
+      const r = await odsAbruf(token, 'https://graph.microsoft.com/v1.0/me/drive/items/' + datei.id + '/preview', { method: 'POST', body: {} });
+      const d = r.ok ? await r.json() : null;
+      if(d && d.getUrl) box.innerHTML = '<iframe class="ods-frame" src="' + htmlEsc(d.getUrl) + '" referrerpolicy="no-referrer"></iframe>';
+      else box.innerHTML = '<div class="design-hinweis" style="padding:16px;">Für diese Datei gibt es keine eingebettete Vorschau – „In OneDrive öffnen“ zeigt sie im Browser.</div>';
+    }
+  }catch(e){ box.innerHTML = '<div class="design-hinweis" style="padding:16px; color:#c0392b;">Vorschau nicht möglich: ' + htmlEsc(e.message || String(e)) + '</div>'; }
+}
+// Wiederherstellen: aktuellen Stand sichern, dann die Kopie ueber das Original legen
+async function odsWiederherstellen(datei){
+  const eintrag = ODS_DATEIEN.find(([p])=> p.split('/').pop() === datei.name);
+  if(!eintrag) throw new Error('Unbekannte Datei.');
+  const [pfad, titel] = eintrag;
+  if(!await betaFrage('„' + titel + '“ aus dieser Sicherung wiederherstellen?\n\nDer jetzige Stand der Datei wird vorher in einer eigenen Sicherung abgelegt.', 'Wiederherstellen', 'Abbrechen')) return false;
+  const token = await msGraphTokenHolen();
+  await odsAnlegen('vor Wiederherstellung', [pfad]);
+  const elternPfad = pfad.split('/').slice(0, -1).join('/');
+  const er = await odsAbruf(token, msGraphPfadUrl(elternPfad) + '?$select=id,parentReference');
+  if(!er.ok) throw new Error('Zielordner nicht gefunden (HTTP ' + er.status + ')');
+  const el = await er.json();
+  const k = await odsAbruf(token, 'https://graph.microsoft.com/v1.0/me/drive/items/' + datei.id + '/copy?@microsoft.graph.conflictBehavior=replace', { method: 'POST', body: { parentReference: { driveId: el.parentReference && el.parentReference.driveId, id: el.id }, name: datei.name } });
+  if(!(k.status === 202 || k.ok)) throw new Error('Wiederherstellen fehlgeschlagen (HTTP ' + k.status + ')');
+  try{ fbBuchCache = null; }catch(_){}
+  return true;
+}
+// --- Einstellungen ---
+function odsAbschnittZeichnen(){
+  const box = document.getElementById('odsAbschnitt'); if(!box) return;
+  const zul = LS.get('ods_zuletzt', 0);
+  box.innerHTML = '<div class="design-hinweis">Einmal pro Woche legt die App beim Start in OneDrive unter <i>' + ODS_ORDNER + '</i> Kopien von Fahrtenbuch, Rechnungsübersicht, Abgleich-Datei, einstellungen.ini, eigenen Positionen und Zonen an. Die letzten ' + ODS_BEHALTEN + ' Sicherungen bleiben.</div>' +
+    '<button type="button" class="btn-sekundaer" id="odsJetzt" style="margin-top:8px;">Jetzt sichern</button><div class="design-hinweis" id="odsInfo">' + (zul ? 'Letzte Sicherung von diesem Gerät: ' + new Date(zul).toLocaleString('de-DE') : '') + '</div><div id="odsListe" class="ods-liste"></div>';
+  document.getElementById('odsJetzt').onclick = async (ev)=>{
+    const b = ev.currentTarget, info = document.getElementById('odsInfo'); b.disabled = true; info.textContent = 'Sicherung wird angelegt …';
+    try{ const e = await odsAnlegen(''); info.innerHTML = '✓ Sicherung „' + htmlEsc(e.name) + '“ angelegt (' + e.kopiert + ' Dateien' + (e.fehlt.length ? '; nicht vorhanden: ' + htmlEsc(e.fehlt.join(', ')) : '') + '). OneDrive kopiert im Hintergrund, die Dateien erscheinen nach wenigen Sekunden.'; setTimeout(odsListeZeichnen, 2500); }
+    catch(e){ info.textContent = 'Nicht gesichert: ' + (e.message || e); }
+    b.disabled = false;
+  };
+  odsListeZeichnen();
+}
+async function odsListeZeichnen(){
+  const box = document.getElementById('odsListe'); if(!box) return;
+  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ box.innerHTML = '<div class="design-hinweis">Zum Anzeigen der Sicherungen bei OneDrive anmelden.</div>'; return; }
+  box.innerHTML = '<div class="design-hinweis">Sicherungen werden geladen …</div>';
+  try{
+    const token = await msGraphTokenHolen(), liste = await odsListe(token);
+    if(!liste.length){ box.innerHTML = '<div class="design-hinweis">Noch keine Sicherung vorhanden.</div>'; return; }
+    box.innerHTML = liste.map((x, i)=> '<div class="ods-eintrag" data-i="' + i + '"><button type="button" class="ods-kopf"><span>' + htmlEsc(odsDatum(x.name).toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })) + '</span><small>' + htmlEsc((/\((.*)\)/.exec(x.name) || [, 'von Hand'])[1]) + '</small><b class="ods-pfeil">›</b></button><div class="ods-dateien" hidden></div></div>').join('');
+    box.querySelectorAll('.ods-eintrag').forEach(el=>{
+      const x = liste[+el.dataset.i], d = el.querySelector('.ods-dateien');
+      el.querySelector('.ods-kopf').onclick = async ()=>{
+        if(!d.hidden){ d.hidden = true; el.classList.remove('offen'); return; }
+        d.hidden = false; el.classList.add('offen'); d.innerHTML = '<div class="design-hinweis">…</div>';
+        try{
+          const dateien = await odsInhalt(token, x.id);
+          const titel = (n)=> (ODS_DATEIEN.find(([p])=> p.split('/').pop() === n) || [, n])[1];
+          d.innerHTML = dateien.length ? dateien.map((f, j)=> '<div class="ods-datei"><div><b>' + htmlEsc(titel(f.name)) + '</b><small>' + htmlEsc(f.name) + ' · ' + (f.size > 1048576 ? (f.size / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(f.size / 1024)) + ' KB') + '</small></div>' +
+            '<button type="button" class="btn-sekundaer" data-v="' + j + '">Ansehen</button><button type="button" class="btn-sekundaer" data-w="' + j + '">Wiederherstellen</button></div>').join('') : '<div class="design-hinweis">Leer (Kopieren evtl. noch nicht fertig).</div>';
+          d.querySelectorAll('[data-v]').forEach(b=> b.onclick = ()=> odsVorschau(dateien[+b.dataset.v]));
+          d.querySelectorAll('[data-w]').forEach(b=> b.onclick = async ()=>{
+            try{ if(await odsWiederherstellen(dateien[+b.dataset.w])){ appToastAnzeigen('Wiederhergestellt. OneDrive übernimmt die Datei in wenigen Sekunden – danach die App neu laden.', 5000); setTimeout(odsListeZeichnen, 2500); } }
+            catch(e){ betaOverlay.meldung('Wiederherstellen nicht möglich: ' + (e.message || e), 'Datensicherung'); }
+          });
+        }catch(e){ d.innerHTML = '<div class="design-hinweis">Nicht lesbar: ' + htmlEsc(e.message || String(e)) + '</div>'; }
+      };
+    });
+  }catch(e){ box.innerHTML = '<div class="design-hinweis">' + htmlEsc(e.message || String(e)) + '</div>'; }
 }
 </script>
 <script>
