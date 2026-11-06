@@ -3328,7 +3328,7 @@ async function fbLoeschen(d, f){
     if(!b) throw new Error('Der Dienst wurde inzwischen verändert – bitte das Fahrtenbuch neu laden.');
     const schiebe = async (von, bis)=>{
       await gx(tok, 'POST', url + "/range(address='A" + von + ':AG' + bis + "')/delete", { shift: 'Up' });
-      await gx(tok, 'POST', url + "/range(address='AS" + von + ':AS' + bis + "')/delete", { shift: 'Up' });
+      await gx(tok, 'POST', url + "/range(address='AS" + von + ':AU' + bis + "')/delete", { shift: 'Up' });   // Uhrzeit, Adresse, Koordinaten
     };
     if(ganz){
       betaOverlay.schritt('Dienst wird gelöscht …');
@@ -3341,7 +3341,7 @@ async function fbLoeschen(d, f){
       if(f.zeile <= b.zeileStart + 1){
         const leer = new Array(FB_COL.AG - FB_COL.D + 1).fill('');
         await gx(tok, 'PATCH', url + "/range(address='D" + f.zeile + ':AG' + f.zeile + "')", { values: [leer] });
-        await gx(tok, 'PATCH', url + "/range(address='AS" + f.zeile + "')", { values: [['']] });
+        await gx(tok, 'PATCH', url + "/range(address='AS" + f.zeile + ':AU' + f.zeile + "')", { values: [['', '', '']] });
       } else await schiebe(f.zeile, f.zeile);
     }
     try{ await fahrdienstStatistikSchreiben(t=> betaOverlay.schritt(t), { blatt: L.blatt }); }catch(_){}
@@ -13909,15 +13909,48 @@ async function fbAlteZeileEntfernen(kx, fall, dt, meldung){
     if(zeile <= alt.zeileStart + 1){
       // Kopfzeilen des Diensts (Datum/Zeit, Dienstart/Arzt) bleiben, nur der Fall wird geleert
       await gx(f.token, 'PATCH', f.blattUrl + "/range(address='D" + zeile + ':AG' + zeile + "')", { values: [new Array(FB_COL.AG - FB_COL.D + 1).fill('')] });
-      await gx(f.token, 'PATCH', f.blattUrl + "/range(address='AS" + zeile + "')", { values: [['']] });
+      await gx(f.token, 'PATCH', f.blattUrl + "/range(address='AS" + zeile + ':AU' + zeile + "')", { values: [['', '', '']] });
     } else {
       await gx(f.token, 'POST', f.blattUrl + "/range(address='A" + zeile + ':AG' + zeile + "')/delete", { shift: 'Up' });
-      await gx(f.token, 'POST', f.blattUrl + "/range(address='AS" + zeile + ':AS' + zeile + "')/delete", { shift: 'Up' });
+      await gx(f.token, 'POST', f.blattUrl + "/range(address='AS" + zeile + ':AU' + zeile + "')/delete", { shift: 'Up' });
     }
     const zt = fbZeitParsen(alt.zeitRoh);
     return { blatt: f.blatt, zeile, geschoben: zeile > alt.zeileStart + 1, dienst: alt.datumText + ' ' + (zt ? fbZeitText(zt) : String(alt.zeitRoh || '')) };
   }
   return null;
+}
+// Adresse/Koordinaten eines GKV-Falls in AT/AU (als Text)
+async function fbAdresseSchreiben(fb, zeile, adresse, geo){
+  const k = geo && isFinite(geo.lat) ? (+geo.lat).toFixed(5) + ', ' + (+geo.lon).toFixed(5) : '';
+  await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='AT" + zeile + ':AU' + zeile + "')", { values: [[String(adresse || ''), k]], numberFormat: [['@', '@']] });
+}
+// Einmalig: Adressen der noch vorhandenen (eingetragenen) GKV-Faelle im Fahrtenbuch nachtragen
+async function gkvAdressenNachtragen(){
+  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return;
+  if(LS.get('gkv_adr_nachgetragen', false)) return;
+  const liste = gkvFaelleLaden().filter(x=> x && x.status === 'eingetragen' && (x.adresse || x.geo) && !x.fbAdr && /^\d{4}-\d{2}-\d{2}$/.test(x.datum || ''));
+  if(!liste.length){ LS.set('gkv_adr_nachgetragen', true); return; }
+  const kx = await fbKontext(null);
+  const norm = (t)=> String(t == null ? '' : t).trim().toLowerCase().replace(/\s+/g, ' ');
+  const erledigt = new Set(), blaetter = new Map();
+  for(const x of liste){
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(x.datum), zm = /^(\d{1,2}):(\d{2})/.exec(x.zeit || '');
+    const dt = new Date(+m[1], +m[2] - 1, +m[3], zm ? +zm[1] : 12, zm ? +zm[2] : 0);
+    const n = kx.info.jahresModus ? (x.blatt || String(dt.getFullYear())) : kx.info.blaetter[0];
+    if(!kx.info.blaetter.includes(n)) continue;
+    let fb = blaetter.get(n); if(!fb){ fb = await fbLesen(null, kx, n); blaetter.set(n, fb); }
+    const b = fbDienstFinden(fb, dt); if(!b) continue;
+    for(let r = b.zeileStart; r <= b.zeileEnde; r++){
+      const zr = fb.werte[r - 1] || [];
+      if(String(zr[FB_COL.E] == null ? '' : zr[FB_COL.E]).trim() !== '' || norm(zr[FB_COL.D]) !== norm(x.name)) continue;
+      if(!String(zr[45] == null ? '' : zr[45]).trim()) await fbAdresseSchreiben(fb, r, x.adresse, x.geo);   // AT leer -> nachtragen
+      erledigt.add(x.id); break;
+    }
+  }
+  if(erledigt.size){ const a = gkvFaelleLaden(); a.forEach(x=>{ if(erledigt.has(x.id)) x.fbAdr = true; }); LS.set('gkv_faelle', a); }
+  for(const [n, fb] of blaetter){ try{ await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='AS4:AU4')", { values: [['Uhrzeit', 'Adresse', 'Koordinaten']] }); }catch(_){} }
+  LS.set('gkv_adr_nachgetragen', true);
+  return erledigt.size;
 }
 async function fahrtenbuchEintragen(fall, meldung, opt){
   opt = opt || {};
@@ -14038,8 +14071,12 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   try{
     const zt = fbZeitAusZelle(fall.zeit);
     if(zt) await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='AS" + ziel + "')", { values: [[zt]], numberFormat: [['@']] });
-    if(!fbBuchKopfGeschrieben[fb.blatt]){ await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='AS4')", { values: [['Uhrzeit']] }); fbBuchKopfGeschrieben[fb.blatt] = true; }
+    if(!fbBuchKopfGeschrieben[fb.blatt]){ await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='AS4:AU4')", { values: [['Uhrzeit', 'Adresse', 'Koordinaten']] }); fbBuchKopfGeschrieben[fb.blatt] = true; }
   }catch(_){}
+  // GKV: Adresse (AT) und Koordinaten (AU) dauerhaft im Fahrtenbuch
+  if(!fall.kat && (fall.adresse || fall.geo)){
+    try{ await fbAdresseSchreiben(fb, ziel, fall.adresse, fall.geo); }catch(_){}
+  }
   // Datum/Uhrzeit geaendert und dadurch anderer Dienst: alte Zeile entfernen (keine Dopplung)
   let verschoben = null, verschiebFehler = '';
   if(fall.vorher){ try{ verschoben = await fbAlteZeileEntfernen(kx, fall, dt, meldung); }catch(e){ verschiebFehler = e.message || String(e); } }
@@ -14426,12 +14463,12 @@ function ansichtGkv(bearbeitenId){
       const mv = x.vorher && /^(\d{4})-(\d{2})-(\d{2})$/.exec(x.vorher.datum || '');
       const vorher = mv ? { datum: new Date(+mv[1], +mv[2] - 1, +mv[3]), zeit: x.vorher.zeit || '', name: x.vorher.name || '' } : null;
       const r = await fahrtenbuchEintragen({ kat: '', name: x.name, namen: x.alterName ? [x.alterName] : [], datum: new Date(+m[1], +m[2] - 1, +m[3]),
-        zeit: x.zeit, euro: x.euro, positionen: x.positionen, vorher }, t=> betaOverlay.schritt(t));
+        zeit: x.zeit, euro: x.euro, positionen: x.positionen, vorher, adresse: x.adresse || '', geo: x.geo || null }, t=> betaOverlay.schritt(t));
       text = fahrtenbuchErgebnisText(r);
       const a2 = gkvFaelleLaden(), y = a2.find(z=> z.id === id);
       if(y){
         if(r.uebersprungen){ y.fehler = r.grund; }
-        else { y.status = 'eingetragen'; y.zeile = r.zeile; y.blatt = r.blatt || ''; delete y.fehler; delete y.alterName; if(!r.verschiebFehler) delete y.vorher; }
+        else { y.status = 'eingetragen'; y.zeile = r.zeile; y.blatt = r.blatt || ''; delete y.fehler; delete y.alterName; if(!r.verschiebFehler) delete y.vorher; if(y.adresse || y.geo) y.fbAdr = true; }
         gkvFaelleSpeichern(a2);
       }
       betaOverlay.schliessen();
@@ -18646,7 +18683,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v337';
+const APP_VERSION = 'v338';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19916,6 +19953,7 @@ async function msGraphInitialisieren(){
       inst.setActiveAccount(konten[0]);
       msGraphKonto = { name: konten[0].name || '', username: konten[0].username || '' };
       msGraphStatus = 'angemeldet';
+      setTimeout(()=>{ gkvAdressenNachtragen().then(n=>{ if(n && typeof appToastAnzeigen === 'function') appToastAnzeigen('Fahrtenbuch: Adressen von ' + n + ' GKV-Fällen nachgetragen.', 3500); }).catch(e=> console.warn('Adressen nachtragen', e)); }, 15000);
       setTimeout(()=>{ try{ nfpZonenEigeneLaden().then(r=>{ if(r && r.status === 'hochgeladen' && typeof appToastAnzeigen === 'function') appToastAnzeigen('Eigene Wegegeld-Zonen von diesem Gerät in OneDrive gesichert.', 4000); }); }catch(_){} }, 1500);
       // Nur direkt nach einem FRISCHEN Login (Rueckkehr vom Redirect) sofort
       // hochladen, statt bei jedem normalen App-Start (dort wuerde sonst bei
