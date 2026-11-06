@@ -13291,7 +13291,9 @@ async function gkvPlzOrtErgaenzen(strFeld, feld, infoEl){
   if(p){ feld.value = p + ' ' + ort; setzeInfo(''); feld.dispatchEvent(new Event('input')); }
   else setzeInfo(p === null ? 'Keine Verbindung – PLZ bitte selbst ergänzen.' : '');   // reiner Ort ohne eindeutige PLZ: Suche klappt trotzdem
 }
-function gkvStufeFuerKm(km){ return km <= 2 ? '2' : km <= 5 ? '5' : km <= 10 ? '10' : km <= 20 ? '10+' : km <= 30 ? '20+' : km <= 50 ? '30+' : '50+'; }
+// NFP Offenburg: Staffel um eine Stufe verschoben (wie die KVBW-Zonenkarte): bis 2 km wie 2–5 km, bis 5 wie 5–10,
+// bis 10 wie über 10, bis 20 wie über 20 (2×), bis 50 wie über 30 (3×), darüber 4×. "bis 2 km" (40220/40226) kommt nicht vor.
+function gkvStufeFuerKm(km){ return km <= 2 ? '5' : km <= 5 ? '10' : km <= 10 ? '10+' : km <= 20 ? '20+' : km <= 50 ? '30+' : '50+'; }
 async function gkvLuftlinie(adresse){
   const startAdr = gkvStartAdresse();
   try{
@@ -18644,7 +18646,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v336';
+const APP_VERSION = 'v337';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -22267,7 +22269,7 @@ function wfKontext(){
     flaechen: a.filter(x=> x && x.id !== '_modus' && Array.isArray(x.pts) && x.pts.length > 2),
     modus: { zonen: mo.zonen !== false, ringe: !!mo.ringe, vorrang: mo.vorrang || 'guenstig' },
     farben,
-    stufen: EBM_GRUPPEN.weg.stufen.map(s=> ({ k: s.k, label: s.label, farbe: farben[s.k] || WF_FARBEN_PRIVAT[s.k] || '#777' })),
+    stufen: EBM_GRUPPEN.weg.stufen.filter(s=> s.k !== '2').map(s=> ({ k: s.k, label: s.label, farbe: farben[s.k] || WF_FARBEN_PRIVAT[s.k] || '#777' })),   // 'bis 2 km' gibt es am NFP nicht
     mitte: kreisMitte(),
     ringe: KM_KREISE.map(R=> ({ km: R, farbe: kmKreisFarbe(R) })),
     kvbwBasis: true, nfpSymbol: true,
