@@ -6689,7 +6689,7 @@ function rdBloeckeAnpassen(bloecke, fall){
       zeilen[0][S.betrag] = Math.round(Number(d.betrag) * 100) / 100;
       // Leichenschau mit verkuerzter Dauer: Wortlaut der GOÄ als eigene Zeile
       if(fall.art === 'ls' && LS_KURZ[z] && Math.abs(Number(d.faktor) - LS_KURZ_FAKTOR) < 1e-9)
-        zeilen = [zeilen[0]].concat(rdBegruendungZeilen(LS_KURZ[z].text, fall.art).map(t=>{ const r = ['', '', '', '', '']; r[S.bez] = t; return r; }), zeilen.slice(1));
+        zeilen = zeilen.concat(rdBegruendungZeilen(LS_KURZ[z].text, fall.art).map(t=>{ const r = zeilen[0].map(()=> ''); r[S.bez] = t; return r; }));
     }
     if(beg){
       let ab = zeilen.findIndex((r, k)=> k > 0 && /^begr/i.test(String(r[S.faktor]).trim()));
@@ -18751,7 +18751,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v345';
+const APP_VERSION = 'v346';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
