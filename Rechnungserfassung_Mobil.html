@@ -2259,7 +2259,7 @@ function xlsxLibLaden(){
   if(window.XLSX) return Promise.resolve();
   return new Promise((ok,fehl)=>{
     const sc = document.createElement('script');
-    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.src = 'lib/xlsx/xlsx.full.min.js';   // SheetJS 0.18.5 (Apache-2.0), lokal statt CDN
     sc.onload = ()=>ok(); sc.onerror = ()=>fehl(new Error('Excel-Leser nicht ladbar'));
     document.head.appendChild(sc);
   });
@@ -18698,7 +18698,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v342';
+const APP_VERSION = 'v343';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
