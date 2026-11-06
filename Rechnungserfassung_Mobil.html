@@ -16941,7 +16941,7 @@ async function vkStandortSchnell(){
 // Patientendaten). Ergebnis je Zelle (Kachel Zoom 10, ca. 25 km) 14 Tage im Geraet
 // gespeichert, damit es auch offline und ohne erneute Abfrage verfuegbar ist.
 const VK_AED_CACHE = 'vk-aed-v1', VK_AED_Z = 10, VK_AED_ALTER = 14 * 86400000;
-const VK_AED_SERVER = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+const VK_AED_SERVER = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 let vkAedLetzterFehler = '';
 const VK_AED_MEM = new Map(), VK_AED_LAEUFT = new Map(), VK_AED_KARTEN = new Set();
 const vkAedSchl = (x, y)=> 'https://vk-offline.local/aed/' + VK_AED_Z + '/' + x + '/' + y;
@@ -18698,7 +18698,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v341';
+const APP_VERSION = 'v342';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
