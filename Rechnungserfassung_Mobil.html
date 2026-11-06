@@ -1595,7 +1595,7 @@ try{
   .luft-karte-legende i.ich{background:#2f80ed; box-shadow:0 0 0 3px rgba(47,128,237,.3);} .luft-karte-legende i.f.ls{background:var(--ls-farbe);} .luft-karte-legende i.f.pt{background:var(--pt-farbe);} .luft-karte-legende i.f.gkv{background:#7d4e9e;}
   .luft-karte-legende i.g{height:4px; border-radius:2px; background:#8e2bd6; width:16px;} .luft-karte-legende i.aed{border-radius:3px; background:#00924a;} .luft-karte-legende i.kr{height:3px; border-radius:0; width:18px; background:repeating-linear-gradient(90deg,#e6c800 0 3px,transparent 3px 4px,#2f8fd6 4px 7px,transparent 7px 8px,#2fa84f 8px 11px,transparent 11px 12px,#d9609f 12px 15px,transparent 15px 16px,#4aa6cf 16px 18px);} .luft-karte-legende i.zo{border-radius:3px; background:linear-gradient(90deg,#4caf50,#ffeb3b,#ff9800,#e53935);}
   .vk-legende{margin:4px 0 2px;}
-  .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M1.5 11 12 3.2 22.5 11v1.6h-2V21.5h-17v-8.9h-2z' fill='%23111'/%3E%3Cpath d='M10.5 10h3v3.3h3.3v3h-3.3v3.4h-3v-3.4H7.2v-3h3.3z' fill='%23fff'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:13px; height:13px;}
+  .luft-karte-legende i.s{background:#1a55c9;} .luft-karte-legende i.z{background:#e0242b;} .luft-karte-legende i.n{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='5' fill='%23111'/%3E%3Cpath d='M8 6v12M16 6v12M8 12h8' stroke='%23fff' stroke-width='3.2' fill='none'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:13px; height:13px;}
   .luft-karte-legende i.rtw{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 20'%3E%3Cpath d='M1 2H21V6H27L33 11V16H1Z' fill='%23111'/%3E%3Ccircle cx='8' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Ccircle cx='26' cy='17' r='3' fill='%23111' stroke='%23fff'/%3E%3Cpath d='M7 9h8M11 5v8' stroke='%23fff' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; border-radius:0; width:20px; height:12px;}
   .luft-karte-legende i.l{height:0; border-radius:0; border-top:2.5px dashed var(--text); width:16px;} .luft-karte-legende i.w{height:4px; border-radius:2px; background:#1a55c9; width:16px;}
   .luft-karte-hinweis{font-size:13px; color:var(--text-schwach); padding:6px 0;}
@@ -2062,6 +2062,20 @@ try{
   /* App-Sperre (Fingerabdruck / Face ID) */
   #appSperre{position:fixed; inset:0; z-index:2147483647; background:var(--bg, #fff); display:flex; align-items:center; justify-content:center; padding:24px;}
   #appSperre[hidden]{display:none;}
+  #appSperre .as-pin-ein, .as-dialog .as-pin-ein{display:block; width:200px; margin:0 auto 14px; font-size:26px; letter-spacing:8px; text-align:center; padding:10px; border-radius:10px; border:1px solid var(--rand, #ccc); background:var(--karte, #fff); color:var(--text, #111);}
+  .as-dialog{position:fixed; inset:0; z-index:2147483646; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:16px;}
+  .as-dialog .as-box{background:var(--karte, #fff); color:var(--text, #111); border-radius:16px; padding:22px 20px; width:min(360px, 100%); text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.3); max-height:calc(100vh - 32px); overflow:auto;}
+  .as-dialog .as-box.as-breit{width:min(440px, 100%); text-align:left;}
+  .as-dialog .as-breit .as-symbol, .as-dialog .as-breit .as-titel{text-align:center;}
+  .as-dialog .as-symbol{color:var(--titelfarbe);}
+  .as-dialog .as-titel{font-size:19px; font-weight:600; margin:6px 0 12px;}
+  .as-dialog .as-zeile{display:flex; gap:8px;} .as-dialog .as-zeile button{flex:1; margin:0;}
+  .as-fehler{color:#c0392b; font-size:14px; min-height:1em;}
+  .as-oder{text-align:center; font-size:13px; opacity:.7; margin:12px 0 8px;}
+  .as-pin-form{display:flex; flex-direction:column; gap:8px;}
+  .as-pin-form input{font-size:18px; letter-spacing:4px; padding:10px; border-radius:9px; border:1px solid var(--rand, #ccc); background:var(--karte, #fff); color:var(--text, #111);}
+  .as-pin-form button{margin:0;}
+  .as-pin-form input::placeholder{letter-spacing:normal; font-size:15px;}
   html.app-gesperrt, html.app-gesperrt body{overflow:hidden;}
   #appSperre .as-box{text-align:center; max-width:320px; color:var(--text, #111);}
   #appSperre .as-symbol{color:var(--titelfarbe); margin-bottom:12px;}
@@ -4656,6 +4670,8 @@ const SVG_ICON_APOTHEKE = `<svg width="48" height="48" viewBox="0 0 24 24" fill=
 // Apotheke in vergleichbarer Groesse wirken).
 
 function ansichtStart(){
+  // App-Sperre ist Pflicht: noch keine eingerichtet -> Fenster zum Einrichten (laesst sich nicht wegklicken)
+  try{ if(typeof AppSperre !== 'undefined' && LS.get('einrichtung_gesehen', false)) setTimeout(()=> AppSperre.pflichtPruefen(), 300); }catch(_){}
   einstellungenOffen = false;
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtStart(); };
   setzeTitel('Rechnungserfassung', null);
@@ -5556,7 +5572,7 @@ function ansichtEinrichtung(schritt){
   const beenden = ()=>{ LS.set('einrichtung_schritt', null); ansichtStart(); };
   setzeTitel('Einrichtung', beenden);
   const angemeldet = typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet';
-  const schritte = ['start', 'anmelden', 'dateien', 'daten', 'brief', 'fertig'];
+  const schritte = ['start', 'sperre', 'anmelden', 'dateien', 'daten', 'brief', 'fertig'];
   const nr = schritte.indexOf(schritt) + 1;
   const kopf = '<div class="einr-fort">' + schritte.map((s, i)=> '<span class="' + (i < nr ? 'an' : '') + '"></span>').join('') + '</div>';
   const knoepfe = (zurueck, weiter, weiterText, weiterAus)=> '<div class="einr-knoepfe">' + (zurueck ? '<button type="button" class="btn-sekundaer" data-einr="' + zurueck + '">Zurück</button>' : '<span></span>') +
@@ -5565,11 +5581,14 @@ function ansichtEinrichtung(schritt){
   if(schritt === 'start'){
     html = '<h2>Willkommen</h2><p>Diese App erstellt Rechnungen für Leichenschau und Privatpatienten, erfasst GKV-Patienten im Fahrdienst, führt das Fahrtenbuch und berechnet das Wegegeld (NFP Offenburg).</p>' +
       '<p>Alle Daten liegen in <b>deinem eigenen OneDrive</b> im Ordner „KVBW Onedrive“. Der Assistent legt ihn an, kopiert die leeren Vorlagen hinein und fragt deine Daten für die Rechnungen ab.</p>' +
-      '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + knoepfe(null, 'anmelden', 'Los geht’s');
+      '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + knoepfe(null, 'sperre', 'Los geht’s');
+  } else if(schritt === 'sperre'){
+    html = '<h2>App-Sperre</h2><p>Die App enthält Patientendaten. Damit niemand außer dir sie öffnen kann, ist eine Sperre Pflicht: <b>Fingerabdruck / Face ID</b> oder eine <b>PIN</b>.</p>' +
+      '<div id="einrSperre"></div>' + knoepfe('start', 'anmelden', 'Weiter', !AppSperre.aktiv());
   } else if(schritt === 'anmelden'){
     html = '<h2>Microsoft-Anmeldung</h2>' + (angemeldet
-      ? '<p class="einr-ok">✓ Angemeldet als <b>' + htmlEsc((msGraphKonto && (msGraphKonto.username || msGraphKonto.name)) || '') + '</b>.</p>' + knoepfe('start', 'dateien')
-      : '<p>Melde dich mit deinem Microsoft-Konto an. Danach kommst du automatisch hierher zurück.</p><button type="button" class="btn-primaer" id="einrAnmelden">Mit Microsoft anmelden</button>' + knoepfe('start', null));
+      ? '<p class="einr-ok">✓ Angemeldet als <b>' + htmlEsc((msGraphKonto && (msGraphKonto.username || msGraphKonto.name)) || '') + '</b>.</p>' + knoepfe('sperre', 'dateien')
+      : '<p>Melde dich mit deinem Microsoft-Konto an. Danach kommst du automatisch hierher zurück.</p><button type="button" class="btn-primaer" id="einrAnmelden">Mit Microsoft anmelden</button>' + knoepfe('sperre', null));
   } else if(schritt === 'dateien'){
     html = '<h2>Ordner und Vorlagen</h2><p>Prüfe, was in deinem OneDrive schon vorhanden ist …</p><div id="einrListe" class="einr-liste"></div><div id="einrDateiKnopf"></div>' + knoepfe('anmelden', 'daten', 'Weiter', true);
   } else if(schritt === 'daten'){
@@ -5619,6 +5638,17 @@ function ansichtEinrichtung(schritt){
       '<button type="button" class="btn-primaer" id="einrFertig">Zur Startseite</button>';
   }
   app.innerHTML = '<div class="einr">' + kopf + html + '</div>';
+  if(schritt === 'sperre'){
+    const pf = document.getElementById('asPflicht'); if(pf) pf.remove();   // der Assistent fragt selbst
+    const box = document.getElementById('einrSperre');
+    const neu = ()=>{
+      const ok = AppSperre.aktiv();
+      box.innerHTML = ok ? '<p class="einr-ok">✓ App-Sperre ist eingerichtet (' + (AppSperre.art() === 'pin' ? 'PIN' : 'Fingerabdruck / Face ID') + '). Ändern geht später unter Einstellungen.</p>' : AppSperre.abschnittHtml();
+      if(!ok) AppSperre.abschnittWiring(neu);
+      const w = app.querySelector('[data-einr="anmelden"]'); if(w) w.disabled = !ok;
+    };
+    neu();
+  }
   app.querySelectorAll('[data-einr]').forEach(b=> b.onclick = async ()=>{
     if(schritt === 'daten' && b.dataset.einr === 'brief'){
       const aend = {};
@@ -15090,11 +15120,10 @@ const KARTE_AUGE_KNOPF = '<button type="button" class="karte-auge" aria-label="F
 // Kartensymbole in Kartenkoordinaten (r = Grundgroesse): NFP = Krankenhaus (Kreuz), Wache = RTW
 function kartenSymbol(art, cx, cy, r){
   const f = (v)=> v.toFixed(1), sw = f(r * 0.22);
-  if(art === 'nfp'){   // Krankenhaus: Haus mit Kreuz
-    const a = r * 2.7, k = a / 24;
-    return '<g class="ks-nfp" transform="translate(' + f(cx - a / 2) + ' ' + f(cy - a / 2) + ') scale(' + k.toFixed(4) + ')">' +
-      '<path d="M1.5 11 12 3.2 22.5 11v1.6h-2V21.5h-17v-8.9h-2z" fill="#111" stroke="#fff" stroke-width="' + (r * 0.22 / k).toFixed(2) + '" stroke-linejoin="round"/>' +
-      '<path d="M10.5 10h3v3.3h3.3v3h-3.3v3.4h-3v-3.4H7.2v-3h3.3z" fill="#fff"/></g>';
+  if(art === 'nfp'){   // Krankenhaus: Schild mit H -- so gross wie der RTW
+    const a = r * 2.55, k = a * 0.26;
+    return '<g class="ks-nfp"><rect x="' + f(cx - a / 2) + '" y="' + f(cy - a / 2) + '" width="' + f(a) + '" height="' + f(a) + '" rx="' + f(a * 0.2) + '" fill="#111" stroke="#fff" stroke-width="' + sw + '"/>' +
+      '<path d="M' + f(cx - k) + ' ' + f(cy - k * 1.2) + 'V' + f(cy + k * 1.2) + 'M' + f(cx + k) + ' ' + f(cy - k * 1.2) + 'V' + f(cy + k * 1.2) + 'M' + f(cx - k) + ' ' + f(cy) + 'H' + f(cx + k) + '" stroke="#fff" stroke-width="' + f(a * 0.15) + '" stroke-linecap="square" fill="none"/></g>';
   }
 
   const b = r * 3.3, h = r * 1.9, x0 = cx - b / 2, y0 = cy - h / 2, kr = h * 0.13;
@@ -18615,7 +18644,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v335';
+const APP_VERSION = 'v336';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -22285,18 +22314,22 @@ function wfEinstellungenZeichnen(){
 // wird nur die Kennung des Passkeys (kein Geheimnis). Die Sperre schuetzt die geoeffnete
 // App vor fremden Blicken; die gespeicherten Daten sind unabhaengig davon verschluesselt (Speicher).
 const AppSperre = (()=>{
+  // Pflicht-Sperre: Fingerabdruck/Face ID (Passkey auf diesem Geraet) ODER eine PIN.
+  // Die PIN liegt nur als PBKDF2-Hash (mit Zufallssalz) vor; nach 5 Fehlversuchen steigende Wartezeit.
   const LSK = 'app_sperre';
   let gesperrt = false, versteckt = 0, laeuft = false;
   const b64 = (u8)=> btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(u8)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const ausB64 = (s)=>{ s = String(s).replace(/-/g, '+').replace(/_/g, '/'); while(s.length % 4) s += '='; return Uint8Array.from(atob(s), c=> c.charCodeAt(0)); };
   function einst(){ try{ return JSON.parse(localStorage.getItem(LSK) || 'null') || {}; }catch(_){ return {}; } }
   function einstSetzen(e){ try{ localStorage.setItem(LSK, JSON.stringify(e)); }catch(_){} }
-  function aktiv(){ const e = einst(); return !!(e.an && e.id); }
+  function art(){ const e = einst(); return e.art === 'pin' ? 'pin' : 'passkey'; }
+  function aktiv(){ const e = einst(); return !!(e.an && (e.art === 'pin' ? (e.pin && e.pin.h) : e.id)); }
   async function unterstuetzt(){
     try{ return !!(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); }catch(_){ return false; }
   }
   function uvGesetzt(authData){ const d = new Uint8Array(authData); return d.length > 32 && (d[32] & 0x04) !== 0; }
-  async function einrichten(){
+  // ---------- Passkey ----------
+  async function passkeyEinrichten(){
     const cred = await navigator.credentials.create({ publicKey: {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
       rp: { name: 'Rechnungserfassung' },
@@ -22306,16 +22339,55 @@ const AppSperre = (()=>{
       timeout: 60000, attestation: 'none'
     } });
     if(!cred) throw new Error('Kein Passkey angelegt.');
-    const e = einst(); einstSetzen(Object.assign(e, { an: true, id: b64(cred.rawId), minuten: e.minuten == null ? 5 : e.minuten, seit: Date.now() }));
+    return b64(cred.rawId);
   }
-  async function pruefen(){
-    const e = einst(); if(!e.id) return false;
+  async function passkeyPruefen(id){
     const a = await navigator.credentials.get({ publicKey: {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
-      allowCredentials: [{ type: 'public-key', id: ausB64(e.id), transports: ['internal', 'hybrid'] }],
+      allowCredentials: [{ type: 'public-key', id: ausB64(id), transports: ['internal', 'hybrid'] }],
       userVerification: 'required', timeout: 60000
     } });
     return !!(a && a.response && uvGesetzt(a.response.authenticatorData));
+  }
+  // ---------- PIN ----------
+  const PIN_RUNDEN = 150000;
+  async function pinHash(pin, salz, runden){
+    const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(pin)), 'PBKDF2', false, ['deriveBits']);
+    return b64(await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salz, iterations: runden }, k, 256));
+  }
+  const pinGueltig = (pin)=> /^\d{4,8}$/.test(String(pin || ''));
+  async function pinDaten(pin){ const salz = crypto.getRandomValues(new Uint8Array(16)); return { s: b64(salz), h: await pinHash(pin, salz, PIN_RUNDEN), n: PIN_RUNDEN }; }
+  function warteRest(){ const e = einst(); return Math.max(0, (Number(e.warteBis) || 0) - Date.now()); }
+  async function pinPruefen(pin){
+    const e = einst(); if(!e.pin || !e.pin.h) return false;
+    if(warteRest() > 0) return false;
+    const ok = (await pinHash(pin, ausB64(e.pin.s), e.pin.n || PIN_RUNDEN)) === e.pin.h;
+    const e2 = einst();
+    if(ok){ delete e2.fehl; delete e2.warteBis; }
+    else { e2.fehl = (Number(e2.fehl) || 0) + 1; if(e2.fehl >= 5) e2.warteBis = Date.now() + Math.min(15 * 60000, 30000 * Math.pow(2, e2.fehl - 5)); }
+    einstSetzen(e2); return ok;
+  }
+  // aktuelle Art bestaetigen (Passkey: Fingerabdruck; PIN: Eingabe im Dialog)
+  async function bestaetigen(){
+    const e = einst();
+    if(e.art === 'pin'){
+      const pin = await pinAbfragen('Aktuelle PIN eingeben');
+      return pin != null && await pinPruefen(pin);
+    }
+    return e.id ? passkeyPruefen(e.id) : true;
+  }
+  async function pinAbfragen(titel){
+    return new Promise((fertig)=>{
+      const d = document.createElement('div'); d.className = 'as-dialog';
+      d.innerHTML = '<div class="as-box"><div class="as-titel">' + titel + '</div><input type="password" inputmode="numeric" autocomplete="off" maxlength="8" class="as-pin-ein"><div class="as-fehler"></div>' +
+        '<div class="as-zeile"><button type="button" class="btn-sekundaer as-ab">Abbrechen</button><button type="button" class="btn-primaer as-ok">OK</button></div></div>';
+      document.body.appendChild(d);
+      const i = d.querySelector('input'); setTimeout(()=> i.focus(), 50);
+      const zu = (w)=>{ d.remove(); fertig(w); };
+      d.querySelector('.as-ab').onclick = ()=> zu(null);
+      d.querySelector('.as-ok').onclick = ()=> zu(i.value);
+      i.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter') zu(i.value); });
+    });
   }
   function fehlerText(err){
     const n = err && err.name;
@@ -22324,15 +22396,20 @@ const AppSperre = (()=>{
     if(n === 'SecurityError') return 'Passkeys gehen nur über die normale App-Adresse (https).';
     return (err && err.message) || String(err);
   }
+  // ---------- Sperrbild ----------
+  const FINGER = '<svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 11v3a8 8 0 0 1-1.2 4.2"/><path d="M8.5 8.8A4.5 4.5 0 0 1 16.5 11v2.5a12 12 0 0 1-.7 4"/><path d="M5.6 7A8 8 0 0 1 20 11v1.5"/><path d="M4 11v1a12 12 0 0 0 .8 4.3"/><path d="M8 11v2a10 10 0 0 1-1.4 5.2"/><path d="M12 3.5A7.5 7.5 0 0 1 17.5 6"/></svg>';
+  const SCHLOSS = '<svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></svg>';
   function bild(){
     let el = document.getElementById('appSperre');
-    if(el) return el;
-    el = document.createElement('div'); el.id = 'appSperre';
-    el.innerHTML = '<div class="as-box"><div class="as-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 11v3a8 8 0 0 1-1.2 4.2"/><path d="M8.5 8.8A4.5 4.5 0 0 1 16.5 11v2.5a12 12 0 0 1-.7 4"/><path d="M5.6 7A8 8 0 0 1 20 11v1.5"/><path d="M4 11v1a12 12 0 0 0 .8 4.3"/><path d="M8 11v2a10 10 0 0 1-1.4 5.2"/><path d="M12 3.5A7.5 7.5 0 0 1 17.5 6"/></svg></div>' +
-      '<div class="as-titel">App gesperrt</div><div class="as-text">Mit Fingerabdruck oder Gesicht entsperren.</div>' +
+    if(!el){ el = document.createElement('div'); el.id = 'appSperre'; (document.body || document.documentElement).appendChild(el); }
+    const pin = art() === 'pin';
+    el.innerHTML = '<div class="as-box"><div class="as-symbol" aria-hidden="true">' + (pin ? SCHLOSS : FINGER) + '</div>' +
+      '<div class="as-titel">App gesperrt</div><div class="as-text">' + (pin ? 'PIN eingeben' : 'Mit Fingerabdruck oder Gesicht entsperren.') + '</div>' +
+      (pin ? '<input type="password" inputmode="numeric" autocomplete="off" maxlength="8" id="asPin" class="as-pin-ein" aria-label="PIN">' : '') +
       '<button type="button" id="asAuf">Entsperren</button><div class="as-fehler" id="asFehler"></div></div>';
-    (document.body || document.documentElement).appendChild(el);
     el.querySelector('#asAuf').onclick = ()=> entsperren();
+    const pi = el.querySelector('#asPin');
+    if(pi) pi.addEventListener('keydown', (ev)=>{ if(ev.key === 'Enter') entsperren(); });
     return el;
   }
   function sperren(){
@@ -22340,54 +22417,101 @@ const AppSperre = (()=>{
     gesperrt = true; const el = bild(); el.hidden = false;
     try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(_){}
     document.documentElement.classList.add('app-gesperrt');
+    if(art() === 'pin') setTimeout(()=>{ const i = document.getElementById('asPin'); if(i && gesperrt) i.focus(); }, 80);
   }
+  function aufheben(){ gesperrt = false; const el = document.getElementById('appSperre'); if(el) el.hidden = true; document.documentElement.classList.remove('app-gesperrt'); }
   async function entsperren(){
     if(laeuft) return; laeuft = true;
     const f = document.getElementById('asFehler'); if(f) f.textContent = '';
     try{
-      if(await pruefen()){ gesperrt = false; const el = document.getElementById('appSperre'); if(el) el.hidden = true; document.documentElement.classList.remove('app-gesperrt'); }
-      else if(f) f.textContent = 'Nicht bestätigt. Nochmal versuchen.';
+      if(art() === 'pin'){
+        const i = document.getElementById('asPin'); const w = warteRest();
+        if(w > 0){ if(f) f.textContent = 'Zu viele Fehlversuche – bitte ' + Math.ceil(w / 1000) + ' s warten.'; return; }
+        if(!i || !i.value) return;
+        if(await pinPruefen(i.value)) aufheben();
+        else { i.value = ''; i.focus(); const e = einst(), w2 = warteRest(); if(f) f.textContent = w2 > 0 ? 'Zu viele Fehlversuche – bitte ' + Math.ceil(w2 / 1000) + ' s warten.' : 'Falsche PIN' + (e.fehl >= 3 ? ' (' + e.fehl + '. Fehlversuch)' : '') + '.'; }
+      } else {
+        if(await passkeyPruefen(einst().id)) aufheben();
+        else if(f) f.textContent = 'Nicht bestätigt. Nochmal versuchen.';
+      }
     }catch(err){ if(f) f.textContent = fehlerText(err); }
     finally{ laeuft = false; }
   }
-  // Beim Start sofort sperren (noch bevor etwas zu sehen ist) und gleich den Fingerabdruck anbieten
-  if(aktiv()){ sperren(); setTimeout(()=>{ if(gesperrt && document.visibilityState === 'visible') entsperren(); }, 300); }
+  // Beim Start sofort sperren (noch bevor etwas zu sehen ist); Fingerabdruck gleich anbieten
+  if(aktiv()){ sperren(); if(art() !== 'pin') setTimeout(()=>{ if(gesperrt && document.visibilityState === 'visible') entsperren(); }, 300); }
   document.addEventListener('visibilitychange', ()=>{
     if(!aktiv()) return;
     const min = Number(einst().minuten) || 0;
     if(document.visibilityState === 'hidden'){ versteckt = Date.now(); if(min === 0) sperren(); }   // "sofort": auch im App-Umschalter nichts zu sehen
-    else if(gesperrt || (versteckt && Date.now() - versteckt >= min * 60000)){ sperren(); setTimeout(()=>{ if(gesperrt) entsperren(); }, 300); }
+    else if(gesperrt || (versteckt && Date.now() - versteckt >= min * 60000)){ sperren(); if(art() !== 'pin') setTimeout(()=>{ if(gesperrt) entsperren(); }, 300); }
   });
-  // ---------- Einstellungen ----------
+  // ---------- Einrichten / Einstellungen ----------
   function abschnittHtml(){
-    const e = einst(), an = aktiv();
+    const e = einst(), an = aktiv(), pin = art() === 'pin';
     const opt = [[0, 'sofort'], [1, 'nach 1 Minute'], [5, 'nach 5 Minuten'], [15, 'nach 15 Minuten'], [60, 'nach 1 Stunde']].map(([m, t])=> '<option value="' + m + '"' + ((e.minuten == null ? 5 : Number(e.minuten)) === m ? ' selected' : '') + '>' + t + '</option>').join('');
-    return '<div class="design-hinweis">Beim Öffnen der App und wenn sie eine Weile im Hintergrund war, fragt sie nach Fingerabdruck oder Gesicht (ersatzweise die Geräte-PIN). Technisch ist das ein Passkey auf diesem Gerät; ein Passwort brauchst du nicht.</div>' +
-      '<div id="asStatus" style="margin:8px 0; font-size:14px;">' + (an ? '✅ <b>Sperre ist an.</b>' : 'Sperre ist aus.') + '</div>' +
-      (an ? '<div class="feld" style="margin-bottom:8px;"><label for="asMinuten">Sperren, wenn die App im Hintergrund war</label><select id="asMinuten">' + opt + '</select></div>' +
-            '<div style="display:flex; gap:8px;"><button type="button" class="btn-sekundaer" id="asTesten" style="flex:1; margin-bottom:0;">Jetzt sperren</button><button type="button" class="btn-sekundaer" id="asAus" style="flex:1; margin-bottom:0;">Sperre ausschalten</button></div>'
-          : '<button type="button" class="btn-sekundaer" id="asEin">Fingerabdruck / Face ID einrichten</button>') +
+    const pinForm = (knopf)=> '<div class="as-pin-form"><input type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" id="asPinNeu" placeholder="PIN (4–8 Ziffern)">' +
+      '<input type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" id="asPinNeu2" placeholder="PIN wiederholen"><button type="button" class="btn-sekundaer" id="asPinSetzen">' + knopf + '</button></div>';
+    if(!an) return '<div class="design-hinweis">Die App enthält Patientendaten und ist deshalb <b>immer gesperrt</b>, wenn sie geöffnet wird oder eine Weile im Hintergrund war. Entsperrt wird mit <b>Fingerabdruck / Face ID</b> – oder, wenn du das nicht möchtest oder das Gerät es nicht kann, mit einer <b>PIN</b>.</div>' +
+      '<button type="button" class="btn-primaer" id="asEin" style="width:100%;">Fingerabdruck / Face ID einrichten</button>' +
+      '<div class="as-oder">oder PIN festlegen</div>' + pinForm('PIN speichern') +
       '<div class="as-fehler" id="asEinstFehler" style="margin-top:6px;"></div>';
+    return '<div class="design-hinweis">Beim Öffnen der App und wenn sie eine Weile im Hintergrund war, ist sie gesperrt. Die Sperre lässt sich nicht ausschalten, nur die Art wechseln.</div>' +
+      '<div id="asStatus" style="margin:8px 0; font-size:14px;">✅ <b>Sperre ist an</b> – ' + (pin ? 'mit PIN' : 'mit Fingerabdruck / Face ID') + '.</div>' +
+      '<div class="feld" style="margin-bottom:8px;"><label for="asMinuten">Sperren, wenn die App im Hintergrund war</label><select id="asMinuten">' + opt + '</select></div>' +
+      '<div style="display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="btn-sekundaer" id="asTesten" style="flex:1; margin-bottom:0;">Jetzt sperren</button>' +
+      (pin ? '<button type="button" class="btn-sekundaer" id="asPinAendern" style="flex:1; margin-bottom:0;">PIN ändern</button><button type="button" class="btn-sekundaer" id="asZuPasskey" style="flex:1 1 100%; margin-bottom:0;">Stattdessen Fingerabdruck / Face ID</button>'
+           : '<button type="button" class="btn-sekundaer" id="asZuPin" style="flex:1; margin-bottom:0;">Stattdessen PIN</button>') + '</div>' +
+      '<div id="asPinBox"></div><div class="as-fehler" id="asEinstFehler" style="margin-top:6px;"></div>';
   }
   function abschnittWiring(neu){
     const f = ()=> document.getElementById('asEinstFehler');
+    const toast = (t)=>{ if(typeof appToastAnzeigen === 'function') appToastAnzeigen(t, 2400); };
+    const passkeyAn = async ()=>{
+      if(!await unterstuetzt()) throw new Error('Dieses Gerät bzw. dieser Browser bietet keinen Fingerabdruck / Face ID für Web-Apps an – bitte eine PIN festlegen.');
+      const id = await passkeyEinrichten();
+      if(!await passkeyPruefen(id)) throw new Error('Nicht bestätigt.');
+      const e = einst(); einstSetzen({ an: true, art: 'passkey', id, minuten: e.minuten == null ? 5 : e.minuten, seit: Date.now() });
+    };
+    const pinVerdrahten = (bestaetigenErst)=>{
+      const k = document.getElementById('asPinSetzen'); if(!k) return;
+      k.onclick = async ()=>{
+        f().textContent = '';
+        const a = document.getElementById('asPinNeu').value, b = document.getElementById('asPinNeu2').value;
+        if(!pinGueltig(a)){ f().textContent = 'Die PIN muss aus 4 bis 8 Ziffern bestehen.'; return; }
+        if(a !== b){ f().textContent = 'Die beiden PINs stimmen nicht überein.'; return; }
+        if(/^(\d)\1+$/.test(a) || '0123456789'.includes(a) || '9876543210'.includes(a)){ f().textContent = 'Bitte keine zu einfache PIN (z. B. 1111 oder 1234).'; return; }
+        try{ if(bestaetigenErst && !await bestaetigen()){ f().textContent = 'Nicht bestätigt.'; return; } }catch(err){ f().textContent = fehlerText(err); return; }
+        k.disabled = true;
+        const e = einst(); einstSetzen({ an: true, art: 'pin', pin: await pinDaten(a), minuten: e.minuten == null ? 5 : e.minuten, seit: Date.now() });
+        toast('PIN gespeichert – die App-Sperre ist an.'); neu();
+      };
+    };
     const ein = document.getElementById('asEin');
-    if(ein) ein.onclick = async ()=>{
+    if(ein) ein.onclick = async ()=>{ f().textContent = ''; try{ await passkeyAn(); toast('App-Sperre ist eingerichtet.'); neu(); }catch(err){ f().textContent = fehlerText(err); } };
+    if(!aktiv()) pinVerdrahten(false);
+    const zuPin = document.getElementById('asZuPin'), aend = document.getElementById('asPinAendern');
+    [zuPin, aend].forEach(kn=>{ if(kn) kn.onclick = ()=>{
+      document.getElementById('asPinBox').innerHTML = '<div class="as-pin-form" style="margin-top:8px;"><input type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" id="asPinNeu" placeholder="Neue PIN (4–8 Ziffern)"><input type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" id="asPinNeu2" placeholder="Neue PIN wiederholen"><button type="button" class="btn-sekundaer" id="asPinSetzen">Neue PIN speichern</button></div>';
+      pinVerdrahten(true); document.getElementById('asPinNeu').focus();
+    }; });
+    const zuPk = document.getElementById('asZuPasskey');
+    if(zuPk) zuPk.onclick = async ()=>{
       f().textContent = '';
-      if(!await unterstuetzt()){ f().textContent = 'Dieses Gerät bzw. dieser Browser bietet keinen Fingerabdruck/Face ID für Web-Apps an.'; return; }
-      try{ await einrichten(); if(!await pruefen()) throw new Error('Nicht bestätigt.'); neu(); if(typeof appToastAnzeigen === 'function') appToastAnzeigen('App-Sperre ist eingerichtet.', 2200); }
-      catch(err){ const e = einst(); delete e.id; e.an = false; einstSetzen(e); f().textContent = fehlerText(err); }
+      try{ if(!await bestaetigen()){ f().textContent = 'Nicht bestätigt.'; return; } await passkeyAn(); toast('Jetzt mit Fingerabdruck / Face ID.'); neu(); }catch(err){ f().textContent = fehlerText(err); }
     };
-    const aus = document.getElementById('asAus');
-    if(aus) aus.onclick = async ()=>{
-      f().textContent = '';
-      try{ if(!await pruefen()){ f().textContent = 'Nicht bestätigt.'; return; } }catch(err){ f().textContent = fehlerText(err); return; }
-      einstSetzen({ minuten: einst().minuten }); neu();
-    };
-    const t = document.getElementById('asTesten'); if(t) t.onclick = ()=>{ sperren(); entsperren(); };
+    const t = document.getElementById('asTesten'); if(t) t.onclick = ()=>{ sperren(); if(art() !== 'pin') entsperren(); };
     const m = document.getElementById('asMinuten'); if(m) m.onchange = ()=>{ const e = einst(); e.minuten = Number(m.value); einstSetzen(e); };
   }
-  return { aktiv, sperren, entsperren, abschnittHtml, abschnittWiring, istGesperrt: ()=> gesperrt };
+  // Pflicht: ist noch keine Sperre eingerichtet, kommt ein Fenster, das sich erst nach dem Einrichten schliesst
+  function pflichtPruefen(){
+    if(aktiv() || document.getElementById('asPflicht') || document.getElementById('einrSperre')) return;
+    const d = document.createElement('div'); d.id = 'asPflicht'; d.className = 'as-dialog';
+    d.innerHTML = '<div class="as-box as-breit"><div class="as-symbol" aria-hidden="true">' + SCHLOSS + '</div><div class="as-titel">App-Sperre einrichten</div><div id="asAbschnittPflicht"></div></div>';
+    document.body.appendChild(d);
+    const neu = ()=>{ if(aktiv()){ d.remove(); return; } const b = document.getElementById('asAbschnittPflicht'); b.innerHTML = abschnittHtml(); abschnittWiring(neu); };
+    neu();
+  }
+  return { aktiv, art, sperren, entsperren, abschnittHtml, abschnittWiring, pflichtPruefen, istGesperrt: ()=> gesperrt };
 })();
 
 // =====================================================================
