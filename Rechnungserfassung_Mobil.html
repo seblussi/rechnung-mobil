@@ -1152,6 +1152,18 @@ try{
   .position-zeile input{width:20px; height:20px; margin-top:1px; flex-shrink:0;}
   .position-zeile .haupt{flex:1; font-size:13.5px; line-height:1.25;}
   .position-zeile .ziffer{font-weight:600; color:var(--text-schwach); font-size:12px;}
+  .ls-assi{border:1px solid var(--rand); border-radius:14px; padding:12px; margin:0 0 12px; background:var(--karte); display:flex; flex-direction:column; gap:12px;}
+  .ls-assi-kopf{font-weight:700; font-size:15px;}
+  .ls-assi-titel{font-size:13.5px; color:var(--text-schwach); margin-bottom:6px;}
+  .ls-assi-reihe{display:flex; flex-wrap:wrap; gap:6px;}
+  .ls-assi-reihe .ls-assi-wahl{flex:1 1 140px; width:auto; margin:0; min-height:44px; padding:8px 10px; font-size:14px; border-radius:10px; border:1px solid var(--rand); background:var(--hintergrund, transparent); color:var(--text); text-align:center; line-height:1.25;}
+  .ls-assi-reihe .ls-assi-wahl.an{border:2px solid var(--ls-farbe); color:var(--ls-farbe); font-weight:700;}
+  .ls-assi-summe{display:flex; justify-content:space-between; gap:10px; align-items:baseline; font-size:14px; border-top:1px solid var(--rand); padding-top:10px;}
+  .ls-assi-summe b{font-size:17px; white-space:nowrap;}
+  .ls-assi-hinweis{font-size:12.5px; color:var(--text-schwach);}
+  .ls-assi-goae summary{font-size:13px; cursor:pointer; color:var(--text-schwach);}
+  .ls-assi-goae p{font-size:12.5px; margin:6px 0 0;}
+  .ls-kurz-reihe{margin:-2px 0 8px 34px;}
   .position-zeile .betrag{font-weight:600; min-width:60px; text-align:right; font-size:14px;}
   /* Kompakter als vorher (18px/4px), damit die komplette Positionsliste
      eher auf einen Bildschirm passt -- v.a. bei mehreren Zwischenüberschriften
@@ -6675,6 +6687,9 @@ function rdBloeckeAnpassen(bloecke, fall){
     if(d && d.faktor !== undefined && d.faktor !== null && d.faktor !== ''){
       zeilen[0][S.faktor] = Number(d.faktor);
       zeilen[0][S.betrag] = Math.round(Number(d.betrag) * 100) / 100;
+      // Leichenschau mit verkuerzter Dauer: Wortlaut der GOÄ als eigene Zeile
+      if(fall.art === 'ls' && LS_KURZ[z] && Math.abs(Number(d.faktor) - LS_KURZ_FAKTOR) < 1e-9)
+        zeilen = [zeilen[0]].concat(rdBegruendungZeilen(LS_KURZ[z].text, fall.art).map(t=>{ const r = ['', '', '', '', '']; r[S.bez] = t; return r; }), zeilen.slice(1));
     }
     if(beg){
       let ab = zeilen.findIndex((r, k)=> k > 0 && /^begr/i.test(String(r[S.faktor]).trim()));
@@ -11110,6 +11125,7 @@ function betaDetailsVervollstaendigen(art, auswahl, details, alle, legacy){
   const liste = auswahl ? Array.from(auswahl) : [];
   liste.forEach(z=>{
     const p = alle.find(x=> goaeNorm(x.ziffer) === goaeNorm(z));
+    if(p && betaLsKurzAktiv(p, alt)){ d.faktoren[betaPosSchluessel(p)] = LS_KURZ_FAKTOR; return; }
     if(!p || !betaPosFaktorEditierbar(p)) return;
     const k = betaPosSchluessel(p);
     const f = alt.faktoren && alt.faktoren[k] !== undefined ? betaFaktorLesen(alt.faktoren[k]) : betaPosStandardFaktor(p);
@@ -11129,10 +11145,31 @@ function betaDetailsVervollstaendigen(art, auswahl, details, alle, legacy){
   if(Object.keys(pg).length) d.pflichtGrund = pg;
   return d;
 }
+// ---------- Leichenschau: verkuerzte Dauer (GOÄ Nr. 100/101, 60 Prozent der Gebuehr) ----------
+// Wortlaut der GOÄ (Anlage, Abschnitt B VII): "Dauert die Leistung nach Nummer 101 weniger als
+// 40 Minuten (ohne Aufsuchen), mindestens aber 20 Minuten (ohne Aufsuchen), sind 60 Prozent der
+// Gebuehr zu berechnen." (Nr. 100 entsprechend: weniger als 20, mindestens 10 Minuten).
+// Gespeichert wird das wie ein Faktor 0,6 in den Positionsdetails.
+const LS_KURZ_FAKTOR = 0.6;
+const LS_KURZ = {
+  '100': { voll: 'mind. 20 Min.', kurz: '10 bis unter 20 Min.',
+           text: 'Dauer weniger als 20 Minuten (ohne Aufsuchen), mindestens aber 10 Minuten: 60 Prozent der Gebühr' },
+  '101': { voll: 'mind. 40 Min.', kurz: '20 bis unter 40 Min.',
+           text: 'Dauer weniger als 40 Minuten (ohne Aufsuchen), mindestens aber 20 Minuten: 60 Prozent der Gebühr' }
+};
+const LS_KEY_100 = 'EIGL100';   // Nr. 100 ist eine feste Zusatzposition (GOAE_FEST)
+function betaLsKurzFaehig(p){ return !!p && !!LS_KURZ[betaPosNr(p)]; }
+function betaLsKurzAktiv(p, details){
+  if(!betaLsKurzFaehig(p) || !details || !details.faktoren) return false;
+  const f = betaFaktorLesen(details.faktoren[betaPosSchluessel(p)]);
+  return !isNaN(f) && Math.abs(f - LS_KURZ_FAKTOR) < 1e-9;
+}
+function lsAssistentAn(){ return (ladeEinstellungen() || {}).lsAssistent !== false; }
 function betaEffektivBetrag(art, p, details){
   if(!p) return 0;
   if(p.ziffer === 'REISE') return Number(p.betrag);
   const k = betaPosSchluessel(p);
+  if(betaLsKurzAktiv(p, details)) return betaRund2(Number(p.betrag) * LS_KURZ_FAKTOR * betaAnzahlVon(details, k));
   const einzeln = (details && details.faktoren && details.faktoren[k] !== undefined && betaPosFaktorEditierbar(p)) ? betaPosBetrag(p, details.faktoren[k]) : Number(p.betrag);
   return betaRund2(einzeln * betaAnzahlVon(details, k));
 }
@@ -11196,6 +11233,7 @@ function betaEigeneMitDetails(f, eigene){
     const k = goaeNorm(p.schluessel);
     if(!det || !det.faktoren || det.faktoren[k] === undefined) return p;
     const auswahl = { ...betaEigenePositionAlsAuswahl({ id: p.schluessel, ziffer: p.ziffer, faktor: p.faktor, bez: p.bez, betrag: p.betrag, punkte: p.punkte }) };
+    if(betaLsKurzAktiv(auswahl, det)) return { ...p, faktor: LS_KURZ_FAKTOR, betrag: betaRund2(Number(p.betrag) * LS_KURZ_FAKTOR), bez: p.bez + ' – ' + LS_KURZ[betaPosNr(auswahl)].text };
     if(!betaPosFaktorEditierbar(auswahl)) return p;
     const fak = betaFaktorLesen(det.faktoren[k]);
     return { ...p, faktor: fak, betrag: betaPosBetrag(auswahl, fak) };
@@ -11535,7 +11573,10 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   const legacy = !!(ausgewaehlteZiffern && ausgewaehlteZiffern.legacy && !ausgewaehlteZiffern.details);
   const begrVon = (p)=>{ const k = betaPosSchluessel(p); return det.begruendungen[k] !== undefined ? det.begruendungen[k] : betaPosStandardBegruendung(art, p, legacy); };
   const anzahlVon = (p)=> betaPosAnzahlRegel(p) ? betaAnzahlVon(det, betaPosSchluessel(p)) : 1;
-  const betragVon = (p)=> betaPosFaktorEditierbar(p) ? betaRund2(betaPosBetrag(p, faktorVon(p)) * anzahlVon(p)) : Number(p.betrag);
+  const betragVon = (p)=> betaLsKurzAktiv(p, det) ? betaRund2(Number(p.betrag) * LS_KURZ_FAKTOR) : betaPosFaktorEditierbar(p) ? betaRund2(betaPosBetrag(p, faktorVon(p)) * anzahlVon(p)) : Number(p.betrag);
+  const lsKurzChip = (p)=> art === 'ls' && betaLsKurzFaehig(p)
+    ? '<button type="button" class="faktor-chip ls-kurz-chip' + (betaLsKurzAktiv(p, det) ? ' hoch' : '') + '" data-kurz="' + htmlEsc(p.ziffer) + '">' +
+      (betaLsKurzAktiv(p, det) ? 'Dauer ' + LS_KURZ[betaPosNr(p)].kurz + ' · 60 %' : 'Dauer ' + LS_KURZ[betaPosNr(p)].voll + ' · volle Gebühr') + ' &#9998;</button>' : '';
 
   const profile = betaProfile(art), profilId = betaProfilAktivId(art);
   let html = `<div class="maske ${art}">`;
@@ -11552,7 +11593,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
         <input type="checkbox" data-ziffer="${htmlEsc(p.ziffer)}" data-betrag="${betragVon(p)}" data-auto="${istAuto?'1':'0'}" ${checked} ${gesperrt}>
         <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (antippen = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
         <div class="betrag">${betragVon(p).toFixed(2).replace('.',',')} &euro;</div>
-      </label>`;
+      </label>${lsKurzChip(p) && ausgewaehlteZiffern && ausgewaehlteZiffern.has(p.ziffer) ? '<div class="ls-kurz-reihe">' + lsKurzChip(p) + '</div>' : ''}`;
     const innen = loeschbar ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>${label}</div>` : label;
     return g.drag ? `<div class="pos-item" data-key="${htmlEsc(p.ziffer)}" data-drag="1">${innen}</div>` : innen;
   };
@@ -11749,6 +11790,18 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     if(cb && cb.checked) setTimeout(async ()=>{ if(await konfliktPruefen(cb) === 'neu') neuZeichnen(); else positionAktualisieren(); }, 0);
   }
 
+  // Leichenschau: volle Gebuehr <-> 60 % (verkuerzte Dauer)
+  app.querySelectorAll('.ls-kurz-chip').forEach(b=> b.onclick = (ev)=>{
+    ev.preventDefault(); ev.stopPropagation();
+    const p = posVon(b.dataset.kurz); if(!p) return;
+    const k = betaPosSchluessel(p);
+    if(betaLsKurzAktiv(p, det)) delete det.faktoren[k]; else det.faktoren[k] = LS_KURZ_FAKTOR;
+    const neu = lsKurzChip(p), tmp = document.createElement('div'); tmp.innerHTML = neu;
+    const nb = tmp.firstChild; b.replaceWith(nb); nb.onclick = b.onclick;
+    const cb = app.querySelector('.position-zeile input[data-ziffer="' + CSS.escape(p.ziffer) + '"]');
+    if(cb){ cb.dataset.betrag = betragVon(p); const be = cb.closest('.position-zeile').querySelector('.betrag'); if(be) be.innerHTML = betragVon(p).toFixed(2).replace('.',',') + ' &euro;'; }
+    summeBerechnen();
+  });
   document.getElementById('btnPositionenFertig').onclick = async ()=>{
     const gewaehlt = gewaehltJetzt();
     const voll = betaDetailsVervollstaendigen(art, gewaehlt, det, alle, legacy);
@@ -18698,7 +18751,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v343';
+const APP_VERSION = 'v344';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19656,6 +19709,13 @@ function ansichtEinstellungen(){
         <input type="hidden" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}">
       </div>
     </div>
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Leichenschau</div>
+      <div class="einstellung-zeile">
+        <input type="checkbox" id="chkLsAssistent"${lsAssistentAn() ? ' checked' : ''}>
+        <div class="txt">Abrechnungsassistent<span class="hinweis">Fragt in der Leichenschau-Maske ab: eingehende oder vorläufige Leichenschau, Dauer (volle Gebühr oder 60 %) und Zuschlag Nr. 102. Die Rechnungspositionen lassen sich weiterhin einzeln ansehen.</span></div>
+      </div>
+    </div>
     ${betaEinstellungenHtml()}
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">OneDrive</div>
@@ -19714,6 +19774,7 @@ function ansichtEinstellungen(){
   };
   document.getElementById('btnEinrichtung').onclick = ()=> ansichtEinrichtung('start');
   document.getElementById('btnEinrichtungBrief').onclick = ()=> ansichtEinrichtung('brief');
+  document.getElementById('chkLsAssistent').onchange = (ev)=>{ const e = ladeEinstellungen() || {}; e.lsAssistent = ev.target.checked; speichereEinstellungen(e); };
   document.getElementById('chkKarteVektor').onchange = (ev)=>{ const e = ladeEinstellungen(); e.karteVektor = ev.target.checked; speichereEinstellungen(e); if(ev.target.checked) vkMaplibreHolen().catch(()=>{}); };
   document.getElementById('btnVkOffline').onclick = async ()=>{ await vkOfflineDialog(); const x = document.getElementById('vkOffEinst'); if(x) x.textContent = vkOffText(); };
   document.querySelectorAll('[data-vkstil]').forEach(b=> b.onclick = ()=>{ const e = ladeEinstellungen(); e.karteVektorStil = b.dataset.vkstil; speichereEinstellungen(e); document.querySelectorAll('[data-vkstil]').forEach(x=> x.classList.toggle('an', x === b)); });
@@ -20433,8 +20494,9 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       feldHtml('PLZ + Stadt', 'txtAdresse2'));
   }
 
-  html += abschnitt('Rechnungspositionen',
-    `<button class="btn-primaer blass" id="btnPunkte">Rechnungspositionen auswählen
+  const lsAssiAn = art === 'ls' && lsAssistentAn();
+  html += abschnitt('Rechnungspositionen', (lsAssiAn ? '<div id="lsAssi" class="ls-assi"></div>' : '') +
+    `<button class="btn-primaer blass" id="btnPunkte">${lsAssiAn ? 'Alle Rechnungspositionen ansehen' : 'Rechnungspositionen auswählen'}
       <span class="unter" id="punkteStatus">${positionenAuswahl? positionenAuswahl.size+' Position(en) ausgewählt' : 'noch nicht geprüft'}</span></button>`);
 
   html += `<input type="hidden" id="txtDokuId" value="${htmlEsc(werte.txtDokuId || '')}">` + dokuKnopfHtml(werte.txtDokuId || '');
@@ -21071,7 +21133,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // aktualisieren. Manuell angehakte ("Manuell") Positionen bleiben davon
   // unberuehrt -- wie am PC (AutoAktualisierenLive/AutoPunkteAktualisieren).
   function positionenAutomatikNachziehen(datum, zeit, kmFahrstrecke, kmLuftlinie){
-    if(!positionenAuswahl) return;
+    if(!positionenAuswahl){ lsAssiZeichnen(); return; }
     const katalog = art==='ls' ? POSITIONEN_LS : POSITIONEN_PT;
     const AUTO_ZIFFERN = new Set([
       ...ZUSCHLAEGE_ZEIT.map(z=>z.ziffer), 'EIGZA', 'EIGZB', 'EIGZC', 'EIGZD',
@@ -21096,6 +21158,78 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     if(betragEl) betragEl.value = summe.toFixed(2).replace('.',',');
     const statusEl = document.getElementById('punkteStatus');
     if(statusEl) statusEl.textContent = positionenAuswahl.size+' Position(en) ausgewählt';
+    lsAssiZeichnen();
+  }
+
+  // ---------- Abrechnungsassistent Leichenschau ----------
+  // Fragt die wenigen Punkte ab, die bei der Leichenschau wechseln (Nr. 100/101,
+  // verkuerzte Dauer, Zuschlag 102). Zeitzuschlaege und Wegegeld bleiben automatisch.
+  function lsAssiAuswahl(){
+    if(positionenAuswahl) return positionenAuswahl;
+    const v = (id)=> ((document.getElementById(id) || {}).value || '');
+    return automatischeAuswahl(POSITIONEN_LS, v('txtDatumExcel'), v('txtZeitLS'), v('txtKmFahrstrecke'), v('txtKmLuftlinie'), manuellerModus);
+  }
+  function lsAssiStand(ausw){
+    const det = ausw.details || {};
+    const lsArt = ausw.has(LS_KEY_100) && !ausw.has('101') ? '100' : '101';
+    const key = lsArt === '100' ? LS_KEY_100 : '101';
+    const f = betaFaktorLesen((det.faktoren || {})[key]);
+    return { lsArt, key, kurz: !isNaN(f) && Math.abs(f - LS_KURZ_FAKTOR) < 1e-9, z102: ausw.has('102') };
+  }
+  function lsAssiSumme(ausw){
+    const alle = allePositionenFlach(POSITIONEN_LS), kmF = ((document.getElementById('txtKmFahrstrecke') || {}).value || '');
+    let summe = 0;
+    ausw.forEach(z=>{
+      if(z === 'REISE'){ summe += reiseGesamtBetrag(kmF).gesamt; return; }
+      const p = alle.find(x=> x.ziffer === z); if(p) summe += betaEffektivBetrag('ls', p, ausw.details);
+    });
+    return betaRund2(summe);
+  }
+  function lsAssiZeichnen(){
+    const box = document.getElementById('lsAssi'); if(!box) return;
+    const ausw = lsAssiAuswahl(), st = lsAssiStand(ausw), info = LS_KURZ[st.lsArt];
+    const knopf = (feld, wert, text, an)=> '<button type="button" class="ls-assi-wahl' + (an ? ' an' : '') + '" data-lsa="' + feld + '" data-w="' + wert + '" aria-pressed="' + (an ? 'true' : 'false') + '">' + text + '</button>';
+    const frage = (titel, knoepfe)=> '<div class="ls-assi-frage"><div class="ls-assi-titel">' + titel + '</div><div class="ls-assi-reihe">' + knoepfe + '</div></div>';
+    const alle = allePositionenFlach(POSITIONEN_LS);
+    const kurzName = (z)=>{ if(z === 'REISE') return 'Reiseentschädigung'; if(/^W[TN]\d/.test(z)) return 'Wegegeld'; const p = alle.find(x=> x.ziffer === z); return p ? (p.anzeigeZiffer !== undefined ? p.anzeigeZiffer : p.ziffer) + (betaLsKurzAktiv(p, ausw.details) ? ' (60 %)' : '') : z; };
+    const goaeText = (nr)=>{ const e = typeof goaeEintrag === 'function' ? goaeEintrag(nr) : null; return e && e.text ? '<p><b>Nr. ' + nr + ':</b> ' + htmlEsc(e.text) + '</p>' : ''; };
+    box.innerHTML = '<div class="ls-assi-kopf">Abrechnungsassistent</div>' +
+      frage('Welche Leichenschau?', knopf('art', '101', 'Eingehend · Nr. 101', st.lsArt === '101') + knopf('art', '100', 'Vorläufig · Nr. 100', st.lsArt === '100')) +
+      frage('Dauer der Untersuchung (ohne Aufsuchen)', knopf('dauer', 'voll', info.voll + ' · volle Gebühr', !st.kurz) + knopf('dauer', 'kurz', info.kurz + ' · 60 %', st.kurz)) +
+      frage('Leiche mit unbekannter Identität und/oder besonderen Todesumständen (zusätzliche Dauer mindestens 10 Minuten)?', knopf('z102', 'nein', 'Nein', !st.z102) + knopf('z102', 'ja', 'Ja · Nr. 102', st.z102)) +
+      '<div class="ls-assi-summe"><span>' + htmlEsc([...ausw].map(kurzName).filter((x, i, a)=> a.indexOf(x) === i).join(' · ')) + '</span><b>' + lsAssiSumme(ausw).toFixed(2).replace('.', ',') + ' €</b></div>' +
+      '<div class="ls-assi-hinweis">Zeitzuschläge und Wegegeld setzt die App automatisch nach Datum, Uhrzeit und Entfernung.</div>' +
+      '<details class="ls-assi-goae"><summary>Wortlaut der GOÄ</summary>' + goaeText(st.lsArt) + goaeText('102') + '</details>';
+    box.querySelectorAll('[data-lsa]').forEach(b=> b.onclick = ()=> lsAssiSetzen(b.dataset.lsa, b.dataset.w));
+  }
+  function lsAssiSetzen(feld, wert){
+    const alt = lsAssiAuswahl(), st = lsAssiStand(alt);
+    const det = alt.details ? JSON.parse(JSON.stringify(alt.details)) : { faktoren: {}, begruendungen: {}, anzahl: {}, abgewaehlt: [], behalten: [] };
+    det.faktoren = det.faktoren || {};
+    let lsArt = st.lsArt, kurz = st.kurz, z102 = st.z102;
+    if(feld === 'art') lsArt = wert;
+    if(feld === 'dauer') kurz = wert === 'kurz';
+    if(feld === 'z102') z102 = wert === 'ja';
+    const key = lsArt === '100' ? LS_KEY_100 : '101';
+    delete det.faktoren['101']; delete det.faktoren[LS_KEY_100];
+    if(kurz) det.faktoren[key] = LS_KURZ_FAKTOR;
+    const rest = [...alt].filter(z=> z !== '101' && z !== LS_KEY_100 && z !== '102');
+    const neu = new Set([key, ...(z102 ? ['102'] : []), ...rest]);
+    neu.details = det;
+    positionenAuswahl = neu;
+    const summe = lsAssiSumme(neu);
+    const betragEl = document.getElementById('txtBetrag'); if(betragEl) betragEl.value = summe.toFixed(2).replace('.', ',');
+    werte.txtBetrag = summe.toFixed(2).replace('.', ',');
+    const statusEl = document.getElementById('punkteStatus'); if(statusEl) statusEl.textContent = neu.size + ' Position(en) ausgewählt';
+    lsAssiZeichnen();
+    app.dispatchEvent(new Event('change'));
+  }
+  lsAssiZeichnen();
+  if(document.getElementById('lsAssi')){
+    // Vorschlag der Automatik live nachziehen, solange noch nichts gewaehlt ist
+    let lsT = null;
+    const lsBald = ()=>{ if(positionenAuswahl) return; clearTimeout(lsT); lsT = setTimeout(lsAssiZeichnen, 200); };
+    ['txtZeitLS', 'txtDatumExcel', 'txtKm', 'txtKmFahrstrecke', 'txtKmLuftlinie'].forEach(id=>{ const el = document.getElementById(id); if(el){ el.addEventListener('input', lsBald); el.addEventListener('change', lsBald); } });
   }
 
   // Exakt wie am PC (StreckenAnzeigeAktualisieren): das SICHTBARE km-Feld
