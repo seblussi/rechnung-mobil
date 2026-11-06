@@ -3457,7 +3457,7 @@ async function ansichtFahrdienstAuswertung(){
   app.innerHTML = fbTabsHtml('quartale') + `
     <div style="display:flex; gap:8px; margin-bottom:12px;" id="fdAktionen">
       <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="flex:1; margin-bottom:0;">Neu laden</button>
-      <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">Fahrtenbuch öffnen</button>
+      <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">In Excel öffnen</button>
     </div>
     <div id="fahrdienstInhalt" class="quer-breit"><div class="leer-hinweis">Lade Fahrdienst-Dokumentation...</div></div>
     <div class="fd-fussnote" id="fdFussnote" hidden>* Beim Öffnen wird die Statistik rechts in die Excel-Datei eingetragen (Spalten AH–AQ, wie am PC). „GP“ = Förderung der KVBW greift (GKV-Anteil mindestens 21,43 €/h im Fahrdienst Mo–Fr = 300 € je 14-h-Dienst, 50 €/h an Wochenenden, Feiertagen, 24.12. und 31.12. sowie immer im Sitzdienst und Telearzt ÄBD; am 24.12./31.12. zusätzlich 500 € je 24 h; docdirekt ohne Förderung). Die Dienstart steht im Fahrtenbuch in Spalte B unter dem Datum.</div>`;
@@ -4744,12 +4744,12 @@ function ansichtStart(){
         <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnOeffneUebersicht">
           <span class="btn-icon-symbol">&#128203;</span>
           <span class="btn-titel">Rechnungsübersicht</span>
-          <span class="unter">Excel-Datei öffnen</span>
+          <span class="unter">in Excel öffnen</span>
         </button>
         <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnOeffneFahrtenbuch">
           <span class="btn-icon-symbol">&#128657;</span>
           <span class="btn-titel">Fahrtenbuch</span>
-          <span class="unter">Excel-Datei öffnen</span>
+          <span class="unter">in Excel öffnen</span>
         </button>
       </div>
     </div>`;
@@ -6009,7 +6009,7 @@ function ansichtKorrigieren(){
           <button type="button" id="btnAuswLoeschen" class="gefahr" disabled>Ausgewählte löschen</button>
           <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
           <button type="button" id="btnAuswRechnungBeta" class="betont" disabled>Word + PDF erstellen</button>
-          <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht öffnen</button>
+          <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht in Excel öffnen</button>
           <button type="button" id="btnAuswBackups">Backups</button>
         </div>
         ${msGraphStatus==='angemeldet' ? '' : `
@@ -9243,7 +9243,7 @@ async function ansichtRechnungenGesamt(neuLaden){
       <div class="gesamt-knoepfe">
         <button type="button" id="btnGesamtHochladen" class="betont" style="display:none;"></button>
         <button type="button" id="btnGesamtNeu">Neu laden</button>
-        <button type="button" id="btnGesamtExcel">Übersicht in Excel</button>
+        <button type="button" id="btnGesamtExcel">In Excel öffnen</button>
         <button type="button" id="btnGesamtBackups">Backups</button>
         <button type="button" id="btnGesamtBank" title="Zahlungseingänge aus einer CSV des Online-Bankings übernehmen">Kontoauszug</button>
       </div>
@@ -12660,7 +12660,7 @@ async function fahrdienstOeffnenMitStatistik(){
     try{ await fahrdienstStatistikSchreiben(t=> betaOverlay.schritt(t)); }
     catch(e){
       betaOverlay.schliessen();
-      if(!await betaFrage('Die Statistik konnte nicht eingetragen werden:\n' + (e.message || e) + '\n\nFahrtenbuch trotzdem öffnen?', 'Öffnen', 'Abbrechen')) return;
+      if(!await betaFrage('Die Statistik konnte nicht eingetragen werden:\n' + (e.message || e) + '\n\nFahrtenbuch trotzdem in Excel öffnen?', 'Öffnen', 'Abbrechen')) return;
     }
     betaOverlay.schliessen();
   }
@@ -18698,7 +18698,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v339';
+const APP_VERSION = 'v340';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19690,8 +19690,8 @@ function ansichtEinstellungen(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Excel-Dateien öffnen</div>
       <div class="icon-buttons-2">
-        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnEinstOeffneUebersicht"><span class="btn-icon-symbol">&#128203;</span><span class="btn-titel">Rechnungsübersicht</span><span class="unter">Excel-Datei öffnen</span></button>
-        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnEinstOeffneFahrtenbuch"><span class="btn-icon-symbol">&#128657;</span><span class="btn-titel">Fahrtenbuch</span><span class="unter">Excel-Datei öffnen</span></button>
+        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnEinstOeffneUebersicht"><span class="btn-icon-symbol">&#128203;</span><span class="btn-titel">Rechnungsübersicht</span><span class="unter">in Excel öffnen</span></button>
+        <button class="btn-sekundaer btn-icon btn-icon-grau" id="btnEinstOeffneFahrtenbuch"><span class="btn-icon-symbol">&#128657;</span><span class="btn-titel">Fahrtenbuch</span><span class="unter">in Excel öffnen</span></button>
       </div>
     </div>
     ${betaProfileHtml()}
