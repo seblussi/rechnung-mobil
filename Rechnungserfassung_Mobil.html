@@ -367,7 +367,7 @@ try{
      "OneDrive-Anmeldung" weiter unten. -->
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
 <!-- BETA: JSZip zum Erzeugen der Word-Datei (.docx) -->
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="lib/jszip.min.js"></script>
 <style>
   :root{
     --bg:#f4f6f9;
@@ -9670,9 +9670,9 @@ function betaWischen(el, beimLoeschen){
 // Statt OneDrive im Browser (dort klappte es beim allerersten Oeffnen oft
 // nicht, weil die Microsoft-Anmeldung im Browser erst aufgebaut wird) laedt
 // die App die PDF selbst und zeigt sie mit pdf.js an.
-const PDFJS_VERSION = '4.10.38';
-const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@' + PDFJS_VERSION + '/legacy/build/pdf.min.mjs';
-const PDFJS_WORKER = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@' + PDFJS_VERSION + '/legacy/build/pdf.worker.min.mjs';
+// pdf.js liegt in der App selbst (lib/pdfjs, Version 6.2.108), kein fremdes CDN
+const PDFJS_URL = new URL('lib/pdfjs/pdf.min.mjs', location.href).href;
+const PDFJS_WORKER = new URL('lib/pdfjs/pdf.worker.min.mjs', location.href).href;
 let pdfjsPromise = null;
 function pdfjsLaden(){
   if(!pdfjsPromise){
@@ -9721,7 +9721,7 @@ async function betaPdfAnzeigen(opt){
       blob = new Blob([await graphItemLaden(token, opt.itemId)], { type:'application/pdf' });
     }
     const pdfjs = await pdfjsLaden();
-    const doc = await pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()) }).promise;
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), standardFontDataUrl: new URL('lib/pdfjs/standard_fonts/', location.href).href }).promise;
     if(!el.classList.contains('aktiv')) return;
     seitenEl.innerHTML = '';
     const breite = Math.max(320, seitenEl.clientWidth - 16);
@@ -18751,7 +18751,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v344';
+const APP_VERSION = 'v345';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
