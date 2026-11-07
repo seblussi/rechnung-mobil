@@ -365,7 +365,7 @@ try{
 <!-- MSAL Browser (Microsoft Authentication Library) -- fuer die Microsoft-
      Anmeldung (OneDrive-Zugriff via Graph API), siehe Abschnitt
      "OneDrive-Anmeldung" weiter unten. -->
-<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
+<script src="lib/msal/msal-browser.min.js"></script>  <!-- @azure/msal-browser 3.30.0 (MIT), lokal statt CDN -->
 <!-- BETA: JSZip zum Erzeugen der Word-Datei (.docx) -->
 <script src="lib/jszip.min.js"></script>
 <style>
@@ -18751,7 +18751,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v346';
+const APP_VERSION = 'v347';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
