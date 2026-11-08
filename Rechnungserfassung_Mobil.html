@@ -3080,7 +3080,7 @@ function fbLokaleSammeln(){
   // Status der lokalen Faelle, die (noch) nicht im Fahrtenbuch stehen:
   // 'unfertig' (Entwurf bzw. GKV-Patient in Erfassung) oder 'offen' (gespeichert, noch nicht eingetragen)
   const lsPtAdr = (art, w)=>{
-    const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim();
+    const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim() && !/^idem\b/i.test(w.txtSterbeAdr1.trim());
     return abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
   };
   const euroAus = (v)=>{ const n = parseFloat(String(v == null ? '' : v).replace(/\./g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
@@ -3468,15 +3468,41 @@ function fbAnsichtC(buch){
 // Ort, LS/PT ueber die Adresse (Geocoding im Geraet zwischengespeichert).
 // Faelle nur in der Excel (ohne Fall auf dem Geraet) haben keinen Ort.
 let fbTagKarteLauf = 0;
+// Adressen der LS/PT-Faelle aus der Rechnungsuebersicht (das Fahrtenbuch hat keine) -- nur im Arbeitsspeicher, 5 min
+let fbUeAdrCache = null;
+async function fbUebersichtAdressen(){
+  if(fbUeAdrCache && Date.now() - fbUeAdrCache.t < 300000) return fbUeAdrCache.liste;
+  let zeilen = null; try{ zeilen = await msGraphUebersichtZeilenRoh(); }catch(_){}
+  const liste = [], txt = (v)=> String(v == null ? '' : v).trim();
+  (zeilen || []).slice(1).forEach(r=>{
+    const k = txt(r[0]).toUpperCase(), art = (k === 'L' || k === 'LS') ? 'ls' : (k === 'P' || k === 'PT') ? 'pt' : null; if(!art) return;
+    const tag = fbDatumAusText(uebersichtDatumText(r[1])); if(!tag) return;
+    const sterbe = art === 'ls' && txt(r[10]) && txt(r[11]) && !/^idem\b/i.test(txt(r[10]));
+    const adr = sterbe ? txt(r[10]) + ', ' + txt(r[11]) : [txt(r[8]), txt(r[9])].filter(Boolean).join(', ');
+    if(adr) liste.push({ art, n: fbNameNorm(txt(r[6]) + ' ' + txt(r[5])), tag, adr });
+  });
+  if(zeilen) fbUeAdrCache = { t: Date.now(), liste };
+  return liste;
+}
 async function fbTagKarteZeichnen(d, di){
   const box = document.getElementById('fbxKarte'); if(!box || !d || typeof NFP_KARTE === 'undefined') return;
   const lauf = ++fbTagKarteLauf, aktuell = ()=> lauf === fbTagKarteLauf && document.body.contains(box);
   const faelle = d.faelle.map((f, fi)=> ({ f, fi })).filter(x=> !x.f.pseudo);
   if(!faelle.length){ box.innerHTML = ''; return; }
   box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Einsatzorte</b><small>werden gesucht …</small></span></div>';
+  // LS/PT ohne Adresse (nur im Fahrtenbuch, nicht mehr in der App): Adresse aus der Rechnungsuebersicht (Name + Datum)
+  if(faelle.some(x=> !x.f.geo && !x.f.adr && x.f.art !== 'gkv')){
+    const ue = await fbUebersichtAdressen(); if(!aktuell()) return;
+    faelle.forEach(x=>{
+      if(x.f.geo || x.f.adr || x.f.art === 'gkv') return;
+      const nn = fbNameNorm(x.f.name);
+      const t = ue.find(u=> u.art === x.f.art && u.n === nn && d.tag && Math.abs(u.tag - d.tag) / 86400000 <= 1.5);
+      if(t) x.f.adr = t.adr;
+    });
+  }
   for(const x of faelle){
     if(x.f.geo || !x.f.adr) continue;
-    try{ x.f.geo = await geocode(x.f.adr); }catch(_){ x.f.geo = null; }
+    x.f.geo = await geocodeMitOrt(x.f.adr);
     if(!aktuell()) return;
   }
   const pois = []; let nr = 0, ohne = 0;
@@ -4187,6 +4213,14 @@ async function ausZwischenablageEinlesen(art, ctx){
 /* ==========================================================
    km / Route-Automation
    ========================================================== */
+// fuer Kartenuebersichten: Strasse nicht gefunden -> wenigstens den Ort (PLZ Ort) zeigen
+async function geocodeMitOrt(adresse){
+  let g = null; try{ g = await geocode(adresse); }catch(_){ return null; }
+  if(g) return g;
+  const teile = String(adresse || '').split(',').map(x=> x.trim()).filter(Boolean);
+  if(teile.length < 2) return null;
+  try{ return await geocode(teile[teile.length - 1]); }catch(_){ return null; }
+}
 async function geocode(adresse){
   const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(adresse);
   const res = await fetch(url, {headers:{'Accept':'application/json'}});
@@ -15191,6 +15225,24 @@ function osmOfflineHtml(z, x0, y0, bw, bh){
 function osmWelt(lat, lon, z){ const n = 256 * Math.pow(2, z), r = lat * Math.PI / 180; return { x: (lon + 180) / 360 * n, y: (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n }; }
 function osmGeo(x, y, z){ const n = 256 * Math.pow(2, z); return { lon: x / n * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI }; }
 function osmGeoListe(d){ const a = (d.pois || []).slice(); (d.weg || []).forEach(c=> a.push({ lat: c[1], lon: c[0] })); (d.linie || []).forEach(g=>{ if(g && isFinite(g.lat)) a.push({ lat: g.lat, lon: g.lon }); }); return a; }
+// Uebersicht der kleinen Karte passend zur echten Fenstergroesse: alle Punkte sichtbar, rechts Platz fuer die Knoepfe,
+// hoechstens Ortsebene (in Grossstaedten etwa ein Stadtteil). Ergebnis im Raster-Zoom (MapLibre = z - 1).
+const MINI_FIT_ZMAX = 14;
+function miniFitAnsicht(d, W, H, fit){
+  const g = osmGeoListe(d);
+  if(!g.length || !W || !H) return { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2((W || fit.bw) / fit.bw) };
+  const ps = g.map(q=> osmWelt(q.lat, q.lon, 0));
+  const x0 = Math.min.apply(null, ps.map(q=> q.x)), x1 = Math.max.apply(null, ps.map(q=> q.x));
+  const y0 = Math.min.apply(null, ps.map(q=> q.y)), y1 = Math.max.apply(null, ps.map(q=> q.y));
+  const pl = 28, pr = W >= 260 ? 64 : 40, pt = 28, pb = 28;
+  const bw = Math.max(W - pl - pr, 40), bh = Math.max(H - pt - pb, 40);
+  let z = Math.min(MINI_FIT_ZMAX, Math.log2(Math.min(x1 > x0 ? bw / (x1 - x0) : Infinity, y1 > y0 ? bh / (y1 - y0) : Infinity)));
+  z = Math.max(3, z);
+  const k = Math.pow(2, z);
+  // Mitte so verschieben, dass der Punktebereich in der Flaeche ohne Knopfspalte liegt
+  const m = osmGeo((x0 + x1) / 2 + (pr - pl) / 2 / k, (y0 + y1) / 2 + (pb - pt) / 2 / k, 0);
+  return { lat: m.lat, lon: m.lon, z };
+}
 function osmZoomFuer(d, bw, bh){
   const g = osmGeoListe(d); if(!g.length) return 12;
   for(let z = 14; z >= 3; z--){
@@ -15502,7 +15554,7 @@ function miniKarteStarten(w){
   const zeichnen = async ()=>{
     if(!aktiv) return;
     const W = f.clientWidth, H = f.clientHeight; if(!W || !H) return;
-    if(!ansicht) ansicht = { lat: fit.lat, lon: fit.lon, z: zKlemm(fit.z + Math.log2(W / fit.bw)) };
+    if(!ansicht){ const a0 = opt.mitte ? { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2(W / fit.bw) } : miniFitAnsicht(d, W, H, fit); ansicht = { lat: a0.lat, lon: a0.lon, z: zKlemm(a0.z) }; }
     const nr = ++lauf;
     if(ebene === 'kvbw' && !kvbwUrl){ kvbwUrl = await nfpKarteBildUrl(); if(nr !== lauf) return; if(!kvbwUrl){ ebene = 'osm'; w.dataset.ebene = 'osm'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'osm'); } }
     const zi = Math.max(3, Math.min(18, Math.round(ansicht.z))), s = Math.pow(2, ansicht.z - zi);
@@ -15627,10 +15679,12 @@ function miniKarteVektor(w, cfg){
     w.querySelectorAll('.mini-stil:not(.kvbw-stil-grau), .vk-menue').forEach(x=> x.remove()); karteKvbwGrau(w, w.dataset.ebene === 'kvbw');
     miniKarteStarten(w);
   };
+  const startAnsicht = ()=>{ const W = f.clientWidth || fit.bw, H = f.clientHeight || fit.bh;
+    return opt.mitte ? { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2(W / fit.bw) } : miniFitAnsicht(d, W, H, fit); };
   const ansichtJetzt = ()=>{ if(!map) return ansicht; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
   w._mk = {
     ansicht: ()=> ansichtJetzt(), ebene: ()=> 'osm', kvbwOk: !!opt.kvbwOk,
-    uebersicht: ()=>{ if(!map) return; const W = f.clientWidth || fit.bw; map.easeTo({ center: [fit.lon, fit.lat], zoom: fit.z + Math.log2(W / fit.bw) - 1 }); },
+    uebersicht: ()=>{ if(!map) return; const a0 = startAnsicht(); map.easeTo({ center: [a0.lon, a0.lat], zoom: a0.z - 1 }); },
     neu: ()=>{ if(!map) return; vkModusAnwenden(map); try{ const q = map.getSource('vk-zonen'); if(q) q.setData(vkZonenGeo()); }catch(_){} },
     ebeneSetzen: (e)=>{ if(e === 'kvbw'){ w._ansichtStart = ansichtJetzt(); w.dataset.ebene = 'kvbw'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'kvbw'); zuRaster(false); } },
     weg: ()=>{ aktiv = false; try{ map && map.remove(); }catch(_){} },
@@ -15641,8 +15695,7 @@ function miniKarteVektor(w, cfg){
     if(!aktiv) return;
     const box = document.createElement('div'); box.className = 'mini-vk'; f.appendChild(box);
     let stil = vkStil();
-    const W = f.clientWidth || fit.bw;
-    const start = ansicht || { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2(W / fit.bw) };
+    const start = ansicht || startAnsicht();
     const stilObj = await vkStilJson(stil); if(!aktiv) return;
     map = new ml.Map({ container: box, style: stilObj, center: [start.lon, start.lat], zoom: Math.max(0, start.z - 1),
       attributionControl: false, cooperativeGestures: true, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5,
@@ -15651,6 +15704,9 @@ function miniKarteVektor(w, cfg){
     let geladen = false;
     const fehlerZeit = setTimeout(()=>{ if(!geladen) zuRaster(true); }, 8000);
     map.on('error', (e)=>{ if(!geladen && e && e.error && /style|fetch|Failed/i.test(String(e.error.message || e.error))) { clearTimeout(fehlerZeit); zuRaster(true); } });
+    // das Fenster waechst nach dem Start oft noch (Fuellen bis zur Leiste): Uebersicht nachziehen, solange niemand die Karte bewegt hat
+    if(!ansicht){ let bewegt = false; map.on('movestart', (e)=>{ if(e && e.originalEvent) bewegt = true; });
+      [400, 1200, 2500].forEach(t=> setTimeout(()=>{ if(aktiv && map && !bewegt){ const a0 = startAnsicht(); map.jumpTo({ center: [a0.lon, a0.lat], zoom: a0.z - 1 }); } }, t)); }
     map.on('style.load', ()=>{
       geladen = true; clearTimeout(fehlerZeit);
       vkDatenEbenen(map, d);
@@ -17917,7 +17973,7 @@ function standortKarteFaelle(info){
     w = w || {};
     // unfertige Faelle (Entwurf) ohne Datum/Uhrzeit: Zeitpunkt der letzten Bearbeitung
     const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS) || (entwurf && entwurf.geaendert ? new Date(entwurf.geaendert) : null); if(!drin(t)) return;
-    const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim();
+    const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim() && !/^idem\b/i.test(w.txtSterbeAdr1.trim());
     const adr = abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
     out.push({ art, t, name: (w.txtName || '').trim() || 'ohne Namen', adr, oeffnen, unfertig: !!entwurf, euro: w.txtBetrag ? parseFloat(String(w.txtBetrag).replace(/\./g, '').replace(',', '.')) : null });
   };
@@ -18980,7 +19036,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v360';
+const APP_VERSION = 'v361';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
