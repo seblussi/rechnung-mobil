@@ -4770,8 +4770,9 @@ async function alphaZustimmen(){
   const am = new Date().toISOString();
   LS.set('alpha_zustimmung', { version: ALPHA_BED_VERSION, am, name: w.ARZTNAME || '' });
   // Nachweis zusaetzlich im eigenen OneDrive (einstellungen.ini), wenn angemeldet
+  // im Hintergrund und ohne Rueckfrage (sonst haengt der Knopf, wenn die ini schon eine Zustimmung von einem anderen Geraet enthaelt)
   try{ if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet' && typeof iniAenderungenSchreiben === 'function')
-    await iniAenderungenSchreiben({ ALPHA_ZUSTIMMUNG: ALPHA_BED_VERSION + ' ' + am }, w); }catch(_){}
+    iniAenderungenSchreiben({ ALPHA_ZUSTIMMUNG: ALPHA_BED_VERSION + ' ' + am }, w, { ohneRueckfrage: true }).catch(()=>{}); }catch(_){}
 }
 function alphaZustimmungHtml(id){
   return '<details class="alpha-text"><summary>Nutzungsbedingungen, Auftragsverarbeitung und Verschwiegenheit lesen</summary>' + alphaBedingungenHtml() + '</details>' +
@@ -8483,7 +8484,7 @@ async function iniVonOneDriveLaden(){
 
 // Schreibt die geaenderten Eintraege (Objekt KEY -> Textwert) in die ini.
 // basisWerte = Stand, auf dem die Bearbeitung beruht (fuer Konflikterkennung).
-async function iniAenderungenSchreiben(aenderungen, basisWerte){
+async function iniAenderungenSchreiben(aenderungen, basisWerte, opt){
   const token = await msGraphTokenHolen();
   if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
   const frisch = await iniHerunterladen(token);
@@ -8491,6 +8492,7 @@ async function iniAenderungenSchreiben(aenderungen, basisWerte){
   if(!keys.length) return {geschrieben:0};
   // Am PC zwischenzeitlich anders geaendert?
   const konflikte = keys.filter(k=>{
+    if(opt && opt.ohneRueckfrage) return false;
     const vorher = (basisWerte && k in basisWerte) ? basisWerte[k] : undefined;
     const jetzt = frisch.werte[k];
     return vorher !== jetzt && jetzt !== aenderungen[k];
@@ -17980,7 +17982,15 @@ async function standortKarteZeichnen(info, mitDialog){
   const listeHtml = (liste.length ? '<div class="sk-liste">' + liste.join('') + '</div>' : '') +
     (ohneOrt ? '<div class="sk-hinweis">' + ohneOrt + ' ohne Ort (keine/unbekannte Adresse – bei GKV erst ab „Wegegeld ermitteln“).</div>' : '');
   if(!allePois.length){
-    box.innerHTML = kopf(unter) + '<div class="sk-leer">Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.') + '</div>' + listeHtml;
+    // auch ohne Standort und ohne Einsaetze eine Karte zeigen (um die Wache bzw. den Notfallpraxis-Bereich);
+    // der Positions-Knopf fragt dann wie gewohnt nach der Standortfreigabe
+    let mitte = null;
+    try{ mitte = gkvStartGeo() || nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); }catch(_){}
+    const leer = '<div class="sk-hinweis">Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.') + '</div>';
+    if(!mitte){ box.innerHTML = kopf(unter) + leer + listeHtml; verdrahten(); return; }
+    const d0 = { pois: [], nfp: true, rahmen: true, fallKlick };
+    gross = (ebene, ansicht)=> osmKarteOverlay(d0, 'Karte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Karte' });
+    box.innerHTML = kopf(unter) + miniKarteHtml(d0, { mitte: { lat: mitte.lat, lon: mitte.lon }, z: 11, start: 'kvbw', kvbwOk: true, fallKlick, gross }) + leer + listeHtml;
     verdrahten(); return;
   }
   const pix = allePois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
@@ -18956,7 +18966,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v357';
+const APP_VERSION = 'v358';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
