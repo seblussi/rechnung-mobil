@@ -1854,6 +1854,7 @@ try{
   .alpha-text{margin:10px 0; font-size:13.5px; text-align:left;} .alpha-text summary{cursor:pointer; font-weight:600; color:var(--akzent, #2f6fd6);}
   .alpha-bed{max-height:45vh; overflow:auto; border:1px solid var(--rand); border-radius:10px; padding:4px 12px; margin-top:8px; background:var(--karte);}
   .alpha-bed h3{font-size:14px; margin:12px 0 6px;} .alpha-bed ol{padding-left:18px; margin:0 0 8px;} .alpha-bed li{margin-bottom:5px;}
+  .einr-erweitert{margin:8px 0; font-size:14px;} .einr-erweitert summary{cursor:pointer; color:var(--akzent, #2f6fd6); font-weight:600;}
   .alpha-check{display:flex; gap:8px; align-items:flex-start; text-align:left; font-size:14px; margin:8px 0;}
   .einr-lade{display:inline-block; width:14px; height:14px; border:2px solid var(--rand); border-top-color:var(--text-schwach); border-radius:50%; animation:einrDreh .8s linear infinite; vertical-align:-2px; margin-right:6px;}
   @keyframes einrDreh{to{transform:rotate(360deg);}}
@@ -5667,8 +5668,8 @@ async function einrFehlt(){
   try{ if(typeof dienstprofile === 'function' && !dienstprofile().length && typeof ansichtEinrichtung === 'function' && /'dienst'/.test(String(ansichtEinrichtung))) f.push({ schritt: 'dienst', text: 'Dienstprofil (Ausgangspunkt fürs Wegegeld)' }); }catch(_){}
   // Weiterleitung: eigene Adresse, oder die Standard-Weiterleitung (leer bzw. Standard-Adresse) mit Zugangsdaten --
   // die Standard-Weiterleitung laesst nur freigegebene LetterXpress-Benutzer durch; ob man dazugehoert, zeigt "Prüfen"/der Versand
-  const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY), wl = !!String(w.BRIEF_WEITERLEITUNG || '').trim();
-  if(!zugang || !wl) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!zugang ? 'LetterXpress-Zugang' : '', !wl ? 'eigene Azure-Weiterleitung' : ''].filter(Boolean).join(' und ') });
+  const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY), wl = !!String(w.BRIEF_WEITERLEITUNG || '').trim() || !!String(w.BRIEF_ZUGANGSCODE || '').trim();
+  if(!zugang || !wl) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!zugang ? 'LetterXpress-Zugang' : '', !wl ? 'Zugangscode der Weiterleitung' : ''].filter(Boolean).join(' und ') });
   return f;
 }
 // unvollstaendig -> Hinweis und die fehlenden Schritte durchgehen (Vorhandenes ist vorausgefuellt)
@@ -5740,28 +5741,28 @@ function ansichtEinrichtung(schritt){
       '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'brief', 'Speichern und weiter');
   } else if(schritt === 'brief'){
     const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
-    const eigen = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG);
+    const eigen = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG) || LXP_WEITERLEITUNG_STANDARD;
     html = '<h2>Briefversand (optional)</h2>' +
-      '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Weil LetterXpress keine Aufrufe direkt aus dem Browser erlaubt, braucht es eine kleine <b>Weiterleitung in deinem eigenen Azure-Konto</b> (Rechenzentrum Frankfurt). So läuft nichts über fremde Server – auch nicht über meine.</p>' +
+      '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Weil LetterXpress keine Aufrufe direkt aus dem Browser erlaubt, läuft der Versand über eine kleine <b>Weiterleitung</b> (Microsoft Azure, Rechenzentrum Frankfurt). Sie reicht nur durch und speichert nichts. Für den Alpha-Test kannst du die Weiterleitung von Sergej nutzen – dafür brauchst du nur deinen persönlichen <b>Zugangscode</b>.</p>' +
       '<div class="einr-hinweis"><b>Wichtig:</b> Die App ist ein privates Projekt ohne Gewähr; ich übernehme keine Haftung. Du bist für deine Daten und den Versand selbst verantwortlich. Mit LetterXpress musst du selbst einen <b>Auftragsverarbeitungsvertrag (AVV)</b> nach DSGVO abschließen. Im Zweifel bitte rechtlich beraten lassen.</div>' +
       '<h3>1. LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren, AVV abschließen, unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
       '<label class="einr-feld"><span>LetterXpress-Benutzername</span><input type="text" id="einrLxpNutzer" autocomplete="off" value="' + htmlEsc(w.BRIEF_BENUTZER || '') + '"></label>' +
       '<label class="einr-feld"><span>API-Key</span><input type="password" id="einrLxpKey" autocomplete="off" value="' + htmlEsc(w.BRIEF_APIKEY || '') + '"></label>' +
-      '<div class="einr-hinweis"><b>Alpha-Test:</b> Hast du von Sergej eine Adresse und einen <b>Zugangscode</b> für seine Weiterleitung bekommen? Dann Schritte 2 und 3 überspringen und beides unter 4 eintragen.</div>' +
-      '<h3>2. Kostenloses Azure-Konto anlegen</h3>' +
-      '<div class="einr-wichtig"><b>Wichtig:</b> Ein normales Microsoft-Konto (Outlook, Hotmail, OneDrive) reicht <b>nicht</b>. Wer sich damit direkt in der Azure-Shell anmeldet, bekommt nur eine Fehlermeldung (kein Abonnement / „No subscriptions found“), und das Skript bricht ab. Zuerst muss dein Microsoft-Konto ein <b>Azure-Konto</b> bekommen – das ist kostenlos und dauert ca. 10 Minuten.</div>' +
+      '<h3>2. Zugangscode eintragen und prüfen</h3>' +
+      '<label class="einr-feld"><span>Zugangscode (von Sergej)</span><input type="text" id="einrLxpZugang" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx" value="' + htmlEsc(w.BRIEF_ZUGANGSCODE || '') + '"></label>' +
+      '<details class="einr-erweitert"' + (eigen !== LXP_WEITERLEITUNG_STANDARD ? ' open' : '') + '><summary>Adresse der Weiterleitung (nur ändern, wenn du eine eigene nutzt)</summary>' +
+      '<label class="einr-feld"><span>Adresse der Weiterleitung</span><input type="url" id="einrLxpUrl" autocomplete="off" placeholder="https://….azurewebsites.net/api" value="' + htmlEsc(eigen) + '"></label>' +
+      '<p class="einr-klein"><b>Eigene Weiterleitung statt der von Sergej:</b> eigenes Azure-Konto anlegen und ein Skript ausführen (ca. 15 Minuten). Dann bleibt kein Zugangscode nötig.</p>' +
       '<p class="einr-klein"><a class="btn-primaer einr-azure-link" href="https://azure.microsoft.com/de-de/pricing/purchase-options/azure-account" target="_blank" rel="noopener">Kostenloses Azure-Konto anlegen</a></p>' +
       '<ol class="einr-klein einr-azure-schritte"><li>„Kostenlos starten“ wählen und mit deinem Microsoft-Konto anmelden (dasselbe wie für OneDrive geht).</li>' +
         '<li>Telefonnummer und <b>Kreditkarte</b> angeben – nur zur Identitätsprüfung, es wird nichts abgebucht (evtl. kurz 1 $ reserviert und wieder freigegeben). Prepaid-Karten gehen nicht.</li>' +
         '<li>Warten, bis „Azure-Portal“ erscheint – dann ist das Abonnement da.</li>' +
         '<li><b>Nach 30 Tagen</b> fragt Azure, ob du auf „nutzungsbasierte Bezahlung“ umstellen willst: <b>ja, umstellen</b> – sonst wird das Konto samt Weiterleitung abgeschaltet. Bezahlt wird nur, was über die kostenlosen Mengen hinausgeht; bei ein paar Briefen im Monat praktisch 0 € (höchstens wenige Cent für den Speicher).</li></ol>' +
-      '<h3>3. Skript ausführen</h3><p class="einr-klein">Erst wenn das Azure-Konto steht – am besten am PC: <a href="https://shell.azure.com" target="_blank" rel="noopener">shell.azure.com</a> öffnen ' +
+      '<p class="einr-klein">Erst wenn das Azure-Konto steht – am besten am PC: <a href="https://shell.azure.com" target="_blank" rel="noopener">shell.azure.com</a> öffnen ' +
         '<span class="einr-shell-hinweis">(oder im Azure-Portal oben rechts auf das Cloud-Shell-Symbol <span class="einr-shell-symbol" aria-label="Cloud-Shell-Symbol"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><path d="M6.5 9.5l3.2 2.5-3.2 2.5M11.5 15.5h5.5"/></svg></span> klicken)</span>, mit demselben Konto anmelden, <b>Bash</b> wählen (Frage nach Speicher: „Kein Speicherkonto erforderlich“). Dann diese Zeile einfügen (Rechtsklick › Einfügen) und Enter drücken:</p>' +
       '<div class="einr-code"><code id="einrSkript">' + htmlEsc(EINR_AZURE_BEFEHL) + '</code><button type="button" class="btn-sekundaer" id="einrKopieren">Kopieren</button></div>' +
       '<p class="einr-klein">Das dauert 3–5 Minuten. Am Ende steht dort „Diese Adresse in der App eintragen“ mit einer Adresse wie <i>https://lxp-weiterleitung-….azurewebsites.net/api</i>. Das Skript darf jederzeit erneut laufen (z. B. für Updates); es legt nichts doppelt an.</p>' +
-      '<h3>4. Adresse eintragen und prüfen</h3>' +
-      '<label class="einr-feld"><span>Adresse der Weiterleitung</span><input type="url" id="einrLxpUrl" autocomplete="off" placeholder="https://….azurewebsites.net/api" value="' + htmlEsc(eigen) + '"></label>' +
-      '<label class="einr-feld"><span>Zugangscode (nur bei einer geteilten Weiterleitung)</span><input type="text" id="einrLxpZugang" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + htmlEsc(w.BRIEF_ZUGANGSCODE || '') + '"></label>' +
+      '</details>' +
       '<button type="button" class="btn-sekundaer" id="einrLxpPruefen">Prüfen</button><div id="einrLxpErgebnis" class="einr-liste"></div>' +
       '<div id="einrBriefInfo" class="einr-klein"></div>' +
       '<div class="einr-knoepfe"><button type="button" class="btn-sekundaer" data-einr="daten">Zurück</button><button type="button" class="btn-primaer" id="einrBriefSpeichern" disabled>Speichern und weiter</button></div>' +
@@ -8329,7 +8330,7 @@ const INI_FELDER = [
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
   {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Zugangscode der Weiterleitung (nur wenn du die Weiterleitung eines anderen nutzt)'},
   {k:'BRIEF_TESTMODUS',  typ:'bool', label:'Testmodus (es wird nichts gedruckt/berechnet)', standard:'1'},
-  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung in Azure (https://….azurewebsites.net/api; nötig für den Briefversand)'},
+  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Weiterleitung (leer = die von Sergej, dann Zugangscode nötig; sonst eigene https://….azurewebsites.net/api)'},
 ];
 const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
@@ -8536,7 +8537,8 @@ async function iniAenderungenSchreiben(aenderungen, basisWerte){
 // Ohne Eintrag kein Briefversand (keine fest eingebaute Adresse mehr). Ein
 // frueherer Eintrag LXP_WEITERLEITUNG in der ini wird weiterhin ignoriert.
 // Die EBM-Werte (/ebm/werte, nur oeffentliche Daten) kommen von der eigenen Weiterleitung, ohne eigene vom EBM_DIENST.
-const LXP_WEITERLEITUNG_STANDARD = '';
+// Alpha: Weiterleitung von Sergej (geschuetzt durch persoenliche Zugangscodes) -- ohne eigenen Eintrag wird sie benutzt
+const LXP_WEITERLEITUNG_STANDARD = 'https://lxp-weiterleitung-19p.azurewebsites.net/api';
 const EBM_DIENST = 'https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net/api';
 function lxpAdresseNormal(s){
   s = String(s || '').trim().replace(/\s+/g, '').replace(/\/+$/, '');
@@ -8555,7 +8557,7 @@ function lxpMitZugang(koerper, w){
 }
 function lxpBasisUrl(w){
   if(!w){ const ini = iniCacheLaden(); w = ini ? ini.werte : {}; }
-  const eigen = lxpAdresseNormal(w && w.BRIEF_WEITERLEITUNG);
+  const eigen = lxpAdresseNormal(w && w.BRIEF_WEITERLEITUNG) || LXP_WEITERLEITUNG_STANDARD;
   if(!eigen){ const e = new Error('Für den Briefversand fehlt noch die eigene Weiterleitung (Einstellungen › „Briefversand einrichten“).'); e.keineWeiterleitung = true; throw e; }
   return eigen;
 }
@@ -18954,7 +18956,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v356';
+const APP_VERSION = 'v357';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
