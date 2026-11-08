@@ -18,7 +18,8 @@ set -euo pipefail
 # Alles in einer Funktion: bash liest bei "curl | bash" so erst das ganze Skript ein.
 haupt() {
 
-RG="rechnung-weiterleitung"
+# vorhandene Weiterleitung gezielt aktualisieren:  ... | RG=<Gruppe> APP=<Name> bash
+RG="${RG:-rechnung-weiterleitung}"
 ORT="germanywestcentral"
 HERKUNFT="https://seblussi.github.io"
 
@@ -44,7 +45,7 @@ done
 echo "2/6 Ressourcengruppe $RG ..."
 az group create -n "$RG" -l "$ORT" -o none
 
-APP="$(az functionapp list -g "$RG" --query "[0].name" -o tsv 2>/dev/null || true)"
+APP="${APP:-$(az functionapp list -g "$RG" --query "[0].name" -o tsv 2>/dev/null || true)}"
 if [ -z "$APP" ]; then
   ZUFALL="$(head -c 64 /dev/urandom | tr -dc 'a-z0-9' | head -c 8)"
   SA="lxpw${ZUFALL}"
