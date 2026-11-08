@@ -1944,6 +1944,12 @@ try{
   .mini-attr{margin-top:3px;}
   .mini-ebenen .karte-ebene{width:40px; height:40px; top:8px; right:8px; font-size:8.5px; border-radius:9px; gap:1px;}
   .mini-ebenen .karte-ebene svg{width:16px; height:16px;}
+  /* kleine Karte: Knoepfe als Bloecke wie in der grossen Karte -- oben Ebene/Ansicht/Stil, unten Aktionen + Vollbild;
+     Quaderform wie gross (56x44), verkleinert. Niedrige Karte: unterer Block als Reihe. */
+  .mini-gruppe{position:absolute; right:8px; z-index:5; display:flex; flex-direction:column; align-items:flex-end; gap:8px; pointer-events:none;}
+  .mini-gruppe.oben{top:8px;} .mini-gruppe.unten{bottom:8px;}
+  .mini-ebenen.kurz .mini-gruppe.unten{flex-direction:row-reverse;}
+  .mini-ebenen .mini-gruppe > button{position:relative !important; top:auto !important; right:auto !important; bottom:auto !important; left:auto !important; width:48px; height:38px; margin:0; flex:none; pointer-events:auto; border-radius:9px;}
   .nfp-start{background:#1a55c9;}
   .nfp-nfp{background:#111; border-radius:3px; width:14px; height:14px; margin:-7px 0 0 -7px;}
   .nfp-poi{display:flex; align-items:center; justify-content:center; color:#fff; font:700 10px sans-serif; width:20px; height:20px; margin:-10px 0 0 -10px;}
@@ -15247,7 +15253,7 @@ function karteEbeneKnopfSetzen(btn, aktuell){
   const ziel = aktuell === 'osm' ? 'kvbw' : 'osm';
   btn.dataset.ziel = ziel; btn.querySelector('span').textContent = ziel === 'osm' ? 'OSM' : 'KVBW';
   btn.setAttribute('aria-label', ziel === 'osm' ? 'Zur OpenStreetMap-Karte wechseln' : 'Zur KVBW-Karte wechseln');
-  karteKvbwGrau(btn.parentElement, aktuell === 'kvbw');
+  karteKvbwGrau(btn.closest('.mini-ebenen') || btn.parentElement, aktuell === 'kvbw');
 }
 // Auf der KVBW-Ebene bleiben Stil- und Auge-Knopf sichtbar, nur ausgegraut (ohne Funktion)
 function karteKvbwGrau(box, kvbw){
@@ -15263,7 +15269,7 @@ function karteKvbwGrau(box, kvbw){
       sk.className = (mini ? 'mini-stil' : 'vk-stil-knopf') + ' kvbw-grau kvbw-stil-grau';
       sk.setAttribute('aria-label', 'Kartenstil (nur auf der OSM-Karte)'); sk.title = 'Kartenstil nur auf der OSM-Karte';
       sk.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
-      box.appendChild(sk);
+      ((mini && box.querySelector('.mini-gruppe.oben')) || box).appendChild(sk);
     }
   }
 }
@@ -15310,7 +15316,8 @@ function miniKarteHtml(d, opt){
   const aedKnopf = opt.gross && !opt.ohneAed ? '<button type="button" class="mini-aed" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '</button>' : '';
   const posKnopf = '<button type="button" class="mini-pos" aria-label="Eigene Position" title="Position"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>';
   const ueberKnopf = '<button type="button" class="mini-ueber" aria-label="Übersicht" title="Übersicht"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="2.5"/></svg></button>';
-  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' + knopf + auge + aedKnopf + posKnopf + ueberKnopf + grossKnopf + '</div>' +
+  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" data-ar="' + (fit.bw / fit.bh).toFixed(4) + '" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' +
+    '<div class="mini-gruppe oben">' + knopf + auge + '</div><div class="mini-gruppe unten">' + aedKnopf + posKnopf + ueberKnopf + grossKnopf + '</div></div>' +
     '<div class="sk-hinweis mini-attr">' + OSM_ATTR_HTML + ' · Zoom: zwei Finger bzw. Mausrad</div>' + (opt.ohneLegende ? '' : karteLegendeHtml(d));
 }
 function miniKarteAnsicht(el){
@@ -15319,7 +15326,7 @@ function miniKarteAnsicht(el){
 }
 function miniKarteStarten(w){
   const cfg = MINI_KARTEN.get(w.dataset.mk); if(!cfg || w._mk) return;
-  requestAnimationFrame(miniKurzPruefen);
+  requestAnimationFrame(miniKurzPruefen); miniKarteFuellenBald();
   const f = w.querySelector('.mini-fenster'); if(!f) return;
   // OSM-Ebene als Vektorkarte (wie die grosse Karte), KVBW weiter als Bild
   if(w.dataset.ebene !== 'kvbw' && vkAn() && !w._vkFehler){ miniKarteVektor(w, cfg); return; }
@@ -15418,7 +15425,8 @@ function miniKarteStarten(w){
     if(t && opt.fallKlick){ ev.stopPropagation(); opt.fallKlick(+t.dataset.fall); return; }
     if(opt.gross){ ev.stopPropagation(); opt.gross(ebene, ansicht ? { ...ansicht } : null); }
   });
-  const ro = new ResizeObserver(()=>{ if(!document.body.contains(w)){ ro.disconnect(); return; } const b = f.clientWidth; if(b && b !== breiteAlt){ if(ansicht && breiteAlt) ansicht.z = zKlemm(ansicht.z + Math.log2(b / breiteAlt)); breiteAlt = b; zeichnen(); } });
+  let hoeheAlt = 0;
+  const ro = new ResizeObserver(()=>{ if(!document.body.contains(w)){ ro.disconnect(); return; } const b = f.clientWidth, hh = f.clientHeight; if(b && b !== breiteAlt){ if(ansicht && breiteAlt) ansicht.z = zKlemm(ansicht.z + Math.log2(b / breiteAlt)); breiteAlt = b; hoeheAlt = hh; zeichnen(); } else if(hh && hoeheAlt && hh !== hoeheAlt){ hoeheAlt = hh; zeichnen(); } else if(hh) hoeheAlt = hh; requestAnimationFrame(miniKurzPruefen); });
   ro.observe(f);
   osmOfflineLaden().catch(()=>null).then(()=>{ if(cur) zeichnen(); });
 }
@@ -15509,7 +15517,7 @@ function miniKarteVektor(w, cfg){
       const sk = document.createElement('button'); sk.type = 'button'; sk.className = 'mini-stil'; sk.setAttribute('aria-label', 'Kartenstil und Ebenen');
       sk.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
       const menue = document.createElement('div'); menue.className = 'vk-menue mini-menue'; menue.hidden = true;
-      w.appendChild(sk); w.appendChild(menue);
+      (w.querySelector('.mini-gruppe.oben') || w).appendChild(sk); w.appendChild(menue);
       sk.addEventListener('click', (ev)=>{ ev.stopPropagation(); if(!menue.hidden){ menue.hidden = true; return; } vkMenueFuellen(menue, ()=> stil, (neu)=>{ vkStilSetzen(neu); vkAlleMinisStil(); }, (id, an)=>{ vkAlleMinisEbene(id, an); }); menue.hidden = false; });
       menue.addEventListener('click', (ev)=> ev.stopPropagation());
       f.addEventListener('pointerdown', ()=>{ menue.hidden = true; });
@@ -15574,7 +15582,38 @@ document.addEventListener('click', (ev)=>{
   const w = k.closest('.mini-ebenen'); if(w && w._mk && w._mk.uebersicht) w._mk.uebersicht();
 }, true);
 // niedrige kleine Karte: Knoepfe zweispaltig
-function miniKurzPruefen(){ document.querySelectorAll('.mini-ebenen').forEach(w=> w.classList.toggle('kurz', w.clientHeight > 0 && w.clientHeight < 330)); }
+function miniKurzPruefen(){
+  document.querySelectorAll('.mini-ebenen').forEach(w=>{
+    const h = w.clientHeight; if(!h) return;
+    const o = w.querySelector('.mini-gruppe.oben'), u = w.querySelector('.mini-gruppe.unten');
+    const n = u ? [...u.children].filter(x=> getComputedStyle(x).display !== 'none').length : 0;
+    const bedarf = (o ? o.offsetHeight : 0) + (n ? n * 46 - 8 : 0) + 28;   // beide Bloecke untereinander + Abstaende
+    w.classList.toggle('kurz', h < bedarf);
+  });
+}
+// Startseite: kleine Karte fuellt den freien Platz bis zur Leiste -- nur solange alles ohne Scrollen passt
+// (z. B. ohne laufenden Dienst); sonst Standardhoehe aus dem Seitenverhaeltnis.
+function miniKarteFuellen(){
+  const f = document.querySelector('#skKarte .mini-fenster'), app = document.getElementById('app');
+  if(!f || !app || !f.offsetParent) return;
+  const ar = parseFloat(f.dataset.ar) || 0, W = f.clientWidth; if(!W || !ar) return;
+  const h0 = Math.round(W / ar), hc = f.offsetHeight;
+  if(!f.dataset.arStil) f.dataset.arStil = f.style.aspectRatio || '';
+  const zurueck = ()=>{ if(f.style.height){ f.style.height = ''; f.style.aspectRatio = f.dataset.arStil; requestAnimationFrame(miniKurzPruefen); } };
+  if(document.body.classList.contains('quer')){ zurueck(); return; }
+  const nav = document.querySelector('.ds-nav');
+  const navOben = nav && nav.getClientRects().length && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().top : innerHeight;
+  const ende = app.getBoundingClientRect().bottom + scrollY - (parseFloat(getComputedStyle(app).paddingBottom) || 0);
+  const ziel = Math.round(Math.min(hc + (navOben - 4 - ende), innerHeight * 0.75));
+  if(ziel <= h0 + 4){ zurueck(); return; }
+  if(Math.abs(ziel - hc) < 3) return;
+  f.style.aspectRatio = 'auto'; f.style.height = ziel + 'px';
+  requestAnimationFrame(miniKurzPruefen);
+}
+let miniFuellenPlan = 0;
+function miniKarteFuellenBald(){ if(miniFuellenPlan) return; miniFuellenPlan = requestAnimationFrame(()=>{ miniFuellenPlan = 0; try{ miniKarteFuellen(); }catch(_){} }); }
+window.addEventListener('resize', miniKarteFuellenBald);
+(function(){ const app = document.getElementById('app'); if(app && window.ResizeObserver) new ResizeObserver(miniKarteFuellenBald).observe(app); })();
 window.addEventListener('resize', ()=> requestAnimationFrame(miniKurzPruefen));
 // AED-Knopf der kleinen Karte: grosse (Vektor-)Karte oeffnen und dort den naechsten AED suchen
 document.addEventListener('click', (ev)=>{
@@ -18751,7 +18790,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v347';
+const APP_VERSION = 'v348';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
