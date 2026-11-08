@@ -90,11 +90,19 @@ cat > "$TMP/src/functions/lxp.js" <<'EOF'
 // verschieben/stornieren). "/v3/_version" meldet die Version.
 // Optional: App-Einstellung ERLAUBTE_LXP_NUTZER (Komma-getrennt) -> nur diese
 // LetterXpress-Benutzer werden weitergeleitet.
+// Optional: App-Einstellung ZUGANGSCODES (Komma-getrennt) -> nur Anfragen mit
+// einem dieser Codes ("_zugang" im Inhalt) werden weitergeleitet; der Code wird
+// vor dem Weiterreichen entfernt. Je Tester ein eigener Code (einzeln sperrbar).
 const { app } = require('@azure/functions');
+const crypto = require('crypto');
+function gleich(a, b) {
+  const x = Buffer.from(String(a)), y = Buffer.from(String(b));
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
 
 const ZIEL = 'https://api.letterxpress.de';
 const ERLAUBTE_HERKUNFT = ['https://seblussi.github.io'];
-const VERSION = 2;
+const VERSION = 3;
 const METHODEN = ['POST', 'PUT', 'DELETE'];
 
 function corsKopf(herkunft) {
@@ -128,6 +136,12 @@ app.http('lxp', {
     let methode = 'POST';
     let daten = null;
     try { daten = JSON.parse(text); } catch (e) { daten = null; }
+    const codes = String(process.env.ZUGANGSCODES || '').split(',').map((s) => s.trim()).filter(Boolean);
+    if (codes.length) {
+      const c = String((daten && typeof daten === 'object' && daten._zugang) || '');
+      if (!c || !codes.some((x) => gleich(x, c))) return json(403, cors, { status: 403, message: 'Zugangscode fehlt oder ist falsch.' });
+    }
+    if (daten && typeof daten === 'object' && '_zugang' in daten) { delete daten._zugang; text = JSON.stringify(daten); }
     if (daten && typeof daten === 'object') {
       if (daten._methode) {
         methode = String(daten._methode).toUpperCase();

@@ -4723,7 +4723,7 @@ const SVG_ICON_APOTHEKE = `<svg width="48" height="48" viewBox="0 0 24 24" fill=
 // Ohne Zustimmung zur aktuellen Fassung geht es nicht weiter (Einrichtung bzw.
 // Sperrfenster beim Start). Nachweis: im Geraet und in der einstellungen.ini.
 // =====================================================================
-const ALPHA_BED_VERSION = '2026-11-08';
+const ALPHA_BED_VERSION = '2026-11-08b';
 const ALPHA_ANBIETER = 'Sergej Jakutsch';
 function alphaBedingungenHtml(){
   const A = htmlEsc(ALPHA_ANBIETER);
@@ -4741,10 +4741,10 @@ function alphaBedingungenHtml(){
       '<li><b>Daten:</b> die Rechnung als PDF (Name, Anschrift und Geburtsdatum des Patienten bzw. Angehörigen/Bestatters, Leistungen, Diagnosen, Beträge) und deine LetterXpress-Zugangsdaten. <b>Betroffene:</b> Patientinnen und Patienten, Rechnungsempfänger, du.</li>' +
       '<li><b>Dauer:</b> nur für den Moment der Weiterleitung (Sekunden). Es wird <b>nichts gespeichert</b> und es werden <b>keine Inhalte protokolliert</b>.</li>' +
       '<li><b>Weisung:</b> Die Daten werden ausschließlich zur Weiterleitung an LetterXpress verwendet, nicht gelesen, nicht ausgewertet, nicht weitergegeben.</li>' +
-      '<li><b>Technische und organisatorische Maßnahmen:</b> verschlüsselte Übertragung (TLS 1.2+), Rechenzentrum in Deutschland, keine Speicherung, keine Inhalts-Protokolle, nur Aufrufe aus dieser App und nur für freigegebene LetterXpress-Benutzer, Zugriff auf das Azure-Konto nur durch den Anbieter mit Zwei-Faktor-Anmeldung.</li>' +
+      '<li><b>Technische und organisatorische Maßnahmen:</b> verschlüsselte Übertragung (TLS 1.2+), Rechenzentrum in Deutschland, keine Speicherung, keine Inhalts-Protokolle, nur Aufrufe aus dieser App und nur mit persönlichem Zugangscode, Zugriff auf das Azure-Konto nur durch den Anbieter mit Zwei-Faktor-Anmeldung.</li>' +
       '<li><b>Unterauftragsverarbeiter:</b> Microsoft Ireland Operations Ltd. (Azure, Rechenzentrum Frankfurt; Datenschutzbedingungen von Microsoft). LetterXpress ist <b>dein</b> eigener Auftragsverarbeiter (eigener Vertrag und AVV mit LetterXpress).</li>' +
       '<li><b>Pflichten des Anbieters:</b> Er meldet dir Datenschutzverletzungen unverzüglich, unterstützt dich bei Anfragen Betroffener und gibt dir Auskunft über die Maßnahmen.</li>' +
-      '<li><b>Ende:</b> Mit Ende der Nutzung wird deine Freigabe in der Weiterleitung gelöscht. Daten zum Löschen gibt es nicht, weil nichts gespeichert wird.</li></ol>' +
+      '<li><b>Ende:</b> Mit Ende der Nutzung wird dein Zugangscode in der Weiterleitung gelöscht. Daten zum Löschen gibt es nicht, weil nichts gespeichert wird.</li></ol>' +
     '<h3>3. Verschwiegenheitsverpflichtung (§ 203 StGB)</h3>' +
     '<p>Der Anbieter wirkt beim Briefversand an deiner beruflichen Tätigkeit mit (§ 203 Abs. 3 StGB). Er verpflichtet sich, über alles, was ihm dabei über Patientinnen und Patienten bekannt werden könnte, <b>Stillschweigen</b> zu bewahren – auch über das Ende der Nutzung hinaus. Ihm ist bekannt, dass eine unbefugte Offenbarung nach § 203 Abs. 4 StGB strafbar ist. Er verpflichtet seine Unterauftragnehmer entsprechend; bei Microsoft geschieht das über deren Datenschutzbedingungen.</p>' +
     '<p class="einr-klein">Fassung ' + ALPHA_BED_VERSION + '. Mit dem Häkchen stimmst du als Ärztin/Arzt (Verantwortlicher) zu; der Anbieter hat dem durch Bereitstellung der Weiterleitung zugestimmt.</p>' +
@@ -5717,6 +5717,7 @@ function ansichtEinrichtung(schritt){
       '<h3>1. LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren, AVV abschließen, unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
       '<label class="einr-feld"><span>LetterXpress-Benutzername</span><input type="text" id="einrLxpNutzer" autocomplete="off" value="' + htmlEsc(w.BRIEF_BENUTZER || '') + '"></label>' +
       '<label class="einr-feld"><span>API-Key</span><input type="password" id="einrLxpKey" autocomplete="off" value="' + htmlEsc(w.BRIEF_APIKEY || '') + '"></label>' +
+      '<div class="einr-hinweis"><b>Alpha-Test:</b> Hast du von Sergej eine Adresse und einen <b>Zugangscode</b> für seine Weiterleitung bekommen? Dann Schritte 2 und 3 überspringen und beides unter 4 eintragen.</div>' +
       '<h3>2. Kostenloses Azure-Konto anlegen</h3>' +
       '<div class="einr-wichtig"><b>Wichtig:</b> Ein normales Microsoft-Konto (Outlook, Hotmail, OneDrive) reicht <b>nicht</b>. Wer sich damit direkt in der Azure-Shell anmeldet, bekommt nur eine Fehlermeldung (kein Abonnement / „No subscriptions found“), und das Skript bricht ab. Zuerst muss dein Microsoft-Konto ein <b>Azure-Konto</b> bekommen – das ist kostenlos und dauert ca. 10 Minuten.</div>' +
       '<p class="einr-klein"><a class="btn-primaer einr-azure-link" href="https://azure.microsoft.com/de-de/pricing/purchase-options/azure-account" target="_blank" rel="noopener">Kostenloses Azure-Konto anlegen</a></p>' +
@@ -5730,6 +5731,7 @@ function ansichtEinrichtung(schritt){
       '<p class="einr-klein">Das dauert 3–5 Minuten. Am Ende steht dort „Diese Adresse in der App eintragen“ mit einer Adresse wie <i>https://lxp-weiterleitung-….azurewebsites.net/api</i>. Das Skript darf jederzeit erneut laufen (z. B. für Updates); es legt nichts doppelt an.</p>' +
       '<h3>4. Adresse eintragen und prüfen</h3>' +
       '<label class="einr-feld"><span>Adresse der Weiterleitung</span><input type="url" id="einrLxpUrl" autocomplete="off" placeholder="https://….azurewebsites.net/api" value="' + htmlEsc(eigen) + '"></label>' +
+      '<label class="einr-feld"><span>Zugangscode (nur bei einer geteilten Weiterleitung)</span><input type="text" id="einrLxpZugang" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + htmlEsc(w.BRIEF_ZUGANGSCODE || '') + '"></label>' +
       '<button type="button" class="btn-sekundaer" id="einrLxpPruefen">Prüfen</button><div id="einrLxpErgebnis" class="einr-liste"></div>' +
       '<div id="einrBriefInfo" class="einr-klein"></div>' +
       '<div class="einr-knoepfe"><button type="button" class="btn-sekundaer" data-einr="daten">Zurück</button><button type="button" class="btn-primaer" id="einrBriefSpeichern" disabled>Speichern und weiter</button></div>' +
@@ -5816,7 +5818,7 @@ async function einrFetchZeit(url, opt, ms){
 // Prueft Erreichbarkeit/Version der Weiterleitung und (falls eingetragen) die
 // LetterXpress-Zugangsdaten im Testmodus (ohne Brief -> es entsteht kein Auftrag).
 // Ergebnis: {ok, zeilen:[{text, ok:true|false|null}]}
-async function einrWeiterleitungPruefen(adresse, nutzer, key){
+async function einrWeiterleitungPruefen(adresse, nutzer, key, zugang){
   const zeilen = [], z = (text, ok)=> zeilen.push({ text, ok });
   const url = lxpAdresseNormal(adresse);
   if(!url){ z('Bitte die Adresse aus der Cloud Shell eintragen.', false); return { ok: false, zeilen }; }
@@ -5840,10 +5842,11 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key){
   if(!nutzer || !key){ z('LetterXpress-Zugangsdaten fehlen noch – ohne sie kann nicht getestet werden, ob LetterXpress dich annimmt.', false); return { ok: false, zeilen, url }; }
   try{
     const r = await einrFetchZeit(url + '/v3/printjobs', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ auth: { username: nutzer, apikey: key, mode: 'test' } }) }, 45000);
+      body: JSON.stringify(Object.assign({ auth: { username: nutzer, apikey: key, mode: 'test' } }, zugang ? { _zugang: zugang } : {})) }, 45000);
     const txt = (await r.text()).slice(0, 400);
     if(r.status === 502){ z('Die Weiterleitung erreicht LetterXpress nicht (HTTP 502). Später noch einmal prüfen.', false); return { ok: false, zeilen, url }; }
     if(r.status === 401 || /unauthori|invalid.{0,20}(api|key|user|credential)/i.test(txt)){ z('LetterXpress lehnt Benutzername oder API-Key ab – bitte prüfen (Groß-/Kleinschreibung, Leerzeichen).', false); return { ok: false, zeilen, url }; }
+    if(r.status === 403 && /Zugangscode/.test(txt)){ z(zugang ? 'Der Zugangscode wird von der Weiterleitung nicht angenommen – bitte genau so eintragen, wie du ihn bekommen hast.' : 'Diese Weiterleitung braucht einen Zugangscode – bitte unten eintragen.', false); return { ok: false, zeilen, url }; }
     if(r.status === 403 && /freigegeben/.test(txt)){ z('Die Weiterleitung lässt diesen LetterXpress-Benutzer nicht zu (ERLAUBTE_LXP_NUTZER in Azure).', false); return { ok: false, zeilen, url }; }
     z('LetterXpress hat die Zugangsdaten angenommen (Testmodus, es wurde nichts verschickt).', true);
   }catch(e){
@@ -5855,9 +5858,9 @@ function einrBriefStarten(){
   const $ = (id)=> document.getElementById(id);
   const knopf = $('einrBriefSpeichern'), info = $('einrBriefInfo'), erg = $('einrLxpErgebnis');
   let geprueft = null;
-  const eingaben = ()=> ({ url: $('einrLxpUrl').value, nutzer: $('einrLxpNutzer').value.trim(), key: $('einrLxpKey').value.trim() });
+  const eingaben = ()=> ({ url: $('einrLxpUrl').value, nutzer: $('einrLxpNutzer').value.trim(), key: $('einrLxpKey').value.trim(), zugang: ($('einrLxpZugang') ? $('einrLxpZugang').value.trim() : '') });
   const zuruecksetzen = ()=>{ geprueft = null; knopf.disabled = true; };
-  ['einrLxpUrl', 'einrLxpNutzer', 'einrLxpKey'].forEach(id=> $(id).addEventListener('input', zuruecksetzen));
+  ['einrLxpUrl', 'einrLxpNutzer', 'einrLxpKey', 'einrLxpZugang'].forEach(id=>{ if($(id)) $(id).addEventListener('input', zuruecksetzen); });
   $('einrKopieren').onclick = async ()=>{
     try{ await navigator.clipboard.writeText(EINR_AZURE_BEFEHL); $('einrKopieren').textContent = '✓ Kopiert'; }
     catch(_){ const r = document.createRange(); r.selectNodeContents($('einrSkript')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('einrKopieren').textContent = 'Markiert'; }
@@ -5867,7 +5870,7 @@ function einrBriefStarten(){
     const b = $('einrLxpPruefen'); b.disabled = true; b.textContent = 'Prüfe …'; zuruecksetzen();
     erg.innerHTML = '<div class="einr-z"><span>Verbinde mit der Weiterleitung …</span><b>…</b></div>';
     const e = eingaben();
-    const r = await einrWeiterleitungPruefen(e.url, e.nutzer, e.key);
+    const r = await einrWeiterleitungPruefen(e.url, e.nutzer, e.key, e.zugang);
     if(!$('einrLxpPruefen')) return;
     erg.innerHTML = r.zeilen.map(x=> '<div class="einr-z ' + (x.ok === true ? 'ok' : x.ok === false ? 'fehlt' : '') + '"><span>' + htmlEsc(x.text) + '</span><b>' + (x.ok === true ? '✓' : x.ok === false ? '✗' : 'i') + '</b></div>').join('') +
       (r.ok ? '<div class="einr-ok" style="margin-top:4px;"><b>✓ Hat geklappt.</b> Jetzt speichern.</div>' : '');
@@ -5878,7 +5881,7 @@ function einrBriefStarten(){
   knopf.onclick = async ()=>{
     if(!geprueft) return;
     knopf.disabled = true; info.textContent = 'Wird in OneDrive gespeichert …';
-    const aend = { BRIEF_WEITERLEITUNG: geprueft.url, BRIEF_BENUTZER: geprueft.nutzer, BRIEF_APIKEY: geprueft.key, BRIEF_AKTIVIERT: '1', BRIEF_TESTMODUS: '1' };
+    const aend = { BRIEF_WEITERLEITUNG: geprueft.url, BRIEF_BENUTZER: geprueft.nutzer, BRIEF_APIKEY: geprueft.key, BRIEF_ZUGANGSCODE: geprueft.zugang || '', BRIEF_AKTIVIERT: '1', BRIEF_TESTMODUS: '1' };
     try{
       const r = await iniAenderungenSchreiben(aend, (iniCacheLaden() || {}).werte || {});
       if(r && r.abgebrochen){ knopf.disabled = false; info.textContent = ''; return; }
@@ -8027,7 +8030,7 @@ async function lxpBriefSenden(pdfBlob, dateiname, test, versandDatumIso){
   let host = basis; try{ host = new URL(basis).host; }catch(_){}
   let r;
   try{
-    r = await fetch(basis + '/v3/printjobs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(koerper) });
+    r = await fetch(basis + '/v3/printjobs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(lxpMitZugang(koerper, w)) });
   }catch(e){ throw new Error('Keine Verbindung zur Weiterleitung ' + host + ' (' + ((e && e.message) || e) + ') – es wurde nichts verschickt.'); }
   const txt = await r.text();
   let j = null; try{ j = JSON.parse(txt); }catch(_){}
@@ -8058,7 +8061,7 @@ async function lxpAuftrag(methode, id, modus, letter){
   if(v < 2) throw new Error('Die Weiterleitung in Azure ist noch die alte Version und kann Aufträge nicht ändern. Bitte einmal das neue Azure-Skript ausführen (wie bei der Einrichtung). Es wurde nichts geändert.');
   const koerper = { _methode: methode, auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: modus === 'test' ? 'test' : 'live' } };
   if(letter) koerper.letter = letter;
-  const r = await fetch(lxpBasisUrl(w) + '/v3/printjobs/' + encodeURIComponent(id), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(koerper) });
+  const r = await fetch(lxpBasisUrl(w) + '/v3/printjobs/' + encodeURIComponent(id), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(lxpMitZugang(koerper, w)) });
   const txt = await r.text();
   let j = null; try{ j = JSON.parse(txt); }catch(_){}
   if(!r.ok || (j && j.status && +j.status >= 400)){
@@ -8293,6 +8296,7 @@ const INI_FELDER = [
   {k:'BRIEF_AKTIVIERT',  typ:'bool', label:'Briefversand über LetterXpress aktiviert'},
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
+  {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Zugangscode der Weiterleitung (nur wenn du die Weiterleitung eines anderen nutzt)'},
   {k:'BRIEF_TESTMODUS',  typ:'bool', label:'Testmodus (es wird nichts gedruckt/berechnet)', standard:'1'},
   {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung in Azure (https://….azurewebsites.net/api; nötig für den Briefversand)'},
 ];
@@ -8302,7 +8306,7 @@ const INI_GRUPPEN = [
   {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTBANKNAME','ARZTIBAN','ARZTBIC']},
   {titel:'Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)', keys:['AERZTE_KONTOINHABER','AERZTE_BANKNAME','AERZTE_IBAN','AERZTE_BIC']},
   {titel:'GKV-Patient: Wegepauschale', keys:['GKV_STARTADRESSE']},
-  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_TESTMODUS','BRIEF_WEITERLEITUNG']}
+  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_TESTMODUS','BRIEF_WEITERLEITUNG','BRIEF_ZUGANGSCODE']}
 ];
 
 // ---------- Windows-1252 lesen/schreiben ----------
@@ -8510,6 +8514,13 @@ function lxpAdresseNormal(s){
   s = s.replace(/\/v3(\/.*)?$/, '').replace(/\/+$/, '');
   if(!/\/api$/i.test(s)) s += '/api';
   return s;
+}
+// Zugangscode fuer eine fremde (geteilte) Weiterleitung: wird im Inhalt als "_zugang" mitgeschickt,
+// die Weiterleitung prueft ihn und entfernt ihn vor dem Weiterreichen an LetterXpress.
+function lxpMitZugang(koerper, w){
+  if(!w){ const ini = iniCacheLaden(); w = ini ? ini.werte : {}; }
+  const c = String((w && w.BRIEF_ZUGANGSCODE) || '').trim();
+  return c ? Object.assign({}, koerper, { _zugang: c }) : koerper;
 }
 function lxpBasisUrl(w){
   if(!w){ const ini = iniCacheLaden(); w = ini ? ini.werte : {}; }
@@ -8934,7 +8945,7 @@ function betaEinstellungenWiring(){
       ergebnis('Teste Verbindung zu LetterXpress ' + (ueberWeiterleitung ? 'über die Weiterleitung' : 'direkt') + ' ...');
       const r = await fetch(basis + '/v3/printjobs', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({auth:{username:w.BRIEF_BENUTZER, apikey:w.BRIEF_APIKEY, mode:'test'}})
+        body: JSON.stringify(lxpMitZugang({auth:{username:w.BRIEF_BENUTZER, apikey:w.BRIEF_APIKEY, mode:'test'}}, w))
       });
       const txt = (await r.text()).slice(0, 300);
       const anmeldungFalsch = r.status===401 || /unauthori/i.test(txt);
@@ -18912,7 +18923,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v354';
+const APP_VERSION = 'v355';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
