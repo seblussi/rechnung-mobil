@@ -17302,6 +17302,14 @@ function vektorKarteOverlay(d, text, opt){
   document.body.classList.add('nfp-offen');
   karteSucheSchweben(ov);
   const info = ov.querySelector('#vkInfo'), box = ov.querySelector('.vk-karte');
+  // Legende SOFORT fuellen (nicht erst nach Laden von Bibliothek/Stil) -- sonst waechst die Fussleiste
+  // verzoegert, die Karte schrumpft und ruckelt beim Oeffnen
+  try{
+    const el0 = ov.querySelector('#vkLegende'), alle = d.pois || [];
+    const p0 = alle.filter(q=> q.kl !== 'ich' && q.kl !== 'ziel'); if(alle.some(q=> q.kl === 'ich')) p0.push({ kl: 'ich' });
+    const t0 = karteLegendeHtml({ pois: p0, linie: d.linie, weg: d.weg, gpsWeg: d.gpsWeg, wegAlt: d.wegAlt, nfp: true, aed: !opt.ohneAed && !!(vkEbenen() || {}).aed });
+    if(el0 && t0) el0.innerHTML = t0.replace(/^<div class="luft-karte-legende">|<\/div>$/g, '');
+  }catch(_){}
   let map = null;
   const zu = (erg)=>{ try{ map && map.remove(); }catch(_){} ov.remove(); if(!document.querySelector('.nfp-overlay')) document.body.classList.remove('nfp-offen'); fertigRes(erg || null); };
   ov.querySelector('.nfp-zu').onclick = ()=> zu();
@@ -17568,6 +17576,8 @@ function vektorKarteOverlay(d, text, opt){
       const aed = !map._aedAus && (vkEbenen().aed || map._aedImmer);
       const t = karteLegendeHtml({ pois, linie: d.linie, weg: d.weg, gpsWeg: d.gpsWeg, wegAlt: d.wegAlt, nfp: true, aed });
       el.innerHTML = t ? t.replace(/^<div class="luft-karte-legende">|<\/div>$/g, '') : '';
+      // nie wieder kleiner werden (z. B. wenn ein Eintrag wegfaellt) -- die Karte darueber bleibt ruhig
+      el.style.minHeight = Math.max(el.offsetHeight, parseFloat(el.style.minHeight) || 0) + 'px';
     };
     ov._legendeNeu = legendeNeu; setTimeout(legendeNeu, 0);
     // Weg vom eigenen GPS-Standort zum gesetzten Punkt (violett)
@@ -18805,7 +18815,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v351';
+const APP_VERSION = 'v352';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
