@@ -1846,6 +1846,9 @@ try{
   .einr a{color:var(--akzent, #2f6fd6);} .einr-liste{display:flex; flex-direction:column; gap:6px; margin:8px 0 12px;}
   .einr-z{display:flex; justify-content:space-between; gap:10px; padding:9px 12px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); font-size:14px;}
   .einr-z b{font-weight:600; text-align:right;} .einr-z.ok b{color:#2fa84f;} .einr-z.fehlt b{color:#c77700;}
+  .einr-z.prueft b{color:var(--text-schwach); font-weight:500;}
+  .einr-lade{display:inline-block; width:14px; height:14px; border:2px solid var(--rand); border-top-color:var(--text-schwach); border-radius:50%; animation:einrDreh .8s linear infinite; vertical-align:-2px; margin-right:6px;}
+  @keyframes einrDreh{to{transform:rotate(360deg);}}
   .kto-hinweis{font-size:12.5px; font-weight:500; margin:3px 2px 0;} .kto-hinweis.ok{color:#2e8b57;} .kto-hinweis.fehler{color:#c62828;} .kto-hinweis.warn{color:#c77700;}
   .einr-feld textarea{box-sizing:border-box; margin:0; padding:10px 12px; font:inherit; font-size:16px; line-height:1.35; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text); resize:vertical; min-height:64px;}
   .einr-gesperrt{opacity:.65;} .einr-check{margin:2px 0 6px;}
@@ -4711,7 +4714,7 @@ const SVG_ICON_APOTHEKE = `<svg width="48" height="48" viewBox="0 0 24 24" fill=
 // Apotheke in vergleichbarer Groesse wirken).
 
 function ansichtStart(){
-  // App-Sperre ist Pflicht: noch keine eingerichtet -> Fenster zum Einrichten (laesst sich nicht wegklicken)
+  // App-Sperre ist freiwillig: noch keine eingerichtet -> einmal empfehlen ("Ohne App-Sperre weiter" moeglich)
   try{ if(typeof AppSperre !== 'undefined' && LS.get('einrichtung_gesehen', false)) setTimeout(()=> AppSperre.pflichtPruefen(), 300); }catch(_){}
   einstellungenOffen = false;
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtStart(); };
@@ -5610,7 +5613,7 @@ function ansichtEinrichtung(schritt){
   schritt = schritt || LS.get('einrichtung_schritt', 'start');
   LS.set('einrichtung_schritt', schritt);
   LS.set('einrichtung_gesehen', true);
-  const beenden = ()=>{ LS.set('einrichtung_schritt', null); ansichtStart(); };
+  const beenden = ()=>{ LS.set('einrichtung_schritt', null); LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false); ansichtStart(); };
   setzeTitel('Einrichtung', beenden);
   const angemeldet = typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet';
   const schritte = ['start', 'sperre', 'anmelden', 'dateien', 'daten', 'brief', 'fertig'];
@@ -5624,8 +5627,8 @@ function ansichtEinrichtung(schritt){
       '<p>Alle Daten liegen in <b>deinem eigenen OneDrive</b> im Ordner „KVBW Onedrive“. Der Assistent legt ihn an, kopiert die leeren Vorlagen hinein und fragt deine Daten für die Rechnungen ab.</p>' +
       '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + knoepfe(null, 'sperre', 'Los geht’s');
   } else if(schritt === 'sperre'){
-    html = '<h2>App-Sperre</h2><p>Die App enthält Patientendaten. Damit niemand außer dir sie öffnen kann, ist eine Sperre Pflicht: <b>Fingerabdruck / Face ID</b> oder eine <b>PIN</b>.</p>' +
-      '<div id="einrSperre"></div>' + knoepfe('start', 'anmelden', 'Weiter', !AppSperre.aktiv());
+    html = '<h2>App-Sperre (empfohlen)</h2><p>Die App enthält Patientendaten. Damit niemand außer dir sie öffnen kann, empfiehlt sich eine Sperre mit <b>Fingerabdruck / Face ID</b> oder <b>PIN</b>. Sie ist freiwillig und lässt sich später unter Einstellungen ein- und ausschalten.</p>' +
+      '<div id="einrSperre"></div>' + knoepfe('start', 'anmelden', AppSperre.aktiv() ? 'Weiter' : 'Ohne Sperre weiter');
   } else if(schritt === 'anmelden'){
     html = '<h2>Microsoft-Anmeldung</h2>' + (angemeldet
       ? '<p class="einr-ok">✓ Angemeldet als <b>' + htmlEsc((msGraphKonto && (msGraphKonto.username || msGraphKonto.name)) || '') + '</b>.</p>' + knoepfe('sperre', 'dateien')
@@ -5633,7 +5636,7 @@ function ansichtEinrichtung(schritt){
   } else if(schritt === 'dateien'){
     html = '<h2>Ordner und Vorlagen</h2><p>Prüfe, was in deinem OneDrive schon vorhanden ist …</p><div id="einrListe" class="einr-liste"></div><div id="einrDateiKnopf"></div>' + knoepfe('anmelden', 'daten', 'Weiter', true);
   } else if(schritt === 'daten'){
-    const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
+    const w = LS.get('einr_daten_leer', false) ? {} : Object.assign({}, (iniCacheLaden() || {}).werte || {});
     const feld = (k, label, ph)=> '<label class="einr-feld"><span>' + label + '</span><input type="text" data-ini="' + k + '" value="' + htmlEsc(w[k] || '') + '"' + (ph ? ' placeholder="' + htmlEsc(ph) + '"' : '') + '></label>';
     const feldMz = (k, label, ph)=> '<label class="einr-feld"><span>' + label + '</span><textarea rows="2" data-ini="' + k + '" data-mz="1"' + (ph ? ' placeholder="' + htmlEsc(ph) + '"' : '') + '>' + htmlEsc(String(w[k] || '').split('~NL~').join('\n')) + '</textarea></label>';
     const inhaberGleich = !w.ARZTKONTOINHABER || w.ARZTKONTOINHABER === w.ARZTNAME;
@@ -5686,7 +5689,7 @@ function ansichtEinrichtung(schritt){
       const ok = AppSperre.aktiv();
       box.innerHTML = ok ? '<p class="einr-ok">✓ App-Sperre ist eingerichtet (' + (AppSperre.art() === 'pin' ? 'PIN' : 'Fingerabdruck / Face ID') + '). Ändern geht später unter Einstellungen.</p>' : AppSperre.abschnittHtml();
       if(!ok) AppSperre.abschnittWiring(neu);
-      const w = app.querySelector('[data-einr="anmelden"]'); if(w) w.disabled = !ok;
+      const w = app.querySelector('[data-einr="anmelden"]'); if(w){ w.disabled = false; w.textContent = ok ? 'Weiter' : 'Ohne Sperre weiter'; }
     };
     neu();
   }
@@ -5825,17 +5828,42 @@ async function einrDateienPruefen(){
     if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ liste.innerHTML = '<div class="gkv-warn">Bitte zuerst bei Microsoft anmelden.</div>'; return; }
     const token = await msGraphTokenHolen();
     const paket = await einrStarterLaden();
+    // erst alle Eintraege mit Wartesymbol zeigen, dann nacheinander pruefen und gleich abhaken
     const status = [];
-    for(const o of paket.ordner) status.push({ art: 'ordner', pfad: o, titel: 'Ordner „' + o.replace(/^KVBW Onedrive\/?/, '') + '“', da: await einrVorhanden(token, o) });
-    for(const f of paket.dateien){
-      let imRepo = false;
-      try{ imRepo = (await fetch('./starter/' + encodeURIComponent(f.quelle), { method: 'HEAD', cache: 'no-cache' })).ok; }catch(_){}
-      status.push({ art: 'datei', pfad: f.ziel, quelle: f.quelle, titel: f.titel, da: await einrVorhanden(token, f.ziel), imRepo });
-    }
+    for(const o of paket.ordner) status.push({ art: 'ordner', pfad: o, titel: 'Ordner „' + o.replace(/^KVBW Onedrive\/?/, '') + '“', pruefen: true });
+    for(const f of paket.dateien) status.push({ art: 'datei', pfad: f.ziel, quelle: f.quelle, titel: f.titel, pruefen: true });
+    status.push({ art: 'ini', pfad: MSGRAPH_PFAD_INI, titel: 'Arztinfos (einstellungen.ini)', pruefen: true });
     const listeZeichnen = ()=>{
-      liste.innerHTML = status.map(x=> zeile(x.art === 'ordner' && x.pfad === 'KVBW Onedrive' ? 'Ordner „KVBW Onedrive“' : x.titel,
+      liste.innerHTML = status.map(x=> x.pruefen
+        ? zeile(x.art === 'ordner' && x.pfad === 'KVBW Onedrive' ? 'Ordner „KVBW Onedrive“' : x.titel, '<span class="einr-lade" aria-hidden="true"></span>wird geprüft', 'prueft')
+        : x.art === 'ini'
+          ? zeile(x.titel, x.da ? '✓ vorhanden' + (x.name ? ' – ' + htmlEsc(x.name) : '') : 'noch keine – im nächsten Schritt', x.da ? 'ok' : '')
+          : zeile(x.art === 'ordner' && x.pfad === 'KVBW Onedrive' ? 'Ordner „KVBW Onedrive“' : x.titel,
         x.da ? '✓ vorhanden' : x.laeuft ? '… wird angelegt' : x.fehler ? '✗ ' + htmlEsc(x.fehler) : x.art === 'datei' && !x.imRepo ? 'fehlt – Vorlage noch nicht im Starter-Paket' : 'fehlt', x.da ? 'ok' : 'fehlt')).join('');
     };
+    listeZeichnen();
+    for(const x of status){
+      if(!document.body.contains(liste)) return;   // Schritt verlassen
+      try{
+        x.da = await einrVorhanden(token, x.pfad);
+        if(x.art === 'datei' && !x.da){ try{ x.imRepo = (await fetch('./starter/' + encodeURIComponent(x.quelle), { method: 'HEAD', cache: 'no-cache' })).ok; }catch(_){ x.imRepo = false; } }
+        if(x.art === 'ini' && x.da){ try{ const ini = await iniVonOneDriveLaden(); x.name = ((ini && ini.werte) || {}).ARZTNAME || ''; }catch(_){} }
+      }catch(e){ x.da = false; x.fehler = e.message || String(e); }
+      x.pruefen = false; listeZeichnen();
+    }
+    if(!document.body.contains(liste)) return;
+    // vorhandene Arztinfos: fragen, ob sie verwendet werden sollen (Schritt "Deine Daten" ist dann vorausgefuellt)
+    const iniX = status.find(x=> x.art === 'ini');
+    if(iniX && iniX.da && iniX.name && !LS.get('einr_ini_entschieden', false) && !LS.get('einrichtung_auto', false)){
+      const w = (iniCacheLaden() || {}).werte || {};
+      const titel = [w.TITEL_PROF === '1' ? 'Prof.' : '', w.TITEL_PRIVDOZ === '1' ? 'Priv.-Doz.' : '', w.TITEL_DRMED === '1' ? 'Dr. med.' : (w.TITEL_DR === '1' ? 'Dr.' : '')].filter(Boolean).join(' ');
+      const zeilen = [[titel, w.ARZTNAME].filter(Boolean).join(' '), w.ARZTADRESSE1, w.ARZTADRESSE2, w.ARZTEMAIL, w.ARZTIBAN ? 'IBAN ' + w.ARZTIBAN : ''].filter(x=> String(x || '').trim());
+      const akt = await betaOverlay.ergebnis('Arztinfos gefunden', 'In deinem OneDrive liegen schon deine Daten:<div class="einr-liste" style="margin:10px 0;">' +
+        zeilen.map(z=> '<div class="einr-z"><span>' + htmlEsc(z) + '</span></div>').join('') + '</div>Sollen sie verwendet werden? Du kannst sie im nächsten Schritt noch ändern.',
+        [{ label: 'Neu eingeben', akt: 'neu' }, { label: 'Verwenden', akt: 'ja', primaer: true }]);
+      betaOverlay.schliessen();
+      LS.set('einr_ini_entschieden', true); LS.set('einr_daten_leer', akt === 'neu');
+    }
     const zeichnen = ()=>{
       listeZeichnen();
       const fehlend = status.filter(x=> !x.da && (x.art === 'ordner' || x.imRepo));
@@ -18815,7 +18843,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v352';
+const APP_VERSION = 'v353';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -22877,17 +22905,17 @@ const AppSperre = (()=>{
     const opt = [[0, 'sofort'], [1, 'nach 1 Minute'], [5, 'nach 5 Minuten'], [15, 'nach 15 Minuten'], [60, 'nach 1 Stunde']].map(([m, t])=> '<option value="' + m + '"' + ((e.minuten == null ? 5 : Number(e.minuten)) === m ? ' selected' : '') + '>' + t + '</option>').join('');
     const pinForm = (knopf)=> '<div class="as-pin-form"><input type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" id="asPinNeu" placeholder="PIN (4–8 Ziffern)">' +
       '<input type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" id="asPinNeu2" placeholder="PIN wiederholen"><button type="button" class="btn-sekundaer" id="asPinSetzen">' + knopf + '</button></div>';
-    if(!an) return '<div class="design-hinweis">Die App enthält Patientendaten und ist deshalb <b>immer gesperrt</b>, wenn sie geöffnet wird oder eine Weile im Hintergrund war. Entsperrt wird mit <b>Fingerabdruck / Face ID</b> – oder, wenn du das nicht möchtest oder das Gerät es nicht kann, mit einer <b>PIN</b>.</div>' +
+    if(!an) return '<div class="design-hinweis">Die App enthält Patientendaten. <b>Empfohlen</b> ist eine App-Sperre: Die App ist dann beim Öffnen und nach einer Weile im Hintergrund gesperrt und wird mit <b>Fingerabdruck / Face ID</b> oder einer <b>PIN</b> entsperrt. Ohne Sperre kann jeder, der dein entsperrtes Handy in der Hand hat, die Daten sehen – das Risiko trägst du selbst.</div>' +
       '<button type="button" class="btn-primaer" id="asEin" style="width:100%;">Fingerabdruck / Face ID einrichten</button>' +
       '<div class="as-oder">oder PIN festlegen</div>' + pinForm('PIN speichern') +
       '<div class="as-fehler" id="asEinstFehler" style="margin-top:6px;"></div>';
-    return '<div class="design-hinweis">Beim Öffnen der App und wenn sie eine Weile im Hintergrund war, ist sie gesperrt. Die Sperre lässt sich nicht ausschalten, nur die Art wechseln.</div>' +
+    return '<div class="design-hinweis">Beim Öffnen der App und wenn sie eine Weile im Hintergrund war, ist sie gesperrt.</div>' +
       '<div id="asStatus" style="margin:8px 0; font-size:14px;">✅ <b>Sperre ist an</b> – ' + (pin ? 'mit PIN' : 'mit Fingerabdruck / Face ID') + '.</div>' +
       '<div class="feld" style="margin-bottom:8px;"><label for="asMinuten">Sperren, wenn die App im Hintergrund war</label><select id="asMinuten">' + opt + '</select></div>' +
       '<div style="display:flex; gap:8px; flex-wrap:wrap;"><button type="button" class="btn-sekundaer" id="asTesten" style="flex:1; margin-bottom:0;">Jetzt sperren</button>' +
       (pin ? '<button type="button" class="btn-sekundaer" id="asPinAendern" style="flex:1; margin-bottom:0;">PIN ändern</button><button type="button" class="btn-sekundaer" id="asZuPasskey" style="flex:1 1 100%; margin-bottom:0;">Stattdessen Fingerabdruck / Face ID</button>'
            : '<button type="button" class="btn-sekundaer" id="asZuPin" style="flex:1; margin-bottom:0;">Stattdessen PIN</button>') + '</div>' +
-      '<div id="asPinBox"></div><div class="as-fehler" id="asEinstFehler" style="margin-top:6px;"></div>';
+      '<div id="asPinBox"></div><button type="button" class="btn-sekundaer" id="asAus" style="width:100%; margin-top:8px;">App-Sperre ausschalten</button><div class="as-fehler" id="asEinstFehler" style="margin-top:6px;"></div>';
   }
   function abschnittWiring(neu){
     const f = ()=> document.getElementById('asEinstFehler');
@@ -22927,13 +22955,26 @@ const AppSperre = (()=>{
     };
     const t = document.getElementById('asTesten'); if(t) t.onclick = ()=>{ sperren(); if(art() !== 'pin') entsperren(); };
     const m = document.getElementById('asMinuten'); if(m) m.onchange = ()=>{ const e = einst(); e.minuten = Number(m.value); einstSetzen(e); };
+    // freiwillig: Sperre ausschalten (vorher bestaetigen, damit kein Fremder sie abschaltet)
+    const aus = document.getElementById('asAus');
+    if(aus) aus.onclick = async ()=>{
+      f().textContent = '';
+      try{ if(!await bestaetigen()){ f().textContent = 'Nicht bestätigt.'; return; } }catch(err){ f().textContent = fehlerText(err); return; }
+      const e = einst(); einstSetzen({ an: false, minuten: e.minuten == null ? 5 : e.minuten });
+      try{ LS.set('app_sperre_abgelehnt', true); }catch(_){}
+      toast('App-Sperre ist aus.'); neu();
+    };
   }
   // Pflicht: ist noch keine Sperre eingerichtet, kommt ein Fenster, das sich erst nach dem Einrichten schliesst
+  // freiwillig: ist noch keine Sperre eingerichtet, wird sie einmal empfohlen -- "Ohne App-Sperre weiter" merkt sich die Wahl
   function pflichtPruefen(){
     if(aktiv() || document.getElementById('asPflicht') || document.getElementById('einrSperre')) return;
+    try{ if(LS.get('app_sperre_abgelehnt', false)) return; }catch(_){}
     const d = document.createElement('div'); d.id = 'asPflicht'; d.className = 'as-dialog';
-    d.innerHTML = '<div class="as-box as-breit"><div class="as-symbol" aria-hidden="true">' + SCHLOSS + '</div><div class="as-titel">App-Sperre einrichten</div><div id="asAbschnittPflicht"></div></div>';
+    d.innerHTML = '<div class="as-box as-breit"><div class="as-symbol" aria-hidden="true">' + SCHLOSS + '</div><div class="as-titel">App-Sperre einrichten?</div><div id="asAbschnittPflicht"></div>' +
+      '<button type="button" class="btn-sekundaer" id="asOhne" style="width:100%; margin-top:10px;">Ohne App-Sperre weiter</button></div>';
     document.body.appendChild(d);
+    d.querySelector('#asOhne').onclick = ()=>{ try{ LS.set('app_sperre_abgelehnt', true); }catch(_){} d.remove(); };
     const neu = ()=>{ if(aktiv()){ d.remove(); return; } const b = document.getElementById('asAbschnittPflicht'); b.innerHTML = abschnittHtml(); abschnittWiring(neu); };
     neu();
   }
