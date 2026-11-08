@@ -1847,6 +1847,10 @@ try{
   .einr-z{display:flex; justify-content:space-between; gap:10px; padding:9px 12px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); font-size:14px;}
   .einr-z b{font-weight:600; text-align:right;} .einr-z.ok b{color:#2fa84f;} .einr-z.fehlt b{color:#c77700;}
   .einr-z.prueft b{color:var(--text-schwach); font-weight:500;}
+  .alpha-text{margin:10px 0; font-size:13.5px; text-align:left;} .alpha-text summary{cursor:pointer; font-weight:600; color:var(--akzent, #2f6fd6);}
+  .alpha-bed{max-height:45vh; overflow:auto; border:1px solid var(--rand); border-radius:10px; padding:4px 12px; margin-top:8px; background:var(--karte);}
+  .alpha-bed h3{font-size:14px; margin:12px 0 6px;} .alpha-bed ol{padding-left:18px; margin:0 0 8px;} .alpha-bed li{margin-bottom:5px;}
+  .alpha-check{display:flex; gap:8px; align-items:flex-start; text-align:left; font-size:14px; margin:8px 0;}
   .einr-lade{display:inline-block; width:14px; height:14px; border:2px solid var(--rand); border-top-color:var(--text-schwach); border-radius:50%; animation:einrDreh .8s linear infinite; vertical-align:-2px; margin-right:6px;}
   @keyframes einrDreh{to{transform:rotate(360deg);}}
   .kto-hinweis{font-size:12.5px; font-weight:500; margin:3px 2px 0;} .kto-hinweis.ok{color:#2e8b57;} .kto-hinweis.fehler{color:#c62828;} .kto-hinweis.warn{color:#c77700;}
@@ -4713,9 +4717,67 @@ const SVG_ICON_APOTHEKE = `<svg width="48" height="48" viewBox="0 0 24 24" fill=
 // vergroessert, damit Emoji und die gezeichneten SVG-Icons Luftlinie/
 // Apotheke in vergleichbarer Groesse wirken).
 
+// =====================================================================
+// Alpha-Test: Nutzungsbedingungen, Auftragsverarbeitung (Briefversand ueber die
+// Weiterleitung des Anbieters) und Verschwiegenheitsverpflichtung (§ 203 StGB).
+// Ohne Zustimmung zur aktuellen Fassung geht es nicht weiter (Einrichtung bzw.
+// Sperrfenster beim Start). Nachweis: im Geraet und in der einstellungen.ini.
+// =====================================================================
+const ALPHA_BED_VERSION = '2026-11-08';
+const ALPHA_ANBIETER = 'Sergej Jakutsch';
+function alphaBedingungenHtml(){
+  const A = htmlEsc(ALPHA_ANBIETER);
+  return '<div class="alpha-bed">' +
+    '<h3>1. Nutzungsbedingungen (Alpha-Test)</h3><ol>' +
+      '<li>Die App ist ein privates, unentgeltliches Projekt von ' + A + ' („Anbieter“) und wird einem kleinen Kreis von Kolleginnen und Kollegen zum Testen überlassen. Es ist eine <b>Testversion</b>: Fehler sind möglich, Funktionen können sich ändern oder wegfallen.</li>' +
+      '<li>Die App unterstützt bei der Abrechnung, prüft aber nicht abschließend, ob eine Rechnung im Einzelfall korrekt ist. Für Rechnungen, Abrechnung, Versand und den Umgang mit Patientendaten bleibst <b>du selbst verantwortlich</b>.</li>' +
+      '<li>Deine Daten liegen auf deinem Gerät und in <b>deinem eigenen OneDrive</b>. Der Anbieter hat darauf keinen Zugriff. Datensicherung ist deine Sache (die App hilft mit Sicherungen im OneDrive).</li>' +
+      '<li>Der Anbieter haftet nur für Vorsatz und grobe Fahrlässigkeit sowie bei Verletzung von Leben, Körper oder Gesundheit. Für die Auftragsverarbeitung gilt Abschnitt 2 und Art. 82 DSGVO.</li>' +
+      '<li>Bitte schicke dem Anbieter bei Fragen oder Fehlermeldungen <b>keine Patientendaten</b> (auch keine Bildschirmfotos mit Namen oder Anschriften).</li>' +
+      '<li>Die Nutzung kann jederzeit von beiden Seiten beendet werden.</li></ol>' +
+    '<h3>2. Auftragsverarbeitung beim Briefversand (Art. 28 DSGVO)</h3>' +
+    '<p>Gilt nur, wenn du Rechnungen über die <b>Weiterleitung des Anbieters</b> an LetterXpress schickst. Verantwortlicher bist du, Auftragsverarbeiter ist der Anbieter.</p><ol>' +
+      '<li><b>Gegenstand:</b> Die Weiterleitung (Microsoft Azure, Rechenzentrum Frankfurt) reicht den Versandauftrag aus deiner App an LetterXpress durch, weil LetterXpress keine Aufrufe direkt aus dem Browser erlaubt.</li>' +
+      '<li><b>Daten:</b> die Rechnung als PDF (Name, Anschrift und Geburtsdatum des Patienten bzw. Angehörigen/Bestatters, Leistungen, Diagnosen, Beträge) und deine LetterXpress-Zugangsdaten. <b>Betroffene:</b> Patientinnen und Patienten, Rechnungsempfänger, du.</li>' +
+      '<li><b>Dauer:</b> nur für den Moment der Weiterleitung (Sekunden). Es wird <b>nichts gespeichert</b> und es werden <b>keine Inhalte protokolliert</b>.</li>' +
+      '<li><b>Weisung:</b> Die Daten werden ausschließlich zur Weiterleitung an LetterXpress verwendet, nicht gelesen, nicht ausgewertet, nicht weitergegeben.</li>' +
+      '<li><b>Technische und organisatorische Maßnahmen:</b> verschlüsselte Übertragung (TLS 1.2+), Rechenzentrum in Deutschland, keine Speicherung, keine Inhalts-Protokolle, nur Aufrufe aus dieser App und nur für freigegebene LetterXpress-Benutzer, Zugriff auf das Azure-Konto nur durch den Anbieter mit Zwei-Faktor-Anmeldung.</li>' +
+      '<li><b>Unterauftragsverarbeiter:</b> Microsoft Ireland Operations Ltd. (Azure, Rechenzentrum Frankfurt; Datenschutzbedingungen von Microsoft). LetterXpress ist <b>dein</b> eigener Auftragsverarbeiter (eigener Vertrag und AVV mit LetterXpress).</li>' +
+      '<li><b>Pflichten des Anbieters:</b> Er meldet dir Datenschutzverletzungen unverzüglich, unterstützt dich bei Anfragen Betroffener und gibt dir Auskunft über die Maßnahmen.</li>' +
+      '<li><b>Ende:</b> Mit Ende der Nutzung wird deine Freigabe in der Weiterleitung gelöscht. Daten zum Löschen gibt es nicht, weil nichts gespeichert wird.</li></ol>' +
+    '<h3>3. Verschwiegenheitsverpflichtung (§ 203 StGB)</h3>' +
+    '<p>Der Anbieter wirkt beim Briefversand an deiner beruflichen Tätigkeit mit (§ 203 Abs. 3 StGB). Er verpflichtet sich, über alles, was ihm dabei über Patientinnen und Patienten bekannt werden könnte, <b>Stillschweigen</b> zu bewahren – auch über das Ende der Nutzung hinaus. Ihm ist bekannt, dass eine unbefugte Offenbarung nach § 203 Abs. 4 StGB strafbar ist. Er verpflichtet seine Unterauftragnehmer entsprechend; bei Microsoft geschieht das über deren Datenschutzbedingungen.</p>' +
+    '<p class="einr-klein">Fassung ' + ALPHA_BED_VERSION + '. Mit dem Häkchen stimmst du als Ärztin/Arzt (Verantwortlicher) zu; der Anbieter hat dem durch Bereitstellung der Weiterleitung zugestimmt.</p>' +
+  '</div>';
+}
+function alphaZugestimmt(){ const z = LS.get('alpha_zustimmung', null); return !!(z && z.version === ALPHA_BED_VERSION); }
+async function alphaZustimmen(){
+  const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {};
+  const am = new Date().toISOString();
+  LS.set('alpha_zustimmung', { version: ALPHA_BED_VERSION, am, name: w.ARZTNAME || '' });
+  // Nachweis zusaetzlich im eigenen OneDrive (einstellungen.ini), wenn angemeldet
+  try{ if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet' && typeof iniAenderungenSchreiben === 'function')
+    await iniAenderungenSchreiben({ ALPHA_ZUSTIMMUNG: ALPHA_BED_VERSION + ' ' + am }, w); }catch(_){}
+}
+function alphaZustimmungHtml(id){
+  return '<details class="alpha-text"><summary>Nutzungsbedingungen, Auftragsverarbeitung und Verschwiegenheit lesen</summary>' + alphaBedingungenHtml() + '</details>' +
+    '<label class="ts-check einr-check alpha-check"><input type="checkbox" id="' + id + '"> Ich habe die Nutzungsbedingungen, die Vereinbarung zur Auftragsverarbeitung und die Verschwiegenheitsverpflichtung gelesen und stimme zu.</label>';
+}
+// Wer die App schon nutzt und (der aktuellen Fassung) noch nicht zugestimmt hat: Sperrfenster
+function alphaZustimmungPruefen(){
+  if(alphaZugestimmt() || document.getElementById('alphaPflicht') || document.getElementById('einrAlpha')) return;
+  const d = document.createElement('div'); d.id = 'alphaPflicht'; d.className = 'as-dialog';
+  d.innerHTML = '<div class="as-box as-breit"><div class="as-titel">Bitte bestätigen</div><p style="font-size:14px;">Für den Test der App gelten ab jetzt Nutzungsbedingungen, eine Vereinbarung zur Auftragsverarbeitung (Briefversand) und eine Verschwiegenheitsverpflichtung. Ohne Zustimmung geht es nicht weiter.</p>' +
+    alphaZustimmungHtml('alphaHaken') + '<button type="button" class="btn-primaer" id="alphaOk" style="width:100%; margin-top:10px;" disabled>Zustimmen und weiter</button></div>';
+  document.body.appendChild(d);
+  const h = d.querySelector('#alphaHaken'), ok = d.querySelector('#alphaOk');
+  h.onchange = ()=>{ ok.disabled = !h.checked; };
+  ok.onclick = async ()=>{ ok.disabled = true; await alphaZustimmen(); d.remove(); try{ if(typeof AppSperre !== 'undefined') AppSperre.pflichtPruefen(); }catch(_){} };
+}
+
 function ansichtStart(){
   // App-Sperre ist freiwillig: noch keine eingerichtet -> einmal empfehlen ("Ohne App-Sperre weiter" moeglich)
-  try{ if(typeof AppSperre !== 'undefined' && LS.get('einrichtung_gesehen', false)) setTimeout(()=> AppSperre.pflichtPruefen(), 300); }catch(_){}
+  try{ if(LS.get('einrichtung_gesehen', false)) setTimeout(()=> alphaZugestimmt() ? (typeof AppSperre !== 'undefined' && AppSperre.pflichtPruefen()) : alphaZustimmungPruefen(), 300); }catch(_){}
   einstellungenOffen = false;
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtStart(); };
   setzeTitel('Rechnungserfassung', null);
@@ -5625,7 +5687,7 @@ function ansichtEinrichtung(schritt){
   if(schritt === 'start'){
     html = '<h2>Willkommen</h2><p>Diese App erstellt Rechnungen für Leichenschau und Privatpatienten, erfasst GKV-Patienten im Fahrdienst, führt das Fahrtenbuch und berechnet das Wegegeld (NFP Offenburg).</p>' +
       '<p>Alle Daten liegen in <b>deinem eigenen OneDrive</b> im Ordner „KVBW Onedrive“. Der Assistent legt ihn an, kopiert die leeren Vorlagen hinein und fragt deine Daten für die Rechnungen ab.</p>' +
-      '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + knoepfe(null, 'sperre', 'Los geht’s');
+      '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + '<div id="einrAlpha">' + alphaZustimmungHtml('einrAlphaHaken') + '</div>' + knoepfe(null, 'sperre', 'Los geht’s', !alphaZugestimmt());
   } else if(schritt === 'sperre'){
     html = '<h2>App-Sperre (empfohlen)</h2><p>Die App enthält Patientendaten. Damit niemand außer dir sie öffnen kann, empfiehlt sich eine Sperre mit <b>Fingerabdruck / Face ID</b> oder <b>PIN</b>. Sie ist freiwillig und lässt sich später unter Einstellungen ein- und ausschalten.</p>' +
       '<div id="einrSperre"></div>' + knoepfe('start', 'anmelden', AppSperre.aktiv() ? 'Weiter' : 'Ohne Sperre weiter');
@@ -5732,6 +5794,13 @@ function ansichtEinrichtung(schritt){
     else if(schritt !== 'start') LS.set('einrichtung_auto', false);   // ab "Deine Daten" bewusst weiter eingerichtet
   }
   const an = document.getElementById('einrAnmelden'); if(an) an.onclick = ()=> msGraphAnmelden();
+  const ah = document.getElementById('einrAlphaHaken');
+  if(ah){
+    const los = app.querySelector('[data-einr="sperre"]');
+    if(alphaZugestimmt()) ah.checked = true;
+    ah.onchange = ()=>{ if(los) los.disabled = !ah.checked; };
+    if(los){ const alt = los.onclick; los.onclick = async (ev)=>{ if(!ah.checked) return; if(!alphaZugestimmt()) await alphaZustimmen(); if(alt) alt.call(los, ev); }; }
+  }
   const fe = document.getElementById('einrFertig'); if(fe) fe.onclick = beenden;
   if(schritt === 'dateien') einrDateienPruefen();
   if(schritt === 'brief') einrBriefStarten();
@@ -18843,7 +18912,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v353';
+const APP_VERSION = 'v354';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}

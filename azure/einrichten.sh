@@ -164,6 +164,9 @@ EOF
 ( cd "$TMP" && if command -v zip >/dev/null; then zip -qr paket.zip package.json host.json src; else python3 -c "import zipfile,os; z=zipfile.ZipFile('paket.zip','w'); [z.write(f) for f in ['package.json','host.json','src/functions/lxp.js']]; z.close()"; fi )
 az functionapp deployment source config-zip -g "$RG" -n "$APP" --src "$TMP/paket.zip" --build-remote true -o none
 az functionapp cors add -g "$RG" -n "$APP" --allowed-origins "$HERKUNFT" -o none 2>/dev/null || true
+# nur verschluesselte Verbindungen (HTTPS), TLS 1.2+
+az functionapp update -g "$RG" -n "$APP" --set httpsOnly=true -o none 2>/dev/null || true
+az functionapp config set -g "$RG" -n "$APP" --min-tls-version 1.2 -o none 2>/dev/null || true
 rm -rf "$TMP"
 
 # Adresse der Funktions-App: bei Flex-Verbrauch steht sie nicht immer in defaultHostName
