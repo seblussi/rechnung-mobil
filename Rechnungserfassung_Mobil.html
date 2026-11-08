@@ -370,6 +370,7 @@ try{
      "OneDrive-Anmeldung" weiter unten. -->
 <script src="lib/msal/msal-browser.min.js"></script>  <!-- @azure/msal-browser 3.30.0 (MIT), lokal statt CDN -->
 <!-- BETA: JSZip zum Erzeugen der Word-Datei (.docx) -->
+<script>window.DEMO_MODUS = (function(){ try{ return sessionStorage.getItem('demo_modus') || ''; }catch(_){ return ''; } })();</script>
 <script src="lib/jszip.min.js"></script>
 <style>
   :root{
@@ -1843,6 +1844,9 @@ try{
   .einr-ok{color:#2fa84f;} .einr-hinweis{font-size:13px; line-height:1.45; padding:10px 12px; border-radius:10px; background:rgba(199,119,0,.10); border:1px solid rgba(199,119,0,.35); margin:0 0 10px;}
   .einr-code{display:flex; gap:8px; align-items:center; padding:8px 10px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); margin:0 0 8px;} .einr-code code{flex:1; font-size:12.5px; word-break:break-all; user-select:all; -webkit-user-select:all;}
   .einr-code .btn-sekundaer{flex:none; width:auto; margin:0; padding:8px 12px;} .einr-link{background:none; border:0; color:var(--text-schwach); text-decoration:underline; font:inherit; font-size:13px; padding:6px; cursor:pointer;}
+  #demoLeiste{position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:center; gap:10px; height:28px; box-sizing:content-box; padding:env(safe-area-inset-top) 10px 0; background:#d9861a; color:#fff; font-size:12.5px; white-space:nowrap;}
+  #demoLeiste button{border:0; border-radius:12px; padding:3px 10px; background:rgba(255,255,255,.25); color:#fff; font:inherit; font-weight:700;}
+  body.demo-an{padding-top:calc(28px + env(safe-area-inset-top));} body.demo-an header{top:calc(28px + env(safe-area-inset-top));}
   .einr a{color:var(--akzent, #2f6fd6);} .einr-liste{display:flex; flex-direction:column; gap:6px; margin:8px 0 12px;}
   .einr-z{display:flex; justify-content:space-between; gap:10px; padding:9px 12px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); font-size:14px;}
   .einr-z b{font-weight:600; text-align:right;} .einr-z.ok b{color:#2fa84f;} .einr-z.fehlt b{color:#c77700;}
@@ -2159,7 +2163,7 @@ const LS = {
     let text;
     try{ text = JSON.stringify(v); }catch(e){ return false; }
     if(text === undefined) Speicher.loeschen(k); else Speicher.setzen(k, text);
-    if(k === 'einstellungen' && v && typeof v === 'object'){   // nur Anzeige-Vorlieben fuer den Startbildschirm, unverschluesselt
+    if(k === 'einstellungen' && v && typeof v === 'object' && !window.DEMO_MODUS){   // nur Anzeige-Vorlieben fuer den Startbildschirm, unverschluesselt
       try{ localStorage.setItem('ui_vorlieben', JSON.stringify({ design: v.design || '', dunkel: !!v.dunkel, dunkelManuell: !!v.dunkelManuell })); }catch(_){}
     }
     return true;
@@ -2548,6 +2552,7 @@ function msGraphPfadUrl(pfadRelativZuOneDrive){
 // Freigabelink zurueck, statt die App mitten in einer Aktion per Redirect
 // zur Microsoft-Anmeldung zu unterbrechen.
 async function msGraphTokenHolen(){
+  if(window.DEMO_MODUS) return 'demo';
   if(msGraphStatus !== 'angemeldet' || !msGraphMsal) return null;
   const konto = msGraphMsal.getActiveAccount();
   if(!konto) return null;
@@ -2580,6 +2585,14 @@ async function msGraphTokenHolen(){
 // wiederholten Klicks). Das ist strukturell derselbe Linktyp wie der
 // statische Fallback, nur live nach dem aktuellen Pfad aufgeloest.
 async function excelDateiUeberGraphOeffnen(pfadRelativZuOneDrive, statischerFallbackLink){
+  // Demo: Datei liegt nur im Arbeitsspeicher -> als .xlsx herunterladen (nie den echten OneDrive-Link oeffnen)
+  if(window.DEMO_MODUS){
+    try{ const b = await LokalGraph.alsXlsx(pfadRelativZuOneDrive); if(!b) throw new Error('nicht vorhanden');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      a.download = pfadRelativZuOneDrive.split('/').pop().replace(/\.xls[xm]$/i, '') + ' (Demo).xlsx'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    }catch(e){ appToastAnzeigen('In der Demo nicht verfügbar: ' + (e.message || e), 3000); }
+    return;
+  }
   const token = await msGraphTokenHolen();
   if(!token){ excelDateiOeffnen(statischerFallbackLink); return; }
   try{
@@ -2983,7 +2996,7 @@ function fbTabsWiring(){
 // wer den Browserspeicher ausliest, kann mit den Daten nichts anfangen.
 // Abmelden loescht ebenfalls alles.
 const ZwSpeicher = (()=>{
-  const DB = 'rechnung-zwischenspeicher', ST = 'd', MAX_ALTER = 12 * 3600000, SITZUNG = 'zw_sitzung';
+  const DB = window.DEMO_MODUS ? 'rechnung-demo-zwischenspeicher' : 'rechnung-zwischenspeicher', ST = 'd', MAX_ALTER = 12 * 3600000, SITZUNG = 'zw_sitzung';
   let dbP = null, keyP = null, sitzungP = null;
   // neue Sitzung (App war geschlossen): Reste der letzten Sitzung samt Schluessel loeschen
   function sitzung(){
@@ -4750,7 +4763,7 @@ function alphaBedingungenHtml(){
     '<p class="einr-klein">Fassung ' + ALPHA_BED_VERSION + '. Mit dem Häkchen stimmst du als Ärztin/Arzt (Verantwortlicher) zu; der Anbieter hat dem durch Bereitstellung der Weiterleitung zugestimmt.</p>' +
   '</div>';
 }
-function alphaZugestimmt(){ const z = LS.get('alpha_zustimmung', null); return !!(z && z.version === ALPHA_BED_VERSION); }
+function alphaZugestimmt(){ if(window.DEMO_MODUS) return true; const z = LS.get('alpha_zustimmung', null); return !!(z && z.version === ALPHA_BED_VERSION); }
 async function alphaZustimmen(){
   const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {};
   const am = new Date().toISOString();
@@ -4773,6 +4786,22 @@ function alphaZustimmungPruefen(){
   const h = d.querySelector('#alphaHaken'), ok = d.querySelector('#alphaOk');
   h.onchange = ()=>{ ok.disabled = !h.checked; };
   ok.onclick = async ()=>{ ok.disabled = true; await alphaZustimmen(); d.remove(); try{ if(typeof AppSperre !== 'undefined') AppSperre.pflichtPruefen(); }catch(_){} };
+}
+
+function demoStarten(){ try{ sessionStorage.setItem('demo_modus', '1'); }catch(_){ return; } location.reload(); }
+function demoBeenden(){
+  try{ sessionStorage.removeItem('demo_modus'); }catch(_){}
+  const neu = ()=> location.reload();
+  try{ const r = indexedDB.deleteDatabase('rechnung-demo-zwischenspeicher'); r.onsuccess = r.onerror = r.onblocked = neu; setTimeout(neu, 1500); }catch(_){ neu(); }
+}
+async function demoFragen(nachher){
+  if(await betaFrage('Demo mit erfundenen Daten starten?\n\nDie App lädt neu und zeigt Beispieldaten (zwei Jahre Dienste, Patienten, Rechnungen). Deine echten Daten und dein OneDrive bleiben unberührt; zurück geht es mit „Beenden“ oben.' + (nachher || ''), 'Demo starten', 'Abbrechen')) demoStarten();
+}
+if(window.DEMO_MODUS && !document.getElementById('demoLeiste')){
+  const l = document.createElement('div'); l.id = 'demoLeiste';
+  l.innerHTML = '<span><b>DEMO</b> · erfundene Daten</span><button type="button" id="demoAus">Beenden</button>';
+  document.body.appendChild(l); document.body.classList.add('demo-an');
+  document.getElementById('demoAus').onclick = demoBeenden;
 }
 
 function ansichtStart(){
@@ -5687,7 +5716,8 @@ function ansichtEinrichtung(schritt){
   if(schritt === 'start'){
     html = '<h2>Willkommen</h2><p>Diese App erstellt Rechnungen für Leichenschau und Privatpatienten, erfasst GKV-Patienten im Fahrdienst, führt das Fahrtenbuch und berechnet das Wegegeld (NFP Offenburg).</p>' +
       '<p>Alle Daten liegen in <b>deinem eigenen OneDrive</b> im Ordner „KVBW Onedrive“. Der Assistent legt ihn an, kopiert die leeren Vorlagen hinein und fragt deine Daten für die Rechnungen ab.</p>' +
-      '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + '<div id="einrAlpha">' + alphaZustimmungHtml('einrAlphaHaken') + '</div>' + knoepfe(null, 'sperre', 'Los geht’s', !alphaZugestimmt());
+      '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + '<div id="einrAlpha">' + alphaZustimmungHtml('einrAlphaHaken') + '</div>' + knoepfe(null, 'sperre', 'Los geht’s', !alphaZugestimmt()) +
+      (window.DEMO_MODUS ? '' : '<p style="text-align:center; margin-top:10px;"><button type="button" class="einr-link" id="einrDemo">Erst ausprobieren: Demo mit Beispieldaten</button></p>');
   } else if(schritt === 'sperre'){
     html = '<h2>App-Sperre (empfohlen)</h2><p>Die App enthält Patientendaten. Damit niemand außer dir sie öffnen kann, empfiehlt sich eine Sperre mit <b>Fingerabdruck / Face ID</b> oder <b>PIN</b>. Sie ist freiwillig und lässt sich später unter Einstellungen ein- und ausschalten.</p>' +
       '<div id="einrSperre"></div>' + knoepfe('start', 'anmelden', AppSperre.aktiv() ? 'Weiter' : 'Ohne Sperre weiter');
@@ -5796,6 +5826,7 @@ function ansichtEinrichtung(schritt){
     else if(schritt !== 'start') LS.set('einrichtung_auto', false);   // ab "Deine Daten" bewusst weiter eingerichtet
   }
   const an = document.getElementById('einrAnmelden'); if(an) an.onclick = ()=> msGraphAnmelden();
+  const dm = document.getElementById('einrDemo'); if(dm) dm.onclick = ()=> demoFragen('\n\nDie Einrichtung kannst du danach fortsetzen.');
   const ah = document.getElementById('einrAlphaHaken');
   if(ah){
     const los = app.querySelector('[data-einr="sperre"]');
@@ -18923,7 +18954,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v355';
+const APP_VERSION = 'v356';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19932,7 +19963,13 @@ function ansichtEinstellungen(){
     ${betaProfileHtml()}
     ${betaAbschnittHtml()}
     ${betaHaftungHtml()}
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Demo</div>
+      <div class="design-hinweis">${window.DEMO_MODUS ? 'Die Demo läuft: alle Daten sind erfunden, nichts wird gespeichert.' : 'Die App mit erfundenen Beispieldaten ausprobieren oder vorführen (zwei Jahre Dienste, Patienten, Rechnungen). Deine echten Daten und dein OneDrive bleiben dabei unberührt – die Demo läuft nur im Arbeitsspeicher.'}</div>
+      <button type="button" class="btn-sekundaer" id="btnDemo">${window.DEMO_MODUS ? 'Demo beenden' : 'Demo starten'}</button>
+    </div>
   `;
+  document.getElementById('btnDemo').onclick = ()=> window.DEMO_MODUS ? demoBeenden() : demoFragen();
   document.getElementById('btnEinstOeffneUebersicht').onclick = ()=> excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
     '');
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
@@ -20192,6 +20229,7 @@ async function msGraphInstanzSicherstellen(){
 // neues eingetragen hat) -- KEIN automatischer Login-Versuch ohne
 // Nutzer-Geste, das entspricht dem Auto-Sync-Verhalten (autoSyncInitialisieren).
 async function msGraphInitialisieren(){
+  if(window.DEMO_MODUS){ msGraphStatus = 'angemeldet'; msGraphKonto = { name: 'Demo', username: 'demo@beispiel.de' }; return; }
   if(!msGraphVerfuegbar()){ msGraphStatus = 'nicht_verfuegbar'; return; }
   try{
     const inst = await msGraphInstanzSicherstellen();
@@ -20233,6 +20271,7 @@ async function msGraphInitialisieren(){
 // Redirect-URI neu; msGraphInitialisieren() (siehe Start unten im Skript)
 // verarbeitet die Rueckkehr automatisch.
 async function msGraphAnmelden(){
+  if(window.DEMO_MODUS){ appToastAnzeigen('In der Demo nicht nötig.', 2000); return; }
   const inst = await msGraphInstanzSicherstellen();
   if(!inst) return;
   await inst.loginRedirect({ scopes: MSGRAPH_SCOPES });
@@ -22856,7 +22895,7 @@ const AppSperre = (()=>{
   function einst(){ try{ return JSON.parse(localStorage.getItem(LSK) || 'null') || {}; }catch(_){ return {}; } }
   function einstSetzen(e){ try{ localStorage.setItem(LSK, JSON.stringify(e)); }catch(_){} }
   function art(){ const e = einst(); return e.art === 'pin' ? 'pin' : 'passkey'; }
-  function aktiv(){ const e = einst(); return !!(e.an && (e.art === 'pin' ? (e.pin && e.pin.h) : e.id)); }
+  function aktiv(){ if(window.DEMO_MODUS) return false; const e = einst(); return !!(e.an && (e.art === 'pin' ? (e.pin && e.pin.h) : e.id)); }
   async function unterstuetzt(){
     try{ return !!(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); }catch(_){ return false; }
   }
@@ -23095,6 +23134,7 @@ const Speicher = (()=>{
   async function ver(text){ const iv = crypto.getRandomValues(new Uint8Array(12)); return { iv, d: new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(text))) }; }
   async function ent(p){ return dec.decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: p.iv }, key, p.d)); }
   async function start(){
+    if(window.DEMO_MODUS){ bereit = true; return; }   // Demo: echte Datenbank wird nicht geoeffnet
     db = await oeffnen();
     key = await tx('meta', 'readonly', s=> s.get('schluessel'));
     if(!key){
@@ -23119,6 +23159,7 @@ const Speicher = (()=>{
     bereit = true;
   }
   async function schreiben(k){
+    if(window.DEMO_MODUS) return;
     const t = mem.get(k);
     if(t == null) await tx('kv', 'readwrite', s=> s.delete(k));
     else { const p = await ver(t); await tx('kv', 'readwrite', s=> s.put(p, k)); }
@@ -23140,6 +23181,7 @@ const Speicher = (()=>{
     setzen(k, text){ if(mem.get(k) === text) return; mem.set(k, text); einreihen(k); },
     loeschen(k){ if(!mem.has(k)) return; mem.delete(k); einreihen(k); },
     schluesselListe(){ return Array.from(mem.keys()); },
+    demoFuellen(kv){ if(!window.DEMO_MODUS) return; mem.clear(); Object.entries(kv || {}).forEach(([k, v])=> mem.set(k, v)); },
     warten(){ return Promise.all(Array.from(schreibt.values()).map(z=> z.p).filter(Boolean)); }
   };
 })();
@@ -23152,7 +23194,41 @@ const Speicher = (()=>{
     if(app) app.innerHTML = '<div style="padding:24px; font-family:sans-serif;"><h3>Daten konnten nicht geöffnet werden</h3><p>' + String((e && e.message) || e).replace(/[<>&]/g, '') + '</p><p>Bitte die App einmal ganz schließen und neu öffnen. Ist sie noch in einem zweiten Fenster/Tab offen, dieses schließen.</p><button onclick="location.reload()">Neu laden</button></div>';
   }
   if(!window.indexedDB || !window.crypto || !crypto.subtle){ fehlerZeigen(new Error('Dieser Browser kann die Daten nicht verschlüsselt speichern.')); return; }
+  if(window.DEMO_MODUS){ demoVorbereiten().then(appLos, fehlerZeigen); return; }
   Speicher.start().then(appLos, fehlerZeigen);
+  // ---------- Demo: erfundene Daten, alles nur im Arbeitsspeicher ----------
+  // OneDrive wird durch eine lokale Nachbildung ersetzt (lokal/lokalgraph.js auf einem
+  // Tresor im Arbeitsspeicher); die echten Daten (Speicher, OneDrive) bleiben unberuehrt.
+  function skript(src){ return new Promise((ok, no)=>{ const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = ()=> no(new Error('Laden fehlgeschlagen: ' + src)); document.head.appendChild(e); }); }
+  async function demoVorbereiten(){
+    const app = document.getElementById('app');
+    if(app) app.innerHTML = '<div style="padding:32px 20px; text-align:center;"><h3>Demo wird vorbereitet …</h3><p>Mit erfundenen Daten. Deine echten Daten bleiben unberührt; in der Demo wird nichts gespeichert.</p></div>';
+    for(const f of ['lib/pdf-lib.min.js', 'lokal/krypto.js', 'lokal/tresor.js', 'lokal/mappe.js', 'lokal/docxpdf.js', 'lokal/lokalgraph.js']) await skript(f);
+    await Speicher.start();
+    await Tresor.pruefen(); await Tresor.demoOeffnen();
+    const r = await fetch('./lokal/demo-daten.json', { cache: 'no-cache' });
+    if(!r.ok) throw new Error('Demo-Daten nicht gefunden (HTTP ' + r.status + ')');
+    const snap = await r.json();
+    // Pfade der Launch-Daten ("Rechnungsapp/...") auf die Privatversion ("KVBW Onedrive/...") umstellen
+    const um = (p)=> String(p || '').replace(/^Rechnungsapp(?=\/|$)/, 'KVBW Onedrive');
+    snap.dateien.forEach(x=>{ x.meta.pfad = um(x.meta.pfad); if(x.meta.pfad === 'KVBW Onedrive') x.meta.name = 'KVBW Onedrive'; });
+    const kv = snap.kv || {}; snap.kv = {};
+    await Tresor.wiederherstellen(snap, 'ersetzen');
+    try{
+      const paket = await (await fetch('./starter/starter.json', { cache: 'no-cache' })).json();
+      for(const o of paket.ordner || []) await Tresor.ordnerAnlegen(o, 'demo');
+      for(const d of paket.dateien || []){
+        if(Tresor.metaPfad(d.ziel)) continue;
+        const q = await fetch('./starter/' + encodeURIComponent(d.quelle)); if(!q.ok) continue;
+        await Tresor.dateiSchreiben(d.ziel, await q.arrayBuffer(), q.headers.get('content-type') || '', null, 'demo');
+      }
+    }catch(e){ console.warn('Demo: Vorlagen', e); }
+    // Einstellungen der Demo (Einrichtung erledigt, Bedingungen bestaetigt)
+    Object.assign(kv, { einrichtung_gesehen: 'true', einrichtung_auto: 'false', einrichtung_schritt: 'null', einr_vollst_gefragt: 'true', dp_assistent_gezeigt: 'true',
+      app_sperre_abgelehnt: 'true', alpha_zustimmung: JSON.stringify({ version: 'demo', am: new Date().toISOString(), name: 'Demo' }) });
+    Speicher.demoFuellen(kv);
+    LokalGraph.einschalten();
+  }
 })();
 </script>
 </body>
