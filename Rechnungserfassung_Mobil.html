@@ -1453,10 +1453,14 @@ try{
 
   /* ---------------- 3 · EINHAND ---------------- */
   body.design-einhand:not(.dunkel){
-    --bg:#eceef2; --karte:#ffffff; --text:#101317; --text-schwach:#4d5562; --rand:#d5d9e0; --titelfarbe:#101317;
-    --ls-farbe:#1a4f85; --pt-farbe:#17663a; --grau-feld:#e3e6eb;
-    --ds-primaer:#101317; --ds-primaer-text:#ffffff; --ds-gkv:#5b3480; --ds-nav:#3a4558; --ds-nav-text:#dde2ea; --ds-gkv-hell:#efe8f6; --ds-gkv-text:#43255f;
+    /* hell, weicher: Schiefer statt Tiefschwarz, gebrochenes Weiss, helle Glas-Leiste */
+    --bg:#eef1f5; --karte:#fcfdfe; --text:#262c36; --text-schwach:#5d6675; --rand:#dce1e8; --titelfarbe:#262c36;
+    --ls-farbe:#1a4f85; --pt-farbe:#17663a; --grau-feld:#e6e9ef;
+    --ds-primaer:#2e3746; --ds-primaer-text:#ffffff; --ds-gkv:#5b3480; --ds-nav:rgba(252,253,254,.88); --ds-nav-text:#4f5866; --ds-gkv-hell:#efe8f6; --ds-gkv-text:#43255f;
   }
+  body.design-einhand:not(.dunkel) .ds-nav{-webkit-backdrop-filter:blur(14px) saturate(1.4); backdrop-filter:blur(14px) saturate(1.4); box-shadow:0 6px 24px rgba(30,40,60,.14), 0 0 0 1px rgba(30,40,60,.06);}
+  body.design-einhand:not(.dunkel) .ds-nav-btn.an{background:#2e3746; color:#fff;}
+  body.design-einhand:not(.dunkel) .ds-nav-btn.gross{background:#2e3746; color:#fff; box-shadow:0 6px 16px rgba(30,40,60,.28);}
   body.design-einhand.dunkel{
     --bg:#14171c; --karte:#1e232b; --text:#eef0f3; --text-schwach:#a3abb8; --rand:#313844; --titelfarbe:#eef0f3;
     --ls-farbe:#22609e; --pt-farbe:#1c7a46; --grau-feld:#262c35;
@@ -18786,11 +18790,11 @@ const DESIGNS = [
   { k: 'standard', titel: 'Standard', text: 'Bisheriges Aussehen.', farben: ['#2b3a55', '#1f5f9e', '#1f8a4c', '#7d4e9e'] },
   { k: 'klinik', titel: 'Klinik', text: 'Sachlich und ruhig: weiße Flächen, Dienst-Karte mit Förderung, offene Fälle, Leiste unten.', farben: ['#ffffff', '#141a24', '#1f5f9e', '#6e4391'] },
   { k: 'nacht', titel: 'Nachtfahrt', text: 'Dunkel und blendfrei: Dienst als Uhr-Ring, Einsätze als Zeitleiste, Bernstein-Akzent.', farben: ['#0b1020', '#141b2e', '#ffb547', '#c79bff'] },
-  { k: 'einhand', titel: 'Einhand', text: 'Alles im Daumenbereich: große Kacheln, kräftige Schrift, große Tippflächen.', farben: ['#eceef2', '#101317', '#5b3480', '#17663a'] }
+  { k: 'einhand', titel: 'Einhand', text: 'Alles im Daumenbereich: große Kacheln, kräftige Schrift, große Tippflächen.', farben: ['#eef1f5', '#2e3746', '#5b3480', '#17663a'] }
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v348';
+const APP_VERSION = 'v349';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -18801,7 +18805,7 @@ function designAnwenden(){
     if(d === 'nacht') b.classList.add('dunkel');
     else b.classList.toggle('dunkel', !!(ladeEinstellungen() || {}).dunkel);
     const dunkel = b.classList.contains('dunkel');
-    const tc = { standard: '#2b3a55', klinik: dunkel ? '#242b36' : '#ffffff', nacht: '#0b1020', einhand: dunkel ? '#1b2028' : '#eceef2' }[d];
+    const tc = { standard: '#2b3a55', klinik: dunkel ? '#242b36' : '#ffffff', nacht: '#0b1020', einhand: dunkel ? '#1b2028' : '#eef1f5' }[d];
     const m = document.querySelector('meta[name="theme-color"]'); if(m && tc) m.setAttribute('content', tc);
     if(typeof designGlobalNav === 'function') designGlobalNav();
   }catch(_){}
