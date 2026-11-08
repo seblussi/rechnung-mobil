@@ -2116,6 +2116,7 @@ try{
   #appSperre{position:fixed; inset:0; z-index:2147483647; background:var(--bg, #fff); display:flex; align-items:center; justify-content:center; padding:24px;}
   #appSperre[hidden]{display:none;}
   #appSperre .as-pin-ein, .as-dialog .as-pin-ein{display:block; width:200px; margin:0 auto 14px; font-size:26px; letter-spacing:8px; text-align:center; padding:10px; border-radius:10px; border:1px solid var(--rand, #ccc); background:var(--karte, #fff); color:var(--text, #111);}
+  body.einr-pflicht .ds-nav, body.einr-pflicht .ds-dock, body.einr-pflicht #btnEinstellungen{display:none !important;}
   .as-dialog{position:fixed; inset:0; z-index:2147483646; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; padding:16px;}
   .as-dialog .as-box{background:var(--karte, #fff); color:var(--text, #111); border-radius:16px; padding:22px 20px; width:min(360px, 100%); text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.3); max-height:calc(100vh - 32px); overflow:auto;}
   .as-dialog .as-box.as-breit{width:min(440px, 100%); text-align:left;}
@@ -4642,6 +4643,7 @@ function setzeTitel(t, zurueckZiel){
   titel.textContent = t;
   aktuelleAnsichtIstHauptbildschirm = false;
   aktuellerZurueckHandler = zurueckZiel || null;
+  document.body.classList.remove('einr-pflicht');
   if(zurueckZiel){ btnZurueck.style.visibility='visible'; btnZurueck.onclick = ()=> (typeof navZurueckAusfuehren === 'function' ? navZurueckAusfuehren(()=> zurueckZiel()) : zurueckZiel()); }
   else { btnZurueck.style.visibility='hidden'; btnZurueck.onclick=null; }
   // Jede Ansicht (Start, Maske, Rechnungspositionen, ...) ruft setzeTitel()
@@ -5682,8 +5684,8 @@ async function einrUnvollstaendigFragen(fehlt, nebenbei){
     'Der Assistent springt zum ersten fehlenden Schritt und geht von dort weiter; was schon eingerichtet ist, ist vorausgefüllt.',
     [{ label: nebenbei ? 'Später' : 'Zur Startseite', akt: 'ende' }, { label: 'Weiter einrichten', akt: 'weiter', primaer: true }]);
   betaOverlay.schliessen();
-  if(akt === 'weiter'){ LS.set('einrichtung_fehlt', fehlt.map(x=> x.schritt)); ansichtEinrichtung(fehlt[0].schritt); return true; }
-  if(!nebenbei){ LS.set('einrichtung_schritt', null); ansichtStart(); }
+  if(akt === 'weiter'){ LS.set('einrichtung_fehlt', fehlt.map(x=> x.schritt)); if(nebenbei) LS.set('einr_aus_einst', true); ansichtEinrichtung(fehlt[0].schritt); return true; }
+  if(!nebenbei){ LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); ansichtStart(); }
   return false;
 }
 async function einrSchonEingerichtetPruefen(){
@@ -5698,7 +5700,7 @@ async function einrSchonEingerichtetPruefen(){
     const akt = await betaOverlay.ergebnis('Bereits eingerichtet', 'Für dein Konto gibt es schon Einstellungen (einstellungen.ini) mit deinen Daten – <b>' + htmlEsc(w.ARZTNAME) + '</b>, ' + htmlEsc(w.ARZTADRESSE1) + '. Der Einrichtungsassistent wird nicht gebraucht.',
       [{ label: 'Trotzdem durchgehen', akt: 'weiter' }, { label: 'Zur Startseite', akt: 'ende', primaer: true }]);
     betaOverlay.schliessen();
-    if(akt === 'ende'){ LS.set('einrichtung_schritt', null); ansichtStart(); }
+    if(akt === 'ende'){ LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); ansichtStart(); }
   } finally { einrSchonEingerichtetPruefen.laeuft = false; }
 }
 function ansichtEinrichtung(schritt){
@@ -5706,8 +5708,20 @@ function ansichtEinrichtung(schritt){
   schritt = schritt || LS.get('einrichtung_schritt', 'start');
   LS.set('einrichtung_schritt', schritt);
   LS.set('einrichtung_gesehen', true);
-  const beenden = ()=>{ LS.set('einrichtung_schritt', null); LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false); ansichtStart(); };
-  setzeTitel('Einrichtung', beenden);
+  const beenden = ()=>{ LS.set('einrichtung_schritt', null); LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false); LS.set('einr_aus_einst', false); ansichtStart(); };
+  // Zurueck (Pfeil oben und Handy-Taste) geht nur einen Schritt zurueck; abbrechen laesst sich der Assistent
+  // nur, wenn er aus den Einstellungen geoeffnet wurde. Nav-Leiste und Einstellungen sind solange ausgeblendet.
+  const ausEinst = !!LS.get('einr_aus_einst', false);
+  const zurueckSchritt = ()=>{
+    const z = document.querySelector('#app .einr-knoepfe [data-einr].btn-sekundaer');
+    if(z){ z.click(); return; }
+    if(schritt === 'fertig'){ beenden(); return; }
+    if(ausEinst){ LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); ansichtEinstellungen(); return; }
+    appToastAnzeigen('Bitte die Einrichtung zuerst abschließen.', 2500);
+  };
+  setzeTitel('Einrichtung', zurueckSchritt);
+  if(schritt === 'start' && !ausEinst) btnZurueck.style.visibility = 'hidden';
+  document.body.classList.toggle('einr-pflicht', !ausEinst);
   const angemeldet = typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet';
   const schritte = ['start', 'sperre', 'anmelden', 'dateien', 'daten', 'brief', 'fertig'];
   const nr = schritte.indexOf(schritt) + 1;
@@ -6008,7 +6022,7 @@ async function einrNachAnmeldungPruefen(){
     const token = await msGraphTokenHolen(); if(!token) return;
     const da = await einrVorhanden(token, MSGRAPH_PFAD_UEBERSICHT);
     LS.set(k, true);
-    if(!da && await betaFrage('In deinem OneDrive fehlen die Dateien der App (Ordner „KVBW Onedrive“).\n\nJetzt einrichten?', 'Einrichten', 'Später')) ansichtEinrichtung('dateien');
+    if(!da && await betaFrage('In deinem OneDrive fehlen die Dateien der App (Ordner „KVBW Onedrive“).\n\nJetzt einrichten?', 'Einrichten', 'Später')){ LS.set('einr_aus_einst', true); ansichtEinrichtung('dateien'); }
   }catch(_){}
 }
 
@@ -18966,7 +18980,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v359';
+const APP_VERSION = 'v360';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19996,8 +20010,8 @@ function ansichtEinstellungen(){
       ungueltig: 'Die Zonen-Datei in OneDrive hat ein unbekanntes Format.', abgemeldet: 'Dafür bitte zuerst bei Microsoft/OneDrive anmelden.',
       fehler: 'OneDrive nicht erreichbar' + (r.text ? ' (' + htmlEsc(r.text) + ')' : '') + '.' })[r.status] || '';
   };
-  document.getElementById('btnEinrichtung').onclick = ()=> ansichtEinrichtung('start');
-  document.getElementById('btnEinrichtungBrief').onclick = ()=> ansichtEinrichtung('brief');
+  document.getElementById('btnEinrichtung').onclick = ()=>{ LS.set('einr_aus_einst', true); ansichtEinrichtung('start'); };
+  document.getElementById('btnEinrichtungBrief').onclick = ()=>{ LS.set('einr_aus_einst', true); ansichtEinrichtung('brief'); };
   document.getElementById('chkLsAssistent').onchange = (ev)=>{ const e = ladeEinstellungen() || {}; e.lsAssistent = ev.target.checked; speichereEinstellungen(e); };
   document.getElementById('chkKarteVektor').onchange = (ev)=>{ const e = ladeEinstellungen(); e.karteVektor = ev.target.checked; speichereEinstellungen(e); if(ev.target.checked) vkMaplibreHolen().catch(()=>{}); };
   document.getElementById('btnVkOffline').onclick = async ()=>{ await vkOfflineDialog(); const x = document.getElementById('vkOffEinst'); if(x) x.textContent = vkOffText(); };
