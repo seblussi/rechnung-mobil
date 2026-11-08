@@ -1952,7 +1952,8 @@ try{
      Quaderform wie gross (56x44), verkleinert. Niedrige Karte: unterer Block als Reihe. */
   .mini-gruppe{position:absolute; right:8px; z-index:5; display:flex; flex-direction:column; align-items:flex-end; gap:8px; pointer-events:none;}
   .mini-gruppe.oben{top:8px;} .mini-gruppe.unten{bottom:8px;}
-  .mini-ebenen.kurz .mini-gruppe.unten{flex-direction:row-reverse;}
+  .mini-gruppe.mitte{top:50%; transform:translateY(-50%);}
+  .mini-ebenen.kurz .mini-gruppe.mitte{top:auto; bottom:8px; right:64px; transform:none; flex-direction:row-reverse;}
   .mini-ebenen .mini-gruppe > button{position:relative !important; top:auto !important; right:auto !important; bottom:auto !important; left:auto !important; width:48px; height:38px; margin:0; flex:none; pointer-events:auto; border-radius:9px;}
   .nfp-start{background:#1a55c9;}
   .nfp-nfp{background:#111; border-radius:3px; width:14px; height:14px; margin:-7px 0 0 -7px;}
@@ -15273,7 +15274,7 @@ function karteKvbwGrau(box, kvbw){
       sk.className = (mini ? 'mini-stil' : 'vk-stil-knopf') + ' kvbw-grau kvbw-stil-grau';
       sk.setAttribute('aria-label', 'Kartenstil (nur auf der OSM-Karte)'); sk.title = 'Kartenstil nur auf der OSM-Karte';
       sk.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
-      ((mini && box.querySelector('.mini-gruppe.oben')) || box).appendChild(sk);
+      ((mini && box.querySelector('.mini-gruppe.oben')) || box).appendChild(sk); if(mini) requestAnimationFrame(miniKurzPruefen);
     }
   }
 }
@@ -15321,7 +15322,7 @@ function miniKarteHtml(d, opt){
   const posKnopf = '<button type="button" class="mini-pos" aria-label="Eigene Position" title="Position"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>';
   const ueberKnopf = '<button type="button" class="mini-ueber" aria-label="Übersicht" title="Übersicht"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="2.5"/></svg></button>';
   return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" data-ar="' + (fit.bw / fit.bh).toFixed(4) + '" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' +
-    '<div class="mini-gruppe oben">' + knopf + auge + '</div><div class="mini-gruppe unten">' + aedKnopf + posKnopf + ueberKnopf + grossKnopf + '</div></div>' +
+    '<div class="mini-gruppe oben">' + knopf + auge + '</div><div class="mini-gruppe mitte">' + aedKnopf + posKnopf + ueberKnopf + '</div><div class="mini-gruppe unten">' + grossKnopf + '</div></div>' +
     '<div class="sk-hinweis mini-attr">' + OSM_ATTR_HTML + ' · Zoom: zwei Finger bzw. Mausrad</div>' + (opt.ohneLegende ? '' : karteLegendeHtml(d));
 }
 function miniKarteAnsicht(el){
@@ -15521,7 +15522,7 @@ function miniKarteVektor(w, cfg){
       const sk = document.createElement('button'); sk.type = 'button'; sk.className = 'mini-stil'; sk.setAttribute('aria-label', 'Kartenstil und Ebenen');
       sk.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>';
       const menue = document.createElement('div'); menue.className = 'vk-menue mini-menue'; menue.hidden = true;
-      (w.querySelector('.mini-gruppe.oben') || w).appendChild(sk); w.appendChild(menue);
+      (w.querySelector('.mini-gruppe.oben') || w).appendChild(sk); w.appendChild(menue); requestAnimationFrame(miniKurzPruefen);
       sk.addEventListener('click', (ev)=>{ ev.stopPropagation(); if(!menue.hidden){ menue.hidden = true; return; } vkMenueFuellen(menue, ()=> stil, (neu)=>{ vkStilSetzen(neu); vkAlleMinisStil(); }, (id, an)=>{ vkAlleMinisEbene(id, an); }); menue.hidden = false; });
       menue.addEventListener('click', (ev)=> ev.stopPropagation());
       f.addEventListener('pointerdown', ()=>{ menue.hidden = true; });
@@ -15587,14 +15588,21 @@ document.addEventListener('click', (ev)=>{
 }, true);
 // niedrige kleine Karte: Knoepfe zweispaltig
 function miniKurzPruefen(){
+  // oben Ebene/Ansicht, Mitte AED/Position/Uebersicht (senkrecht mittig wie in der grossen Karte), unten Vollbild;
+  // reicht die Hoehe nicht, wandert der Mittelblock als Reihe neben den Vollbild-Knopf
   document.querySelectorAll('.mini-ebenen').forEach(w=>{
     const h = w.clientHeight; if(!h) return;
-    const o = w.querySelector('.mini-gruppe.oben'), u = w.querySelector('.mini-gruppe.unten');
-    const n = u ? [...u.children].filter(x=> getComputedStyle(x).display !== 'none').length : 0;
-    const bedarf = (o ? o.offsetHeight : 0) + (n ? n * 46 - 8 : 0) + 28;   // beide Bloecke untereinander + Abstaende
-    w.classList.toggle('kurz', h < bedarf);
+    const o = w.querySelector('.mini-gruppe.oben'), m = w.querySelector('.mini-gruppe.mitte'), u = w.querySelector('.mini-gruppe.unten');
+    const sichtbar = (g)=> g ? [...g.children].filter(x=> getComputedStyle(x).display !== 'none').length : 0;
+    const n = sichtbar(m), oH = o ? o.offsetHeight : 0, uH = sichtbar(u) ? 38 : 0;
+    const mH = n ? n * 46 - 8 : 0;
+    // Mittelblock mittig im freien Band zwischen oberem Block und Vollbild-Knopf
+    const bedarf = n ? 8 + oH + 8 + mH + 8 + uH + 8 : 0;
+    const kurz = h < bedarf; w.classList.toggle('kurz', kurz);
+    if(m){ if(kurz || !n) m.style.top = ''; else { const a = 8 + oH, b = h - 8 - uH; m.style.top = Math.round(a + (b - a - mH) / 2) + 'px'; m.style.transform = 'none'; } if(kurz) m.style.transform = ''; }
   });
 }
+
 // Startseite: kleine Karte fuellt den freien Platz bis zur Leiste -- nur solange alles ohne Scrollen passt
 // (z. B. ohne laufenden Dienst); sonst Standardhoehe aus dem Seitenverhaeltnis.
 function miniKarteFuellen(){
@@ -18794,7 +18802,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v349';
+const APP_VERSION = 'v350';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
