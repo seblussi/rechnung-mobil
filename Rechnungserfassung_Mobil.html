@@ -1849,7 +1849,7 @@ try{
   body.demo-an{padding-top:calc(28px + env(safe-area-inset-top));} body.demo-an header{top:calc(28px + env(safe-area-inset-top));}
   .einr a{color:var(--akzent, #2f6fd6);} .einr-liste{display:flex; flex-direction:column; gap:6px; margin:8px 0 12px;}
   .einr-z{display:flex; justify-content:space-between; gap:10px; padding:9px 12px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); font-size:14px;}
-  .einr-z b{font-weight:600; text-align:right;} .einr-z.ok b{color:#2fa84f;} .einr-z.fehlt b{color:#c77700;}
+  .einr-z{line-height:20px; align-items:flex-start;} .einr-z b{font-weight:600; text-align:right; flex:none; height:20px; line-height:20px; display:inline-flex; align-items:center; overflow:visible;} .einr-z.ok b{color:#2fa84f;} .einr-z.fehlt b{color:#c77700;}
   .einr-z.prueft b{color:var(--text-schwach); font-weight:500;}
   .alpha-text{margin:10px 0; font-size:13.5px; text-align:left;} .alpha-text summary{cursor:pointer; font-weight:600; color:var(--akzent, #2f6fd6);}
   .alpha-bed{max-height:45vh; overflow:auto; border:1px solid var(--rand); border-radius:10px; padding:4px 12px; margin-top:8px; background:var(--karte);}
@@ -4843,6 +4843,10 @@ if(window.DEMO_MODUS && !document.getElementById('demoLeiste')){
 }
 
 function ansichtStart(){
+  // Solange die Ersteinrichtung laeuft, gibt es keine Startseite (sonst blitzt sie zwischen den Schritten auf,
+  // z. B. nach der Microsoft-Anmeldung oder wenn der Abgleich die Startseite neu zeichnet)
+  try{ if(!window.DEMO_MODUS && typeof ansichtEinrichtung === 'function' && !LS.get('einr_aus_einst', false) &&
+         (LS.get('einrichtung_schritt', null) || (ersterStart && !LS.get('einrichtung_gesehen', false)))){ ansichtEinrichtung(); return; } }catch(_){}
   // App-Sperre ist freiwillig: noch keine eingerichtet -> einmal empfehlen ("Ohne App-Sperre weiter" moeglich)
   try{ if(LS.get('einrichtung_gesehen', false)) setTimeout(()=> alphaZugestimmt() ? (typeof AppSperre !== 'undefined' && AppSperre.pflichtPruefen()) : alphaZustimmungPruefen(), 300); }catch(_){}
   einstellungenOffen = false;
@@ -5790,17 +5794,16 @@ function ansichtEinrichtung(schritt){
       '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'brief', 'Speichern und weiter');
   } else if(schritt === 'brief'){
     const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
-    const eigen = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG) || LXP_WEITERLEITUNG_STANDARD;
+    const eigen0 = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG), eigen = eigen0 === LXP_WEITERLEITUNG_STANDARD ? '' : eigen0;
     html = '<h2>Briefversand (optional)</h2>' +
       '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Weil LetterXpress keine Aufrufe direkt aus dem Browser erlaubt, läuft der Versand über eine kleine <b>Weiterleitung</b> (Microsoft Azure, Rechenzentrum Frankfurt). Sie reicht nur durch und speichert nichts. Für den Alpha-Test kannst du die Weiterleitung von Sergej nutzen – dafür brauchst du nur deinen persönlichen <b>Zugangscode</b>.</p>' +
-      '<div class="einr-hinweis"><b>Wichtig:</b> Die App ist ein privates Projekt ohne Gewähr; ich übernehme keine Haftung. Du bist für deine Daten und den Versand selbst verantwortlich. Mit LetterXpress musst du selbst einen <b>Auftragsverarbeitungsvertrag (AVV)</b> nach DSGVO abschließen. Im Zweifel bitte rechtlich beraten lassen.</div>' +
-      '<h3>1. LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren, AVV abschließen, unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
+      '<h3>1. LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren (mit den AGB ist dort auch der Auftragsverarbeitungsvertrag dabei) und unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
       '<label class="einr-feld"><span>LetterXpress-Benutzername</span><input type="text" id="einrLxpNutzer" autocomplete="off" value="' + htmlEsc(w.BRIEF_BENUTZER || '') + '"></label>' +
       '<label class="einr-feld"><span>API-Key</span><input type="password" id="einrLxpKey" autocomplete="off" value="' + htmlEsc(w.BRIEF_APIKEY || '') + '"></label>' +
       '<h3>2. Zugangscode eintragen und prüfen</h3>' +
       '<label class="einr-feld"><span>Zugangscode (von Sergej)</span><input type="text" id="einrLxpZugang" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx" value="' + htmlEsc(w.BRIEF_ZUGANGSCODE || '') + '"></label>' +
-      '<details class="einr-erweitert"' + (eigen !== LXP_WEITERLEITUNG_STANDARD ? ' open' : '') + '><summary>Adresse der Weiterleitung (nur ändern, wenn du eine eigene nutzt)</summary>' +
-      '<label class="einr-feld"><span>Adresse der Weiterleitung</span><input type="url" id="einrLxpUrl" autocomplete="off" placeholder="https://….azurewebsites.net/api" value="' + htmlEsc(eigen) + '"></label>' +
+      '<details class="einr-erweitert"' + (eigen ? ' open' : '') + '><summary>Eigene Weiterleitung nutzen (optional)</summary>' +
+      '<label class="einr-feld"><span>Adresse der eigenen Weiterleitung (leer lassen = die von Sergej)</span><input type="url" id="einrLxpUrl" autocomplete="off" placeholder="https://….azurewebsites.net/api" value="' + htmlEsc(eigen) + '"></label>' +
       '<p class="einr-klein"><b>Eigene Weiterleitung statt der von Sergej:</b> eigenes Azure-Konto anlegen und ein Skript ausführen (ca. 15 Minuten). Dann bleibt kein Zugangscode nötig.</p>' +
       '<p class="einr-klein"><a class="btn-primaer einr-azure-link" href="https://azure.microsoft.com/de-de/pricing/purchase-options/azure-account" target="_blank" rel="noopener">Kostenloses Azure-Konto anlegen</a></p>' +
       '<ol class="einr-klein einr-azure-schritte"><li>„Kostenlos starten“ wählen und mit deinem Microsoft-Konto anmelden (dasselbe wie für OneDrive geht).</li>' +
@@ -5819,7 +5822,7 @@ function ansichtEinrichtung(schritt){
   } else {
     html = '<h2>Fertig 🎉</h2><p>Die App ist eingerichtet. Ein paar Tipps:</p><ul class="einr-tipps">' +
       '<li>Unter <b>Einstellungen › Design</b> die Optik wählen (z. B. „Einhand“).</li>' +
-      (lxpAdresseNormal(((iniCacheLaden() || {}).werte || {}).BRIEF_WEITERLEITUNG)
+      ((w0=> w0.BRIEF_BENUTZER && (lxpAdresseNormal(w0.BRIEF_WEITERLEITUNG) || String(w0.BRIEF_ZUGANGSCODE || '').trim()))(((iniCacheLaden() || {}).werte || {}))
         ? '<li><b>Briefversand</b> ist eingerichtet – zunächst im <b>Testmodus</b> (nichts wird gedruckt). Unter Einstellungen › Briefversand ausschalten, wenn alles passt.</li>'
         : '<li>Den <b>Briefversand</b> kannst du jederzeit nachholen: Einstellungen › „Briefversand einrichten“.</li>') +
       '<li>Auf dem iPhone: in Safari <b>Teilen › Zum Home-Bildschirm</b>, dann startet die App wie eine normale App.</li></ul>' +
@@ -5951,13 +5954,14 @@ function einrBriefStarten(){
     const b = $('einrLxpPruefen'); b.disabled = true; b.textContent = 'Prüfe …'; zuruecksetzen();
     erg.innerHTML = '<div class="einr-z"><span>Verbinde mit der Weiterleitung …</span><b>…</b></div>';
     const e = eingaben();
-    const r = await einrWeiterleitungPruefen(e.url, e.nutzer, e.key, e.zugang);
+    const eigeneUrl = lxpAdresseNormal(e.url);
+    const r = await einrWeiterleitungPruefen(eigeneUrl || LXP_WEITERLEITUNG_STANDARD, e.nutzer, e.key, eigeneUrl ? e.zugang : (e.zugang || ''));
     if(!$('einrLxpPruefen')) return;
     erg.innerHTML = r.zeilen.map(x=> '<div class="einr-z ' + (x.ok === true ? 'ok' : x.ok === false ? 'fehlt' : '') + '"><span>' + htmlEsc(x.text) + '</span><b>' + (x.ok === true ? '✓' : x.ok === false ? '✗' : 'i') + '</b></div>').join('') +
       (r.ok ? '<div class="einr-ok" style="margin-top:4px;"><b>✓ Hat geklappt.</b> Jetzt speichern.</div>' : '');
-    if(r.url && $('einrLxpUrl').value.trim() !== r.url) $('einrLxpUrl').value = r.url;
+    if(eigeneUrl && r.url && $('einrLxpUrl').value.trim() !== r.url) $('einrLxpUrl').value = r.url;
     b.disabled = false; b.textContent = 'Erneut prüfen';
-    if(r.ok){ geprueft = Object.assign({}, eingaben(), { url: r.url }); knopf.disabled = false; }
+    if(r.ok){ geprueft = Object.assign({}, eingaben(), { url: eigeneUrl ? r.url : '' }); knopf.disabled = false; }
   };
   knopf.onclick = async ()=>{
     if(!geprueft) return;
@@ -5971,7 +5975,7 @@ function einrBriefStarten(){
     ansichtEinrichtung('fertig');
   };
   // schon eingetragen -> gleich pruefen
-  if($('einrLxpUrl').value.trim() && $('einrLxpNutzer').value.trim() && $('einrLxpKey').value.trim()) $('einrLxpPruefen').click();
+  if(($('einrLxpUrl').value.trim() || $('einrLxpZugang').value.trim()) && $('einrLxpNutzer').value.trim() && $('einrLxpKey').value.trim()) $('einrLxpPruefen').click();
 }
 async function einrDateienPruefen(){
   const liste = document.getElementById('einrListe'), knopfBox = document.getElementById('einrDateiKnopf');
@@ -8379,7 +8383,7 @@ const INI_FELDER = [
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
   {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Zugangscode der Weiterleitung (nur wenn du die Weiterleitung eines anderen nutzt)'},
   {k:'BRIEF_TESTMODUS',  typ:'bool', label:'Testmodus (es wird nichts gedruckt/berechnet)', standard:'1'},
-  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Weiterleitung (leer = die von Sergej, dann Zugangscode nötig; sonst eigene https://….azurewebsites.net/api)'},
+  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung (leer lassen = die von Sergej, dann mit Zugangscode)'},
 ];
 const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
@@ -8714,6 +8718,7 @@ function iniFeldWertFuerAnzeige(f, werte){
   const roh = (werte && f.k in werte) ? werte[f.k] : (f.standard !== undefined ? f.standard : '');
   if(f.typ === 'bool') return String(roh).trim() === '1';
   if(f.typ === 'mehrzeilig') return String(roh).split('~NL~').join('\n');
+  if(f.k === 'BRIEF_WEITERLEITUNG' && typeof lxpAdresseNormal === 'function' && lxpAdresseNormal(roh) === LXP_WEITERLEITUNG_STANDARD) return '';   // Standard nicht anzeigen (leer = Standard)
   return String(roh);
 }
 function htmlEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -12632,7 +12637,7 @@ function betaHaftungHtml(){
         der Patientendaten verarbeitet, ist ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO) nötig und der
         Dienstleister zur Verschwiegenheit zu verpflichten:</p>
         <ul>
-          <li><b>LetterXpress:</b> <a href="${LXP_AVV_LINK}" target="_blank" rel="noopener">AVV als PDF</a> – ausfüllen, unterschreiben und an LetterXpress schicken.</li>
+          <li><b>LetterXpress:</b> Der AVV ist Bestandteil der AGB und wird mit der Registrierung automatisch geschlossen (<a href="${LXP_AVV_LINK}" target="_blank" rel="noopener">AVV zum Nachlesen</a>).</li>
           <li><b>Microsoft (OneDrive):</b> Einen Vertrag zur Auftragsverarbeitung gibt es nur für geschäftliche Konten (Microsoft 365 Business) – <a href="${MS_DPA_LINK}" target="_blank" rel="noopener">Microsoft-DPA</a>. Für private Microsoft-Konten gibt es keinen.</li>
           <li><b>Weiterleitung für den Briefversand (Azure):</b> Wer die Weiterleitung eines anderen benutzt, braucht mit diesem einen AVV – oder richtet sich eine eigene ein.</li>
         </ul>
@@ -19036,7 +19041,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v361';
+const APP_VERSION = 'v362';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -22325,10 +22330,12 @@ let ersterStart = false;
 try{ ersterStart = LS.get('einstellungen', null) === null && !LS.get('einrichtung_gesehen', false) && !ladeFaelle('ls').length && !ladeFaelle('pt').length; }catch(_){}
 try{ themaAnwenden(); }catch(e){}
 try{ dunkelModusAutoSyncEinrichten(); }catch(e){}
-try{ ansichtStart(); }catch(e){}
 try{
   if(ersterStart && einrSchonEingerichtet()) ersterStart = false;   // einstellungen.ini schon da -> nicht noetig
   if(ersterStart) LS.set('einrichtung_auto', true);
+}catch(e){}
+try{ ansichtStart(); }catch(e){}   // laeuft die Einrichtung (oder erster Start), zeigt das direkt den Assistenten
+try{
   if(!ersterStart && !LS.get('einrichtung_schritt', null)) setTimeout(()=>{ try{ if(aktuelleAnsichtIstHauptbildschirm) ansichtWiederherstellen(); }catch(_){} }, 0);
   if(ersterStart || LS.get('einrichtung_schritt', null)) setTimeout(()=>{ if(aktuelleAnsichtIstHauptbildschirm) ansichtEinrichtung(); }, 300);
   // schon (teilweise) eingerichtet: einmal pruefen, ob noch etwas fehlt (Dateien, Briefversand/Azure ...)
