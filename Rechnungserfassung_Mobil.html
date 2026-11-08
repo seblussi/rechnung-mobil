@@ -1948,7 +1948,10 @@ try{
   .fbx-kpi div{background:var(--grau-feld); border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; font-size:11.5px; color:var(--text-schwach);}
   .fbx-kpi b{font-size:15px; color:var(--text);}
   .fbx-ortkarte{padding:4px 12px 12px;} .fbx-ortkarte:empty{display:none;}
-  .fbx-ortnr{display:inline-flex; width:17px; height:17px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; align-items:center; justify-content:center; margin-right:4px; vertical-align:1px;}
+  .fbx-ortnr{display:inline-flex; flex:none; width:17px; height:17px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; align-items:center; justify-content:center; margin-right:5px; vertical-align:1px;}
+  .fbx-ortnr.leer{background:none;}
+  .fbx-mit-nr > .fbx-fall{grid-template-columns:64px minmax(0,1fr) auto;}
+  .fbx-mit-nr > .fbx-fall .fbx-zeit{display:flex; align-items:center; white-space:nowrap;}
   .fbx-ortnr.ls{background:var(--ls-farbe);} .fbx-ortnr.pt{background:var(--pt-farbe);} .fbx-ortnr.gkv{background:#7d4e9e;}
   .mini-ebenen{position:relative;}
   .mini-stil{position:absolute; top:100px; right:8px; z-index:5; width:40px; height:40px; margin:0; padding:0; border-radius:9px; border:2px solid #fff;
@@ -3512,6 +3515,12 @@ async function fbTagKarteZeichnen(d, di){
     nr++; pois.push({ lat: x.f.geo.lat, lon: x.f.geo.lon, kl: x.f.art, nr, idx: x.fi });
     if(zeile && !zeile.querySelector('.fbx-ortnr')) zeile.insertAdjacentHTML('afterbegin', '<span class="fbx-ortnr ' + x.f.art + '">' + nr + '</span>');
   });
+  // Nummer vor der Uhrzeit in derselben Zeile; Faelle ohne Ort bekommen einen leeren Platzhalter (Zeiten bleiben buendig)
+  if(nr) faelle.forEach(x=>{
+    const zeile = document.querySelector('[data-fbfall="' + di + '-' + x.fi + '"] .fbx-zeit'); if(!zeile) return;
+    const fall = zeile.closest('.fbx-fall'); if(fall && fall.parentElement) fall.parentElement.classList.add('fbx-mit-nr');
+    if(!zeile.querySelector('.fbx-ortnr')) zeile.insertAdjacentHTML('afterbegin', '<span class="fbx-ortnr leer"></span>');
+  });
   const hinweis = ohne ? '<div class="sk-hinweis">' + ohne + ' ohne Ort (nur in der Excel oder ohne Adresse – GKV erst ab „Wegegeld ermitteln“).</div>' : '';
   if(!pois.length){ box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Einsatzorte</b><small>keine Orte bekannt</small></span></div>' + hinweis; return; }
   const fallKlick = (i)=>{ const z = document.querySelector('[data-fbfall="' + di + '-' + i + '"]'); if(z) z.click(); };
@@ -4215,15 +4224,30 @@ async function ausZwischenablageEinlesen(art, ctx){
    ========================================================== */
 // fuer Kartenuebersichten: Strasse nicht gefunden -> wenigstens den Ort (PLZ Ort) zeigen
 async function geocodeMitOrt(adresse){
-  let g = null; try{ g = await geocode(adresse); }catch(_){ return null; }
+  let g = null; try{ g = await geocode(adresse); }catch(_){}
   if(g) return g;
   const teile = String(adresse || '').split(',').map(x=> x.trim()).filter(Boolean);
   if(teile.length < 2) return null;
-  try{ return await geocode(teile[teile.length - 1]); }catch(_){ return null; }
+  const ort = teile[teile.length - 1];
+  try{ g = await geocode(ort); }catch(_){}
+  if(g) return g;
+  const plz = (ort.match(/\b\d{5}\b/) || [])[0];   // notfalls nur die PLZ
+  if(plz && plz !== ort){ try{ g = await geocode(plz + ', Deutschland'); }catch(_){} }
+  return g || null;
+}
+// Nominatim erlaubt hoechstens eine Anfrage pro Sekunde -- sonst HTTP 429 und gar kein Ergebnis.
+// Deshalb nacheinander mit Abstand; bei 429/503 einmal kurz warten und wiederholen.
+let geocodeKette = Promise.resolve(), geocodeLetzte = 0;
+function geocodeTakt(){
+  const p = geocodeKette.then(async ()=>{ const w = geocodeLetzte + 1100 - Date.now(); if(w > 0) await new Promise(r=> setTimeout(r, w)); geocodeLetzte = Date.now(); });
+  geocodeKette = p.catch(()=>{}); return p;
 }
 async function geocode(adresse){
   const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(adresse);
-  const res = await fetch(url, {headers:{'Accept':'application/json'}});
+  await geocodeTakt();
+  let res = await fetch(url, {headers:{'Accept':'application/json'}});
+  if(res.status === 429 || res.status === 503){ await new Promise(r=> setTimeout(r, 2500)); await geocodeTakt(); res = await fetch(url, {headers:{'Accept':'application/json'}}); }
+  if(!res.ok) throw new Error('Ortssuche HTTP ' + res.status);
   const data = await res.json();
   if(!data || !data.length) return null;
   return {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon)};
@@ -19041,7 +19065,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v362';
+const APP_VERSION = 'v363';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
