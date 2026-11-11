@@ -194,8 +194,8 @@ try{
   .beta-pdf-kopf{display:flex; align-items:center; gap:6px; padding:calc(8px + env(safe-area-inset-top)) 8px 8px; background:#2c3e50; color:#fff;}
   .beta-pdf-kopf button{width:40px; height:36px; padding:0; border:none; border-radius:8px; background:rgba(255,255,255,.12); color:#fff; font-size:18px;}
   .beta-pdf-titel{flex:1; min-width:0; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .beta-pdf-seiten{flex:1; overflow:auto; padding:8px; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y;}
-  .beta-pdf-inhalt{margin:0 auto;}
+  .beta-pdf-seiten{flex:1; overflow:auto; padding:8px; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; display:flex; flex-direction:column;}
+  .beta-pdf-inhalt{margin:auto; flex:none;}   /* kleiner als der Bildschirm: mittig; groesser: scrollbar ohne Abschneiden */
   .beta-pdf-seiten canvas{display:block; width:100%; margin:0 0 2.5%; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.4);}
   .beta-pdf-seiten .leer-hinweis{color:#eee;}
   /* Einstellungen: einklappbare Abschnitte */
@@ -10153,22 +10153,33 @@ async function betaPdfAnzeigen(opt){
   const inhaltEl = ()=> seitenEl.querySelector('.beta-pdf-inhalt');
   const zoomSetzen = (z)=>{ zoom = Math.max(1, Math.min(4, z)); const w = inhaltEl(); if(w) w.style.width = (zoom * 100) + '%'; };
   const PAD = 8;
-  // Zwei-Finger-Zoom (die App selbst ist nicht zoombar): um den Mittelpunkt der Finger
+  // Zwei-Finger-Zoom (die App selbst ist nicht zoombar): waehrend der Geste frei per Transform um die Fingermitte
+  // (keine Scroll-Grenzen), beim Loslassen Zoom uebernehmen und so scrollen, dass der Punkt unter den Fingern bleibt
   if(el._pinchWeg) el._pinchWeg();
   { let p0 = null;
     const abst = (t)=> Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
-    const start = (ev)=>{ if(ev.touches.length !== 2) return; const r = seitenEl.getBoundingClientRect();
-      const mx = (ev.touches[0].clientX + ev.touches[1].clientX) / 2 - r.left, my = (ev.touches[0].clientY + ev.touches[1].clientY) / 2 - r.top;
-      p0 = { d: abst(ev.touches) || 1, z: zoom, fx: (seitenEl.scrollLeft + mx - PAD) / zoom, fy: (seitenEl.scrollTop + my - PAD) / zoom, mx, my }; };
-    const zug = (ev)=>{ if(!p0 || ev.touches.length !== 2) return; ev.preventDefault();
-      zoomSetzen(p0.z * abst(ev.touches) / p0.d);
-      seitenEl.scrollLeft = p0.fx * zoom - p0.mx + PAD; seitenEl.scrollTop = p0.fy * zoom - p0.my + PAD; };
-    const ende = (ev)=>{ if(ev.touches.length < 2) p0 = null; };
+    const mitte = (t)=> ({ x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2 });
+    const start = (ev)=>{ if(ev.touches.length !== 2) return; const w = inhaltEl(); if(!w) return;
+      const r = w.getBoundingClientRect(), m = mitte(ev.touches);
+      p0 = { d: abst(ev.touches) || 1, z: zoom, m, r, s: 1, mj: m };
+      w.style.transformOrigin = (m.x - r.left) + 'px ' + (m.y - r.top) + 'px'; w.style.willChange = 'transform'; };
+    const zug = (ev)=>{ if(!p0 || ev.touches.length !== 2) return; ev.preventDefault(); const w = inhaltEl(); if(!w) return;
+      const zNeu = Math.max(1, Math.min(4, p0.z * abst(ev.touches) / p0.d)); p0.s = zNeu / p0.z; p0.mj = mitte(ev.touches);
+      w.style.transform = 'translate(' + (p0.mj.x - p0.m.x) + 'px,' + (p0.mj.y - p0.m.y) + 'px) scale(' + p0.s + ')'; };
+    const ende = (ev)=>{ if(!p0 || ev.touches.length >= 2) return; const w = inhaltEl(), q = p0; p0 = null; if(!w) return;
+      // Punkt unter der Startmitte in Seitenkoordinaten (Zoom 1)
+      const cx = (q.m.x - q.r.left) / q.z, cy = (q.m.y - q.r.top) / q.z;
+      w.style.transform = ''; w.style.willChange = '';
+      zoomSetzen(q.z * q.s);
+      const r2 = w.getBoundingClientRect();
+      seitenEl.scrollLeft += (r2.left + cx * zoom) - q.mj.x;
+      seitenEl.scrollTop += (r2.top + cy * zoom) - q.mj.y; };
     seitenEl.addEventListener('touchstart', start, { passive: true });
     seitenEl.addEventListener('touchmove', zug, { passive: false });
     seitenEl.addEventListener('touchend', ende); seitenEl.addEventListener('touchcancel', ende);
     el._pinchWeg = ()=>{ seitenEl.removeEventListener('touchstart', start); seitenEl.removeEventListener('touchmove', zug); seitenEl.removeEventListener('touchend', ende); seitenEl.removeEventListener('touchcancel', ende); };
   }
+
   el.querySelector('[data-a="klein"]').onclick = ()=> zoomSetzen(zoom - 0.5);
   el.querySelector('[data-a="gross"]').onclick = ()=> zoomSetzen(zoom + 0.5);
   // Als Brief senden (sofort oder zu einem Datum) -- nur wenn die Rechnung noch nicht verschickt ist
@@ -19371,7 +19382,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v379';
+const APP_VERSION = 'v380';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
