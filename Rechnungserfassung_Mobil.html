@@ -139,7 +139,17 @@ try{
   .gesamt-knoepfe button.betont{background:#e67e22; border-color:#e67e22; color:#fff; font-weight:600;}
   .gesamt-ziel{font-size:12px; color:var(--text-schwach);}
   .gesamt-ziel.echt{color:#c0392b; font-weight:700;}
-  .gesamt-abschnitt{font-size:12px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--text-schwach); margin:14px 2px 6px;}
+.gesamt-abschnitt{font-size:12px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--text-schwach); margin:14px 2px 6px;}
+  .offen-dash{background:var(--karte); border:1px solid var(--rand); border-radius:12px; margin:8px 0 12px; padding:0 12px;}
+  .offen-dash > summary{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 0; cursor:pointer; font-size:15px; list-style:none;}
+  .offen-dash > summary::-webkit-details-marker{display:none;}
+  .offen-dash > summary::after{content:'▾'; color:var(--text-schwach); margin-left:6px;} .offen-dash:not([open]) > summary::after{content:'▸';}
+  .offen-verzug{margin-left:auto; font-size:12.5px; font-weight:700; color:#b3261e; background:rgba(179,38,30,.1); padding:3px 8px; border-radius:999px;}
+  .offen-zeile{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--rand);}
+  .offen-zeile:last-child{padding-bottom:12px;}
+  .offen-inhalt{flex:1; min-width:0;} .offen-inhalt b{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .offen-inhalt small{color:var(--text-schwach); font-size:12.5px;} .offen-zeile.verzug .offen-inhalt small{color:#b3261e;}
+  .offen-bezahlt{flex:none; width:auto; margin:0; min-height:36px; padding:6px 12px; border-radius:9px; border:1px solid var(--rand); background:var(--grau-feld); color:var(--text); font-size:13.5px; font-weight:600;}
   .fall-zeile.offen{border-style:dashed; border-color:#e67e22;}
   .fall-zeile.offen .offen-text{color:#d35400; font-weight:600;}
   .badge-hochladen{display:inline-block; font-size:22px; line-height:1; cursor:pointer; color:#e67e22; margin-left:6px;}
@@ -166,6 +176,9 @@ try{
   .gesamt-aktionen-knoepfe button{display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 2px; font-size:11px; border:none; background:none; color:var(--text); width:auto;}
   .gesamt-aktionen-knoepfe button .sym{font-size:22px; line-height:1;}
   .gesamt-aktionen-knoepfe button:disabled{opacity:.3;}
+  /* gesperrte Hauptknoepfe sichtbar ausgegraut (z. B. „Los geht's“ bis zum Haken) */
+  .btn-primaer:disabled, .btn-sekundaer:disabled{opacity:.45; filter:grayscale(.6); cursor:not-allowed; box-shadow:none;}
+  .btn-primaer.geaendert{background:var(--aend-farbe, var(--ds-primaer)) !important; border-color:var(--aend-farbe, var(--ds-primaer)) !important; color:#fff !important;}
   .gesamt-aktionen-knoepfe button[data-a="weg"]{color:#c0392b;}
   /* Formular im eigenen Fenster */
   .beta-form label{display:block; font-size:13px; color:var(--text-schwach); margin:10px 0 0;}
@@ -173,6 +186,10 @@ try{
   .beta-form-fehler{color:#c0392b; font-weight:600; margin-bottom:6px;}
   /* PDF-Anzeige */
   .beta-pdf{position:fixed; inset:0; z-index:10001; background:#525659; display:none; flex-direction:column;}
+  .intro-text{font-size:15.5px; line-height:1.55;} .intro-punkte{display:flex; gap:6px; justify-content:center; margin-top:14px;}
+  .intro-punkte span{width:7px; height:7px; border-radius:50%; background:var(--rand);} .intro-punkte span.an{background:var(--ds-primaer, #4a5568);}
+  body.pdf-dialog .beta-overlay{z-index:10003;}
+  .beta-pdf-kopf button.beta-pdf-senden{width:auto; padding:0 12px; font-size:15px; font-weight:600; background:#2f855a;}
   .beta-pdf.aktiv{display:flex;}
   .beta-pdf-kopf{display:flex; align-items:center; gap:6px; padding:calc(8px + env(safe-area-inset-top)) 8px 8px; background:#2c3e50; color:#fff;}
   .beta-pdf-kopf button{width:40px; height:36px; padding:0; border:none; border-radius:8px; background:rgba(255,255,255,.12); color:#fff; font-size:18px;}
@@ -214,7 +231,7 @@ try{
   .goae-treffer button{display:block; width:100%; text-align:left; margin:0 0 4px; padding:7px 9px; font-size:12.5px; line-height:1.3; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .goae-treffer button span{color:var(--text-schwach);}
   .routenoptionen .routenoptionen-hinweis.warn{background:var(--warnung-bg); border:1px solid var(--warnung-rand); color:var(--warnung-text); border-radius:8px; padding:9px 11px; font-size:13px; margin-top:6px;}
-  body.diag-tippen{padding-bottom:80vh !important;}
+  body.diag-klicken{padding-bottom:80vh !important;}
   .fall-zeile.unfertig{border-color:#8e44ad;}
   .fall-zeile.unfertig .offen-text{color:#8e44ad;}
   .fall-zeile.andere-ablage{opacity:.7;}
@@ -1064,7 +1081,7 @@ try{
     display:block; width:auto; flex:0 0 auto; margin-bottom:0;
     padding:10px 14px; font-size:13.5px; white-space:nowrap; align-self:center;
   }
-  /* NUTZERWUNSCH: Backup-Zeile antippen klappt die enthaltenen Rechnungen
+  /* NUTZERWUNSCH: Backup-Zeile anklicken klappt die enthaltenen Rechnungen
      (LS+PT) darunter auf. Der Abstand zwischen Eintraegen sitzt jetzt am
      Wrapper statt an .fall-zeile selbst, damit Zeile + aufgeklapptes Panel
      optisch als EIN Block zusammengehoeren. */
@@ -1123,7 +1140,7 @@ try{
   .badge-neu.pt{background:var(--pt-farbe);}
   /* Versand-/PDF-Status, nur in der Rechnungsverwaltung (ansichtAlleRechnungen):
      Brief-Symbol = bereits versendet, Dokument-Symbol = PDF vorhanden und
-     antippbar. Ein goldenes "S" ("bereits in der Übersicht vorhanden") gibt
+     anklickbar. Ein goldenes "S" ("bereits in der Übersicht vorhanden") gibt
      es bewusst nicht mehr: in "Lokale Rechnungen" ist jede verbleibende
      Zeile per Definition NOCH NICHT übernommen (sie verschwindet automatisch
      sobald doch, siehe lokaleFaelleBereitsUebernommenEntfernen), und in der
@@ -1150,7 +1167,7 @@ try{
      Dokument-Symbols gezeigt (die beiden schliessen sich gegenseitig aus:
      entweder es gibt schon ein PDF zum Ansehen, oder der Fall braucht noch
      eine manuelle Korrektur -- nie beides). Korrektur wie gewohnt per
-     Antippen der Zeile -> "Rechnung korrigieren" am PC. */
+     Anklicken der Zeile -> "Rechnung korrigieren" am PC. */
   .fall-zeile.unvollstaendig .name{color:var(--fehler);}
   .badge-unvollstaendig{display:inline-block; font-size:26px; line-height:1;
     color:var(--fehler); vertical-align:middle;}
@@ -2757,7 +2774,7 @@ async function msGraphUebersichtFingerprintsLaden(){
 // PC-Faelle). Neueste zuerst (Excel-Zeilenreihenfolge umgedreht). PDF-Links
 // werden hier bewusst NICHT vorab pro Zeile geladen (koennte bei einer
 // langen Uebersicht sehr viele Graph-Anfragen ausloesen) -- das passiert
-// erst bei Bedarf beim Antippen einer Zeile, siehe ansichtAlleRechnungen().
+// erst bei Bedarf beim Anklicken einer Zeile, siehe ansichtAlleRechnungen().
 async function msGraphAlleZeilenLaden(){
   if(msGraphStatus!=='angemeldet'){ rnLiveFehler = 'nicht bei Microsoft angemeldet'; return null; }
   // KORREKTUR: ueber msGraphUebersichtZeilenRoh -- faellt die Excel-
@@ -3978,7 +3995,7 @@ function datumKurzeingabeErgaenzen(eingabe, bisherigerWert){
   // vollstaendig/korrekt mit Punkten eingegeben).
   const direkt = normalisiereDatum(roh);
   if(direkt) return direkt;
-  // KORREKTUR: ein versehentlich VERGESSENER Punkt beim schnellen Tippen
+  // KORREKTUR: ein versehentlich VERGESSENER Punkt beim schnellen Klicken
   // (z.B. "0101.26" statt "01.01.26", oder "01.0126" statt "01.01.26")
   // fuehrte bisher zu einer Fehlermeldung, obwohl die Absicht eindeutig
   // war. Alle Punkte/Trennzeichen werden dafuer entfernt und die
@@ -5190,7 +5207,7 @@ function ansichtLuftlinienTool(){
   document.getElementById('btnLuftMapsOeffnen').onclick = ()=>{
     window.open('https://www.google.com/maps', '_blank');
   };
-  // Fruehere Startadressen (nur auf diesem Geraet), antippen = uebernehmen, x = loeschen
+  // Fruehere Startadressen (nur auf diesem Geraet), anklicken = uebernehmen, x = loeschen
   const startListeZeichnen = ()=>{
     const el = document.getElementById('luftStartListe'); if(!el) return;
     const eL = ladeEinstellungen();
@@ -5825,12 +5842,36 @@ async function einrSchonEingerichtetPruefen(){
     if(akt === 'ende'){ LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); ansichtStart(); }
   } finally { einrSchonEingerichtetPruefen.laeuft = false; }
 }
+// ---------- Kurze Einfuehrung nach der Ersteinrichtung (auch aus den Einstellungen) ----------
+const EINFUEHRUNG = [
+  ['Neuer Fall', 'Mit dem großen <b>+</b> unten legst du von überall einen neuen Fall an: <b>GKV-Patient</b> (Fahrdienst), <b>Privatpatient</b> oder <b>Leichenschau</b>. Zeitzuschläge und Wegegeld setzt die App nach Datum, Uhrzeit und Entfernung selbst.'],
+  ['Dienst', 'Oben auf der Startseite steht dein laufender Dienst. Anklicken, um ihn zu wählen oder zu ändern – die GKV-Fälle landen dann im richtigen Dienst im <b>Fahrtenbuch</b>.'],
+  ['Karte und Wegegeld', 'Die Karte zeigt deine Einsatzorte, Zonen und die Wache. Im Fall „auf Karte wählen“: Adresse suchen oder die Einsatzstelle anklicken – Zone, Luftlinie und Wegegeld ergeben sich daraus.'],
+  ['Rechnungen', 'Speichern erstellt Word und PDF in deinem OneDrive und trägt alles in die Rechnungsübersicht ein. In der PDF-Vorschau: <b>Teilen</b> oder <b>Senden</b> als Brief (sofort oder zu einem Datum, Testbrief oder echt).'],
+  ['Überblick', 'Unter <b>Rechnungen</b> siehst du oben die <b>offenen Rechnungen</b> mit Verzug und bestätigst den Zahlungseingang mit einem Klick. Das <b>Fahrtenbuch</b> zeigt Dienste, Fälle, Beträge und Wege.'],
+  ['Einstellungen', 'Arztdaten, Briefversand, Design und Offline-Karte findest du unter <b>Einstellungen</b>. Dort lässt sich auch die <b>Demo</b> mit erfundenen Daten starten und diese Einführung wieder aufrufen.']
+];
+async function appEinfuehrung(){
+  for(let i = 0; i < EINFUEHRUNG.length; i++){
+    const [titel, text] = EINFUEHRUNG[i];
+    const punkte = '<div class="intro-punkte">' + EINFUEHRUNG.map((_, k)=> '<span' + (k === i ? ' class="an"' : '') + '></span>').join('') + '</div>';
+    const letzte = i === EINFUEHRUNG.length - 1;
+    const akt = await betaOverlay.ergebnis(titel, '<div class="intro-text">' + text + '</div>' + punkte,
+      [...(i ? [{ label: 'Zurück', akt: 'zurueck' }] : [{ label: 'Überspringen', akt: 'weg' }]), { label: letzte ? 'Los geht’s' : 'Weiter', akt: 'weiter', primaer: true }]);
+    if(akt === 'zurueck'){ i -= 2; continue; }
+    if(akt !== 'weiter') break;
+  }
+  betaOverlay.schliessen();
+  try{ LS.set('einfuehrung_gesehen', true); }catch(_){}
+}
 function ansichtEinrichtung(schritt){
   einstellungenOffen = false;
   schritt = schritt || LS.get('einrichtung_schritt', 'start');
+  if(schritt === 'sperre') schritt = 'anmelden';   // frueherer Schritt App-Sperre
   LS.set('einrichtung_schritt', schritt);
   LS.set('einrichtung_gesehen', true);
-  const beenden = ()=>{ LS.set('einrichtung_schritt', null); LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false); LS.set('einr_aus_einst', false); ansichtStart(); };
+  const beenden = ()=>{ LS.set('einrichtung_schritt', null); LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false); LS.set('einr_aus_einst', false); ansichtStart();
+    if(!LS.get('einfuehrung_gesehen', false)) setTimeout(()=>{ try{ appEinfuehrung(); }catch(_){} }, 600); };
   // Zurueck (Pfeil oben und Handy-Taste) geht nur einen Schritt zurueck; abbrechen laesst sich der Assistent
   // nur, wenn er aus den Einstellungen geoeffnet wurde. Nav-Leiste und Einstellungen sind solange ausgeblendet.
   const ausEinst = !!LS.get('einr_aus_einst', false);
@@ -5845,7 +5886,9 @@ function ansichtEinrichtung(schritt){
   if(schritt === 'start' && !ausEinst) btnZurueck.style.visibility = 'hidden';
   document.body.classList.toggle('einr-pflicht', !ausEinst);
   const angemeldet = typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet';
-  const schritte = ['start', 'sperre', 'anmelden', 'dateien', 'daten', 'brief', 'fertig'];
+  // App-Sperre ist kein eigener Schritt mehr: die Abfrage kommt direkt nach der Einrichtung auf der Startseite
+  if(schritt === 'sperre') schritt = 'anmelden';
+  const schritte = ['start', 'anmelden', 'dateien', 'daten', 'brief', 'fertig'];
   const nr = schritte.indexOf(schritt) + 1;
   const kopf = '<div class="einr-fort">' + schritte.map((s, i)=> '<span class="' + (i < nr ? 'an' : '') + '"></span>').join('') + '</div>';
   const knoepfe = (zurueck, weiter, weiterText, weiterAus)=> '<div class="einr-knoepfe">' + (zurueck ? '<button type="button" class="btn-sekundaer" data-einr="' + zurueck + '">Zurück</button>' : '<span></span>') +
@@ -5854,15 +5897,15 @@ function ansichtEinrichtung(schritt){
   if(schritt === 'start'){
     html = '<h2>Willkommen</h2><p>Diese App erstellt Rechnungen für Leichenschau und Privatpatienten, erfasst GKV-Patienten im Fahrdienst, führt das Fahrtenbuch und berechnet das Wegegeld (NFP Offenburg).</p>' +
       '<p>Alle Daten liegen in <b>deinem eigenen OneDrive</b> im Ordner „KVBW Onedrive“. Der Assistent legt ihn an, kopiert die leeren Vorlagen hinein und fragt deine Daten für die Rechnungen ab.</p>' +
-      '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + '<div id="einrAlpha">' + alphaZustimmungHtml('einrAlphaHaken') + '</div>' + knoepfe(null, 'sperre', 'Los geht’s', !alphaZugestimmt()) +
+      '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + '<div id="einrAlpha">' + alphaZustimmungHtml('einrAlphaHaken') + '</div>' + knoepfe(null, 'anmelden', 'Los geht’s', !alphaZugestimmt()) +
       (window.DEMO_MODUS ? '' : '<p style="text-align:center; margin-top:10px;"><button type="button" class="einr-link" id="einrDemo">Erst ausprobieren: Demo mit Beispieldaten</button></p>');
   } else if(schritt === 'sperre'){
     html = '<h2>App-Sperre (empfohlen)</h2><p>Die App enthält Patientendaten. Damit niemand außer dir sie öffnen kann, empfiehlt sich eine Sperre mit <b>Fingerabdruck / Face ID</b> oder <b>PIN</b>. Sie ist freiwillig und lässt sich später unter Einstellungen ein- und ausschalten.</p>' +
       '<div id="einrSperre"></div>' + knoepfe('start', 'anmelden', AppSperre.aktiv() ? 'Weiter' : 'Ohne Sperre weiter');
   } else if(schritt === 'anmelden'){
     html = '<h2>Microsoft-Anmeldung</h2>' + (angemeldet
-      ? '<p class="einr-ok">✓ Angemeldet als <b>' + htmlEsc((msGraphKonto && (msGraphKonto.username || msGraphKonto.name)) || '') + '</b>.</p>' + knoepfe('sperre', 'dateien')
-      : '<p>Melde dich mit deinem Microsoft-Konto an. Danach kommst du automatisch hierher zurück.</p><button type="button" class="btn-primaer" id="einrAnmelden">Mit Microsoft anmelden</button>' + knoepfe('sperre', null));
+      ? '<p class="einr-ok">✓ Angemeldet als <b>' + htmlEsc((msGraphKonto && (msGraphKonto.username || msGraphKonto.name)) || '') + '</b>.</p>' + knoepfe('start', 'dateien')
+      : '<p>Melde dich mit deinem Microsoft-Konto an. Danach kommst du automatisch hierher zurück.</p><button type="button" class="btn-primaer" id="einrAnmelden">Mit Microsoft anmelden</button>' + knoepfe('start', null));
   } else if(schritt === 'dateien'){
     html = '<h2>Ordner und Vorlagen</h2><p>Prüfe, was in deinem OneDrive schon vorhanden ist …</p><div id="einrListe" class="einr-liste"></div><div id="einrDateiKnopf"></div>' + knoepfe('anmelden', 'daten', 'Weiter', true);
   } else if(schritt === 'daten'){
@@ -5966,7 +6009,7 @@ function ansichtEinrichtung(schritt){
   const dm = document.getElementById('einrDemo'); if(dm) dm.onclick = ()=> demoFragen('\n\nDie Einrichtung kannst du danach fortsetzen.');
   const ah = document.getElementById('einrAlphaHaken');
   if(ah){
-    const los = app.querySelector('[data-einr="sperre"]');
+    const los = app.querySelector('[data-einr="anmelden"]');
     if(alphaZugestimmt()) ah.checked = true;
     ah.onchange = ()=>{ if(los) los.disabled = !ah.checked; };
     if(los){ const alt = los.onclick; los.onclick = async (ev)=>{ if(!ah.checked) return; if(!alphaZugestimmt()) await alphaZustimmen(); if(alt) alt.call(los, ev); }; }
@@ -6170,6 +6213,7 @@ let gkvHerkunft = null;
 // Herkunft eines geoeffneten Falls (z. B. Fahrtenbuch): Zurueck/Speichern fuehren dorthin zurueck.
 // Wird von der naechsten Fall-Ansicht (GKV oder Maske) uebernommen und dabei geleert.
 let fallHerkunft = null;
+let maskeHerkunftAkt = null, maskeGeaendertFlag = false;
 function fallHerkunftNehmen(){ const h = fallHerkunft; fallHerkunft = null; return typeof h === 'function' ? h : null; }
 // Pseudo-Fall: Foerderung des Diensts = Pauschale (Stunden x Satz) minus GKV-Faelle im Dienst (+ Zuschlag 24.12./31.12.)
 function gkvPseudoFoerderung(f){
@@ -6193,12 +6237,10 @@ function ansichtGkvVerwaltung(){
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=> ansichtGkvVerwaltung(); };
   setzeTitel('Rechnungsverwaltung', ()=>{ betaMaskeHerkunft = null; ansichtStart(); });
   app.innerHTML = vwTabsHtml('gkv') +
-    '<div class="gesamt-kopf"><div class="feld" style="margin-bottom:0;"><input type="text" id="gvSuche" autocomplete="off" placeholder="Suche: Name, Ziffer oder Datum"></div>' +
-      '<div class="gesamt-knoepfe"><button type="button" id="gvNeu" class="gv-neu-knopf">+ Neuer GKV-Patient</button><button type="button" id="gvFb">Fahrtenbuch</button></div></div>' +
+    '<div class="gesamt-kopf"><div class="feld" style="margin-bottom:0;"><input type="text" id="gvSuche" autocomplete="off" placeholder="Suche: Name, Ziffer oder Datum"></div></div>' +
     '<div id="gvInfo" class="gv-info"></div><div id="gvListe"></div>';
   const suchEl = document.getElementById('gvSuche');
-  document.getElementById('gvNeu').onclick = ()=>{ gkvHerkunft = 'verwaltung'; ansichtGkv(); };
-  document.getElementById('gvFb').onclick = ()=> ansichtFahrtenbuch();
+
   // zuerst die letzten 25 auf dem Geraet; "Weitere laden" holt alle weiteren aus dem Fahrtenbuch (je Jahresblatt)
   let anzahl = 25, excel = [], blaetterGeladen = [], blaetterAlle = null, laedt = false;
   const lokalSchl = new Set();
@@ -6269,7 +6311,7 @@ function ansichtGkvVerwaltung(){
             '<span class="gv-rechts"><b>' + (pseudo ? gkvPseudoFoerderungHtml(f) : betaEuro(f.euro).replace(' €', '')) + '</b><small class="' + (f.status === 'eingetragen' ? 'gv-ok' : 'gv-offen') + '">' + (f.status === 'eingetragen' ? '✓ Fahrtenbuch' : 'offen') + '</small></span>' +
             '</button></div>';
         }).join('');
-    }).join('') + weiterKnopf + '<div class="eigene-hinweis" style="margin-top:8px;">Antippen = bearbeiten · nach links wischen = aus der Liste löschen (die Zeile im Fahrtenbuch bleibt).</div>';
+    }).join('') + weiterKnopf + '<div class="eigene-hinweis" style="margin-top:8px;">Anklicken = bearbeiten · nach links wischen = aus der Liste löschen (die Zeile im Fahrtenbuch bleibt).</div>';
     weiterVerdrahten();
     document.querySelectorAll('[data-gvexcel]').forEach(b=> b.onclick = ()=>{
       const x = excel[+b.dataset.gvexcel]; if(!x) return;
@@ -6328,7 +6370,7 @@ function ansichtKorrigieren(){
           <input type="checkbox" class="chk" data-art="${f.art}" data-idx="${f.idx}">
           <div class="inhalt">
             <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${f.werte.txtName || '(ohne Namen)'}</div>
-            <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}${f.rechnungsnummer ? ' &middot; <span class="renu-reset" data-art="'+f.art+'" data-idx="'+f.idx+'" title="Antippen, um diese Nummer zurückzusetzen (z.B. bei Dopplungen)">Nr. '+f.rechnungsnummer+' &#9998;</span>' : ' &middot; ohne Rechnungsnummer'}</div>
+            <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}${f.rechnungsnummer ? ' &middot; <span class="renu-reset" data-art="'+f.art+'" data-idx="'+f.idx+'" title="Anklicken, um diese Nummer zurückzusetzen (z.B. bei Dopplungen)">Nr. '+f.rechnungsnummer+' &#9998;</span>' : ' &middot; ohne Rechnungsnummer'}</div>
           </div>
         </div>`).join('')}
     </div>
@@ -6488,7 +6530,7 @@ function ansichtSyncBackups(){
     return;
   }
   app.innerHTML = `
-    <div class="leer-hinweis" style="margin-bottom:10px;">Automatisch vor jedem Sync-Versuch angelegt (letzte ${BACKUP_MAX} Stände). "Wiederherstellen" ersetzt die aktuellen lokalen Rechnungen durch diesen Stand. Zum Ansehen der enthaltenen Rechnungen auf die Zeile tippen.</div>
+    <div class="leer-hinweis" style="margin-bottom:10px;">Automatisch vor jedem Sync-Versuch angelegt (letzte ${BACKUP_MAX} Stände). "Wiederherstellen" ersetzt die aktuellen lokalen Rechnungen durch diesen Stand. Zum Ansehen der enthaltenen Rechnungen auf die Zeile klicken.</div>
     <div id="backupsListe">
       ${liste.map((b,i)=>{
         const stand = JSON.parse(b.inhalt);
@@ -6648,10 +6690,10 @@ async function lokaleFaelleBereitsUebernommenEntfernen(alle){
 // erfolgtem PC-Sync automatisch von dort verschwinden). Grundsaetzlich rein
 // lesend (Suchen/Filtern, PDFs oeffnen) -- siehe Begruendung im Kommentar bei
 // msGraphAlleZeilenLaden weiter oben. EINZIGE Ausnahme: eine "unvollstaendige"
-// Zeile, zu der noch ein lokal gespeicherter Fall existiert, ist antippbar
+// Zeile, zu der noch ein lokal gespeicherter Fall existiert, ist anklickbar
 // und oeffnet diesen zum Bearbeiten (siehe alsUnvollstaendigMarkieren /
 // lokalenFallFuerZeileFinden weiter unten) -- fuer alle anderen Zeilen bleibt
-// es bei reiner Anzeige. PDF-Links werden erst beim Antippen einer Zeile
+// es bei reiner Anzeige. PDF-Links werden erst beim Anklicken einer Zeile
 // nachgeladen, nicht vorab
 // fuer die ganze (potenziell lange) Liste -- Ausnahme: fuer ein begrenztes
 // Fenster der zuletzt hinzugekommenen Zeilen wird die PDF-Pruefung eager
@@ -6725,7 +6767,7 @@ function alleRechnungenListeRendern(cache, suchtext){
   // gespeicherter Fall (lokalenFallFuerZeileFinden -- moeglich, weil ein
   // solcher Fall bei Sync-Problemen NICHT geloescht wird, siehe
   // lokaleFaelleBereitsUebernommenEntfernen), wird die Zeile stattdessen
-  // direkt zum Bearbeiten antippbar (oeffnet denselben Bearbeiten-Dialog wie
+  // direkt zum Bearbeiten anklickbar (oeffnet denselben Bearbeiten-Dialog wie
   // in "Lokale Rechnungen") -- die vollstaendigen Angaben (Adresse,
   // Diagnosen, Positionen) sind dort ja noch vorhanden, in der schmalen
   // Uebersichtszeile dagegen nicht. Ohne lokalen Fund bleibt es beim reinen
@@ -6735,7 +6777,7 @@ function alleRechnungenListeRendern(cache, suchtext){
     const platz = el.querySelector('.pdf-platz');
     const lokal = lokalenFallFuerZeileFinden(f);
     if(lokal){
-      platz.innerHTML = '<span class="badge-unvollstaendig" title="Noch nicht als Rechnung erzeugt -- lokal auf dem Handy vorhanden, zum Bearbeiten antippen.">&#9998;</span>';
+      platz.innerHTML = '<span class="badge-unvollstaendig" title="Noch nicht als Rechnung erzeugt -- lokal auf dem Handy vorhanden, zum Bearbeiten anklicken.">&#9998;</span>';
       el.style.cursor = 'pointer';
       el.onclick = ()=> ansichtMaske(lokal.art, lokal.idx);
     } else {
@@ -6744,10 +6786,10 @@ function alleRechnungenListeRendern(cache, suchtext){
   };
 
   // Eager-Fenster: fuer die ersten paar sichtbaren Zeilen wird der PDF-Status
-  // sofort mitgeladen (statt erst beim Antippen), damit unvollstaendige
+  // sofort mitgeladen (statt erst beim Anklicken), damit unvollstaendige
   // Faelle zeitnah rot auffallen -- ohne bei einer langen Liste auf einen
   // Schlag hunderte Graph-Anfragen abzufeuern. Darueber hinaus bleibt es
-  // beim bewaehrten lazy Laden per Antippen.
+  // beim bewaehrten lazy Laden per Anklicken.
   const EAGER_FENSTER = 40;
 
   zielEl.querySelectorAll('.fall-zeile').forEach(el=>{
@@ -8420,7 +8462,7 @@ async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
   const el = document.getElementById('korrigierenHinweis');
   if(!el) return;
   el.querySelectorAll('[data-akt="pdf"]').forEach(b=>{
-    b.onclick = ()=>{ const e = ergebnisse[+b.dataset.i]; betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob, webUrl: e.pdfUrl }); };
+    b.onclick = ()=>{ const e = ergebnisse[+b.dataset.i]; betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob, webUrl: e.pdfUrl, senden: e }); };
   });
   el.querySelectorAll('[data-akt="lxp"]').forEach(b=>{
     b.onclick = async ()=>{
@@ -9023,7 +9065,7 @@ function betaEinstellungenWiring(){
       ablageErgebnis('Repariere …');
       await uebersichtEinblenden(token, MSGRAPH_PFAD_UEBERSICHT);
       alleRechnungenCache = null;
-      ablageErgebnis('✓ Repariert. Die Rechnungsverwaltung sollte jetzt wieder laden (dort „Neu laden“ tippen).');
+      ablageErgebnis('✓ Repariert. Die Rechnungsverwaltung sollte jetzt wieder laden (dort „Neu laden“ klicken).');
     }catch(e){ ablageErgebnis('✗ ' + htmlEsc(e.message || String(e))); }
     finally{ btn.disabled = false; }
   };
@@ -9241,7 +9283,7 @@ function betaFallAendern(art, zeitstempel, aendern){
 }
 
 // ---------- Eigenes Fenster statt Browser-Popups (mit Ladeanimation) ----------
-// Abbrechen ohne Knopf: Tippen neben das Fenster, "×" oben rechts oder Zurueck-Taste.
+// Abbrechen ohne Knopf: Klicken neben das Fenster, "×" oben rechts oder Zurueck-Taste.
 // Geht nur, wenn das Fenster einen Abbrechen-artigen Knopf hat (bzw. nur "OK") --
 // dann wirkt es genau wie dieser Knopf. Waehrend eines Ladevorgangs nicht.
 const betaOverlay = (()=>{
@@ -9500,8 +9542,10 @@ async function betaErgebnisseZeigen(ergebnisse, ziel){
     [{ label:'Fertig', akt:'fertig', primaer:true }]);
   const karte = document.querySelector('.beta-overlay-text');
   karte.querySelectorAll('[data-erg="pdf"]').forEach(b=>{
-    b.onclick = ()=>{ const e = ergebnisse[+b.dataset.i]; betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob, webUrl: e.pdfUrl }); };
+    b.onclick = ()=>{ const e = ergebnisse[+b.dataset.i]; betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob, webUrl: e.pdfUrl, senden: e }); };
   });
+  { const neu = ergebnisse.filter(e=> !e.fehler && !e.uebersprungen && e.pdfBlob);
+    if(neu.length === 1 && ok === 1) setTimeout(()=> betaPdfAnzeigen({ titel: neu[0].name, blob: neu[0].pdfBlob, webUrl: neu[0].pdfUrl, senden: neu[0] }), 250); }
   karte.querySelectorAll('[data-erg="lxp"]').forEach(b=>{
     b.onclick = async ()=>{
       const e = ergebnisse[+b.dataset.i];
@@ -9543,7 +9587,7 @@ async function betaNachSpeichern(art, idx){
   const f = ladeFaelle(art)[idx];
   if(!f){ ansichtRechnungenGesamt(); return; }
   if(!navigator.onLine){
-    appToastAnzeigen('Gespeichert – noch nicht hochgeladen (kein Internet). In „Rechnungen“ später „Hochladen“ tippen.', 4000);
+    appToastAnzeigen('Gespeichert – noch nicht hochgeladen (kein Internet). In „Rechnungen“ später „Hochladen“ klicken.', 4000);
     ansichtRechnungenGesamt(!betaGesamtCache || !!betaGesamtCache.fehler);
     return;
   }
@@ -9573,7 +9617,7 @@ async function ansichtRechnungenGesamt(neuLaden){
       </div>
       ${ziel.echt ? '' : '<div class="gesamt-ziel">Testablage (Beta-Test)</div>'}
     </div>
-    <div class="quer-verw quer-breit"><div id="gesamtListe"></div><aside class="quer-detail" id="gesamtDetail"><div class="qd-karte"><span class="qv-leer">Rechnung antippen – Details erscheinen hier.</span></div></aside></div>`;
+    <div class="quer-verw quer-breit"><div id="gesamtListe"></div><aside class="quer-detail" id="gesamtDetail"><div class="qd-karte"><span class="qv-leer">Rechnung anklicken – Details erscheinen hier.</span></div></aside></div>`;
   const suchEl = document.getElementById('txtGesamtSuche');
   document.getElementById('btnGesamtNeu').onclick = ()=> ansichtRechnungenGesamt(true);
   document.getElementById('btnGesamtBackups').onclick = ansichtSyncBackups;
@@ -9650,7 +9694,7 @@ async function ansichtRechnungenGesamt(neuLaden){
 
 // betaGesamtZeichnen: siehe beta_verwaltung.js
 
-// Antippen einer Uebersichtszeile: vorhandenen lokalen Fall oeffnen oder aus
+// Anklicken einer Uebersichtszeile: vorhandenen lokalen Fall oeffnen oder aus
 // der Zeile einen bearbeitbaren Fall anlegen
 function betaZeileBearbeiten(z, lokal, ziel){
   if(lokal){
@@ -9971,7 +10015,7 @@ function betaWischen(el, beimLoeschen){
     document.addEventListener('mousemove', mm); document.addEventListener('mouseup', mu);
   });
   el.addEventListener('contextmenu', ev=>{ if(ev.target.closest('input, textarea, select')) return; ev.preventDefault(); loeschenAusloesen(); });
-  // Klick direkt nach einer Wischbewegung nicht als Antippen werten
+  // Klick direkt nach einer Wischbewegung nicht als Anklicken werten
   el.addEventListener('click', ev=>{ if(Date.now() - zuletzt < 450){ ev.stopPropagation(); ev.preventDefault(); } }, true);
 }
 
@@ -9990,6 +10034,32 @@ function pdfjsLaden(){
   }
   return pdfjsPromise;
 }
+// Brief senden aus der PDF-Ansicht: sofort oder zu einem Datum; danach wie immer Testbrief oder echt
+async function briefSendenDialog(eintrag){
+  document.body.classList.add('pdf-dialog');   // Dialoge ueber der PDF-Ansicht zeigen
+  try{
+    const wann = await betaOverlay.ergebnis('Brief senden', 'Wann soll LetterXpress „' + htmlEsc(eintrag.name || 'die Rechnung') + '“ verschicken?',
+      [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Datum wählen', akt: 'plan' }, { label: 'Sofort', akt: 'sofort', primaer: true }]);
+    if(wann !== 'sofort' && wann !== 'plan'){ betaOverlay.schliessen(); return null; }
+    let versandDatumIso = null;
+    if(wann === 'plan'){
+      const d = new Date(); d.setDate(d.getDate() + 1);
+      const min = d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate());
+      const akt = await betaOverlay.ergebnis('Versand planen', 'An welchem Tag soll LetterXpress verschicken?<div class="beta-form"><label>Versanddatum<input type="date" id="betaVersandDatum2" min="' + min + '" value="' + min + '"></label></div>',
+        [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Weiter', akt: 'ja', primaer: true }]);
+      versandDatumIso = (document.getElementById('betaVersandDatum2') || {}).value || '';
+      if(akt !== 'ja'){ betaOverlay.schliessen(); return null; }
+      if(!versandDatumIso || versandDatumIso < min){ await betaOverlay.meldung('Bitte ein Datum ab morgen wählen.'); return null; }
+    }
+    betaOverlay.zeigen('Brief'); betaOverlay.fortschritt(null); betaOverlay.schritt('Versandstatus wird geprüft …');
+    let r = null;
+    try{ r = await betaBriefeVersenden([eintrag], betaFrage, { versandDatumIso }); }
+    catch(err){ await betaOverlay.meldung(err.message || String(err), 'Nicht verschickt'); return null; }
+    if(r.abgebrochen){ betaOverlay.schliessen(); return r; }
+    await betaOverlay.meldung(r.fehler.length ? '✗ ' + r.fehler.join('\n') : (r.test ? '✓ Testbrief angenommen – nichts wurde verschickt.' : '✓ An LetterXpress übergeben' + (versandDatumIso ? ', Versand am ' + versandDatumIso.split('-').reverse().join('.') : '') + '.'), 'Brief');
+    return r;
+  } finally { document.body.classList.remove('pdf-dialog'); }
+}
 async function betaPdfAnzeigen(opt){
   // opt: {titel, blob?, itemId?, webUrl?}
   let el = document.getElementById('betaPdfAnsicht');
@@ -9999,7 +10069,7 @@ async function betaPdfAnzeigen(opt){
     el.className = 'beta-pdf';
     el.innerHTML = '<div class="beta-pdf-kopf"><button type="button" data-a="zu" title="Schließen">✕</button><div class="beta-pdf-titel"></div>' +
       '<button type="button" data-a="klein" title="Verkleinern">−</button><button type="button" data-a="gross" title="Vergrößern">+</button>' +
-      '<button type="button" data-a="teilen" title="Teilen / Speichern">⇪</button></div><div class="beta-pdf-seiten"></div>';
+      '<button type="button" data-a="teilen" title="Teilen / Speichern">⇪</button><button type="button" data-a="senden" class="beta-pdf-senden" title="Als Brief senden" hidden>✉ Senden</button></div><div class="beta-pdf-seiten"></div>';
     document.body.appendChild(el);
   }
   const seitenEl = el.querySelector('.beta-pdf-seiten');
@@ -10015,6 +10085,11 @@ async function betaPdfAnzeigen(opt){
   const zoomSetzen = (z)=>{ zoom = Math.max(1, Math.min(3, z)); seitenEl.querySelectorAll('canvas').forEach(c=> c.style.width = (zoom * 100) + '%'); };
   el.querySelector('[data-a="klein"]').onclick = ()=> zoomSetzen(zoom - 0.5);
   el.querySelector('[data-a="gross"]').onclick = ()=> zoomSetzen(zoom + 0.5);
+  // Als Brief senden (sofort oder zu einem Datum) -- nur wenn die Rechnung noch nicht verschickt ist
+  const sk = el.querySelector('[data-a="senden"]');
+  sk.hidden = !opt.senden || typeof betaBriefeVersenden !== 'function';
+  sk.onclick = async ()=>{ if(!opt.senden) return; const e = Object.assign({}, opt.senden); if(blob && !e.pdfBlob && !e.pdfItemId) e.pdfBlob = blob;
+    const r = await briefSendenDialog(e); if(r && r.gesendet && r.gesendet.length){ sk.textContent = r.test ? '✓ Test' : '✓ Gesendet'; sk.disabled = true; } };
   el.querySelector('[data-a="teilen"]').onclick = async ()=>{
     if(!blob) return;
     const datei = new File([blob], (opt.titel || 'Rechnung') + '.pdf', { type:'application/pdf' });
@@ -10226,7 +10301,7 @@ async function betaDokumentFertig(titel, e, hinweise){
     const akt = await betaOverlay.ergebnis(titel, '<div class="beta-erg">✓ <b>' + htmlEsc(e.name) + '</b>' +
       (hinweise || []).map(t=> '<br><span class="beta-erg-klein">' + htmlEsc(t) + '</span>').join('') + '</div>',
       [{ label:'PDF ansehen', akt:'pdf' }, { label:'Brief senden' + (testmodus ? ' (Testablage)' : ''), akt:'lxp' }, { label:'Fertig', akt:'ok', primaer:true }]);
-    if(akt === 'pdf'){ betaOverlay.schliessen(); await betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob }); return true; }
+    if(akt === 'pdf'){ betaOverlay.schliessen(); await betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob, senden: e }); return true; }
     if(akt === 'lxp'){
       betaOverlay.zeigen('Brief'); betaOverlay.fortschritt(null);
       try{
@@ -10566,7 +10641,7 @@ async function betaAktionSenden(eintraege, mitTermin){
     const d = new Date(); d.setDate(d.getDate() + 1);
     const min = d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate());
     const akt = await betaOverlay.ergebnis('Versand planen', 'An welchem Tag soll LetterXpress verschicken? (muss in der Zukunft liegen)<div class="beta-form"><label>Versanddatum<input type="date" id="betaVersandDatum" min="' + min + '" value="' + min + '"></label></div>' +
-      '<div class="beta-erg-klein" style="margin-top:8px;">Der Brief erscheint dann mit &#9203; in der Liste. Antippen: Datum ändern oder stornieren – bis zum Versandtag möglich.</div>',
+      '<div class="beta-erg-klein" style="margin-top:8px;">Der Brief erscheint dann mit &#9203; in der Liste. Anklicken: Datum ändern oder stornieren – bis zum Versandtag möglich.</div>',
       [{ label:'Abbrechen', akt:'nein' }, { label:'Weiter', akt:'ja', primaer:true }]);
     versandDatumIso = (document.getElementById('betaVersandDatum') || {}).value || '';
     if(akt !== 'ja'){ betaOverlay.schliessen(); return false; }
@@ -10591,7 +10666,7 @@ async function betaAktionFreigeben(eintraege){
   const geplant = eintraege.filter(e=> e.versendet && e.geplant);
   if(geplant.length){
     await betaOverlay.meldung((geplant.length === 1 ? geplant[0].datei + ' liegt' : geplant.length + ' Briefe liegen') + ' noch geplant bei LetterXpress (' +
-      geplant.map(e=> isoDe(e.geplant.datum)).join(', ') + ').\n\nFreigeben würde einen zweiten Brief ermöglichen. Zum Ändern oder Stornieren bitte auf die Sanduhr tippen.', 'Noch nicht verschickt');
+      geplant.map(e=> isoDe(e.geplant.datum)).join(', ') + ').\n\nFreigeben würde einen zweiten Brief ermöglichen. Zum Ändern oder Stornieren bitte auf die Sanduhr klicken.', 'Noch nicht verschickt');
     return false;
   }
   const versendet = eintraege.filter(e=> e.versendet);
@@ -10873,7 +10948,7 @@ function betaGesamtZeichnen(suchtext, ziel){
         <div class="inhalt">
           <div class="name"><span class="badge-neu ${e.art}">${e.art === 'ls' ? 'L' : 'P'}</span>${htmlEsc((e.werte || {}).txtName || '(noch ohne Namen)')}</div>
           <div class="info">${htmlEsc((e.werte || {}).txtDatumExcel || '')}${(e.werte || {}).txtBetrag ? ' &middot; ' + htmlEsc(e.werte.txtBetrag) + ' &euro;' : ''}</div>
-          <div class="info offen-text">unfertig – antippen zum Weitermachen</div>
+          <div class="info offen-text">unfertig – anklicken zum Weitermachen</div>
         </div>
       </div></div>`).join('');
   }
@@ -10898,7 +10973,7 @@ function betaGesamtZeichnen(suchtext, ziel){
         <div class="inhalt">
           <div class="name"><span class="badge-neu ${f.art}">${f.art === 'ls' ? 'L' : 'P'}</span>${htmlEsc((f.werte || {}).txtName || '(ohne Namen)')}</div>
           <div class="info">${htmlEsc((f.werte || {}).txtDatumExcel || '')}${f.rechnungsnummer ? ' &middot; Nr. ' + htmlEsc(f.rechnungsnummer) : ''}</div>
-          <div class="info">${zk === 'echt' ? (f.ausUebersicht ? 'Bearbeitung aus der Test-Übersicht – nur löschen' : 'antippen: in die echte Übersicht übernehmen · wischen: löschen') : 'gehört zum Echtbetrieb'}</div>
+          <div class="info">${zk === 'echt' ? (f.ausUebersicht ? 'Bearbeitung aus der Test-Übersicht – nur löschen' : 'anklicken: in die echte Übersicht übernehmen · wischen: löschen') : 'gehört zum Echtbetrieb'}</div>
         </div>
       </div></div>`).join('');
   }
@@ -10913,6 +10988,22 @@ function betaGesamtZeichnen(suchtext, ziel){
     const sichtbarZeilen = new Set(eintraege.filter(e=> e.typ === 'ORIG' && passt(e.name, e.renu, e.datum)).map(e=> e.z.nr));
     const sichtbar = eintraege.filter(e=> sichtbarZeilen.has(e.z.nr));
     const MAX = 200;
+    // Ueberblick: offene (abgeschickte, noch nicht bezahlte) Rechnungen, aelteste zuerst -- Zahlungseingang direkt bestaetigen
+    if(!String(suchtext || '').trim()){
+      const offenR = eintraege.filter(e=> e.typ === 'ORIG' && !e.bezahlt && !e.geplant).map(e=> ({ e, t: betaTageSeit(e.abgeschickt) }))
+        .filter(x=> !isNaN(x.t) && x.t >= 0).sort((a, b)=> b.t - a.t);
+      if(offenR.length){
+        const zahl = (v)=> Number(String(v || '').replace(/\./g, '').replace(',', '.')) || 0;
+        const summe = offenR.reduce((s, x)=> s + zahl(x.e.betrag), 0), verzug = offenR.filter(x=> x.t > 30).length;
+        let auf = true; try{ auf = LS.get('offen_dash_auf', true) !== false; }catch(_){}
+        html += '<details class="offen-dash"' + (auf ? ' open' : '') + '><summary><span><b>Offene Rechnungen: ' + offenR.length + '</b> · ' + betaEuro(summe) + '</span>' +
+          (verzug ? '<span class="offen-verzug">' + verzug + ' im Verzug</span>' : '') + '</summary>' +
+          offenR.slice(0, 50).map(x=> '<div class="offen-zeile' + (x.t > 30 ? ' verzug' : '') + '"><div class="offen-inhalt"><b>' + htmlEsc(x.e.name) + '</b><small>' +
+            (x.e.renu ? 'Nr. ' + htmlEsc(x.e.renu) + ' · ' : '') + (x.e.betrag ? htmlEsc(x.e.betrag) + ' € · ' : '') + 'seit ' + x.t + (x.t === 1 ? ' Tag' : ' Tagen') + (x.t > 30 ? ' – im Verzug' : '') +
+            '</small></div><button type="button" class="offen-bezahlt" data-okey="' + htmlEsc(x.e.key) + '">✓ Bezahlt</button></div>').join('') +
+          (offenR.length > 50 ? '<div class="leer-hinweis">' + (offenR.length - 50) + ' weitere – in der Liste unten.</div>' : '') + '</details>';
+      }
+    }
     html += '<div class="gesamt-abschnitt">Rechnungsübersicht (' + eintraege.filter(e=> e.typ === 'ORIG').length + ')</div>';
     if(!sichtbar.length) html += '<div class="leer-hinweis">Keine Treffer.</div>';
     let letzteGruppe = null;
@@ -10930,12 +11021,16 @@ function betaGesamtZeichnen(suchtext, ziel){
           ${e.geplant ? '<div class="info termin-text">Versand geplant am ' + htmlEsc(isoDe(e.geplant.datum)) + (e.geplant.modus === 'test' ? ' (Testmodus)' : '') + '</div>' : ''}
           ${!e.unter ? betaZahlungInfo(e) : ''}
         </div>
-        <div class="fall-icons">${e.geplant ? '<span class="badge-termin" data-akt="termin" title="Versand geplant – antippen zum Ändern">&#9203;</span>' : (e.versendet ? BRIEF_SYMBOL : '')}${symbol}</div>
+        <div class="fall-icons">${e.geplant ? '<span class="badge-termin" data-akt="termin" title="Versand geplant – anklicken zum Ändern">&#9203;</span>' : (e.versendet ? BRIEF_SYMBOL : '')}${symbol}</div>
       </div></div>`;
     });
     if(sichtbar.length > MAX) html += '<div class="leer-hinweis">' + (sichtbar.length - MAX) + ' weitere – bitte Suche eingrenzen.</div>';
   }
   listeEl.innerHTML = html + '<div class="gesamt-platzhalter"></div>';
+  { const od = listeEl.querySelector('.offen-dash'); if(od) od.addEventListener('toggle', ()=>{ try{ LS.set('offen_dash_auf', od.open); }catch(_){} });
+    listeEl.querySelectorAll('.offen-bezahlt').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
+      const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
+      if(await betaAktionBezahlt([e])){ betaAuswahl.clear(); await ansichtRechnungenGesamt(true); } }); }
 
   // --- unfertige Rechnungen ---
   listeEl.querySelectorAll('.wisch-huelle[data-entwurf]').forEach(h=>{
@@ -11015,7 +11110,8 @@ function betaGesamtZeichnen(suchtext, ziel){
     const chk = zeileEl.querySelector('.chk');
     chk.onclick = (ev)=>{ ev.stopPropagation(); if(chk.checked) betaAuswahl.add(e.key); else betaAuswahl.delete(e.key); zeileEl.classList.toggle('gewaehlt', chk.checked); auswahlGeaendert(); };
     const pdfEl = zeileEl.querySelector('[data-akt="pdf"]');
-    if(pdfEl) pdfEl.onclick = (ev)=>{ ev.stopPropagation(); betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl }); };
+    const sendenE = (!e.versendet && !e.fassung && e.pdf) ? { renu: e.renu, name: e.datei, ziel, typ: e.typ, pdfItemId: e.pdf.id } : null;
+    if(pdfEl) pdfEl.onclick = (ev)=>{ ev.stopPropagation(); betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl, senden: sendenE }); };
     const terminEl = zeileEl.querySelector('[data-akt="termin"]');
     if(terminEl) terminEl.onclick = async (ev)=>{ ev.stopPropagation(); if(await betaTerminBearbeiten(e, ziel)) ansichtRechnungenGesamt(true); };
     zeileEl.querySelector('.inhalt').onclick = ()=>{
@@ -11034,7 +11130,7 @@ function betaGesamtZeichnen(suchtext, ziel){
       return ok;
     });
   });
-  // Tages-Ueberschrift antippen: alle dieses Tages an-/abwaehlen (wie am PC)
+  // Tages-Ueberschrift anklicken: alle dieses Tages an-/abwaehlen (wie am PC)
   listeEl.querySelectorAll('.gesamt-gruppe').forEach(g=>{
     g.onclick = ()=>{
       const tag = eintraege.filter(e=> e.datum === g.dataset.gruppe && listeEl.querySelector('.wisch-huelle[data-key="' + CSS.escape(e.key) + '"]'));
@@ -11664,7 +11760,7 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       '<div class="faktor-eigen" id="fdEigenZeile" hidden><input id="fdEigenWert" inputmode="decimal" placeholder="z.B. 2,8" autocomplete="off"><button type="button" id="fdEigenOk">Übernehmen</button></div>' +
       '<div class="faktor-betrag" id="fdBetrag"></div>' +
       '<label id="fdBegLabel">Begründung<textarea id="fdBeg" rows="' + (zeitModus ? 1 : 3) + '"' + (zeitModus ? ' readonly class="nur-lesen" tabindex="-1"' : '') + '>' + htmlEsc(w.beg) + '</textarea></label>' +
-      (zeitModus ? '' : '<div class="begr-katalog"><div class="beta-erg-klein">Frühere Begründungen zu Ziffer ' + htmlEsc(nr) + ' – antippen zum Einsetzen:</div>' +
+      (zeitModus ? '' : '<div class="begr-katalog"><div class="beta-erg-klein">Frühere Begründungen zu Ziffer ' + htmlEsc(nr) + ' – anklicken zum Einsetzen:</div>' +
         (katalog.length ? katalog.map((x, i)=> '<div class="begr-eintrag"><button type="button" class="begr-text' + (x.text === w.beg ? ' aktiv' : '') + '" data-i="' + i + '">' + htmlEsc(x.text) +
             (x.standard ? ' <span class="begr-std">Standard</span>' : '') + '</button>' +
             (x.standard ? '' : '<button type="button" class="begr-weg" data-i="' + i + '" title="aus der Liste entfernen">&times;</button>') + '</div>').join('')
@@ -11711,7 +11807,7 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       [vonEl, bisEl].forEach(el=>{
         el.addEventListener('input', ()=>{ zeitAktual(); aktual(); });
         el.addEventListener('change', ()=>{ zeitAktual(); aktual(); });
-        // Antippen irgendwo im Feld oeffnet die Uhr (nicht nur auf der Ziffer)
+        // Anklicken irgendwo im Feld oeffnet die Uhr (nicht nur auf der Ziffer)
         el.addEventListener('click', ()=>{ try{ if(el.showPicker) el.showPicker(); }catch(_){} });
       });
     }
@@ -11906,7 +12002,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     const loeschbar = p.eigene && !p.fest;
     const label = `<label class="position-zeile${/^(W[TN]\d+|REISE)$/.test(p.ziffer)?' weg':''}${istAuto && !aus?' auto-gesperrt':''}${aus?' auto-aus':''}${mitFaktor?' mit-faktor':''}" data-auto-aus="${aus?'1':'0'}">
         <input type="checkbox" data-ziffer="${htmlEsc(p.ziffer)}" data-betrag="${betragVon(p)}" data-auto="${istAuto?'1':'0'}" ${checked} ${gesperrt}>
-        <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (antippen = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
+        <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (anklicken = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
         <div class="betrag">${betragVon(p).toFixed(2).replace('.',',')} &euro;</div>
       </label>${lsKurzChip(p) && ausgewaehlteZiffern && ausgewaehlteZiffern.has(p.ziffer) ? '<div class="ls-kurz-reihe ls-assi-reihe">' + lsKurzChip(p) + '</div>' : ''}`;
     const innen = loeschbar ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>${label}</div>` : label;
@@ -11932,7 +12028,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
       const r = betaPosRahmen(p), f = faktorVon(p), b = String(begrVon(p) || '').trim(), n = anzahlVon(p);
       const pflicht = !!betaBegrPflicht(p, f, n, det);
       el.innerHTML = `<button type="button" class="faktor-chip${pflicht ? ' hoch' : ''}">${n > 1 ? n + ' &times; &middot; ' : ''}Faktor ${betaFaktorText(f)} &#9998;</button>` +
-        (pflicht ? (b ? `<span class="beg-text">${betaBegrImmer(p) ? 'Verweilen ' : 'Begründung: '}${htmlEsc(b)}</span>` : `<span class="beg-text fehlt">${betaBegrImmer(p) ? 'Ende des Verweilens fehlt – antippen' : 'Begründung fehlt – antippen'}</span>`) : '');
+        (pflicht ? (b ? `<span class="beg-text">${betaBegrImmer(p) ? 'Verweilen ' : 'Begründung: '}${htmlEsc(b)}</span>` : `<span class="beg-text fehlt">${betaBegrImmer(p) ? 'Ende des Verweilens fehlt – anklicken' : 'Begründung fehlt – anklicken'}</span>`) : '');
       const zeile = el.closest('.position-zeile');
       zeile.querySelector('.betrag').innerHTML = betragVon(p).toFixed(2).replace('.',',') + ' &euro;';
       cb.dataset.betrag = betragVon(p);
@@ -12403,7 +12499,7 @@ function betaPosZiehen(wurzel, beimAblegen, scroller){
       document.addEventListener('mousemove', weg); document.addEventListener('mouseup', hoch);
     });
     item.addEventListener('contextmenu', ev=> ev.preventDefault());
-    // Antippen direkt nach dem Ablegen nicht als Haken werten
+    // Anklicken direkt nach dem Ablegen nicht als Haken werten
     item.addEventListener('click', ev=>{ if(item.__klickSperre && Date.now() - item.__klickSperre < 500){ ev.preventDefault(); ev.stopPropagation(); } }, true);
   });
 }
@@ -12622,7 +12718,7 @@ async function betaProfilBearbeiten(art, id){
     };
     const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="beta-form"><label>Name<input id="prName" value="' + htmlEsc(profil.name) + '" autocomplete="off"></label></div>' +
-      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Haken = bei einer neuen Rechnung schon angehakt · Faktor antippen = Faktor und Begründung für dieses Profil vorgeben · &times; = in diesem Profil nicht anzeigen · lang drücken und ziehen = Reihenfolge</div>' +
+      '<div class="beta-erg-klein" style="margin:10px 0 4px;">Haken = bei einer neuen Rechnung schon angehakt · Faktor anklicken = Faktor und Begründung für dieses Profil vorgeben · &times; = in diesem Profil nicht anzeigen · lang drücken und ziehen = Reihenfolge</div>' +
       '<div class="profil-auswahl">' +
         (art === 'pt' ? '<div class="profil-gruppe-titel">Grundpauschalen</div>' : '') +
         '<div class="pos-gruppe" data-gruppe="grund">' + drinG.map(zeile).join('') + '<div class="pos-gruppe-ende"></div></div>' +
@@ -12630,7 +12726,7 @@ async function betaProfilBearbeiten(art, id){
           (drinE.length ? '' : '<div class="beta-erg-klein profil-leer">hierher ziehen oder unten anlegen</div>') + '<div class="pos-gruppe-ende"></div></div>' : '') +
       '</div>' +
       (art === 'pt' ? '<button type="button" class="btn-sekundaer profil-eigene" data-akt="eigene" style="margin-top:8px;">+ Eigene Position anlegen</button>' : '') +
-      (weg.length ? '<button type="button" class="profil-aus-titel" data-akt="ausklappen">' + (ausOffen ? '&#9662;' : '&#9656;') + ' Entfernt (' + weg.length + ') – antippen zum Zurückholen</button>' +
+      (weg.length ? '<button type="button" class="profil-aus-titel" data-akt="ausklappen">' + (ausOffen ? '&#9662;' : '&#9656;') + ' Entfernt (' + weg.length + ') – anklicken zum Zurückholen</button>' +
         (ausOffen ? '<div class="profil-ausgeblendet">' + weg.map(p=> '<button type="button" class="profil-zurueck" data-akt="zurueck:' + htmlEsc(p.ziffer) + '"><b>' + htmlEsc(nrText(p)) + '</b> ' + htmlEsc(bezText(p)) + ' <span>＋</span></button>').join('') + '</div>' : '') : '');
     const knoepfe = [{ label:'Abbrechen', akt:'nein' }];
     if(vorhanden && betaProfile(art).length > 1) knoepfe.push({ label:'Löschen', akt:'loeschen' });
@@ -13513,7 +13609,7 @@ async function gkvProfilBearbeiten(id){
       (sitz ? '<div class="beta-erg-klein profil-leer">Sitzdienst/telefonisch – es wird nicht gefahren, keine Wegepauschale.</div>'
         : '<div class="gkv-pe-zeile' + (wa ? ' an' : '') + '"><label><input type="checkbox" data-gk="weg"' + (wa ? ' checked' : '') + '> <span>Wegepauschale vorauswählen</span></label>' +
           '<select class="gkv-pe-stufe" data-gstufe="weg">' + EBM_GRUPPEN.weg.stufen.map(x=> '<option value="' + x.k + '"' + (((wa && wa.stufe) || '2') === x.k ? ' selected' : '') + '>' + htmlEsc(x.label) + '</option>').join('') + '</select></div>') +
-      (weg.length ? '<button type="button" class="profil-aus-titel" data-akt="ausklappen">' + (ausOffen ? '&#9662;' : '&#9656;') + ' Entfernt (' + weg.length + ') – antippen zum Zurückholen</button>' +
+      (weg.length ? '<button type="button" class="profil-aus-titel" data-akt="ausklappen">' + (ausOffen ? '&#9662;' : '&#9656;') + ' Entfernt (' + weg.length + ') – anklicken zum Zurückholen</button>' +
         (ausOffen ? '<div class="profil-ausgeblendet">' + weg.map(k=> '<button type="button" class="profil-zurueck" data-akt="zurueck:' + htmlEsc(k) + '"><b>' + htmlEsc(nrText(k)) + '</b> ' + htmlEsc(bezText(k)) + ' <span>＋</span></button>').join('') + '</div>' : '') : '');
     const knoepfe = [{ label: 'Abbrechen', akt: 'nein' }];
     if(alt && gkvProfileLaden().length > 1) knoepfe.push({ label: 'Löschen', akt: 'loeschen' });
@@ -14569,8 +14665,7 @@ function ansichtGkv(bearbeitenId){
       <button type="button" class="btn-primaer" id="gkvSpeichern">${st.id ? 'Fahrtenbuch aktualisieren' : 'Ins Fahrtenbuch'}</button></div>
     <div id="gkvMeldung"></div>
     <button type="button" class="btn-sekundaer gkv-pseudo-knopf" id="gkvPseudo">Dienst ohne GKV-Patient eintragen (Pseudo-Fall 99999)</button>
-    <div class="gesamt-abschnitt">Zuletzt erfasst</div>
-    <div id="gkvVerlauf"></div>
+    <div id="gkvVerlauf" hidden></div>
     <div class="gkv-platz"></div>`;
   // Querformat: links Patient/Wegepauschale (+ zuletzt erfasst), rechts die Ziffern mit Summe
   gkvQuerUmstellen();
@@ -14728,7 +14823,7 @@ function ansichtGkv(bearbeitenId){
   el('gkvPlzOrt').oninput = ()=> el('gkvAdresse').oninput();
   el('gkvPlzOrt').addEventListener('blur', ()=> gkvPlzOrtErgaenzen(el('gkvAdresse'), el('gkvPlzOrt'), el('gkvPlzInfo')).then(()=>{ st.adresse = adrLesen(); }));
   el('gkvPlzOrt').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); el('gkvKmBtn').click(); } };
-  el('gkvAdresse').oninput = ()=>{ st.adresse = adrLesen(); routenKarteSetzen('gkvRouteKarte', null, null); if(st.kmInfo){ st.kmInfo = ''; st.kmStufe = ''; st.kmGeo = null; el('gkvKmInfo').textContent = 'Adresse geändert – „Luftlinie“ erneut tippen.'; } };
+  el('gkvAdresse').oninput = ()=>{ st.adresse = adrLesen(); routenKarteSetzen('gkvRouteKarte', null, null); if(st.kmInfo){ st.kmInfo = ''; st.kmStufe = ''; st.kmGeo = null; el('gkvKmInfo').textContent = 'Adresse geändert – „Luftlinie“ erneut klicken.'; } };
   el('gkvAdresse').onkeydown = (ev)=>{ if(ev.key === 'Enter'){ ev.preventDefault(); el('gkvPlzOrt').focus(); } };
   el('gkvKmBtn').onclick = async ()=>{
     await gkvPlzOrtErgaenzen(el('gkvAdresse'), el('gkvPlzOrt'), el('gkvPlzInfo'));
@@ -14839,7 +14934,22 @@ function ansichtGkv(bearbeitenId){
     gkvFaelleSpeichern(arr);
     gkvEntwurf = null;
     await gkvEintragen(eintrag.id);
+    if(gkvAendBasis) gkvAendBasis();
   };
+  // Schon eingetragener Fall: „Fahrtenbuch aktualisieren“ grau, bis sich etwas geaendert hat; dann in GKV-Farbe
+  let gkvAendBasis = null;
+  if(st.id && f && f.status === 'eingetragen'){
+    const knopf = el('gkvSpeichern');
+    const zustand = ()=> JSON.stringify([st.auswahl, st.profil, st.kmGeo, st.kmStufe, st.datum,
+      [...app.querySelectorAll('input:not([type=search]):not([type=hidden]), select, textarea')].map(i=> i.type === 'checkbox' ? i.checked : i.value)]);
+    let basis = null;
+    const pruefen = ()=>{ if(!document.body.contains(knopf)){ clearInterval(tm); return; } if(basis === null) return;
+      const g = zustand() !== basis; knopf.disabled = !g; knopf.classList.toggle('geaendert', g); };
+    knopf.style.setProperty('--aend-farbe', 'var(--ds-gkv, #6b3fa0)');
+    const tm = setInterval(pruefen, 500);
+    setTimeout(()=>{ basis = zustand(); pruefen(); }, 400);
+    gkvAendBasis = ()=>{ basis = zustand(); pruefen(); };
+  }
   async function gkvEintragen(id){
     const arr = gkvFaelleLaden(), x = arr.find(y=> y.id === id);
     if(!x) return;
@@ -15025,7 +15135,7 @@ function nfpZonenBildUrl(){
   return (nfpZonenBildUrl.url = c.toDataURL());
 }
 
-// Karte einblenden: Adresse suchen, GPS-Standort oder Tippen = Einsatzstelle.
+// Karte einblenden: Adresse suchen, GPS-Standort oder Klicken = Einsatzstelle.
 // Zoom ueber eigene Knoepfe/zwei Finger (die Punkte behalten ihre Groesse).
 // -> { stufe, text, kmText, woher, geo, adresseText } | null
 // ---------- Luftlinie-Werkzeug: Zonenkarte mit Weg ----------
@@ -15047,7 +15157,7 @@ async function wegVomStandort(g){
   return { pos, luft };
 }
 function wegVomStandortText(w){
-  if(!w) return '<span class="weg-farbe gps"></span>Weg von deinem Standort: Standort nicht freigegeben/verfügbar („📍 Position“ tippen).';
+  if(!w) return '<span class="weg-farbe gps"></span>Weg von deinem Standort: Standort nicht freigegeben/verfügbar („📍 Position“ klicken).';
   if(w.hier) return '<span class="weg-farbe gps"></span>Du bist schon dort.';
   return '<span class="weg-farbe gps"></span>Von deinem Standort: ' + (w.km != null ? '<b>' + nfpKmText(w.km) + ' km</b>' + (w.minuten ? ' (ca. ' + Math.round(w.minuten) + ' min)' : '') : 'Luftlinie ' + nfpKmText(w.luft) + ' km (Route nicht verfügbar)');
 }
@@ -15236,7 +15346,7 @@ function karteZonenSichtbar(){ const m = karteModus(); return m === 'an' || m ==
 function karteKreiseSichtbar(){ const m = karteModus(); return m === 'kreise' || m === 'beide'; }
 function karteModusWeiter(){ const n = { an: 'kreise', kreise: 'beide', beide: 'aus', aus: 'an' }[karteModus()]; LS.set('karte_zonen', n === 'an' ? true : (n === 'aus' ? false : n)); return n; }
 function augeKlasse(el){ if(!el) return; const m = karteModus(); el.classList.toggle('aus', m === 'aus'); el.classList.toggle('kreise', m === 'kreise'); el.classList.toggle('beide', m === 'beide');
-  el.title = { an: 'Zonen (antippen: km-Ringe)', kreise: 'km-Ringe (antippen: Zonen + Ringe)', beide: 'Zonen + km-Ringe (antippen: aus)', aus: 'aus (antippen: Zonen)' }[m]; }
+  el.title = { an: 'Zonen (anklicken: km-Ringe)', kreise: 'km-Ringe (anklicken: Zonen + Ringe)', beide: 'Zonen + km-Ringe (anklicken: aus)', aus: 'aus (anklicken: Zonen)' }[m]; }
 // km-Kreise um die Notfallpraxis (wie der 50-km-Kreis): Stufen der Wegepauschale
 const KM_KREISE = [2, 5, 10, 20, 30, 50];   // 50 km als normaler Ring (wie Launch)
 // Farben wie die Zonen der KVBW-Karte (2-km-Zone ... 30-km-Zone)
@@ -15753,7 +15863,7 @@ function miniKarteStarten(w){
     anwenden(g.m0, Math.max(1 / 16, Math.min(16, g.k * Math.pow(1.0025, -ev.deltaY))));
     clearTimeout(radT); radT = setTimeout(beenden, 250);
   }, { passive: false });
-  // Tippen: Fall oeffnen bzw. grosse Karte (mit derselben Ansicht)
+  // Klicken: Fall oeffnen bzw. grosse Karte (mit derselben Ansicht)
   w.addEventListener('click', (ev)=>{
     if(ev.target.closest('.mini-ebene-knopf, .karte-auge, .mini-stil, .mini-aed, .mini-pos, .mini-ueber')) return;
     if(gezogen){ ev.stopPropagation(); return; }
@@ -15767,7 +15877,7 @@ function miniKarteStarten(w){
   osmOfflineLaden().catch(()=>null).then(()=>{ if(cur) zeichnen(); });
 }
 // kleine Karte als Vektorkarte: eine Hand scrollt die Seite, zwei Finger zoomen/verschieben
-// (am PC Strg+Mausrad); Tippen oeffnet die grosse Karte bzw. den Fall.
+// (am PC Strg+Mausrad); Klicken oeffnet die grosse Karte bzw. den Fall.
 function vkDatenEbenen(map, d){
   if(map.getSource('vk-zonen')) return;
   const ll = (g)=> [g.lon, g.lat];
@@ -15999,7 +16109,7 @@ document.addEventListener('click', (ev)=>{
 // Auge ein/aus. Zwei-Finger-Zoom; am PC Mausrad = Zoom, Ziehen = Verschieben.
 // opt: { ansicht:{lat,lon,z}, ebene:'kvbw'|'zonen', titel,
 //        waehlen:{ adresse:{lat,lon}, adresseText, gps } }  -> Promise(Auswahl | null)
-// Mit "waehlen": Adresse suchen, Stelle antippen oder Standort -> Zone, Luftlinie, Route.
+// Mit "waehlen": Adresse suchen, Stelle anklicken oder Standort -> Zone, Luftlinie, Route.
 // Querformat: Adresssuche nicht als volle Zeile ueber der Karte, sondern als kleine Box oben links IN der Karte
 function karteSucheSchweben(ov){ karteQuerUmstellen(ov); }
 // Querformat an/aus (beim Oeffnen und beim Drehen): Suche schwebt in der Karte (Strasse, darunter PLZ/Ort),
@@ -16034,7 +16144,7 @@ function osmKarteOverlay(d, text, opt){
       '<button type="button" class="btn-sekundaer nfp-such-knopf">Suchen</button></div>' +
     '<div class="nfp-rahmen"><div class="nfp-scroll osm-scroll"></div>' + KARTE_EBENE_KNOPF + KARTE_AUGE_KNOPF +
       KARTE_ZOOM_KNOEPFE + '<button type="button" class="gross-zu" aria-label="Karte verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>' + '</div>' +
-    '<div class="nfp-fuss"><div class="nfp-info" id="okInfo">' + (W ? 'Adresse suchen, Position holen, auf die Einsatzstelle tippen oder lange drücken und den Punkt mit dem Finger verschieben.' : (text ? htmlEsc(text) + '<br>' : '') + '<small>Adresse suchen oder lange auf die Karte drücken, um einen Ort zu setzen (mit dem Finger verschiebbar).</small>') + '</div>' +
+    '<div class="nfp-fuss"><div class="nfp-info" id="okInfo">' + (W ? 'Adresse suchen, Position holen, auf die Einsatzstelle klicken oder lange drücken und den Punkt mit dem Finger verschieben.' : (text ? htmlEsc(text) + '<br>' : '') + '<small>Adresse suchen oder lange auf die Karte drücken, um einen Ort zu setzen (mit dem Finger verschiebbar).</small>') + '</div>' +
       '<div class="nfp-knoepfe"><button type="button" class="ok-uebersicht">Übersicht</button><button type="button" class="ok-position">📍 Position</button>' +
         (W ? '<button type="button" class="btn-primaer nfp-ok" disabled>Übernehmen</button>' : '') + '</div>' +
       '<div class="luft-karte-legende vk-legende" id="okLegende"></div><div class="ok-attr">' + OSM_ATTR_HTML + '</div></div>';
@@ -16197,8 +16307,8 @@ function osmKarteOverlay(d, text, opt){
     if(!a){ info.textContent = 'Bitte eine Adresse eintragen.'; return; }
     info.textContent = 'Adresse wird gesucht …';
     let g = null;
-    try{ g = await gkvOrtSuchen(a); }catch(_){ info.textContent = 'Keine Verbindung zum Kartendienst – bitte auf die Einsatzstelle tippen.'; return; }
-    if(!g){ info.textContent = 'Adresse nicht gefunden – bitte prüfen oder auf die Einsatzstelle tippen.'; return; }
+    try{ g = await gkvOrtSuchen(a); }catch(_){ info.textContent = 'Keine Verbindung zum Kartendienst – bitte auf die Einsatzstelle klicken.'; return; }
+    if(!g){ info.textContent = 'Adresse nicht gefunden – bitte prüfen oder auf die Einsatzstelle klicken.'; return; }
     hinZu(g, 13.5); waehlen(g, 'Adresse' + (g.gefunden ? ' (' + g.gefunden + ')' : ''), a, 'wache');
     if(W && wahl){ wahl._uebersicht = true; alles(); }
   };
@@ -16374,7 +16484,7 @@ document.addEventListener('input', (ev)=>{
   const istBic = el.matches(SEL_BIC), istIban = el.matches(SEL_IBAN);
   if(!istBic && !istIban) return;
   if(istIban){
-    // IBAN schon beim Tippen in 4er-Bloecken (Cursor bleibt hinter demselben Zeichen)
+    // IBAN schon beim Eintippen in 4er-Bloecken (Cursor bleibt hinter demselben Zeichen)
     const pos = el.selectionStart == null ? el.value.length : el.selectionStart, n = el.value.slice(0, pos).replace(/\s/g, '').length;
     const f = ibanFormat(el.value);
     if(f !== el.value){ el.value = f; let i = 0, c = 0; while(i < f.length && c < n){ if(f[i] !== ' ') c++; i++; } try{ el.setSelectionRange(i, i); }catch(_){} }
@@ -17767,8 +17877,8 @@ function vektorKarteOverlay(d, text, opt){
         if(W.adresse && W.adresse.lat){ zielSetzen(W.adresse, 'Adresse', W.adresseText || '', false, 'wache'); ueber(); }
         else if(W.adresseText) suchen();
         else if(W.gps){ standortHolen({ still: true }).then(g=>{ if(!g) return; map.jumpTo({ center: ll(g), zoom: 15 }); zielSetzen(g, 'Standort', '', false, 'wache'); adresseZu(g); }); }
-        else info.textContent = 'Adresse suchen, auf die Einsatzstelle tippen oder lange drücken.';
-        // Tippen waehlt die Einsatzstelle
+        else info.textContent = 'Adresse suchen, auf die Einsatzstelle klicken oder lange drücken.';
+        // Klicken waehlt die Einsatzstelle
         map.on('click', (ev)=>{ if(ev.defaultPrevented || Date.now() - (ov._langZeit || 0) < 1000) return; const p = ev.lngLat; zielSetzen({ lat: p.lat, lon: p.lng }, 'Gewählt', '', false, 'wache'); adresseZu({ lat: p.lat, lon: p.lng }); });
       }
     });
@@ -18163,7 +18273,7 @@ async function standortKarteZeichnen(info, mitDialog){
   const fallKlick = (i)=>{ const f = faelle[i]; if(f && f.oeffnen) f.oeffnen(); };
   const ichPoi = pos ? [{ lat: pos.lat, lon: pos.lon, kl: 'ich' }] : [];
   if(!auf){
-    if(!pos){ box.innerHTML = kopf('Standort nicht verfügbar') + '<div class="sk-leer">Ohne Standortfreigabe keine Anzeige – „📍 Standort“ tippen.</div>'; verdrahten(); return; }
+    if(!pos){ box.innerHTML = kopf('Standort nicht verfügbar') + '<div class="sk-leer">Ohne Standortfreigabe keine Anzeige – „📍 Standort“ klicken.</div>'; verdrahten(); return; }
     const d = { pois: ichPoi, nfp: true, rahmen: true };
     gross = (ebene, ansicht)=> osmKarteOverlay(d, 'Dein Standort', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen' });
     box.innerHTML = kopf(zone) + miniKarteHtml(d, { mitte: pos, z: 12, w: 560, h: 330, start: ichDrin ? 'kvbw' : 'osm', kvbwOk: ichDrin, gross });
@@ -18241,7 +18351,7 @@ async function zonenEditorOeffnen(){
   const hinweis = (t)=> info.innerHTML = t;
   const standardHinweis = ()=> hinweis(modus === 'zeichnen'
     ? 'Grenze der <b style="color:' + NFP_ZONEN[zone].farbe + '">' + NFP_ZONEN[zone].label + '</b> nachzeichnen: <b>auf der Grenze ansetzen</b>, die richtige Linie ziehen und <b>wieder auf der Grenze</b> loslassen.'
-    : 'Karte verschieben und mit zwei Fingern oder −/+ zoomen. Zum Nachzeichnen auf „✏ Zeichnen“ tippen.');
+    : 'Karte verschieben und mit zwei Fingern oder −/+ zoomen. Zum Nachzeichnen auf „✏ Zeichnen“ klicken.');
   const zeichnen = (strich)=>{
     const f = (v)=> v.toFixed(1);
     const pfad = (k)=> (stand[k] || []).map(r=> 'M' + r.map(q=> f(q.x) + ' ' + f(q.y)).join('L') + 'Z').join('');
@@ -18427,7 +18537,7 @@ async function standortHolen(opt){
       if(opt.still) return null;
       if(e && e.code === 1){ await standortHilfe('gesperrt'); return null; }
       // Standort am Geraet aus: Web-Apps koennen die Systemeinstellungen nicht selbst oeffnen -> kurzer Hinweis statt Dialog
-      appToastAnzeigen('Kein Standort – am Handy den Standort einschalten (oben herunterwischen › „Standort“) und nochmal tippen.', 4500); return null;
+      appToastAnzeigen('Kein Standort – am Handy den Standort einschalten (oben herunterwischen › „Standort“) und nochmal klicken.', 4500); return null;
     }
   }
 }
@@ -18439,14 +18549,14 @@ async function standortHilfe(fall){
         '<li><b>Als App installiert:</b> App-Symbol lange drücken › <i>App-Info</i> › <i>Berechtigungen</i> › <i>Standort</i> › <i>Nur bei Nutzung der App zulassen</i>.</li>' +
         '<li><b>Im Chrome-Browser:</b> Schloss-Symbol links neben der Adresse › <i>Berechtigungen</i> › <i>Standort</i> › <i>Zulassen</i>.</li>' +
         '<li>Falls Chrome selbst keinen Standort darf: Android-<i>Einstellungen</i> › <i>Apps</i> › <i>Chrome</i> › <i>Berechtigungen</i> › <i>Standort</i> › <i>Bei Nutzung zulassen</i>.</li>' +
-      '</ol><div class="fb-info">Danach den GPS-Knopf noch einmal tippen.</div>',
+      '</ol><div class="fb-info">Danach den GPS-Knopf noch einmal klicken.</div>',
       [{ label: 'OK', akt: 'ok', primaer: true }]);
     betaOverlay.schliessen(); return false;
   }
   const a = await betaOverlay.ergebnis('Kein Standort',
     '<div class="fb-info">Das Handy liefert gerade keinen Standort – meist ist der Standort (GPS) ausgeschaltet.</div>' +
     '<ol class="standort-hilfe"><li>Vom oberen Rand nach unten wischen › Kachel <b>„Standort“</b> einschalten<br>(oder <i>Einstellungen</i> › <i>Standort</i> › <i>Standort verwenden</i>).</li>' +
-    '<li>Dann <b>„Nochmal“</b> tippen.</li></ol>',
+    '<li>Dann <b>„Nochmal“</b> klicken.</li></ol>',
     [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Nochmal', akt: 'ja', primaer: true }]);
   betaOverlay.schliessen();
   return a === 'ja';
@@ -19169,11 +19279,11 @@ const DESIGNS = [
   { k: 'standard', titel: 'Standard', text: 'Bisheriges Aussehen.', farben: ['#2b3a55', '#1f5f9e', '#1f8a4c', '#7d4e9e'] },
   { k: 'klinik', titel: 'Klinik', text: 'Sachlich und ruhig: weiße Flächen, Dienst-Karte mit Förderung, offene Fälle, Leiste unten.', farben: ['#ffffff', '#141a24', '#1f5f9e', '#6e4391'] },
   { k: 'nacht', titel: 'Nachtfahrt', text: 'Dunkel und blendfrei: Dienst als Uhr-Ring, Einsätze als Zeitleiste, Bernstein-Akzent.', farben: ['#0b1020', '#141b2e', '#ffb547', '#c79bff'] },
-  { k: 'einhand', titel: 'Einhand', text: 'Alles im Daumenbereich: große Kacheln, kräftige Schrift, große Tippflächen.', farben: ['#eef1f5', '#4a5568', '#5b3480', '#17663a'] }
+  { k: 'einhand', titel: 'Einhand', text: 'Alles im Daumenbereich: große Kacheln, kräftige Schrift, große Klickflächen.', farben: ['#eef1f5', '#4a5568', '#5b3480', '#17663a'] }
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v367';
+const APP_VERSION = 'v368';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19278,9 +19388,11 @@ function querStartAnordnen(){
     const leer = !live.querySelector('.ds-dz') && live.offsetHeight < 4;
     w.classList.toggle('zwei', leer); s2.hidden = leer;
   };
-  mitte(); setTimeout(mitte, 600); setTimeout(mitte, 2000);
   if(karte){ s3.appendChild(karte); w.append(s3); }
   if(kopf) kopf.after(w); else app.prepend(w);
+  // erst jetzt (im Dokument) messen: zwei oder drei Spalten -- sonst sieht man kurz das Dreier-Raster
+  mitte(); setTimeout(mitte, 600); setTimeout(mitte, 2000);
+  try{ if(typeof miniKurzPruefen === 'function') requestAnimationFrame(miniKurzPruefen); }catch(_){}
 }
 // Rechnungsverwaltung: Details rechts (Querformat), "Bearbeiten" oeffnet wie bisher
 function querDetailZeigen(zeileEl, titel, zeilen, knoepfe){
@@ -19307,7 +19419,7 @@ function designWahlHtml(){
       <div class="pos-stil-wahl live-wahl"><label class="pos-stil-option${querEinst() ? ' an' : ''}"><input type="checkbox" id="chkQuerLayout"${querEinst() ? ' checked' : ''}>
         <span><b>Breite Ansicht im Querformat</b><small>Sobald Tablet, PC oder Handy quer liegen: Startseite in drei Spalten (Neuer Fall · Dienst · Karte), beim Erfassen rechts die Rechnungsvorschau, Rechnungsverwaltung mit Details rechts, Fahrtenbuch und Luftlinie-Werkzeug zweispaltig.</small></span></label></div>
       <div class="sync-unter-titel" style="margin-top:14px;">Live-Dienst-Anzeige auf der Startseite</div>
-      <div class="design-hinweis">Optional, jede einzeln. Den Dienst wählst du durch Antippen der Anzeige; er füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.</div>
+      <div class="design-hinweis">Optional, jede einzeln. Den Dienst wählst du durch Anklicken der Anzeige; er füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.</div>
       <div class="pos-stil-wahl live-wahl">${LIVE_ANZEIGEN.map(x=> `
         <label class="pos-stil-option${liveEinst()[x.k] ? ' an' : ''}"><input type="checkbox" name="liveAnzeige" value="${x.k}"${liveEinst()[x.k] ? ' checked' : ''}>
           <span><b>${x.titel}</b><small>${x.text}</small></span></label>`).join('')}
@@ -19338,7 +19450,7 @@ function designProfilName(id){
   return { hb: 'Hausbesuch', tel: 'Telefon', sitz: 'Sitzdienst' }[id] || 'GKV';
 }
 // ---------- Live-Dienst (optional, Einstellungen > Allgemein) ----------
-// Der Dienst wird von Hand gewaehlt (Antippen der Anzeige) und fuellt
+// Der Dienst wird von Hand gewaehlt (Anklicken der Anzeige) und fuellt
 // spaeter die Abfrage "Neuer Dienst" beim Eintragen ins Fahrtenbuch vor.
 // Gespeichert lokal: live_dienst = {datum:'JJJJ-MM-TT', von:'HH:MM', bis:'HH:MM', art, arzt}
 // Uebliche Dienstzeiten je Dienstart (Werktag / Wochenende+Feiertag) --
@@ -19537,7 +19649,7 @@ function liveDienstErsetztHinweis(alt, neu){
     if(!a || !n || (a.datum === n.datum && a.von === n.von && a.bis === n.bis && a.art === n.art && (a.schicht || '') === (n.schicht || ''))) return;
     const t = (d)=> (d.art || 'Dienst') + (d.schicht ? ' ' + d.schicht : '') + ' · ' + isoDe(d.datum) + ', ' + d.von + '–' + d.bis + ' Uhr';
     liveErsetztOffen = 'Auf einem anderen Gerät wurde ein anderer Dienst gestartet oder dieser geändert (z. B. während kein Netz da war). Es gilt jetzt der zuletzt gestartete:\n\n' + t(n) +
-      '\n\nstatt\n\n' + t(a) + '\n\nPasst das nicht, tippe auf die Dienstanzeige und ändere ihn.';
+      '\n\nstatt\n\n' + t(a) + '\n\nPasst das nicht, klicke auf die Dienstanzeige und ändere ihn.';
     setTimeout(liveErsetztZeigen, 400);
   }catch(_){}
 }
@@ -19588,7 +19700,7 @@ function designUeber(info){
   return { laufend: 'Laufender Dienst', geplant: 'Geplanter Dienst', vorbei: 'Dienst beendet', leer: 'Live-Dienst' }[info.modus] +
     (info.auto === 'fahrtenbuch' ? ' · erkannt im Fahrtenbuch' : info.auto === 'gkv' ? ' · erkannt an GKV-Fällen' : '');
 }
-function liveLeerText(info){ return info.auto === 'suche' ? ['Kein Dienst erkannt', 'Antippen und Dienst wählen'] : ['Kein Dienst gewählt', 'Antippen und Dienst wählen']; }
+function liveLeerText(info){ return info.auto === 'suche' ? ['Kein Dienst erkannt', 'Anklicken und Dienst wählen'] : ['Kein Dienst gewählt', 'Anklicken und Dienst wählen']; }
 function designRestText(info){
   if(info.modus === 'geplant'){ const min = Math.round((info.fenster.von - info.jetzt) / 60000); return 'beginnt in ' + Math.floor(min / 60) + ' h ' + zz2(min % 60) + ' min'; }
   const ms = info.fenster.bis - info.jetzt;
@@ -19642,7 +19754,7 @@ function liveAutoAuffrischen(){
   });
 }
 
-// Auswahl des Dienstes (Antippen der Live-Anzeige)
+// Auswahl des Dienstes (Anklicken der Live-Anzeige)
 async function liveDienstDialog(){
   const akt = liveDienstLaden(), jetzt = new Date();
   const vorschlag = akt || (liveAuto() ? liveDienstAuto() : null);
@@ -19679,7 +19791,7 @@ async function liveDienstDialog(){
       '<div class="fb-info">Der Dienst wird in der App angelegt und steuert die Live-Anzeige. Alle Fälle in seinem Zeitraum landen im Fahrtenbuch in diesem Dienst – ohne weitere Rückfrage.' +
         (!akt && vorschlag ? ' Vorschlag: automatisch erkannt (' + (vorschlag.auto === 'fahrtenbuch' ? 'Fahrtenbuch' : 'GKV-Fälle') + ').' : '') + (akt && liveAuto() ? ' „Dienst beenden“ schaltet zurück auf automatisch.' : '') +
         (passtJetzt && !mehrere() && schicht === passtJetzt.label && art === passtJetzt.art ? ' <b>Vorausgewählt: ' + htmlEsc(passtJetzt.art + ' · ' + passtJetzt.label) + '</b> (' + passtJetzt.von + '–' + passtJetzt.bis + ').' : '') +
-        (mehrere() && !schicht ? ' <b>Passt zur Uhrzeit: ' + htmlEsc(passtJetzt.kandidaten.map(k=> k.label).join(', ')) + '</b> – bitte deine Nummer antippen (orange markiert).' : '') + '</div>' +
+        (mehrere() && !schicht ? ' <b>Passt zur Uhrzeit: ' + htmlEsc(passtJetzt.kandidaten.map(k=> k.label).join(', ')) + '</b> – bitte deine Nummer anklicken (orange markiert).' : '') + '</div>' +
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
@@ -19718,7 +19830,7 @@ async function liveDienstDialog(){
     if(a === 'ende'){ betaOverlay.schliessen(); liveDienstLeeren(); syncBaldSchreiben(); return true; }
     if(a !== 'ok'){ betaOverlay.schliessen(); return false; }
     if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)){ fehler = 'Bitte den Tag des Dienstbeginns wählen.'; continue; }
-    if(mehrere() && !schicht && (!von || !bis)){ fehler = 'Bitte deinen Dienst (Nummer) antippen – oder eigene Uhrzeiten eintragen.'; continue; }
+    if(mehrere() && !schicht && (!von || !bis)){ fehler = 'Bitte deinen Dienst (Nummer) anklicken – oder eigene Uhrzeiten eintragen.'; continue; }
     if(!/^\d{1,2}:\d{2}$/.test(von) || !/^\d{1,2}:\d{2}$/.test(bis)){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen.'; continue; }
     betaOverlay.schliessen();
     if(!dienstSchichten(art, tagVon()).length) schicht = '';
@@ -20198,8 +20310,10 @@ function ansichtEinstellungen(){
       <div class="trennlinie">Demo</div>
       <div class="design-hinweis">${window.DEMO_MODUS ? 'Die Demo läuft: alle Daten sind erfunden, nichts wird gespeichert.' : 'Die App mit erfundenen Beispieldaten ausprobieren oder vorführen (zwei Jahre Dienste, Patienten, Rechnungen). Deine echten Daten und dein OneDrive bleiben dabei unberührt – die Demo läuft nur im Arbeitsspeicher.'}</div>
       <button type="button" class="btn-sekundaer" id="btnDemo">${window.DEMO_MODUS ? 'Demo beenden' : 'Demo starten'}</button>
+      <button type="button" class="btn-sekundaer" id="btnEinfuehrung" style="margin-top:8px;">Kurze Einführung zeigen</button>
     </div>
   `;
+  { const ef = document.getElementById('btnEinfuehrung'); if(ef) ef.onclick = ()=> appEinfuehrung(); }
   document.getElementById('btnDemo').onclick = ()=> window.DEMO_MODUS ? demoBeenden() : demoFragen();
   document.getElementById('btnEinstOeffneUebersicht').onclick = ()=> excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
     '');
@@ -20782,7 +20896,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // zurückführen statt immer auf die Startseite. Bei einer neu angelegten
   // Rechnung (kein korrekturIdx, ueber die Kacheln Leichenschau/Privat-
   // rechnung gestartet) bleibt es bei der Startseite.
-  const herkunftFall = fallHerkunftNehmen();
+  if(!vorbelegt){ maskeHerkunftAkt = fallHerkunftNehmen(); maskeGeaendertFlag = false; }
+  const herkunftFall = maskeHerkunftAkt;
   const ruecksprungZiel = herkunftFall || (betaMaskeHerkunft==='gesamt' ? ()=> ansichtRechnungenGesamt() : (korrekturIdx!==undefined ? ansichtKorrigieren : ansichtStart));
   setzeTitel(art==='ls' ? 'Leichenschau' : 'Privatrechnung', zurueckAusMaske);
   let werte = {};
@@ -20903,7 +21018,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       `<div id="diagChips"></div>` +
       `<div class="feld" style="position:relative;">
         <label for="txtDiag">Diagnose suchen</label>
-        <input type="text" id="txtDiag" autocomplete="off" placeholder="ab 2 Zeichen tippen...">
+        <input type="text" id="txtDiag" autocomplete="off" placeholder="ab 2 Zeichen eingeben...">
         <div class="autocomplete-liste" id="diagVorschlaege"></div>
       </div>`);
   }
@@ -20951,6 +21066,17 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   html += `</div>`;
 
   app.innerHTML = html;
+  // Schon gestellte Rechnung: „Speichern“ grau, bis etwas geaendert wurde; dann in der Farbe der Rechnungsart
+  { const sp = document.getElementById('btnSpeichern'), alt = korrekturIdx !== undefined ? ladeFaelle(art)[korrekturIdx] : null;
+    if(sp && alt && (alt.rechnungsnummer || alt.hochgeladen)){
+      sp.style.setProperty('--aend-farbe', art === 'ls' ? 'var(--ls-farbe)' : 'var(--pt-farbe)');
+      const setzen = ()=>{ if(!document.body.contains(sp)) return; sp.disabled = !maskeGeaendertFlag; sp.classList.toggle('geaendert', maskeGeaendertFlag); };
+      const markieren = (ev)=>{ if(!document.body.contains(sp) || (ev.target && ev.target.closest && ev.target.closest('#btnSpeichern'))) return; maskeGeaendertFlag = true; setzen(); };
+      if(app._maskeAend){ app.removeEventListener('input', app._maskeAend, true); app.removeEventListener('change', app._maskeAend, true); }
+      app._maskeAend = markieren; app.addEventListener('input', markieren, true); app.addEventListener('change', markieren, true);
+      setzen();
+    }
+  }
   // Querformat: Formular links, Rechnungsvorschau rechts (live)
   if(querEinst()){
     const w = document.createElement('div'); w.className = 'quer-maske quer-breit';
@@ -21203,7 +21329,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     // von sich aus "Öffnen"/"Los" statt "Weiter") -- die Bestaetigung wird
     // hier bewusst NICHT auf "Weiter" umgebogen, sondern sinnvoll genutzt:
     // "Öffnen" springt direkt zu den Rechnungspositionen, genau wie ein
-    // Antippen des Buttons "Rechnungspositionen auswählen".
+    // Anklicken des Buttons "Rechnungspositionen auswählen".
     document.getElementById('txtAdresse2').setAttribute('enterkeyhint', 'go');
     document.getElementById('txtAdresse2').addEventListener('keydown', (ev)=>{
       if(ev.key==='Enter'){ ev.preventDefault(); document.getElementById('txtAdresse2').blur(); document.getElementById('btnPunkte')?.click(); }
@@ -21315,10 +21441,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 
     const diagEl = document.getElementById('txtDiag');
     const diagListe = document.getElementById('diagVorschlaege');
-    // BETA: beim Tippen Suchfeld nach oben schieben, damit die Trefferliste
+    // BETA: beim Klicken Suchfeld nach oben schieben, damit die Trefferliste
     // nicht unter der Tastatur verschwindet
     const diagNachOben = ()=>{
-      document.body.classList.add('diag-tippen');
+      document.body.classList.add('diag-klicken');
       setTimeout(()=>{
         if(document.activeElement !== diagEl) return;
         const y = diagEl.getBoundingClientRect().top + window.scrollY - 84;
@@ -21326,7 +21452,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       }, 280);
     };
     diagEl.addEventListener('focus', diagNachOben);
-    diagEl.addEventListener('blur', ()=> setTimeout(()=>{ if(document.activeElement !== diagEl) document.body.classList.remove('diag-tippen'); }, 400));
+    diagEl.addEventListener('blur', ()=> setTimeout(()=>{ if(document.activeElement !== diagEl) document.body.classList.remove('diag-klicken'); }, 400));
     if(window.visualViewport) window.visualViewport.addEventListener('resize', ()=>{ if(document.activeElement === diagEl) diagNachOben(); });
     // Freie Diagnosen: nicht jede Diagnose steht im ICD-Katalog (bzw. ist
     // dort noch nicht erfasst) -- deshalb wird zusätzlich zu den
@@ -21448,7 +21574,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 
   // Analog zur PC-Funktion KmBerechnen/RoutenAnzeigen: zeigt bis zu mehrere
   // Routenalternativen (falls der Routendienst welche liefert) plus die
-  // Luftlinie als eigene Kachel an -- Antippen uebernimmt die gewaehlte
+  // Luftlinie als eigene Kachel an -- Anklicken uebernimmt die gewaehlte
   // Strecke in "Strecke (Hin- und Rückfahrt)", genau wie am PC RouteWaehlen()
   // (Luftlinie bleibt Einfachstrecke, echte Routen werden Hin+Rück verdoppelt).
   async function alternativroutenAnzeigen(){
@@ -22153,6 +22279,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // auf -- das hat vorher zu einem stillen Fehler geführt, der einen
       // auf der Positionen-Seite "gefangen" hat.
       positionenAuswahl = gewaehlt;
+      maskeGeaendertFlag = true;   // Positionen uebernommen = Aenderung
       const neueWerte = {...snapVorPositionen, txtBetrag: summe.toFixed(2).replace('.',',')};
       ansichtMaske(art, korrekturIdx, {werte: neueWerte, positionen: positionenAuswahl});
     }, kmFahrstrecke);
@@ -22175,7 +22302,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // Masken-Aufruf frisch auf false gesetzt (Closure-Variable), damit eine neu
   // geoeffnete Maske wieder mit der ersten Warnung startet.
   let warnhinweiseBestaetigt = false;
-  let neuGespeichert = false; // Doppel-Tipp auf "Speichern" legt keinen zweiten Fall an
+  let neuGespeichert = false; // Doppelklick auf "Speichern" legt keinen zweiten Fall an
 
   document.getElementById('btnSpeichern').onclick = ()=>{
     if(neuGespeichert) return;
@@ -22195,7 +22322,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // erst NACH alertBanner() zum eigentlichen Hinweis scrollen, sonst
       // gewinnt dessen Scroll und man landet wieder unten am Banner statt
       // beim eigentlich markierten Feld.
-      alertBanner('Bitte zuerst die markierten Hinweise oben prüfen. Nochmal auf "Speichern" tippen, um trotzdem fortzufahren.');
+      alertBanner('Bitte zuerst die markierten Hinweise oben prüfen. Nochmal auf "Speichern" klicken, um trotzdem fortzufahren.');
       offeneWarnung.scrollIntoView({behavior:'smooth', block:'center'});
       warnhinweiseBestaetigt = true; // naechster Klick speichert durch, auch wenn der Hinweis noch offen ist
       return;
@@ -22349,10 +22476,10 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 // Kurzer Einblend-Hinweis (siehe #appToast) -- liegt AUSSERHALB von #app,
 // wird also von einem Ansichtswechsel nicht mit weggerissen. Allgemein
 // nutzbar (Zurück-Taste-Hinweis, Auto-Sync-Rückmeldungen, ...).
-// ---------- Tipp auf Speichern direkt nach dem Tippen in ein Feld ----------
+// ---------- Klick auf Speichern direkt nach dem Eintippen in ein Feld ----------
 // Verlaesst man ein Feld, aendert sich oft der Inhalt darueber (Hinweis zur
 // Strecke, Adress-Normalisierung, Tastatur geht zu). Dadurch rutschte der
-// Knopf zwischen Antippen und Loslassen weg und der Tipp ging ins Leere
+// Knopf zwischen Anklicken und Loslassen weg und der Tipp ging ins Leere
 // ("Speichern geht nicht"). Deshalb: beim Druecken auf einen Haupt-Knopf
 // bleibt der Fokus im Feld (kein Verrutschen); erst beim Klick selbst wird
 // das Feld verlassen -- seine Pruefungen laufen, bevor gespeichert wird.
@@ -22748,7 +22875,7 @@ async function wegZonenZeichnen(p){
     const s = st(k), anz = fl.filter(x=> x.k === k).length;
     hinweis(modus === 'zeichnen'
       ? '<b style="color:' + s.farbe + '">' + htmlEsc(s.label) + '</b>: ' + (anz ? 'Grenze ändern: <b>auf der Grenze ansetzen</b>, neue Linie ziehen, <b>wieder auf der Grenze</b> loslassen. Oder eine weitere Fläche als geschlossene Linie zeichnen.' : 'Fläche als <b>geschlossene Linie</b> umfahren (Ende beim Anfang).')
-      : 'Karte verschieben, mit zwei Fingern, Mausrad oder −/+ zoomen. Zum Zeichnen „✏ Zeichnen“ tippen.');
+      : 'Karte verschieben, mit zwei Fingern, Mausrad oder −/+ zoomen. Zum Zeichnen „✏ Zeichnen“ klicken.');
   };
   // --- Darstellung ---
   let akt = null, basisLinks = 0, basisOben = 0;
