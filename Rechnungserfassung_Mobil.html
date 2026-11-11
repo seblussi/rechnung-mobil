@@ -5851,7 +5851,7 @@ async function einrFehlt(){
   // Weiterleitung: eigene Adresse, oder die Standard-Weiterleitung (leer bzw. Standard-Adresse) mit Zugangsdaten --
   // die Standard-Weiterleitung laesst nur freigegebene LetterXpress-Benutzer durch; ob man dazugehoert, zeigt "Prüfen"/der Versand
   const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY), wl = !!String(w.BRIEF_WEITERLEITUNG || '').trim() || !!String(w.BRIEF_ZUGANGSCODE || '').trim();
-  if(!zugang || !wl) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!zugang ? 'LetterXpress-Zugang' : '', !wl ? 'Zugangscode der Weiterleitung' : ''].filter(Boolean).join(' und ') });
+  if(!zugang || !wl) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!zugang ? 'LetterXpress-Zugang' : '', !wl ? 'Zugangscode' : ''].filter(Boolean).join(' und ') });
   return f;
 }
 // unvollstaendig -> Hinweis und die fehlenden Schritte durchgehen (Vorhandenes ist vorausgefuellt)
@@ -5989,25 +5989,14 @@ function ansichtEinrichtung(schritt){
     const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
     const eigen0 = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG), eigen = eigen0 === LXP_WEITERLEITUNG_STANDARD ? '' : eigen0;
     html = '<h2>Briefversand (optional)</h2>' +
-      '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Weil LetterXpress keine Aufrufe direkt aus dem Browser erlaubt, läuft der Versand über eine kleine <b>Weiterleitung</b> (Microsoft Azure, Rechenzentrum Frankfurt). Sie reicht nur durch und speichert nichts. Für den Alpha-Test kannst du die Weiterleitung von Sergej nutzen – dafür brauchst du nur deinen persönlichen <b>Zugangscode</b>.</p>' +
+      '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Du brauchst dafür ein LetterXpress-Konto und deinen persönlichen <b>Zugangscode</b> von Sergej.</p>' +
+      '<p class="einr-klein">Warum ein Zugangscode und eine AVV? LetterXpress nimmt keine Aufträge direkt aus der App an. Die Briefe laufen deshalb kurz über Sergejs Server (Rechenzentrum Frankfurt), der sie nur durchreicht und nichts speichert. Weil dabei Rechnungen mit Patientendaten durchgehen, gilt dafür die Vereinbarung zur Auftragsverarbeitung (AVV), die du mit den Alpha-Bedingungen bestätigt hast.</p>' +
       '<h3>1. LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren (mit den AGB ist dort auch der Auftragsverarbeitungsvertrag dabei) und unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
       '<label class="einr-feld"><span>LetterXpress-Benutzername</span><input type="text" id="einrLxpNutzer" autocomplete="off" value="' + htmlEsc(w.BRIEF_BENUTZER || '') + '"></label>' +
       '<label class="einr-feld"><span>API-Key</span><input type="password" id="einrLxpKey" autocomplete="off" value="' + htmlEsc(w.BRIEF_APIKEY || '') + '"></label>' +
       '<h3>2. Zugangscode eintragen und prüfen</h3>' +
       '<label class="einr-feld"><span>Zugangscode (von Sergej)</span><input type="text" id="einrLxpZugang" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx" value="' + htmlEsc(w.BRIEF_ZUGANGSCODE || '') + '"></label>' +
-      '<details class="einr-erweitert"' + (eigen ? ' open' : '') + '><summary>Eigene Weiterleitung nutzen (optional)</summary>' +
-      '<label class="einr-feld"><span>Adresse der eigenen Weiterleitung (leer lassen = die von Sergej)</span><input type="url" id="einrLxpUrl" autocomplete="off" placeholder="https://….azurewebsites.net/api" value="' + htmlEsc(eigen) + '"></label>' +
-      '<p class="einr-klein"><b>Eigene Weiterleitung statt der von Sergej:</b> eigenes Azure-Konto anlegen und ein Skript ausführen (ca. 15 Minuten). Dann bleibt kein Zugangscode nötig.</p>' +
-      '<p class="einr-klein"><a class="btn-primaer einr-azure-link" href="https://azure.microsoft.com/de-de/pricing/purchase-options/azure-account" target="_blank" rel="noopener">Kostenloses Azure-Konto anlegen</a></p>' +
-      '<ol class="einr-klein einr-azure-schritte"><li>„Kostenlos starten“ wählen und mit deinem Microsoft-Konto anmelden (dasselbe wie für OneDrive geht).</li>' +
-        '<li>Telefonnummer und <b>Kreditkarte</b> angeben – nur zur Identitätsprüfung, es wird nichts abgebucht (evtl. kurz 1 $ reserviert und wieder freigegeben). Prepaid-Karten gehen nicht.</li>' +
-        '<li>Warten, bis „Azure-Portal“ erscheint – dann ist das Abonnement da.</li>' +
-        '<li><b>Nach 30 Tagen</b> fragt Azure, ob du auf „nutzungsbasierte Bezahlung“ umstellen willst: <b>ja, umstellen</b> – sonst wird das Konto samt Weiterleitung abgeschaltet. Bezahlt wird nur, was über die kostenlosen Mengen hinausgeht; bei ein paar Briefen im Monat praktisch 0 € (höchstens wenige Cent für den Speicher).</li></ol>' +
-      '<p class="einr-klein">Erst wenn das Azure-Konto steht – am besten am PC: <a href="https://shell.azure.com" target="_blank" rel="noopener">shell.azure.com</a> öffnen ' +
-        '<span class="einr-shell-hinweis">(oder im Azure-Portal oben rechts auf das Cloud-Shell-Symbol <span class="einr-shell-symbol" aria-label="Cloud-Shell-Symbol"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><path d="M6.5 9.5l3.2 2.5-3.2 2.5M11.5 15.5h5.5"/></svg></span> klicken)</span>, mit demselben Konto anmelden, <b>Bash</b> wählen (Frage nach Speicher: „Kein Speicherkonto erforderlich“). Dann diese Zeile einfügen (Rechtsklick › Einfügen) und Enter drücken:</p>' +
-      '<div class="einr-code"><code id="einrSkript">' + htmlEsc(EINR_AZURE_BEFEHL) + '</code><button type="button" class="btn-sekundaer" id="einrKopieren">Kopieren</button></div>' +
-      '<p class="einr-klein">Das dauert 3–5 Minuten. Am Ende steht dort „Diese Adresse in der App eintragen“ mit einer Adresse wie <i>https://lxp-weiterleitung-….azurewebsites.net/api</i>. Das Skript darf jederzeit erneut laufen (z. B. für Updates); es legt nichts doppelt an.</p>' +
-      '</details>' +
+      '<input type="hidden" id="einrLxpUrl" value="' + htmlEsc(eigen) + '">' +
       '<button type="button" class="btn-sekundaer" id="einrLxpPruefen">Prüfen</button><div id="einrLxpErgebnis" class="einr-liste"></div>' +
       '<div id="einrBriefInfo" class="einr-klein"></div>' +
       '<div class="einr-knoepfe"><button type="button" class="btn-sekundaer" data-einr="daten">Zurück</button><button type="button" class="btn-primaer" id="einrBriefSpeichern" disabled>Speichern und weiter</button></div>' +
@@ -6106,7 +6095,7 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key, zugang){
   try{
     const r = await einrFetchZeit(url + '/v3/_version', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 45000);
     const txt = await r.text(); let j = null; try{ j = JSON.parse(txt); }catch(_){}
-    if(r.status === 403) { z('Die Weiterleitung lehnt die App ab (HTTP 403). Bitte das Skript erneut ausführen.', false); return { ok: false, zeilen, url }; }
+    if(r.status === 403) { z('Die Weiterleitung lehnt die App ab (HTTP 403) – bitte Sergej Bescheid geben.', false); return { ok: false, zeilen, url }; }
     if(r.status === 404) { z('Unter dieser Adresse gibt es keine Weiterleitung (HTTP 404). Endet die Adresse auf „/api“? Läuft das Skript noch? Sonst das Skript erneut ausführen.', false); return { ok: false, zeilen, url }; }
     if(!r.ok){ z('Die Weiterleitung antwortet mit HTTP ' + r.status + '. Azure braucht nach dem Einrichten manchmal ein paar Minuten – bitte gleich noch einmal prüfen.', false); return { ok: false, zeilen, url }; }
     version = j && Number(j.weiterleitung) || 1;
@@ -6114,7 +6103,7 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key, zugang){
     z('Keine Antwort von der Weiterleitung (' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e.message || e)) + '). Adresse richtig kopiert? Direkt nach dem Skript kann der erste Start bis zu einer Minute dauern – bitte noch einmal prüfen.', false);
     return { ok: false, zeilen, url };
   }
-  if(version < 2){ z('Weiterleitung erreichbar, aber alte Version ' + version + ' – bitte das Skript erneut ausführen (sonst lassen sich geplante Briefe nicht verschieben/stornieren).', false); return { ok: false, zeilen, url }; }
+  if(version < 2){ z('Weiterleitung erreichbar, aber alte Version ' + version + ' – bitte Sergej Bescheid geben (sonst lassen sich geplante Briefe nicht verschieben/stornieren).', false); return { ok: false, zeilen, url }; }
   z('Weiterleitung erreichbar und aktuell (Version ' + version + ').', true);
   if(!nutzer || !key){ z('LetterXpress-Zugangsdaten fehlen noch – ohne sie kann nicht getestet werden, ob LetterXpress dich annimmt.', false); return { ok: false, zeilen, url }; }
   try{
@@ -6124,7 +6113,7 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key, zugang){
     if(r.status === 502){ z('Die Weiterleitung erreicht LetterXpress nicht (HTTP 502). Später noch einmal prüfen.', false); return { ok: false, zeilen, url }; }
     if(r.status === 401 || /unauthori|invalid.{0,20}(api|key|user|credential)/i.test(txt)){ z('LetterXpress lehnt Benutzername oder API-Key ab – bitte prüfen (Groß-/Kleinschreibung, Leerzeichen).', false); return { ok: false, zeilen, url }; }
     if(r.status === 403 && /Zugangscode/.test(txt)){ z(zugang ? 'Der Zugangscode wird von der Weiterleitung nicht angenommen – bitte genau so eintragen, wie du ihn bekommen hast.' : 'Diese Weiterleitung braucht einen Zugangscode – bitte unten eintragen.', false); return { ok: false, zeilen, url }; }
-    if(r.status === 403 && /freigegeben/.test(txt)){ z('Die Weiterleitung lässt diesen LetterXpress-Benutzer nicht zu (ERLAUBTE_LXP_NUTZER in Azure).', false); return { ok: false, zeilen, url }; }
+    if(r.status === 403 && /freigegeben/.test(txt)){ z('Dieser LetterXpress-Benutzer ist für deinen Zugangscode noch nicht freigegeben – bitte Sergej Bescheid geben.', false); return { ok: false, zeilen, url }; }
     z('LetterXpress hat die Zugangsdaten angenommen (Testmodus, es wurde nichts verschickt).', true);
   }catch(e){
     z('Test bei LetterXpress fehlgeschlagen: ' + (e.message || e), false); return { ok: false, zeilen, url };
@@ -6138,7 +6127,7 @@ function einrBriefStarten(){
   const eingaben = ()=> ({ url: $('einrLxpUrl').value, nutzer: $('einrLxpNutzer').value.trim(), key: $('einrLxpKey').value.trim(), zugang: ($('einrLxpZugang') ? $('einrLxpZugang').value.trim() : '') });
   const zuruecksetzen = ()=>{ geprueft = null; knopf.disabled = true; };
   ['einrLxpUrl', 'einrLxpNutzer', 'einrLxpKey', 'einrLxpZugang'].forEach(id=>{ if($(id)) $(id).addEventListener('input', zuruecksetzen); });
-  $('einrKopieren').onclick = async ()=>{
+  if($('einrKopieren')) $('einrKopieren').onclick = async ()=>{
     try{ await navigator.clipboard.writeText(EINR_AZURE_BEFEHL); $('einrKopieren').textContent = '✓ Kopiert'; }
     catch(_){ const r = document.createRange(); r.selectNodeContents($('einrSkript')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $('einrKopieren').textContent = 'Markiert'; }
     setTimeout(()=>{ const b = $('einrKopieren'); if(b) b.textContent = 'Kopieren'; }, 2500);
@@ -8360,7 +8349,7 @@ async function lxpAuftrag(methode, id, modus, letter){
   if(!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > Briefversand).');
   const v = await lxpWeiterleitungVersion();
   if(v === 0) throw new Error('Die Weiterleitung zu LetterXpress ist nicht erreichbar (Internet?). Es wurde nichts geändert.');
-  if(v < 2) throw new Error('Die Weiterleitung in Azure ist noch die alte Version und kann Aufträge nicht ändern. Bitte einmal das neue Azure-Skript ausführen (wie bei der Einrichtung). Es wurde nichts geändert.');
+  if(v < 2) throw new Error('Die Weiterleitung in Azure ist noch die alte Version und kann Aufträge nicht ändern. Bitte Sergej Bescheid geben. Es wurde nichts geändert.');
   const koerper = { _methode: methode, auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: modus === 'test' ? 'test' : 'live' } };
   if(letter) koerper.letter = letter;
   const r = await fetch(lxpBasisUrl(w) + '/v3/printjobs/' + encodeURIComponent(id), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(lxpMitZugang(koerper, w)) });
@@ -8607,7 +8596,7 @@ const INI_FELDER = [
   {k:'BRIEF_AKTIVIERT',  typ:'bool', label:'Briefversand über LetterXpress aktiviert'},
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
-  {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Zugangscode der Weiterleitung (nur wenn du die Weiterleitung eines anderen nutzt)'},
+  {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Zugangscode (von Sergej)'},
   {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung (leer lassen = die von Sergej, dann mit Zugangscode)'},
 ];
 const INI_GRUPPEN = [
@@ -8616,7 +8605,7 @@ const INI_GRUPPEN = [
   {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTBANKNAME','ARZTIBAN','ARZTBIC']},
   {titel:'Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)', keys:['AERZTE_KONTOINHABER','AERZTE_BANKNAME','AERZTE_IBAN','AERZTE_BIC']},
   {titel:'GKV-Patient: Wegepauschale', keys:['GKV_STARTADRESSE']},
-  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_WEITERLEITUNG','BRIEF_ZUGANGSCODE']}
+  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_ZUGANGSCODE']}   // eigene Weiterleitung (BRIEF_WEITERLEITUNG) bleibt in der INI, wird aber nicht mehr angezeigt
 ];
 
 // ---------- Windows-1252 lesen/schreiben ----------
@@ -9262,16 +9251,16 @@ function betaEinstellungenWiring(){
       const txt = (await r.text()).slice(0, 300);
       const anmeldungFalsch = r.status===401 || /unauthori/i.test(txt);
       if(ueberWeiterleitung && r.status===403 && /Nicht erlaubt/.test(txt)){
-        ergebnis('<b>✗ Die Weiterleitung lehnt diese App ab</b> -- in der Azure-Funktion steht vermutlich eine andere erlaubte Adresse (ERLAUBTE_HERKUNFT) bzw. sie fehlt unter CORS.'); return;
+        ergebnis('<b>✗ Die Weiterleitung lehnt diese App ab</b> -- bitte Sergej Bescheid geben.'); return;
       }
       const wv = await lxpWeiterleitungVersion();
       ergebnis(`<b>✓ ${ueberWeiterleitung ? 'Versand über die Weiterleitung funktioniert' : 'Direkter Aufruf vom Handy ist möglich'}</b> (LetterXpress hat geantwortet, HTTP ${r.status}).<br>` +
         (wv >= 2 ? 'Weiterleitung Version ' + wv + ': geplante Briefe lassen sich verschieben/stornieren.<br>'
-                 : '<b>Weiterleitung noch Version 1</b>: zum Verschieben/Stornieren geplanter Briefe einmal das neue Azure-Skript ausführen.<br>') +
+                 : '<b>Weiterleitung noch Version 1</b>: geplante Briefe lassen sich noch nicht verschieben/stornieren (bitte Sergej Bescheid geben).<br>') +
         (anmeldungFalsch ? 'Hinweis: Benutzername/API-Key wurden abgelehnt -- bitte prüfen.<br>' : 'Anmeldedaten wurden angenommen (die Fehlermeldung zum fehlenden Brief ist bei diesem Test normal).<br>') +
         `<span style="font-size:12px; word-break:break-all;">Antwort: ${htmlEsc(txt)}</span>`);
     }catch(e){
-      ergebnis('<b>✗ Die Weiterleitung in Azure ist nicht erreichbar</b> -- Internet prüfen; sonst im Azure-Portal nachsehen, ob die Funktions-App läuft und https://seblussi.github.io unter „CORS“ eingetragen ist.' +
+      ergebnis('<b>✗ Die Weiterleitung ist nicht erreichbar</b> -- Internet prüfen; sonst bitte Sergej Bescheid geben.' +
         '<br><span style="font-size:12px;">' + htmlEsc(e.message||String(e)) + '</span>');
     }
   };
@@ -12976,7 +12965,7 @@ function betaHaftungHtml(){
         <ul>
           <li><b>LetterXpress:</b> Der AVV ist Bestandteil der AGB und wird mit der Registrierung automatisch geschlossen (<a href="${LXP_AVV_LINK}" target="_blank" rel="noopener">AVV zum Nachlesen</a>).</li>
           <li><b>Microsoft (OneDrive):</b> Einen Vertrag zur Auftragsverarbeitung gibt es nur für geschäftliche Konten (Microsoft 365 Business) – <a href="${MS_DPA_LINK}" target="_blank" rel="noopener">Microsoft-DPA</a>. Für private Microsoft-Konten gibt es keinen.</li>
-          <li><b>Weiterleitung für den Briefversand (Azure):</b> Wer die Weiterleitung eines anderen benutzt, braucht mit diesem einen AVV – oder richtet sich eine eigene ein.</li>
+          <li><b>Briefversand:</b> Die Briefe laufen kurz über Sergejs Server (Rechenzentrum Frankfurt) zu LetterXpress. Dafür gilt die AVV aus den Alpha-Bedingungen.</li>
         </ul>
         <p>Vor dem Einsatz mit echten Patientendaten wird eine rechtliche bzw. datenschutzrechtliche Beratung
         empfohlen (z. B. Datenschutzbeauftragter, Landesärztekammer).</p>
@@ -13444,8 +13433,8 @@ async function ebmWerteOnlineHolen(){
   let r;
   let basis = ''; try{ basis = lxpBasisUrl(); }catch(e){ basis = EBM_DIENST; }   // eigene Weiterleitung, sonst Werte-Dienst
   try{ r = await fetch(basis + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
-  catch(e){ throw new Error('Keine Verbindung zur Azure-Weiterleitung (Internet?).'); }
-  if(r.status === 404) throw new Error('Die Azure-Weiterleitung kennt die Werte-Prüfung noch nicht – bitte einmal das neue Azure-Skript ausführen.');
+  catch(e){ throw new Error('Keine Verbindung zur Weiterleitung (Internet?).'); }
+  if(r.status === 404) throw new Error('Die Weiterleitung kennt die Werte-Prüfung noch nicht – bitte Sergej Bescheid geben.');
   const j = await r.json().catch(()=> null);
   if(!r.ok || !j) throw new Error('Werte-Prüfung fehlgeschlagen (HTTP ' + r.status + ').');
   return j;
@@ -19411,7 +19400,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v389';
+const APP_VERSION = 'v390';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -20455,7 +20444,7 @@ function ansichtEinstellungen(){
       <button type="button" class="btn-sekundaer" id="btnZonenLaden" style="margin-top:8px;">Eigene Zonen mit OneDrive abgleichen</button>
       <div class="design-hinweis" id="zonenLadenInfo"></div>
       <button type="button" class="btn-sekundaer" id="btnEinrichtung" style="margin-top:8px;">Einrichtungsassistent (neues Gerät / neuer Nutzer)</button>
-      <button type="button" class="btn-sekundaer" id="btnEinrichtungBrief" style="margin-top:8px;">Briefversand einrichten (eigene Azure-Weiterleitung)</button>
+      <button type="button" class="btn-sekundaer" id="btnEinrichtungBrief" style="margin-top:8px;">Briefversand einrichten</button>
       <div class="einstellung-zeile" style="margin-top:14px;">
         <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor !== false ? ' checked' : ''}>
         <div class="txt">Karten als Vektorkarte (Standard)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Im Nachtmodus automatisch dunkel; in der Karte über ◐ Stil und Ebenen (Medizinisch, Parkplätze) umschaltbar; Hausnummern immer sichtbar. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
