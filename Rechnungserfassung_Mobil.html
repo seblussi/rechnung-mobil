@@ -1132,6 +1132,13 @@ try{
   .fahrdienst-arzt-name{font-weight:700; font-size:14px; margin-bottom:4px;}
   .fahrdienst-arzt-karte ul{margin:4px 0 8px; padding-left:18px; font-size:13px;}
   .fahrdienst-arzt-summe{font-size:13px; color:var(--text-schwach);}
+  .fd-arzt-zeile{display:flex; gap:10px; align-items:flex-start;}
+  .fd-arzt-links{flex:1; min-width:0;}
+  .fd-arzt-links ul{margin-top:2px;}
+  .fd-arzt-links li{white-space:nowrap;}
+  .fd-arzt-zeile > .ar-knoepfe{flex:0 0 auto; flex-direction:column; align-items:stretch; margin:2px 0 0; padding:0; border-top:none;}
+  .fd-arzt-zeile > .ar-knoepfe .ar-renu{text-align:right;}
+  .fd-arzt-zeile > .ar-knoepfe button{max-width:120px; line-height:1.25;}
   /* Wie am PC (Rechnungsverwaltung): farbiges L/P-Badge VOR dem Namen statt
      ausgeschriebenem "LS"/"PT" dahinter -- gleiche Form/Groesse wie dort
      (18x18px, abgerundetes Quadrat, ein Buchstabe). */
@@ -2848,6 +2855,7 @@ async function msGraphBriefVersendetLaden(blattName, zeile){
 // nur live per Microsoft-Graph-Excel-API gelesen und lokal berechnet.
 // =====================================================================
 const FAHRDIENST_GEBUEHR_SATZ = 0.087904;
+const FAHRDIENST_STRUKTUR_SATZ = 0.05;   // Strukturpauschale, zusaetzlich zur Gebuehr vom Gesamtbetrag
 
 // Laedt "Tabellenblatt1" der Fahrdienst-Dokumentation komplett per Graph-
 // Excel-API (usedRange, nur Werte -- keine Formeln, siehe fahrdienstZeitLabel
@@ -3725,9 +3733,12 @@ function fahrdienstAuswertungRendernBasis(daten){
     q.aerzte.forEach(a=>{
       html += `<div class="fahrdienst-arzt-karte">
         <div class="fahrdienst-arzt-name">${a.arzt}</div>
-        <ul>${a.dienste.map(d=>`<li>${d}</li>`).join('')}</ul>
+        <div class="fd-arzt-zeile"><div class="fd-arzt-links">
+          <ul>${a.dienste.map(d=>`<li>${d}</li>`).join('')}</ul>
+        </div></div>
         <div class="fahrdienst-arzt-summe">Gesamtsumme (GKV): ${euro(a.summe)}</div>
         <div class="fahrdienst-arzt-summe">abzügl. ${gebuehrText}% Gebühr: ${euro(a.summe*(1-FAHRDIENST_GEBUEHR_SATZ))}</div>
+        <div class="fahrdienst-arzt-summe">abzügl. Gebühr und 5% Strukturpauschale: ${euro(a.summe*(1-FAHRDIENST_GEBUEHR_SATZ-FAHRDIENST_STRUKTUR_SATZ))}</div>
       </div>`;
     });
   });
@@ -19113,7 +19124,7 @@ function aerzteKnoepfeEinfuegen(zielEl, bloecke, quartale){
       (r ? '<button type="button" data-ar-erh class="' + (r.bezahlt ? 'an' : '') + '">' + (r.bezahlt ? '✓ Erhalten' : 'Erhalten') + '</button>' : '') +
       '<button type="button" data-ar-neu>' + (r ? 'Bearbeiten' : 'Rechnung erstellen') + '</button>' +
       (r ? '<button type="button" data-ar-weg class="ar-weg" title="Rechnung löschen" aria-label="Rechnung löschen">🗑</button>' : '');
-    karte.appendChild(box);
+    (karte.querySelector('.fd-arzt-zeile') || karte).appendChild(box);
     box.querySelector('[data-ar-neu]').onclick = async ()=>{ await aerzteRechnungErstellen(a.arzt, q.quartal, bl); neuZeichnen(); };
     const erh = box.querySelector('[data-ar-erh]'); if(erh) erh.onclick = async ()=>{ if(await aerzteErhaltenUmschalten(r)) neuZeichnen(); };
     const weg = box.querySelector('[data-ar-weg]'); if(weg) weg.onclick = async ()=>{ if(await aerzteRechnungLoeschen(r)) neuZeichnen(); };
@@ -19396,7 +19407,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v386';
+const APP_VERSION = 'v387';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
