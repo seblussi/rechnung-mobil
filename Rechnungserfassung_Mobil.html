@@ -19131,13 +19131,11 @@ function aerzteKnoepfeEinfuegen(zielEl, bloecke, quartale){
     // PDF aus dem gemeinsamen OneDrive-Ordner (egal ob am PC oder in der App erstellt)
     const pdf = box.querySelector('[data-ar-pdf]');
     if(pdf) pdf.onclick = async ()=>{
-      const fenster = window.open('', '_blank');
       try{
         const token = await msGraphTokenHolen();
-        const it = await gx(token, 'GET', msGraphPfadUrl(AERZTE_ORDNER + '/' + r.datei + '.pdf') + '?$select=webUrl');
-        if(fenster) fenster.location = it.webUrl; else window.open(it.webUrl, '_blank');
+        const it = await gx(token, 'GET', msGraphPfadUrl(AERZTE_ORDNER + '/' + r.datei + '.pdf') + '?$select=id,webUrl');
+        betaPdfAnzeigen({ titel: r.datei + '.pdf', itemId: it.id, webUrl: it.webUrl });   // app-interne Ansicht
       }catch(e){
-        if(fenster) fenster.close();
         betaOverlay.meldung('Die PDF „' + r.datei + '.pdf“ wurde im Ordner „fertige Rechnungen Vertretungsärzte“ nicht gefunden.', 'PDF');
       }
     };
@@ -19407,7 +19405,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v387';
+const APP_VERSION = 'v388';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
