@@ -195,7 +195,8 @@ try{
   .beta-pdf-kopf button{width:40px; height:36px; padding:0; border:none; border-radius:8px; background:rgba(255,255,255,.12); color:#fff; font-size:18px;}
   .beta-pdf-titel{flex:1; min-width:0; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .beta-pdf-seiten{flex:1; overflow:auto; padding:8px; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y;}
-  .beta-pdf-seiten canvas{display:block; margin:0 auto 10px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .beta-pdf-inhalt{margin:0 auto;}
+  .beta-pdf-seiten canvas{display:block; width:100%; margin:0 0 2.5%; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.4);}
   .beta-pdf-seiten .leer-hinweis{color:#eee;}
   /* Einstellungen: einklappbare Abschnitte */
   .abschnitt.einklappbar > .trennlinie{cursor:pointer; display:flex; align-items:center; gap:8px; user-select:none;}
@@ -10148,17 +10149,20 @@ async function betaPdfAnzeigen(opt){
   const schliessen = ()=>{ el.classList.remove('aktiv'); document.body.classList.remove('beta-pdf-offen'); seitenEl.innerHTML = ''; aktuellerZurueckHandler = vorherZurueck; };
   aktuellerZurueckHandler = schliessen; // Handy-Zurueck schliesst die Anzeige
   el.querySelector('[data-a="zu"]').onclick = schliessen;
-  const zoomSetzen = (z)=>{ zoom = Math.max(1, Math.min(4, z)); seitenEl.querySelectorAll('canvas').forEach(c=> c.style.width = (zoom * 100) + '%'); };
+  // alle Seiten in einem Rahmen, der als Ganzes skaliert (auch die Abstaende) -- so bleibt der Punkt unter den Fingern stehen
+  const inhaltEl = ()=> seitenEl.querySelector('.beta-pdf-inhalt');
+  const zoomSetzen = (z)=>{ zoom = Math.max(1, Math.min(4, z)); const w = inhaltEl(); if(w) w.style.width = (zoom * 100) + '%'; };
+  const PAD = 8;
   // Zwei-Finger-Zoom (die App selbst ist nicht zoombar): um den Mittelpunkt der Finger
   if(el._pinchWeg) el._pinchWeg();
   { let p0 = null;
     const abst = (t)=> Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
     const start = (ev)=>{ if(ev.touches.length !== 2) return; const r = seitenEl.getBoundingClientRect();
       const mx = (ev.touches[0].clientX + ev.touches[1].clientX) / 2 - r.left, my = (ev.touches[0].clientY + ev.touches[1].clientY) / 2 - r.top;
-      p0 = { d: abst(ev.touches) || 1, z: zoom, fx: (seitenEl.scrollLeft + mx) / zoom, fy: (seitenEl.scrollTop + my) / zoom, mx, my }; };
+      p0 = { d: abst(ev.touches) || 1, z: zoom, fx: (seitenEl.scrollLeft + mx - PAD) / zoom, fy: (seitenEl.scrollTop + my - PAD) / zoom, mx, my }; };
     const zug = (ev)=>{ if(!p0 || ev.touches.length !== 2) return; ev.preventDefault();
       zoomSetzen(p0.z * abst(ev.touches) / p0.d);
-      seitenEl.scrollLeft = p0.fx * zoom - p0.mx; seitenEl.scrollTop = p0.fy * zoom - p0.my; };
+      seitenEl.scrollLeft = p0.fx * zoom - p0.mx + PAD; seitenEl.scrollTop = p0.fy * zoom - p0.my + PAD; };
     const ende = (ev)=>{ if(ev.touches.length < 2) p0 = null; };
     seitenEl.addEventListener('touchstart', start, { passive: true });
     seitenEl.addEventListener('touchmove', zug, { passive: false });
@@ -10189,7 +10193,8 @@ async function betaPdfAnzeigen(opt){
     const pdfjs = await pdfjsLaden();
     const doc = await pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), standardFontDataUrl: new URL('lib/pdfjs/standard_fonts/', location.href).href }).promise;
     if(!el.classList.contains('aktiv')) return;
-    seitenEl.innerHTML = '';
+    seitenEl.innerHTML = '<div class="beta-pdf-inhalt" style="width:' + (zoom * 100) + '%"></div>';
+    const inhalt = inhaltEl();
     const breite = Math.max(320, seitenEl.clientWidth - 16);
     const dpr = Math.min(3, window.devicePixelRatio || 1);
     for(let i = 1; i <= doc.numPages; i++){
@@ -10198,8 +10203,7 @@ async function betaPdfAnzeigen(opt){
       const vp = seite.getViewport({ scale: (breite * dpr * 2) / v1.width }); // doppelt aufloesen fuer Zoom
       const c = document.createElement('canvas');
       c.width = Math.round(vp.width); c.height = Math.round(vp.height);
-      c.style.width = (zoom * 100) + '%';
-      seitenEl.appendChild(c);
+      inhalt.appendChild(c);
       await seite.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
       if(!el.classList.contains('aktiv')) return;
     }
@@ -19367,7 +19371,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v373';
+const APP_VERSION = 'v374';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
