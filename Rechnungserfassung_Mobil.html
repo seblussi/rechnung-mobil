@@ -145,7 +145,7 @@ try{
   .offen-dash > summary::-webkit-details-marker{display:none;}
   .offen-dash > summary::after{content:'▾'; color:var(--text-schwach); margin-left:6px;} .offen-dash:not([open]) > summary::after{content:'▸';}
   .offen-verzug{margin-left:auto; font-size:12.5px; font-weight:700; color:#b3261e; background:rgba(179,38,30,.1); padding:3px 8px; border-radius:999px;}
-  .offen-zeile{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--rand);}
+  .offen-zeile{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--rand); cursor:pointer;}
   .offen-zeile:last-child{padding-bottom:12px;}
   .offen-inhalt{flex:1; min-width:0;} .offen-inhalt b{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .offen-inhalt small{color:var(--text-schwach); font-size:12.5px;} .offen-zeile.verzug .offen-inhalt small{color:#b3261e;}
@@ -11095,8 +11095,8 @@ function betaGesamtZeichnen(suchtext, ziel){
         let auf = true; try{ auf = LS.get('offen_dash_auf', true) !== false; }catch(_){}
         html += '<details class="offen-dash"' + (auf ? ' open' : '') + '><summary><span><b>Offene Rechnungen: ' + offenR.length + '</b> · ' + betaEuro(summe) + '</span>' +
           (verzug ? '<span class="offen-verzug">' + verzug + ' im Verzug</span>' : '') + '</summary>' +
-          offenR.slice(0, 50).map(x=> '<div class="offen-zeile' + (x.t > 30 ? ' verzug' : '') + '"><div class="offen-inhalt"><b>' + htmlEsc(x.e.name) + '</b><small>' +
-            (x.e.renu ? 'Nr. ' + htmlEsc(x.e.renu) + ' · ' : '') + (x.e.betrag ? htmlEsc(x.e.betrag) + ' € · ' : '') + 'seit ' + x.t + (x.t === 1 ? ' Tag' : ' Tagen') + (x.t > 30 ? ' – im Verzug' : '') +
+          offenR.slice(0, 50).map(x=> '<div class="offen-zeile' + (x.t > 30 ? ' verzug' : '') + '" data-okey="' + htmlEsc(x.e.key) + '" data-orenu="' + htmlEsc(x.e.renu || x.e.name || '') + '" role="button" tabindex="0"><div class="offen-inhalt"><b>' + htmlEsc(x.e.name) + '</b><small>' +
+            (x.e.renu ? 'Nr. ' + htmlEsc(x.e.renu) + ' · ' : '') + (x.e.betrag ? htmlEsc(x.e.betrag) + ' € · ' : '') + 'seit ' + x.t + (x.t === 1 ? ' Tag' : ' Tagen') +
             '</small></div><button type="button" class="offen-bezahlt" data-okey="' + htmlEsc(x.e.key) + '" title="Zahlungseingang eintragen (Datum wählbar)">Zahlung erfassen</button></div>').join('') +
           (offenR.length > 50 ? '<div class="leer-hinweis">' + (offenR.length - 50) + ' weitere – in der Liste unten.</div>' : '') + '</details>';
       }
@@ -11125,6 +11125,17 @@ function betaGesamtZeichnen(suchtext, ziel){
   }
   listeEl.innerHTML = html + '<div class="gesamt-platzhalter"></div>';
   { const od = listeEl.querySelector('.offen-dash'); if(od) od.addEventListener('toggle', ()=>{ try{ LS.set('offen_dash_auf', od.open); }catch(_){} });
+    // Zeile anklicken: zur Rechnung in der Liste springen und sie kurz hervorheben (z. B. fuer Erinnerung oder Pruefung)
+    listeEl.querySelectorAll('.offen-zeile[data-okey]').forEach(z=> z.onclick = (ev)=>{
+      if(ev.target.closest('.offen-bezahlt')) return;
+      const finden = ()=> [...listeEl.querySelectorAll('.wisch-huelle[data-key]')].find(x=> x.dataset.key === z.dataset.okey);
+      let zielEl = finden();
+      if(!zielEl){ const such = document.getElementById('txtGesamtSuche'); if(such){ such.value = z.dataset.orenu; betaGesamtZeichnen(such.value, ziel); zielEl = [...document.querySelectorAll('.wisch-huelle[data-key]')].find(x=> x.dataset.key === z.dataset.okey); } }
+      if(!zielEl) return;
+      const zeile = zielEl.querySelector('.fall-zeile') || zielEl;
+      try{ zielEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }catch(_){}
+      zeile.classList.remove('fbx-blink'); void zeile.offsetWidth; zeile.classList.add('fbx-blink'); setTimeout(()=> zeile.classList.remove('fbx-blink'), 2200);
+    });
     listeEl.querySelectorAll('.offen-bezahlt').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
       if(await betaAktionBezahlt([e])){ betaAuswahl.clear(); await ansichtRechnungenGesamt(true); } }); }
@@ -19382,7 +19393,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v380';
+const APP_VERSION = 'v381';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
