@@ -8139,7 +8139,7 @@ async function betaRechnungErstellen(f, meldung, frage, kontext){
       const am = xlDatumText(treffer.v[17]);
       const geplant = versandGeplant(u, 'ORIG');
       geplantPlan = geplant && geplant.id ? geplant : null;
-      if(!await frage('Sind Sie sicher?\n\n' + anzeige + ' (' + renu + ') wurde ' + (geplant ? 'zum Versand am ' + isoDe(geplant.datum) + ' an LetterXpress übergeben' : 'bereits per Brief verschickt' + (am ? ' (' + am + ')' : '')) + '.\n\n' +
+      if(!await frage('Bist du sicher?\n\n' + anzeige + ' (' + renu + ') wurde ' + (geplant ? 'zum Versand am ' + isoDe(geplant.datum) + ' an LetterXpress übergeben' : 'bereits per Brief verschickt' + (am ? ' (' + am + ')' : '')) + '.\n\n' +
         'Es wird eine NEUE Fassung (Word + PDF) unter derselben Rechnungsnummer erstellt. Die bisherige PDF bleibt als „' + name + '_verschickte Fassung …“ im Ordner erhalten, damit nachvollziehbar ist, was verschickt wurde.' +
         (geplantPlan ? '\n\nDer geplante Brief enthält noch die bisherige Fassung: er wird automatisch bei LetterXpress storniert und mit der neuen Fassung zum selben Datum (' + isoDe(geplantPlan.datum) + ') neu übergeben – es geht nur ein Brief raus.'
                      : geplant ? '\n\nAchtung: Für den geplanten Brief ist keine Auftragsnummer gespeichert – bitte im LetterXpress-Kundenkonto stornieren.' : '\n\nVerschickt wird dabei nichts.'),
@@ -11874,7 +11874,7 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
         (katalog.length ? katalog.map((x, i)=> '<div class="begr-eintrag"><button type="button" class="begr-text' + (x.text === w.beg ? ' aktiv' : '') + '" data-i="' + i + '">' + htmlEsc(x.text) +
             (x.standard ? ' <span class="begr-std">Standard</span>' : '') + '</button>' +
             (x.standard ? '' : '<button type="button" class="begr-weg" data-i="' + i + '" title="aus der Liste entfernen">&times;</button>') + '</div>').join('')
-          : '<div class="beta-erg-klein begr-leer">Noch keine. Jede Begründung, die Sie hier mit „Übernehmen“ bestätigen, wird gesammelt und steht dann zur Auswahl (alle Geräte).</div>') + '</div>') +
+          : '<div class="beta-erg-klein begr-leer">Noch keine. Jede Begründung, die du hier mit „Übernehmen“ bestätigen, wird gesammelt und steht dann zur Auswahl (alle Geräte).</div>') + '</div>') +
       '</div><div class="beta-erg-klein" id="fdHinweis"></div>';
     const warte = betaOverlay.ergebnis('Ziffer ' + nr, html, [{ label:'Abbrechen', akt:'nein' }, { label:'Übernehmen', akt:'ja', primaer:true }]);
     const $ = (id)=> document.getElementById(id);
@@ -19395,7 +19395,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v384';
+const APP_VERSION = 'v385';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
