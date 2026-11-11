@@ -5870,7 +5870,7 @@ const SEITENHILFE = {
   maske_pt: ['Privatrechnung', 'Patient, Datum, Uhrzeit und Entfernung eintragen. Unter <b>Rechnungspositionen</b> wählst du die Ziffern; über dem Schwellenwert braucht ein Faktor eine Begründung. Zuschläge und Wegegeld kommen automatisch.<br><br><b>Speichern</b> erstellt die Rechnung und zeigt die PDF zum Teilen oder Senden.'],
   gkv: ['Kassenpatient', 'Name, Uhrzeit und Einsatzort eintragen und die Ziffern anklicken – Tag/Nacht-Ziffern und Wegepauschale wählt die App selbst (Einsatzort über „auf Karte wählen“).<br><br><b>Ins Fahrtenbuch</b> trägt den Fall in den laufenden Dienst ein.'],
   positionen: ['Rechnungspositionen', 'Haken setzen, was abgerechnet wird. <b>Faktor</b> anklicken zum Ändern (über dem Schwellenwert mit Begründung). Graue Zeilen setzt die App automatisch (Zeitzuschläge, Wegegeld).<br><br><b>Übernehmen</b> führt zurück zur Rechnung.'],
-  verwaltung: ['Rechnungen', 'Oben die <b>offenen Rechnungen</b> – mit „Bezahlt“ den Zahlungseingang bestätigen. Darunter alle Rechnungen: Haken setzen für <b>Senden, Termin, Erinnerung, Bezahlt</b>; 📄 öffnet die PDF; nach links wischen löscht.'],
+  verwaltung: ['Rechnungen', 'Oben die <b>offenen Rechnungen</b> – mit „Zahlung erfassen“ den Zahlungseingang eintragen. Darunter alle Rechnungen: Haken setzen für <b>Senden, Termin, Erinnerung, Bezahlt</b>; 📄 öffnet die PDF; nach links wischen löscht.'],
   gkvVerwaltung: ['Kassenpatienten', 'Die zuletzt erfassten GKV-Fälle. Anklicken = bearbeiten, nach links wischen = aus der Liste löschen (im Fahrtenbuch bleibt die Zeile). „Weitere laden“ holt ältere aus dem Fahrtenbuch.'],
   fahrtenbuch: ['Fahrtenbuch', 'Oben Zeitraum und Suche, darunter die Ansichten <b>Karten</b>, <b>Tabelle</b> und <b>Woche</b>. Einen Fall anklicken öffnet ihn, lange drücken löscht ihn. Die Karte zeigt die Einsatzorte des Dienstes nummeriert – eine Nummer anklicken hebt den Fall in der Liste hervor.'],
   einstellungen: ['Einstellungen', 'Register anklicken zum Aufklappen: Arztdaten, Bankverbindung, Briefversand, Design, Offline-Karte und mehr. Ganz unten die <b>Demo</b> mit erfundenen Daten und das Wiedereinschalten dieser Hilfen.']
@@ -11086,7 +11086,7 @@ function betaGesamtZeichnen(suchtext, ziel){
           (verzug ? '<span class="offen-verzug">' + verzug + ' im Verzug</span>' : '') + '</summary>' +
           offenR.slice(0, 50).map(x=> '<div class="offen-zeile' + (x.t > 30 ? ' verzug' : '') + '"><div class="offen-inhalt"><b>' + htmlEsc(x.e.name) + '</b><small>' +
             (x.e.renu ? 'Nr. ' + htmlEsc(x.e.renu) + ' · ' : '') + (x.e.betrag ? htmlEsc(x.e.betrag) + ' € · ' : '') + 'seit ' + x.t + (x.t === 1 ? ' Tag' : ' Tagen') + (x.t > 30 ? ' – im Verzug' : '') +
-            '</small></div><button type="button" class="offen-bezahlt" data-okey="' + htmlEsc(x.e.key) + '">✓ Bezahlt</button></div>').join('') +
+            '</small></div><button type="button" class="offen-bezahlt" data-okey="' + htmlEsc(x.e.key) + '" title="Zahlungseingang eintragen (Datum wählbar)">Zahlung erfassen</button></div>').join('') +
           (offenR.length > 50 ? '<div class="leer-hinweis">' + (offenR.length - 50) + ' weitere – in der Liste unten.</div>' : '') + '</details>';
       }
     }
@@ -19371,7 +19371,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v376';
+const APP_VERSION = 'v377';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
