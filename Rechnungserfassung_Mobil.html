@@ -3618,7 +3618,7 @@ async function ansichtFahrdienstAuswertung(){
   setTimeout(fbTabsWiring, 0);
   setzeTitel('Quartalsübersicht', ansichtStart);
   app.innerHTML = fbTabsHtml('quartale') + `
-    <div style="display:flex; gap:8px; margin-bottom:12px;" id="fdAktionen">
+    <div style="display:none; gap:8px; margin-bottom:12px;" id="fdAktionen">
       <button class="btn-sekundaer" id="btnFahrdienstNeuLaden" style="flex:1; margin-bottom:0;">Neu laden</button>
       <button class="btn-sekundaer" id="btnFahrdienstExcelOeffnen" style="flex:1; margin-bottom:0;">In Excel öffnen</button>
     </div>
@@ -3698,6 +3698,7 @@ function fahrdienstAuswertungRendern(daten){
 function fahrdienstAuswertungRendernBasis(daten){
   const zielEl = document.getElementById('fahrdienstInhalt');
   if(!zielEl) return;
+  if(!daten || !daten.bloecke || !daten.bloecke.length){ const fa = document.getElementById('fdAktionen'); if(fa && fa.style.display === 'none') fa.style.display = 'flex'; }
   if(!daten){
     zielEl.innerHTML = '<div class="leer-hinweis">Konnte nicht geladen werden (kein Netz oder nicht angemeldet). Bitte "Neu laden" versuchen.</div>';
     return;
@@ -19395,7 +19396,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v385';
+const APP_VERSION = 'v386';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
