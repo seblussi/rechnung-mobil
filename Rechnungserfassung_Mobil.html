@@ -19371,7 +19371,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v377';
+const APP_VERSION = 'v378';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -21889,7 +21889,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   async function lsAuslageBetragFragen(){
     const alt = lsAuslageBetrag();
     const akt = await betaOverlay.ergebnis('Formular Todesbescheinigung',
-      'Was kostet dich ein Formular der Todesbescheinigung (Einkaufspreis)? Der Betrag wird als Auslage nach § 10 GOÄ berechnet und für alle weiteren Leichenschauen gemerkt.' +
+      'Formularkosten (Auslagenersatz für den Durchschreibesatz „Todesbescheinigung“, § 10 GOÄ). Bitte deinen tatsächlichen Einkaufspreis eintragen. Der Betrag wird für alle weiteren Leichenschauen gemerkt.' +
       '<label class="einr-feld" style="margin-top:10px;"><span>Betrag in €</span><input type="text" inputmode="decimal" id="lsAuslageEingabe" value="' + (alt ? alt.toFixed(2).replace('.', ',') : '') + '" placeholder="z. B. 2,50"></label>',
       [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Übernehmen', akt: 'ok', primaer: true }]);
     const v = Number(String(((document.getElementById('lsAuslageEingabe') || {}).value) || '').replace(',', '.').trim());
