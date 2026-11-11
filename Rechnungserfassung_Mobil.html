@@ -4948,9 +4948,10 @@ function alphaZustimmungPruefen(){
   ok.onclick = async ()=>{ ok.disabled = true; await alphaZustimmen(); d.remove(); try{ if(typeof AppSperre !== 'undefined') AppSperre.pflichtPruefen(); }catch(_){} };
 }
 
-function demoStarten(){ try{ sessionStorage.setItem('demo_modus', '1'); }catch(_){ return; } location.reload(); }
+// Demo starten/beenden: danach immer auf der Startseite (nicht auf der zuletzt offenen Seite, z. B. Einstellungen)
+function demoStarten(){ try{ sessionStorage.setItem('demo_modus', '1'); sessionStorage.removeItem('reload_ansicht'); window.__keinMerken = true; }catch(_){ return; } location.reload(); }
 function demoBeenden(){
-  try{ sessionStorage.removeItem('demo_modus'); }catch(_){}
+  try{ sessionStorage.removeItem('demo_modus'); sessionStorage.removeItem('reload_ansicht'); window.__keinMerken = true; }catch(_){}
   const neu = ()=> location.reload();
   try{ const r = indexedDB.deleteDatabase('rechnung-demo-zwischenspeicher'); r.onsuccess = r.onerror = r.onblocked = neu; setTimeout(neu, 1500); }catch(_){ neu(); }
 }
@@ -19394,7 +19395,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v383';
+const APP_VERSION = 'v384';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -22753,6 +22754,7 @@ function ansichtMerken(x){ try{ sessionStorage.setItem(ANSICHT_SCHL, JSON.string
   // beim Verlassen: Entwurf-ID bzw. GKV-Zwischenstand mitschreiben
   window.addEventListener('pagehide', ()=>{
     try{
+      if(window.__keinMerken) return;
       const x = JSON.parse(sessionStorage.getItem(ANSICHT_SCHL) || 'null'); if(!x) return;
       if(x.typ === 'maske' && x.idx == null && typeof betaAktuellerEntwurf !== 'undefined' && betaAktuellerEntwurf) x.entwurf = betaAktuellerEntwurf.id;
       if(x.typ === 'gkv' && !x.id && typeof gkvEntwurf !== 'undefined' && gkvEntwurf) x.gkv = gkvEntwurf;
