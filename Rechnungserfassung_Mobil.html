@@ -19371,7 +19371,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v374';
+const APP_VERSION = 'v375';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19447,13 +19447,42 @@ function querAnwenden(){
 try{ QUER_MQ.addEventListener('change', querAnwenden); }catch(_){ try{ QUER_MQ.addListener(querAnwenden); }catch(__){} }
 if(document.body) querAnwenden(); else document.addEventListener('DOMContentLoaded', querAnwenden);
 // Startseite: links Neuer Fall + unfertige Faelle + Verwaltung/Fahrtenbuch, Mitte laufender Dienst, rechts Karte
-function dsSyncHtml(anmeldung){
-  const off = typeof navigator !== 'undefined' && navigator.onLine === false;
-  return '<span class="ds-sync' + (off ? ' offline' : (anmeldung ? ' an' : '')) + '" data-angemeldet="' + (anmeldung ? 1 : 0) + '"><i></i>' + (off ? 'offline' : (anmeldung ? 'OneDrive' : 'nicht angemeldet')) + '</span>';
+// Verbindungsanzeige auf der Startseite:
+//  offline   = das Geraet meldet keine Verbindung (WLAN/Daten aus, Flugmodus oder gar kein Empfang -- fuer eine Web-App nicht unterscheidbar)
+//  kein Netz = Verbindung gemeldet, aber eine echte Anfrage (Microsoft) kommt nicht durch (schwacher Empfang, WLAN ohne Internet)
+//  OneDrive rot = Internet da, OneDrive aber nicht angemeldet; gruen = verbunden
+let dsNetzOk = null, dsNetzLauf = null, dsNetzZeit = 0;
+async function dsNetzPruefen(){
+  if(typeof navigator !== 'undefined' && navigator.onLine === false){ dsNetzOk = false; return; }
+  if(dsNetzLauf) return dsNetzLauf;
+  dsNetzLauf = (async ()=>{
+    const ac = new AbortController(), tm = setTimeout(()=> ac.abort(), 6000);
+    try{ await fetch('https://graph.microsoft.com/v1.0/?p=' + Date.now(), { mode: 'no-cors', cache: 'no-store', signal: ac.signal }); dsNetzOk = true; }
+    catch(_){ dsNetzOk = false; }
+    finally{ clearTimeout(tm); dsNetzLauf = null; dsNetzZeit = Date.now(); }
+  })();
+  return dsNetzLauf;
 }
-['online', 'offline'].forEach(n=> window.addEventListener(n, ()=>{
-  document.querySelectorAll('.ds-sync[data-angemeldet]').forEach(el=>{ const t = document.createElement('div'); t.innerHTML = dsSyncHtml(el.dataset.angemeldet === '1'); el.replaceWith(t.firstChild); });
-}));
+function dsSyncZustand(anmeldung){
+  if(typeof navigator !== 'undefined' && navigator.onLine === false) return ['offline', 'offline'];
+  if(dsNetzOk === false) return ['offline', 'kein Netz'];
+  return anmeldung ? ['an', 'OneDrive'] : ['offline', 'OneDrive'];
+}
+function dsSyncHtml(anmeldung){
+  const [k, t] = dsSyncZustand(anmeldung);
+  return '<span class="ds-sync ' + k + '" data-angemeldet="' + (anmeldung ? 1 : 0) + '" title="' +
+    ({ offline: 'Keine Verbindung (WLAN/Daten aus oder kein Empfang)', 'kein Netz': 'Verbindung gemeldet, aber es kommt nichts durch', OneDrive: anmeldung ? 'OneDrive verbunden' : 'OneDrive nicht verbunden' })[t] + '"><i></i>' + t + '</span>';
+}
+function dsSyncAuffrischen(){
+  document.querySelectorAll('.ds-sync[data-angemeldet]').forEach(el=>{
+    const an = (typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet');
+    const t = document.createElement('div'); t.innerHTML = dsSyncHtml(an); el.replaceWith(t.firstChild);
+  });
+}
+['online', 'offline'].forEach(n=> window.addEventListener(n, ()=>{ dsSyncAuffrischen(); dsNetzPruefen().then(dsSyncAuffrischen); }));
+// regelmaessig pruefen, solange die Startseite offen ist (alle 45 s; sichtbar geworden: sofort)
+setInterval(()=>{ if(document.querySelector('.ds-sync[data-angemeldet]') && !document.hidden) dsNetzPruefen().then(dsSyncAuffrischen); }, 45000);
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && document.querySelector('.ds-sync[data-angemeldet]')) dsNetzPruefen().then(dsSyncAuffrischen); });
 function querStartAnordnen(){
   if(!querAn()) return;
   const app = document.getElementById('app'); if(!app || app.querySelector('.quer-start')) return;
@@ -20256,6 +20285,7 @@ function designStartErgaenzen(){
     vor('<div class="ds-start ds-einhand"><div class="ds-zeile-oben ds-zeile-neu"><span class="ds-klein ds-neu-titel">NEUER FALL</span>' +
       '<span class="ds-uhrzeit">' + DESIGN_WT[jetzt.getDay()] + ' ' + zz2(jetzt.getDate()) + '.' + zz2(jetzt.getMonth() + 1) + '. · ' + designUhr(jetzt) + '</span>' +
       dsSyncHtml(anmeldung) + '</div></div>');
+    if(Date.now() - dsNetzZeit > 20000) setTimeout(()=> dsNetzPruefen().then(dsSyncAuffrischen), 300);
   }
   // Einhand: Neuer-Fall-Kacheln ganz oben, darunter Uhr, Dienst, Karte
   if(live){ if(d === 'einhand') reihe.insertAdjacentHTML('afterend', live); else vor(live); liveAutoAuffrischen(); if(document.getElementById('skKarte')) standortKarteZeichnen(info); designDienstWiring(app); }
