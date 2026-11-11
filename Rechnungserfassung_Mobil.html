@@ -1552,7 +1552,7 @@ try{
   .ds-einhand .ds-zeile-oben{display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; color:var(--text-schwach);}
   .ds-sync{display:flex; align-items:center; gap:6px;}
   .ds-zeile-neu{display:grid !important; grid-template-columns:1fr auto 1fr; align-items:center; margin:2px 2px 16px;}
-  .ds-zeile-neu .ds-neu-titel{margin:0; transform:translateY(8px);}   /* nur die Ueberschrift naeher an die Kacheln */ .ds-zeile-neu .ds-sync{justify-self:end;}
+  .ds-zeile-neu .ds-neu-titel{margin:0; transform:translateY(8px);}   /* nur die Ueberschrift naeher an die Kacheln */ .ds-zeile-neu .ds-sync{justify-self:end; transform:translateY(8px);}   /* auf Hoehe von NEUER FALL */
   .ds-uhrzeit{font-size:15.5px; font-weight:700; color:var(--text); text-align:center; white-space:nowrap;}
   .ds-sync.offline{color:#b3261e;} .ds-sync.offline i{background:#d93025;}
   body.dunkel .ds-sync.offline{color:#ff8a80;}
@@ -2101,7 +2101,12 @@ try{
   body.quer .quer-gkv-links .gkv-kopf{margin-top:0;}
   /* Quartalsuebersicht: Knoepfe rechts in der Jahreszeile */
   .fd-jahre{align-items:center;}
-  .fd-aktionen{margin-left:auto; display:flex; gap:6px;}
+  .fd-jahre{flex-wrap:nowrap !important;}
+  .fd-jahre-leiste{display:flex; gap:6px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:2px 0;
+    -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent); mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent);}
+  .fd-jahre-leiste::-webkit-scrollbar{display:none;}
+  .fd-jahre-leiste .fb-chip{flex:none;}
+  .fd-aktionen{margin-left:auto; display:flex; gap:6px; flex:none;}
   .fd-aktionen button{flex:none !important; width:auto !important; margin:0 !important; padding:6px 12px !important; min-height:0 !important; font-size:13px !important; border-radius:16px !important;}
   /* Fahrtenbuch "Dienste" im Querformat: links der gewaehlte Dienst, rechts die Liste */
   .fbx-quer{display:block;}
@@ -2855,7 +2860,7 @@ async function msGraphBriefVersendetLaden(blattName, zeile){
 // nur live per Microsoft-Graph-Excel-API gelesen und lokal berechnet.
 // =====================================================================
 const FAHRDIENST_GEBUEHR_SATZ = 0.087904;
-const FAHRDIENST_STRUKTUR_SATZ = 0.05;   // Strukturpauschale, zusaetzlich zur Gebuehr vom Gesamtbetrag
+const FAHRDIENST_STRUKTUR_SATZ = 0.05;   // Strukturpauschale, eigene Zeile: vom Gesamtbetrag
 
 // Laedt "Tabellenblatt1" der Fahrdienst-Dokumentation komplett per Graph-
 // Excel-API (usedRange, nur Werte -- keine Formeln, siehe fahrdienstZeitLabel
@@ -3689,8 +3694,8 @@ function fahrdienstAuswertungRendern(daten){
   const euro = (w)=> (Number(w)||0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
   const s = bl.reduce((a, b)=>{ a.g += b.gesamt; a.k += b.gkv; a.l += b.ls; a.p += b.pt; a.h += (b.dienststunden || 0); a.f += Math.max(0, (b.gkv || 0) - (b.gkvRoh || 0)); a.nk += b.nGkv || 0; a.nl += b.nLs || 0; a.np += b.nPt || 0; return a; }, {g:0, k:0, l:0, p:0, h:0, f:0, nk:0, nl:0, np:0});
   const kopf = document.createElement('div');
-  kopf.innerHTML = '<div class="fd-jahre">' + jahre.map(j=> '<button type="button" class="fb-chip' + (j === wahl ? ' an' : '') + '" data-jahr="' + j + '">' + j + '</button>').join('') +
-    '<button type="button" class="fb-chip' + (wahl === 'alle' ? ' an' : '') + '" data-jahr="alle">Alle</button></div>' +
+  kopf.innerHTML = '<div class="fd-jahre"><div class="fd-jahre-leiste">' + jahre.map(j=> '<button type="button" class="fb-chip' + (j === wahl ? ' an' : '') + '" data-jahr="' + j + '">' + j + '</button>').join('') +
+    '<button type="button" class="fb-chip' + (wahl === 'alle' ? ' an' : '') + '" data-jahr="alle">Alle</button></div></div>' +
     '<div class="fd-jahr-summe"><b>' + (wahl === 'alle' ? 'Alle Jahre' : wahl) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
     ' (GKV ' + euro(s.k) + (s.f > 0.005 ? ', davon Förderung ' + euro(s.f) : '') + ' · PT ' + euro(s.p) + ' · LS ' + euro(s.l) + ')' +
     (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>Fälle: ' + s.nk + ' GKV · ' + s.np + ' PT · ' + s.nl + ' LS' +
@@ -3702,6 +3707,7 @@ function fahrdienstAuswertungRendern(daten){
   // "Neu laden" / "Fahrtenbuch öffnen" rechts in die Zeile der Jahre (spart eine ganze Zeile)
   if(fdAktionenEl && document.body.contains(zielEl)){ fdAktionenEl.removeAttribute('style'); fdAktionenEl.className = 'fd-aktionen'; kopf.querySelector('.fd-jahre').appendChild(fdAktionenEl); }
   kopf.querySelectorAll('[data-jahr]').forEach(b=> b.onclick = ()=>{ fahrdienstJahrWahl = b.dataset.jahr; fahrdienstAuswertungRendern(daten); });
+  { const lei = kopf.querySelector('.fd-jahre-leiste'), an = lei && lei.querySelector('.an'); if(an && lei.scrollWidth > lei.clientWidth) lei.scrollLeft = Math.max(0, an.offsetLeft - lei.offsetLeft - 8); }   // gewaehltes Jahr sichtbar
 }
 function fahrdienstAuswertungRendernBasis(daten){
   const zielEl = document.getElementById('fahrdienstInhalt');
@@ -3738,7 +3744,7 @@ function fahrdienstAuswertungRendernBasis(daten){
         </div></div>
         <div class="fahrdienst-arzt-summe">Gesamtsumme (GKV): ${euro(a.summe)}</div>
         <div class="fahrdienst-arzt-summe">abzügl. ${gebuehrText}% Gebühr: ${euro(a.summe*(1-FAHRDIENST_GEBUEHR_SATZ))}</div>
-        <div class="fahrdienst-arzt-summe">abzügl. Gebühr und 5% Strukturpauschale: ${euro(a.summe*(1-FAHRDIENST_GEBUEHR_SATZ-FAHRDIENST_STRUKTUR_SATZ))}</div>
+        <div class="fahrdienst-arzt-summe">abzügl. 5% Strukturpauschale: ${euro(a.summe*(1-FAHRDIENST_STRUKTUR_SATZ))}</div>
       </div>`;
     });
   });
@@ -19405,7 +19411,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v388';
+const APP_VERSION = 'v389';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -23757,18 +23763,22 @@ const Speicher = (()=>{
   function skript(src){ return new Promise((ok, no)=>{ const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = ()=> no(new Error('Laden fehlgeschlagen: ' + src)); document.head.appendChild(e); }); }
   async function demoVorbereiten(){
     const app = document.getElementById('app');
-    if(app) app.innerHTML = '<div style="padding:32px 20px; text-align:center;"><h3>Demo wird vorbereitet …</h3><p>Mit erfundenen Daten. Deine echten Daten bleiben unberührt; in der Demo wird nichts gespeichert.</p></div>';
+    if(app) app.innerHTML = '<div style="padding:32px 20px; text-align:center;"><h3>Demo wird vorbereitet …</h3><p>Mit erfundenen Daten. Deine echten Daten bleiben unberührt; in der Demo wird nichts gespeichert.</p>' + '<div style="height:8px; border-radius:4px; background:rgba(127,127,127,.25); overflow:hidden; margin:18px auto 6px; max-width:320px;"><div id="demoBalken" style="height:100%; width:0; background:#7d4e9e; transition:width .2s;"></div></div><div id="demoSchritt" style="font-size:13px; opacity:.75;">Demo-Daten werden geladen …</div>' + '</div>';
+    const stand = (a, t)=>{ const b = document.getElementById('demoBalken'); if(b) b.style.width = Math.round(Math.max(0, Math.min(1, a)) * 100) + '%'; const s = document.getElementById('demoSchritt'); if(s && t) s.textContent = t; };
     for(const f of ['lib/pdf-lib.min.js', 'lokal/krypto.js', 'lokal/tresor.js', 'lokal/mappe.js', 'lokal/docxpdf.js', 'lokal/lokalgraph.js']) await skript(f);
     await Speicher.start();
     await Tresor.pruefen(); await Tresor.demoOeffnen();
-    const r = await fetch('./lokal/demo-daten.json', { cache: 'no-cache' });
-    if(!r.ok) throw new Error('Demo-Daten nicht gefunden (HTTP ' + r.status + ')');
-    const snap = await r.json();
+    stand(0.03, 'Demo-Daten werden geladen …');
+    let snap;
+    try{ snap = await Tresor.jsonMitFortschritt('./lokal/demo-daten.json', a=> stand(0.03 + a * 0.52)); }
+    catch(e){ throw new Error('Demo-Daten nicht gefunden (' + (e.message || e) + ')'); }
     // Pfade der Launch-Daten ("Rechnungsapp/...") auf die Privatversion ("KVBW Onedrive/...") umstellen
     const um = (p)=> String(p || '').replace(/^Rechnungsapp(?=\/|$)/, 'KVBW Onedrive');
     snap.dateien.forEach(x=>{ x.meta.pfad = um(x.meta.pfad); if(x.meta.pfad === 'KVBW Onedrive') x.meta.name = 'KVBW Onedrive'; });
     const kv = snap.kv || {}; snap.kv = {};
-    await Tresor.wiederherstellen(snap, 'ersetzen');
+    stand(0.55, 'Rechnungen werden eingerichtet …');
+    await Tresor.wiederherstellen(snap, 'ersetzen', (i, n)=> stand(0.55 + 0.35 * i / n));
+    stand(0.9, 'Vorlagen werden ergänzt …');
     try{
       const paket = await (await fetch('./starter/starter.json', { cache: 'no-cache' })).json();
       for(const o of paket.ordner || []) await Tresor.ordnerAnlegen(o, 'demo');
@@ -23786,6 +23796,7 @@ const Speicher = (()=>{
       app_sperre_abgelehnt: 'true', alpha_zustimmung: JSON.stringify({ version: 'demo', am: new Date().toISOString(), name: 'Demo' }) });
     Speicher.demoFuellen(kv);
     LokalGraph.einschalten();
+    stand(1, 'Fertig');
   }
 })();
 </script>

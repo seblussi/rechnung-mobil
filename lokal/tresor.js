@@ -427,7 +427,7 @@
     return { format: 'rechnungsapp-sicherung', v: 1, erstellt: new Date().toISOString(), geraet: geraet && geraet.id, kv, dateien };
   }
   // modus 'ersetzen': alles vorher loeschen; 'ergaenzen': nur fehlende/neuere
-  async function wiederherstellen(s, modus){
+  async function wiederherstellen(s, modus, fortschritt){
     brauchtOffen();
     if(!s || s.format !== 'rechnungsapp-sicherung') throw new Error('Das ist keine Sicherung dieser App.');
     if(modus === 'ersetzen'){
@@ -435,7 +435,9 @@
       for(const m of Array.from(dMeta.values())) await dateiEntfernenId(m.id, 'sicherung');
     }
     for(const [k, v] of Object.entries(s.kv || {})){ if(modus === 'ersetzen' || !kvMem.has(k)) kvSetzenText(k, v, 'sicherung'); }
-    for(const x of (s.dateien || [])){
+    const alle = s.dateien || []; let nr = 0;
+    for(const x of alle){
+      if(fortschritt){ try{ fortschritt(++nr, alle.length); }catch(_){} }
       const vorh = metaPfad(x.meta.pfad);
       if(modus !== 'ersetzen' && vorh && vorh.geaendert >= x.meta.geaendert) continue;
       await dateiEinspielen(x.meta, x.daten ? Krypto.ausB64(x.daten) : null, 'sicherung');
@@ -455,7 +457,26 @@
     return null;
   }
 
+  // JSON laden und dabei den Fortschritt melden (0..1); bei gepackter Uebertragung ist die Gesamtgroesse geschaetzt
+  async function jsonMitFortschritt(url, fortschritt, schaetzung){
+    const r = await fetch(url, { cache: 'no-cache' });
+    if(!r.ok) throw new Error('Nicht gefunden (HTTP ' + r.status + ')');
+    if(!r.body || !r.body.getReader || !fortschritt) return r.json();
+    const laenge = Number(r.headers.get('content-length')) || 0, gepackt = !!r.headers.get('content-encoding');
+    const gesamt = laenge && !gepackt ? laenge : (schaetzung || 6e6);
+    const leser = r.body.getReader(), teile = []; let n = 0;
+    for(;;){
+      const { done, value } = await leser.read(); if(done) break;
+      teile.push(value); n += value.length;
+      try{ fortschritt(Math.min(0.97, n / gesamt)); }catch(_){}
+    }
+    const alles = new Uint8Array(n); let o = 0; for(const t of teile){ alles.set(t, o); o += t.length; }
+    try{ fortschritt(1); }catch(_){}
+    return JSON.parse(new TextDecoder().decode(alles));
+  }
+
   global.Tresor = {
+    jsonMitFortschritt,
     pruefen, einrichten, einrichtenMitInfo, demoOeffnen, entsperren, sperren, allesLoeschen, geraetMerken, istGemerkt, passwortAendern, codeErneuern, pruefePasswort, passwortFehlt, passwortRegelFehler, PASSWORT_REGEL,
     passkeyUnterstuetzt, passkeys, passkeyEinrichten, passkeyEntsperren, passkeyEntfernen,
     status: ()=> status, offen, schluesselInfo: ()=> info, geraetId: ()=> geraet && geraet.id,
