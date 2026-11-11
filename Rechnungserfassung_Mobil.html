@@ -7031,7 +7031,9 @@ function rdEigeneBloecke(eigene, art, begruendungen){
     const breit = !!p.auslage || String(p.schluessel || p.id).toUpperCase() === 'EIGLTB';
     if(breit){
       const bb = L.cols[L.sp.ziffer] + L.cols[L.sp.faktor] + L.cols[L.sp.bez] - 2 * RECHNUNG_ZELLRAND_TWIPS / 20 - 1;
-      const zeilen = rdBezUmbrechen(p.bez, bb).map((t, i)=>{ const z = ['', '', '', '', '']; z[L.sp.bez] = t; if(i === 0) z[L.sp.betrag] = Math.round(Number(p.betrag) * 100) / 100; return z; });
+      // einzeilig (die Schrift wird beim Zeichnen passend verkleinert), mit normalem Abstand zum Rahmen
+      const z0 = ['', '', '', '', '']; z0[L.sp.bez] = String(p.bez || ''); z0[L.sp.betrag] = Math.round(Number(p.betrag) * 100) / 100;
+      const zeilen = [z0];
       return { ziffer: String(p.schluessel || p.id), nr: '', typ: 'pos', eigene: true, breit: true, zeilen };
     }
     const zeilen = rdBezUmbrechen(p.bez, breite).map((t, i)=>{
@@ -7178,8 +7180,12 @@ function rdTabelleXml(kopf, tab, art, gesamtLabel, zeilenGesamt){
     // hinaus), erst den Innenabstand weglassen, dann notfalls die Schrift
     // minimal schmaler laufen lassen -- ein Umbruch wuerde in der festen
     // Zeilenhoehe abgeschnitten.
-    let mar = '', schmal = '';
-    if(String(text) !== ''){
+    let mar = '', schmal = '', sz = 20;
+    if(opts.einpassen && String(text) !== ''){
+      // Schrift schrittweise (halbe Punkte) verkleinern, bis der Text mit Innenabstand in die Zelle passt (min. 7,5 pt)
+      const verfuegbar = breiteTw / 20 - 2 * RECHNUNG_ZELLRAND_TWIPS / 20 - 1 - 6;   // 5 pt Einzug vom Rahmen
+      while(sz > 15 && rdTextBreite(text, sz / 2, !!opts.fett) > verfuegbar) sz--;
+    } else if(String(text) !== ''){
       const verfuegbar = breiteTw / 20 - 2 * RECHNUNG_ZELLRAND_TWIPS / 20 - 0.5;
       const breite = rdTextBreite(text, 10, !!opts.fett);
       if(breite > verfuegbar){
@@ -7191,10 +7197,10 @@ function rdTabelleXml(kopf, tab, art, gesamtLabel, zeilenGesamt){
     return `<w:tc><w:tcPr><w:tcW w:w="${breiteTw}" w:type="dxa"/>${span}<w:tcBorders>` +
       `<w:top ${linie(rand.t)}/><w:left ${linie(rand.l)}/><w:bottom ${linie(rand.b)}/><w:right ${linie(rand.r)}/>` +
       `</w:tcBorders>${mar}<w:noWrap/><w:vAlign w:val="bottom"/></w:tcPr>` +
-      `<w:p><w:pPr>${opts.zusammen ? '<w:keepNext/>' : ''}<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="${ausr}"/>` +
+      `<w:p><w:pPr>${opts.zusammen ? '<w:keepNext/>' : ''}${opts.einpassen ? '<w:ind w:left="100"/>' : ''}<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="${ausr}"/>` +
       `<w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:sz w:val="20"/></w:rPr></w:pPr>` +
       (String(text) === '' ? '' :
-        `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${fett}${schmal}<w:sz w:val="20"/><w:szCs w:val="20"/></w:rPr>` +
+        `<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/>${fett}${schmal}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/></w:rPr>` +
         `<w:t xml:space="preserve">${rdXml(text)}</w:t></w:r>`) +
       `</w:p></w:tc>`;
   };
@@ -7222,7 +7228,7 @@ function rdTabelleXml(kopf, tab, art, gesamtLabel, zeilenGesamt){
       // Auslage: Text ueber Ziffer-, Faktor- und Bezeichnungsspalte
       xml.push(zeileXml([
         zx(fmtZelle(c[0],0), tw[0], 'center', {l:1,r:1}),
-        zx(String(c[S.bez]), tw[1] + tw[2] + tw[3], 'left', {l:1,r:1}, {span:3}),
+        zx(String(c[S.bez]), tw[1] + tw[2] + tw[3], 'left', {l:1,r:1}, {span:3, einpassen:true}),
         zx(fmtZelle(c[S.betrag], S.betrag), tw[4], 'right', {l:1,r:1})
       ]));
       return;
@@ -19361,7 +19367,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v371';
+const APP_VERSION = 'v372';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
