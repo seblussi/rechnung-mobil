@@ -1955,6 +1955,8 @@ try{
   .fbx-ortkarte{padding:4px 12px 12px;} .fbx-ortkarte:empty{display:none;}
   .fbx-ortnr{display:inline-flex; flex:none; width:17px; height:17px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; align-items:center; justify-content:center; margin-right:5px; vertical-align:1px;}
   .fbx-ortnr.leer{background:none;}
+  @keyframes fbxBlink{0%,100%{box-shadow:none;} 20%,60%{box-shadow:inset 0 0 0 2px var(--ds-primaer, #4a5568); background:rgba(74,85,104,.10);}}
+  .fbx-blink{animation:fbxBlink 1.6s ease;}
   .fbx-mit-nr > .fbx-fall{grid-template-columns:64px minmax(0,1fr) auto;}
   .fbx-mit-nr > .fbx-fall .fbx-zeit{display:flex; align-items:center; white-space:nowrap;}
   .fbx-ortnr.ls{background:var(--ls-farbe);} .fbx-ortnr.pt{background:var(--pt-farbe);} .fbx-ortnr.gkv{background:#7d4e9e;}
@@ -1978,6 +1980,10 @@ try{
   .mini-gruppe.mitte{top:50%; transform:translateY(-50%);}
   .mini-ebenen.kurz .mini-gruppe.mitte{top:auto; bottom:8px; right:64px; transform:none; flex-direction:row-reverse;}
   .mini-ebenen .mini-gruppe > button{position:relative !important; top:auto !important; right:auto !important; bottom:auto !important; left:auto !important; width:48px; height:38px; margin:0; flex:none; pointer-events:auto; border-radius:9px;}
+  .mini-ebenen.platz .mini-gruppe > button{height:48px; border-radius:10px;}
+  .mini-ebenen.platz .karte-ebene{font-size:9.5px; gap:2px;}
+  .mini-ebenen.platz .karte-ebene svg{width:20px; height:20px;}
+  .mini-ebenen.platz.kurz .mini-gruppe.mitte{right:64px;}
   .nfp-start{background:#1a55c9;}
   .nfp-nfp{background:#111; border-radius:3px; width:14px; height:14px; margin:-7px 0 0 -7px;}
   .nfp-poi{display:flex; align-items:center; justify-content:center; color:#fff; font:700 10px sans-serif; width:20px; height:20px; margin:-10px 0 0 -10px;}
@@ -2071,7 +2077,17 @@ try{
   body.quer .fbx-quer{display:grid; grid-template-columns:minmax(0, 1.45fr) minmax(280px, 1fr); gap:18px; align-items:start;}
   body.quer .fbx-quer > .fbx-karte{margin:0;}
   .fbx-quer-liste{display:flex; flex-direction:column; gap:6px;}
-  body.quer .fbx-quer-liste{position:sticky; top:8px; max-height:calc(100vh - 210px); overflow:auto; padding-right:2px;}
+  /* Querformat Fahrtenbuch: Leiste oben in allen Ansichten voll breit; Karten: Dienstliste links, Dienst rechts */
+  body.quer .fbx-quer{grid-template-columns:minmax(260px, 1fr) minmax(0, 1.45fr);}
+  body.quer .fbx-quer > .fbx-quer-liste{order:-1;}
+  body.quer .fbx-quer-liste{position:sticky; top:8px; max-height:calc(100dvh - 16px); overflow:auto; padding-right:2px; padding-bottom:96px; box-sizing:border-box;}
+  /* Tabelle: Liste in der bisherigen Breite */
+  body.quer #fbxInhalt > .fbx-tab{max-width:648px; margin-left:auto; margin-right:auto;}
+  /* Woche: Tage oben, darunter links die Faelle, rechts die Karte */
+  body.quer .fbx-woche + .fbx-karte{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.2fr); column-gap:16px; align-items:start;}
+  body.quer .fbx-woche + .fbx-karte > .fbx-kopf, body.quer .fbx-woche + .fbx-karte > .fbx-kpi{grid-column:1 / -1;}
+  body.quer .fbx-woche + .fbx-karte > .fbx-detail{grid-column:1; grid-row:3;}
+  body.quer .fbx-woche + .fbx-karte > .fbx-ortkarte{grid-column:2; grid-row:3; position:sticky; top:8px; margin-top:0;}
   .fbx-qzeile{display:flex; justify-content:space-between; align-items:center; gap:10px; width:100%; padding:9px 12px; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text); text-align:left; font:inherit; cursor:pointer;}
   .fbx-qzeile.an{border-color:var(--titelfarbe); box-shadow:inset 0 0 0 1px var(--titelfarbe);}
   .fbx-qzeile.laeuft{border-left:4px solid #e08a1e;}
@@ -3266,13 +3282,13 @@ async function ansichtFahrtenbuch(blatt){
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=> ansichtFahrtenbuch(blatt); };
   let ansicht = LS.get('fb_ansicht', 'a');
   app.innerHTML = fbTabsHtml('dienste') +
-    '<div class="fbx-leiste"><div class="fbx-varianten">' + [['a', 'Karten'], ['b', 'Tabelle'], ['c', 'Woche']].map(([k, t])=> '<button type="button" data-fbv="' + k + '">' + t + '</button>').join('') + '</div>' +
-    '</div>' +
     '<div class="fbx-filter"><select id="fbxZeitraum" aria-label="Zeitraum">' + [['jahr', 'Jahr'], ['q1', 'Q1'], ['q2', 'Q2'], ['q3', 'Q3'], ['q4', 'Q4'], ['eigen', 'Zeitraum …']].map(([k, t])=> '<option value="' + k + '">' + t + '</option>').join('') + '</select>' +
       '<select id="fbxJahr" class="fbx-jahr" aria-label="Jahr"></select>' +
       '<input type="search" id="fbxSuche" autocomplete="off" placeholder="🔍 Name, Ziffer, Datum"></div>' +
     '<div class="fbx-eigen" id="fbxEigen" hidden><label>von<input type="date" id="fbxVon"></label><label>bis<input type="date" id="fbxBis"></label></div>' +
-    '<div id="fbxInhalt"><div class="leer-hinweis">Fahrtenbuch wird gelesen …</div></div>';
+    '<div class="fbx-leiste"><div class="fbx-varianten">' + [['a', 'Karten'], ['b', 'Tabelle'], ['c', 'Woche']].map(([k, t])=> '<button type="button" data-fbv="' + k + '">' + t + '</button>').join('') + '</div>' +
+    '</div>' +
+    '<div id="fbxInhalt" class="quer-breit"><div class="leer-hinweis">Fahrtenbuch wird gelesen …</div></div>';
   fbTabsWiring();
   const inhalt = document.getElementById('fbxInhalt');
   try{
@@ -3558,7 +3574,10 @@ async function fbTagKarteZeichnen(d, di){
   });
   const hinweis = ohne ? '<div class="sk-hinweis">' + ohne + ' ohne Ort (nur in der Excel oder ohne Adresse – GKV erst ab „Wegegeld ermitteln“).</div>' : '';
   if(!pois.length){ box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Einsatzorte</b><small>keine Orte bekannt</small></span></div>' + hinweis; return; }
-  const fallKlick = (i)=>{ const z = document.querySelector('[data-fbfall="' + di + '-' + i + '"]'); if(z) z.click(); };
+  // Klick auf eine Nummer in der Karte: den Fall in der Liste nur kurz hervorheben (oeffnen nur ueber die Liste -- keine Fehlklicks)
+  const fallKlick = (i)=>{ const z = document.querySelector('[data-fbfall="' + di + '-' + i + '"]'); if(!z) return;
+    try{ z.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }catch(_){}
+    z.classList.remove('fbx-blink'); void z.offsetWidth; z.classList.add('fbx-blink'); setTimeout(()=> z.classList.remove('fbx-blink'), 1800); };
   const pix = pois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
   const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
   const dd = { pois, nfp: true, rahmen: true, fallKlick };
@@ -4258,8 +4277,13 @@ async function ausZwischenablageEinlesen(art, ctx){
    km / Route-Automation
    ========================================================== */
 // fuer Kartenuebersichten: Strasse nicht gefunden -> wenigstens den Ort (PLZ Ort) zeigen
+let geocodeNetzWeg = 0;   // Zeitpunkt des letzten Netzfehlers: 60 s lang nicht weiter probieren (offline)
 async function geocodeMitOrt(adresse){
-  let g = null; try{ g = await geocode(adresse); }catch(_){}
+  if((typeof navigator !== 'undefined' && navigator.onLine === false) || Date.now() - geocodeNetzWeg < 60000){
+    try{ return await geocode(adresse); }catch(_){ return null; }   // nur der Zwischenspeicher hilft dann noch
+  }
+  let g = null;
+  try{ g = await geocode(adresse); }catch(e){ if(!/HTTP/.test(String(e && e.message))){ geocodeNetzWeg = Date.now(); return null; } }
   if(g) return g;
   const teile = String(adresse || '').split(',').map(x=> x.trim()).filter(Boolean);
   if(teile.length < 2) return null;
@@ -4279,6 +4303,7 @@ function geocodeTakt(){
 }
 async function geocode(adresse){
   const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(adresse);
+  if(typeof navigator !== 'undefined' && navigator.onLine === false) throw new Error('offline');
   await geocodeTakt();
   let res = await fetch(url, {headers:{'Accept':'application/json'}});
   if(res.status === 429 || res.status === 503){ await new Promise(r=> setTimeout(r, 2500)); await geocodeTakt(); res = await fetch(url, {headers:{'Accept':'application/json'}}); }
@@ -15904,8 +15929,13 @@ function miniKurzPruefen(){
     const h = w.clientHeight; if(!h) return;
     const o = w.querySelector('.mini-gruppe.oben'), m = w.querySelector('.mini-gruppe.mitte'), u = w.querySelector('.mini-gruppe.unten');
     const sichtbar = (g)=> g ? [...g.children].filter(x=> getComputedStyle(x).display !== 'none').length : 0;
-    const n = sichtbar(m), oH = o ? o.offsetHeight : 0, uH = sichtbar(u) ? 38 : 0;
-    const mH = n ? n * 46 - 8 : 0;
+    // genug Platz: quadratische Knoepfe wie in der grossen Karte (KVBW mit vollem Symbol)
+    const nO = sichtbar(o), nM = sichtbar(m), nU = sichtbar(u);
+    const bedarfQ = 8 + (nO ? nO * 56 - 8 : 0) + 8 + (nM ? nM * 56 - 8 : 0) + 8 + (nU ? 48 : 0) + 8;
+    w.classList.toggle('platz', h >= bedarfQ && w.clientWidth >= 260);
+    const kh = w.classList.contains('platz') ? 48 : 38;
+    const n = nM, oH = o ? o.offsetHeight : 0, uH = nU ? kh : 0;
+    const mH = n ? n * (kh + 8) - 8 : 0;
     // Mittelblock mittig im freien Band zwischen oberem Block und Vollbild-Knopf
     const bedarf = n ? 8 + oH + 8 + mH + 8 + uH + 8 : 0;
     const kurz = h < bedarf; w.classList.toggle('kurz', kurz);
@@ -17200,8 +17230,11 @@ async function vkOfflineDialog(){
   let eigen = null;   // eigene Karte (karten-bw): wird im Hintergrund geprueft; sonst OpenFreeMap mit Download-Grenze
   const VK_EIGEN_MAX = 100;
   const eigenOk = ()=> !!(eigen && !eigen.fehler);
-  const grenze = ()=> eigenOk() ? VK_EIGEN_MAX : vkOffMaxRadius(m, vkOffKbJeKachel(14), 14);
-  let radius = Math.min(grenze(), alt.radius || 25);
+  const grenze = ()=> Math.max(3, Math.floor(eigenOk() ? VK_EIGEN_MAX : vkOffMaxRadius(m, vkOffKbJeKachel(14), 14)));
+  // gewuenschter Umkreis (bisheriger oder gleich das Maximum); der Regler zeigt ihn, soweit die Grenze es erlaubt --
+  // ist die eigene Karte (bis 100 km) verfuegbar, steht er danach gleich auf dem Wunsch statt auf der vorlaeufigen Grenze
+  let wunsch = VK_EIGEN_MAX;   // immer gleich das Maximum vorschlagen (kleiner stellen geht mit dem Regler)
+  let radius = Math.min(grenze(), wunsch);
   const html = '<div class="fb-dialog"><div class="fb-info">' + htmlEsc(vkOffText()) + '</div>' +
     '<div class="fb-lbl">Details offline</div><div class="fb-chips vk-off-stufe">' +
       '<button type="button" class="fb-chip" data-vkart="voll"><b>Vollständig</b><small>alles wie online</small></button>' +
@@ -17221,7 +17254,7 @@ async function vkOfflineDialog(){
   const regler = document.getElementById('vkOffR');
   const zeigen = ()=>{
     const rMax = grenze(), d = art === 'indiv' ? details : null;
-    regler.max = rMax; if(+regler.value > rMax || !regler.value) regler.value = Math.min(rMax, radius); radius = +regler.value;
+    regler.max = rMax; regler.value = Math.min(rMax, wunsch); radius = +regler.value;
     const n = eigenOk() ? vkEigenKachelListe(m, radius).length : vkOffPlan(m, radius, 14).liste.length;
     const kb = (eigenOk() ? eigen.kbJeKachel : vkOffKbJeKachel(14)) * vkOffAnteil(d);
     document.getElementById('vkOffKm').textContent = radius + ' km';
@@ -17234,11 +17267,10 @@ async function vkOfflineDialog(){
   };
   document.querySelectorAll('.beta-overlay [data-vkart]').forEach(b=> b.onclick = ()=>{ art = b.dataset.vkart; zeigen(); });
   document.querySelectorAll('.beta-overlay [data-vkdet]').forEach(cb=> cb.onchange = ()=>{ details = [...document.querySelectorAll('.beta-overlay [data-vkdet]:checked')].map(x=> x.dataset.vkdet); zeigen(); });
-  regler.value = radius; regler.oninput = ()=>{ radius = +regler.value; zeigen(); }; zeigen();
+  regler.value = radius; regler.oninput = ()=>{ wunsch = radius = +regler.value; zeigen(); }; zeigen();
   vkEigeneKarteInfo().then(i=>{
     const bx = i && i.box; if(!i.fehler && Array.isArray(bx) && !(m.lon >= bx[0] && m.lat >= bx[1] && m.lon <= bx[2] && m.lat <= bx[3])) i = { fehler: 'Ausgangspunkt liegt außerhalb der eigenen Karte' };
     eigen = i; if(!document.getElementById('vkOffR')) return;
-    if(eigenOk() && (alt.eigen || !alt.radius)){ radius = Math.max(radius, 75); regler.max = VK_EIGEN_MAX; regler.value = radius; }
     zeigen();
   });
   const akt = await warte;
@@ -17995,7 +18027,9 @@ function vektorKarteOverlay(d, text, opt){
     // lange druecken (Finger oder Maus) setzt einen Punkt
     let langT = null, langP = null;
     const langAus = ()=>{ clearTimeout(langT); langT = null; };
+    let zeigerArt = '';
     box.addEventListener('pointerdown', (ev)=>{
+      zeigerArt = ev.pointerType || '';
       if(ev.target.closest('.maplibregl-marker, .maplibregl-ctrl')) return;
       langP = { x: ev.clientX, y: ev.clientY }; langAus();
       langT = setTimeout(()=>{
@@ -18009,6 +18043,15 @@ function vektorKarteOverlay(d, text, opt){
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(n=> box.addEventListener(n, langAus));
     box.addEventListener('contextmenu', (ev)=> ev.preventDefault());
     map.on('movestart', langAus);
+    // PC (Maus): einfacher Klick oder Rechtsklick setzt den Punkt (am Handy bleibt es beim langen Druecken)
+    const mausPunkt = (ev)=>{
+      if(Date.now() - (ov._langZeit || 0) < 1000) return;
+      try{ if(map.getLayer('vk-aed') && map.queryRenderedFeatures(ev.point, { layers: ['vk-aed'] }).length) return; }catch(_){}
+      ov._langZeit = Date.now();
+      const p = ev.lngLat; zielSetzen({ lat: p.lat, lon: p.lng }, 'Gesetzt'); adresseZu({ lat: p.lat, lon: p.lng });
+    };
+    if(!W) map.on('click', (ev)=>{ if(zeigerArt === 'mouse' && !ev.defaultPrevented) mausPunkt(ev); });
+    map.on('contextmenu', (ev)=>{ if(zeigerArt === 'mouse') mausPunkt(ev); });
   }).catch(()=>{
     // ohne MapLibre (offline o.ae.): normale Karte
     try{ ov.remove(); }catch(_){}
@@ -19130,7 +19173,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v366';
+const APP_VERSION = 'v367';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
