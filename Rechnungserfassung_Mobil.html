@@ -4155,18 +4155,23 @@ function strasseAusschreiben(text){
 // SelStart + (neue Länge - alte Länge) -- unabhängig davon, WO im Text
 // sich etwas geändert hat.
 let gGrossSchreibLaeuft = false;
-function grossKleinKorrigieren(text){
+function grossKleinKorrigieren(text, imTippen){
   // Zuerst falsch geschriebene Woerter richten: komplett GROSS (ab 3 Buchstaben,
   // kurze Kuerzel wie "KG" bleiben) oder verdreht wie "mÜLLER" -> "Müller".
   // Gemischte Schreibung wie "McDonald" oder "GmbH" bleibt unangetastet.
-  text = String(text || '').replace(/[^\s\-\/,.()&]+/g, (w)=>{
+  // imTippen: das Wort, das gerade am Ende getippt wird, noch nicht anfassen (sonst wird aus
+  // "MUSTERMANN" beim Tippen "MusTERMANN") -- es wird beim naechsten Wort bzw. beim Verlassen korrigiert.
+  text = String(text || '');
+  let ende = '';
+  if(imTippen){ const m = /[^\s\-\/,.()&]+$/.exec(text); if(m){ ende = m[0]; text = text.slice(0, m.index); } }
+  text = text.replace(/[^\s\-\/,.()&]+/g, (w)=>{
     if(!/^\p{L}/u.test(w)) return w;
     const b = w.replace(/[^\p{L}]/gu, '');
     if(b.length < 3) return w;
     const rest = b.slice(1);
     if(rest !== rest.toUpperCase() || rest === rest.toLowerCase()) return w;
     return w[0].toUpperCase() + w.slice(1).toLowerCase().replace(/'(\p{L})/gu, (m, c)=> "'" + c.toUpperCase());
-  });
+  }) + ende;
   // Entspricht GrossKleinKorrigieren (PC): Leerzeichen UND Bindestrich
   // sind Wortgrenzen, nur der erste Buchstabe je Wort wird grossgeschrieben,
   // der Rest bleibt unangetastet (korrigiert also gezielt vergessene
@@ -4185,12 +4190,13 @@ function grossKleinKorrigieren(text){
 function feldLiveGrossschreibungAnhaengen(id, istStrassenfeld){
   const el = document.getElementById(id);
   if(!el) return;
+  el.addEventListener('blur', ()=>{ const v = grossKleinKorrigieren(el.value); if(v !== el.value){ el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } });
   el.addEventListener('input', ()=>{
     if(gGrossSchreibLaeuft) return; // Wiedereintritt verhindern (das el.value=... unten loest selbst wieder 'input' aus)
     const textVorher = el.value;
     let textNachher = textVorher;
     if(istStrassenfeld) textNachher = strasseAusschreiben(textNachher);
-    textNachher = grossKleinKorrigieren(textNachher);
+    textNachher = grossKleinKorrigieren(textNachher, el.selectionStart === textVorher.length);
     if(textNachher === textVorher) return;
     let posCursor = el.selectionStart + (textNachher.length - textVorher.length);
     if(posCursor < 0) posCursor = 0;
@@ -4207,18 +4213,24 @@ function feldLiveGrossschreibungAnhaengen(id, istStrassenfeld){
 const GROSS_FELDER = {
   gkvName: 'g', gkvAdresse: 's', gkvPlzOrt: 'g',
   txtLuftVonStr: 's', txtLuftVonOrt: 'g', txtLuftZielStr: 's', txtLuftZielOrt: 'g',
-  nfpStrasse: 's', nfpPlzOrt: 'g',
+  nfpStrasse: 's', nfpPlzOrt: 'g', vkStrasse: 's', vkPlzOrt: 'g',
   arVname: 'g', arAdr1: 's', arAdr2: 'g',
   fbArzt: 'g', liveArzt: 'g', txtPraxisadresse: 's',
   ini_ARZTNAME: 'g', ini_ARZTADRESSE1: 's', ini_ARZTADRESSE2: 'g', ini_ARZTKONTOINHABER: 'g',
   ini_AERZTE_KONTOINHABER: 'g', ini_GKV_STARTADRESSE: 's'
 };
+document.addEventListener('focusout', (ev)=>{
+  const el = ev.target, art = el && (GROSS_FELDER[el.id] || (el.dataset && el.dataset.ini ? GROSS_FELDER['ini_' + el.dataset.ini] : null));
+  if(!art || typeof el.value !== 'string') return;
+  const v = grossKleinKorrigieren(el.value);
+  if(v !== el.value){ el.value = v; try{ el.dispatchEvent(new Event('input', { bubbles: true })); }catch(_){} }
+});
 document.addEventListener('input', (ev)=>{
-  const el = ev.target, art = el && GROSS_FELDER[el.id];
+  const el = ev.target, art = el && (GROSS_FELDER[el.id] || (el.dataset && el.dataset.ini ? GROSS_FELDER['ini_' + el.dataset.ini] : null));
   if(!art || gGrossSchreibLaeuft || typeof el.selectionStart !== 'number') return;
   const vorher = el.value;
   let nachher = art === 's' ? strasseAusschreiben(vorher) : vorher;
-  nachher = grossKleinKorrigieren(nachher);
+  nachher = grossKleinKorrigieren(nachher, el.selectionStart === vorher.length);
   if(nachher === vorher) return;
   let pos = el.selectionStart + (nachher.length - vorher.length); if(pos < 0) pos = 0;
   gGrossSchreibLaeuft = true; el.value = nachher; gGrossSchreibLaeuft = false;
@@ -19283,7 +19295,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v368';
+const APP_VERSION = 'v369';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
