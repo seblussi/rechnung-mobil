@@ -543,6 +543,9 @@ try{
   /* Schrift wie bei PT/LS (Ziffer klein und grau, Text 13,5 px, Betrag 14 px fett) */
   :root{--ziffer-breite:46px; --ziffer-breite-goae:30px;}
   body.ziffer-gross{--ziffer-breite:64px; --ziffer-breite-goae:44px;}
+  /* Wegegeld-Kuerzel (WT10, WN25, REISE) sind laenger als GOAe-Ziffern */
+  .maske.ls .position-zeile, .position-zeile.weg{--ziffer-breite-goae:42px;}
+  body.ziffer-gross .maske.ls .position-zeile, body.ziffer-gross .position-zeile.weg{--ziffer-breite-goae:58px;}
   .gkv-pos-haupt{align-items:flex-start; gap:6px;}
   .gkv-pos .gkv-gop{font-size:12px; font-weight:600; color:var(--text-schwach); width:calc(var(--ziffer-breite) - 6px); min-width:0; flex:0 0 auto; line-height:1.55;}
   /* PT/LS: Ziffer als eigene Spalte, Text mit Einzug darunter (wie bei EBM) */
@@ -1168,6 +1171,8 @@ try{
   .ls-assi-goae summary{font-size:13px; cursor:pointer; color:var(--text-schwach);}
   .ls-assi-goae p{font-size:12.5px; margin:6px 0 0;}
   .ls-kurz-reihe{margin:-2px 0 8px 34px;}
+  .ls-kurz-reihe.ls-assi-reihe{display:flex; gap:8px; flex-wrap:wrap;}
+  .ls-kurz-reihe .ls-assi-wahl{flex:1 1 130px; min-height:40px; font-size:13.5px;}
   .position-zeile .betrag{font-weight:600; min-width:60px; text-align:right; font-size:14px;}
   /* Kompakter als vorher (18px/4px), damit die komplette Positionsliste
      eher auf einen Bildschirm passt -- v.a. bei mehreren Zwischenüberschriften
@@ -6805,7 +6810,7 @@ const RECHNUNG_LAYOUT = {
   ls: { cols: [78.5, 72.0, 60.8, 195.6, 61.2], einzug: 7.2, zeilenGesamt: 15,
         sp: {datum:0, ziffer:1, faktor:2, bez:3, betrag:4}, ersteSpalte: 1,
         ausr: ['center','center','center','left','right'],
-        betragFormat: 'general', gesamtFormat: '#,##0.00 €' }
+        betragFormat: '0.00', gesamtFormat: '#,##0.00 €' }   // Betraege immer mit 2 Nachkommastellen (3,50 statt 3,5)
 };
 const RECHNUNG_ZEILENHOEHE_TWIPS = 296;   // 14,8 pt
 const RECHNUNG_ZELLRAND_TWIPS = 34;       // ca. 1,7 pt Innenabstand links/rechts
@@ -11822,8 +11827,10 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     ...(art === 'ls' ? [] : [{titel:'Eigene Positionen', liste: geordnet.eigene, automatisch:false, eigene:true, drag:'eigene'}]),
     {titel:'Zeitzuschläge', liste: zuschlagListe, automatisch:true,
      hinweis: art === 'ls' ? '' : familie === 'AD' ? 'Beratung/Untersuchung ohne Besuch: A–D' : (familie === 'EH' ? 'mit Besuch: E–H' : '')},
-    // Wegegeld gibt es nur mit Besuch -- ohne Besuch (Sitzdienst, Telefon) gar nicht zeigen
-    ...(besuch ? [{titel:'Wegegeld', liste: [...WEGEGELD_TAG, ...WEGEGELD_NACHT, {ziffer:'REISE', bez:reiseBez, betrag:reise.gesamt}], automatisch:true, hinweis: ''}] : [])
+    // Wegegeld gibt es nur mit Besuch -- ohne Besuch (Sitzdienst, Telefon) gar nicht zeigen; bei der Leichenschau
+    // immer zeigen (wie die Zeitzuschlaege), berechnet wird es aber erst zusammen mit Nr. 100 bzw. 101
+    ...((besuch || art === 'ls') ? [{titel:'Wegegeld', liste: [...WEGEGELD_TAG, ...WEGEGELD_NACHT, {ziffer:'REISE', bez:reiseBez, betrag:reise.gesamt}], automatisch:true,
+      hinweis: besuch ? '' : 'wird mit Nr. 100 bzw. 101 berechnet'}] : [])
   ];
   const alle = [].concat(...gruppen.map(g=> g.liste));
   const posVon = (z)=> alle.find(p=> p.ziffer === z);
@@ -11853,9 +11860,13 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   const begrVon = (p)=>{ const k = betaPosSchluessel(p); return det.begruendungen[k] !== undefined ? det.begruendungen[k] : betaPosStandardBegruendung(art, p, legacy); };
   const anzahlVon = (p)=> betaPosAnzahlRegel(p) ? betaAnzahlVon(det, betaPosSchluessel(p)) : 1;
   const betragVon = (p)=> betaLsKurzAktiv(p, det) ? betaRund2(Number(p.betrag) * LS_KURZ_FAKTOR) : betaPosFaktorEditierbar(p) ? betaRund2(betaPosBetrag(p, faktorVon(p)) * anzahlVon(p)) : Number(p.betrag);
-  const lsKurzChip = (p)=> art === 'ls' && betaLsKurzFaehig(p)
-    ? '<button type="button" class="faktor-chip ls-kurz-chip' + (betaLsKurzAktiv(p, det) ? ' hoch' : '') + '" data-kurz="' + htmlEsc(p.ziffer) + '">' +
-      (betaLsKurzAktiv(p, det) ? 'Dauer ' + LS_KURZ[betaPosNr(p)].kurz + ' · 60 %' : 'Dauer ' + LS_KURZ[betaPosNr(p)].voll + ' · volle Gebühr') + ' &#9998;</button>' : '';
+  // Dauer der Leichenschau: beide Moeglichkeiten nebeneinander, die gewaehlte hervorgehoben (Standard: volle Gebuehr)
+  const lsKurzChip = (p)=>{
+    if(art !== 'ls' || !betaLsKurzFaehig(p)) return '';
+    const kurz = betaLsKurzAktiv(p, det), i = LS_KURZ[betaPosNr(p)], z = htmlEsc(p.ziffer);
+    const kn = (w, an, text)=> '<button type="button" class="ls-assi-wahl ls-kurz-wahl' + (an ? ' an' : '') + '" data-kurz="' + z + '" data-w="' + w + '" aria-pressed="' + an + '">' + text + '</button>';
+    return kn('voll', !kurz, i.voll + ' · volle Gebühr') + kn('kurz', kurz, i.kurz + ' · 60 %');
+  };
 
   const profile = betaProfile(art), profilId = betaProfilAktivId(art);
   let html = `<div class="maske ${art}">`;
@@ -11868,11 +11879,11 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     const gesperrt = istAuto && !aus ? 'disabled' : '';
     const mitFaktor = betaPosFaktorEditierbar(p);
     const loeschbar = p.eigene && !p.fest;
-    const label = `<label class="position-zeile${istAuto && !aus?' auto-gesperrt':''}${aus?' auto-aus':''}${mitFaktor?' mit-faktor':''}" data-auto-aus="${aus?'1':'0'}">
+    const label = `<label class="position-zeile${/^(W[TN]\d+|REISE)$/.test(p.ziffer)?' weg':''}${istAuto && !aus?' auto-gesperrt':''}${aus?' auto-aus':''}${mitFaktor?' mit-faktor':''}" data-auto-aus="${aus?'1':'0'}">
         <input type="checkbox" data-ziffer="${htmlEsc(p.ziffer)}" data-betrag="${betragVon(p)}" data-auto="${istAuto?'1':'0'}" ${checked} ${gesperrt}>
         <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (antippen = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
         <div class="betrag">${betragVon(p).toFixed(2).replace('.',',')} &euro;</div>
-      </label>${lsKurzChip(p) && ausgewaehlteZiffern && ausgewaehlteZiffern.has(p.ziffer) ? '<div class="ls-kurz-reihe">' + lsKurzChip(p) + '</div>' : ''}`;
+      </label>${lsKurzChip(p) && ausgewaehlteZiffern && ausgewaehlteZiffern.has(p.ziffer) ? '<div class="ls-kurz-reihe ls-assi-reihe">' + lsKurzChip(p) + '</div>' : ''}`;
     const innen = loeschbar ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>${label}</div>` : label;
     return g.drag ? `<div class="pos-item" data-key="${htmlEsc(p.ziffer)}" data-drag="1">${innen}</div>` : innen;
   };
@@ -12070,13 +12081,14 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   }
 
   // Leichenschau: volle Gebuehr <-> 60 % (verkuerzte Dauer)
-  app.querySelectorAll('.ls-kurz-chip').forEach(b=> b.onclick = (ev)=>{
+  if(app._lsKurzKlick) app.removeEventListener('click', app._lsKurzKlick);
+  app.addEventListener('click', app._lsKurzKlick = (ev)=>{
+    const b = ev.target.closest && ev.target.closest('.ls-kurz-wahl'); if(!b || !app.contains(b)) return;
     ev.preventDefault(); ev.stopPropagation();
     const p = posVon(b.dataset.kurz); if(!p) return;
     const k = betaPosSchluessel(p);
-    if(betaLsKurzAktiv(p, det)) delete det.faktoren[k]; else det.faktoren[k] = LS_KURZ_FAKTOR;
-    const neu = lsKurzChip(p), tmp = document.createElement('div'); tmp.innerHTML = neu;
-    const nb = tmp.firstChild; b.replaceWith(nb); nb.onclick = b.onclick;
+    if(b.dataset.w === 'kurz') det.faktoren[k] = LS_KURZ_FAKTOR; else delete det.faktoren[k];
+    const reihe = b.closest('.ls-kurz-reihe'); if(reihe) reihe.innerHTML = lsKurzChip(p);
     const cb = app.querySelector('.position-zeile input[data-ziffer="' + CSS.escape(p.ziffer) + '"]');
     if(cb){ cb.dataset.betrag = betragVon(p); const be = cb.closest('.position-zeile').querySelector('.betrag'); if(be) be.innerHTML = betragVon(p).toFixed(2).replace('.',',') + ' &euro;'; }
     summeBerechnen();
@@ -12137,12 +12149,18 @@ const GOAE_FEST = {
   ],
   ls: [
     { id:'EIGL100', ziffer:'100', bez:'Untersuchung eines Toten und Ausstellung einer vorläufigen Todesbescheinigung (vorläufige Leichenschau)', gruppe:'grund' },
+    // Auslage nach § 10 GOAe: Kosten des Formulars Todesbescheinigung (Betrag in den Einstellungen bzw. beim ersten Mal abgefragt)
+    { id:'EIGLTB', ziffer:'', bez:'Auslage nach § 10 GOÄ: Formular Todesbescheinigung', gruppe:'grund', auslage:true },
   ]
 };
 // automatisch gesetzte Zuschlaege der Familie A-D (entsprechen F/G/H)
 const ZUSCHLAG_AD = { F:'EIGZB', G:'EIGZC', H:'EIGZD' };
+const LS_KEY_AUSLAGE = 'EIGLTB';
+function lsAuslageBetrag(){ const v = Number(String(LS.get('ls_auslage_tb', '') || '').replace(',', '.')); return v > 0 ? betaRund2(v) : 0; }
 function betaFestPositionen(art){
   return (GOAE_FEST[art] || []).map(f=>{
+    if(f.auslage) return { id: f.id, ziffer: f.ziffer, faktor: '', bez: f.bez, punkte: null, betrag: lsAuslageBetrag(), fest: true, gruppe: f.gruppe,
+                           familie: null, manuell: true, auslage: true, angelegt: '', geaendert: '' };
     const e = goaeEintrag(f.ziffer) || { punkte: 0, typ: 'f' };
     const faktor = e.typ === 'n' ? 2.3 : e.typ === 't' ? 1.8 : e.typ === 'l' ? 1.15 : 1;
     return { id: f.id, ziffer: f.ziffer, faktor: String(faktor).replace('.', ','), bez: f.bez, punkte: e.punkte || null,
@@ -19112,7 +19130,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v365';
+const APP_VERSION = 'v366';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -21559,7 +21577,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const lsArt = ausw.has(LS_KEY_100) && !ausw.has('101') ? '100' : '101';
     const key = lsArt === '100' ? LS_KEY_100 : '101';
     const f = betaFaktorLesen((det.faktoren || {})[key]);
-    return { lsArt, key, kurz: !isNaN(f) && Math.abs(f - LS_KURZ_FAKTOR) < 1e-9, z102: ausw.has('102') };
+    return { lsArt, key, kurz: !isNaN(f) && Math.abs(f - LS_KURZ_FAKTOR) < 1e-9, z102: ausw.has('102'), auslage: ausw.has(LS_KEY_AUSLAGE) };
   }
   function lsAssiSumme(ausw){
     const alle = allePositionenFlach(POSITIONEN_LS), kmF = ((document.getElementById('txtKmFahrstrecke') || {}).value || '');
@@ -21570,36 +21588,60 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     });
     return betaRund2(summe);
   }
+  // Betrag des Formulars einmal abfragen (gilt dann fuer alle weiteren Leichenschauen; aenderbar)
+  async function lsAuslageBetragFragen(){
+    const alt = lsAuslageBetrag();
+    const akt = await betaOverlay.ergebnis('Formular Todesbescheinigung',
+      'Was kostet dich ein Formular der Todesbescheinigung (Einkaufspreis)? Der Betrag wird als Auslage nach § 10 GOÄ berechnet und für alle weiteren Leichenschauen gemerkt.' +
+      '<label class="einr-feld" style="margin-top:10px;"><span>Betrag in €</span><input type="text" inputmode="decimal" id="lsAuslageEingabe" value="' + (alt ? alt.toFixed(2).replace('.', ',') : '') + '" placeholder="z. B. 3,50"></label>',
+      [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Übernehmen', akt: 'ok', primaer: true }]);
+    const v = Number(String(((document.getElementById('lsAuslageEingabe') || {}).value) || '').replace(',', '.').trim());
+    betaOverlay.schliessen();
+    if(akt !== 'ok') return false;
+    if(!(v > 0) || v > 100){ appToastAnzeigen('Bitte einen Betrag zwischen 0,01 und 100 € eingeben.', 2600); return false; }
+    LS.set('ls_auslage_tb', betaRund2(v).toFixed(2));
+    return true;
+  }
   function lsAssiZeichnen(){
     const box = document.getElementById('lsAssi'); if(!box) return;
     const ausw = lsAssiAuswahl(), st = lsAssiStand(ausw), info = LS_KURZ[st.lsArt];
     const knopf = (feld, wert, text, an)=> '<button type="button" class="ls-assi-wahl' + (an ? ' an' : '') + '" data-lsa="' + feld + '" data-w="' + wert + '" aria-pressed="' + (an ? 'true' : 'false') + '">' + text + '</button>';
     const frage = (titel, knoepfe)=> '<div class="ls-assi-frage"><div class="ls-assi-titel">' + titel + '</div><div class="ls-assi-reihe">' + knoepfe + '</div></div>';
     const alle = allePositionenFlach(POSITIONEN_LS);
-    const kurzName = (z)=>{ if(z === 'REISE') return 'Reiseentschädigung'; if(/^W[TN]\d/.test(z)) return 'Wegegeld'; const p = alle.find(x=> x.ziffer === z); return p ? (p.anzeigeZiffer !== undefined ? p.anzeigeZiffer : p.ziffer) + (betaLsKurzAktiv(p, ausw.details) ? ' (60 %)' : '') : z; };
+    const kurzName = (z)=>{ if(z === 'REISE') return 'Reiseentschädigung'; if(z === LS_KEY_AUSLAGE) return 'Formular'; if(/^W[TN]\d/.test(z)) return 'Wegegeld'; const p = alle.find(x=> x.ziffer === z); return p ? (p.anzeigeZiffer !== undefined ? p.anzeigeZiffer : p.ziffer) + (betaLsKurzAktiv(p, ausw.details) ? ' (60 %)' : '') : z; };
     const goaeText = (nr)=>{ const e = typeof goaeEintrag === 'function' ? goaeEintrag(nr) : null; return e && e.text ? '<p><b>Nr. ' + nr + ':</b> ' + htmlEsc(e.text) + '</p>' : ''; };
     box.innerHTML = '<div class="ls-assi-kopf">Abrechnungsassistent</div>' +
       frage('Welche Leichenschau?', knopf('art', '101', 'Eingehend · Nr. 101', st.lsArt === '101') + knopf('art', '100', 'Vorläufig · Nr. 100', st.lsArt === '100')) +
       frage('Dauer der Untersuchung (ohne Aufsuchen)', knopf('dauer', 'voll', info.voll + ' · volle Gebühr', !st.kurz) + knopf('dauer', 'kurz', info.kurz + ' · 60 %', st.kurz)) +
       frage('Leiche mit unbekannter Identität und/oder besonderen Todesumständen (zusätzliche Dauer mindestens 10 Minuten)?', knopf('z102', 'nein', 'Nein', !st.z102) + knopf('z102', 'ja', 'Ja · Nr. 102', st.z102)) +
+      frage('Formular der Todesbescheinigung als Auslage berechnen (§ 10 GOÄ)?', knopf('auslage', 'nein', 'Nein', !st.auslage) +
+        knopf('auslage', 'ja', 'Ja' + (lsAuslageBetrag() ? ' · ' + lsAuslageBetrag().toFixed(2).replace('.', ',') + ' €' : ''), st.auslage)) +
+      (lsAuslageBetrag() ? '<div class="ls-assi-hinweis" style="margin-top:-4px;"><button type="button" class="einr-link" data-lsa="auslageBetrag" data-w="">Betrag für das Formular ändern</button></div>' : '') +
       '<div class="ls-assi-summe"><span>' + htmlEsc([...ausw].map(kurzName).filter((x, i, a)=> a.indexOf(x) === i).join(' · ')) + '</span><b>' + lsAssiSumme(ausw).toFixed(2).replace('.', ',') + ' €</b></div>' +
       '<div class="ls-assi-hinweis">Zeitzuschläge und Wegegeld setzt die App automatisch nach Datum, Uhrzeit und Entfernung.</div>' +
-      '<details class="ls-assi-goae"><summary>Wortlaut der GOÄ</summary>' + goaeText(st.lsArt) + goaeText('102') + '</details>';
-    box.querySelectorAll('[data-lsa]').forEach(b=> b.onclick = ()=> lsAssiSetzen(b.dataset.lsa, b.dataset.w));
+      '<details class="ls-assi-goae"><summary>Wortlaut der GOÄ</summary>' + goaeText('100') + goaeText('101') + goaeText('102') + '</details>';
+    box.querySelectorAll('[data-lsa]').forEach(b=> b.onclick = async ()=>{
+      if(b.dataset.lsa === 'auslageBetrag' || (b.dataset.lsa === 'auslage' && b.dataset.w === 'ja' && !lsAuslageBetrag())){
+        if(!await lsAuslageBetragFragen()) return;
+        if(b.dataset.lsa === 'auslageBetrag'){ lsAssiSetzen('auslage', lsAssiStand(lsAssiAuswahl()).auslage ? 'ja' : 'nein'); return; }
+      }
+      lsAssiSetzen(b.dataset.lsa, b.dataset.w);
+    });
   }
   function lsAssiSetzen(feld, wert){
     const alt = lsAssiAuswahl(), st = lsAssiStand(alt);
     const det = alt.details ? JSON.parse(JSON.stringify(alt.details)) : { faktoren: {}, begruendungen: {}, anzahl: {}, abgewaehlt: [], behalten: [] };
     det.faktoren = det.faktoren || {};
-    let lsArt = st.lsArt, kurz = st.kurz, z102 = st.z102;
+    let lsArt = st.lsArt, kurz = st.kurz, z102 = st.z102, auslage = st.auslage;
+    if(feld === 'auslage') auslage = wert === 'ja';
     if(feld === 'art') lsArt = wert;
     if(feld === 'dauer') kurz = wert === 'kurz';
     if(feld === 'z102') z102 = wert === 'ja';
     const key = lsArt === '100' ? LS_KEY_100 : '101';
     delete det.faktoren['101']; delete det.faktoren[LS_KEY_100];
     if(kurz) det.faktoren[key] = LS_KURZ_FAKTOR;
-    const rest = [...alt].filter(z=> z !== '101' && z !== LS_KEY_100 && z !== '102');
-    const neu = new Set([key, ...(z102 ? ['102'] : []), ...rest]);
+    const rest = [...alt].filter(z=> z !== '101' && z !== LS_KEY_100 && z !== '102' && z !== LS_KEY_AUSLAGE);
+    const neu = new Set([key, ...(z102 ? ['102'] : []), ...rest, ...(auslage ? [LS_KEY_AUSLAGE] : [])]);
     neu.details = det;
     positionenAuswahl = neu;
     const summe = lsAssiSumme(neu);
