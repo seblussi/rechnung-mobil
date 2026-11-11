@@ -19371,7 +19371,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v375';
+const APP_VERSION = 'v376';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -23743,6 +23743,9 @@ const Speicher = (()=>{
         await Tresor.dateiSchreiben(d.ziel, await q.arrayBuffer(), q.headers.get('content-type') || '', null, 'demo');
       }
     }catch(e){ console.warn('Demo: Vorlagen', e); }
+    // Design wie im Live-Modus (nicht das der Demo-Daten)
+    try{ const ui = JSON.parse(localStorage.getItem('ui_vorlieben') || 'null');
+      if(ui){ const e = JSON.parse(kv.einstellungen || '{}') || {}; Object.assign(e, { design: ui.design || '', dunkel: !!ui.dunkel, dunkelManuell: !!ui.dunkelManuell }); kv.einstellungen = JSON.stringify(e); } }catch(_){}
     // Einstellungen der Demo (Einrichtung erledigt, Bedingungen bestaetigt)
     Object.assign(kv, { einrichtung_gesehen: 'true', einrichtung_auto: 'false', einrichtung_schritt: 'null', einr_vollst_gefragt: 'true', dp_assistent_gezeigt: 'true',
       app_sperre_abgelehnt: 'true', alpha_zustimmung: JSON.stringify({ version: 'demo', am: new Date().toISOString(), name: 'Demo' }) });
