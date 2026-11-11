@@ -197,6 +197,7 @@ try{
   .beta-pdf-seiten{flex:1; overflow:auto; padding:8px; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y; display:flex; flex-direction:column;}
   .beta-pdf-inhalt{margin:auto; flex:none;}   /* kleiner als der Bildschirm: mittig; groesser: scrollbar ohne Abschneiden */
   .beta-pdf-seiten canvas{display:block; width:100%; margin:0 0 2.5%; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .beta-pdf-seiten canvas:last-child{margin-bottom:0;}   /* unten derselbe Rand wie oben und seitlich */
   .beta-pdf-seiten .leer-hinweis{color:#eee;}
   /* Einstellungen: einklappbare Abschnitte */
   .abschnitt.einklappbar > .trennlinie{cursor:pointer; display:flex; align-items:center; gap:8px; user-select:none;}
@@ -19393,7 +19394,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v382';
+const APP_VERSION = 'v383';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
