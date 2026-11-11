@@ -5990,7 +5990,7 @@ function einrBriefStarten(){
   knopf.onclick = async ()=>{
     if(!geprueft) return;
     knopf.disabled = true; info.textContent = 'Wird in OneDrive gespeichert …';
-    const aend = { BRIEF_WEITERLEITUNG: geprueft.url, BRIEF_BENUTZER: geprueft.nutzer, BRIEF_APIKEY: geprueft.key, BRIEF_ZUGANGSCODE: geprueft.zugang || '', BRIEF_AKTIVIERT: '1', BRIEF_TESTMODUS: '1' };
+    const aend = { BRIEF_WEITERLEITUNG: geprueft.url, BRIEF_BENUTZER: geprueft.nutzer, BRIEF_APIKEY: geprueft.key, BRIEF_ZUGANGSCODE: geprueft.zugang || '', BRIEF_AKTIVIERT: '1' };
     try{
       const r = await iniAenderungenSchreiben(aend, (iniCacheLaden() || {}).werte || {});
       if(r && r.abgebrochen){ knopf.disabled = false; info.textContent = ''; return; }
@@ -8118,10 +8118,9 @@ function pdfSeitenZaehlen(bytes){
   const m = s.match(/\/Type\s*\/Page(?![s\w])/g);
   return m ? m.length : 0;
 }
+// Test oder echt wird beim Absenden gewaehlt (Rueckfrage mit zwei Knoepfen); nur die Testablage ist immer Test.
 function briefTestmodus(werte, ziel){
-  if(!ziel.echt) return true; // Testablage: immer Testmodus
-  const v = String(werte.BRIEF_TESTMODUS == null || werte.BRIEF_TESTMODUS === '' ? '1' : werte.BRIEF_TESTMODUS).trim().toLowerCase();
-  return !(v === '0' || v === 'false' || v === 'falsch');
+  return !ziel.echt;
 }
 async function lxpBriefSenden(pdfBlob, dateiname, test, versandDatumIso){
   const ini = iniCacheLaden();
@@ -8192,7 +8191,8 @@ async function betaBriefeVersenden(liste, frage, opts){
   const ziel = liste[0].ziel;
   const ini = iniCacheLaden() || await iniVonOneDriveLaden().then(()=> iniCacheLaden());
   const werte = (ini && ini.werte) || {};
-  const test = typeof opts.testErzwingen === 'boolean' ? opts.testErzwingen : briefTestmodus(werte, ziel);
+  const waehlbar = typeof opts.testErzwingen !== 'boolean' && !!ziel.echt;
+  let test = typeof opts.testErzwingen === 'boolean' ? opts.testErzwingen : briefTestmodus(werte, ziel);
   const ue = await schritt('Rechnungsübersicht lesen', ()=> uebersichtLadenRepariert(token, ziel, frage));
   const ana = uebersichtAuswerten(ue);
   const offen = [], schon = [], fehlt = [];
@@ -8214,15 +8214,22 @@ async function betaBriefeVersenden(liste, frage, opts){
     }
     o.seiten = pdfSeitenZaehlen(new Uint8Array(await o.e.pdfBlob.arrayBuffer()));
   }
-  const modusTxt = test ? 'TESTMODUS – es wird NICHTS wirklich verschickt.' : 'LIVE – die Briefe werden ECHT gedruckt und verschickt und kosten Geld!';
+  const modusTxt = waehlbar
+    ? '„Testbrief“: landet bei LetterXpress nur im Testbereich – nichts wird gedruckt, verschickt oder berechnet.\n„Echt verschicken“: wird gedruckt und verschickt und kostet Porto.'
+    : (test ? 'TESTMODUS – es wird NICHTS wirklich verschickt.' : 'LIVE – die Briefe werden ECHT gedruckt und verschickt und kosten Geld!');
   const terminTxt = opts.versandDatumIso ? '\nVersand geplant zum ' + opts.versandDatumIso.split('-').reverse().join('.') + '.' : '';
   const mehrseitig = offen.some(o=> o.seiten > 1);
   const listeTxt = offen.map(o=> '• ' + o.e.name + (o.seiten ? ' (' + o.seiten + (o.seiten === 1 ? ' Seite)' : ' Seiten)') : '')).join('\n');
   const text = (offen.length === 1 ? 'Diesen Brief' : 'Diese ' + offen.length + ' Briefe') + ' per LetterXpress verschicken?\n\n' + listeTxt + '\n' +
     (schon.length ? '\n' + schon.length + ' bereits verschickte werden übersprungen.' : '') + terminTxt + '\n' + modusTxt +
     (mehrseitig ? '\n\nHinweis: mehrseitig – jede weitere Seite kostet bei LetterXpress etwas extra.' : '');
-  if(!await frage(text, offen.length === 1 ? 'Senden' : 'Alle senden', 'Abbrechen')) return { abgebrochen: true, test };
-  const ergebnis = { test, gesendet: [], fehler: [], uebersprungen: schon.length };
+  const antwortWahl = await frage(text, waehlbar ? 'Echt verschicken' : (offen.length === 1 ? 'Senden' : 'Alle senden'), 'Abbrechen', waehlbar ? 'Testbrief' : undefined);
+  if(!antwortWahl) return { abgebrochen: true, test };
+  if(waehlbar) test = antwortWahl === 'extra';
+  // Testbriefe ohne Termin nicht in der Uebersicht vermerken (sonst waere der echte Versand danach gesperrt);
+  // mit Termin schon, damit sich der Auftrag stornieren/verschieben laesst
+  const vermerken = !test || !!opts.versandDatumIso;
+  const ergebnis = { test, vermerkt: vermerken, gesendet: [], fehler: [], uebersprungen: schon.length };
   const uNeu = new Map(); // Zeile -> aktuelles U (mehrere Kennzeichen in einer Zeile)
   const sid = await xlSitzung(token, ue.basis);
   try{
@@ -8231,6 +8238,7 @@ async function betaBriefeVersenden(liste, frage, opts){
       try{
         antwort = await lxpBriefSenden(o.e.pdfBlob, o.e.name, test, opts.versandDatumIso);
       }catch(err){ ergebnis.fehler.push(o.e.name + ': ' + (err.message || err)); continue; }
+      if(!vermerken){ ergebnis.gesendet.push(o.e); continue; }
       try{
         const bisher = uNeu.has(o.z.nr) ? uNeu.get(o.z.nr) : String(o.z.v[20] == null ? '' : o.z.v[20]);
         const flag = lxpFlagFuerTyp(o.e.typ);
@@ -8318,7 +8326,7 @@ async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
           if(e.sendbar){
             ergebnisse.push(e);
             const testV = briefTestmodus((iniCacheLaden() || {werte:{}}).werte || {}, ziel);
-            knopf = `<div class="aktionen"><button data-akt="lxp" data-i="${ergebnisse.length-1}">${testV ? 'Vorhandene als Brief senden (Testmodus)' : 'Vorhandene als Brief senden (LIVE)'}</button></div>`;
+            knopf = `<div class="aktionen"><button data-akt="lxp" data-i="${ergebnisse.length-1}">${testV ? 'Vorhandene als Brief senden (Testablage)' : 'Vorhandene als Brief senden'}</button></div>`;
           }
           protokoll.push('– <b>' + htmlEsc(name) + '</b>: übersprungen (' + htmlEsc(e.grund) + ', ' + htmlEsc(e.name || e.renu) + ')' +
             (e.url ? ` <a href="${htmlEsc(e.url)}" target="_blank" rel="noopener">vorhandene PDF</a>` : '') + knopf);
@@ -8336,7 +8344,7 @@ async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
           ', Summe ' + rdZahl(e.summe, '0.00') + ' €<br>&nbsp;&nbsp;Übersicht: Zeile ' + e.zeile + (e.neu ? ' neu eingetragen' : ' aktualisiert') +
           [...e.hinweise, ...e.warnungen].map(t=> '<br>&nbsp;&nbsp;' + (/^[✓⚠]/.test(t) ? '' : '⚠ ') + htmlEsc(t)).join('') +
           `<div class="aktionen"><button data-akt="pdf" data-i="${ergebnisse.length-1}">PDF ansehen</button>` +
-          `<button data-akt="lxp" data-i="${ergebnisse.length-1}">${test ? 'Brief senden (Testmodus)' : 'Brief senden (LIVE)'}</button></div>`);
+          `<button data-akt="lxp" data-i="${ergebnisse.length-1}">${test ? 'Brief senden (Testablage)' : 'Brief senden'}</button></div>`);
       }catch(err){
         protokoll.push('✗ <b>' + htmlEsc(name) + '</b>: ' + htmlEsc(err.message || String(err)));
       }
@@ -8357,7 +8365,7 @@ async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
       try{
         const r = await betaBriefVersenden(e);
         if(r.abgebrochen){ b.textContent = alt; b.disabled = false; return; }
-        b.textContent = r.test ? '✓ Testbrief angenommen, vermerkt' : '✓ Brief verschickt, vermerkt';
+        b.textContent = r.test ? (r.vermerkt ? '✓ Testbrief angenommen, vermerkt' : '✓ Testbrief angenommen (nicht vermerkt)') : '✓ Brief verschickt, vermerkt';
       }catch(err){
         b.textContent = alt; b.disabled = false;
         betaOverlay.meldung(err.message || String(err));
@@ -8406,7 +8414,6 @@ const INI_FELDER = [
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
   {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Zugangscode der Weiterleitung (nur wenn du die Weiterleitung eines anderen nutzt)'},
-  {k:'BRIEF_TESTMODUS',  typ:'bool', label:'Testmodus (es wird nichts gedruckt/berechnet)', standard:'1'},
   {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung (leer lassen = die von Sergej, dann mit Zugangscode)'},
 ];
 const INI_GRUPPEN = [
@@ -8415,7 +8422,7 @@ const INI_GRUPPEN = [
   {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTBANKNAME','ARZTIBAN','ARZTBIC']},
   {titel:'Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)', keys:['AERZTE_KONTOINHABER','AERZTE_BANKNAME','AERZTE_IBAN','AERZTE_BIC']},
   {titel:'GKV-Patient: Wegepauschale', keys:['GKV_STARTADRESSE']},
-  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_TESTMODUS','BRIEF_WEITERLEITUNG','BRIEF_ZUGANGSCODE']}
+  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_WEITERLEITUNG','BRIEF_ZUGANGSCODE']}
 ];
 
 // ---------- Windows-1252 lesen/schreiben ----------
@@ -9213,7 +9220,7 @@ const betaOverlay = (()=>{
     },
     schritt(text){ t('.beta-overlay-text').textContent = text || ''; t('.beta-overlay-knoepfe').innerHTML = ''; spinner(true); },
     // Rueckfrage im eigenen Fenster -> Promise<boolean>
-    frage(text, ja, nein){
+    frage(text, ja, nein, extra){
       const offen = bauen().classList.contains('aktiv');
       if(!offen){ this.zeigen(''); this.fortschritt(null); }
       const vorher = t('.beta-overlay-text').textContent;
@@ -9227,7 +9234,9 @@ const betaOverlay = (()=>{
         const fertig = (wert)=>{ abbruchSetzen(null); k.innerHTML = ''; if(offen){ t('.beta-overlay-text').textContent = vorher; spinner(true); } else this.schliessen(); res(wert); };
         b1.onclick = ()=> fertig(false); b2.onclick = ()=> fertig(true);
         abbruchSetzen(()=> fertig(false));
-        k.appendChild(b1); k.appendChild(b2);
+        k.appendChild(b1);
+        if(extra){ const b3 = document.createElement('button'); b3.type = 'button'; b3.className = 'btn-sekundaer'; b3.textContent = extra; b3.onclick = ()=> fertig('extra'); k.appendChild(b3); }
+        k.appendChild(b2);
       });
     },
     // Ergebnis anzeigen (HTML) mit Knoepfen [{label, akt, primaer}] -> Promise<akt>
@@ -9259,7 +9268,7 @@ const betaOverlay = (()=>{
     schliessen(){ abbruchSetzen(null); if(el){ el.classList.remove('aktiv'); t('.beta-overlay-text').innerHTML = ''; t('.beta-overlay-knoepfe').innerHTML = ''; } }
   };
 })();
-const betaFrage = (text, ja, nein)=> betaOverlay.frage(text, ja, nein);
+const betaFrage = (text, ja, nein, extra)=> betaOverlay.frage(text, ja, nein, extra);
 
 // ---------- Uebersichtszeile -> bearbeitbarer Fall ----------
 // Liest alles, was am PC in der Uebersicht steht, zurueck in die Felder der
@@ -9412,12 +9421,12 @@ async function betaErgebnisseZeigen(ergebnisse, ziel){
   const zeilenHtml = ergebnisse.map((e, i)=>{
     if(e.fehler) return '<div class="beta-erg">✗ <b>' + htmlEsc(e.name) + '</b><br><span class="beta-erg-klein">' + htmlEsc(e.fehler) + '<br>Gespeichert, aber noch nicht hochgeladen.</span></div>';
     if(e.uebersprungen) return '<div class="beta-erg">– <b>' + htmlEsc(e.anzeige) + '</b>: ' + htmlEsc(e.grund) + ' (' + htmlEsc(e.name || e.renu) + ')' +
-      (e.sendbar ? '<div class="aktionen"><button type="button" data-erg="lxp" data-i="' + i + '">Vorhandene als Brief senden' + (testmodus ? ' (Testmodus)' : ' (LIVE)') + '</button></div>' : '') + '</div>';
+      (e.sendbar ? '<div class="aktionen"><button type="button" data-erg="lxp" data-i="' + i + '">Vorhandene als Brief senden' + (testmodus ? ' (Testablage)' : '') + '</button></div>' : '') + '</div>';
     return '<div class="beta-erg">✓ <b>' + htmlEsc(e.anzeige) + '</b> → ' + htmlEsc(e.name) + (e.ersetzt ? ' (ersetzt)' : '') +
       '<br><span class="beta-erg-klein">Summe ' + rdZahl(e.summe, '0.00') + ' € · Übersicht Zeile ' + e.zeile + (e.neu ? ' neu' : ' aktualisiert') + '</span>' +
       [...(e.hinweise || []), ...(e.warnungen || [])].map(t=> '<br><span class="beta-erg-klein">' + (/^[✓⚠]/.test(t) ? '' : '⚠ ') + htmlEsc(t) + '</span>').join('') +
       '<div class="aktionen"><button type="button" data-erg="pdf" data-i="' + i + '">PDF ansehen</button>' +
-      '<button type="button" data-erg="lxp" data-i="' + i + '">Brief senden' + (testmodus ? ' (Testmodus)' : ' (LIVE)') + '</button></div></div>';
+      '<button type="button" data-erg="lxp" data-i="' + i + '">Brief senden' + (testmodus ? ' (Testablage)' : '') + '</button></div></div>';
   }).join('');
   const ok = ergebnisse.filter(e=> !e.fehler && !e.uebersprungen).length;
   const titel = ok === ergebnisse.length ? (ok === 1 ? 'Rechnung erstellt' : ok + ' Rechnungen erstellt')
@@ -9434,9 +9443,9 @@ async function betaErgebnisseZeigen(ergebnisse, ziel){
       const e = ergebnisse[+b.dataset.i];
       b.disabled = true; const alt = b.textContent; b.textContent = 'sende …';
       try{
-        const r = await betaBriefVersenden(e, (t)=> betaInlineFrage(b.closest('.beta-erg'), t));
+        const r = await betaBriefVersenden(e, (t, ja, nein, extra)=> betaInlineFrage(b.closest('.beta-erg'), t, ja, nein, extra));
         if(r.abgebrochen){ b.textContent = alt; b.disabled = false; return; }
-        b.textContent = r.test ? '✓ Testbrief angenommen, vermerkt' : '✓ Brief verschickt, vermerkt';
+        b.textContent = r.test ? (r.vermerkt ? '✓ Testbrief angenommen, vermerkt' : '✓ Testbrief angenommen (nicht vermerkt)') : '✓ Brief verschickt, vermerkt';
       }catch(err){
         b.textContent = alt; b.disabled = false;
         betaInlineHinweis(b.closest('.beta-erg'), '✗ ' + (err.message || String(err)));
@@ -9446,13 +9455,15 @@ async function betaErgebnisseZeigen(ergebnisse, ziel){
   await fertig;
 }
 // Rueckfrage/Hinweis direkt unter einem Ergebnis (das Fenster bleibt offen)
-function betaInlineFrage(container, text){
+function betaInlineFrage(container, text, ja, nein, extra){
   return new Promise(res=>{
     const box = document.createElement('div');
     box.className = 'beta-inline';
-    box.innerHTML = '<div style="white-space:pre-line;">' + htmlEsc(text) + '</div><div class="aktionen"><button type="button" data-a="nein">Abbrechen</button><button type="button" data-a="ja" class="betont">Ja, senden</button></div>';
+    box.innerHTML = '<div style="white-space:pre-line;">' + htmlEsc(text) + '</div><div class="aktionen"><button type="button" data-a="nein">' + htmlEsc(nein || 'Abbrechen') + '</button>' +
+      (extra ? '<button type="button" data-a="extra">' + htmlEsc(extra) + '</button>' : '') + '<button type="button" data-a="ja" class="betont">' + htmlEsc(ja || 'Ja, senden') + '</button></div>';
     container.appendChild(box);
     box.querySelector('[data-a="nein"]').onclick = ()=>{ box.remove(); res(false); };
+    if(extra) box.querySelector('[data-a="extra"]').onclick = ()=>{ box.remove(); res('extra'); };
     box.querySelector('[data-a="ja"]').onclick = ()=>{ box.remove(); res(true); };
   });
 }
@@ -10150,14 +10161,14 @@ async function betaDokumentFertig(titel, e, hinweise){
   for(;;){
     const akt = await betaOverlay.ergebnis(titel, '<div class="beta-erg">✓ <b>' + htmlEsc(e.name) + '</b>' +
       (hinweise || []).map(t=> '<br><span class="beta-erg-klein">' + htmlEsc(t) + '</span>').join('') + '</div>',
-      [{ label:'PDF ansehen', akt:'pdf' }, { label:'Brief senden' + (testmodus ? ' (Test)' : ' (LIVE)'), akt:'lxp' }, { label:'Fertig', akt:'ok', primaer:true }]);
+      [{ label:'PDF ansehen', akt:'pdf' }, { label:'Brief senden' + (testmodus ? ' (Testablage)' : ''), akt:'lxp' }, { label:'Fertig', akt:'ok', primaer:true }]);
     if(akt === 'pdf'){ betaOverlay.schliessen(); await betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob }); return true; }
     if(akt === 'lxp'){
       betaOverlay.zeigen('Brief'); betaOverlay.fortschritt(null);
       try{
         const r = await betaBriefeVersenden([e], betaFrage);
         if(!r.abgebrochen){
-          await betaOverlay.ergebnis('Brief', r.fehler.length ? '✗ ' + htmlEsc(r.fehler.join('\n')) : (r.test ? '✓ Testbrief angenommen und vermerkt.' : '✓ Brief verschickt und vermerkt.'));
+          await betaOverlay.ergebnis('Brief', r.fehler.length ? '✗ ' + htmlEsc(r.fehler.join('\n')) : (r.test ? (r.vermerkt ? '✓ Testbrief angenommen und vermerkt.' : '✓ Testbrief angenommen. Nichts wurde verschickt; die Rechnung bleibt für den echten Versand frei.') : '✓ Brief verschickt und vermerkt.'));
           break;
         }
       }catch(err){ await betaOverlay.ergebnis('Brief', '✗ ' + htmlEsc(err.message || String(err))); }
@@ -10503,7 +10514,7 @@ async function betaAktionSenden(eintraege, mitTermin){
     if(r.abgebrochen){ betaOverlay.schliessen(); return false; }
     const ok = r.gesendet.length;
     await betaOverlay.ergebnis(ok ? (ok === 1 ? 'Brief übergeben' : ok + ' Briefe übergeben') : 'Nicht verschickt',
-      (ok ? '✓ ' + ok + ' an LetterXpress übergeben' + (r.test ? ' (Testmodus – nichts verschickt)' : '') + (versandDatumIso ? ', Versand am ' + versandDatumIso.split('-').reverse().join('.') : '') + ' und in der Übersicht vermerkt.' : '') +
+      (ok ? '✓ ' + ok + ' an LetterXpress übergeben' + (r.test ? ' (Testmodus – nichts verschickt)' : '') + (versandDatumIso ? ', Versand am ' + versandDatumIso.split('-').reverse().join('.') : '') + (r.vermerkt === false ? '; nicht in der Übersicht vermerkt.' : ' und in der Übersicht vermerkt.') : '') +
       (r.uebersprungen ? '<br>' + r.uebersprungen + ' bereits verschickte übersprungen.' : '') +
       (r.fehler.length ? '<br>✗ ' + r.fehler.map(htmlEsc).join('<br>✗ ') : ''));
   }catch(err){ await betaOverlay.ergebnis('Nicht verschickt', '✗ ' + htmlEsc(err.message || String(err))); }
@@ -19065,7 +19076,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v363';
+const APP_VERSION = 'v364';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
