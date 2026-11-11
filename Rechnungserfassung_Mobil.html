@@ -2221,6 +2221,20 @@ function ladeKatalog(){
   return LS.get('bestatter_katalog', []);
 }
 function speichereKatalog(k){ LS.set('bestatter_katalog', k); synchronisiereAlle(); }
+// Bestatter aus einer gespeicherten LS-Rechnung in den Katalog uebernehmen (ohne Dubletten; Adresse ergaenzen, wenn leer)
+function bestatterEintragen(name, adr1, adr2){
+  name = String(name || '').trim(); adr1 = String(adr1 || '').trim(); adr2 = String(adr2 || '').trim();
+  if(!name) return false;
+  const k = ladeKatalog(), klein = (x)=> String(x || '').trim().toLowerCase();
+  const gleich = k.find(b=> klein(b.name) === klein(name) && (klein(b.adr1) === klein(adr1) || !adr1 || !b.adr1));
+  if(gleich){
+    if(!gleich.adr1 && adr1){ gleich.adr1 = adr1; gleich.adr2 = adr2; gleich.zeitstempel = new Date().toISOString(); speichereKatalog(k); return true; }
+    return false;
+  }
+  k.push({ name, adr1, adr2, herkunft: 'handy', zeitstempel: new Date().toISOString() });
+  speichereKatalog(k);
+  return true;
+}
 function ladeEinstellungen(){
   return LS.get('einstellungen', {dunkel:false, dunkelManuell:false, praxisadresse:'', reiseBasisLuftlinie:false, rnLetzte:'', rnNaechsterZaehler:null});
 }
@@ -3333,8 +3347,8 @@ async function ansichtFahrtenbuch(blatt){
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> z.onclick = ()=>{
       if(z._lang){ z._lang = false; return; }
       const [di, fi] = z.dataset.fbfall.split('-').map(Number), f = buch.dienste[di] && buch.dienste[di].faelle[fi];
-      if(f && f.oeffnen){ vorbereiteRuecksprung(); f.oeffnen(); return; }
-      if(f && f.art === 'gkv'){ vorbereiteRuecksprung(); fbGkvAusExcelOeffnen(buch.dienste[di], f); return; }
+      if(f && f.oeffnen){ vorbereiteRuecksprung(); fallHerkunft = ()=> ansichtFahrtenbuch(blatt); f.oeffnen(); return; }
+      if(f && f.art === 'gkv'){ vorbereiteRuecksprung(); fallHerkunft = ()=> ansichtFahrtenbuch(blatt); fbGkvAusExcelOeffnen(buch.dienste[di], f); return; }
       appToastAnzeigen('LS/PT-Rechnungen bitte über „Rechnungen“ bearbeiten – das Fahrtenbuch übernimmt die Änderung.', 3500);
     });
     if(kopf) inhalt.insertAdjacentHTML('afterbegin', kopf);
@@ -3346,10 +3360,26 @@ async function ansichtFahrtenbuch(blatt){
 // Alter GKV-Eintrag nur in der Excel: daraus einen GKV-Fall auf dem Geraet
 // anlegen (Name, Tag, Ziffern) und in der GKV-Maske oeffnen. Beim Speichern
 // findet das Fahrtenbuch die Zeile ueber den Namen im Dienst und ueberschreibt sie.
-function fbGkvAusExcelOeffnen(d, f){
+// Auswahl der GKV-Maske aus einer Ziffernliste [{gop, anz}] (Fahrtenbuch, aeltere/importierte Faelle)
+function gkvAuswahlAusPositionen(liste){
   const auswahl = {};
+  (liste || []).forEach(z=>{
+    const gop = ebmNorm(z.gop), k = ebmGruppeVon(gop), anz = Number(z.anz) || 1;
+    if(k === 'weg'){
+      const st = EBM_GRUPPEN.weg.stufen.filter(x=> x.tag === gop || x.nacht === gop);
+      const passend = st.find(x=> (x.anz || 1) === anz) || st[0];
+      if(passend) auswahl.weg = { anz: 1, stufe: passend.k };
+    } else if(k){
+      const g = EBM_GRUPPEN[k];
+      auswahl[k] = Object.assign({ anz }, g.stufen ? { stufe: g.stufen[0].k } : {});
+    } else if(gop) auswahl[gop] = { anz };
+  });
+  return auswahl;
+}
+function fbGkvAusExcelOeffnen(d, f){
+  const auswahl = gkvAuswahlAusPositionen(f.ziffern);
   let nacht = false;
-  f.ziffern.forEach(z=>{
+  [].forEach(z=>{
     const gop = ebmNorm(z.gop), k = ebmGruppeVon(gop), anz = Number(z.anz) || 1;
     if(k === 'weg'){
       const st = EBM_GRUPPEN.weg.stufen.filter(x=> x.tag === gop || x.nacht === gop);
@@ -6107,6 +6137,10 @@ document.addEventListener('click', (ev)=>{
   if(b.dataset.vwtab === 'gkv') ansichtGkvVerwaltung(); else designNavAktion('verwaltung');
 });
 let gkvHerkunft = null;
+// Herkunft eines geoeffneten Falls (z. B. Fahrtenbuch): Zurueck/Speichern fuehren dorthin zurueck.
+// Wird von der naechsten Fall-Ansicht (GKV oder Maske) uebernommen und dabei geleert.
+let fallHerkunft = null;
+function fallHerkunftNehmen(){ const h = fallHerkunft; fallHerkunft = null; return typeof h === 'function' ? h : null; }
 // Pseudo-Fall: Foerderung des Diensts = Pauschale (Stunden x Satz) minus GKV-Faelle im Dienst (+ Zuschlag 24.12./31.12.)
 function gkvPseudoFoerderung(f){
   const t = designFallZeit(f); if(!t) return null;
@@ -14450,10 +14484,12 @@ let gkvEntwurf = null;
 
 function ansichtGkv(bearbeitenId){
   const ausVerwaltung = gkvHerkunft === 'verwaltung'; gkvHerkunft = null;
-  setzeTitel('GKV-Patient', ausVerwaltung ? ansichtGkvVerwaltung : ansichtStart);
+  const herkunft = fallHerkunftNehmen();
+  setzeTitel('GKV-Patient', herkunft || (ausVerwaltung ? ansichtGkvVerwaltung : ansichtStart));
   const jetzt = new Date();
   const alle = gkvFaelleLaden();
   let f = bearbeitenId ? alle.find(x=> x.id === bearbeitenId) : null;
+  if(f && (!f.auswahl || !Object.keys(f.auswahl).length) && f.positionen && f.positionen.length) f = Object.assign({}, f, { auswahl: gkvAuswahlAusPositionen(f.positionen) });
   const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null, dokuId: f.dokuId || null }
     : (gkvEntwurf || Object.assign({ id: '', name: '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()) }, gkvStartAuswahl()));
   gkvEntwurf = st.id ? null : st;
@@ -19076,7 +19112,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v364';
+const APP_VERSION = 'v365';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19128,7 +19164,19 @@ function querAnwenden(){
   // offene Karten umstellen
   document.querySelectorAll('.nfp-overlay').forEach(ov=>{ try{ karteQuerUmstellen(ov); }catch(_){} });
   try{ if(typeof miniKurzPruefen === 'function') requestAnimationFrame(miniKurzPruefen); }catch(_){}
-  if(typeof aktuelleAnsichtIstHauptbildschirm !== 'undefined' && aktuelleAnsichtIstHauptbildschirm){ try{ ansichtStart(); }catch(_){} return; }
+  if(typeof aktuelleAnsichtIstHauptbildschirm !== 'undefined' && aktuelleAnsichtIstHauptbildschirm){
+    // Liegt gerade eine grosse Karte oder ein Dialog ueber der Startseite, NICHT neu aufbauen (sonst ist man
+    // nach dem Drehen ploetzlich wieder auf der Startseite) -- erst, wenn das Fenster zu ist
+    const offen = ()=> document.body.classList.contains('nfp-offen') || document.querySelector('.nfp-overlay, .beta-overlay.aktiv, .pdf-overlay');
+    if(offen()){
+      clearInterval(querAnwenden._warte);
+      querAnwenden._warte = setInterval(()=>{ if(offen()) return; clearInterval(querAnwenden._warte);
+        if(aktuelleAnsichtIstHauptbildschirm && document.body.classList.contains('quer') === !!document.querySelector('#app .quer-start')) return;
+        if(aktuelleAnsichtIstHauptbildschirm) try{ ansichtStart(); }catch(_){} }, 400);
+      return;
+    }
+    try{ ansichtStart(); }catch(_){} return;
+  }
   // GKV-Patient: Spalten umbauen, ohne Eingaben zu verlieren
   if(document.getElementById('gkvListe')){ try{ gkvQuerUmstellen(); }catch(_){} return; }
   // Ansichten, die ihr Querformat beim Aufbau anlegen: neu zeichnen
@@ -20673,7 +20721,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // zurückführen statt immer auf die Startseite. Bei einer neu angelegten
   // Rechnung (kein korrekturIdx, ueber die Kacheln Leichenschau/Privat-
   // rechnung gestartet) bleibt es bei der Startseite.
-  const ruecksprungZiel = betaMaskeHerkunft==='gesamt' ? ()=> ansichtRechnungenGesamt() : (korrekturIdx!==undefined ? ansichtKorrigieren : ansichtStart);
+  const herkunftFall = fallHerkunftNehmen();
+  const ruecksprungZiel = herkunftFall || (betaMaskeHerkunft==='gesamt' ? ()=> ansichtRechnungenGesamt() : (korrekturIdx!==undefined ? ansichtKorrigieren : ansichtStart));
   setzeTitel(art==='ls' ? 'Leichenschau' : 'Privatrechnung', zurueckAusMaske);
   let werte = {};
   let positionenAuswahl = null;
