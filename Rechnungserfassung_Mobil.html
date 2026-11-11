@@ -194,7 +194,7 @@ try{
   .beta-pdf-kopf{display:flex; align-items:center; gap:6px; padding:calc(8px + env(safe-area-inset-top)) 8px 8px; background:#2c3e50; color:#fff;}
   .beta-pdf-kopf button{width:40px; height:36px; padding:0; border:none; border-radius:8px; background:rgba(255,255,255,.12); color:#fff; font-size:18px;}
   .beta-pdf-titel{flex:1; min-width:0; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .beta-pdf-seiten{flex:1; overflow:auto; padding:8px; -webkit-overflow-scrolling:touch;}
+  .beta-pdf-seiten{flex:1; overflow:auto; padding:8px; -webkit-overflow-scrolling:touch; touch-action:pan-x pan-y;}
   .beta-pdf-seiten canvas{display:block; margin:0 auto 10px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.4);}
   .beta-pdf-seiten .leer-hinweis{color:#eee;}
   /* Einstellungen: einklappbare Abschnitte */
@@ -1542,6 +1542,11 @@ try{
   /* Start oben */
   .ds-einhand .ds-zeile-oben{display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; color:var(--text-schwach);}
   .ds-sync{display:flex; align-items:center; gap:6px;}
+  .ds-zeile-neu{display:grid !important; grid-template-columns:1fr auto 1fr; align-items:center; margin:2px 2px 8px;}
+  .ds-zeile-neu .ds-neu-titel{margin:0;} .ds-zeile-neu .ds-sync{justify-self:end;}
+  .ds-uhrzeit{font-size:15.5px; font-weight:700; color:var(--text); text-align:center; white-space:nowrap;}
+  .ds-sync.offline{color:#b3261e;} .ds-sync.offline i{background:#d93025;}
+  body.dunkel .ds-sync.offline{color:#ff8a80;}
   .ds-sync i{width:8px; height:8px; border-radius:50%; background:#9aa1ad;}
   .ds-sync.an{color:#1a5e37;} .ds-sync.an i{background:#1d7a45;}
   body.dunkel .ds-sync.an{color:#8fd9a8;}
@@ -3295,6 +3300,7 @@ function fbLaufend(d){
   try{ const i = designDienstInfo(); return i.fenster && Math.abs(i.fenster.tag - d.tag) < 43200000 && i.modus !== 'vorbei'; }catch(_){ return false; }
 }
 async function ansichtFahrtenbuch(blatt){
+  einstellungenOffen = false;
   setzeTitel('Fahrtenbuch', ansichtStart);
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=> ansichtFahrtenbuch(blatt); };
   let ansicht = LS.get('fb_ansicht', 'a');
@@ -3606,6 +3612,7 @@ async function fbTagKarteZeichnen(d, di){
 let fahrdienstAuswertungCache = null;
 
 async function ansichtFahrdienstAuswertung(){
+  einstellungenOffen = false;
   setTimeout(fbTabsWiring, 0);
   setzeTitel('Quartalsübersicht', ansichtStart);
   app.innerHTML = fbTabsHtml('quartale') + `
@@ -5854,27 +5861,54 @@ async function einrSchonEingerichtetPruefen(){
     if(akt === 'ende'){ LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); ansichtStart(); }
   } finally { einrSchonEingerichtetPruefen.laeuft = false; }
 }
-// ---------- Kurze Einfuehrung nach der Ersteinrichtung (auch aus den Einstellungen) ----------
-const EINFUEHRUNG = [
-  ['Neuer Fall', 'Mit dem großen <b>+</b> unten legst du von überall einen neuen Fall an: <b>GKV-Patient</b> (Fahrdienst), <b>Privatpatient</b> oder <b>Leichenschau</b>. Zeitzuschläge und Wegegeld setzt die App nach Datum, Uhrzeit und Entfernung selbst.'],
-  ['Dienst', 'Oben auf der Startseite steht dein laufender Dienst. Anklicken, um ihn zu wählen oder zu ändern – die GKV-Fälle landen dann im richtigen Dienst im <b>Fahrtenbuch</b>.'],
-  ['Karte und Wegegeld', 'Die Karte zeigt deine Einsatzorte, Zonen und die Wache. Im Fall „auf Karte wählen“: Adresse suchen oder die Einsatzstelle anklicken – Zone, Luftlinie und Wegegeld ergeben sich daraus.'],
-  ['Rechnungen', 'Speichern erstellt Word und PDF in deinem OneDrive und trägt alles in die Rechnungsübersicht ein. In der PDF-Vorschau: <b>Teilen</b> oder <b>Senden</b> als Brief (sofort oder zu einem Datum, Testbrief oder echt).'],
-  ['Überblick', 'Unter <b>Rechnungen</b> siehst du oben die <b>offenen Rechnungen</b> mit Verzug und bestätigst den Zahlungseingang mit einem Klick. Das <b>Fahrtenbuch</b> zeigt Dienste, Fälle, Beträge und Wege.'],
-  ['Einstellungen', 'Arztdaten, Briefversand, Design und Offline-Karte findest du unter <b>Einstellungen</b>. Dort lässt sich auch die <b>Demo</b> mit erfundenen Daten starten und diese Einführung wieder aufrufen.']
-];
-async function appEinfuehrung(){
-  for(let i = 0; i < EINFUEHRUNG.length; i++){
-    const [titel, text] = EINFUEHRUNG[i];
-    const punkte = '<div class="intro-punkte">' + EINFUEHRUNG.map((_, k)=> '<span' + (k === i ? ' class="an"' : '') + '></span>').join('') + '</div>';
-    const letzte = i === EINFUEHRUNG.length - 1;
-    const akt = await betaOverlay.ergebnis(titel, '<div class="intro-text">' + text + '</div>' + punkte,
-      [...(i ? [{ label: 'Zurück', akt: 'zurueck' }] : [{ label: 'Überspringen', akt: 'weg' }]), { label: letzte ? 'Los geht’s' : 'Weiter', akt: 'weiter', primaer: true }]);
-    if(akt === 'zurueck'){ i -= 2; continue; }
-    if(akt !== 'weiter') break;
-  }
-  betaOverlay.schliessen();
-  try{ LS.set('einfuehrung_gesehen', true); }catch(_){}
+// ---------- Seitenhilfen: beim ersten Oeffnen einer Seite eine kurze Erklaerung dieser Seite ----------
+// Nach der Einrichtung (und der PIN/App-Sperre) fragt die App einmal, ob man das moechte (LS 'seitenhilfe').
+const SEITENHILFE = {
+  start: ['Startseite', 'Oben die Kacheln für einen <b>neuen Fall</b> (Leichenschau, Privatrechnung, Kassenpatient). Darunter dein <b>Dienst</b> – anklicken, um ihn zu wählen oder zu ändern – und die <b>Karte</b> mit den Einsatzorten.<br><br>Unten die Leiste: <b>Start</b>, das große <b>+</b> (neuer Fall von überall), <b>Rechnungen</b>, <b>Fahrtenbuch</b> und <b>Einstellungen</b>.'],
+  maske_ls: ['Leichenschau', 'Pflichtfelder sind markiert. Der <b>Abrechnungsassistent</b> fragt nur ab, was wechselt: Nr. 100/101, Dauer, Zuschlag 102 und Formularkosten. Zeitzuschläge und Wegegeld setzt die App aus Datum, Uhrzeit und Entfernung.<br><br><b>Speichern</b> erstellt Word und PDF, trägt die Rechnung in die Übersicht ein und zeigt die PDF – dort kannst du sie teilen oder als Brief senden.'],
+  maske_pt: ['Privatrechnung', 'Patient, Datum, Uhrzeit und Entfernung eintragen. Unter <b>Rechnungspositionen</b> wählst du die Ziffern; über dem Schwellenwert braucht ein Faktor eine Begründung. Zuschläge und Wegegeld kommen automatisch.<br><br><b>Speichern</b> erstellt die Rechnung und zeigt die PDF zum Teilen oder Senden.'],
+  gkv: ['Kassenpatient', 'Name, Uhrzeit und Einsatzort eintragen und die Ziffern anklicken – Tag/Nacht-Ziffern und Wegepauschale wählt die App selbst (Einsatzort über „auf Karte wählen“).<br><br><b>Ins Fahrtenbuch</b> trägt den Fall in den laufenden Dienst ein.'],
+  positionen: ['Rechnungspositionen', 'Haken setzen, was abgerechnet wird. <b>Faktor</b> anklicken zum Ändern (über dem Schwellenwert mit Begründung). Graue Zeilen setzt die App automatisch (Zeitzuschläge, Wegegeld).<br><br><b>Übernehmen</b> führt zurück zur Rechnung.'],
+  verwaltung: ['Rechnungen', 'Oben die <b>offenen Rechnungen</b> – mit „Bezahlt“ den Zahlungseingang bestätigen. Darunter alle Rechnungen: Haken setzen für <b>Senden, Termin, Erinnerung, Bezahlt</b>; 📄 öffnet die PDF; nach links wischen löscht.'],
+  gkvVerwaltung: ['Kassenpatienten', 'Die zuletzt erfassten GKV-Fälle. Anklicken = bearbeiten, nach links wischen = aus der Liste löschen (im Fahrtenbuch bleibt die Zeile). „Weitere laden“ holt ältere aus dem Fahrtenbuch.'],
+  fahrtenbuch: ['Fahrtenbuch', 'Oben Zeitraum und Suche, darunter die Ansichten <b>Karten</b>, <b>Tabelle</b> und <b>Woche</b>. Einen Fall anklicken öffnet ihn, lange drücken löscht ihn. Die Karte zeigt die Einsatzorte des Dienstes nummeriert – eine Nummer anklicken hebt den Fall in der Liste hervor.'],
+  einstellungen: ['Einstellungen', 'Register anklicken zum Aufklappen: Arztdaten, Bankverbindung, Briefversand, Design, Offline-Karte und mehr. Ganz unten die <b>Demo</b> mit erfundenen Daten und das Wiedereinschalten dieser Hilfen.']
+};
+let seitenhilfeTimer = null;
+function seitenhilfeZeigen(key){
+  try{
+    if(LS.get('seitenhilfe', null) !== true || !SEITENHILFE[key]) return;
+    const gesehen = LS.get('seitenhilfe_gesehen', []) || [];
+    if(gesehen.includes(key)) return;
+    clearTimeout(seitenhilfeTimer);
+    const versuch = (n)=>{
+      // erst, wenn kein anderes Fenster offen ist (Dialog, PDF, App-Sperre, Zustimmung)
+      if(document.querySelector('.beta-overlay.aktiv, #betaPdfAnsicht.aktiv, .as-dialog, #alphaPflicht, .nfp-overlay')){ if(n < 120) seitenhilfeTimer = setTimeout(()=> versuch(n + 1), 1000); return; }
+      const [titel, text] = SEITENHILFE[key];
+      const g = LS.get('seitenhilfe_gesehen', []) || []; if(g.includes(key)) return;
+      LS.set('seitenhilfe_gesehen', g.concat(key));
+      betaOverlay.ergebnis(titel, '<div class="intro-text">' + text + '</div>', [{ label: 'Keine Hilfen mehr', akt: 'aus' }, { label: 'Verstanden', akt: 'ok', primaer: true }])
+        .then(akt=>{ betaOverlay.schliessen(); if(akt === 'aus') LS.set('seitenhilfe', false); });
+    };
+    seitenhilfeTimer = setTimeout(()=> versuch(0), 700);
+  }catch(_){}
+}
+// einmal fragen -- nach der Einrichtung und nach der PIN/App-Sperre (wartet, bis deren Fenster zu sind)
+function seitenhilfeFragen(){
+  try{
+    if(LS.get('seitenhilfe', null) !== null || LS.get('einrichtung_schritt', null) || !LS.get('einrichtung_gesehen', false)) return;
+    const versuch = (n)=>{
+      if(LS.get('seitenhilfe', null) !== null) return;
+      if(!aktuelleAnsichtIstHauptbildschirm || document.querySelector('.beta-overlay.aktiv, #betaPdfAnsicht.aktiv, .as-dialog, #alphaPflicht, .nfp-overlay')){ if(n < 300) setTimeout(()=> versuch(n + 1), 1000); return; }
+      betaOverlay.ergebnis('Kurze Anleitungen?', '<div class="intro-text">Möchtest du beim ersten Öffnen jeder Seite eine kurze Erklärung, was du dort machen kannst? Abschalten geht jederzeit – in der Erklärung selbst oder in den Einstellungen.</div>',
+        [{ label: 'Nein, danke', akt: 'nein' }, { label: 'Ja, gerne', akt: 'ja', primaer: true }]).then(akt=>{
+          betaOverlay.schliessen();
+          LS.set('seitenhilfe', akt === 'ja'); LS.set('seitenhilfe_gesehen', []);
+          if(akt === 'ja') seitenhilfeZeigen('start');
+        });
+    };
+    setTimeout(()=> versuch(0), 1500);
+  }catch(_){}
 }
 function ansichtEinrichtung(schritt){
   einstellungenOffen = false;
@@ -5882,8 +5916,7 @@ function ansichtEinrichtung(schritt){
   if(schritt === 'sperre') schritt = 'anmelden';   // frueherer Schritt App-Sperre
   LS.set('einrichtung_schritt', schritt);
   LS.set('einrichtung_gesehen', true);
-  const beenden = ()=>{ LS.set('einrichtung_schritt', null); LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false); LS.set('einr_aus_einst', false); ansichtStart();
-    if(!LS.get('einfuehrung_gesehen', false)) setTimeout(()=>{ try{ appEinfuehrung(); }catch(_){} }, 600); };
+  const beenden = ()=>{ LS.set('einrichtung_schritt', null); LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false); LS.set('einr_aus_einst', false); ansichtStart(); };
   // Zurueck (Pfeil oben und Handy-Taste) geht nur einen Schritt zurueck; abbrechen laesst sich der Assistent
   // nur, wenn er aus den Einstellungen geoeffnet wurde. Nav-Leiste und Einstellungen sind solange ausgeblendet.
   const ausEinst = !!LS.get('einr_aus_einst', false);
@@ -6995,6 +7028,12 @@ function rdEigeneBloecke(eigene, art, begruendungen){
   return (eigene || []).map(p=>{
     const faktorZahl = Number(String(p.faktor == null ? '' : p.faktor).replace(',', '.'));
     const faktor = String(p.faktor == null ? '' : p.faktor).trim() === '' ? '' : (isNaN(faktorZahl) ? String(p.faktor) : faktorZahl);
+    const breit = !!p.auslage || String(p.schluessel || p.id).toUpperCase() === 'EIGLTB';
+    if(breit){
+      const bb = L.cols[L.sp.ziffer] + L.cols[L.sp.faktor] + L.cols[L.sp.bez] - 2 * RECHNUNG_ZELLRAND_TWIPS / 20 - 1;
+      const zeilen = rdBezUmbrechen(p.bez, bb).map((t, i)=>{ const z = ['', '', '', '', '']; z[L.sp.bez] = t; if(i === 0) z[L.sp.betrag] = Math.round(Number(p.betrag) * 100) / 100; return z; });
+      return { ziffer: String(p.schluessel || p.id), nr: '', typ: 'pos', eigene: true, breit: true, zeilen };
+    }
     const zeilen = rdBezUmbrechen(p.bez, breite).map((t, i)=>{
       const z = ['', '', '', '', ''];
       z[L.sp.bez] = t;
@@ -7063,8 +7102,9 @@ function rdTabelleBauen(vorlage, fall){
     if(pos < 0) pos = bl.length;
     // eingebaute Zuschlaege (A-E) "unmittelbar im Anschluss an die
     // zugrundeliegende Leistung" (GOÄ), die uebrigen vor dem Wegegeld
-    const zuschlaege = eigene.filter(b=> /^EIGZ/i.test(b.ziffer)), sonst = eigene.filter(b=> !/^EIGZ/i.test(b.ziffer));
+    const zuschlaege = eigene.filter(b=> /^EIGZ/i.test(b.ziffer)), auslagen = eigene.filter(b=> b.breit), sonst = eigene.filter(b=> !/^EIGZ/i.test(b.ziffer) && !b.breit);
     bl.splice(pos, 0, ...sonst);
+    bl.push(...auslagen);   // Auslagen (Formularkosten) ganz unten, unter dem Wegegeld
     const nrVon = (b)=> String(b.nr || b.ziffer).toUpperCase();
     const istGrund = (b, z)=> {
       const n = nrVon(b), zahl = /^\d+$/.test(n) ? Number(n) : NaN;
@@ -7114,7 +7154,7 @@ function rdTabelleBauen(vorlage, fall){
         return;
       }
       if(erste && typeof z[L.sp.betrag] === 'number') summe += z[L.sp.betrag];
-      zeilen.push({typ: b.typ === 'reise' ? 'reise' : 'pos', zellen: z, ersteZeile: erste, block: b.typ === 'reise' ? 'reise' : block});
+      zeilen.push({typ: b.typ === 'reise' ? 'reise' : (b.breit ? 'breit' : 'pos'), zellen: z, ersteZeile: erste, block: b.typ === 'reise' ? 'reise' : block});
     });
   });
   // Datum (erste Zeile) und Uhrzeit (zweite Zeile) in der Datumsspalte
@@ -7178,6 +7218,15 @@ function rdTabelleXml(kopf, tab, art, gesamtLabel, zeilenGesamt){
     const naechste = tab.zeilen[idx + 1];
     const zus = !naechste || naechste.block === z.block;  // mit Folgezeile (bzw. Gesamtzeile) zusammenhalten
     const zx = (t, w, a, r, o={})=> zelleXml(t, w, a, r, {...o, zusammen: zus});
+    if(z.typ === 'breit'){
+      // Auslage: Text ueber Ziffer-, Faktor- und Bezeichnungsspalte
+      xml.push(zeileXml([
+        zx(fmtZelle(c[0],0), tw[0], 'center', {l:1,r:1}),
+        zx(String(c[S.bez]), tw[1] + tw[2] + tw[3], 'left', {l:1,r:1}, {span:3}),
+        zx(fmtZelle(c[S.betrag], S.betrag), tw[4], 'right', {l:1,r:1})
+      ]));
+      return;
+    }
     if(z.typ === 'reise'){
       // Ziffer- und Faktorspalte verbunden: "Reiseentschädigung"
       xml.push(zeileXml([
@@ -8967,8 +9016,7 @@ function betaDebugTestHtml(){
 
 // Einstellungen: Abschnitte ein-/ausklappbar (Zustand bleibt gemerkt)
 function betaEinstellungenEinklappen(){
-  let offen = [];
-  try{ offen = JSON.parse(localStorage.getItem('einst_offen') || '[]') || []; }catch(_){ offen = []; }
+  let offen = einstOffenListe.slice();
   document.querySelectorAll('#app .abschnitt').forEach(ab=>{
     const kopf = ab.querySelector(':scope > .trennlinie');
     if(!kopf || ab.classList.contains('einklappbar')) return;
@@ -8985,7 +9033,7 @@ function betaEinstellungenEinklappen(){
       const jetztZu = !ab.classList.contains('zu');
       ab.classList.toggle('zu', jetztZu); kopf.setAttribute('aria-expanded', String(!jetztZu));
       offen = offen.filter(t=> t !== titel); if(!jetztZu) offen.push(titel);
-      try{ localStorage.setItem('einst_offen', JSON.stringify(offen)); }catch(_){}
+      einstOffenListe = offen.slice();
     };
     kopf.onclick = umschalten;
     kopf.onkeydown = (ev)=>{ if(ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); umschalten(); } };
@@ -10094,7 +10142,23 @@ async function betaPdfAnzeigen(opt){
   const schliessen = ()=>{ el.classList.remove('aktiv'); document.body.classList.remove('beta-pdf-offen'); seitenEl.innerHTML = ''; aktuellerZurueckHandler = vorherZurueck; };
   aktuellerZurueckHandler = schliessen; // Handy-Zurueck schliesst die Anzeige
   el.querySelector('[data-a="zu"]').onclick = schliessen;
-  const zoomSetzen = (z)=>{ zoom = Math.max(1, Math.min(3, z)); seitenEl.querySelectorAll('canvas').forEach(c=> c.style.width = (zoom * 100) + '%'); };
+  const zoomSetzen = (z)=>{ zoom = Math.max(1, Math.min(4, z)); seitenEl.querySelectorAll('canvas').forEach(c=> c.style.width = (zoom * 100) + '%'); };
+  // Zwei-Finger-Zoom (die App selbst ist nicht zoombar): um den Mittelpunkt der Finger
+  if(el._pinchWeg) el._pinchWeg();
+  { let p0 = null;
+    const abst = (t)=> Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const start = (ev)=>{ if(ev.touches.length !== 2) return; const r = seitenEl.getBoundingClientRect();
+      const mx = (ev.touches[0].clientX + ev.touches[1].clientX) / 2 - r.left, my = (ev.touches[0].clientY + ev.touches[1].clientY) / 2 - r.top;
+      p0 = { d: abst(ev.touches) || 1, z: zoom, fx: (seitenEl.scrollLeft + mx) / zoom, fy: (seitenEl.scrollTop + my) / zoom, mx, my }; };
+    const zug = (ev)=>{ if(!p0 || ev.touches.length !== 2) return; ev.preventDefault();
+      zoomSetzen(p0.z * abst(ev.touches) / p0.d);
+      seitenEl.scrollLeft = p0.fx * zoom - p0.mx; seitenEl.scrollTop = p0.fy * zoom - p0.my; };
+    const ende = (ev)=>{ if(ev.touches.length < 2) p0 = null; };
+    seitenEl.addEventListener('touchstart', start, { passive: true });
+    seitenEl.addEventListener('touchmove', zug, { passive: false });
+    seitenEl.addEventListener('touchend', ende); seitenEl.addEventListener('touchcancel', ende);
+    el._pinchWeg = ()=>{ seitenEl.removeEventListener('touchstart', start); seitenEl.removeEventListener('touchmove', zug); seitenEl.removeEventListener('touchend', ende); seitenEl.removeEventListener('touchcancel', ende); };
+  }
   el.querySelector('[data-a="klein"]').onclick = ()=> zoomSetzen(zoom - 0.5);
   el.querySelector('[data-a="gross"]').onclick = ()=> zoomSetzen(zoom + 0.5);
   // Als Brief senden (sofort oder zu einem Datum) -- nur wenn die Rechnung noch nicht verschickt ist
@@ -11928,6 +11992,7 @@ function betaPosAnzeigeNr(p){ return p.anzeigeZiffer !== undefined ? (p.anzeigeZ
 // Automatik), zusaetzlich: Faktor je Position, Begruendung, Summe unten fest.
 // Die gewaehlte Ziffernmenge traegt die Details als Eigenschaft ".details".
 function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, kmFahrstreckeGesamt){
+  try{ seitenhilfeZeigen('positionen'); }catch(_){}
   setzeTitel('Rechnungspositionen', ()=>ruecksprungAusEinstellungen());
   aktuellerZurueckHandler = ()=>{ vorbereiteRuecksprung(); ruecksprungAusEinstellungen(); };
   const katalog = art==='ls' ? POSITIONEN_LS : POSITIONEN_PT;
@@ -12283,7 +12348,7 @@ const GOAE_FEST = {
   ls: [
     { id:'EIGL100', ziffer:'100', bez:'Untersuchung eines Toten und Ausstellung einer vorläufigen Todesbescheinigung (vorläufige Leichenschau)', gruppe:'grund' },
     // Auslage nach § 10 GOAe: Kosten des Formulars Todesbescheinigung (Betrag in den Einstellungen bzw. beim ersten Mal abgefragt)
-    { id:'EIGLTB', ziffer:'', bez:'Auslage nach § 10 GOÄ: Formular Todesbescheinigung', gruppe:'grund', auslage:true },
+    { id:'EIGLTB', ziffer:'', bez:'Formularkosten (Auslagenersatz für den Durchschreibesatz „Todesbescheinigung“)', gruppe:'grund', auslage:true },
   ]
 };
 // automatisch gesetzte Zuschlaege der Familie A-D (entsprechen F/G/H)
@@ -14634,6 +14699,7 @@ function gkvFaelleSpeichern(a){ const neu = a.slice(-200); if(typeof faelleMetaN
 let gkvEntwurf = null;
 
 function ansichtGkv(bearbeitenId){
+  einstellungenOffen = false;
   const ausVerwaltung = gkvHerkunft === 'verwaltung'; gkvHerkunft = null;
   const herkunft = fallHerkunftNehmen();
   setzeTitel('GKV-Patient', herkunft || (ausVerwaltung ? ansichtGkvVerwaltung : ansichtStart));
@@ -19295,7 +19361,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v369';
+const APP_VERSION = 'v370';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19371,6 +19437,13 @@ function querAnwenden(){
 try{ QUER_MQ.addEventListener('change', querAnwenden); }catch(_){ try{ QUER_MQ.addListener(querAnwenden); }catch(__){} }
 if(document.body) querAnwenden(); else document.addEventListener('DOMContentLoaded', querAnwenden);
 // Startseite: links Neuer Fall + unfertige Faelle + Verwaltung/Fahrtenbuch, Mitte laufender Dienst, rechts Karte
+function dsSyncHtml(anmeldung){
+  const off = typeof navigator !== 'undefined' && navigator.onLine === false;
+  return '<span class="ds-sync' + (off ? ' offline' : (anmeldung ? ' an' : '')) + '" data-angemeldet="' + (anmeldung ? 1 : 0) + '"><i></i>' + (off ? 'offline' : (anmeldung ? 'OneDrive' : 'nicht angemeldet')) + '</span>';
+}
+['online', 'offline'].forEach(n=> window.addEventListener(n, ()=>{
+  document.querySelectorAll('.ds-sync[data-angemeldet]').forEach(el=>{ const t = document.createElement('div'); t.innerHTML = dsSyncHtml(el.dataset.angemeldet === '1'); el.replaceWith(t.firstChild); });
+}));
 function querStartAnordnen(){
   if(!querAn()) return;
   const app = document.getElementById('app'); if(!app || app.querySelector('.quer-start')) return;
@@ -20169,8 +20242,10 @@ function designStartErgaenzen(){
 
   if(d === 'einhand'){
     const jetzt = info.jetzt;
-    vor('<div class="ds-start ds-einhand"><div class="ds-zeile-oben"><span>' + DESIGN_WT[jetzt.getDay()] + ' ' + zz2(jetzt.getDate()) + '.' + zz2(jetzt.getMonth() + 1) + '. · ' + designUhr(jetzt) + '</span>' +
-      '<span class="ds-sync' + (anmeldung ? ' an' : '') + '"><i></i>' + (anmeldung ? 'OneDrive' : 'nicht angemeldet') + '</span></div></div>');
+    // eine Zeile: links "Neuer Fall", Mitte Datum/Uhrzeit, rechts OneDrive (rot ohne Netz)
+    vor('<div class="ds-start ds-einhand"><div class="ds-zeile-oben ds-zeile-neu"><span class="ds-klein ds-neu-titel">NEUER FALL</span>' +
+      '<span class="ds-uhrzeit">' + DESIGN_WT[jetzt.getDay()] + ' ' + zz2(jetzt.getDate()) + '.' + zz2(jetzt.getMonth() + 1) + '. · ' + designUhr(jetzt) + '</span>' +
+      dsSyncHtml(anmeldung) + '</div></div>');
   }
   // Einhand: Neuer-Fall-Kacheln ganz oben, darunter Uhr, Dienst, Karte
   if(live){ if(d === 'einhand') reihe.insertAdjacentHTML('afterend', live); else vor(live); liveAutoAuffrischen(); if(document.getElementById('skKarte')) standortKarteZeichnen(info); designDienstWiring(app); }
@@ -20195,7 +20270,6 @@ function designStartErgaenzen(){
   }
   if(d === 'einhand'){
     const w = designWeiterFall();
-    vor('<div class="ds-start ds-einhand"><div class="ds-klein ds-neu-titel">NEUER FALL</div></div>');
     const ws = designWeiterFaelle();
     if(ws.length) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand ds-weiter-block">' + ws.map((x, i)=> '<div class="ds-weiter-zeile wisch-huelle"><button type="button" class="ds-weiter" data-wf="' + i + '"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten · unfertig</span><b>' + htmlEsc(x.titel) + '</b></span>' + DS_ICON.pfeil + '</button>' +
       '</div>').join('') + '</div>');
@@ -20246,7 +20320,9 @@ function designUhrStarten(){
 }
 
 
+let einstOffenListe = [];   // aufgeklappte Register -- nur solange man in den Einstellungen bleibt
 function ansichtEinstellungen(){
+  if(!einstellungenOffen) einstOffenListe = [];   // neu hereingekommen: alles eingeklappt
   einstellungenOffen = true;
   setzeTitel('Einstellungen', schliesseEinstellungen);
   const e = ladeEinstellungen();
@@ -20322,10 +20398,10 @@ function ansichtEinstellungen(){
       <div class="trennlinie">Demo</div>
       <div class="design-hinweis">${window.DEMO_MODUS ? 'Die Demo läuft: alle Daten sind erfunden, nichts wird gespeichert.' : 'Die App mit erfundenen Beispieldaten ausprobieren oder vorführen (zwei Jahre Dienste, Patienten, Rechnungen). Deine echten Daten und dein OneDrive bleiben dabei unberührt – die Demo läuft nur im Arbeitsspeicher.'}</div>
       <button type="button" class="btn-sekundaer" id="btnDemo">${window.DEMO_MODUS ? 'Demo beenden' : 'Demo starten'}</button>
-      <button type="button" class="btn-sekundaer" id="btnEinfuehrung" style="margin-top:8px;">Kurze Einführung zeigen</button>
+      <button type="button" class="btn-sekundaer" id="btnEinfuehrung" style="margin-top:8px;">Seitenhilfen wieder einschalten</button>
     </div>
   `;
-  { const ef = document.getElementById('btnEinfuehrung'); if(ef) ef.onclick = ()=> appEinfuehrung(); }
+  { const ef = document.getElementById('btnEinfuehrung'); if(ef) ef.onclick = ()=>{ LS.set('seitenhilfe', true); LS.set('seitenhilfe_gesehen', []); appToastAnzeigen('Seitenhilfen sind wieder an – jede Seite erklärt sich beim nächsten Öffnen.', 3200); }; }
   document.getElementById('btnDemo').onclick = ()=> window.DEMO_MODUS ? demoBeenden() : demoFragen();
   document.getElementById('btnEinstOeffneUebersicht').onclick = ()=> excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
     '');
@@ -21773,8 +21849,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   async function lsAuslageBetragFragen(){
     const alt = lsAuslageBetrag();
     const akt = await betaOverlay.ergebnis('Formular Todesbescheinigung',
-      'Was kostet dich ein Formular der Todesbescheinigung (Einkaufspreis)? Der Betrag wird als Auslage nach § 10 GOÄ berechnet und für alle weiteren Leichenschauen gemerkt.' +
-      '<label class="einr-feld" style="margin-top:10px;"><span>Betrag in €</span><input type="text" inputmode="decimal" id="lsAuslageEingabe" value="' + (alt ? alt.toFixed(2).replace('.', ',') : '') + '" placeholder="z. B. 3,50"></label>',
+      'Formularkosten (Auslagenersatz für den Durchschreibesatz „Todesbescheinigung“, § 10 GOÄ). Üblich sind 2,50 € – bitte deinen tatsächlichen Einkaufspreis eintragen. Der Betrag wird für alle weiteren Leichenschauen gemerkt.' +
+      '<label class="einr-feld" style="margin-top:10px;"><span>Betrag in €</span><input type="text" inputmode="decimal" id="lsAuslageEingabe" value="' + (alt ? alt.toFixed(2).replace('.', ',') : '2,50') + '" placeholder="2,50"></label>',
       [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Übernehmen', akt: 'ok', primaer: true }]);
     const v = Number(String(((document.getElementById('lsAuslageEingabe') || {}).value) || '').replace(',', '.').trim());
     betaOverlay.schliessen();
@@ -21795,9 +21871,9 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       frage('Welche Leichenschau?', knopf('art', '101', 'Eingehend · Nr. 101', st.lsArt === '101') + knopf('art', '100', 'Vorläufig · Nr. 100', st.lsArt === '100')) +
       frage('Dauer der Untersuchung (ohne Aufsuchen)', knopf('dauer', 'voll', info.voll + ' · volle Gebühr', !st.kurz) + knopf('dauer', 'kurz', info.kurz + ' · 60 %', st.kurz)) +
       frage('Leiche mit unbekannter Identität und/oder besonderen Todesumständen (zusätzliche Dauer mindestens 10 Minuten)?', knopf('z102', 'nein', 'Nein', !st.z102) + knopf('z102', 'ja', 'Ja · Nr. 102', st.z102)) +
-      frage('Formular der Todesbescheinigung als Auslage berechnen (§ 10 GOÄ)?', knopf('auslage', 'nein', 'Nein', !st.auslage) +
+      frage('Formularkosten (Durchschreibesatz Todesbescheinigung) als Auslage berechnen?', knopf('auslage', 'nein', 'Nein', !st.auslage) +
         knopf('auslage', 'ja', 'Ja' + (lsAuslageBetrag() ? ' · ' + lsAuslageBetrag().toFixed(2).replace('.', ',') + ' €' : ''), st.auslage)) +
-      (lsAuslageBetrag() ? '<div class="ls-assi-hinweis" style="margin-top:-4px;"><button type="button" class="einr-link" data-lsa="auslageBetrag" data-w="">Betrag für das Formular ändern</button></div>' : '') +
+      (lsAuslageBetrag() ? '<div class="ls-assi-hinweis" style="margin-top:-4px; text-align:right;"><button type="button" class="einr-link" data-lsa="auslageBetrag" data-w="">Betrag für das Formular ändern</button></div>' : '') +
       '<div class="ls-assi-summe"><span>' + htmlEsc([...ausw].map(kurzName).filter((x, i, a)=> a.indexOf(x) === i).join(' · ')) + '</span><b>' + lsAssiSumme(ausw).toFixed(2).replace('.', ',') + ' €</b></div>' +
       '<div class="ls-assi-hinweis">Zeitzuschläge und Wegegeld setzt die App automatisch nach Datum, Uhrzeit und Entfernung.</div>' +
       '<details class="ls-assi-goae"><summary>Wortlaut der GOÄ</summary>' + goaeText('100') + goaeText('101') + goaeText('102') + '</details>';
@@ -22587,7 +22663,14 @@ function navZurueckAusfuehren(f){ f(); }
     if(oben && oben.name === name) NAV_STAPEL.pop();   // gleiche Ansicht neu gezeichnet
     NAV_STAPEL.push({ name, args });
     if(NAV_STAPEL.length > 30) NAV_STAPEL.shift();
-    return basis.apply(this, args);
+    const erg = basis.apply(this, args);
+    try{
+      const key = { ansichtStart: 'start', ansichtFahrtenbuch: 'fahrtenbuch', ansichtGkvVerwaltung: 'gkvVerwaltung', ansichtRechnungenGesamt: 'verwaltung',
+        ansichtGkv: 'gkv', ansichtEinstellungen: 'einstellungen', ansichtMaske: args[0] === 'ls' ? 'maske_ls' : 'maske_pt' }[name];
+      if(key && (name !== 'ansichtStart' || aktuelleAnsichtIstHauptbildschirm)) seitenhilfeZeigen(key);
+      if(name === 'ansichtStart') seitenhilfeFragen();
+    }catch(_){}
+    return erg;
   };
 });
 // ---------- Nach dem Neuladen (z. B. versehentlich heruntergezogen) auf derselben Seite bleiben ----------
