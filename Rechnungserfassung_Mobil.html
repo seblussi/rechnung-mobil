@@ -2231,6 +2231,28 @@ try{
    Speicher / Grunddaten
    ========================================================== */
 // Daten liegen verschluesselt in "Speicher" (siehe unten, vor dem Start entschluesselt)
+// OneDrive-Downloads (".../content"): Microsoft leitet auf einen Download-Server um. Scheitert das im Browser
+// ("Failed to fetch", z. B. nach einer Umstellung des Download-Servers), noch einmal ueber den
+// vorab signierten Download-Link der Datei laden (ohne Umleitung, ohne Anmeldekopf).
+(function(){
+  const orig = window.fetch.bind(window);
+  const kopfAuth = (h)=>{ if(!h) return ''; if(typeof h.get === 'function') return h.get('Authorization') || ''; return h.Authorization || h.authorization || ''; };
+  window.fetch = async function(input, init){
+    try{ return await orig(input, init); }
+    catch(e){
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      const methode = String((init && init.method) || 'GET').toUpperCase();
+      const auth = kopfAuth(init && init.headers);
+      if(methode !== 'GET' || !auth || !/^https:\/\/graph\.microsoft\.com\/.+\/content(\?.*)?$/.test(url) || (init && init.signal && init.signal.aborted)) throw e;
+      try{
+        const r = await orig(url.replace(/\/content(\?.*)?$/, '?select=id,@microsoft.graph.downloadUrl'), { headers: { Authorization: auth }, cache: 'no-store' });
+        if(!r.ok) throw e;
+        const dl = (await r.json())['@microsoft.graph.downloadUrl']; if(!dl) throw e;
+        return await orig(dl, { cache: 'no-store', signal: init && init.signal });
+      }catch(_){ throw e; }
+    }
+  };
+})();
 const LS = {
   get(k, fallback){ let v = Speicher.text(k); if(v === null){ try{ v = localStorage.getItem(k); }catch(_){ v = null; } } if(v === null) return fallback; try{ return JSON.parse(v); }catch(e){ return fallback; } },
   set(k, v){
@@ -9162,7 +9184,8 @@ async function oneDriveVerbindungstest(ausgabe){
     ['Word-Vorlage PT', msGraphPfadUrl(MSGRAPH_PFAD_WORDVORLAGE.pt) + '/content', async r=> Math.round((await r.arrayBuffer()).byteLength/1024) + ' KB'],
     ['Word-Vorlage LS', msGraphPfadUrl(MSGRAPH_PFAD_WORDVORLAGE.ls) + '?$select=size', async r=> Math.round(((await r.json()).size||0)/1024) + ' KB'],
     ['Excel-Vorlage PT (Positionen)', msGraphPfadUrl(MSGRAPH_PFAD_VORLAGE_PT) + "/workbook/worksheets?$select=name", async r=> ((await r.json()).value||[]).map(w=>w.name).join(', ')],
-    ['Ordner „fertige Rechnungen“', msGraphPfadUrl(MSGRAPH_PFAD_ZIEL_ORDNER) + '?$select=folder', async r=> ((await r.json()).folder||{}).childCount + ' Dateien']
+    ['Ordner „fertige Rechnungen“', msGraphPfadUrl(MSGRAPH_PFAD_ZIEL_ORDNER) + '?$select=folder', async r=> ((await r.json()).folder||{}).childCount + ' Dateien'],
+    ['Übersicht (Download-Link)', uebersicht + '?select=id,@microsoft.graph.downloadUrl', async r=>{ const u = (await r.json())['@microsoft.graph.downloadUrl']; if(!u) return 'kein Link'; const x = await fetch(u, { cache: 'no-store' }); return x.ok ? Math.round((await x.arrayBuffer()).byteLength / 1024) + ' KB geladen' : 'Download HTTP ' + x.status; }]
   ];
   for(const [name, url, auswerten] of tests){
     zeigen(name);
@@ -19707,7 +19730,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v402';
+const APP_VERSION = 'v403';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
