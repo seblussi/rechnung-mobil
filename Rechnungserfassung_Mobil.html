@@ -1986,8 +1986,14 @@ try{
   .fbx-ortkarte{padding:4px 12px 12px;} .fbx-ortkarte:empty{display:none;}
   .fbx-ortnr{display:inline-flex; flex:none; width:17px; height:17px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; align-items:center; justify-content:center; margin-right:5px; vertical-align:1px;}
   .fbx-ortnr.leer{background:none;}
-  @keyframes fbxBlink{0%,100%{box-shadow:none;} 20%,60%{box-shadow:inset 0 0 0 2px var(--ds-primaer, #4a5568); background:rgba(74,85,104,.10);}}
-  .fbx-blink{animation:fbxBlink 1.6s ease;}
+  /* Hervorheben (Nummer in der Karte, Sprung aus „Offene Rechnungen“): ganze Zeile in der Farbe der Rechnungsart, abgerundet,
+     gleichmaessig ueber den Inhalt hinaus (Schatten in derselben Farbe statt Rahmen) */
+  [data-art="ls"]{--art-farbe:var(--ls-farbe);} [data-art="pt"]{--art-farbe:var(--pt-farbe);} [data-art="gkv"]{--art-farbe:#7d4e9e;}
+  @keyframes fbxBlink{
+    0%, 100%{background:transparent; box-shadow:0 0 0 6px transparent;}
+    15%, 70%{background:color-mix(in srgb, var(--art-farbe, #4a5568) 18%, transparent); box-shadow:0 0 0 6px color-mix(in srgb, var(--art-farbe, #4a5568) 18%, transparent);}
+  }
+  .fbx-blink{animation:fbxBlink 2.2s ease; border-radius:10px; position:relative; z-index:1;}
   .fbx-mit-nr > .fbx-fall{grid-template-columns:64px minmax(0,1fr) auto;}
   .fbx-mit-nr > .fbx-fall .fbx-zeit{display:flex; align-items:center; white-space:nowrap;}
   .fbx-ortnr.ls{background:var(--ls-farbe);} .fbx-ortnr.pt{background:var(--pt-farbe);} .fbx-ortnr.gkv{background:#7d4e9e;}
@@ -3524,7 +3530,7 @@ async function fbLoeschen(d, f){
 function fbAnsichtA(buch){
   return buch.dienste.map((d, di)=> '<div class="fbx-karte' + (di ? ' zu' : '') + (fbLaufend(d) ? ' laeuft' : '') + '">' +
     '<button type="button" class="fbx-kopf" data-fbauf="1" data-fbdienst="' + di + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '<small>' + (fbLaufend(d) ? 'bisher' : 'gesamt') + '</small></span></button>' +
-    '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + di + '-' + fi + '">' +
+    '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + di + '-' + fi + '">' +
       '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art, f) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
       '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + (di ? '' : '<div class="fbx-ortkarte" id="fbxKarte"></div>') + '</div></div>').join('');
 }
@@ -3534,7 +3540,7 @@ function fbAnsichtAQuer(buch){
   const d = buch.dienste[wahl];
   const links = '<div class="fbx-karte fbx-quer-detail' + (fbLaufend(d) ? ' laeuft' : '') + '">' +
     '<div class="fbx-kopf" data-fbdienst="' + wahl + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '<small>' + (fbLaufend(d) ? 'bisher' : 'gesamt') + '</small></span></div>' +
-    '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '">' +
+    '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + wahl + '-' + fi + '">' +
       '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art, f) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
       '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + '<div class="fbx-ortkarte" id="fbxKarte"></div></div></div>';
   const rechts = '<div class="fbx-quer-liste">' + buch.dienste.map((x, i)=> '<button type="button" class="fbx-qzeile' + (i === wahl ? ' an' : '') + (fbLaufend(x) ? ' laeuft' : '') + '" data-fbtag="' + i + '">' +
@@ -3546,7 +3552,7 @@ function fbAnsichtAQuer(buch){
 function fbAnsichtB(buch){
   return '<div class="fbx-tab"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div>' +
     buch.dienste.map((d, di)=> '<div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
-      d.faelle.map((f, fi)=> '<div class="fbx-tr" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art, f) + '</span><span class="fbx-zt">' +
+      d.faelle.map((f, fi)=> '<div class="fbx-tr" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art, f) + '</span><span class="fbx-zt">' +
         f.ziffern.map(x=> htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '')).join(' ') + '</span><span>' + fbFallEuro(d, f) + '</span></div>').join('') +
       '<div class="fbx-tr fbx-sum"><span>GKV ' + betaEuro(d.gkv).replace(' €', '') + (d.pauschale ? ' (GP)' : '') + ' · LS ' + betaEuro(d.ls).replace(' €', '') + ' · PT ' + betaEuro(d.pt).replace(' €', '') + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span></div>').join('') + '</div>';
 }
@@ -3620,7 +3626,7 @@ async function fbTagKarteZeichnen(d, di){
   // Klick auf eine Nummer in der Karte: den Fall in der Liste nur kurz hervorheben (oeffnen nur ueber die Liste -- keine Fehlklicks)
   const fallKlick = (i)=>{ const z = document.querySelector('[data-fbfall="' + di + '-' + i + '"]'); if(!z) return;
     try{ z.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }catch(_){}
-    z.classList.remove('fbx-blink'); void z.offsetWidth; z.classList.add('fbx-blink'); setTimeout(()=> z.classList.remove('fbx-blink'), 1800); };
+    z.classList.remove('fbx-blink'); void z.offsetWidth; z.classList.add('fbx-blink'); setTimeout(()=> z.classList.remove('fbx-blink'), 2400); };
   const pix = pois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
   const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
   const dd = { pois, nfp: true, rahmen: true, fallKlick };
@@ -11407,7 +11413,7 @@ function betaGesamtZeichnen(suchtext, ziel){
                            : '<span class="badge-unvollstaendig" title="Keine PDF im Ordner">&#9888;</span>';
       html += `
       <div class="wisch-huelle${e.unter ? ' unter' : ''}" data-key="${htmlEsc(e.key)}"><div class="wisch-hinter">&#128465; Löschen</div>
-      <div class="fall-zeile ${e.art}${e.pdf ? '' : ' unvollstaendig'}${e.unter ? ' unter' : ''}${betaAuswahl.has(e.key) ? ' gewaehlt' : ''}">
+      <div data-art="${e.art}" class="fall-zeile ${e.art}${e.pdf ? '' : ' unvollstaendig'}${e.unter ? ' unter' : ''}${betaAuswahl.has(e.key) ? ' gewaehlt' : ''}">
         <input type="checkbox" class="chk" ${betaAuswahl.has(e.key) ? 'checked' : ''}>
         <div class="inhalt">
           <div class="name">${e.unter ? '' : '<span class="badge-neu ' + e.art + '">' + (e.art === 'ls' ? 'L' : 'P') + '</span>'}${htmlEsc(e.name)}</div>
@@ -11431,7 +11437,7 @@ function betaGesamtZeichnen(suchtext, ziel){
       if(!zielEl) return;
       const zeile = zielEl.querySelector('.fall-zeile') || zielEl;
       try{ zielEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }catch(_){}
-      zeile.classList.remove('fbx-blink'); void zeile.offsetWidth; zeile.classList.add('fbx-blink'); setTimeout(()=> zeile.classList.remove('fbx-blink'), 2200);
+      zeile.classList.remove('fbx-blink'); void zeile.offsetWidth; zeile.classList.add('fbx-blink'); setTimeout(()=> zeile.classList.remove('fbx-blink'), 2400);
     });
     listeEl.querySelectorAll('.offen-bezahlt').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
@@ -19696,7 +19702,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v399';
+const APP_VERSION = 'v400';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
