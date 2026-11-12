@@ -3748,8 +3748,8 @@ function fahrdienstAuswertungRendernBasis(daten){
           <ul>${a.dienste.map(d=>`<li>${d}</li>`).join('')}</ul>
         </div></div>
         <div class="fahrdienst-arzt-summe">Gesamtsumme (GKV): ${euro(a.summe)}</div>
-        <div class="fahrdienst-arzt-summe">abzügl. ${gebuehrText}% Gebühr: ${euro(a.summe*(1-FAHRDIENST_GEBUEHR_SATZ))}</div>
         <div class="fahrdienst-arzt-summe">abzügl. 5% Strukturpauschale: ${euro(a.summe*(1-FAHRDIENST_STRUKTUR_SATZ))}</div>
+        <div class="fahrdienst-arzt-summe">abzügl. ${gebuehrText}% Gebühr: ${euro(a.summe*(1-FAHRDIENST_GEBUEHR_SATZ))}</div>
       </div>`;
     });
   });
@@ -4681,10 +4681,9 @@ async function msGraphPositionsKatalogLaden(art){
   try{
     const basisUrl = msGraphPfadUrl(pfad);
     const rangeUrl = basisUrl + "/workbook/worksheets('Tabelle1')/usedRange(valuesOnly=true)?$select=values";
-    const rangeRes = await fetch(rangeUrl, { headers: { Authorization: 'Bearer ' + token } });
-    if(!rangeRes.ok) return null;
-    const rangeDaten = await rangeRes.json();
-    const zeilen = rangeDaten.values || [];
+    let rangeDaten;
+    try{ rangeDaten = await gx(token, 'GET', rangeUrl); }catch(_){ return null; }   // gx liest bei Excel-Stoerung ueber den Datei-Download
+    const zeilen = (rangeDaten && rangeDaten.values) || [];
     const positionen = [];
     let aktuelle = null;
     // Zeile 0 = Kopfzeile, ab Zeile 1 die eigentlichen Positionen.
@@ -7754,10 +7753,9 @@ async function excelVorlageZeilenLaden(token, art){
   for(const blatt of [EXCELVORLAGE_SNAPSHOT_BLATT[art], 'Tabelle1']){
     try{
       const url = basis + "/workbook/worksheets('" + encodeURIComponent(blatt) + "')/range(address='A1:F120')?$select=values";
-      const r = await fetch(url, { headers:{ Authorization:'Bearer ' + token } });
-      if(!r.ok){ letzterFehler = 'HTTP ' + r.status; continue; }
-      const d = await r.json();
-      const zeilen = d.values || [];
+      let d;
+      try{ d = await gx(token, 'GET', url); }catch(e){ letzterFehler = 'HTTP ' + (e.status || '') + ' ' + (e.message || ''); continue; }
+      const zeilen = (d && d.values) || [];
       const kopf = (zeilen[0] || []).map(v=> String(v));
       if(kopf.some(v=> /bezeichnung/i.test(v))) return {zeilen, blatt};
     }catch(e){ letzterFehler = (e && e.message) || String(e); /* naechstes Blatt versuchen */ }
@@ -7866,12 +7864,58 @@ async function gx(token, methode, url, koerper, sid, zeitlimitMs){
   }
   if(uhr) clearTimeout(uhr);
   if(!r.ok){
-    const err = new Error('HTTP ' + r.status + ' ' + await graphFehlerText(r));
+    const text = await graphFehlerText(r);
+    // Bekannte Stoerung bei Microsoft: die Excel-Schnittstelle lehnt Dateien im privaten OneDrive zeitweise ab
+    // (401 FileOpenUserUnauthorized), obwohl die Datei selbst lesbar ist -> Lesen ueber den Datei-Download
+    if(r.status === 401 && /FileOpenUserUnauthorized|permission to open this file/i.test(text) && /\/workbook\//.test(url)){
+      if(methode === 'GET'){ try{ return await xlNotlesen(token, url); }catch(e2){ console.warn('xlNotlesen', e2); } }
+      const err = new Error('Microsoft lässt die Excel-Datei gerade nicht bearbeiten (Störung der Excel-Schnittstelle im privaten OneDrive, HTTP 401). Lesen geht weiter, Eintragen bitte später noch einmal versuchen.');
+      err.status = 401; err.xlStoerung = true; throw err;
+    }
+    const err = new Error('HTTP ' + r.status + ' ' + text);
     err.status = r.status; throw err;
   }
   if(r.status === 204) return null;
   const t = await r.text();
   try{ return t ? JSON.parse(t) : null; }catch(_){ return null; }
+}
+
+// ---------- Notlesen: Excel-Datei herunterladen und selbst auswerten (wenn die Excel-Schnittstelle streikt) ----------
+// Nachgebildet werden die Leseabfragen der App: Blattliste, usedRange (values/formulas/numberFormat) und range(address=...).
+const xlNotCache = new Map();   // basis -> { am, wb }
+async function xlNotMappe(token, basis){
+  const c = xlNotCache.get(basis);
+  if(c && Date.now() - c.am < 20000) return c.wb;
+  await xlsxLibLaden();
+  const r = await fetch(basis + '/content', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+  if(!r.ok) throw new Error('Datei laden HTTP ' + r.status);
+  const wb = XLSX.read(new Uint8Array(await r.arrayBuffer()), { type: 'array', cellFormula: true, cellNF: true });
+  xlNotCache.set(basis, { am: Date.now(), wb });
+  return wb;
+}
+async function xlNotlesen(token, url){
+  const i = url.indexOf('/workbook/'); if(i < 0) throw new Error('keine Excel-Abfrage');
+  const basis = url.slice(0, i), rest = decodeURIComponent(url.slice(i + '/workbook/'.length));
+  const wb = await xlNotMappe(token, basis);
+  if(/^worksheets(\?|$)/.test(rest)) return { value: wb.SheetNames.map((name, position)=> ({ name, position, id: name })) };
+  const m = /^worksheets\('((?:[^']|'')*)'\)\/(usedRange(?:\(valuesOnly=true\))?|range\(address='([^']+)'\))/.exec(rest);
+  if(!m) throw new Error('Abfrage nicht nachgebildet: ' + rest.slice(0, 60));
+  const blatt = m[1].replace(/''/g, "'"), ws = wb.Sheets[blatt];
+  if(!ws) throw new Error('Blatt „' + blatt + '“ nicht gefunden');
+  const used = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+  const rg = m[3] ? XLSX.utils.decode_range(m[3].replace(/\$/g, '')) : used;
+  const values = [], formulas = [], numberFormat = [];
+  for(let r = rg.s.r; r <= rg.e.r; r++){
+    const zv = [], zf = [], zn = [];
+    for(let c = rg.s.c; c <= rg.e.c; c++){
+      const z = ws[XLSX.utils.encode_cell({ r, c })];
+      const v = z ? (z.t === 'e' ? (z.w || '#WERT!') : z.t === 'b' ? !!z.v : z.v == null ? '' : z.v) : '';
+      zv.push(v); zf.push(z && z.f ? '=' + z.f : v); zn.push((z && z.z) || 'General');
+    }
+    values.push(zv); formulas.push(zf); numberFormat.push(zn);
+  }
+  const adr = "'" + blatt.replace(/'/g, "''") + "'!" + XLSX.utils.encode_range(rg);
+  return { address: adr, addressLocal: adr, values, formulas, numberFormat, rowCount: values.length, columnCount: values[0] ? values[0].length : 0, notgelesen: true };
 }
 
 // ---------- Excel-Datum/-Uhrzeit ----------
@@ -19652,7 +19696,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v398';
+const APP_VERSION = 'v399';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
