@@ -2018,6 +2018,7 @@ try{
   .mini-ebenen.kurz .mini-gruppe.mitte{top:auto; bottom:8px; right:64px; transform:none; flex-direction:row-reverse;}
   .mini-ebenen .mini-gruppe > button{position:relative !important; top:auto !important; right:auto !important; bottom:auto !important; left:auto !important; width:48px; height:38px; margin:0; flex:none; pointer-events:auto; border-radius:9px;}
   .mini-ebenen.platz .mini-gruppe > button{height:48px; border-radius:10px;}
+  .mini-ebenen.platz .mini-gruppe > .karte-auge, .mini-ebenen.platz .mini-gruppe > .mini-stil{height:38px;}   /* Ansicht und Kartenstil flach wie in der grossen Karte */
   .mini-ebenen.platz .karte-ebene{font-size:9.5px; gap:2px;}
   .mini-ebenen.platz .karte-ebene svg{width:20px; height:20px;}
   .mini-ebenen.platz.kurz .mini-gruppe.mitte{right:64px;}
@@ -16454,7 +16455,7 @@ function miniKurzPruefen(){
     const sichtbar = (g)=> g ? [...g.children].filter(x=> getComputedStyle(x).display !== 'none').length : 0;
     // genug Platz: quadratische Knoepfe wie in der grossen Karte (KVBW mit vollem Symbol)
     const nO = sichtbar(o), nM = sichtbar(m), nU = sichtbar(u);
-    const bedarfQ = 8 + (nO ? nO * 56 - 8 : 0) + 8 + (nM ? nM * 56 - 8 : 0) + 8 + (nU ? 48 : 0) + 8;
+    const bedarfQ = 8 + (nO ? 56 + (nO - 1) * 46 - 8 : 0) + 8 + (nM ? nM * 56 - 8 : 0) + 8 + (nU ? 48 : 0) + 8;
     w.classList.toggle('platz', h >= bedarfQ && w.clientWidth >= 260);
     const kh = w.classList.contains('platz') ? 48 : 38;
     const n = nM, oH = o ? o.offsetHeight : 0, uH = nU ? kh : 0;
@@ -19702,7 +19703,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v400';
+const APP_VERSION = 'v401';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
