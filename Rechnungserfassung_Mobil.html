@@ -5949,19 +5949,37 @@ async function einrUnvollstaendigFragen(fehlt, nebenbei){
   if(!nebenbei){ LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); ansichtStart(); }
   return false;
 }
+// In der einstellungen.ini vermerkt: Einrichtung wurde schon einmal komplett durchlaufen (auch auf anderem Geraet)
+function einrIniFertig(){ const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {}; return !!String(w.EINRICHTUNG_FERTIG || '').trim() && einrSchonEingerichtet(); }
+function einrDirektStarten(){
+  LS.set('einrichtung_fertig', true); LS.set('einrichtung_schritt', null); LS.set('einrichtung_auto', false); LS.set('einr_aus_einst', false); LS.set('einrichtung_fehlt', null);
+  try{ betaOverlay.schliessen(); }catch(_){}
+  ansichtStart();
+  setTimeout(()=>{ try{ einrIniFertigNachtragen(); }catch(_){} }, 3000);
+}
+// Bestehende Einrichtungen (vor diesem Vermerk) einmal nachtragen, wenn nichts mehr fehlt
+async function einrIniFertigNachtragen(){
+  try{
+    if(window.DEMO_MODUS || LS.get('einrichtung_schritt', null) || typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return;
+    const w0 = ((iniCacheLaden() || {}).werte || {});
+    if(String(w0.EINRICHTUNG_FERTIG || '').trim() || !einrSchonEingerichtet()) return;
+    if((await einrFehlt()).length) return;
+    const h = new Date();
+    await iniAenderungenSchreiben({ EINRICHTUNG_FERTIG: String(h.getDate()).padStart(2, '0') + '.' + String(h.getMonth() + 1).padStart(2, '0') + '.' + h.getFullYear() }, w0);
+    try{ await iniVonOneDriveLaden(); }catch(_){}
+  }catch(e){ console.warn('EINRICHTUNG_FERTIG nachtragen', e); }
+}
 async function einrSchonEingerichtetPruefen(){
   if(einrSchonEingerichtetPruefen.laeuft) return; einrSchonEingerichtetPruefen.laeuft = true;
   try{
-    if(!einrSchonEingerichtet() && typeof iniVonOneDriveLaden === 'function' && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){ try{ await iniVonOneDriveLaden(); }catch(_){} }
+    if(!einrIniFertig() && typeof iniVonOneDriveLaden === 'function' && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){ try{ await iniVonOneDriveLaden(); }catch(_){} }
+    if(!LS.get('einr_aus_einst', false) && einrIniFertig()){ einrDirektStarten(); return; }   // schon komplett eingerichtet -> nicht noch einmal durchklicken
     if(!einrSchonEingerichtet() || !LS.get('einrichtung_auto', false)) return;
     LS.set('einrichtung_auto', false);
     const w = (iniCacheLaden() || {}).werte || {};
     const fehlt = await einrFehlt();
     if(fehlt.length){ await einrUnvollstaendigFragen(fehlt, false); return; }
-    const akt = await betaOverlay.ergebnis('Bereits eingerichtet', 'Für dein Konto gibt es schon Einstellungen (einstellungen.ini) mit deinen Daten – <b>' + htmlEsc(w.ARZTNAME) + '</b>, ' + htmlEsc(w.ARZTADRESSE1) + '. Der Einrichtungsassistent wird nicht gebraucht.',
-      [{ label: 'Trotzdem durchgehen', akt: 'weiter' }, { label: 'Zur Startseite', akt: 'ende', primaer: true }]);
-    betaOverlay.schliessen();
-    if(akt === 'ende'){ LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); ansichtStart(); }
+    einrDirektStarten();   // alles da -> ohne Rueckfrage in die App (Anpassungen in den Einstellungen)
   } finally { einrSchonEingerichtetPruefen.laeuft = false; }
 }
 // ---------- Seitenhilfen: beim ersten Oeffnen einer Seite eine kurze Erklaerung dieser Seite ----------
@@ -6019,7 +6037,14 @@ function ansichtEinrichtung(schritt){
   if(schritt === 'sperre') schritt = 'anmelden';   // frueherer Schritt App-Sperre
   LS.set('einrichtung_schritt', schritt);
   LS.set('einrichtung_gesehen', true);
-  if(schritt === 'fertig') LS.set('einrichtung_fertig', true);
+  if(schritt === 'fertig'){
+    LS.set('einrichtung_fertig', true);
+    const w0 = ((iniCacheLaden() || {}).werte || {});
+    if(!window.DEMO_MODUS && !String(w0.EINRICHTUNG_FERTIG || '').trim() && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){
+      const heute = new Date(), d = String(heute.getDate()).padStart(2, '0') + '.' + String(heute.getMonth() + 1).padStart(2, '0') + '.' + heute.getFullYear();
+      iniAenderungenSchreiben({ EINRICHTUNG_FERTIG: d }, w0).then(()=>{ try{ iniVonOneDriveLaden(); }catch(_){} }).catch(e=> console.warn('EINRICHTUNG_FERTIG nicht gespeichert', e));
+    }
+  }
   const beenden = ()=>{ LS.set('einrichtung_schritt', null); LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false); LS.set('einr_aus_einst', false); ansichtStart(); };
   // Zurueck (Pfeil oben und Handy-Taste) geht nur einen Schritt zurueck; abbrechen laesst sich der Assistent
   // nur, wenn er aus den Einstellungen geoeffnet wurde. Nav-Leiste und Einstellungen sind solange ausgeblendet.
@@ -6139,6 +6164,8 @@ function ansichtEinrichtung(schritt){
     app.querySelectorAll(SEL_IBAN + ',' + SEL_BIC).forEach(el=>{ if(el.value) ktoPruefenEl(el); });
   }
   // Automatisch gestartet, aber fuer dieses Konto gibt es schon Einstellungen -> nicht noetig
+  if((schritt === 'anmelden' || schritt === 'dateien') && !LS.get('einr_aus_einst', false) && !window.DEMO_MODUS &&
+     typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet' && !LS.get('einrichtung_auto', false)) einrSchonEingerichtetPruefen();
   if(LS.get('einrichtung_auto', false)){
     if(schritt === 'anmelden' || schritt === 'dateien') einrSchonEingerichtetPruefen();
     else if(schritt !== 'start') LS.set('einrichtung_auto', false);   // ab "Deine Daten" bewusst weiter eingerichtet
@@ -19489,7 +19516,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v394';
+const APP_VERSION = 'v395';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -22885,7 +22912,8 @@ try{
   if(ersterStart && einrSchonEingerichtet()) ersterStart = false;   // einstellungen.ini schon da -> nicht noetig
   if(ersterStart) LS.set('einrichtung_auto', true);
 }catch(e){}
-try{ appCodeStartPruefen(); }catch(e){}   // Freischaltung per Zugangscode (Sperrfenster ueber allem)
+try{ appCodeStartPruefen(); }catch(e){}
+setTimeout(()=>{ try{ einrIniFertigNachtragen(); }catch(_){} }, 15000);   // Vermerk "Einrichtung fertig" in der einstellungen.ini nachtragen   // Freischaltung per Zugangscode (Sperrfenster ueber allem)
 try{ ansichtStart(); }catch(e){}   // laeuft die Einrichtung (oder erster Start), zeigt das direkt den Assistenten
 try{
   const einrOffen = !window.DEMO_MODUS && (ersterStart || !!LS.get('einrichtung_schritt', null) || (!LS.get('einrichtung_fertig', false) && !einrSchonEingerichtet()));
