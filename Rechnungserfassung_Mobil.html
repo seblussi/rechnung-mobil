@@ -2690,7 +2690,8 @@ async function msGraphTokenHolen(){
 // das genaue, im Graph-Token aktive Konto gebunden, waehrend ein per
 // createLink erzeugter Freigabelink (wie beim manuell erstellten,
 // funktionierenden statischen Link) bewusst OHNE diese Bindung auskommt.
-// Deshalb jetzt nicht mehr "?$select=webUrl", sondern echtes createLink
+// NOV 2026: wieder webUrl (im Browser geoeffnet) -- anonyme Freigabelinks sind fuer Patientendaten nicht vertretbar.
+// Frueher: nicht mehr "?$select=webUrl", sondern echtes createLink
 // (siehe Graph-Doku "Create a sharing link for a DriveItem") -- erzeugt
 // serverseitig entweder einen neuen oder liefert einen bereits vorhandenen,
 // zum angefragten Typ/Scope passenden Freigabelink zurueck (kein Spam bei
@@ -2705,24 +2706,20 @@ async function excelDateiUeberGraphOeffnen(pfadRelativZuOneDrive, statischerFall
     }catch(e){ appToastAnzeigen('In der Demo nicht verfügbar: ' + (e.message || e), 3000); }
     return;
   }
+  // Datenschutz: KEIN anonymer Freigabelink mehr (frueher createLink "edit/anonymous" bzw. fest eingebaute 1drv.ms-Links --
+  // wer den Link hat, koennte die Datei ohne Anmeldung oeffnen). Geoeffnet wird die eigene Adresse der Datei (webUrl);
+  // Excel bzw. der Browser fragt dann nach der Microsoft-Anmeldung.
   const token = await msGraphTokenHolen();
-  if(!token){ excelDateiOeffnen(statischerFallbackLink); return; }
+  if(!token){ appToastAnzeigen('Bitte zuerst bei Microsoft anmelden (Einstellungen).', 3000); return; }
   try{
-    const antwort = await fetch(msGraphPfadUrl(pfadRelativZuOneDrive) + '/createLink', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'edit', scope: 'anonymous' })
-    });
-    if(!antwort.ok) throw new Error('Graph-Antwort ' + antwort.status);
-    const daten = await antwort.json();
-    const link = daten && daten.link && daten.link.webUrl;
-    if(link){
-      excelDateiOeffnen(link);
-    } else {
-      throw new Error('Keine Freigabe-URL in der createLink-Antwort');
-    }
+    const r = await fetch(msGraphPfadUrl(pfadRelativZuOneDrive) + '?$select=webUrl', { headers: { Authorization: 'Bearer ' + token } });
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const link = (await r.json()).webUrl;
+    if(!link) throw new Error('keine Adresse');
+    // im Browser (Excel fuer das Web, mit der eigenen Microsoft-Anmeldung) -- die Excel-App fand die direkte Adresse frueher nicht
+    const w = window.open(link, '_blank'); if(!w) location.href = link;
   }catch(e){
-    excelDateiOeffnen(statischerFallbackLink);
+    appToastAnzeigen('Die Datei konnte nicht geöffnet werden (' + (e.message || e) + ').', 3500);
   }
 }
 
@@ -19732,7 +19729,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v404';
+const APP_VERSION = 'v405';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
