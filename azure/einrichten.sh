@@ -88,7 +88,7 @@ cat > "$TMP/src/functions/lxp.js" <<'EOF'
 // Zugangsdaten: Benutzername und API-Key schickt die App bei jedem Aufruf mit.
 // Nur Anfragen von der App-Adresse, nur Pfade /v3/<name>[/<nummer>].
 // "_methode" (PUT/DELETE) im Inhalt -> Anfrage mit dieser Methode (Brief
-// verschieben/stornieren). "/v3/_version" meldet die Version.
+// verschieben/stornieren). "/v3/_version" meldet die Version, "/v3/_code" prueft nur den Zugangscode (App-Freischaltung).
 // Optional: App-Einstellung ERLAUBTE_LXP_NUTZER (Komma-getrennt) -> nur diese
 // LetterXpress-Benutzer werden weitergeleitet.
 // Optional: App-Einstellung ZUGANGSCODES (Komma-getrennt) -> nur Anfragen mit
@@ -103,7 +103,7 @@ function gleich(a, b) {
 
 const ZIEL = 'https://api.letterxpress.de';
 const ERLAUBTE_HERKUNFT = ['https://seblussi.github.io'];
-const VERSION = 3;
+const VERSION = 4;
 const METHODEN = ['POST', 'PUT', 'DELETE'];
 
 function corsKopf(herkunft) {
@@ -142,6 +142,7 @@ app.http('lxp', {
       const c = String((daten && typeof daten === 'object' && daten._zugang) || '');
       if (!c || !codes.some((x) => gleich(x, c))) return json(403, cors, { status: 403, message: 'Zugangscode fehlt oder ist falsch.' });
     }
+    if (pfad === '_code') return json(200, cors, { ok: true });   // Freischaltung der App: nur der Zugangscode wird geprueft
     if (daten && typeof daten === 'object' && '_zugang' in daten) { delete daten._zugang; text = JSON.stringify(daten); }
     if (daten && typeof daten === 'object') {
       if (daten._methode) {

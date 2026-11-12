@@ -2101,6 +2101,11 @@ try{
   body.quer .quer-gkv-links .gkv-kopf{margin-top:0;}
   /* Quartalsuebersicht: Knoepfe rechts in der Jahreszeile */
   .fd-jahre{align-items:center;}
+  #appCodeTor{position:fixed; inset:0; z-index:2147483000; background:var(--bg, #f6f7f9); display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; overflow:auto;}
+  #appCodeTor .act-karte{width:100%; max-width:420px; background:var(--karte, #fff); color:var(--text, #141a24); border-radius:18px; padding:22px 20px; box-shadow:0 6px 30px rgba(0,0,0,.12);}
+  #appCodeTor h2{margin:0 0 10px;} #appCodeTor .btn-primaer{width:100%; margin-top:10px;} #appCodeTor #actInfo{min-height:1.2em; color:#c0392b;}
+  body.app-code-tor{overflow:hidden;}
+  .einst-copyright{margin:28px 0 8px; text-align:center; font-size:11px; color:var(--text-schwach); opacity:.8;}
   .fd-jahre{flex-wrap:nowrap !important;}
   .fd-jahre-leiste{display:flex; gap:6px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:2px 0;
     -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent); mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent);}
@@ -4913,6 +4918,84 @@ const SVG_ICON_APOTHEKE = `<svg width="48" height="48" viewBox="0 0 24 24" fill=
 // Ohne Zustimmung zur aktuellen Fassung geht es nicht weiter (Einrichtung bzw.
 // Sperrfenster beim Start). Nachweis: im Geraet und in der einstellungen.ini.
 // =====================================================================
+// =====================================================================
+// Freischaltung: Die App startet nur mit einem persoenlichen Zugangscode (derselbe wie fuer den
+// Briefversand). Geprueft wird er bei der Weiterleitung (Azure); einmal freigeschaltet laeuft die App
+// auch offline. Online wird regelmaessig nachgeprueft -- ein gesperrter Code sperrt die App wieder.
+// =====================================================================
+const APP_CODE_NACHPRUEFEN_MS = 3 * 86400000;
+function appCodeAktuell(){ return String(LS.get('app_zugangscode', '') || '').trim(); }
+function appFreigeschaltet(){ return !!appCodeAktuell() && LS.get('app_code_ok', false) === true; }
+// -> 'ok' | 'falsch' | 'netz'
+async function appCodePruefen(code){
+  code = String(code || '').trim();
+  if(!code) return 'falsch';
+  if(navigator.onLine === false) return 'netz';
+  const post = async (pfad, koerper)=>{
+    const st = new AbortController(), t = setTimeout(()=> st.abort(), 25000);
+    try{ return await fetch(LXP_WEITERLEITUNG_STANDARD + '/v3/' + pfad, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(koerper), signal: st.signal }); }
+    finally{ clearTimeout(t); }
+  };
+  try{
+    let r = await post('_code', { _zugang: code });
+    if(r.status === 200) return 'ok';
+    let txt = await r.text().catch(()=> '');
+    if(r.status === 403 && /Zugangscode/.test(txt)) return 'falsch';
+    if(r.status === 404){
+      // aeltere Weiterleitung ohne "_code": Probe ohne LetterXpress-Zugang -- abgelehnt wird dann nur ein falscher Code
+      r = await post('printjobs', { auth: { username: '', apikey: '', mode: 'test' }, _zugang: code });
+      txt = await r.text().catch(()=> '');
+      if(r.status === 403 && /Zugangscode/.test(txt)) return 'falsch';
+      if(r.status === 403 && /Nicht erlaubt/.test(txt)) return 'netz';
+      return r.status >= 500 && r.status !== 502 ? 'netz' : 'ok';
+    }
+    return 'netz';
+  }catch(_){ return 'netz'; }
+}
+function appCodeTor(meldung){
+  if(document.getElementById('appCodeTor')) return;
+  const ini = (()=>{ try{ return ((iniCacheLaden() || {}).werte || {}).BRIEF_ZUGANGSCODE || ''; }catch(_){ return ''; } })();
+  const vorschlag = appCodeAktuell() || String(ini || '').trim();
+  const d = document.createElement('div'); d.id = 'appCodeTor';
+  d.innerHTML = '<div class="act-karte"><h2>Freischaltung</h2>' +
+    '<p>Diese App ist nur für eingeladene Testerinnen und Tester. Bitte gib deinen persönlichen <b>Zugangscode</b> ein. Du bekommst ihn vom App-Entwickler.</p>' +
+    '<label class="einr-feld"><span>Zugangscode</span><input type="text" id="actCode" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx"></label>' +
+    '<div id="actInfo" class="einr-klein">' + htmlEsc(meldung || '') + '</div>' +
+    '<button type="button" class="btn-primaer" id="actOk">Freischalten</button>' +
+    '<p class="einr-klein" style="margin-top:12px;">Für die Freischaltung braucht es einmal Internet. Danach läuft die App auch offline.</p></div>';
+  document.body.appendChild(d); document.body.classList.add('app-code-tor');
+  const feld = d.querySelector('#actCode'), knopf = d.querySelector('#actOk'), info = d.querySelector('#actInfo');
+  feld.value = vorschlag;
+  const los = async ()=>{
+    const c = feld.value.trim();
+    if(!c){ info.textContent = 'Bitte den Zugangscode eintragen.'; feld.focus(); return; }
+    knopf.disabled = true; knopf.textContent = 'Prüfe …'; info.textContent = '';
+    const erg = await appCodePruefen(c);
+    knopf.disabled = false; knopf.textContent = 'Freischalten';
+    if(erg === 'ok'){
+      LS.set('app_zugangscode', c); LS.set('app_code_ok', true); LS.set('app_code_geprueft', Date.now());
+      d.remove(); document.body.classList.remove('app-code-tor');
+      return;
+    }
+    info.textContent = erg === 'falsch' ? 'Dieser Zugangscode wird nicht angenommen. Bitte genau so eintragen, wie du ihn bekommen hast.'
+                                        : 'Keine Verbindung zur Prüfstelle. Bitte Internet prüfen und noch einmal versuchen.';
+  };
+  knopf.onclick = los;
+  feld.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') los(); });
+  if(vorschlag && !meldung) los();   // Code schon bekannt (z. B. aus dem Briefversand) -> gleich pruefen
+}
+function appCodeStartPruefen(){
+  if(!appFreigeschaltet()){ appCodeTor(); return; }
+  // freigeschaltet: online gelegentlich nachpruefen (gesperrter Code -> wieder sperren; ohne Netz bleibt alles, wie es ist)
+  const zuletzt = Number(LS.get('app_code_geprueft', 0)) || 0;
+  if(Date.now() - zuletzt < APP_CODE_NACHPRUEFEN_MS) return;
+  setTimeout(async ()=>{
+    const erg = await appCodePruefen(appCodeAktuell());
+    if(erg === 'ok') LS.set('app_code_geprueft', Date.now());
+    else if(erg === 'falsch'){ LS.set('app_code_ok', false); appCodeTor('Dein Zugangscode ist nicht mehr gültig. Bitte beim App-Entwickler einen neuen anfragen.'); }
+  }, 4000);
+}
+
 const ALPHA_BED_VERSION = '2026-11-08b';
 const ALPHA_ANBIETER = 'Sergej Jakutsch';
 function alphaBedingungenHtml(){
@@ -4987,7 +5070,8 @@ function ansichtStart(){
   // Solange die Ersteinrichtung laeuft, gibt es keine Startseite (sonst blitzt sie zwischen den Schritten auf,
   // z. B. nach der Microsoft-Anmeldung oder wenn der Abgleich die Startseite neu zeichnet)
   try{ if(!window.DEMO_MODUS && typeof ansichtEinrichtung === 'function' && !LS.get('einr_aus_einst', false) &&
-         (LS.get('einrichtung_schritt', null) || (ersterStart && !LS.get('einrichtung_gesehen', false)))){ ansichtEinrichtung(); return; } }catch(_){}
+         (LS.get('einrichtung_schritt', null) || (ersterStart && !LS.get('einrichtung_gesehen', false)) ||
+          (!LS.get('einrichtung_fertig', false) && !einrSchonEingerichtet()))){ ansichtEinrichtung(); return; } }catch(_){}   // ohne abgeschlossene Einrichtung kein Zugriff auf die App
   // App-Sperre ist freiwillig: noch keine eingerichtet -> einmal empfehlen ("Ohne App-Sperre weiter" moeglich)
   try{ if(LS.get('einrichtung_gesehen', false)) setTimeout(()=> alphaZugestimmt() ? (typeof AppSperre !== 'undefined' && AppSperre.pflichtPruefen()) : alphaZustimmungPruefen(), 300); }catch(_){}
   einstellungenOffen = false;
@@ -5850,7 +5934,7 @@ async function einrFehlt(){
   try{ if(typeof dienstprofile === 'function' && !dienstprofile().length && typeof ansichtEinrichtung === 'function' && /'dienst'/.test(String(ansichtEinrichtung))) f.push({ schritt: 'dienst', text: 'Dienstprofil (Ausgangspunkt fürs Wegegeld)' }); }catch(_){}
   // Weiterleitung: eigene Adresse, oder die Standard-Weiterleitung (leer bzw. Standard-Adresse) mit Zugangsdaten --
   // die Standard-Weiterleitung laesst nur freigegebene LetterXpress-Benutzer durch; ob man dazugehoert, zeigt "Prüfen"/der Versand
-  const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY), wl = !!String(w.BRIEF_WEITERLEITUNG || '').trim() || !!String(w.BRIEF_ZUGANGSCODE || '').trim();
+  const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY), wl = !!String(w.BRIEF_WEITERLEITUNG || '').trim() || !!String(w.BRIEF_ZUGANGSCODE || '').trim() || !!appCodeAktuell();
   if(!zugang || !wl) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!zugang ? 'LetterXpress-Zugang' : '', !wl ? 'Zugangscode' : ''].filter(Boolean).join(' und ') });
   return f;
 }
@@ -5861,7 +5945,7 @@ async function einrUnvollstaendigFragen(fehlt, nebenbei){
     (w.ARZTNAME ? 'Deine Einstellungen (einstellungen.ini) sind da – <b>' + htmlEsc(w.ARZTNAME) + '</b>. ' : '') + 'Es fehlt noch:' +
     '<ul class="einr-fehlt">' + fehlt.map(x=> '<li>' + htmlEsc(x.text) + '</li>').join('') + '</ul>' +
     'Der Assistent springt zum ersten fehlenden Schritt und geht von dort weiter; was schon eingerichtet ist, ist vorausgefüllt.',
-    [{ label: nebenbei ? 'Später' : 'Zur Startseite', akt: 'ende' }, { label: 'Weiter einrichten', akt: 'weiter', primaer: true }]);
+    (nebenbei ? [{ label: 'Später', akt: 'ende' }] : []).concat([{ label: 'Weiter einrichten', akt: 'weiter', primaer: true }]));   // ohne Einstellungen-Aufruf kein Abbrechen
   betaOverlay.schliessen();
   if(akt === 'weiter'){ LS.set('einrichtung_fehlt', fehlt.map(x=> x.schritt)); if(nebenbei) LS.set('einr_aus_einst', true); ansichtEinrichtung(fehlt[0].schritt); return true; }
   if(!nebenbei){ LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); ansichtStart(); }
@@ -5937,6 +6021,7 @@ function ansichtEinrichtung(schritt){
   if(schritt === 'sperre') schritt = 'anmelden';   // frueherer Schritt App-Sperre
   LS.set('einrichtung_schritt', schritt);
   LS.set('einrichtung_gesehen', true);
+  if(schritt === 'fertig') LS.set('einrichtung_fertig', true);
   const beenden = ()=>{ LS.set('einrichtung_schritt', null); LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false); LS.set('einr_aus_einst', false); ansichtStart(); };
   // Zurueck (Pfeil oben und Handy-Taste) geht nur einen Schritt zurueck; abbrechen laesst sich der Assistent
   // nur, wenn er aus den Einstellungen geoeffnet wurde. Nav-Leiste und Einstellungen sind solange ausgeblendet.
@@ -5989,13 +6074,13 @@ function ansichtEinrichtung(schritt){
     const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
     const eigen0 = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG), eigen = eigen0 === LXP_WEITERLEITUNG_STANDARD ? '' : eigen0;
     html = '<h2>Briefversand (optional)</h2>' +
-      '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Du brauchst dafür ein LetterXpress-Konto und deinen persönlichen <b>Zugangscode</b> von Sergej.</p>' +
-      '<p class="einr-klein">Warum ein Zugangscode und eine AVV? LetterXpress nimmt keine Aufträge direkt aus der App an. Die Briefe laufen deshalb kurz über Sergejs Server (Rechenzentrum Frankfurt), der sie nur durchreicht und nichts speichert. Weil dabei Rechnungen mit Patientendaten durchgehen, gilt dafür die Vereinbarung zur Auftragsverarbeitung (AVV), die du mit den Alpha-Bedingungen bestätigt hast.</p>' +
+      '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Du brauchst dafür ein LetterXpress-Konto und deinen persönlichen <b>Zugangscode</b>.</p>' +
+      '<p class="einr-klein">Warum ein Zugangscode und eine AVV? LetterXpress nimmt keine Aufträge direkt aus der App an. Die Briefe laufen deshalb kurz über den Server des App-Entwicklers (Rechenzentrum Frankfurt), der sie nur durchreicht und nichts speichert. Weil dabei Rechnungen mit Patientendaten durchgehen, gilt dafür die Vereinbarung zur Auftragsverarbeitung (AVV), die du mit den Alpha-Bedingungen bestätigt hast.</p>' +
       '<h3>1. LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren (mit den AGB ist dort auch der Auftragsverarbeitungsvertrag dabei) und unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
       '<label class="einr-feld"><span>LetterXpress-Benutzername</span><input type="text" id="einrLxpNutzer" autocomplete="off" value="' + htmlEsc(w.BRIEF_BENUTZER || '') + '"></label>' +
       '<label class="einr-feld"><span>API-Key</span><input type="password" id="einrLxpKey" autocomplete="off" value="' + htmlEsc(w.BRIEF_APIKEY || '') + '"></label>' +
       '<h3>2. Zugangscode eintragen und prüfen</h3>' +
-      '<label class="einr-feld"><span>Zugangscode (von Sergej)</span><input type="text" id="einrLxpZugang" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx" value="' + htmlEsc(w.BRIEF_ZUGANGSCODE || '') + '"></label>' +
+      '<label class="einr-feld"><span>Zugangscode</span><input type="text" id="einrLxpZugang" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx" value="' + htmlEsc(w.BRIEF_ZUGANGSCODE || appCodeAktuell() || '') + '"></label>' +
       '<input type="hidden" id="einrLxpUrl" value="' + htmlEsc(eigen) + '">' +
       '<button type="button" class="btn-sekundaer" id="einrLxpPruefen">Prüfen</button><div id="einrLxpErgebnis" class="einr-liste"></div>' +
       '<div id="einrBriefInfo" class="einr-klein"></div>' +
@@ -6095,7 +6180,7 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key, zugang){
   try{
     const r = await einrFetchZeit(url + '/v3/_version', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 45000);
     const txt = await r.text(); let j = null; try{ j = JSON.parse(txt); }catch(_){}
-    if(r.status === 403) { z('Die Weiterleitung lehnt die App ab (HTTP 403) – bitte Sergej Bescheid geben.', false); return { ok: false, zeilen, url }; }
+    if(r.status === 403) { z('Die Weiterleitung lehnt die App ab (HTTP 403) – bitte dem App-Entwickler Bescheid geben.', false); return { ok: false, zeilen, url }; }
     if(r.status === 404) { z('Unter dieser Adresse gibt es keine Weiterleitung (HTTP 404). Endet die Adresse auf „/api“? Läuft das Skript noch? Sonst das Skript erneut ausführen.', false); return { ok: false, zeilen, url }; }
     if(!r.ok){ z('Die Weiterleitung antwortet mit HTTP ' + r.status + '. Azure braucht nach dem Einrichten manchmal ein paar Minuten – bitte gleich noch einmal prüfen.', false); return { ok: false, zeilen, url }; }
     version = j && Number(j.weiterleitung) || 1;
@@ -6103,7 +6188,7 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key, zugang){
     z('Keine Antwort von der Weiterleitung (' + (e && e.name === 'AbortError' ? 'Zeitüberschreitung' : (e.message || e)) + '). Adresse richtig kopiert? Direkt nach dem Skript kann der erste Start bis zu einer Minute dauern – bitte noch einmal prüfen.', false);
     return { ok: false, zeilen, url };
   }
-  if(version < 2){ z('Weiterleitung erreichbar, aber alte Version ' + version + ' – bitte Sergej Bescheid geben (sonst lassen sich geplante Briefe nicht verschieben/stornieren).', false); return { ok: false, zeilen, url }; }
+  if(version < 2){ z('Weiterleitung erreichbar, aber alte Version ' + version + ' – bitte dem App-Entwickler Bescheid geben (sonst lassen sich geplante Briefe nicht verschieben/stornieren).', false); return { ok: false, zeilen, url }; }
   z('Weiterleitung erreichbar und aktuell (Version ' + version + ').', true);
   if(!nutzer || !key){ z('LetterXpress-Zugangsdaten fehlen noch – ohne sie kann nicht getestet werden, ob LetterXpress dich annimmt.', false); return { ok: false, zeilen, url }; }
   try{
@@ -6113,7 +6198,7 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key, zugang){
     if(r.status === 502){ z('Die Weiterleitung erreicht LetterXpress nicht (HTTP 502). Später noch einmal prüfen.', false); return { ok: false, zeilen, url }; }
     if(r.status === 401 || /unauthori|invalid.{0,20}(api|key|user|credential)/i.test(txt)){ z('LetterXpress lehnt Benutzername oder API-Key ab – bitte prüfen (Groß-/Kleinschreibung, Leerzeichen).', false); return { ok: false, zeilen, url }; }
     if(r.status === 403 && /Zugangscode/.test(txt)){ z(zugang ? 'Der Zugangscode wird von der Weiterleitung nicht angenommen – bitte genau so eintragen, wie du ihn bekommen hast.' : 'Diese Weiterleitung braucht einen Zugangscode – bitte unten eintragen.', false); return { ok: false, zeilen, url }; }
-    if(r.status === 403 && /freigegeben/.test(txt)){ z('Dieser LetterXpress-Benutzer ist für deinen Zugangscode noch nicht freigegeben – bitte Sergej Bescheid geben.', false); return { ok: false, zeilen, url }; }
+    if(r.status === 403 && /freigegeben/.test(txt)){ z('Dieser LetterXpress-Benutzer ist für deinen Zugangscode noch nicht freigegeben – bitte dem App-Entwickler Bescheid geben.', false); return { ok: false, zeilen, url }; }
     z('LetterXpress hat die Zugangsdaten angenommen (Testmodus, es wurde nichts verschickt).', true);
   }catch(e){
     z('Test bei LetterXpress fehlgeschlagen: ' + (e.message || e), false); return { ok: false, zeilen, url };
@@ -8349,7 +8434,7 @@ async function lxpAuftrag(methode, id, modus, letter){
   if(!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > Briefversand).');
   const v = await lxpWeiterleitungVersion();
   if(v === 0) throw new Error('Die Weiterleitung zu LetterXpress ist nicht erreichbar (Internet?). Es wurde nichts geändert.');
-  if(v < 2) throw new Error('Die Weiterleitung in Azure ist noch die alte Version und kann Aufträge nicht ändern. Bitte Sergej Bescheid geben. Es wurde nichts geändert.');
+  if(v < 2) throw new Error('Die Weiterleitung in Azure ist noch die alte Version und kann Aufträge nicht ändern. Bitte dem App-Entwickler Bescheid geben. Es wurde nichts geändert.');
   const koerper = { _methode: methode, auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: modus === 'test' ? 'test' : 'live' } };
   if(letter) koerper.letter = letter;
   const r = await fetch(lxpBasisUrl(w) + '/v3/printjobs/' + encodeURIComponent(id), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(lxpMitZugang(koerper, w)) });
@@ -8596,8 +8681,8 @@ const INI_FELDER = [
   {k:'BRIEF_AKTIVIERT',  typ:'bool', label:'Briefversand über LetterXpress aktiviert'},
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
-  {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Zugangscode (von Sergej)'},
-  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung (leer lassen = die von Sergej, dann mit Zugangscode)'},
+  {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Zugangscode'},
+  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung (leer lassen = Standard mit Zugangscode)'},
 ];
 const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
@@ -8820,7 +8905,7 @@ function lxpAdresseNormal(s){
 // die Weiterleitung prueft ihn und entfernt ihn vor dem Weiterreichen an LetterXpress.
 function lxpMitZugang(koerper, w){
   if(!w){ const ini = iniCacheLaden(); w = ini ? ini.werte : {}; }
-  const c = String((w && w.BRIEF_ZUGANGSCODE) || '').trim();
+  const c = String((w && w.BRIEF_ZUGANGSCODE) || '').trim() || (typeof appCodeAktuell === 'function' ? appCodeAktuell() : '');
   return c ? Object.assign({}, koerper, { _zugang: c }) : koerper;
 }
 function lxpBasisUrl(w){
@@ -9251,16 +9336,16 @@ function betaEinstellungenWiring(){
       const txt = (await r.text()).slice(0, 300);
       const anmeldungFalsch = r.status===401 || /unauthori/i.test(txt);
       if(ueberWeiterleitung && r.status===403 && /Nicht erlaubt/.test(txt)){
-        ergebnis('<b>✗ Die Weiterleitung lehnt diese App ab</b> -- bitte Sergej Bescheid geben.'); return;
+        ergebnis('<b>✗ Die Weiterleitung lehnt diese App ab</b> -- bitte dem App-Entwickler Bescheid geben.'); return;
       }
       const wv = await lxpWeiterleitungVersion();
       ergebnis(`<b>✓ ${ueberWeiterleitung ? 'Versand über die Weiterleitung funktioniert' : 'Direkter Aufruf vom Handy ist möglich'}</b> (LetterXpress hat geantwortet, HTTP ${r.status}).<br>` +
         (wv >= 2 ? 'Weiterleitung Version ' + wv + ': geplante Briefe lassen sich verschieben/stornieren.<br>'
-                 : '<b>Weiterleitung noch Version 1</b>: geplante Briefe lassen sich noch nicht verschieben/stornieren (bitte Sergej Bescheid geben).<br>') +
+                 : '<b>Weiterleitung noch Version 1</b>: geplante Briefe lassen sich noch nicht verschieben/stornieren (bitte dem App-Entwickler Bescheid geben).<br>') +
         (anmeldungFalsch ? 'Hinweis: Benutzername/API-Key wurden abgelehnt -- bitte prüfen.<br>' : 'Anmeldedaten wurden angenommen (die Fehlermeldung zum fehlenden Brief ist bei diesem Test normal).<br>') +
         `<span style="font-size:12px; word-break:break-all;">Antwort: ${htmlEsc(txt)}</span>`);
     }catch(e){
-      ergebnis('<b>✗ Die Weiterleitung ist nicht erreichbar</b> -- Internet prüfen; sonst bitte Sergej Bescheid geben.' +
+      ergebnis('<b>✗ Die Weiterleitung ist nicht erreichbar</b> -- Internet prüfen; sonst bitte dem App-Entwickler Bescheid geben.' +
         '<br><span style="font-size:12px;">' + htmlEsc(e.message||String(e)) + '</span>');
     }
   };
@@ -9599,6 +9684,13 @@ async function betaFaelleHochladen(faelle, titel){
 
 // Abschluss im Fenster: je Rechnung PDF ansehen / Brief senden
 async function betaErgebnisseZeigen(ergebnisse, ziel){
+  // genau eine Rechnung ohne Warnung: keine Bestaetigungsbox, gleich die PDF-Ansicht (dort Teilen/Senden)
+  { const e = ergebnisse.length === 1 ? ergebnisse[0] : null;
+    if(e && !e.fehler && !e.uebersprungen && e.pdfBlob && !(e.warnungen || []).length){
+      betaOverlay.schliessen();
+      setTimeout(()=> betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob, webUrl: e.pdfUrl, senden: e }), 50);
+      return;
+    } }
   const testmodus = briefTestmodus((iniCacheLaden() || { werte:{} }).werte || {}, ziel);
   const zeilenHtml = ergebnisse.map((e, i)=>{
     if(e.fehler) return '<div class="beta-erg">✗ <b>' + htmlEsc(e.name) + '</b><br><span class="beta-erg-klein">' + htmlEsc(e.fehler) + '<br>Gespeichert, aber noch nicht hochgeladen.</span></div>';
@@ -10402,6 +10494,7 @@ async function betaZweiteAdresseErstellen(e){
 
 // Abschluss fuer Mahnung/2. Adresse: ansehen oder gleich verschicken
 async function betaDokumentFertig(titel, e, hinweise){
+  if(e.pdfBlob && !(hinweise || []).length){ betaOverlay.schliessen(); await betaPdfAnzeigen({ titel: e.name, blob: e.pdfBlob, senden: e }); return true; }   // ohne Warnung gleich die PDF-Ansicht
   const testmodus = briefTestmodus((iniCacheLaden() || { werte:{} }).werte || {}, e.ziel);
   for(;;){
     const akt = await betaOverlay.ergebnis(titel, '<div class="beta-erg">✓ <b>' + htmlEsc(e.name) + '</b>' +
@@ -12965,7 +13058,7 @@ function betaHaftungHtml(){
         <ul>
           <li><b>LetterXpress:</b> Der AVV ist Bestandteil der AGB und wird mit der Registrierung automatisch geschlossen (<a href="${LXP_AVV_LINK}" target="_blank" rel="noopener">AVV zum Nachlesen</a>).</li>
           <li><b>Microsoft (OneDrive):</b> Einen Vertrag zur Auftragsverarbeitung gibt es nur für geschäftliche Konten (Microsoft 365 Business) – <a href="${MS_DPA_LINK}" target="_blank" rel="noopener">Microsoft-DPA</a>. Für private Microsoft-Konten gibt es keinen.</li>
-          <li><b>Briefversand:</b> Die Briefe laufen kurz über Sergejs Server (Rechenzentrum Frankfurt) zu LetterXpress. Dafür gilt die AVV aus den Alpha-Bedingungen.</li>
+          <li><b>Briefversand:</b> Die Briefe laufen kurz über den Server des App-Entwicklers (Rechenzentrum Frankfurt) zu LetterXpress. Dafür gilt die AVV aus den Alpha-Bedingungen.</li>
         </ul>
         <p>Vor dem Einsatz mit echten Patientendaten wird eine rechtliche bzw. datenschutzrechtliche Beratung
         empfohlen (z. B. Datenschutzbeauftragter, Landesärztekammer).</p>
@@ -13434,7 +13527,7 @@ async function ebmWerteOnlineHolen(){
   let basis = ''; try{ basis = lxpBasisUrl(); }catch(e){ basis = EBM_DIENST; }   // eigene Weiterleitung, sonst Werte-Dienst
   try{ r = await fetch(basis + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
   catch(e){ throw new Error('Keine Verbindung zur Weiterleitung (Internet?).'); }
-  if(r.status === 404) throw new Error('Die Weiterleitung kennt die Werte-Prüfung noch nicht – bitte Sergej Bescheid geben.');
+  if(r.status === 404) throw new Error('Die Weiterleitung kennt die Werte-Prüfung noch nicht – bitte dem App-Entwickler Bescheid geben.');
   const j = await r.json().catch(()=> null);
   if(!r.ok || !j) throw new Error('Werte-Prüfung fehlgeschlagen (HTTP ' + r.status + ').');
   return j;
@@ -18952,11 +19045,9 @@ async function aerzteRechnungErstellen(arzt, quartalKey, bloecke){
                    dienste: st.dienste.map(x=> ({ text: x.text })), summe: st.summe, summeBerechnet: st.berechnet, datei,
                    bezahlt: (st.alt && st.alt.bezahlt) || '', pdfUrl: (pdfItem && pdfItem.webUrl) || '', am: jetzt }]);
     }).catch(()=>{});
-    const a = await betaOverlay.ergebnis('Rechnung erstellt', '✓ <b>' + htmlEsc(renu) + '</b> an ' + htmlEsc(st.vname) + '<br><span class="beta-erg-klein">' +
-      aerzteZahlText(st.summe) + ' € · ' + htmlEsc(aerzteAbweichungText(st.summe, st.berechnet)) + ' · Word + PDF als „' + htmlEsc(datei) + '“</span>',
-      [{ label: 'Schließen', akt: 'zu' }, { label: 'PDF ansehen', akt: 'pdf', primaer: true }]);
     betaOverlay.schliessen();
-    if(a === 'pdf' && pdfItem && pdfItem.webUrl) window.open(pdfItem.webUrl, '_blank');
+    if(pdfItem && pdfItem.id) betaPdfAnzeigen({ titel: datei + '.pdf', itemId: pdfItem.id, webUrl: pdfItem.webUrl });   // keine Bestaetigungsbox, gleich die PDF
+    else await betaOverlay.ergebnis('Rechnung erstellt', '✓ <b>' + htmlEsc(renu) + '</b> an ' + htmlEsc(st.vname), [{ label: 'Schließen', akt: 'zu', primaer: true }]);
   }catch(e){
     await betaOverlay.meldung(e.message || String(e), 'Rechnung nicht erstellt');
   }
@@ -19400,7 +19491,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v390';
+const APP_VERSION = 'v391';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -20469,6 +20560,7 @@ function ansichtEinstellungen(){
       <button type="button" class="btn-sekundaer" id="btnDemo">${window.DEMO_MODUS ? 'Demo beenden' : 'Demo starten'}</button>
       <button type="button" class="btn-sekundaer" id="btnEinfuehrung" style="margin-top:8px;">Seitenhilfen wieder einschalten</button>
     </div>
+    <div class="einst-copyright">© 2026 Sergej Jakutsch · Alle Rechte vorbehalten</div>
   `;
   { const ef = document.getElementById('btnEinfuehrung'); if(ef) ef.onclick = ()=>{ LS.set('seitenhilfe', true); LS.set('seitenhilfe_gesehen', []); appToastAnzeigen('Seitenhilfen sind wieder an – jede Seite erklärt sich beim nächsten Öffnen.', 3200); }; }
   document.getElementById('btnDemo').onclick = ()=> window.DEMO_MODUS ? demoBeenden() : demoFragen();
@@ -22795,10 +22887,12 @@ try{
   if(ersterStart && einrSchonEingerichtet()) ersterStart = false;   // einstellungen.ini schon da -> nicht noetig
   if(ersterStart) LS.set('einrichtung_auto', true);
 }catch(e){}
+try{ appCodeStartPruefen(); }catch(e){}   // Freischaltung per Zugangscode (Sperrfenster ueber allem)
 try{ ansichtStart(); }catch(e){}   // laeuft die Einrichtung (oder erster Start), zeigt das direkt den Assistenten
 try{
-  if(!ersterStart && !LS.get('einrichtung_schritt', null)) setTimeout(()=>{ try{ if(aktuelleAnsichtIstHauptbildschirm) ansichtWiederherstellen(); }catch(_){} }, 0);
-  if(ersterStart || LS.get('einrichtung_schritt', null)) setTimeout(()=>{ if(aktuelleAnsichtIstHauptbildschirm) ansichtEinrichtung(); }, 300);
+  const einrOffen = !window.DEMO_MODUS && (ersterStart || !!LS.get('einrichtung_schritt', null) || (!LS.get('einrichtung_fertig', false) && !einrSchonEingerichtet()));
+  if(!einrOffen) setTimeout(()=>{ try{ if(aktuelleAnsichtIstHauptbildschirm) ansichtWiederherstellen(); }catch(_){} }, 0);
+  if(einrOffen) setTimeout(()=>{ if(aktuelleAnsichtIstHauptbildschirm) ansichtEinrichtung(); }, 300);
   // schon (teilweise) eingerichtet: einmal pruefen, ob noch etwas fehlt (Dateien, Briefversand/Azure ...)
   else if(einrSchonEingerichtet() && !LS.get('einr_vollst_gefragt', false)) setTimeout(async ()=>{
     try{
