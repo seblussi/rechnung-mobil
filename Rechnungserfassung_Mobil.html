@@ -18613,71 +18613,81 @@ async function standortKarteZeichnen(info, mitDialog){
   const lauf = ++standortKarteLauf, aktuell = ()=> lauf === standortKarteLauf && document.body.contains(box);
   const auf = true;   // immer Standort + Einsatzorte; vergroessern ueber den Vollbild-Knopf der Karte
   const ohneDienst = !info || !info.fenster;
-  box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Standort</b><small>wird ermittelt …</small></span></div>';
-  const [hg, pos] = await Promise.all([nfpHintergrund(), standortHolen({ still: !mitDialog })]);
-  try{ const m = pos || gkvStartGeo() || (typeof vkOffInfo === 'function' && vkOffInfo()); if(m) vkAedVorladen({ lat: m.lat, lon: m.lon }); }catch(_){}
-  if(!aktuell()) return;
-  const ich = pos ? nfpGeoZuPixel(pos.lat, pos.lon) : null;
-  const ichDrin = !!(ich && nfpImBild(ich));
-  let zone = '';
-  if(ichDrin){ try{ zone = nfpBewertung(ich).text; }catch(_){} }
-  else if(ich) zone = 'außerhalb der Wegegeld-Karte';
   const faelle = standortKarteFaelle(info);
-  const kopf = (unter)=> '<div class="sk-kopf"><span class="sk-titel"><b>' + (auf ? 'Einsatzorte ' + (ohneDienst ? '(letzte 24 h)' : 'in diesem Dienst') : 'Standort') + '</b><small>' + htmlEsc(unter) + '</small></span>' +
-    (pos ? '' : '<button type="button" class="sk-pos">📍 Standort</button>') +
-    '</div>';
-  let gross = null;
-  const verdrahten = ()=>{
-    const a = box.querySelector('.sk-auf'); if(a) a.onclick = ()=>{ LS.set('start_karte_auf', !auf); standortKarteZeichnen(info); };
-    const p = box.querySelector('.sk-pos'); if(p) p.onclick = ()=> standortKarteZeichnen(info, true);
-    box.querySelectorAll('.sk-ort[data-fall]').forEach(z=> z.onclick = ()=>{ const f = faelle[+z.dataset.fall]; if(f && f.oeffnen) f.oeffnen(); });
+  // Standort (GPS) und Adresssuche dauern -- solange schon die Karte des Bezirks mit den bekannten Einsatzorten zeigen
+  const posP = standortHolen({ still: !mitDialog }).catch(()=> null);
+  const zeichnen = (pos, laedt)=>{
+    const ich = pos ? nfpGeoZuPixel(pos.lat, pos.lon) : null;
+    const ichDrin = !!(ich && nfpImBild(ich));
+    let zone = '';
+    if(ichDrin){ try{ zone = nfpBewertung(ich).text; }catch(_){} }
+    else if(ich) zone = 'außerhalb der Wegegeld-Karte';
+    const kopf = (unter)=> '<div class="sk-kopf"><span class="sk-titel"><b>' + (auf ? 'Einsatzorte ' + (ohneDienst ? '(letzte 24 h)' : 'in diesem Dienst') : 'Standort') + '</b><small>' + htmlEsc(unter) + '</small></span>' +
+      (pos || laedt ? '' : '<button type="button" class="sk-pos">📍 Standort</button>') +
+      '</div>';
+    let gross = null;
+    const verdrahten = ()=>{
+      const a = box.querySelector('.sk-auf'); if(a) a.onclick = ()=>{ LS.set('start_karte_auf', !auf); standortKarteZeichnen(info); };
+      const p = box.querySelector('.sk-pos'); if(p) p.onclick = ()=> standortKarteZeichnen(info, true);
+      box.querySelectorAll('.sk-ort[data-fall]').forEach(z=> z.onclick = ()=>{ const f = faelle[+z.dataset.fall]; if(f && f.oeffnen) f.oeffnen(); });
+    };
+    const fallKlick = (i)=>{ const f = faelle[i]; if(f && f.oeffnen) f.oeffnen(); };
+    const ichPoi = pos ? [{ lat: pos.lat, lon: pos.lon, kl: 'ich' }] : [];
+    if(!auf){
+      if(!pos){ box.innerHTML = kopf('Standort nicht verfügbar') + '<div class="sk-leer">Ohne Standortfreigabe keine Anzeige – „📍 Standort“ klicken.</div>'; verdrahten(); return; }
+      const d = { pois: ichPoi, nfp: true, rahmen: true };
+      gross = (ebene, ansicht)=> osmKarteOverlay(d, 'Dein Standort', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen' });
+      box.innerHTML = kopf(zone) + miniKarteHtml(d, { mitte: pos, z: 12, w: 560, h: 330, start: ichDrin ? 'kvbw' : 'osm', kvbwOk: ichDrin, gross });
+      verdrahten(); return;
+    }
+    const pois = [], liste = [];
+    let ohneOrt = 0, nr = 0;
+    faelle.forEach((f, idx)=>{
+      if(!f.geo){ ohneOrt++; liste.push('<div class="sk-ort" data-fall="' + idx + '"><span class="nr ' + f.art + '">–</span><span class="txt">' + htmlEsc(f.name) + ' <span class="zeit">' + designUhr(f.t) + '</span></span></div>'); return; }
+      nr++; pois.push({ lat: f.geo.lat, lon: f.geo.lon, kl: f.art, nr, idx });
+      liste.push('<div class="sk-ort" data-fall="' + idx + '"><span class="nr ' + f.art + '">' + nr + '</span><span class="txt">' + htmlEsc(f.name) + ' <span class="zeit">' + designUhr(f.t) + ' · ' + f.art.toUpperCase() + '</span></span></div>');
+    });
+    const allePois = pois.concat(ichPoi);
+    const unter = (zone ? 'Standort: ' + zone : laedt ? 'Standort wird ermittelt …' : 'ohne Standort') + (ohneDienst ? '' : ' · ' + designDienstTitel(info));
+    const listeHtml = (liste.length ? '<div class="sk-liste">' + liste.join('') + '</div>' : '') +
+      (ohneOrt ? '<div class="sk-hinweis">' + ohneOrt + ' ohne Ort (keine/unbekannte Adresse – bei GKV erst ab „Wegegeld ermitteln“).</div>' : '');
+    if(!allePois.length){
+      // auch ohne Standort und ohne Einsaetze eine Karte zeigen (um die Wache bzw. den Notfallpraxis-Bereich);
+      // der Positions-Knopf fragt dann wie gewohnt nach der Standortfreigabe
+      let mitte = null;
+      try{ mitte = gkvStartGeo() || nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); }catch(_){}
+      const leer = '<div class="sk-hinweis">Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.') + '</div>';
+      if(!mitte){ box.innerHTML = kopf(unter) + leer + listeHtml; verdrahten(); return; }
+      const d0 = { pois: [], nfp: true, rahmen: true, fallKlick };
+      gross = (ebene, ansicht)=> osmKarteOverlay(d0, 'Karte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Karte' });
+      box.innerHTML = kopf(unter) + miniKarteHtml(d0, { mitte: { lat: mitte.lat, lon: mitte.lon }, z: 11, start: 'kvbw', kvbwOk: true, fallKlick, gross }) + leer + listeHtml;
+      verdrahten(); return;
+    }
+    const pix = allePois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
+    const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
+    const d = { pois: allePois, nfp: true, rahmen: true, fallKlick };
+    gross = (ebene, ansicht)=> osmKarteOverlay(d, 'Einsatzorte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Einsatzorte' });
+    box.innerHTML = kopf(unter) + miniKarteHtml(d, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk: etwasDrin, fallKlick, gross }) + listeHtml;
+    verdrahten();
   };
-  const fallKlick = (i)=>{ const f = faelle[i]; if(f && f.oeffnen) f.oeffnen(); };
-  const ichPoi = pos ? [{ lat: pos.lat, lon: pos.lon, kl: 'ich' }] : [];
-  if(!auf){
-    if(!pos){ box.innerHTML = kopf('Standort nicht verfügbar') + '<div class="sk-leer">Ohne Standortfreigabe keine Anzeige – „📍 Standort“ klicken.</div>'; verdrahten(); return; }
-    const d = { pois: ichPoi, nfp: true, rahmen: true };
-    gross = (ebene, ansicht)=> osmKarteOverlay(d, 'Dein Standort', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen' });
-    box.innerHTML = kopf(zone) + miniKarteHtml(d, { mitte: pos, z: 12, w: 560, h: 330, start: ichDrin ? 'kvbw' : 'osm', kvbwOk: ichDrin, gross });
-    verdrahten(); return;
-  }
-  // ausgeklappt: Einsatzorte ermitteln (GKV mit gespeichertem Ort, LS/PT ueber die Adresse)
-  box.innerHTML = kopf(faelle.length ? faelle.length + ' Einsatzorte werden gesucht …' : 'noch keine Einsätze') + '<div class="sk-leer">…</div>';
-  verdrahten();
-  for(const f of faelle){
+  try{ await nfpHintergrund(); }catch(_){}
+  if(!aktuell()) return;
+  const mitOrtVorher = faelle.filter(f=> f.geo).length;
+  zeichnen(null, true);
+  const pos = await posP;
+  try{ const m = pos || gkvStartGeo() || (typeof vkOffInfo === 'function' && vkOffInfo()); if(m) vkAedVorladen({ lat: m.lat, lon: m.lon }); }catch(_){}
+  for(const f of faelle){   // LS/PT ueber die Adresse (GKV haben ihren Ort gespeichert)
     if(f.geo || !f.adr) continue;
     try{ f.geo = await geocode(f.adr, { still: true }); }catch(_){ f.geo = null; }
     if(!aktuell()) return;
   }
-  const pois = [], liste = [];
-  let ohneOrt = 0, nr = 0;
-  faelle.forEach((f, idx)=>{
-    if(!f.geo){ ohneOrt++; liste.push('<div class="sk-ort" data-fall="' + idx + '"><span class="nr ' + f.art + '">–</span><span class="txt">' + htmlEsc(f.name) + ' <span class="zeit">' + designUhr(f.t) + '</span></span></div>'); return; }
-    nr++; pois.push({ lat: f.geo.lat, lon: f.geo.lon, kl: f.art, nr, idx });
-    liste.push('<div class="sk-ort" data-fall="' + idx + '"><span class="nr ' + f.art + '">' + nr + '</span><span class="txt">' + htmlEsc(f.name) + ' <span class="zeit">' + designUhr(f.t) + ' · ' + f.art.toUpperCase() + '</span></span></div>');
-  });
-  const allePois = pois.concat(ichPoi);
-  const unter = (zone ? 'Standort: ' + zone : 'ohne Standort') + (ohneDienst ? '' : ' · ' + designDienstTitel(info));
-  const listeHtml = (liste.length ? '<div class="sk-liste">' + liste.join('') + '</div>' : '') +
-    (ohneOrt ? '<div class="sk-hinweis">' + ohneOrt + ' ohne Ort (keine/unbekannte Adresse – bei GKV erst ab „Wegegeld ermitteln“).</div>' : '');
-  if(!allePois.length){
-    // auch ohne Standort und ohne Einsaetze eine Karte zeigen (um die Wache bzw. den Notfallpraxis-Bereich);
-    // der Positions-Knopf fragt dann wie gewohnt nach der Standortfreigabe
-    let mitte = null;
-    try{ mitte = gkvStartGeo() || nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); }catch(_){}
-    const leer = '<div class="sk-hinweis">Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.') + '</div>';
-    if(!mitte){ box.innerHTML = kopf(unter) + leer + listeHtml; verdrahten(); return; }
-    const d0 = { pois: [], nfp: true, rahmen: true, fallKlick };
-    gross = (ebene, ansicht)=> osmKarteOverlay(d0, 'Karte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Karte' });
-    box.innerHTML = kopf(unter) + miniKarteHtml(d0, { mitte: { lat: mitte.lat, lon: mitte.lon }, z: 11, start: 'kvbw', kvbwOk: true, fallKlick, gross }) + leer + listeHtml;
-    verdrahten(); return;
+  if(!aktuell()) return;
+  if(pos || faelle.filter(f=> f.geo).length !== mitOrtVorher) zeichnen(pos);   // nur neu zeichnen, wenn etwas dazukam
+  else {   // kein Standort: Karte stehen lassen, nur die Kopfzeile anpassen
+    const sm = box.querySelector('.sk-titel small'); if(sm) sm.textContent = 'ohne Standort' + (ohneDienst ? '' : ' · ' + designDienstTitel(info));
+    const k = box.querySelector('.sk-kopf');
+    if(k && !k.querySelector('.sk-pos')){ k.insertAdjacentHTML('beforeend', '<button type="button" class="sk-pos">📍 Standort</button>'); k.querySelector('.sk-pos').onclick = ()=> standortKarteZeichnen(info, true); }
   }
-  const pix = allePois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
-  const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
-  const d = { pois: allePois, nfp: true, rahmen: true, fallKlick };
-  gross = (ebene, ansicht)=> osmKarteOverlay(d, 'Einsatzorte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Einsatzorte' });
-  box.innerHTML = kopf(unter) + miniKarteHtml(d, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk: etwasDrin, fallKlick, gross }) + listeHtml;
-  verdrahten();
 }
 
 // ---------- Zonen-Editor: Grenzen am Handy nachzeichnen ----------
@@ -19641,7 +19651,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v396';
+const APP_VERSION = 'v397';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
