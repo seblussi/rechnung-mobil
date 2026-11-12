@@ -5108,6 +5108,7 @@ function appCodeTor(meldung){
   if(vorschlag && !meldung) los();   // Code schon bekannt (z. B. aus dem Briefversand) -> gleich pruefen
 }
 function appCodeStartPruefen(){
+  if(window.DEMO_MODUS){ let frei = false; try{ frei = sessionStorage.getItem('demo_frei') === '1'; }catch(_){} if(frei) return; }   // Demo aus der freigeschalteten App: keine erneute Abfrage
   if(!appFreigeschaltet()){ appCodeTor(); return; }
   // freigeschaltet: online gelegentlich nachpruefen (gesperrter Code -> wieder sperren; ohne Netz bleibt alles, wie es ist)
   const zuletzt = Number(LS.get('app_code_geprueft', 0)) || 0;
@@ -5173,9 +5174,9 @@ function alphaZustimmungPruefen(){
 }
 
 // Demo starten/beenden: danach immer auf der Startseite (nicht auf der zuletzt offenen Seite, z. B. Einstellungen)
-function demoStarten(){ try{ sessionStorage.setItem('demo_modus', '1'); sessionStorage.removeItem('reload_ansicht'); window.__keinMerken = true; }catch(_){ return; } location.reload(); }
+function demoStarten(){ try{ sessionStorage.setItem('demo_modus', '1'); if(typeof appFreigeschaltet === 'function' && appFreigeschaltet()) sessionStorage.setItem('demo_frei', '1'); sessionStorage.removeItem('reload_ansicht'); window.__keinMerken = true; }catch(_){ return; } location.reload(); }
 function demoBeenden(){
-  try{ sessionStorage.removeItem('demo_modus'); sessionStorage.removeItem('reload_ansicht'); window.__keinMerken = true; }catch(_){}
+  try{ sessionStorage.removeItem('demo_modus'); sessionStorage.removeItem('demo_frei'); sessionStorage.removeItem('reload_ansicht'); window.__keinMerken = true; }catch(_){}
   const neu = ()=> location.reload();
   try{ const r = indexedDB.deleteDatabase('rechnung-demo-zwischenspeicher'); r.onsuccess = r.onerror = r.onblocked = neu; setTimeout(neu, 1500); }catch(_){ neu(); }
 }
@@ -19651,7 +19652,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v397';
+const APP_VERSION = 'v398';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
