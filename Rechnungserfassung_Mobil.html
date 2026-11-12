@@ -1810,7 +1810,7 @@ try{
   .vk-m-vorschau.liberty{background:linear-gradient(135deg, #f2efe9 55%, #a9cce8 55%);} .vk-m-vorschau.osm{background:linear-gradient(135deg, #e0dfdf 35%, #add19e 35%, #add19e 60%, #fcd6a4 60%, #fcd6a4 72%, #f2efe9 72%);} .vk-m-vorschau.bright{background:linear-gradient(135deg, #f8f4f0 40%, #f9d77e 40%, #f9d77e 55%, #b5d8a0 55%);} .vk-m-vorschau.detail{background:linear-gradient(135deg, #f6f1ea 30%, #8fc06f 30%, #8fc06f 55%, #7aa5f0 55%);} .vk-m-vorschau.dark{background:linear-gradient(135deg, #2b2f36 55%, #0f1c2c 55%);} .vk-m-vorschau.dunkelgrau{background:linear-gradient(135deg, #4c525d 40%, #141716 40%, #141716 62%, #2f6496 62%);}
   .vk-m-off{font-size:12.5px; opacity:.8; margin-bottom:6px;} .vk-m-offknopf{width:100%; margin:0; padding:8px 10px; font-size:14px;}
   .vk-off-stufe .fb-chip{display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left;} .vk-off-stufe .fb-chip small{font-size:11.5px; font-weight:400; opacity:.85;}
-  .vk-off-regler{display:flex; align-items:center; gap:12px; margin:6px 0 2px;} .vk-off-regler input{flex:1; accent-color:#2f6fd6;} .vk-off-regler b{min-width:56px; text-align:right; font-size:16px;}
+  .vk-off-regler{display:flex; align-items:center; gap:12px; margin:6px 0 2px;} .vk-off-regler input{flex:1; min-width:0; accent-color:#2f6fd6; padding:0; margin:0; border:0; background:transparent; box-shadow:none; height:32px;} .vk-off-regler b{min-width:56px; text-align:right; font-size:16px;}
   .vk-off-schaetzung{font-size:14px; font-weight:600; margin:2px 0 8px;}
   .vk-off-radien .fb-chip{display:flex; flex-direction:column; align-items:center; gap:2px;} .vk-off-radien .fb-chip small{font-size:11px; font-weight:400; opacity:.8;}
   .vk-m-ebene{display:flex; align-items:flex-start; gap:8px; padding:5px 0; line-height:1.3;} .vk-m-ebene input{width:18px; height:18px; flex:none; margin-top:1px;}
@@ -17751,9 +17751,11 @@ async function vkOfflineDialog(){
   const alt = vkOffInfo() || {};
   let art = Array.isArray(alt.details) ? 'indiv' : 'voll';
   let details = vkOffDetailsLaden();
-  let eigen = null;   // eigene Karte (karten-bw): wird im Hintergrund geprueft; sonst OpenFreeMap mit Download-Grenze
+  // eigene Karte (karten-bw): zuletzt bekannter Stand sofort nutzen (kein Zwischenschritt mit der kleineren
+  // OpenFreeMap-Grenze), im Hintergrund wird neu geprueft; ohne bekannten Stand gilt sie bis zur Pruefung als verfuegbar
+  let eigen = LS.get('vk_eigen_info', null), eigenGeprueft = false;
   const VK_EIGEN_MAX = 100;
-  const eigenOk = ()=> !!(eigen && !eigen.fehler);
+  const eigenOk = ()=> eigen ? !eigen.fehler : !eigenGeprueft;
   const grenze = ()=> Math.max(3, Math.floor(eigenOk() ? VK_EIGEN_MAX : vkOffMaxRadius(m, vkOffKbJeKachel(14), 14)));
   // gewuenschter Umkreis (bisheriger oder gleich das Maximum); der Regler zeigt ihn, soweit die Grenze es erlaubt --
   // ist die eigene Karte (bis 100 km) verfuegbar, steht er danach gleich auf dem Wunsch statt auf der vorlaeufigen Grenze
@@ -17780,10 +17782,10 @@ async function vkOfflineDialog(){
     const rMax = grenze(), d = art === 'indiv' ? details : null;
     regler.max = rMax; regler.value = Math.min(rMax, wunsch); radius = +regler.value;
     const n = eigenOk() ? vkEigenKachelListe(m, radius).length : vkOffPlan(m, radius, 14).liste.length;
-    const kb = (eigenOk() ? eigen.kbJeKachel : vkOffKbJeKachel(14)) * vkOffAnteil(d);
+    const kb = (eigenOk() ? ((eigen && eigen.kbJeKachel) || vkOffKbJeKachel(14)) : vkOffKbJeKachel(14)) * vkOffAnteil(d);
     document.getElementById('vkOffKm').textContent = radius + ' km';
     document.getElementById('vkOffS').textContent = n + ' Kacheln · ca. ' + Math.max(1, Math.round(n * kb / 1024)) + ' MB im Gerät (Schätzung)';
-    if(eigen) document.getElementById('vkOffGrenze').textContent = eigenOk()
+    if(eigen && eigenGeprueft) document.getElementById('vkOffGrenze').textContent = eigenOk()
       ? 'Eigene Karte aus OpenStreetMap-Daten (Stand ' + new Date(eigen.stand).toLocaleDateString('de-DE') + ') – ohne Download-Grenze, bis ' + VK_EIGEN_MAX + ' km.' + (d ? ' Geladen wird die ganze Karte des Umkreises, gespeichert nur die gewählten Details.' : '')
       : 'Eigene Karte hier nicht verfügbar – Kartendienst OpenFreeMap: höchstens 3.000 Kacheln / 50 MB je Download.' + (d ? ' Die Grenze gilt für die geladene Menge – weniger Details sparen nur Platz im Gerät.' : '');
     document.querySelectorAll('.beta-overlay [data-vkart]').forEach(b=> b.classList.toggle('an', b.dataset.vkart === art));
@@ -17792,12 +17794,14 @@ async function vkOfflineDialog(){
   document.querySelectorAll('.beta-overlay [data-vkart]').forEach(b=> b.onclick = ()=>{ art = b.dataset.vkart; zeigen(); });
   document.querySelectorAll('.beta-overlay [data-vkdet]').forEach(cb=> cb.onchange = ()=>{ details = [...document.querySelectorAll('.beta-overlay [data-vkdet]:checked')].map(x=> x.dataset.vkdet); zeigen(); });
   regler.value = radius; regler.oninput = ()=>{ wunsch = radius = +regler.value; zeigen(); }; zeigen();
-  vkEigeneKarteInfo().then(i=>{
+  const pruefung = vkEigeneKarteInfo().then(i=>{
     const bx = i && i.box; if(!i.fehler && Array.isArray(bx) && !(m.lon >= bx[0] && m.lat >= bx[1] && m.lon <= bx[2] && m.lat <= bx[3])) i = { fehler: 'Ausgangspunkt liegt außerhalb der eigenen Karte' };
-    eigen = i; if(!document.getElementById('vkOffR')) return;
+    eigen = i; eigenGeprueft = true; if(!i.fehler) LS.set('vk_eigen_info', i);
+    if(!document.getElementById('vkOffR')) return;
     zeigen();
   });
   const akt = await warte;
+  if(akt === 'ok' && !eigenGeprueft){ betaOverlay.zeigen('Offline-Karte'); betaOverlay.fortschritt(null); betaOverlay.schritt('Eigene Karte wird geprüft …'); await pruefung; radius = Math.min(radius, grenze()); }
   if(akt === 'weg'){ betaOverlay.schliessen(); try{ await caches.delete(VK_OFF_CACHE); }catch(_){} LS.set('vk_offline', null); appToastAnzeigen('Offline-Karte gelöscht.', 2000); return true; }
   if(akt !== 'ok'){ betaOverlay.schliessen(); return false; }
   LS.set('vk_off_details', details);
@@ -19703,7 +19707,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v401';
+const APP_VERSION = 'v402';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
