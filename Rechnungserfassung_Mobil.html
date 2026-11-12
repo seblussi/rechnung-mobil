@@ -4958,8 +4958,8 @@ function appCodeTor(meldung){
   const vorschlag = appCodeAktuell() || String(ini || '').trim();
   const d = document.createElement('div'); d.id = 'appCodeTor';
   d.innerHTML = '<div class="act-karte"><h2>Freischaltung</h2>' +
-    '<p>Diese App ist nur für eingeladene Testerinnen und Tester. Bitte gib deinen persönlichen <b>Zugangscode</b> ein. Du bekommst ihn vom App-Entwickler.</p>' +
-    '<label class="einr-feld"><span>Zugangscode</span><input type="text" id="actCode" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx"></label>' +
+    '<p>Diese App ist nur für eingeladene Testerinnen und Tester. Bitte gib deinen persönlichen <b>Freischaltcode</b> ein. Du bekommst ihn vom App-Entwickler.</p>' +
+    '<label class="einr-feld"><span>Freischaltcode</span><input type="text" id="actCode" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx"></label>' +
     '<div id="actInfo" class="einr-klein">' + htmlEsc(meldung || '') + '</div>' +
     '<button type="button" class="btn-primaer" id="actOk">Freischalten</button>' +
     '<p class="einr-klein" style="margin-top:12px;">Für die Freischaltung braucht es einmal Internet. Danach läuft die App auch offline.</p></div>';
@@ -4968,7 +4968,7 @@ function appCodeTor(meldung){
   feld.value = vorschlag;
   const los = async ()=>{
     const c = feld.value.trim();
-    if(!c){ info.textContent = 'Bitte den Zugangscode eintragen.'; feld.focus(); return; }
+    if(!c){ info.textContent = 'Bitte den Freischaltcode eintragen.'; feld.focus(); return; }
     knopf.disabled = true; knopf.textContent = 'Prüfe …'; info.textContent = '';
     const erg = await appCodePruefen(c);
     knopf.disabled = false; knopf.textContent = 'Freischalten';
@@ -4977,7 +4977,7 @@ function appCodeTor(meldung){
       d.remove(); document.body.classList.remove('app-code-tor');
       return;
     }
-    info.textContent = erg === 'falsch' ? 'Dieser Zugangscode wird nicht angenommen. Bitte genau so eintragen, wie du ihn bekommen hast.'
+    info.textContent = erg === 'falsch' ? 'Dieser Freischaltcode wird nicht angenommen. Bitte genau so eintragen, wie du ihn bekommen hast.'
                                         : 'Keine Verbindung zur Prüfstelle. Bitte Internet prüfen und noch einmal versuchen.';
   };
   knopf.onclick = los;
@@ -4992,7 +4992,7 @@ function appCodeStartPruefen(){
   setTimeout(async ()=>{
     const erg = await appCodePruefen(appCodeAktuell());
     if(erg === 'ok') LS.set('app_code_geprueft', Date.now());
-    else if(erg === 'falsch'){ LS.set('app_code_ok', false); appCodeTor('Dein Zugangscode ist nicht mehr gültig. Bitte beim App-Entwickler einen neuen anfragen.'); }
+    else if(erg === 'falsch'){ LS.set('app_code_ok', false); appCodeTor('Dein Freischaltcode ist nicht mehr gültig. Bitte beim App-Entwickler einen neuen anfragen.'); }
   }, 4000);
 }
 
@@ -5014,10 +5014,10 @@ function alphaBedingungenHtml(){
       '<li><b>Daten:</b> die Rechnung als PDF (Name, Anschrift und Geburtsdatum des Patienten bzw. Angehörigen/Bestatters, Leistungen, Diagnosen, Beträge) und deine LetterXpress-Zugangsdaten. <b>Betroffene:</b> Patientinnen und Patienten, Rechnungsempfänger, du.</li>' +
       '<li><b>Dauer:</b> nur für den Moment der Weiterleitung (Sekunden). Es wird <b>nichts gespeichert</b> und es werden <b>keine Inhalte protokolliert</b>.</li>' +
       '<li><b>Weisung:</b> Die Daten werden ausschließlich zur Weiterleitung an LetterXpress verwendet, nicht gelesen, nicht ausgewertet, nicht weitergegeben.</li>' +
-      '<li><b>Technische und organisatorische Maßnahmen:</b> verschlüsselte Übertragung (TLS 1.2+), Rechenzentrum in Deutschland, keine Speicherung, keine Inhalts-Protokolle, nur Aufrufe aus dieser App und nur mit persönlichem Zugangscode, Zugriff auf das Azure-Konto nur durch den Anbieter mit Zwei-Faktor-Anmeldung.</li>' +
+      '<li><b>Technische und organisatorische Maßnahmen:</b> verschlüsselte Übertragung (TLS 1.2+), Rechenzentrum in Deutschland, keine Speicherung, keine Inhalts-Protokolle, nur Aufrufe aus dieser App und nur mit persönlichem Freischaltcode, Zugriff auf das Azure-Konto nur durch den Anbieter mit Zwei-Faktor-Anmeldung.</li>' +
       '<li><b>Unterauftragsverarbeiter:</b> Microsoft Ireland Operations Ltd. (Azure, Rechenzentrum Frankfurt; Datenschutzbedingungen von Microsoft). LetterXpress ist <b>dein</b> eigener Auftragsverarbeiter (eigener Vertrag und AVV mit LetterXpress).</li>' +
       '<li><b>Pflichten des Anbieters:</b> Er meldet dir Datenschutzverletzungen unverzüglich, unterstützt dich bei Anfragen Betroffener und gibt dir Auskunft über die Maßnahmen.</li>' +
-      '<li><b>Ende:</b> Mit Ende der Nutzung wird dein Zugangscode in der Weiterleitung gelöscht. Daten zum Löschen gibt es nicht, weil nichts gespeichert wird.</li></ol>' +
+      '<li><b>Ende:</b> Mit Ende der Nutzung wird dein Freischaltcode in der Weiterleitung gelöscht. Daten zum Löschen gibt es nicht, weil nichts gespeichert wird.</li></ol>' +
     '<h3>3. Verschwiegenheitsverpflichtung (§ 203 StGB)</h3>' +
     '<p>Der Anbieter wirkt beim Briefversand an deiner beruflichen Tätigkeit mit (§ 203 Abs. 3 StGB). Er verpflichtet sich, über alles, was ihm dabei über Patientinnen und Patienten bekannt werden könnte, <b>Stillschweigen</b> zu bewahren – auch über das Ende der Nutzung hinaus. Ihm ist bekannt, dass eine unbefugte Offenbarung nach § 203 Abs. 4 StGB strafbar ist. Er verpflichtet seine Unterauftragnehmer entsprechend; bei Microsoft geschieht das über deren Datenschutzbedingungen.</p>' +
     '<p class="einr-klein">Fassung ' + ALPHA_BED_VERSION + '. Mit dem Häkchen stimmst du als Ärztin/Arzt (Verantwortlicher) zu; der Anbieter hat dem durch Bereitstellung der Weiterleitung zugestimmt.</p>' +
@@ -5935,7 +5935,7 @@ async function einrFehlt(){
   // Weiterleitung: eigene Adresse, oder die Standard-Weiterleitung (leer bzw. Standard-Adresse) mit Zugangsdaten --
   // die Standard-Weiterleitung laesst nur freigegebene LetterXpress-Benutzer durch; ob man dazugehoert, zeigt "Prüfen"/der Versand
   const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY), wl = !!String(w.BRIEF_WEITERLEITUNG || '').trim() || !!String(w.BRIEF_ZUGANGSCODE || '').trim() || !!appCodeAktuell();
-  if(!zugang || !wl) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!zugang ? 'LetterXpress-Zugang' : '', !wl ? 'Zugangscode' : ''].filter(Boolean).join(' und ') });
+  if(!zugang || !wl) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!zugang ? 'LetterXpress-Zugang' : '', !wl ? 'Freischaltcode' : ''].filter(Boolean).join(' und ') });
   return f;
 }
 // unvollstaendig -> Hinweis und die fehlenden Schritte durchgehen (Vorhandenes ist vorausgefuellt)
@@ -6074,13 +6074,13 @@ function ansichtEinrichtung(schritt){
     const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
     const eigen0 = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG), eigen = eigen0 === LXP_WEITERLEITUNG_STANDARD ? '' : eigen0;
     html = '<h2>Briefversand (optional)</h2>' +
-      '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Du brauchst dafür ein LetterXpress-Konto und deinen persönlichen <b>Zugangscode</b>.</p>' +
-      '<p class="einr-klein">Warum ein Zugangscode und eine AVV? LetterXpress nimmt keine Aufträge direkt aus der App an. Die Briefe laufen deshalb kurz über den Server des App-Entwicklers (Rechenzentrum Frankfurt), der sie nur durchreicht und nichts speichert. Weil dabei Rechnungen mit Patientendaten durchgehen, gilt dafür die Vereinbarung zur Auftragsverarbeitung (AVV), die du mit den Alpha-Bedingungen bestätigt hast.</p>' +
-      '<h3>1. LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren (mit den AGB ist dort auch der Auftragsverarbeitungsvertrag dabei) und unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
+      '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Du brauchst dafür nur ein LetterXpress-Konto.</p>' +
+      '<p class="einr-klein">Warum eine AVV? LetterXpress nimmt keine Aufträge direkt aus der App an. Die Briefe laufen deshalb kurz über den Server des App-Entwicklers (Rechenzentrum Frankfurt), der sie nur durchreicht und nichts speichert. Weil dabei Rechnungen mit Patientendaten durchgehen, gilt dafür die Vereinbarung zur Auftragsverarbeitung (AVV), die du mit den Alpha-Bedingungen bestätigt hast.</p>' +
+      '<h3>LetterXpress-Konto</h3><p class="einr-klein">Auf <a href="https://www.letterxpress.de" target="_blank" rel="noopener">letterxpress.de</a> registrieren (mit den AGB ist dort auch der Auftragsverarbeitungsvertrag dabei) und unter „Mein Konto › API“ den API-Key erzeugen.</p>' +
       '<label class="einr-feld"><span>LetterXpress-Benutzername</span><input type="text" id="einrLxpNutzer" autocomplete="off" value="' + htmlEsc(w.BRIEF_BENUTZER || '') + '"></label>' +
       '<label class="einr-feld"><span>API-Key</span><input type="password" id="einrLxpKey" autocomplete="off" value="' + htmlEsc(w.BRIEF_APIKEY || '') + '"></label>' +
-      '<h3>2. Zugangscode eintragen und prüfen</h3>' +
-      '<label class="einr-feld"><span>Zugangscode</span><input type="text" id="einrLxpZugang" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx" value="' + htmlEsc(w.BRIEF_ZUGANGSCODE || appCodeAktuell() || '') + '"></label>' +
+      (appCodeAktuell() ? '<input type="hidden" id="einrLxpZugang" value="' + htmlEsc(appCodeAktuell()) + '">' :   // Freischaltcode gilt auch fuer den Briefversand
+        '<label class="einr-feld"><span>Freischaltcode</span><input type="text" id="einrLxpZugang" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx" value="' + htmlEsc(w.BRIEF_ZUGANGSCODE || '') + '"></label>') +
       '<input type="hidden" id="einrLxpUrl" value="' + htmlEsc(eigen) + '">' +
       '<button type="button" class="btn-sekundaer" id="einrLxpPruefen">Prüfen</button><div id="einrLxpErgebnis" class="einr-liste"></div>' +
       '<div id="einrBriefInfo" class="einr-klein"></div>' +
@@ -6197,8 +6197,8 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key, zugang){
     const txt = (await r.text()).slice(0, 400);
     if(r.status === 502){ z('Die Weiterleitung erreicht LetterXpress nicht (HTTP 502). Später noch einmal prüfen.', false); return { ok: false, zeilen, url }; }
     if(r.status === 401 || /unauthori|invalid.{0,20}(api|key|user|credential)/i.test(txt)){ z('LetterXpress lehnt Benutzername oder API-Key ab – bitte prüfen (Groß-/Kleinschreibung, Leerzeichen).', false); return { ok: false, zeilen, url }; }
-    if(r.status === 403 && /Zugangscode/.test(txt)){ z(zugang ? 'Der Zugangscode wird von der Weiterleitung nicht angenommen – bitte genau so eintragen, wie du ihn bekommen hast.' : 'Diese Weiterleitung braucht einen Zugangscode – bitte unten eintragen.', false); return { ok: false, zeilen, url }; }
-    if(r.status === 403 && /freigegeben/.test(txt)){ z('Dieser LetterXpress-Benutzer ist für deinen Zugangscode noch nicht freigegeben – bitte dem App-Entwickler Bescheid geben.', false); return { ok: false, zeilen, url }; }
+    if(r.status === 403 && /Zugangscode/.test(txt)){ z(zugang ? 'Der Freischaltcode wird für den Briefversand nicht angenommen – bitte dem App-Entwickler Bescheid geben.' : 'Für den Briefversand fehlt der Freischaltcode.', false); return { ok: false, zeilen, url }; }
+    if(r.status === 403 && /freigegeben/.test(txt)){ z('Dieser LetterXpress-Benutzer ist für deinen Freischaltcode noch nicht freigegeben – bitte dem App-Entwickler Bescheid geben.', false); return { ok: false, zeilen, url }; }
     z('LetterXpress hat die Zugangsdaten angenommen (Testmodus, es wurde nichts verschickt).', true);
   }catch(e){
     z('Test bei LetterXpress fehlgeschlagen: ' + (e.message || e), false); return { ok: false, zeilen, url };
@@ -8681,8 +8681,8 @@ const INI_FELDER = [
   {k:'BRIEF_AKTIVIERT',  typ:'bool', label:'Briefversand über LetterXpress aktiviert'},
   {k:'BRIEF_BENUTZER',   typ:'text', label:'LetterXpress-Benutzername'},
   {k:'BRIEF_APIKEY',     typ:'geheim', label:'LetterXpress-API-Key'},
-  {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Zugangscode'},
-  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung (leer lassen = Standard mit Zugangscode)'},
+  {k:'BRIEF_ZUGANGSCODE', typ:'geheim', label:'Freischaltcode'},
+  {k:'BRIEF_WEITERLEITUNG', typ:'text', label:'Eigene Weiterleitung (leer lassen = Standard mit Freischaltcode)'},
 ];
 const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
@@ -8690,7 +8690,7 @@ const INI_GRUPPEN = [
   {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTBANKNAME','ARZTIBAN','ARZTBIC']},
   {titel:'Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)', keys:['AERZTE_KONTOINHABER','AERZTE_BANKNAME','AERZTE_IBAN','AERZTE_BIC']},
   {titel:'GKV-Patient: Wegepauschale', keys:['GKV_STARTADRESSE']},
-  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY','BRIEF_ZUGANGSCODE']}   // eigene Weiterleitung (BRIEF_WEITERLEITUNG) bleibt in der INI, wird aber nicht mehr angezeigt
+  {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY']}   // eigene Weiterleitung (BRIEF_WEITERLEITUNG) bleibt in der INI, wird aber nicht mehr angezeigt
 ];
 
 // ---------- Windows-1252 lesen/schreiben ----------
@@ -19491,7 +19491,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v391';
+const APP_VERSION = 'v392';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
