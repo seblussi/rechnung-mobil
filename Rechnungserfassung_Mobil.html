@@ -4932,25 +4932,22 @@ async function appCodePruefen(code){
   if(!code) return 'falsch';
   if(navigator.onLine === false) return 'netz';
   const post = async (pfad, koerper)=>{
-    const st = new AbortController(), t = setTimeout(()=> st.abort(), 25000);
+    const st = new AbortController(), t = setTimeout(()=> st.abort(), 45000);   // Azure braucht nach Pause manchmal lange zum Aufwachen
     try{ return await fetch(LXP_WEITERLEITUNG_STANDARD + '/v3/' + pfad, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(koerper), signal: st.signal }); }
     finally{ clearTimeout(t); }
   };
   try{
-    let r = await post('_code', { _zugang: code });
+    const r = await post('_code', { _zugang: code });
     if(r.status === 200) return 'ok';
-    let txt = await r.text().catch(()=> '');
-    if(r.status === 403 && /Zugangscode/.test(txt)) return 'falsch';
-    if(r.status === 404){
-      // aeltere Weiterleitung ohne "_code": Probe ohne LetterXpress-Zugang -- abgelehnt wird dann nur ein falscher Code
-      r = await post('printjobs', { auth: { username: '', apikey: '', mode: 'test' }, _zugang: code });
-      txt = await r.text().catch(()=> '');
-      if(r.status === 403 && /Zugangscode/.test(txt)) return 'falsch';
-      if(r.status === 403 && /Nicht erlaubt/.test(txt)) return 'netz';
-      return r.status >= 500 && r.status !== 502 ? 'netz' : 'ok';
-    }
-    return 'netz';
-  }catch(_){ return 'netz'; }
+    const txt = await r.text().catch(()=> '');
+    if(r.status === 403 && /Zugangscode/i.test(txt)) return 'falsch';
+    window.__appCodeDetail = 'HTTP ' + r.status + (txt ? ': ' + txt.slice(0, 80) : '');
+    if(r.status === 403 && /^Nicht erlaubt/.test(txt)) return 'netz';   // falsche Herkunft (z. B. lokale Kopie)
+    if(!r.status || r.status >= 500) return 'netz';
+    // aeltere Weiterleitung ohne "_code": der Code wurde schon angenommen, die Anfrage scheitert erst danach
+    // (LetterXpress-Benutzer nicht freigegeben, unbekannter Pfad bei LetterXpress o. ae.) -> freigeschaltet
+    return 'ok';
+  }catch(e){ window.__appCodeDetail = (e && e.name === 'AbortError') ? 'Zeitüberschreitung' : String((e && e.message) || e); return 'netz'; }
 }
 function appCodeTor(meldung){
   if(document.getElementById('appCodeTor')) return;
@@ -4970,6 +4967,7 @@ function appCodeTor(meldung){
     const c = feld.value.trim();
     if(!c){ info.textContent = 'Bitte den Freischaltcode eintragen.'; feld.focus(); return; }
     knopf.disabled = true; knopf.textContent = 'Prüfe …'; info.textContent = '';
+    window.__appCodeDetail = '';
     const erg = await appCodePruefen(c);
     knopf.disabled = false; knopf.textContent = 'Freischalten';
     if(erg === 'ok'){
@@ -4978,7 +4976,7 @@ function appCodeTor(meldung){
       return;
     }
     info.textContent = erg === 'falsch' ? 'Dieser Freischaltcode wird nicht angenommen. Bitte genau so eintragen, wie du ihn bekommen hast.'
-                                        : 'Keine Verbindung zur Prüfstelle. Bitte Internet prüfen und noch einmal versuchen.';
+                                        : 'Keine Verbindung zur Prüfstelle. Bitte noch einmal versuchen.' + (window.__appCodeDetail ? ' (' + window.__appCodeDetail + ')' : '');
   };
   knopf.onclick = los;
   feld.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') los(); });
@@ -19491,7 +19489,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v392';
+const APP_VERSION = 'v393';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
