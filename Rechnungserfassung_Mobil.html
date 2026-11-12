@@ -4341,10 +4341,11 @@ async function ausZwischenablageEinlesen(art, ctx){
 let geocodeNetzWeg = 0;   // Zeitpunkt des letzten Netzfehlers: 60 s lang nicht weiter probieren (offline)
 async function geocodeMitOrt(adresse){
   if((typeof navigator !== 'undefined' && navigator.onLine === false) || Date.now() - geocodeNetzWeg < 60000){
-    try{ return await geocode(adresse); }catch(_){ return null; }   // nur der Zwischenspeicher hilft dann noch
+    try{ return await geocode(adresse, { still: true }); }catch(_){ return null; }   // offline: Schaetzung aus der Offline-Karte (Kartenmarker, ohne Rueckfrage)
   }
   let g = null;
-  try{ g = await geocode(adresse); }catch(e){ if(!/HTTP/.test(String(e && e.message))){ geocodeNetzWeg = Date.now(); return null; } }
+  try{ g = await geocode(adresse, { still: true }); }catch(e){ if(!/HTTP/.test(String(e && e.message))){ geocodeNetzWeg = Date.now(); return null; } }
+  if(g && g.offline) return g;
   if(g) return g;
   const teile = String(adresse || '').split(',').map(x=> x.trim()).filter(Boolean);
   if(teile.length < 2) return null;
@@ -4362,11 +4363,135 @@ function geocodeTakt(){
   const p = geocodeKette.then(async ()=>{ const w = geocodeLetzte + 1100 - Date.now(); if(w > 0) await new Promise(r=> setTimeout(r, w)); geocodeLetzte = Date.now(); });
   geocodeKette = p.catch(()=>{}); return p;
 }
-async function geocode(adresse){
+// ---------- Ohne Internet: Adresse aus der Offline-Karte schaetzen ----------
+// Die Kacheln (OpenMapTiles) kennen Hausnummern nur als Zahl ohne Strasse/PLZ: Ort ueber die Ortsnamen,
+// dann im Umkreis die Strasse mit diesem Namen und die Hausnummer, die am naechsten an GENAU dieser Strasse liegt.
+// Nur eine Schaetzung -> der Nutzer muss den Hinweis quittieren (siehe geocode).
+function offMvt(u8){
+  let p = 0;
+  const vi = ()=>{ let v = 0, f = 1, x; do{ x = u8[p++]; v += (x & 0x7f) * f; f *= 128; }while(x & 0x80); return v; };
+  const msg = (a, e, cb)=>{ const sp = p; p = a; while(p < e){ const k = vi(), fn = Math.floor(k / 8), wt = k & 7;
+    if(wt === 2){ const l = vi(), s0 = p; p += l; cb(fn, s0, s0 + l, wt); } else if(wt === 0) cb(fn, vi(), null, 0); else if(wt === 5){ cb(fn, p, null, 5); p += 4; } else if(wt === 1){ cb(fn, p, null, 1); p += 8; } else break; } p = sp; };
+  const str = (a, b)=> new TextDecoder().decode(u8.subarray(a, b));
+  const gepackt = (a, b)=>{ const sp = p; p = a; const o = []; while(p < b) o.push(vi()); p = sp; return o; };
+  const lagen = {};
+  msg(0, u8.length, (fn, a, b)=>{ if(fn !== 3) return;
+    const L = { name: '', keys: [], vals: [], feats: [], extent: 4096 };
+    msg(a, b, (f2, a2, b2, wt)=>{
+      if(f2 === 1) L.name = str(a2, b2);
+      else if(f2 === 3) L.keys.push(str(a2, b2));
+      else if(f2 === 4){ let v = null; msg(a2, b2, (f3, a3, b3, w3)=>{ if(f3 === 1) v = str(a3, b3); else if(w3 === 0) v = a3; }); L.vals.push(v); }
+      else if(f2 === 5) L.extent = a2;
+      else if(f2 === 2){ const F = { tags: [], geom: [] }; msg(a2, b2, (f3, a3, b3)=>{ if(f3 === 2) F.tags = gepackt(a3, b3); else if(f3 === 4) F.geom = gepackt(a3, b3); }); L.feats.push(F); }
+    });
+    if(!['place', 'transportation_name', 'housenumber'].includes(L.name)) return;
+    for(const F of L.feats){
+      F.props = {}; for(let i = 0; i < F.tags.length; i += 2) F.props[L.keys[F.tags[i]]] = L.vals[F.tags[i + 1]];
+      const g = F.geom, linien = []; let x = 0, y = 0, i = 0, cur = [];
+      while(i < g.length){ const c = g[i++], id = c & 7, n = c >> 3;
+        if(id === 1 || id === 2){ for(let k = 0; k < n; k++){ const dx = g[i++], dy = g[i++]; x += (dx >>> 1) ^ -(dx & 1); y += (dy >>> 1) ^ -(dy & 1); if(id === 1 && cur.length){ linien.push(cur); cur = []; } cur.push([x / L.extent, y / L.extent]); } } }
+      if(cur.length) linien.push(cur); F.linien = linien;
+    }
+    lagen[L.name] = L; });
+  return lagen;
+}
+const offZuKachel = (lat, lon, z)=>{ const n = 2 ** z, r = lat * Math.PI / 180; return [(lon + 180) / 360 * n, (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n]; };
+const offZuGeo = (z, tx, ty, fx, fy)=>{ const n = 2 ** z, yy = Math.PI * (1 - 2 * (ty + fy) / n); return [Math.atan(Math.sinh(yy)) * 180 / Math.PI, (tx + fx) / n * 360 - 180]; };
+const offAbst = (a, b)=>{ const dLat = (b[0] - a[0]) * Math.PI / 180, dLon = (b[1] - a[1]) * Math.PI / 180 * Math.cos(a[0] * Math.PI / 180); return 6371000 * Math.hypot(dLat, dLon); };
+const offNorm = (s)=> String(s || '').toLowerCase().replace(/ß/g, 'ss').replace(/str\.?(?=\s|$)/g, 'strasse').replace(/strasse$/, 'str').replace(/[^a-z0-9äöü]/g, '');
+const offKachelMem = new Map();
+async function offKachel(z, x, y){
+  const k = z + '/' + x + '/' + y;
+  if(!offKachelMem.has(k)) offKachelMem.set(k, (async ()=>{
+    const c = await vkOffCache(); if(!c) return null;
+    const r = await c.match(vkKachelSchl(z, x, y)); if(!r) return null;
+    let b = await r.arrayBuffer(); if(r.headers.get('X-VK-Gz') === '1') b = await vkGunzip(b);
+    try{ return offMvt(new Uint8Array(b)); }catch(_){ return null; }
+  })());
+  return offKachelMem.get(k);
+}
+let offOrteMem = null;
+async function offOrte(){
+  if(offOrteMem) return offOrteMem;
+  const c = await vkOffCache(); const orte = new Map();
+  if(c){
+    const keys = (await c.keys()).map(r=> /\/kachel\/(\d+)\/(\d+)\/(\d+)$/.exec(r.url)).filter(m=> m && (m[1] === '10' || m[1] === '12' || m[1] === '13'));
+    for(const m of keys){
+      const z = +m[1], x = +m[2], y = +m[3], t = await offKachel(z, x, y);
+      if(t && t.place) for(const f of t.place.feats){ const nm = f.props.name; if(!nm || !f.linien[0]) continue; const k = offNorm(nm); if(!orte.has(k)) orte.set(k, { name: nm, geo: offZuGeo(z, x, y, ...f.linien[0][0]) }); }
+    }
+  }
+  return (offOrteMem = orte);
+}
+function offSegAbst(p, linien){
+  let best = 1e9;
+  for(const l of linien) for(let i = 0; i < l.length - 1; i++){
+    const a = l[i], b = l[i + 1], c = Math.cos(a[0] * Math.PI / 180), bx = (b[1] - a[1]) * c, by = b[0] - a[0], px = (p[1] - a[1]) * c, py = p[0] - a[0], L2 = bx * bx + by * by;
+    let s = L2 ? (px * bx + py * by) / L2 : 0; s = Math.max(0, Math.min(1, s));
+    const d = Math.hypot(px - s * bx, py - s * by) * 111320; if(d < best) best = d;
+  }
+  return best;
+}
+// -> { lat, lon, offline: true, genau: 'hausnummer'|'strasse'|'ort', ort } oder null
+async function geocodeOffline(adresse){
+  try{
+    const teile = String(adresse || '').split(',').map(x=> x.trim()).filter(Boolean);
+    if(!teile.length) return null;
+    const ortTeil = teile.length > 1 ? teile[teile.length - 1] : teile[0];
+    const ortName = ortTeil.replace(/\b\d{5}\b/, '').replace(/,?\s*(deutschland|germany)$/i, '').trim();
+    const strTeil = teile.length > 1 ? teile[0] : '';
+    const mh = /^(.*?)\s+(\d+\s*[a-zA-Z]?(?:\s*[-\/]\s*\d+\s*[a-zA-Z]?)?)$/.exec(strTeil);
+    const strasse = mh ? mh[1] : strTeil, hnr = mh ? mh[2].toLowerCase().replace(/\s/g, '') : '';
+    if(!ortName) return null;
+    const orte = await offOrte(); if(!orte.size) return null;
+    const on = offNorm(ortName), erstes = offNorm(ortName.split(/[\s\/(-]/)[0]);
+    const o = orte.get(on) || [...orte.values()].find(x=> offNorm(x.name).startsWith(on)) || [...orte.values()].find(x=> offNorm(x.name) === erstes) || [...orte.values()].find(x=> offNorm(x.name).startsWith(erstes));
+    if(!o) return null;
+    const ergebnis = (geo, genau)=> ({ lat: geo[0], lon: geo[1], offline: true, genau, ort: o.name });
+    if(!strasse) return ergebnis(o.geo, 'ort');
+    const [cx, cy] = offZuKachel(o.geo[0], o.geo[1], 14), r = 2, ziel = offNorm(strasse);
+    const strassen = new Map(), nummern = [];
+    for(let x = Math.floor(cx) - r; x <= Math.floor(cx) + r; x++) for(let y = Math.floor(cy) - r; y <= Math.floor(cy) + r; y++){
+      const t = await offKachel(14, x, y); if(!t) continue;
+      if(t.transportation_name) for(const f of t.transportation_name.feats){ const n = offNorm(f.props.name); if(!n) continue; if(!strassen.has(n)) strassen.set(n, []); for(const l of f.linien) strassen.get(n).push(l.map(([fx, fy])=> offZuGeo(14, x, y, fx, fy))); }
+      if(hnr && t.housenumber) for(const f of t.housenumber.feats) if(String(f.props.housenumber || '').toLowerCase().replace(/\s/g, '') === hnr) for(const l of f.linien) nummern.push(offZuGeo(14, x, y, ...l[0]));
+    }
+    const zl = strassen.get(ziel);
+    if(!zl) return ergebnis(o.geo, 'ort');
+    const gut = [];
+    for(const pnt of nummern){
+      const d = offSegAbst(pnt, zl); if(d > 80) continue;
+      let anders = 1e9; for(const [n, ls] of strassen){ if(n !== ziel){ const dd = offSegAbst(pnt, ls); if(dd < anders) anders = dd; } }
+      if(d <= anders + 5) gut.push({ pnt, zO: offAbst(pnt, o.geo) });   // die Nummer gehoert zu dieser Strasse (sie ist die naechste)
+    }
+    if(gut.length){ gut.sort((a, b)=> a.zO - b.zO); return ergebnis(gut[0].pnt, 'hausnummer'); }
+    const naechster = zl.flat().sort((a, b)=> offAbst(a, o.geo) - offAbst(b, o.geo))[0];
+    return ergebnis(naechster, 'strasse');
+  }catch(e){ console.warn('geocodeOffline', e); return null; }
+}
+const geocodeOfflineQuittiert = new Set();
+// opts: { still: ohne Rueckfrage (Kartenmarker), keinOffline: nur online }
+async function geocodeOfflineMitHinweis(adresse, opts){
+  if(opts && opts.keinOffline) return null;
+  const g = await geocodeOffline(adresse);
+  if(!g || (opts && opts.still) || geocodeOfflineQuittiert.has(adresse)) return g;
+  const was = g.genau === 'hausnummer' ? 'Straße und Hausnummer in „' + g.ort + '“ gefunden'
+            : g.genau === 'strasse' ? 'nur die Straße in „' + g.ort + '“ gefunden, ohne Hausnummer'
+            : 'nur die Ortsmitte von „' + g.ort + '“';
+  const ok = await betaOverlay.frage('Ohne Internet geschätzt\n\n„' + adresse + '“ wurde aus der Offline-Karte bestimmt: ' + was + '.\n\n' +
+    'Das ist nur eine Schätzung. Gibt es die Straße auch in einem Nachbarort, kann der Punkt danebenliegen. Bitte die Entfernung prüfen und mit Internet noch einmal berechnen.',
+    'Verstanden', 'Nicht verwenden');
+  if(!ok) return null;
+  geocodeOfflineQuittiert.add(adresse);
+  return g;
+}
+async function geocode(adresse, opts){
   const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(adresse);
-  if(typeof navigator !== 'undefined' && navigator.onLine === false) throw new Error('offline');
+  if(typeof navigator !== 'undefined' && navigator.onLine === false){ const g = await geocodeOfflineMitHinweis(adresse, opts); if(g) return g; throw new Error('offline'); }
   await geocodeTakt();
-  let res = await fetch(url, {headers:{'Accept':'application/json'}});
+  let res;
+  try{ res = await fetch(url, {headers:{'Accept':'application/json'}}); }
+  catch(e){ const g = await geocodeOfflineMitHinweis(adresse, opts); if(g) return g; throw e; }   // kein Netz (Funkloch)
   if(res.status === 429 || res.status === 503){ await new Promise(r=> setTimeout(r, 2500)); await geocodeTakt(); res = await fetch(url, {headers:{'Accept':'application/json'}}); }
   if(!res.ok) throw new Error('Ortssuche HTTP ' + res.status);
   const data = await res.json();
@@ -15325,7 +15450,7 @@ function gkvStartGeo(){ const s = LS.get('gkv_start_geo', null); return s && s.a
 async function gkvStartGeoHolen(){
   let s = gkvStartGeo(); if(s) return s;
   const adr = gkvStartAdresse(); if(!adr) return null;
-  try{ const g = await geocode(adr); if(!g) return null; s = { adr, lat: g.lat, lon: g.lon }; LS.set('gkv_start_geo', s); return s; }catch(_){ return null; }
+  try{ const g = await geocode(adr, { keinOffline: true }); if(!g) return null; s = { adr, lat: g.lat, lon: g.lon }; LS.set('gkv_start_geo', s); return s; }catch(_){ return null; }
 }
 // "Luftlinie 11,6 km ab Wache" (ab Startadresse, sonst ab NFP)
 function nfpLuftlinieText(geo, p){
@@ -18521,7 +18646,7 @@ async function standortKarteZeichnen(info, mitDialog){
   verdrahten();
   for(const f of faelle){
     if(f.geo || !f.adr) continue;
-    try{ f.geo = await geocode(f.adr); }catch(_){ f.geo = null; }
+    try{ f.geo = await geocode(f.adr, { still: true }); }catch(_){ f.geo = null; }
     if(!aktuell()) return;
   }
   const pois = [], liste = [];
@@ -19516,7 +19641,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v395';
+const APP_VERSION = 'v396';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
