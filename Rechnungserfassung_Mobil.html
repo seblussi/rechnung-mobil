@@ -1988,12 +1988,14 @@ try{
   .fbx-ortnr.leer{background:none;}
   /* Hervorheben (Nummer in der Karte, Sprung aus „Offene Rechnungen“): ganze Zeile in der Farbe der Rechnungsart, abgerundet,
      gleichmaessig ueber den Inhalt hinaus (Schatten in derselben Farbe statt Rahmen) */
-  [data-art="ls"]{--art-farbe:var(--ls-farbe);} [data-art="pt"]{--art-farbe:var(--pt-farbe);} [data-art="gkv"]{--art-farbe:#7d4e9e;}
-  @keyframes fbxBlink{
-    0%, 100%{background:transparent; box-shadow:0 0 0 6px transparent;}
-    15%, 70%{background:color-mix(in srgb, var(--art-farbe, #4a5568) 18%, transparent); box-shadow:0 0 0 6px color-mix(in srgb, var(--art-farbe, #4a5568) 18%, transparent);}
-  }
-  .fbx-blink{animation:fbxBlink 2.2s ease; border-radius:10px; position:relative; z-index:1;}
+  [data-art="ls"]{--art-farbe:var(--ls-farbe, #1f5f9e); --art-hell:#2f80e6;} [data-art="pt"]{--art-farbe:var(--pt-farbe, #1f8a4c); --art-hell:#22b35e;} [data-art="gkv"]{--art-farbe:#7d4e9e; --art-hell:#9d5fd6;}
+  /* eigene Flaeche hinter dem Inhalt: oben/unten genau zwischen den Trennlinien, seitlich etwas breiter, abgerundet --
+     unabhaengig vom Hintergrund der Zeile selbst */
+  .fbx-blink{position:relative; isolation:isolate;}
+  .fbx-blink::after{content:''; position:absolute; top:0; bottom:0; left:-6px; right:-6px; z-index:-1; border-radius:10px; pointer-events:none;
+    background:var(--art-hell, var(--art-farbe, #4a5568)); opacity:0; animation:fbxBlink 2.2s ease;}
+  .fall-zeile.fbx-blink::after{left:0; right:0;}
+  @keyframes fbxBlink{0%, 100%{opacity:0;} 15%, 70%{opacity:.26;}}
   .fbx-mit-nr > .fbx-fall{grid-template-columns:64px minmax(0,1fr) auto;}
   .fbx-mit-nr > .fbx-fall .fbx-zeit{display:flex; align-items:center; white-space:nowrap;}
   .fbx-ortnr.ls{background:var(--ls-farbe);} .fbx-ortnr.pt{background:var(--pt-farbe);} .fbx-ortnr.gkv{background:#7d4e9e;}
@@ -19730,7 +19732,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v403';
+const APP_VERSION = 'v404';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
