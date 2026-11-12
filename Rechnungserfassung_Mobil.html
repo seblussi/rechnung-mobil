@@ -2115,6 +2115,8 @@ try{
   #appCodeTor h2{margin:0 0 10px;} #appCodeTor .btn-primaer{width:100%; margin-top:10px;} #appCodeTor #actInfo{min-height:1.2em; color:#c0392b;}
   body.app-code-tor{overflow:hidden;}
   .einst-copyright{margin:28px 0 8px; text-align:center; font-size:11px; color:var(--text-schwach); opacity:.8;}
+  .brief-termin{margin-top:12px; padding-top:10px; border-top:1px solid var(--rand);} .brief-termin label{display:flex !important; align-items:center; justify-content:flex-start; gap:10px; margin:8px 0; font-size:15px; font-weight:500;}
+  .brief-termin input[type=radio]{width:20px !important; height:20px; flex:none; margin:0 !important; padding:0;} .brief-termin input[type=date]{width:auto !important; flex:none; margin:0 !important; padding:6px 10px;}
   .fd-jahre{flex-wrap:nowrap !important;}
   .fd-jahre-leiste{display:flex; gap:6px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:2px 0;
     -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent); mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent);}
@@ -2247,7 +2249,7 @@ try{
       const auth = kopfAuth(init && init.headers);
       if(methode !== 'GET' || !auth || !/^https:\/\/graph\.microsoft\.com\/.+\/content(\?.*)?$/.test(url) || (init && init.signal && init.signal.aborted)) throw e;
       try{
-        const r = await orig(url.replace(/\/content(\?.*)?$/, '?select=id,@microsoft.graph.downloadUrl'), { headers: { Authorization: auth }, cache: 'no-store' });
+        const r = await orig(url.replace(/\/content(\?.*)?$/, ''), { headers: { Authorization: auth }, cache: 'no-store' });   // ohne $select, sonst fehlt der Download-Link
         if(!r.ok) throw e;
         const dl = (await r.json())['@microsoft.graph.downloadUrl']; if(!dl) throw e;
         return await orig(dl, { cache: 'no-store', signal: init && init.signal });
@@ -4972,6 +4974,7 @@ let aktuelleAnsichtIstHauptbildschirm = false;
 
 function setzeTitel(t, zurueckZiel){
   titel.textContent = t;
+  { const a0 = document.getElementById('app'); if(a0 && a0.dataset.startPad){ a0.style.paddingBottom = ''; a0.dataset.startPad = ''; } }   // Startseiten-Anpassung zuruecknehmen
   aktuelleAnsichtIstHauptbildschirm = false;
   aktuellerZurueckHandler = zurueckZiel || null;
   document.body.classList.remove('einr-pflicht');
@@ -5111,6 +5114,7 @@ function appCodeTor(meldung){
     '<label class="einr-feld"><span>Freischaltcode</span><input type="text" id="actCode" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx"></label>' +
     '<div id="actInfo" class="einr-klein">' + htmlEsc(meldung || '') + '</div>' +
     '<button type="button" class="btn-primaer" id="actOk">Freischalten</button>' +
+    '<div id="actMs"></div>' +
     '<p class="einr-klein" style="margin-top:12px;">Für die Freischaltung braucht es einmal Internet. Danach läuft die App auch offline.</p></div>';
   document.body.appendChild(d); document.body.classList.add('app-code-tor');
   const feld = d.querySelector('#actCode'), knopf = d.querySelector('#actOk'), info = d.querySelector('#actInfo');
@@ -5125,6 +5129,7 @@ function appCodeTor(meldung){
     if(erg === 'ok'){
       LS.set('app_zugangscode', c); LS.set('app_code_ok', true); LS.set('app_code_geprueft', Date.now());
       d.remove(); document.body.classList.remove('app-code-tor');
+      appCodeInIniMerken(c);
       return;
     }
     info.textContent = erg === 'falsch' ? 'Dieser Freischaltcode wird nicht angenommen. Bitte genau so eintragen, wie du ihn bekommen hast.'
@@ -5133,10 +5138,45 @@ function appCodeTor(meldung){
   knopf.onclick = los;
   feld.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') los(); });
   if(vorschlag && !meldung) los();   // Code schon bekannt (z. B. aus dem Briefversand) -> gleich pruefen
+  // Neues Geraet/Browser: der Code liegt in deiner einstellungen.ini im OneDrive -> nach der Microsoft-Anmeldung selbst holen
+  const msBox = d.querySelector('#actMs');
+  const ausIni = async ()=>{
+    try{ await iniVonOneDriveLaden(); }catch(_){}
+    const c = String((((iniCacheLaden() || {}).werte || {}).BRIEF_ZUGANGSCODE) || '').trim();
+    if(c && document.getElementById('appCodeTor') && !feld.value.trim()){ feld.value = c; info.textContent = 'Code aus deinem OneDrive übernommen …'; los(); }
+    else if(!c && msBox) msBox.innerHTML = '<p class="einr-klein">In deinem OneDrive ist noch kein Freischaltcode hinterlegt – bitte einmal eintippen. Danach merkt ihn sich die App dort für alle Geräte.</p>';
+  };
+  let versuche = 0;
+  const warteAufAnmeldung = ()=>{
+    if(!document.getElementById('appCodeTor')) return;
+    if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){ if(msBox) msBox.innerHTML = ''; ausIni(); return; }
+    if(++versuche === 4 && msBox && typeof msGraphAnmelden === 'function'){
+      msBox.innerHTML = '<button type="button" class="btn-sekundaer" id="actMsAn" style="margin-top:10px;">Mit Microsoft anmelden und Code aus OneDrive übernehmen</button>';
+      msBox.querySelector('#actMsAn').onclick = ()=> msGraphAnmelden();
+    }
+    if(versuche < 60) setTimeout(warteAufAnmeldung, 1000);
+  };
+  if(!vorschlag) setTimeout(warteAufAnmeldung, 500);
+}
+// Freischaltcode in der einstellungen.ini hinterlegen (gleicher Code wie fuer den Briefversand), damit andere Geraete
+// ihn nach der Microsoft-Anmeldung selbst finden -- im Hintergrund, sobald die Anmeldung steht
+function appCodeInIniMerken(c){
+  let n = 0;
+  const v = async ()=>{
+    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ if(++n < 30) setTimeout(v, 2000); return; }
+    try{
+      const w = ((iniCacheLaden() || {}).werte || {});
+      if(String(w.BRIEF_ZUGANGSCODE || '').trim() === c) return;
+      if(String(w.BRIEF_ZUGANGSCODE || '').trim()) return;   // anderer Code schon eingetragen: nicht ueberschreiben
+      await iniAenderungenSchreiben({ BRIEF_ZUGANGSCODE: c }, w); try{ await iniVonOneDriveLaden(); }catch(_){}
+    }catch(e){ console.warn('Freischaltcode in ini', e); }
+  };
+  if(!window.DEMO_MODUS) setTimeout(v, 3000);
 }
 function appCodeStartPruefen(){
   if(window.DEMO_MODUS){ let frei = false; try{ frei = sessionStorage.getItem('demo_frei') === '1'; }catch(_){} if(frei) return; }   // Demo aus der freigeschalteten App: keine erneute Abfrage
   if(!appFreigeschaltet()){ appCodeTor(); return; }
+  appCodeInIniMerken(appCodeAktuell());
   // freigeschaltet: online gelegentlich nachpruefen (gesperrter Code -> wieder sperren; ohne Netz bleibt alles, wie es ist)
   const zuletzt = Number(LS.get('app_code_geprueft', 0)) || 0;
   if(Date.now() - zuletzt < APP_CODE_NACHPRUEFEN_MS) return;
@@ -8714,13 +8754,35 @@ async function betaBriefeVersenden(liste, frage, opts){
   const text = (offen.length === 1 ? 'Diesen Brief' : 'Diese ' + offen.length + ' Briefe') + ' per LetterXpress verschicken?\n\n' + listeTxt + '\n' +
     (schon.length ? '\n' + schon.length + ' bereits verschickte werden übersprungen.' : '') + terminTxt + '\n' + modusTxt +
     (mehrseitig ? '\n\nHinweis: mehrseitig – jede weitere Seite kostet bei LetterXpress etwas extra.' : '');
-  const antwortWahl = await frage(text, waehlbar ? 'Echt verschicken' : (offen.length === 1 ? 'Senden' : 'Alle senden'), 'Abbrechen', waehlbar ? 'Testbrief' : undefined);
+  let antwortWahl;
+  if(opts.terminWahl){
+    // eine Maske: Termin (sofort oder Datum) + Testbrief / Echt verschicken
+    const d1 = new Date(); d1.setDate(d1.getDate() + 1);   // Termin fruehestens morgen
+    const min = d1.getFullYear() + '-' + zz2(d1.getMonth() + 1) + '-' + zz2(d1.getDate());
+    for(;;){
+      const pr = betaOverlay.ergebnis('Brief senden', htmlEsc(text).replace(/\n/g, '<br>') +
+        '<div class="beta-form brief-termin"><label><input type="radio" name="briefWann" value="sofort" checked><span>Sofort verschicken</span></label>' +
+        '<label><input type="radio" name="briefWann" value="plan"><span>Am</span><input type="date" id="briefTermin" min="' + min + '" value="' + min + '"></label></div>',
+        [{ label: 'Abbrechen', akt: 'nein' }].concat(waehlbar ? [{ label: 'Testbrief', akt: 'test' }] : []).concat([{ label: waehlbar ? 'Echt verschicken' : (offen.length === 1 ? 'Senden' : 'Alle senden'), akt: 'echt', primaer: true }]));
+      { const dt = document.getElementById('briefTermin'), rp = document.querySelector('input[name="briefWann"][value="plan"]');
+        if(dt && rp) ['focus', 'input', 'click'].forEach(ev=> dt.addEventListener(ev, ()=>{ rp.checked = true; })); }   // Datum anfassen = "Am" waehlen
+      const akt = await pr;
+      if(akt !== 'test' && akt !== 'echt'){ betaOverlay.schliessen(); return { abgebrochen: true, test }; }
+      const plan = (document.querySelector('input[name="briefWann"]:checked') || {}).value === 'plan';
+      const dat = plan ? ((document.getElementById('briefTermin') || {}).value || '') : '';
+      if(plan && (!dat || dat < min)){ await betaOverlay.ergebnis('Brief senden', 'Bitte ein Datum ab morgen wählen.', [{ label: 'OK', akt: 'ok', primaer: true }]); continue; }
+      opts.versandDatumIso = plan ? dat : null;
+      antwortWahl = waehlbar ? (akt === 'test' ? 'extra' : true) : true;
+      betaOverlay.zeigen('Brief'); betaOverlay.fortschritt(null);
+      break;
+    }
+  } else antwortWahl = await frage(text, waehlbar ? 'Echt verschicken' : (offen.length === 1 ? 'Senden' : 'Alle senden'), 'Abbrechen', waehlbar ? 'Testbrief' : undefined);
   if(!antwortWahl) return { abgebrochen: true, test };
   if(waehlbar) test = antwortWahl === 'extra';
   // Testbriefe ohne Termin nicht in der Uebersicht vermerken (sonst waere der echte Versand danach gesperrt);
   // mit Termin schon, damit sich der Auftrag stornieren/verschieben laesst
   const vermerken = !test || !!opts.versandDatumIso;
-  const ergebnis = { test, vermerkt: vermerken, gesendet: [], fehler: [], uebersprungen: schon.length };
+  const ergebnis = { test, vermerkt: vermerken, gesendet: [], fehler: [], uebersprungen: schon.length, versandDatumIso: opts.versandDatumIso || null };
   const uNeu = new Map(); // Zeile -> aktuelles U (mehrere Kennzeichen in einer Zeile)
   const sid = await xlSitzung(token, ue.basis);
   try{
@@ -9184,7 +9246,10 @@ async function oneDriveVerbindungstest(ausgabe){
     ['Word-Vorlage LS', msGraphPfadUrl(MSGRAPH_PFAD_WORDVORLAGE.ls) + '?$select=size', async r=> Math.round(((await r.json()).size||0)/1024) + ' KB'],
     ['Excel-Vorlage PT (Positionen)', msGraphPfadUrl(MSGRAPH_PFAD_VORLAGE_PT) + "/workbook/worksheets?$select=name", async r=> ((await r.json()).value||[]).map(w=>w.name).join(', ')],
     ['Ordner „fertige Rechnungen“', msGraphPfadUrl(MSGRAPH_PFAD_ZIEL_ORDNER) + '?$select=folder', async r=> ((await r.json()).folder||{}).childCount + ' Dateien'],
-    ['Übersicht (Download-Link)', uebersicht + '?select=id,@microsoft.graph.downloadUrl', async r=>{ const u = (await r.json())['@microsoft.graph.downloadUrl']; if(!u) return 'kein Link'; const x = await fetch(u, { cache: 'no-store' }); return x.ok ? Math.round((await x.arrayBuffer()).byteLength / 1024) + ' KB geladen' : 'Download HTTP ' + x.status; }]
+    ['Übersicht (Download-Link)', uebersicht, async r=>{ const u = (await r.json())['@microsoft.graph.downloadUrl']; if(!u) return 'kein Link';
+      const host = (()=>{ try{ return new URL(u).host; }catch(_){ return '?'; } })();
+      try{ const x = await fetch(u, { cache: 'no-store' }); return host + ': ' + (x.ok ? Math.round((await x.arrayBuffer()).byteLength / 1024) + ' KB geladen' : 'HTTP ' + x.status); }
+      catch(e){ return host + ': ✗ ' + (e.message || e) + ' – dieser Server ist von hier aus nicht erreichbar (Werbeblocker, privates DNS, Firewall?)'; } }]
   ];
   for(const [name, url, auswerten] of tests){
     zeigen(name);
@@ -10430,22 +10495,10 @@ function pdfjsLaden(){
 async function briefSendenDialog(eintrag){
   document.body.classList.add('pdf-dialog');   // Dialoge ueber der PDF-Ansicht zeigen
   try{
-    const wann = await betaOverlay.ergebnis('Brief senden', 'Wann soll LetterXpress „' + htmlEsc(eintrag.name || 'die Rechnung') + '“ verschicken?',
-      [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Datum wählen', akt: 'plan' }, { label: 'Sofort', akt: 'sofort', primaer: true }]);
-    if(wann !== 'sofort' && wann !== 'plan'){ betaOverlay.schliessen(); return null; }
-    let versandDatumIso = null;
-    if(wann === 'plan'){
-      const d = new Date(); d.setDate(d.getDate() + 1);
-      const min = d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate());
-      const akt = await betaOverlay.ergebnis('Versand planen', 'An welchem Tag soll LetterXpress verschicken?<div class="beta-form"><label>Versanddatum<input type="date" id="betaVersandDatum2" min="' + min + '" value="' + min + '"></label></div>',
-        [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Weiter', akt: 'ja', primaer: true }]);
-      versandDatumIso = (document.getElementById('betaVersandDatum2') || {}).value || '';
-      if(akt !== 'ja'){ betaOverlay.schliessen(); return null; }
-      if(!versandDatumIso || versandDatumIso < min){ await betaOverlay.meldung('Bitte ein Datum ab morgen wählen.'); return null; }
-    }
+    let versandDatumIso = null;   // Termin und Test/Echt werden zusammen in einer Maske gewaehlt (betaBriefeVersenden, terminWahl)
     betaOverlay.zeigen('Brief'); betaOverlay.fortschritt(null); betaOverlay.schritt('Versandstatus wird geprüft …');
     let r = null;
-    try{ r = await betaBriefeVersenden([eintrag], betaFrage, { versandDatumIso }); }
+    try{ r = await betaBriefeVersenden([eintrag], betaFrage, { terminWahl: true }); versandDatumIso = r && r.versandDatumIso; }
     catch(err){ await betaOverlay.meldung(err.message || String(err), 'Nicht verschickt'); return null; }
     if(r.abgebrochen){ betaOverlay.schliessen(); return r; }
     await betaOverlay.meldung(r.fehler.length ? '✗ ' + r.fehler.join('\n') : (r.test ? '✓ Testbrief angenommen – nichts wurde verschickt.' : '✓ An LetterXpress übergeben' + (versandDatumIso ? ', Versand am ' + versandDatumIso.split('-').reverse().join('.') : '') + '.'), 'Brief');
@@ -16502,14 +16555,28 @@ function miniKarteFuellen(){
   const nav = document.querySelector('.ds-nav');
   const navOben = nav && nav.getClientRects().length && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().top : innerHeight;
   const ende = app.getBoundingClientRect().bottom + scrollY - (parseFloat(getComputedStyle(app).paddingBottom) || 0);
-  const ziel = Math.round(Math.min(hc + (navOben - 4 - ende), innerHeight * 0.75));
-  if(ziel <= h0 + 4){ zurueck(); return; }
+  // nicht nur bis zur Leiste, sondern auch so, dass die Seite insgesamt nicht scrollt (Innenabstaende unten, Demo-Leiste ...)
+  const frei = navOben - 4 - ende;
+  const ziel = Math.round(Math.min(hc + frei, innerHeight * 0.75));
+  if(Math.abs(ziel - h0) <= 4 || ziel < 170){ zurueck(); return; }   // auch kleiner als Standard, damit nichts scrollt (aber nicht winzig)
   if(Math.abs(ziel - hc) < 3) return;
   f.style.aspectRatio = 'auto'; f.style.height = ziel + 'px';
   requestAnimationFrame(miniKurzPruefen);
 }
+// Startseite: passt alles ueber die Leiste, braucht es den Innenabstand fuer die Leiste unten nicht -- sonst
+// laesst sich die Seite ein Stueck scrollen, ohne dass etwas Neues kommt (Handy und PC)
+function startseiteOhneUeberhang(){
+  const app = document.getElementById('app'); if(!app || !document.getElementById('skKarte')) return;
+  app.style.paddingBottom = ''; app.dataset.startPad = '';
+  const nav = document.querySelector('.ds-nav');
+  const navOben = nav && nav.getClientRects().length && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().top : innerHeight;
+  const pad = parseFloat(getComputedStyle(app).paddingBottom) || 0;
+  const inhaltEnde = app.getBoundingClientRect().bottom - pad;   // im Fenster
+  const ueber = document.documentElement.scrollHeight - innerHeight;
+  if(ueber > 0 && inhaltEnde <= navOben + 1){ app.style.paddingBottom = Math.max(0, pad - ueber) + 'px'; app.dataset.startPad = '1'; }
+}
 let miniFuellenPlan = 0;
-function miniKarteFuellenBald(){ if(miniFuellenPlan) return; miniFuellenPlan = requestAnimationFrame(()=>{ miniFuellenPlan = 0; try{ miniKarteFuellen(); }catch(_){} }); }
+function miniKarteFuellenBald(){ if(miniFuellenPlan) return; miniFuellenPlan = requestAnimationFrame(()=>{ miniFuellenPlan = 0; try{ miniKarteFuellen(); }catch(_){} requestAnimationFrame(()=>{ try{ startseiteOhneUeberhang(); }catch(_){} }); }); }
 window.addEventListener('resize', miniKarteFuellenBald);
 (function(){ const app = document.getElementById('app'); if(app && window.ResizeObserver) new ResizeObserver(miniKarteFuellenBald).observe(app); })();
 window.addEventListener('resize', ()=> requestAnimationFrame(miniKurzPruefen));
@@ -19729,7 +19796,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v405';
+const APP_VERSION = 'v409';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
