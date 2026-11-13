@@ -9353,6 +9353,15 @@ async function oneDriveVerbindungstest(ausgabe){
       zeilen.push('✗ <b>Übersicht (Excel: Schreibsitzung)</b>: keine Antwort (' + htmlEsc(e.message || String(e)) + ')');
     }
   }
+  // Schutz der Briefversand-Weiterleitung: ein absichtlich falscher Code muss abgelehnt werden
+  zeigen('Weiterleitung: Schutz durch Freischaltcodes');
+  try{
+    const r = await fetch(LXP_WEITERLEITUNG_STANDARD + '/v3/_code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ _zugang: 'pruefung-falsch-' + Math.random().toString(36).slice(2) }) });
+    const t = await r.text().catch(()=> '');
+    zeilen.push(r.status === 403 && /Zugangscode/i.test(t)
+      ? '✓ Weiterleitung geschützt <span style="color:var(--text-schwach);">(ein falscher Code wird abgelehnt)</span>'
+      : '✗ <b>Weiterleitung NICHT geschützt</b>: ein falscher Code wurde nicht abgelehnt (HTTP ' + r.status + '). In Azure fehlt vermutlich die Einstellung ZUGANGSCODES.');
+  }catch(e){ zeilen.push('✗ <b>Weiterleitung</b>: keine Antwort (' + htmlEsc(e.message || String(e)) + ')'); }
   zeigen('Übersicht: Fenster ausgeblendet?');
   try{
     const ausgeblendet = await uebersichtAusgeblendet(token, MSGRAPH_PFAD_UEBERSICHT);
@@ -19871,7 +19880,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v413';
+const APP_VERSION = 'v414';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
