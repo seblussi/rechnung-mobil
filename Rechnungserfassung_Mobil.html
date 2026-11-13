@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-QUMZe4hq1yPTJX/LatL91xObrdoEj4g8w/vbnWKpxDU=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-sKEOAJItoRfQlybJr3PhmKUZRcPEPep6sD7FXfZNMxo=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -10733,13 +10733,20 @@ async function betaMahnungErstellen(e){
     const dateien = await betaDateienAlle(token, ziel);
     const orig = dateien.get((basis + '.docx').toLowerCase());
     if(!orig) throw new Error('Die Word-Datei der Rechnung (' + basis + '.docx) wurde nicht gefunden.');
-    let nr = 1; while(betaErinnerungDatei(dateien, basis, nr, '.docx')) nr++;
+    // Stufe: vorhandene Erinnerungen (Word ODER PDF) und die Daten in Spalte V (1.) / X (2.) der Uebersicht
+    const zv = (e.z && e.z.v) || [];
+    const spDatum = (k)=>{ const i = k === 1 ? 21 : (k === 2 ? 23 : -1); return i < 0 ? '' : String(xlDatumText(zv[i]) || '').trim(); };
+    let nr = 1; while(betaErinnerungDatei(dateien, basis, nr, '.docx') || betaErinnerungDatei(dateien, basis, nr, '.pdf')) nr++;
+    if(spDatum(1) && nr < 2) nr = 2;
+    if(spDatum(2) && nr < 3) nr = 3;
     const { zip, xml } = await docxDokumentXml(await graphItemLaden(token, orig.id));
     const origDatum = docxDatumFinden(xml);
     const vorige = [];
     for(let k = 1; k < nr; k++){
       const it = betaErinnerungDatei(dateien, basis, k, '.docx');
-      try{ vorige.push(it ? docxDatumFinden((await docxDokumentXml(await graphItemLaden(token, it.id))).xml) : ''); }catch(_){ vorige.push(''); }
+      let d = '';
+      try{ d = it ? docxDatumFinden((await docxDokumentXml(await graphItemLaden(token, it.id))).xml) : ''; }catch(_){ d = ''; }
+      vorige.push(d || spDatum(k));
     }
     betaOverlay.fortschritt(0.35); betaOverlay.schritt(nr + '. Erinnerung wird geschrieben …');
     const morgen = betaMorgenText();
@@ -10749,6 +10756,11 @@ async function betaMahnungErstellen(e){
     if(neu === xml) warnungen.push('Die Überschrift „Privatrechnung“ wurde nicht gefunden.');
     const vorZahlung = neu;
     neu = rdPlatzhalterInXml(neu, [[ZAHLUNGSTEXT_PT, text], [ZAHLUNGSTEXT_LS, text]]);
+    if(neu === vorZahlung){
+      // Absatz mit Girocode-Bild wird oben uebersprungen: dann nur den Textlauf selbst ersetzen
+      const ersatz = '<w:t xml:space="preserve">' + String(text).split(/\r\n|\n|\r/).map(rdXml).join('</w:t><w:br/><w:t xml:space="preserve">') + '</w:t>';
+      [ZAHLUNGSTEXT_PT, ZAHLUNGSTEXT_LS].forEach(k=>{ const re = new RegExp('<w:t(?: [^>]*)?>' + rdXml(k).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '</w:t>', 'g'); neu = neu.replace(re, ()=> ersatz); });
+    }
     if(neu === vorZahlung) warnungen.push('Der Zahlungstext wurde nicht im erwarteten Wortlaut gefunden – bitte in der Erinnerung prüfen.');
     if(origDatum) neu = rdPlatzhalterInXml(neu, [['Datum: ' + origDatum, 'Datum: ' + morgen]]);
     else warnungen.push('Das Rechnungsdatum („Datum:“) wurde nicht gefunden.');
