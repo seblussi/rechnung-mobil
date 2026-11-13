@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-9LV3KEv3x1mgpQ2e1cmFs549EjtNrCXdXt6oHe3Ieko=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-iLKP76Mv+SCCvC12A8cJiDq6tprvvrgRzaABIACCdcQ=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -19871,7 +19871,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v418';
+const APP_VERSION = 'v419';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -21220,7 +21220,7 @@ async function msGraphInstanzSicherstellen(){
       authority: MSGRAPH_AUTHORITY,
       redirectUri: MSGRAPH_REDIRECT_URI
     },
-    cache: { cacheLocation: 'localStorage' }
+    cache: { cacheLocation: msGraphAngemeldetBleiben() ? 'localStorage' : 'sessionStorage' }
   });
   await msGraphMsal.initialize();
   return msGraphMsal;
@@ -21279,6 +21279,25 @@ async function msGraphAnmelden(){
   await inst.loginRedirect({ scopes: MSGRAPH_SCOPES });
 }
 
+// "Angemeldet bleiben" (Standard: an): Die Microsoft-Anmeldung der App liegt im Browser
+// dauerhaft (localStorage) -- oder nur, solange App/Browser offen sind (sessionStorage);
+// danach muss man in der App erneut auf "Mit Microsoft anmelden" klicken.
+function msGraphAngemeldetBleiben(){ try{ return LS.get('ms_angemeldet_bleiben', true) !== false; }catch(_){ return true; } }
+const MSAL_SCHLUESSEL_RE = /^msal\.|login\.microsoftonline|login\.windows\.net|login\.live\.com/;
+function msGraphAngemeldetBleibenSetzen(an){
+  // vorhandene Anmeldung in den anderen Speicher umziehen, damit man jetzt angemeldet bleibt
+  const von = an ? sessionStorage : localStorage, nach = an ? localStorage : sessionStorage;
+  try{
+    const k = []; for(let i = 0; i < von.length; i++){ const s = von.key(i); if(s && MSAL_SCHLUESSEL_RE.test(s) && !/request|interaction/i.test(s)) k.push(s); }
+    k.forEach(s=>{ const v = von.getItem(s); if(v !== null) nach.setItem(s, v); von.removeItem(s); });
+  }catch(e){ console.warn('Anmeldung umziehen', e); }
+  LS.set('ms_angemeldet_bleiben', !!an);
+  Speicher.warten().finally(()=> location.reload());
+}
+function msGraphBleibenHtml(){
+  return `<div class="einstellung-zeile" style="margin:10px 0 6px;"><input type="checkbox" id="chkMsBleiben"${msGraphAngemeldetBleiben() ? ' checked' : ''}><div class="txt">Angemeldet bleiben<span class="hinweis">Aus: Nach dem Schließen der App bzw. des Browsers ist die Microsoft-Anmeldung vom Gerät gelöscht, beim nächsten Öffnen einmal „Mit Microsoft anmelden“ klicken.</span></div></div>`;
+}
+
 function msGraphAbmelden(){
   if(!msGraphMsal) return;
   const konto = msGraphMsal.getActiveAccount();
@@ -21301,18 +21320,22 @@ function msGraphAbschnittHtml(){
       Rechnungen, Übersicht, Vorlagen und Arztdaten liegen in deinem OneDrive (Ordner „KVBW Onedrive“).
       Jeder Fall wird zusätzlich automatisch gesichert (Backups).
     </div>
+    ${msGraphBleibenHtml()}
     <button type="button" id="btnMsGraphAbmelden" class="btn-sekundaer">Abmelden</button>`;
   }
   return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
     Noch nicht angemeldet -- ohne Anmeldung bleibt der Ordner-Sync unten bzw. der manuelle Export die einzigen Wege,
     Fälle auf den PC zu übertragen.
   </div>
+  ${msGraphBleibenHtml()}
   <button type="button" id="btnMsGraphAnmelden" class="btn-sekundaer">Mit Microsoft anmelden</button>`;
 }
 
 function msGraphAbschnittWiring(){
   const btnAn = document.getElementById('btnMsGraphAnmelden');
   if(btnAn) btnAn.onclick = ()=>{ msGraphAnmelden(); };
+  const chkB = document.getElementById('chkMsBleiben');
+  if(chkB) chkB.onchange = ()=> msGraphAngemeldetBleibenSetzen(chkB.checked);
   const btnAb = document.getElementById('btnMsGraphAbmelden');
   if(btnAb) btnAb.onclick = ()=>{
     msGraphAbmelden();
