@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-9Pp4pH5G/u9/tgJsbxfA8X4vW0ASNPk9p2U0LHTIWts=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-9LV3KEv3x1mgpQ2e1cmFs549EjtNrCXdXt6oHe3Ieko=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -5258,7 +5258,7 @@ function appCodeStartPruefen(){
   }, 4000);
 }
 
-const ALPHA_BED_VERSION = '2026-11-08b';
+const ALPHA_BED_VERSION = '2026-11-13';
 const ALPHA_ANBIETER = 'Sergej Jakutsch';
 function alphaBedingungenHtml(){
   const A = htmlEsc(ALPHA_ANBIETER);
@@ -5267,6 +5267,7 @@ function alphaBedingungenHtml(){
       '<li>Die App ist ein privates, unentgeltliches Projekt von ' + A + ' („Anbieter“) und wird einem kleinen Kreis von Kolleginnen und Kollegen zum Testen überlassen. Es ist eine <b>Testversion</b>: Fehler sind möglich, Funktionen können sich ändern oder wegfallen.</li>' +
       '<li>Die App unterstützt bei der Abrechnung, prüft aber nicht abschließend, ob eine Rechnung im Einzelfall korrekt ist. Für Rechnungen, Abrechnung, Versand und den Umgang mit Patientendaten bleibst <b>du selbst verantwortlich</b>.</li>' +
       '<li>Deine Daten liegen auf deinem Gerät und in <b>deinem eigenen OneDrive</b>. Der Anbieter hat darauf keinen Zugriff. Datensicherung ist deine Sache (die App hilft mit Sicherungen im OneDrive).</li>' +
+      '<li>Die App speichert deine Daten auf dem Gerät verschlüsselt. Für die <b>Sicherheit deiner Geräte</b> bist du selbst verantwortlich: Bildschirmsperre bzw. eigenes, geschütztes Benutzerkonto, aktuelle Updates und <b>kein Zugriff durch andere</b> auf Geräte, auf denen die App mit deinen Daten läuft oder du bei Microsoft angemeldet bist. Geht ein Gerät verloren, melde dich in deinem Microsoft-Konto von allen Geräten ab und ändere dein Passwort.</li>' +
       '<li>Der Anbieter haftet nur für Vorsatz und grobe Fahrlässigkeit sowie bei Verletzung von Leben, Körper oder Gesundheit. Für die Auftragsverarbeitung gilt Abschnitt 2 und Art. 82 DSGVO.</li>' +
       '<li>Bitte schicke dem Anbieter bei Fragen oder Fehlermeldungen <b>keine Patientendaten</b> (auch keine Bildschirmfotos mit Namen oder Anschriften).</li>' +
       '<li>Die Nutzung kann jederzeit von beiden Seiten beendet werden.</li></ol>' +
@@ -19870,7 +19871,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v417';
+const APP_VERSION = 'v418';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
