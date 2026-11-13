@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-U7tOz8bNdV3th4D8nt3tXSVMFrhNxB3TzVaHAOqkABg=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-rIh5fWaa9RPmHJC0dpg3p0wwTrMaCEuFd22/s+kBnLY=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -5236,24 +5236,25 @@ function appCodeTor(meldung){
     if(c && document.getElementById('appCodeTor') && !feld.value.trim()){ feld.value = c; info.textContent = 'Code aus deinem OneDrive übernommen …'; los(); }
     else if(!c && msBox) msBox.innerHTML = '<p class="einr-klein">In deinem OneDrive ist noch kein Freischaltcode hinterlegt – bitte einmal eintippen. Danach merkt ihn sich die App dort für alle Geräte.</p>';
   };
-  let versuche = 0;
+  // Schon auf einem anderen Geraet freigeschaltet? Dann reicht die Microsoft-Anmeldung: der Code steht in der einstellungen.ini.
   const warteAufAnmeldung = ()=>{
     if(!document.getElementById('appCodeTor')) return;
     if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){ if(msBox) msBox.innerHTML = ''; ausIni(); return; }
-    if(++versuche === 4 && msBox && typeof msGraphAnmelden === 'function'){
-      msBox.innerHTML = '<button type="button" class="btn-sekundaer" id="actMsAn" style="margin-top:10px;">Mit Microsoft anmelden und Code aus OneDrive übernehmen</button>';
+    if(msBox && !msBox.querySelector('#actMsAn') && typeof msGraphAnmelden === 'function' && (typeof msGraphStatus === 'undefined' || msGraphStatus !== 'unbekannt')){
+      msBox.innerHTML = '<div class="einr-klein" style="margin-top:14px;">Auf einem anderen Gerät schon freigeschaltet?</div>' +
+        '<button type="button" class="btn-sekundaer" id="actMsAn" style="margin-top:6px;">Mit Microsoft anmelden – Code aus OneDrive übernehmen</button>';
       msBox.querySelector('#actMsAn').onclick = ()=> msGraphAnmelden();
     }
-    if(versuche < 60) setTimeout(warteAufAnmeldung, 1000);
+    setTimeout(warteAufAnmeldung, 1000);
   };
-  if(!vorschlag) setTimeout(warteAufAnmeldung, 500);
+  if(!vorschlag) setTimeout(warteAufAnmeldung, 300);
 }
 // Freischaltcode in der einstellungen.ini hinterlegen (gleicher Code wie fuer den Briefversand), damit andere Geraete
 // ihn nach der Microsoft-Anmeldung selbst finden -- im Hintergrund, sobald die Anmeldung steht
 function appCodeInIniMerken(c){
   let n = 0;
   const v = async ()=>{
-    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ if(++n < 30) setTimeout(v, 2000); return; }
+    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ if(++n < 360) setTimeout(v, 5000); return; }   // bis 30 Min. auf die Anmeldung warten
     try{
       const w = ((iniCacheLaden() || {}).werte || {});
       if(String(w.BRIEF_ZUGANGSCODE || '').trim() === c) return;
@@ -19896,7 +19897,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v421';
+const APP_VERSION = 'v422';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
