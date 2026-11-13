@@ -81,7 +81,7 @@ cat > "$TMP/host.json" <<'EOF'
 }
 EOF
 cat > "$TMP/src/functions/lxp.js" <<'EOF'
-// LetterXpress-Weiterleitung fuer die Rechnungs-App (Azure Function), Version 2
+// LetterXpress-Weiterleitung fuer die Rechnungs-App (Azure Function), Version 5
 // LetterXpress erlaubt keine direkten Aufrufe aus dem Browser (CORS). Diese
 // Funktion reicht die Anfrage der App unveraendert an https://api.letterxpress.de
 // weiter. Sie speichert NICHTS, protokolliert keine Inhalte und enthaelt KEINE
@@ -103,8 +103,38 @@ function gleich(a, b) {
 
 const ZIEL = 'https://api.letterxpress.de';
 const ERLAUBTE_HERKUNFT = ['https://seblussi.github.io'];
-const VERSION = 4;
+const VERSION = 5;
 const METHODEN = ['POST', 'PUT', 'DELETE'];
+
+// Schutz gegen Durchprobieren von Zugangscodes (nur im Arbeitsspeicher, nichts wird gespeichert):
+// je Absender (IP nur als gekuerzter Hash) wird jede weitere falsche Eingabe langsamer beantwortet
+// (0,5 s, 1 s, 2 s, ... bis 15 s); nach 10 Fehlversuchen innerhalb einer Stunde 1 Stunde Sperre.
+// Zusaetzlich: sehr viele Fehlversuche insgesamt (verteilter Angriff) -> alle Fehlversuche bremsen.
+const FEHL = new Map();
+const FEHL_FENSTER = 60 * 60 * 1000, FEHL_MAX = 10, SPERRE_MS = 60 * 60 * 1000;
+let fehlGesamt = [];
+const schlafen = (ms) => new Promise((r) => setTimeout(r, ms));
+function absender(request) {
+  const ip = String(request.headers.get('x-forwarded-for') || '').split(',')[0].trim().replace(/:\d+$/, '') || 'unbekannt';
+  return crypto.createHash('sha256').update('lxp|' + ip).digest('hex').slice(0, 16);
+}
+function aufraeumen(jetzt) {
+  for (const [k, v] of FEHL) if (jetzt - v.seit > FEHL_FENSTER && (!v.sperreBis || v.sperreBis < jetzt)) FEHL.delete(k);
+  fehlGesamt = fehlGesamt.filter((t) => jetzt - t < FEHL_FENSTER);
+}
+function gesperrt(id, jetzt) {
+  const v = FEHL.get(id);
+  return v && v.sperreBis && v.sperreBis > jetzt ? Math.ceil((v.sperreBis - jetzt) / 60000) : 0;
+}
+async function fehlversuch(id, jetzt, context) {
+  let v = FEHL.get(id);
+  if (!v || jetzt - v.seit > FEHL_FENSTER) { v = { n: 0, seit: jetzt, sperreBis: 0 }; FEHL.set(id, v); }
+  v.n++; fehlGesamt.push(jetzt);
+  if (v.n >= FEHL_MAX) { v.sperreBis = jetzt + SPERRE_MS; context.log('Zugangscode: Absender nach ' + v.n + ' Fehlversuchen fuer 1 Stunde gesperrt'); }
+  let warte = Math.min(500 * Math.pow(2, v.n - 1), 15000);
+  if (fehlGesamt.length > 100) { warte = Math.max(warte, 10000); if (fehlGesamt.length % 50 === 1) context.log('Zugangscode: auffaellig viele Fehlversuche insgesamt (' + fehlGesamt.length + '/h)'); }
+  await schlafen(warte);
+}
 
 function corsKopf(herkunft) {
   return {
@@ -139,8 +169,13 @@ app.http('lxp', {
     try { daten = JSON.parse(text); } catch (e) { daten = null; }
     const codes = String(process.env.ZUGANGSCODES || '').split(',').map((s) => s.trim()).filter(Boolean);
     if (codes.length) {
+      const jetzt = Date.now(), id = absender(request);
+      aufraeumen(jetzt);
+      const min = gesperrt(id, jetzt);
+      if (min) return { status: 429, headers: { ...cors, 'Content-Type': 'application/json', 'Retry-After': String(min * 60) }, body: JSON.stringify({ status: 429, message: 'Zu viele Fehlversuche. Bitte in ' + min + ' Minuten erneut versuchen.', minuten: min }) };
       const c = String((daten && typeof daten === 'object' && daten._zugang) || '');
-      if (!c || !codes.some((x) => gleich(x, c))) return json(403, cors, { status: 403, message: 'Zugangscode fehlt oder ist falsch.' });
+      if (!c || !codes.some((x) => gleich(x, c))) { await fehlversuch(id, jetzt, context); return json(403, cors, { status: 403, message: 'Zugangscode fehlt oder ist falsch.' }); }
+      FEHL.delete(id);   // richtiger Code: Zaehler zuruecksetzen
     }
     if (pfad === '_code') return json(200, cors, { ok: true });   // Freischaltung der App: nur der Zugangscode wird geprueft
     if (daten && typeof daten === 'object' && '_zugang' in daten) { delete daten._zugang; text = JSON.stringify(daten); }
