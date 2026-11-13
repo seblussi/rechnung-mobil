@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-ntPlTb8pFFLO0uQajELZ4X/5RWfMyO7CIFc2EsdhUs4=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-U7tOz8bNdV3th4D8nt3tXSVMFrhNxB3TzVaHAOqkABg=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -2684,35 +2684,54 @@ async function freigabelinksEntfernen(melde){
   const H = { Authorization: 'Bearer ' + token };
   const holen = async (url)=>{ const r = await fetch(url, { headers: H, cache: 'no-store' }); if(!r.ok) throw new Error('HTTP ' + r.status + ' ' + await graphFehlerText(r)); return r.json(); };
   const wurzel = await holen(msGraphPfadUrl('KVBW Onedrive') + '?$select=id,name,folder');
-  const elemente = [{ id: wurzel.id, name: 'KVBW Onedrive' }], ordner = [{ id: wurzel.id, pfad: 'KVBW Onedrive' }];
+  const elemente = [{ id: wurzel.id, name: 'KVBW Onedrive', ordner: true }], ordner = [{ id: wurzel.id, pfad: 'KVBW Onedrive' }];
   while(ordner.length){
     const o = ordner.shift();
     let url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + o.id + '/children?$select=id,name,folder&$top=200';
     while(url){
       const d = await holen(url);
-      for(const it of d.value || []){ const pf = o.pfad + '/' + it.name; elemente.push({ id: it.id, name: pf }); if(it.folder) ordner.push({ id: it.id, pfad: pf }); }
+      for(const it of d.value || []){ const pf = o.pfad + '/' + it.name; elemente.push({ id: it.id, name: pf, ordner: !!it.folder }); if(it.folder) ordner.push({ id: it.id, pfad: pf }); }
       url = d['@odata.nextLink'] || null;
     }
     if(melde) melde('Ordner werden durchsucht … (' + elemente.length + ' Einträge)');
   }
   const geloescht = [], andere = [], fehler = [];
+  // Freigaben an Personen: geerbte (vom Ordner auf alle Dateien darin) nur einmal, beim Ordner, melden
+  const nameVon = new Map(elemente.map(x=> [x.id, x.name])), andereMap = new Map();
+  const wer = (pm)=>{
+    const l = [].concat(pm.grantedToIdentitiesV2 || [], pm.grantedToIdentities || [], pm.grantedToV2 ? [pm.grantedToV2] : [], pm.grantedTo ? [pm.grantedTo] : []);
+    const namen = new Set();
+    l.forEach(g=>{ const u = (g && (g.user || g.siteUser)) || {}; const t = u.displayName || u.email || ''; if(t) namen.add(t + (u.email && u.displayName && u.email !== u.displayName ? ' <' + u.email + '>' : '')); });
+    if(!namen.size && pm.invitation && pm.invitation.email) namen.add(pm.invitation.email);
+    return namen.size ? Array.from(namen).join(', ') : 'unbekannte Person';
+  };
+  const andereMerken = (el, pm)=>{
+    const quelle = pm.inheritedFrom && pm.inheritedFrom.id;
+    const ort = quelle ? (nameVon.get(quelle) || ('übergeordneter Ordner ' + ((pm.inheritedFrom.path || '').replace(/^\/drive\/root:\/?/, '') || '(OneDrive-Hauptordner)'))) : el.name;
+    const schl = (quelle || el.id) + '|' + (pm.id || '');
+    if(andereMap.has(schl)) return;
+    const recht = (pm.roles || []).some(r=> r === 'write') ? 'bearbeiten' : 'ansehen';
+    andereMap.set(schl, ort + (quelle || el.ordner ? ' (und alles darin)' : '') + ': ' + wer(pm) + ' – ' + recht);
+  };
   let n = 0;
   const pruefe = async (el)=>{
     try{
       const d = await holen('https://graph.microsoft.com/v1.0/me/drive/items/' + el.id + '/permissions');
       for(const pm of d.value || []){
-        if(!pm.link) continue;   // eigene Berechtigung (Besitzer) bzw. direkte Freigabe ohne Link
-        if(pm.link.scope === 'anonymous'){
+        if((pm.roles || []).includes('owner')) continue;   // eigene Berechtigung (Besitzer)
+        if(!pm.link || pm.link.scope !== 'anonymous'){ andereMerken(el, pm); continue; }   // Freigabe an bestimmte Personen: nur melden
+        {
           const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + el.id + '/permissions/' + pm.id, { method: 'DELETE', headers: H });
           if(r.ok || r.status === 404) geloescht.push(el.name + ' (' + (pm.link.type === 'edit' ? 'bearbeiten' : 'ansehen') + ')');
           else fehler.push(el.name + ': HTTP ' + r.status);
-        } else andere.push(el.name + ' (' + (pm.link.scope || 'Link') + ')');
+        }
       }
     }catch(e){ fehler.push(el.name + ': ' + (e.message || e)); }
     n++; if(melde && n % 10 === 0) melde('Freigaben werden geprüft … ' + n + ' / ' + elemente.length);
   };
   const warte = [...elemente];
   await Promise.all([1, 2, 3, 4].map(async ()=>{ while(warte.length) await pruefe(warte.shift()); }));
+  andere.push(...andereMap.values());
   return { geprueft: elemente.length, geloescht, andere, fehler };
 }
 // einmalig automatisch nach dem Start (Auftrag vom Nutzer), bis ein Durchlauf ohne Fehler geklappt hat
@@ -9737,7 +9756,7 @@ function betaEinstellungenWiring(){
       try{ const r = await freigabelinksEntfernen(t=>{ out.textContent = t; });
         if(!r.fehler.length) LS.set('freigaben_bereinigt_v1', true);
         out.innerHTML = '<b>' + r.geprueft + ' Einträge geprüft.</b> ' + (r.geloescht.length ? r.geloescht.length + ' öffentliche Links gelöscht: ' + htmlEsc(r.geloescht.join(', ')) : 'Keine öffentlichen Links gefunden.') +
-          (r.andere.length ? '<br>Freigaben an bestimmte Personen (unverändert): ' + htmlEsc(r.andere.join(', ')) : '') + (r.fehler.length ? '<br>✗ Nicht geprüft: ' + htmlEsc(r.fehler.slice(0, 5).join('; ')) : ''); }
+          (r.andere.length ? '<br><b>Freigaben an bestimmte Personen (unverändert):</b><br>' + r.andere.map(htmlEsc).join('<br>') : '') + (r.fehler.length ? '<br>✗ Nicht geprüft: ' + htmlEsc(r.fehler.slice(0, 5).join('; ')) : ''); }
       catch(e){ out.textContent = '✗ ' + (e.message || e); }
       finally{ fb.disabled = false; } }; }
   document.getElementById('btnTestOneDrive').onclick = async ()=>{
@@ -16555,6 +16574,11 @@ function vkMenueFuellen(menue, stilJetzt, stilNeu, ebeneNeu){
   });
   menue.querySelector('.vk-m-offknopf').onclick = ()=>{ menue.hidden = true; vkOfflineDialog(); };
 }
+// Hell/Dunkel umgeschaltet -> alle offenen Karten auf den passenden Stil (getrennt gemerkt fuer hell und dunkel)
+const VK_STIL_HOOKS = new Set();
+(function(){ let war = null; const pruefen = ()=>{ const jetzt = document.body.classList.contains('dunkel'); if(war === null){ war = jetzt; return; } if(jetzt === war) return; war = jetzt; try{ vkAlleMinisStil(); }catch(_){} VK_STIL_HOOKS.forEach(f=>{ try{ f(); }catch(_){} }); };
+  const los = ()=>{ pruefen(); new MutationObserver(pruefen).observe(document.body, { attributes: true, attributeFilter: ['class'] }); };
+  if(document.body) los(); else document.addEventListener('DOMContentLoaded', los); })();
 function vkAlleMinisStil(){ document.querySelectorAll('.mini-ebenen').forEach(w=>{ if(w._mk && w._mk.stilPruefen) w._mk.stilPruefen(); }); }
 function vkAlleMinisEbene(id, an){ document.querySelectorAll('.mini-ebenen').forEach(w=>{ if(w._mk && w._mk.ebeneSichtbar) w._mk.ebeneSichtbar(id, an); }); }
 function miniKartenNeu(){
@@ -18374,6 +18398,7 @@ function vektorKarteOverlay(d, text, opt){
     map = new ml.Map({ container: box, style: stilObj, center: a ? [a.lon, a.lat] : [n.lon, n.lat], zoom: a ? Math.max(0, a.z - 1) : 9.5,
       attributionControl: false, dragRotate: false, pitchWithRotate: false, touchPitch: false, maxPitch: 0, maxZoom: 18.5 });
     map.touchZoomRotate.disableRotation(); vkBilderAnmelden(map); vkAedAnbinden(map, true); vkSymbolSkalaAnbinden(map);
+    { const hook = ()=>{ if(!ov.isConnected){ VK_STIL_HOOKS.delete(hook); return; } const s = vkStil(); if(s !== stil && map){ stil = s; vkStilJson(s).then(o=> map.setStyle(o, { diff: false })).catch(()=>{}); } }; VK_STIL_HOOKS.add(hook); }
     ov.querySelectorAll('.ok-zoom [data-zoom]').forEach(b=> b.onclick = ()=>{ if(b.dataset.zoom === '1') map.zoomIn(); else map.zoomOut(); });
     map.on('error', (e)=>{ if(e && e.error && /style|fetch/i.test(String(e.error.message || ''))) info.textContent = 'Vektorkarte nicht erreichbar (Internet?).'; });
     const ll = (g)=> [g.lon, g.lat];
@@ -19871,7 +19896,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v420';
+const APP_VERSION = 'v421';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
