@@ -2241,9 +2241,19 @@ try{
 (function(){
   const orig = window.fetch.bind(window);
   const kopfAuth = (h)=>{ if(!h) return ''; if(typeof h.get === 'function') return h.get('Authorization') || ''; return h.Authorization || h.authorization || ''; };
+  // Stoerung bei Microsoft erkennen: 5xx-Antworten oder abgebrochene Verbindungen zu OneDrive/Graph merken
+  const odUrl = (u)=> /^https:\/\/(graph\.microsoft\.com|[^/]*microsoftpersonalcontent\.com|[^/]*\.1drv\.com)\//.test(u);
+  const merken = (ok)=>{ try{ window.__odFehlerZeit = ok ? (window.__odFehlerZeit || 0) : Date.now(); if(!ok && typeof dsSyncAuffrischenBald === 'function') dsSyncAuffrischenBald(); }catch(_){} };
   window.fetch = async function(input, init){
-    try{ return await orig(input, init); }
+    const url0 = typeof input === 'string' ? input : (input && input.url) || '';
+    try{
+      const r = await orig(input, init);
+      if(odUrl(url0) && (r.status >= 500 || r.status === 429)) merken(false);
+      if(odUrl(url0) && r.ok && /\/content(\?|$)|microsoftpersonalcontent/.test(url0)) window.__odDownloadOk = Date.now();
+      return r;
+    }
     catch(e){
+      if(odUrl(url0) && !(init && init.signal && init.signal.aborted) && navigator.onLine !== false) merken(false);
       const url = typeof input === 'string' ? input : (input && input.url) || '';
       const methode = String((init && init.method) || 'GET').toUpperCase();
       const auth = kopfAuth(init && init.headers);
@@ -19796,7 +19806,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v409';
+const APP_VERSION = 'v410';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -19885,18 +19895,39 @@ async function dsNetzPruefen(){
     try{ await fetch('https://graph.microsoft.com/v1.0/?p=' + Date.now(), { mode: 'no-cors', cache: 'no-store', signal: ac.signal }); dsNetzOk = true; }
     catch(_){ dsNetzOk = false; }
     finally{ clearTimeout(tm); dsNetzLauf = null; dsNetzZeit = Date.now(); }
+    // angemeldet: alle 3 Minuten eine kleine echte OneDrive-Abfrage (Erfolg und Fehler merkt sich der fetch-Waechter)
+    if(dsNetzOk && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet' && Date.now() - (dsNetzPruefen.od || 0) > 3 * 60000){
+      dsNetzPruefen.od = Date.now();
+      try{
+        const token = await msGraphTokenHolen();
+        if(token){ const ac2 = new AbortController(), t2 = setTimeout(()=> ac2.abort(), 12000);
+          // kleine Datei wirklich herunterladen (einstellungen.ini, wenige KB): prueft auch den Download-Server von Microsoft
+          try{ const r = await fetch(msGraphPfadUrl(MSGRAPH_PFAD_INI) + '/content', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store', signal: ac2.signal }); if(r.ok) await r.arrayBuffer(); }
+          catch(e){ if(ac2.signal.aborted) window.__odFehlerZeit = Date.now(); }
+          finally{ clearTimeout(t2); } }
+      }catch(_){}
+    }
   })();
   return dsNetzLauf;
+}
+// OneDrive gestoert: in den letzten 5 Minuten hat Microsoft mit Serverfehlern geantwortet oder Verbindungen abgebrochen
+// (und seitdem kam kein erfolgreicher Download mehr)
+function dsOdGestoert(){
+  const f = window.__odFehlerZeit || 0;
+  return !!f && Date.now() - f < 5 * 60000 && !((window.__odDownloadOk || 0) > f);
 }
 function dsSyncZustand(anmeldung){
   if(typeof navigator !== 'undefined' && navigator.onLine === false) return ['offline', 'offline'];
   if(dsNetzOk === false) return ['offline', 'kein Netz'];
+  if(anmeldung && dsOdGestoert()) return ['offline', 'OneDrive ⚠'];
   return anmeldung ? ['an', 'OneDrive'] : ['offline', 'OneDrive'];
 }
+let dsSyncPlan = 0;
+function dsSyncAuffrischenBald(){ if(dsSyncPlan) return; dsSyncPlan = setTimeout(()=>{ dsSyncPlan = 0; try{ dsSyncAuffrischen(); }catch(_){} }, 300); }
 function dsSyncHtml(anmeldung){
   const [k, t] = dsSyncZustand(anmeldung);
   return '<span class="ds-sync ' + k + '" data-angemeldet="' + (anmeldung ? 1 : 0) + '" title="' +
-    ({ offline: 'Keine Verbindung (WLAN/Daten aus oder kein Empfang)', 'kein Netz': 'Verbindung gemeldet, aber es kommt nichts durch', OneDrive: anmeldung ? 'OneDrive verbunden' : 'OneDrive nicht verbunden' })[t] + '"><i></i>' + t + '</span>';
+    ({ offline: 'Keine Verbindung (WLAN/Daten aus oder kein Empfang)', 'kein Netz': 'Verbindung gemeldet, aber es kommt nichts durch', 'OneDrive ⚠': 'Störung bei Microsoft: OneDrive antwortet gerade fehlerhaft', OneDrive: anmeldung ? 'OneDrive verbunden' : 'OneDrive nicht verbunden' })[t] + '"><i></i>' + t + '</span>';
 }
 function dsSyncAuffrischen(){
   document.querySelectorAll('.ds-sync[data-angemeldet]').forEach(el=>{
