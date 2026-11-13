@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-iLKP76Mv+SCCvC12A8cJiDq6tprvvrgRzaABIACCdcQ=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-ntPlTb8pFFLO0uQajELZ4X/5RWfMyO7CIFc2EsdhUs4=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -5258,8 +5258,8 @@ function appCodeStartPruefen(){
   }, 4000);
 }
 
-const ALPHA_BED_VERSION = '2026-11-13';
-const ALPHA_ANBIETER = 'Sergej Jakutsch';
+const ALPHA_BED_VERSION = '2026-11-13b';
+const ALPHA_ANBIETER = 'Dr. med. Sebastian Fried';
 function alphaBedingungenHtml(){
   const A = htmlEsc(ALPHA_ANBIETER);
   return '<div class="alpha-bed">' +
@@ -9229,7 +9229,7 @@ async function iniAenderungenSchreiben(aenderungen, basisWerte, opt){
 // Ohne Eintrag kein Briefversand (keine fest eingebaute Adresse mehr). Ein
 // frueherer Eintrag LXP_WEITERLEITUNG in der ini wird weiterhin ignoriert.
 // Die EBM-Werte (/ebm/werte, nur oeffentliche Daten) kommen von der eigenen Weiterleitung, ohne eigene vom EBM_DIENST.
-// Alpha: Weiterleitung von Sergej (geschuetzt durch persoenliche Zugangscodes) -- ohne eigenen Eintrag wird sie benutzt
+// Alpha: Weiterleitung des Anbieters (geschuetzt durch persoenliche Zugangscodes) -- ohne eigenen Eintrag wird sie benutzt
 const LXP_WEITERLEITUNG_STANDARD = 'https://lxp-weiterleitung-19p.azurewebsites.net/api';
 const EBM_DIENST = 'https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net/api';
 function lxpAdresseNormal(s){
@@ -19871,7 +19871,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v419';
+const APP_VERSION = 'v420';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -20968,7 +20968,7 @@ function ansichtEinstellungen(){
       <button type="button" class="btn-sekundaer" id="btnDemo">${window.DEMO_MODUS ? 'Demo beenden' : 'Demo starten'}</button>
       <button type="button" class="btn-sekundaer" id="btnEinfuehrung" style="margin-top:8px;">Seitenhilfen wieder einschalten</button>
     </div>
-    <div class="einst-copyright">© 2026 Sergej Jakutsch · Alle Rechte vorbehalten</div>
+    <div class="einst-copyright">© 2026 Dr. med. Sebastian Fried · Alle Rechte vorbehalten</div>
   `;
   { const ef = document.getElementById('btnEinfuehrung'); if(ef) ef.onclick = ()=>{ LS.set('seitenhilfe', true); LS.set('seitenhilfe_gesehen', []); appToastAnzeigen('Seitenhilfen sind wieder an – jede Seite erklärt sich beim nächsten Öffnen.', 3200); }; }
   document.getElementById('btnDemo').onclick = ()=> window.DEMO_MODUS ? demoBeenden() : demoFragen();
