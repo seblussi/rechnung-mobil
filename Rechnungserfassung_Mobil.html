@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-rVMTEF3gWQ0U/cfJb5vQCIfRFbYCy/45nEhNrdQMduc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -2267,6 +2268,8 @@ try{
     }
   };
 })();
+// fehlende Kartenkacheln ausblenden (statt eines onerror-Attributs: die Sicherheitsrichtlinie erlaubt keine Inline-Handler)
+document.addEventListener('error', (ev)=>{ const t = ev.target; if(t && t.tagName === 'IMG' && t.classList.contains('osm-kachel')) t.style.visibility = 'hidden'; }, true);
 const LS = {
   get(k, fallback){ let v = Speicher.text(k); if(v === null){ try{ v = localStorage.getItem(k); }catch(_){ v = null; } } if(v === null) return fallback; try{ return JSON.parse(v); }catch(e){ return fallback; } },
   set(k, v){
@@ -8253,13 +8256,6 @@ function uebersichtAuswerten(ue){
 // Fall bereits reserviert ist.
 function hoechsteLokaleNrBeideVersionen(){
   let max = hoechsteLokalVergebeneRenu();
-  try{
-    ['ls', 'pt'].forEach(art=>{
-      const roh = window.__rohSpeicher && window.__rohSpeicher.get('faelle_' + art);
-      if(!roh) return;
-      (JSON.parse(roh) || []).forEach(f=>{ const n = renuZaehlerAusText(f && f.rechnungsnummer); if(n !== null && n > max) max = n; });
-    });
-  }catch(_){}
   return max;
 }
 
@@ -8282,17 +8278,6 @@ async function hoechsteFesteNr(token, ue, ana){
 // Nummern, die die normale App fuer noch nicht eingelesene Faelle reserviert hat
 function reservierteNummernNormaleApp(ana){
   const erg = new Set();
-  try{
-    ['ls', 'pt'].forEach(art=>{
-      const roh = window.__rohSpeicher && window.__rohSpeicher.get('faelle_' + art);
-      if(!roh) return;
-      (JSON.parse(roh) || []).forEach(f=>{
-        const r = f && String(f.rechnungsnummer || '').trim();
-        const n = renuZaehlerAusText(r);
-        if(r && n !== null && !ana.nachRenu.has(r)) erg.add(n);
-      });
-    });
-  }catch(_){}
   return erg;
 }
 // Naechste freie Nummer nach der hoechsten festen
@@ -9457,10 +9442,6 @@ function betaAbschnittHtml(){
         <div class="txt">Echtbetrieb (echte Übersicht und echter Ordner)</div></div>
       <button type="button" class="btn-sekundaer" id="btnTestUebersichtNeu" style="margin-top:8px;">Test-Übersicht neu aus der echten kopieren</button>
       <div class="hinweis ini-testergebnis" id="ablageErgebnis"></div>
-      <div class="sync-trenner"></div>
-      <div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
-        Die Beta hat einen eigenen Speicher. Beim ersten Start wurden die Fälle der normalen Version einmalig kopiert.</div>
-      <button type="button" class="btn-sekundaer" id="btnBetaDatenNeu">Fälle erneut aus normaler Version übernehmen</button>
     </div>`;
 }
 
@@ -9761,16 +9742,6 @@ function betaEinstellungenWiring(){
     btn.disabled = true;
     try{ await oneDriveVerbindungstest(ergebnisIn('testErgebnisOd')); }
     finally{ btn.disabled = false; }
-  };
-  if(document.getElementById('btnBetaDatenNeu')) document.getElementById('btnBetaDatenNeu').onclick = async ()=>{
-    if(!await betaFrage('Alle Fälle der Beta durch die Fälle der normalen Version ersetzen?', 'Ersetzen', 'Abbrechen')) return;
-    try{
-      ['faelle_ls','faelle_pt','bestatter_katalog'].forEach(k=>{
-        const v = window.__rohSpeicher.get(k);
-        if(v !== null) Speicher.setzen(k, v);   // verschluesselt, nie im Klartext in localStorage
-      });
-      appToastAnzeigen('Fälle aus der normalen Version übernommen.', 2200);
-    }catch(e){ betaOverlay.meldung('Übernahme fehlgeschlagen: ' + (e.message||e)); }
   };
 
   // Beim Oeffnen still im Hintergrund aktualisieren (falls angemeldet)
@@ -16077,7 +16048,7 @@ function osmAusschnitt(d, opt){
     if(ty < 0 || ty >= n) continue;
     for(let tx = Math.floor(x0 / 256); tx <= Math.floor((x1 - 1) / 256); tx++){
       kacheln += '<img alt="" draggable="false" loading="lazy" src="https://tile.openstreetmap.org/' + z + '/' + (((tx % n) + n) % n) + '/' + ty + '.png" style="left:' +
-        ((tx * 256 - x0) / bw * 100).toFixed(3) + '%; top:' + ((ty * 256 - y0) / bh * 100).toFixed(3) + '%; width:' + (256 / bw * 100 + 0.05).toFixed(3) + '%; height:' + (256 / bh * 100 + 0.05).toFixed(3) + '%;" onerror="this.style.visibility=\'hidden\'">';
+        ((tx * 256 - x0) / bw * 100).toFixed(3) + '%; top:' + ((ty * 256 - y0) / bh * 100).toFixed(3) + '%; width:' + (256 / bw * 100 + 0.05).toFixed(3) + '%; height:' + (256 / bh * 100 + 0.05).toFixed(3) + '%;" class="osm-kachel">';
     }
   }
   const P = (g)=> osmWelt(g.lat, g.lon, z), f = (v)=> v.toFixed(1);
@@ -19880,7 +19851,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v414';
+const APP_VERSION = 'v415';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
