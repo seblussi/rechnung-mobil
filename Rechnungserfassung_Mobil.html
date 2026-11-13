@@ -2020,7 +2020,7 @@ try{
   .mini-ebenen.kurz .mini-gruppe.mitte{top:auto; bottom:8px; right:64px; transform:none; flex-direction:row-reverse;}
   .mini-ebenen .mini-gruppe > button{position:relative !important; top:auto !important; right:auto !important; bottom:auto !important; left:auto !important; width:48px; height:38px; margin:0; flex:none; pointer-events:auto; border-radius:9px;}
   .mini-ebenen.platz .mini-gruppe > button{height:48px; border-radius:10px;}
-  .mini-ebenen.platz .mini-gruppe > .karte-auge, .mini-ebenen.platz .mini-gruppe > .mini-stil{height:38px;}   /* Ansicht und Kartenstil flach wie in der grossen Karte */
+  .mini-ebenen.platz .mini-gruppe > .karte-auge, .mini-ebenen.platz .mini-gruppe > .mini-stil, .mini-ebenen.platz .mini-gruppe.mitte > button{height:38px;}   /* flach wie in der grossen Karte; nur KVBW und Vollbild quadratisch */   /* Ansicht und Kartenstil flach wie in der grossen Karte */
   .mini-ebenen.platz .karte-ebene{font-size:9.5px; gap:2px;}
   .mini-ebenen.platz .karte-ebene svg{width:20px; height:20px;}
   .mini-ebenen.platz.kurz .mini-gruppe.mitte{right:64px;}
@@ -16540,11 +16540,11 @@ function miniKurzPruefen(){
     const sichtbar = (g)=> g ? [...g.children].filter(x=> getComputedStyle(x).display !== 'none').length : 0;
     // genug Platz: quadratische Knoepfe wie in der grossen Karte (KVBW mit vollem Symbol)
     const nO = sichtbar(o), nM = sichtbar(m), nU = sichtbar(u);
-    const bedarfQ = 8 + (nO ? 56 + (nO - 1) * 46 - 8 : 0) + 8 + (nM ? nM * 56 - 8 : 0) + 8 + (nU ? 48 : 0) + 8;
+    const bedarfQ = 8 + (nO ? 56 + (nO - 1) * 46 - 8 : 0) + 8 + (nM ? nM * 46 - 8 : 0) + 8 + (nU ? 48 : 0) + 8;
     w.classList.toggle('platz', h >= bedarfQ && w.clientWidth >= 260);
     const kh = w.classList.contains('platz') ? 48 : 38;
     const n = nM, oH = o ? o.offsetHeight : 0, uH = nU ? kh : 0;
-    const mH = n ? n * (kh + 8) - 8 : 0;
+    const mH = n ? n * (38 + 8) - 8 : 0;   // mittlere Knoepfe immer flach
     // Mittelblock mittig im freien Band zwischen oberem Block und Vollbild-Knopf
     const bedarf = n ? 8 + oH + 8 + mH + 8 + uH + 8 : 0;
     const kurz = h < bedarf; w.classList.toggle('kurz', kurz);
@@ -19806,7 +19806,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v410';
+const APP_VERSION = 'v411';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
