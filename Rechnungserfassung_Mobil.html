@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-rVMTEF3gWQ0U/cfJb5vQCIfRFbYCy/45nEhNrdQMduc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-QUMZe4hq1yPTJX/LatL91xObrdoEj4g8w/vbnWKpxDU=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -148,6 +148,8 @@ try{
   .offen-verzug{margin-left:auto; font-size:12.5px; font-weight:700; color:#b3261e; background:rgba(179,38,30,.1); padding:3px 8px; border-radius:999px;}
   .offen-zeile{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--rand); cursor:pointer;}
   .offen-zeile:last-child{padding-bottom:12px;}
+  .offen-knoepfe{flex:none; display:flex; gap:6px; align-items:center;} .offen-knoepfe .offen-bezahlt{white-space:nowrap;}
+  @media (max-width:420px){ .offen-knoepfe{flex-direction:column; align-items:stretch;} .offen-knoepfe .offen-bezahlt{min-height:32px; padding:4px 10px; font-size:12.5px;} }
   .offen-inhalt{flex:1; min-width:0;} .offen-inhalt b{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .offen-inhalt small{color:var(--text-schwach); font-size:12.5px;} .offen-zeile.verzug .offen-inhalt small{color:#b3261e;}
   .offen-bezahlt{flex:none; width:auto; margin:0; min-height:36px; padding:6px 12px; border-radius:9px; border:1px solid var(--rand); background:var(--grau-feld); color:var(--text); font-size:13.5px; font-weight:600;}
@@ -11531,7 +11533,8 @@ function betaGesamtZeichnen(suchtext, ziel){
           (verzug ? '<span class="offen-verzug">' + verzug + ' im Verzug</span>' : '') + '</summary>' +
           offenR.slice(0, 50).map(x=> '<div class="offen-zeile' + (x.t > 30 ? ' verzug' : '') + '" data-okey="' + htmlEsc(x.e.key) + '" data-orenu="' + htmlEsc(x.e.renu || x.e.name || '') + '" role="button" tabindex="0"><div class="offen-inhalt"><b>' + htmlEsc(x.e.name) + '</b><small>' +
             (x.e.renu ? 'Nr. ' + htmlEsc(x.e.renu) + ' · ' : '') + (x.e.betrag ? htmlEsc(x.e.betrag) + ' € · ' : '') + 'seit ' + x.t + (x.t === 1 ? ' Tag' : ' Tagen') +
-            '</small></div><button type="button" class="offen-bezahlt" data-okey="' + htmlEsc(x.e.key) + '" title="Zahlungseingang eintragen (Datum wählbar)">Bezahlt?</button></div>').join('') +
+            '</small></div><div class="offen-knoepfe"><button type="button" class="offen-bezahlt" data-okey="' + htmlEsc(x.e.key) + '" title="Zahlungseingang eintragen (Datum wählbar)">Bezahlt?</button>' +
+            '<button type="button" class="offen-bezahlt offen-erinnern" data-okey="' + htmlEsc(x.e.key) + '" title="Zahlungserinnerung erstellen und senden">Erinnerung senden</button></div></div>').join('') +
           (offenR.length > 50 ? '<div class="leer-hinweis">' + (offenR.length - 50) + ' weitere – in der Liste unten.</div>' : '') + '</details>';
       }
     }
@@ -11570,7 +11573,11 @@ function betaGesamtZeichnen(suchtext, ziel){
       try{ zielEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); }catch(_){}
       zeile.classList.remove('fbx-blink'); void zeile.offsetWidth; zeile.classList.add('fbx-blink'); setTimeout(()=> zeile.classList.remove('fbx-blink'), 2400);
     });
-    listeEl.querySelectorAll('.offen-bezahlt').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
+    listeEl.querySelectorAll('.offen-erinnern').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
+      const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
+      // erstellt die naechste Erinnerung (Word + PDF) und zeigt sie gleich in der PDF-Ansicht -- dort Teilen oder als Brief senden
+      if(await betaMahnungErstellen(e)) await ansichtRechnungenGesamt(true); });
+    listeEl.querySelectorAll('.offen-bezahlt:not(.offen-erinnern)').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
       if(await betaAktionBezahlt([e])){ betaAuswahl.clear(); await ansichtRechnungenGesamt(true); } }); }
 
@@ -19851,7 +19858,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v415';
+const APP_VERSION = 'v416';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
