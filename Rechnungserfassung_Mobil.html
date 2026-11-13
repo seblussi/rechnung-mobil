@@ -2670,6 +2670,62 @@ function msGraphPfadUrl(pfadRelativZuOneDrive){
   return 'https://graph.microsoft.com/v1.0/me/drive/root:/' + segmente + ':';
 }
 
+// ---------- Datenschutz: anonyme Freigabelinks im Ordner "KVBW Onedrive" entfernen ----------
+// Frueher legte "In Excel oeffnen" Links "Jeder mit dem Link kann bearbeiten" an (und zwei standen fest im Code).
+// Diese Funktion sucht im ganzen Ordner (inkl. Unterordner) alle Freigaben per Link ohne Anmeldung (scope
+// "anonymous") und loescht sie. Freigaben an bestimmte Personen bleiben unberuehrt (werden nur gemeldet).
+async function freigabelinksEntfernen(melde){
+  const token = await msGraphTokenHolen(); if(!token) throw new Error('Nicht bei Microsoft angemeldet.');
+  const H = { Authorization: 'Bearer ' + token };
+  const holen = async (url)=>{ const r = await fetch(url, { headers: H, cache: 'no-store' }); if(!r.ok) throw new Error('HTTP ' + r.status + ' ' + await graphFehlerText(r)); return r.json(); };
+  const wurzel = await holen(msGraphPfadUrl('KVBW Onedrive') + '?$select=id,name,folder');
+  const elemente = [{ id: wurzel.id, name: 'KVBW Onedrive' }], ordner = [{ id: wurzel.id, pfad: 'KVBW Onedrive' }];
+  while(ordner.length){
+    const o = ordner.shift();
+    let url = 'https://graph.microsoft.com/v1.0/me/drive/items/' + o.id + '/children?$select=id,name,folder&$top=200';
+    while(url){
+      const d = await holen(url);
+      for(const it of d.value || []){ const pf = o.pfad + '/' + it.name; elemente.push({ id: it.id, name: pf }); if(it.folder) ordner.push({ id: it.id, pfad: pf }); }
+      url = d['@odata.nextLink'] || null;
+    }
+    if(melde) melde('Ordner werden durchsucht … (' + elemente.length + ' Einträge)');
+  }
+  const geloescht = [], andere = [], fehler = [];
+  let n = 0;
+  const pruefe = async (el)=>{
+    try{
+      const d = await holen('https://graph.microsoft.com/v1.0/me/drive/items/' + el.id + '/permissions');
+      for(const pm of d.value || []){
+        if(!pm.link) continue;   // eigene Berechtigung (Besitzer) bzw. direkte Freigabe ohne Link
+        if(pm.link.scope === 'anonymous'){
+          const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + el.id + '/permissions/' + pm.id, { method: 'DELETE', headers: H });
+          if(r.ok || r.status === 404) geloescht.push(el.name + ' (' + (pm.link.type === 'edit' ? 'bearbeiten' : 'ansehen') + ')');
+          else fehler.push(el.name + ': HTTP ' + r.status);
+        } else andere.push(el.name + ' (' + (pm.link.scope || 'Link') + ')');
+      }
+    }catch(e){ fehler.push(el.name + ': ' + (e.message || e)); }
+    n++; if(melde && n % 10 === 0) melde('Freigaben werden geprüft … ' + n + ' / ' + elemente.length);
+  };
+  const warte = [...elemente];
+  await Promise.all([1, 2, 3, 4].map(async ()=>{ while(warte.length) await pruefe(warte.shift()); }));
+  return { geprueft: elemente.length, geloescht, andere, fehler };
+}
+// einmalig automatisch nach dem Start (Auftrag vom Nutzer), bis ein Durchlauf ohne Fehler geklappt hat
+async function freigabelinksEinmalBereinigen(){
+  if(window.DEMO_MODUS || LS.get('freigaben_bereinigt_v1', false) || freigabelinksEinmalBereinigen.laeuft) return;
+  if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet' || navigator.onLine === false) return;
+  freigabelinksEinmalBereinigen.laeuft = true;
+  try{
+    const r = await freigabelinksEntfernen();
+    if(!r.fehler.length) LS.set('freigaben_bereinigt_v1', true);
+    if(r.geloescht.length) betaOverlay.meldung('Datenschutz: ' + r.geloescht.length + ' öffentliche Freigabelinks (ohne Anmeldung nutzbar) wurden gelöscht:\n\n' + r.geloescht.join('\n') +
+      (r.andere.length ? '\n\nUnverändert (Freigabe an bestimmte Personen):\n' + r.andere.join('\n') : '') + (r.fehler.length ? '\n\nNoch nicht geprüft (wird beim nächsten Start wiederholt):\n' + r.fehler.slice(0, 5).join('\n') : ''), 'Freigabelinks entfernt');
+  }catch(e){ console.warn('Freigabelinks', e); }
+  finally{ freigabelinksEinmalBereinigen.laeuft = false; }
+}
+setTimeout(()=>{ try{ freigabelinksEinmalBereinigen(); }catch(_){} }, 20000);
+setInterval(()=>{ try{ freigabelinksEinmalBereinigen(); }catch(_){} }, 10 * 60000);
+
 // Silent-Token-Holen -- OHNE Nutzer-Geste/Redirect. Schlaegt das fehl (z.B.
 // Zustimmung abgelaufen/widerrufen, oder man ist erst gar nicht angemeldet),
 // liefert die Funktion null; der Aufrufer faellt dann auf den statischen
@@ -3773,19 +3829,19 @@ function fahrdienstAuswertungRendernBasis(daten){
   html += '<div style="overflow-x:auto;"><table class="fahrdienst-tabelle"><tr>' +
     '<th>Datum</th><th>Arzt</th><th>Zeit</th><th>Gesamt</th><th>Std.-Lohn</th><th>gesetzl.</th><th>LS+PT</th><th>LS</th><th>PT</th></tr>' +
     daten.bloecke.map(b=>`<tr>
-      <td>${b.datumText}</td><td>${b.arzt}</td><td>${b.zeitLabel}</td>
+      <td>${htmlEsc(b.datumText)}</td><td>${htmlEsc(b.arzt)}</td><td>${htmlEsc(b.zeitLabel)}</td>
       <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}${b.pauschale ? '<span class="fd-gp" title="Förderung ' + fahrdienstSatzText(b.satz) + ' €/h (' + b.satzGrund + ') statt ' + euro(b.gkvRoh) + '">GP*</span>' : ''}${b.zusatz ? '<span class="fd-gp" title="Zusatzförderung 24.12./31.12.: 500 € je 24 h">+500</span>' : ''} ${b.pseudo ? '<span class="fd-gp" title="Dienst ohne GKV-Patient – Pseudo-Fall 99999 eingetragen (auch in der KV-Abrechnung anlegen)">Pseudo</span>' : ''}${!(b.gkvRoh > 0) && !b.pseudo && !fahrdienstOhneFoerderung(b.dienstart) ? '<span class="fd-gp fd-pseudo" title="Kein GKV-Fall in diesem Dienst: Für die Förderung muss ein Pseudo-Abrechnungsfall (GOP 99999, ICD Z02, Uhrzeit Dienstbeginn) angelegt werden.">99999?</span>' : ''}</td>
       <td>${euro(b.ls+b.pt)}</td><td>${euro(b.ls)}</td><td>${euro(b.pt)}</td>
     </tr>`).join('') + '</table></div></div>';
 
   html += '<div class="abschnitt"><div class="trennlinie">Quartale je vertretenem Arzt</div>';
   daten.quartale.forEach(q=>{
-    html += `<div class="fahrdienst-quartal-titel">${q.quartal}</div>`;
+    html += `<div class="fahrdienst-quartal-titel">${htmlEsc(q.quartal)}</div>`;
     q.aerzte.forEach(a=>{
       html += `<div class="fahrdienst-arzt-karte">
-        <div class="fahrdienst-arzt-name">${a.arzt}</div>
+        <div class="fahrdienst-arzt-name">${htmlEsc(a.arzt)}</div>
         <div class="fd-arzt-zeile"><div class="fd-arzt-links">
-          <ul>${a.dienste.map(d=>`<li>${d}</li>`).join('')}</ul>
+          <ul>${a.dienste.map(d=>`<li>${htmlEsc(d)}</li>`).join('')}</ul>
         </div></div>
         <div class="fahrdienst-arzt-summe">Gesamtsumme (GKV): ${euro(a.summe)}</div>
         <div class="fahrdienst-arzt-summe">abzügl. 5% Strukturpauschale: ${euro(a.summe*(1-FAHRDIENST_STRUKTUR_SATZ))}</div>
@@ -6737,8 +6793,8 @@ function ansichtKorrigieren(){
         <div class="fall-zeile ${f.art}" data-art="${f.art}" data-idx="${f.idx}">
           <input type="checkbox" class="chk" data-art="${f.art}" data-idx="${f.idx}">
           <div class="inhalt">
-            <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${f.werte.txtName || '(ohne Namen)'}</div>
-            <div class="info">${f.werte.txtDatum || ''} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}${f.rechnungsnummer ? ' &middot; <span class="renu-reset" data-art="'+f.art+'" data-idx="'+f.idx+'" title="Anklicken, um diese Nummer zurückzusetzen (z.B. bei Dopplungen)">Nr. '+f.rechnungsnummer+' &#9998;</span>' : ' &middot; ohne Rechnungsnummer'}</div>
+            <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${htmlEsc(f.werte.txtName || '(ohne Namen)')}</div>
+            <div class="info">${htmlEsc(f.werte.txtDatum || '')} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}${f.rechnungsnummer ? ' &middot; <span class="renu-reset" data-art="'+f.art+'" data-idx="'+f.idx+'" title="Anklicken, um diese Nummer zurückzusetzen (z.B. bei Dopplungen)">Nr. '+f.rechnungsnummer+' &#9998;</span>' : ' &middot; ohne Rechnungsnummer'}</div>
           </div>
         </div>`).join('')}
     </div>
@@ -6970,8 +7026,8 @@ function ansichtSyncBackups(){
           ? eintraege.map(f=>`
               <div class="backup-rechnung-zeile">
                 <span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>
-                <span class="name">${(f.werte && f.werte.txtName) || '(ohne Namen)'}</span>
-                <span class="info">${(f.werte && f.werte.txtDatum) || ''}${f.rechnungsnummer ? ' &middot; Nr. ' + f.rechnungsnummer : ''}</span>
+                <span class="name">${htmlEsc((f.werte && f.werte.txtName) || '(ohne Namen)')}</span>
+                <span class="info">${htmlEsc((f.werte && f.werte.txtDatum) || '')}${f.rechnungsnummer ? ' &middot; Nr. ' + f.rechnungsnummer : ''}</span>
               </div>`).join('')
           : '<div class="leer-hinweis">Dieser Stand enthält keine Rechnungen.</div>')
           + '<button type="button" class="btn-sekundaer btn-backup-wiederherstellen backup-wiederherstellen-panel" data-i="'+i+'">Wiederherstellen</button>';
@@ -7117,8 +7173,8 @@ function alleRechnungenListeRendern(cache, suchtext){
   zielEl.innerHTML = anzuzeigen.map((f,i)=>`
     <div class="fall-zeile ${f.art==='L'?'ls':'pt'}" data-i="${i}">
       <div class="inhalt">
-        <div class="name"><span class="badge-neu ${f.art==='L'?'ls':'pt'}">${f.art==='L'?'L':'P'}</span>${f.nachname}, ${f.vorname}</div>
-        <div class="info">${f.datum || ''}${f.betrag ? ' &middot; ' + f.betrag + ' €' : ''}${f.renu ? ' &middot; Nr. ' + f.renu : ' &middot; ohne Rechnungsnummer'}</div>
+        <div class="name"><span class="badge-neu ${f.art==='L'?'ls':'pt'}">${f.art==='L'?'L':'P'}</span>${htmlEsc(f.nachname)}, ${htmlEsc(f.vorname)}</div>
+        <div class="info">${htmlEsc(f.datum || '')}${f.betrag ? ' &middot; ' + f.betrag + ' €' : ''}${f.renu ? ' &middot; Nr. ' + f.renu : ' &middot; ohne Rechnungsnummer'}</div>
       </div>
       <div class="fall-icons"><span class="brief-platz"></span><span class="pdf-platz"></span></div>
     </div>`).join('') +
@@ -9403,6 +9459,7 @@ function betaAbschnittHtml(){
 function betaOneDriveTestHtml(){
   return `
       <button type="button" class="btn-sekundaer" id="btnTestOneDrive" style="margin-top:10px;"><span class="btn-titel">Verbindungstest</span><span class="unter">jeden Zugriff einzeln, mit Fehlercode</span></button>
+      <button type="button" class="btn-sekundaer" id="btnFreigaben" style="margin-top:10px;"><span class="btn-titel">Freigabelinks prüfen</span><span class="unter">öffentliche Links im Ordner „KVBW Onedrive“ finden und löschen</span></button><div id="freigabeErgebnis" class="einr-klein"></div>
       <div class="hinweis ini-testergebnis" id="testErgebnisOd"></div>
 `;
 }
@@ -9682,6 +9739,14 @@ function betaEinstellungenWiring(){
       ergebnis('<b>✗ PDF-Umwandlung fehlgeschlagen:</b> ' + htmlEsc(e.message||String(e)));
     }
   };
+  { const fb = document.getElementById('btnFreigaben'); if(fb) fb.onclick = async ()=>{
+      const out = document.getElementById('freigabeErgebnis'); fb.disabled = true;
+      try{ const r = await freigabelinksEntfernen(t=>{ out.textContent = t; });
+        if(!r.fehler.length) LS.set('freigaben_bereinigt_v1', true);
+        out.innerHTML = '<b>' + r.geprueft + ' Einträge geprüft.</b> ' + (r.geloescht.length ? r.geloescht.length + ' öffentliche Links gelöscht: ' + htmlEsc(r.geloescht.join(', ')) : 'Keine öffentlichen Links gefunden.') +
+          (r.andere.length ? '<br>Freigaben an bestimmte Personen (unverändert): ' + htmlEsc(r.andere.join(', ')) : '') + (r.fehler.length ? '<br>✗ Nicht geprüft: ' + htmlEsc(r.fehler.slice(0, 5).join('; ')) : ''); }
+      catch(e){ out.textContent = '✗ ' + (e.message || e); }
+      finally{ fb.disabled = false; } }; }
   document.getElementById('btnTestOneDrive').onclick = async ()=>{
     const btn = document.getElementById('btnTestOneDrive');
     btn.disabled = true;
@@ -9693,7 +9758,7 @@ function betaEinstellungenWiring(){
     try{
       ['faelle_ls','faelle_pt','bestatter_katalog'].forEach(k=>{
         const v = window.__rohSpeicher.get(k);
-        if(v !== null) localStorage.setItem(k, v);
+        if(v !== null) Speicher.setzen(k, v);   // verschluesselt, nie im Klartext in localStorage
       });
       appToastAnzeigen('Fälle aus der normalen Version übernommen.', 2200);
     }catch(e){ betaOverlay.meldung('Übernahme fehlgeschlagen: ' + (e.message||e)); }
@@ -19806,7 +19871,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v412';
+const APP_VERSION = 'v413';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -21985,7 +22050,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       if(!q){ liste.classList.remove('aktiv'); liste.innerHTML=''; return; }
       const treffer = ladeKatalog().filter(b=>b.name.toLowerCase().startsWith(q)).slice(0,6);
       if(!treffer.length){ liste.classList.remove('aktiv'); liste.innerHTML=''; return; }
-      liste.innerHTML = treffer.map(b=>`<div data-name="${b.name}" data-a1="${b.adr1}" data-a2="${b.adr2}">${b.name}<br><small style="color:var(--text-schwach)">${b.adr1}, ${b.adr2}</small></div>`).join('');
+      liste.innerHTML = treffer.map(b=>`<div data-name="${htmlEsc(b.name)}" data-a1="${htmlEsc(b.adr1)}" data-a2="${htmlEsc(b.adr2)}">${htmlEsc(b.name)}<br><small style="color:var(--text-schwach)">${htmlEsc(b.adr1)}, ${htmlEsc(b.adr2)}</small></div>`).join('');
       liste.classList.add('aktiv');
       liste.querySelectorAll('div').forEach(d=>{
         d.onclick = ()=>{
@@ -22616,7 +22681,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         // echten "Ort existiert nicht"-Falls, das wird jetzt im Text
         // unterschieden.
         const zusatz = ermitteltePlz===null ? keinInternetHinweisText() : '';
-        feldWarnung(plzOrtId, `Der Ort "${eingabe}" konnte nicht gefunden werden.${zusatz} Bitte PLZ und Ort manuell eintragen.
+        feldWarnung(plzOrtId, `Der Ort "${htmlEsc(eingabe)}" konnte nicht gefunden werden.${zusatz} Bitte PLZ und Ort manuell eintragen.
           <div class="aktionen"><button data-akt="behalten">So belassen</button></div>`);
         const warnEl = document.getElementById(plzOrtId+'_warn');
         warnEl.querySelector('[data-akt="behalten"]').onclick = ()=> feldWarnung(plzOrtId, '');
@@ -22640,7 +22705,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         // ohne jeden Ausweg blockiert; plus Internet-Hinweis bei
         // Netzwerkfehler (ortErmitteln()===null).
         const zusatz = ermittelterOrt===null ? keinInternetHinweisText() : '';
-        feldWarnung(plzOrtId, `Zur PLZ "${eingegebenePlz}" konnte kein Ort gefunden werden.${zusatz} Bitte manuell ergänzen.
+        feldWarnung(plzOrtId, `Zur PLZ "${htmlEsc(eingegebenePlz)}" konnte kein Ort gefunden werden.${zusatz} Bitte manuell ergänzen.
           <div class="aktionen"><button data-akt="behalten">So belassen</button></div>`);
         const warnEl = document.getElementById(plzOrtId+'_warn');
         warnEl.querySelector('[data-akt="behalten"]').onclick = ()=> feldWarnung(plzOrtId, '');
@@ -22667,7 +22732,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       return;
     }
     if(plzLautKarte !== eingegebenePlz){
-      feldWarnung(plzOrtId, `Achtung: Die eingegebene PLZ (${eingegebenePlz}) passt möglicherweise nicht zur Adresse. Laut Kartendienst gehört zu "${strasse}" eher PLZ ${plzLautKarte}.
+      feldWarnung(plzOrtId, `Achtung: Die eingegebene PLZ (${htmlEsc(eingegebenePlz)}) passt möglicherweise nicht zur Adresse. Laut Kartendienst gehört zu "${htmlEsc(strasse)}" eher PLZ ${htmlEsc(plzLautKarte)}.
         <div class="aktionen">
           <button data-akt="korrigieren">Auf ${plzLautKarte} korrigieren</button>
           <button data-akt="behalten">So belassen</button>
