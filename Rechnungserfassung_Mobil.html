@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-mJPPFtQl0ZVfCC2R70+OXpMyzOeYzr+n8zTXHk6pFdQ=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-TbZ98wxnQhXozxEgnOy5oU/rtWyVuEwU3Jbv1zZyyV8=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -17579,7 +17579,19 @@ function vkKachelnNachladen(map){
   const online = ()=>{ if(!map.getContainer().isConnected){ window.removeEventListener('online', online); return; } n = 0; if(!t) t = setTimeout(nach, 800); };
   window.addEventListener('online', online);
 }
+// MapLibre 4.7 ueberspringt die erste Groessenmeldung seines ResizeObservers. Waechst das Kartenfeld
+// genau in diesem Moment (die kleine Karte fuellt nach dem Start den freien Platz), bleibt die Zeichenflaeche
+// zu klein und unten/rechts erscheint ein leerer Balken. Deshalb selbst nachmessen und nachziehen.
+function vkGroesseNachziehen(map){
+  const box = map.getContainer();
+  const pruefen = ()=>{ try{ if(!box.isConnected) return; const cv = map.getCanvas(); if(!cv || !box.clientWidth || !box.clientHeight) return;
+    if(Math.abs(cv.clientWidth - box.clientWidth) > 1 || Math.abs(cv.clientHeight - box.clientHeight) > 1){ map.resize(); map.triggerRepaint(); } }catch(_){} };
+  const ro = new ResizeObserver(()=>{ if(!box.isConnected){ ro.disconnect(); return; } requestAnimationFrame(pruefen); });
+  ro.observe(box);
+  map.once('load', pruefen); [300, 1000, 2500].forEach(t=> setTimeout(pruefen, t));
+}
 function vkSymbolSkalaAnbinden(map){
+  try{ vkGroesseNachziehen(map); }catch(_){}
   try{ vkKachelnNachladen(map); }catch(_){}
   const setze = ()=>{ try{ const z = map.getZoom(), f = Math.max(1, Math.min(2.1, 1 + (z - 10.5) * 0.19)); map.getContainer().style.setProperty('--vks', f.toFixed(2)); }catch(_){} };
   map.on('zoom', setze); map.on('load', setze); setze();
@@ -19916,7 +19928,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v423';
+const APP_VERSION = 'v424';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
