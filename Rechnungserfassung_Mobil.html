@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-TJCNxp8VU+XumIjolmx+NlAMe1J8+bWN+h9jW3Qqdtc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-VVJPN/Q4Cg5RcV7yEs9sllo3VkZpiD8WDpupD6CdcVU=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -7979,6 +7979,17 @@ async function arztdatenLaden(){
   return {arzt: a, ini: w};
 }
 
+// Moegliche Rechnungsempfaenger einer Leichenschau (nur wenn ein Bestatter eingetragen ist, gibt es eine Wahl)
+function lsEmpfaengerOptionen(w){
+  const t = (x)=> String(x || '').trim(), adr = (a, b)=> [t(a), t(b)].filter(Boolean).join(', ');
+  const o = [];
+  if(t(w.txtBName)) o.push({ key: 'bestatter', label: 'Bestatter: ' + t(w.txtBName) + (adr(w.txtAdresse1, w.txtAdresse2) ? ', ' + adr(w.txtAdresse1, w.txtAdresse2) : '') });
+  if(!o.length) return o;
+  if(adr(w.txtPAdresse1, w.txtPAdresse2)) o.push({ key: 'patient', label: 'Patientenadresse (Angehörige): ' + adr(w.txtPAdresse1, w.txtPAdresse2) });
+  const s = adr(w.txtSterbeAdr1, w.txtSterbeAdr2);
+  if(s && s !== adr(w.txtPAdresse1, w.txtPAdresse2)) o.push({ key: 'sterbe', label: 'Abweichender Sterbeort: ' + s });
+  return o;
+}
 function fallRechnungsdaten(f, arzt){
   const w = f.werte || {};
   const {nachname, vorname} = nameAufteilen(w.txtName);
@@ -7998,7 +8009,13 @@ function fallRechnungsdaten(f, arzt){
     daten.diag = diagnosenVolltext(w.diagnosen);
   } else {
     const bestatter = String(w.txtBName || '').trim();
-    if(bestatter){
+    const empf = w.txtEmpfaenger || '';
+    const sterbeAbw = String(w.txtSterbeAdr1 || '').trim() || String(w.txtSterbeAdr2 || '').trim();
+    if(empf === 'sterbe' && sterbeAbw){
+      daten.bname = ''; daten.badresse1 = w.txtSterbeAdr1 || ''; daten.badresse2 = w.txtSterbeAdr2 || '';
+    } else if(empf === 'patient'){
+      daten.bname = ''; daten.badresse1 = daten.padresse1; daten.badresse2 = daten.padresse2;
+    } else if(bestatter){
       daten.bname = bestatter; daten.badresse1 = w.txtAdresse1 || ''; daten.badresse2 = w.txtAdresse2 || '';
     } else {
       // wie am PC: ohne Bestatter an die Patientenadresse, "c/o"-Zeile entfaellt
@@ -10874,7 +10891,7 @@ async function betaMahnungErstellen(e){
 
 async function betaZweiteAdresseErstellen(e){
   const ziel = betaZiel();
-  betaOverlay.zeigen('Rechnung an 2. Adresse'); betaOverlay.fortschritt(0.05);
+  betaOverlay.zeigen('Rechnung an Patientenadresse'); betaOverlay.fortschritt(0.05);
   try{
     const token = await msGraphTokenHolen();
     if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
@@ -10887,7 +10904,7 @@ async function betaZweiteAdresseErstellen(e){
         [{ label:'Melde: ' + melde.join(', '), akt:'melde', primaer:true }, { label:'Sterbeort: ' + sterbe.join(', '), akt:'sterbe' }, { label:'Abbrechen', akt:'nein' }]);
       if(wahl === 'nein'){ betaOverlay.schliessen(); return false; }
       if(wahl === 'sterbe') adr = sterbe;
-      betaOverlay.zeigen('Rechnung an 2. Adresse');
+      betaOverlay.zeigen('Rechnung an Patientenadresse');
     }
     if(!adr[0] && !adr[1]) throw new Error('In der Übersicht steht keine Patientenadresse.');
     betaOverlay.schritt('Rechnung wird geladen …');
@@ -10901,7 +10918,7 @@ async function betaZweiteAdresseErstellen(e){
     const absaetze = [];
     xml.replace(RD_ABSATZ_RE, (p, pos)=>{ absaetze.push({ p, pos }); return p; });
     const i = absaetze.findIndex(a=> rdAbsatzText(a.p).indexOf('c/o Bestattungsinstitut') >= 0);
-    if(i < 0 || !absaetze[i + 2]) throw new Error('Diese Rechnung ging nicht an einen Bestatter („c/o Bestattungsinstitut“ fehlt) – sie ist schon an die Patientenadresse adressiert.');
+    if(i < 0 || !absaetze[i + 2]) throw new Error('Diese Rechnung ging nicht an einen Bestatter („c/o Bestattungsinstitut“ fehlt) – sie ist schon an die Patienten- bzw. Sterbeadresse adressiert.');
     const ersatz = new Map([[i, ''], [i + 1, docxAbsatzMitText(absaetze[i + 1].p, adr[0])], [i + 2, docxAbsatzMitText(absaetze[i + 2].p, adr[1])]]);
     let neu = '', ende = 0;
     absaetze.forEach((a, k)=>{ neu += xml.slice(ende, a.pos) + (ersatz.has(k) ? ersatz.get(k) : a.p); ende = a.pos + a.p.length; });
@@ -10919,7 +10936,7 @@ async function betaZweiteAdresseErstellen(e){
     const { pdfBlob, pdfItem } = await docxHochladenMitPdf(token, ziel.ordner, name, blob, t2=>{ betaOverlay.fortschritt(0.7); betaOverlay.schritt(t2); });
     betaOverlay.fortschritt(0.9); betaOverlay.schritt('Datum wird in die Übersicht eingetragen …');
     await betaUebersichtDatumSetzen(token, ziel, e.renu, 'V', morgen, betaFrage);
-    return await betaDokumentFertig('Rechnung an 2. Adresse erstellt', { renu: e.renu, name, ziel, typ: '2A', pdfBlob, pdfItemId: pdfItem && pdfItem.id },
+    return await betaDokumentFertig('Rechnung an Patientenadresse erstellt', { renu: e.renu, name, ziel, typ: '2A', pdfBlob, pdfItemId: pdfItem && pdfItem.id },
       ['Adresse: ' + adr.filter(Boolean).join(', '), ...warnungen]);
   }catch(err){
     await betaOverlay.ergebnis('Nicht erstellt', '✗ ' + htmlEsc(err.message || String(err)));
@@ -10972,7 +10989,7 @@ function betaZahlungInfo(e){
 async function betaAktionBezahlt(eintraege){
   const ziel = betaZiel();
   const orig = eintraege.filter(e=> e.typ === 'ORIG');
-  if(!orig.length){ await betaOverlay.meldung('Bitte die Rechnung selbst auswählen (nicht Erinnerung oder 2. Adresse).'); return false; }
+  if(!orig.length){ await betaOverlay.meldung('Bitte die Rechnung selbst auswählen (nicht Erinnerung oder Fassung an die Patientenadresse).'); return false; }
   const alleBezahlt = orig.every(e=> e.bezahlt);
   const heute = heuteIso();
   const akt = await betaOverlay.ergebnis(alleBezahlt ? 'Zahlung' : 'Als bezahlt markieren',
@@ -11346,7 +11363,7 @@ async function betaAktionLoeschen(eintraege){
   let mitZeile = false;
   if(orig.length){
     const akt = await betaOverlay.ergebnis('Endgültig löschen?', htmlEsc('Die erzeugten Dokumente (Word + PDF) wirklich löschen?\n\n' + liste).replace(/\n/g, '<br>') +
-      (orig.length < eintraege.length ? '<br><br><span class="beta-erg-klein">Für Erinnerungen/2. Adresse gibt es keine eigene Zeile – dort werden nur die Dateien gelöscht.</span>' : ''),
+      (orig.length < eintraege.length ? '<br><br><span class="beta-erg-klein">Für Erinnerungen/Fassungen an die Patientenadresse gibt es keine eigene Zeile – dort werden nur die Dateien gelöscht.</span>' : ''),
       [{ label:'Abbrechen', akt:'nein' }, { label:'Nur Dateien', akt:'dateien' }, { label:'Dateien + Zeile', akt:'zeile', primaer:true }]);
     if(akt === 'nein'){ betaOverlay.schliessen(); return false; }
     mitZeile = akt === 'zeile';
@@ -11495,7 +11512,7 @@ function betaEintraegeBauen(c){
       });
     if(art === 'ls'){
       const d2 = datei(basis + '_2. Adresse');
-      if(d2.pdf || d2.docx) eintraege.push({ key: z.nr + '|2A', typ: '2A', z, renu, art, name: name + ' (2. Adresse)', datum, sort, betrag:'', datei: basis + '_2. Adresse', ...d2, versendet: lxpFlagVorhanden(u, 'LXP:2A'), geplant: lxpFlagVorhanden(u, 'LXP:2A') ? versandGeplant(u, '2A') : null, unter: true });
+      if(d2.pdf || d2.docx) eintraege.push({ key: z.nr + '|2A', typ: '2A', z, renu, art, name: name + ' (an Patientenadresse)', datum, sort, betrag:'', datei: basis + '_2. Adresse', ...d2, versendet: lxpFlagVorhanden(u, 'LXP:2A'), geplant: lxpFlagVorhanden(u, 'LXP:2A') ? versandGeplant(u, '2A') : null, unter: true });
     }
     for(let n = 1; n < 20; n++){
       let mname = basis + '_Erinnerung ' + n, dm = datei(mname);
@@ -11817,7 +11834,7 @@ function betaAktionsleisteAktualisieren(nachKey, ziel){
   };
   const k = (id, sym, label)=> `<button type="button" data-a="${id}" ${kann[id] ? '' : 'disabled'}><span class="sym">${sym}</span><span>${label}</span></button>`;
   leiste.innerHTML = `<div class="gesamt-aktionen-kopf"><span>${gewaehlt.length} ausgewählt</span><button type="button" data-a="leer">Auswahl aufheben</button></div>
-    <div class="gesamt-aktionen-knoepfe">${k('senden', '&#9993;', 'Senden')}${k('termin', '&#8987;', 'Termin')}${k('adresse', '&#128205;', '2. Adresse')}${k('mahnung', '&#128231;', 'Erinnerung')}${k('bezahlt', '&#128182;', 'Bezahlt')}${k('frei', '&#128275;', 'Freigeben')}${k('weg', '&#128465;', 'Löschen')}</div>`;
+    <div class="gesamt-aktionen-knoepfe">${k('senden', '&#9993;', 'Senden')}${k('termin', '&#8987;', 'Termin')}${k('adresse', '&#128205;', 'An Patientenadresse')}${k('mahnung', '&#128231;', 'Erinnerung')}${k('bezahlt', '&#128182;', 'Bezahlt')}${k('frei', '&#128275;', 'Freigeben')}${k('weg', '&#128465;', 'Löschen')}</div>`;
   leiste.classList.add('aktiv');
   const fertig = async (veraendert)=>{ if(veraendert){ betaAuswahl.clear(); await ansichtRechnungenGesamt(true); } };
   leiste.querySelector('[data-a="leer"]').onclick = ()=>{ betaAuswahl.clear(); betaGesamtZeichnen(document.getElementById('txtGesamtSuche').value, ziel); };
@@ -20052,7 +20069,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v436';
+const APP_VERSION = 'v437';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -23301,7 +23318,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   let warnhinweiseBestaetigt = false;
   let neuGespeichert = false; // Doppelklick auf "Speichern" legt keinen zweiten Fall an
 
-  document.getElementById('btnSpeichern').onclick = ()=>{
+  document.getElementById('btnSpeichern').onclick = async ()=>{
     if(neuGespeichert) return;
     alleChecksAusfuehren();
     if(art==='ls') pruefeBestatterLeer();
@@ -23421,6 +23438,18 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       eintrag.positionsDetails = betaDet;
     } else if(korrekturIdx!==undefined && faelle[korrekturIdx].positionsDetails){
       eintrag.positionsDetails = faelle[korrekturIdx].positionsDetails;
+    }
+    // LS mit Bestatter: fragen, an wen die Rechnung gehen soll (Bestatter, Patientenadresse, abw. Sterbeort)
+    if(art === 'ls'){
+      const opts = lsEmpfaengerOptionen(w);
+      if(opts.length > 1){
+        const vorher = w.txtEmpfaenger || (korrekturIdx!==undefined && faelle[korrekturIdx] && faelle[korrekturIdx].werte && faelle[korrekturIdx].werte.txtEmpfaenger) || 'bestatter';
+        const wahl = await betaOverlay.ergebnis('An wen geht die Rechnung?', 'Bitte die Anschrift wählen, an die die Rechnung adressiert wird:',
+          opts.map(o=> ({ label: o.label, akt: o.key, primaer: o.key === vorher })).concat([{ label: 'Abbrechen', akt: 'abbrechen' }]));
+        betaOverlay.schliessen();
+        if(!wahl || wahl === 'abbrechen') return;
+        w.txtEmpfaenger = wahl;
+      } else delete w.txtEmpfaenger;
     }
     if(korrekturIdx!==undefined) faelle[korrekturIdx]=eintrag; else { faelle.push(eintrag); neuGespeichert = true; }
     speichereFaelle(art, faelle);
