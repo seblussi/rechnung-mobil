@@ -174,6 +174,9 @@ app.http('lxp', {
       const min = gesperrt(id, jetzt);
       if (min) return { status: 429, headers: { ...cors, 'Content-Type': 'application/json', 'Retry-After': String(min * 60) }, body: JSON.stringify({ status: 429, message: 'Zu viele Fehlversuche. Bitte in ' + min + ' Minuten erneut versuchen.', minuten: min }) };
       const c = String((daten && typeof daten === 'object' && daten._zugang) || '');
+      // Selbsttest der App ("ist die Weiterleitung geschuetzt?") schickt absichtlich einen falschen Code mit
+      // diesem Praefix: sofort ablehnen, nicht als Fehlversuch zaehlen (kann nie ein gueltiger Code sein).
+      if (c.startsWith('pruefung-falsch-') && !codes.some((x) => gleich(x, c))) return json(403, cors, { status: 403, message: 'Zugangscode fehlt oder ist falsch.' });
       if (!c || !codes.some((x) => gleich(x, c))) { await fehlversuch(id, jetzt, context); return json(403, cors, { status: 403, message: 'Zugangscode fehlt oder ist falsch.' }); }
       FEHL.delete(id);   // richtiger Code: Zaehler zuruecksetzen
     }
