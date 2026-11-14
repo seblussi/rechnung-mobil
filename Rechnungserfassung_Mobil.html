@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-/9v57Od4cXK+ZffKzyvt7xfESaTxlcxEd8uCKPUETuk=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-xGtDpYQJB2GlqlOxLrhdimXrr7216FG/dt6/sSgldes=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -17199,7 +17199,7 @@ async function ibanBankFuellen(el){
 // ---------- GiroCode (EPC-QR) fuer Rechnungen ----------
 // Banking-Apps lesen daraus Empfaenger, IBAN, BIC, Betrag und Verwendungszweck (Rechnungsnummer).
 function girocodeText(a, betrag, renu){
-  const iban = ibanNorm(a && a.iban); if(ibanPruefen(iban) !== '' || !(betrag > 0)) return null;
+  const iban = ibanNorm(a && a.iban); if(ibanPruefen(iban) !== '' || !(betrag >= 0.01 && betrag <= 999999999.99)) return null;   // EPC069-12: 0,01 bis 999.999.999,99 EUR
   const name = String((a && (a.kontoinhaber || a.name)) || '').replace(/\s+/g, ' ').trim().slice(0, 70); if(!name) return null;
   return ['BCD', '002', '1', 'SCT', String((a && a.bic) || '').replace(/\s/g, '').toUpperCase(), name, iban,
     'EUR' + (Math.round(betrag * 100) / 100).toFixed(2), '', '', ('Rechnung ' + String(renu || '').trim()).trim().slice(0, 140)].join('\n');
@@ -17216,6 +17216,18 @@ async function girocodePng(text, ohneText){
     const t = 'QR-Code zum Bezahlen'; let fs = Math.round(txtH * 0.6);
     do{ g.font = '600 ' + fs + 'px Arial, Helvetica, sans-serif'; fs--; }while(g.measureText(t).width > w * 0.94 && fs > 8);
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, w / 2, w - rand * m * 0.35 + txtH * 0.4);
+  }
+  // Selbstpruefung: den fertigen Code wieder einlesen und mit den Zahlungsdaten vergleichen (wo der Browser
+  // einen QR-Leser mitbringt, z. B. Chrome auf Android/macOS). Weicht etwas ab, wird KEIN Code eingefuegt.
+  if(typeof BarcodeDetector !== 'undefined'){
+    let fmt = []; try{ fmt = await BarcodeDetector.getSupportedFormats(); }catch(_){}
+    if(fmt.includes('qr_code')){
+      let gelesen = null; try{ const t = await new BarcodeDetector({ formats: ['qr_code'] }).detect(c); gelesen = t.length ? t[0].rawValue : ''; }catch(_){}
+      if(gelesen !== null){
+        let alt = gelesen; try{ alt = decodeURIComponent(escape(gelesen)); }catch(_){}
+        if(gelesen !== text && alt !== text) throw new Error('GiroCode-Selbstprüfung: der erzeugte Code stimmt nicht mit den Zahlungsdaten überein – Code wird weggelassen.');
+      }
+    }
   }
   const blob = await new Promise(ok=> c.toBlob(ok, 'image/png'));
   return { daten: new Uint8Array(await blob.arrayBuffer()), hoeheZuBreite: c.height / c.width };
@@ -20017,7 +20029,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v433';
+const APP_VERSION = 'v434';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
