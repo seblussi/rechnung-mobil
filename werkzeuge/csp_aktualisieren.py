@@ -11,7 +11,7 @@ for m in re.finditer(r'<script(?![^>]*\bsrc=)([^>]*)>(.*?)</script>', s, re.S):
     h = "'sha256-" + base64.b64encode(hashlib.sha256(body.encode('utf-8')).digest()).decode() + "'"
     if h not in hashes: hashes.append(h)
 connect = ["'self'", 'blob:', 'data:', 'https://graph.microsoft.com', 'https://login.microsoftonline.com', 'https://login.live.com',
-  'https://*.microsoftpersonalcontent.com', 'https://*.1drv.com', 'https://*.livefilestore.com',
+  'https://*.microsoftpersonalcontent.com', 'https://*.1drv.com', 'https://*.livefilestore.com', 'https://*.svc.ms',
   'https://nominatim.openstreetmap.org', 'https://router.project-osrm.org', 'https://routing.openstreetmap.de',
   'https://overpass-api.de', 'https://overpass.kumi.systems', 'https://overpass.private.coffee',
   'https://tiles.openfreemap.org', 'https://tile.openstreetmap.org', 'https://seblussi.github.io',

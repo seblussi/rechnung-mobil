@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-5Q2FYqpevFXkjW9gc7btvRBr0Xjq5JIaZpNuIcKs06w=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-/9v57Od4cXK+ZffKzyvt7xfESaTxlcxEd8uCKPUETuk=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -2261,7 +2261,8 @@ try{
       const url = typeof input === 'string' ? input : (input && input.url) || '';
       const methode = String((init && init.method) || 'GET').toUpperCase();
       const auth = kopfAuth(init && init.headers);
-      if(methode !== 'GET' || !auth || !/^https:\/\/graph\.microsoft\.com\/.+\/content(\?.*)?$/.test(url) || (init && init.signal && init.signal.aborted)) throw e;
+      // Umwandlungen (?format=pdf) nie durch die Originaldatei ersetzen -- sonst kaeme still das Word-Dokument zurueck
+      if(methode !== 'GET' || !auth || !/^https:\/\/graph\.microsoft\.com\/.+\/content(\?.*)?$/.test(url) || /[?&]format=/.test(url) || (init && init.signal && init.signal.aborted)) throw e;
       try{
         const r = await orig(url.replace(/\/content(\?.*)?$/, ''), { headers: { Authorization: auth }, cache: 'no-store' });   // ohne $select, sonst fehlt der Download-Link
         if(!r.ok) throw e;
@@ -2271,6 +2272,10 @@ try{
     }
   };
 })();
+// Von der Sicherheitsrichtlinie blockierte Adressen merken (fuer verstaendliche Fehlermeldungen)
+window.__cspBlockiert = [];
+document.addEventListener('securitypolicyviolation', (ev)=>{ try{ let h = String(ev.blockedURI || ''); try{ h = new URL(h).host; }catch(_){} window.__cspBlockiert.push({ t: Date.now(), host: h, art: ev.effectiveDirective || ev.violatedDirective }); if(window.__cspBlockiert.length > 20) window.__cspBlockiert.shift(); console.warn('Sicherheitsrichtlinie blockiert', ev.blockedURI, ev.effectiveDirective); }catch(_){} });
+function cspZuletztBlockiert(ms){ const g = (window.__cspBlockiert || []).filter(x=> Date.now() - x.t < (ms || 10000)); return g.length ? g[g.length - 1].host : ''; }
 // fehlende Kartenkacheln ausblenden (statt eines onerror-Attributs: die Sicherheitsrichtlinie erlaubt keine Inline-Handler)
 document.addEventListener('error', (ev)=>{ const t = ev.target; if(t && t.tagName === 'IMG' && t.classList.contains('osm-kachel')) t.style.visibility = 'hidden'; }, true);
 const LS = {
@@ -8524,7 +8529,7 @@ async function docxHochladenMitPdf(token, ordner, name, docxBlob, meldung){
         if(kopf === '%PDF-') pdfBlob = new Blob([b], { type:'application/pdf' });
         else pdfFehler = 'Antwort war keine PDF';
       } else pdfFehler = 'HTTP ' + r.status;
-    }catch(e){ pdfFehler = 'keine Antwort (' + ((e && e.message) || e) + ')'; }
+    }catch(e){ await new Promise(res=> setTimeout(res, 100)); const bl = cspZuletztBlockiert(); pdfFehler = 'keine Antwort (' + ((e && e.message) || e) + (bl ? '; blockiert: ' + bl : '') + ')'; }
     if(!pdfBlob) await new Promise(res=> setTimeout(res, 1500 * versuch));
   }
   if(!pdfBlob) throw new Error('PDF erzeugen: Microsoft konnte aus dem Word-Dokument kein PDF machen (' + pdfFehler + '). Die Word-Datei liegt bereits im Ordner.');
@@ -20012,7 +20017,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v432';
+const APP_VERSION = 'v433';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
