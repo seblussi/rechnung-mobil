@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-8fQPWCKq/nigNxThnUiEOI9JwbzKEX0VzjFRv/+vtOg=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-TJCNxp8VU+XumIjolmx+NlAMe1J8+bWN+h9jW3Qqdtc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -2376,7 +2376,7 @@ function rnZaehlerAusEingabe(eingabe){
   const bereinigt = (eingabe||'').trim().replace(/\D/g,'');
   if(!bereinigt) return null;
   const z = parseInt(bereinigt, 10);
-  if(isNaN(z) || z<0 || z>999) return null;
+  if(isNaN(z) || z<0 || z>99998) return null;
   return z + 1;
 }
 function rnYymmdd(datumNorm){
@@ -2405,9 +2405,9 @@ function rechnungsnummerBerechnen(nachname, vorname, datumNorm, zaehler){
 // werden (Dopplungsgefahr).
 function renuZaehlerAusText(wert){
   const text = String(wert==null?'':wert).trim();
-  const treffer = text.match(/-(\d{3})$/);
+  const treffer = text.match(/-(\d{3,5})$/);   // ab 1000 vierstellig
   if(treffer) return parseInt(treffer[1], 10);
-  if(/^\d{3}$/.test(text)) return parseInt(text, 10);
+  if(/^\d{3,5}$/.test(text)) return parseInt(text, 10);
   return null;
 }
 function rnZaehlerStandText(e){
@@ -2541,13 +2541,20 @@ function hoechsteLokalVergebeneRenu(){
   });
   return hoechste;
 }
+// "Laufende Nummer fortsetzen ab": vom Nutzer gesetzte naechste Nummer (z. B. 710 beim Umstieg auf die App).
+// Gilt als Untergrenze -- nie wird eine kleinere Nummer vergeben; liegt die Uebersicht schon hoeher, gilt die.
+function renuFortsetzenAb(){
+  let n = Number(ladeEinstellungen().rnAb) || 0;
+  try{ const w = ((typeof iniCacheLaden === 'function' ? iniCacheLaden() : null) || {}).werte || {}; n = Math.max(n, parseInt(w.RENU_AB, 10) || 0); }catch(_){}
+  return n > 0 ? n : 0;
+}
 async function naechsterRenuZaehlerErmitteln(){
   const e = ladeEinstellungen();
   const live = await msGraphNaechsteRenuLiveErmitteln();
   // Untergrenze: nie eine Nummer erneut vergeben, die hier lokal (z.B. in
   // einem noch nicht per "Handy laden" abgeholten Fall) bereits vergeben ist,
   // selbst wenn die Excel-Datei das noch nicht widerspiegelt.
-  const lokaleUntergrenze = hoechsteLokalVergebeneRenu() + 1;
+  const lokaleUntergrenze = Math.max(hoechsteLokalVergebeneRenu() + 1, renuFortsetzenAb());
   if(live!==null){
     const naechster = Math.max(live, lokaleUntergrenze);
     if(naechster !== e.rnNaechsterZaehler){
@@ -9482,6 +9489,7 @@ function betaEinstellungenHtml(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Bankverbindung</div>
       ${gruppe('Bankverbindung').replace('<div class="sync-unter-titel">Bankverbindung</div>', '<div class="sync-unter-titel">Konto für Leichenschau- und Privatrechnungen</div>')}
+      <label class="einst-feld" style="display:block; margin:6px 0 12px;"><span style="display:block; font-weight:600;">Rechnungsnummer: laufende Nummer fortsetzen ab</span><input type="text" id="rnAbEingabe" inputmode="numeric" maxlength="5" placeholder="z. B. 710" value="${renuFortsetzenAb() || ''}" style="width:9em; margin-top:4px;"><span class="hinweis" id="rnAbHinweis" style="display:block; font-size:12.5px; color:var(--text-schwach); margin-top:4px;">Die nächste Rechnung bekommt mindestens diese Nummer (letzte Stelle der Rechnungsnummer, z. B. „…-710“). Liegt die Rechnungsübersicht schon höher, zählt die App dort weiter. Nach 999 geht es vierstellig mit 1000 weiter. <b id="rnAbAktuell"></b></span></label>
       <div class="einstellung-zeile" style="margin:6px 0 10px;"><input type="checkbox" id="chkRechnungQr"${ladeEinstellungen().rechnungQr !== false ? ' checked' : ''}><div class="txt">QR-Code zum Bezahlen auf Rechnungen<span class="hinweis">GiroCode auf Leichenschau-, Privat- und Vertretungsärzte-Rechnungen: Mit der Banking-App scannen – Empfänger, IBAN, Betrag und Rechnungsnummer sind dann schon ausgefüllt. Bank und BIC ergänzt die App beim Eintippen der IBAN selbst.</span></div></div>
       ${gruppe('Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)').replace('<div class="sync-unter-titel">Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)</div>',
         '<div class="sync-unter-titel" style="margin-top:14px;">Konto für Rechnungen an Vertretungsärzte</div><div class="hinweis" style="font-size:12.5px; color:var(--text-schwach); margin-bottom:6px;">Leer lassen, wenn dasselbe Konto wie oben gelten soll.</div>')}
@@ -9616,6 +9624,21 @@ function betaEinstellungenWiring(){
     cb.checked = !!an;
     ablageErgebnis(an ? '<b style="color:#c0392b;">Echtbetrieb ist an.</b>' : 'Testablage ist aktiv.');
   };
+  { const ra = document.getElementById('rnAbEingabe'), rh = document.getElementById('rnAbHinweis');
+    const anzeigen = async ()=>{ try{ const n = await naechsterRenuZaehlerErmitteln(); const el = document.getElementById('rnAbAktuell'); if(el) el.textContent = n ? 'Nächste Nummer derzeit: ' + String(n).padStart(3, '0') + '.' : ''; }catch(_){} };
+    if(ra){
+      anzeigen();
+      ra.onchange = async ()=>{
+        const roh = ra.value.replace(/\D/g, ''); const n = roh ? parseInt(roh, 10) : 0;
+        if(roh && !(n >= 1 && n <= 99999)){ appToastAnzeigen('Bitte eine Zahl zwischen 1 und 99999 eintragen.', 2600); return; }
+        const e = ladeEinstellungen(); e.rnAb = n || null; speichereEinstellungen(e);
+        try{ if(typeof iniAenderungenSchreiben === 'function') await iniAenderungenSchreiben({ RENU_AB: n ? String(n) : '0' }, { RENU_AB: ((iniCacheLaden() || {}).werte || {}).RENU_AB }, { ohneRueckfrage: true }); }catch(err){ console.warn('RENU_AB in ini', err); }
+        ra.value = n ? String(n) : '';
+        appToastAnzeigen(n ? 'Die nächste Rechnung bekommt mindestens Nummer ' + String(n).padStart(3, '0') + '.' : 'Keine Untergrenze mehr – es wird an der Rechnungsübersicht weitergezählt.', 3200);
+        anzeigen();
+      };
+    }
+  }
   { const cq = document.getElementById('chkRechnungQr'); if(cq) cq.onchange = ()=>{ const e = ladeEinstellungen(); e.rechnungQr = cq.checked; speichereEinstellungen(e); }; }
   if(document.getElementById('chkBetaEchtbetrieb')){
   document.getElementById('chkBetaEchtbetrieb').onchange = (ev)=> echtSetzen(ev.target.checked);
@@ -11375,7 +11398,7 @@ async function betaAktionLoeschen(eintraege){
 // Nach dem Loeschen: nicht verschickte Rechnungen hinter der hoechsten
 // verschickten schliessen die Luecken (neue Nummer, Word + PDF neu).
 // Verschickte Rechnungen und solche mit Mahnung/2. Adresse behalten ihre Nummer.
-function renuMitNummer(renu, n){ return String(renu).replace(/-(\d{3})$/, '-' + String(n).padStart(3, '0')); }
+function renuMitNummer(renu, n){ return String(renu).replace(/-(\d{3,5})$/, '-' + String(n).padStart(3, '0')); }
 async function betaAufruecken(ziel){
   const token = await msGraphTokenHolen();
   if(!token) return;
@@ -20029,7 +20052,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v435';
+const APP_VERSION = 'v436';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
