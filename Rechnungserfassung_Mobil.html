@@ -2,11 +2,34 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-60wwFPX82Yzzc2X4BgxjhwVD6K7MjmEVJQdPzRKLRwA=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-AUnKIdxR2Za6igHJmF2cYun0FXsCV5ODufR9VUhSsKc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
 (function(){ try{ if(window.top === window.self) return; void window.top.location.href; }catch(e){ window.__fremderRahmen = true; document.documentElement.style.setProperty('display','none','important'); } })();
+</script>
+<script>
+/* Warnung bei veraltetem Browser: prueft die Funktionen, die die App braucht (bewusst alte Schreibweise) */
+(function(){
+  try{
+    var fehlt = [];
+    if(!(window.crypto && window.crypto.subtle)) fehlt.push('Verschlüsselung');
+    if(!window.indexedDB) fehlt.push('Speicher');
+    if(!window.fetch || !window.Promise) fehlt.push('Netzwerk');
+    if(!(Promise.allSettled && String.prototype.replaceAll && Array.prototype.at && Object.fromEntries && window.structuredClone)) fehlt.push('aktuelle Browser-Funktionen');
+    if(!(window.CSS && CSS.supports && CSS.supports('display','grid'))) fehlt.push('Darstellung');
+    if(!fehlt.length) return;
+    window.__browserVeraltet = fehlt;
+    document.addEventListener('DOMContentLoaded', function(){
+      var d = document.createElement('div');
+      d.setAttribute('role','alert');
+      d.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:2147483600;background:#fff3cd;color:#4a3b00;border:1px solid #d9b94a;border-radius:10px;padding:10px 12px;font:14px/1.35 system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.25);';
+      d.innerHTML = '<b>Dein Browser ist veraltet.</b> Es fehlt: ' + fehlt.join(', ') + '. Die App läuft dann eventuell nicht richtig oder nicht sicher. Bitte aktualisiere den Browser bzw. das Betriebssystem (Safari: iOS-Update, Chrome: Play Store).<br><button type="button" style="margin-top:8px;padding:6px 12px;border-radius:8px;border:1px solid #d9b94a;background:#fff;">Verstanden</button>';
+      d.getElementsByTagName('button')[0].onclick = function(){ d.parentNode.removeChild(d); };
+      document.body.appendChild(d);
+    });
+  }catch(e){}
+})();
 </script>
 <script>
 // =====================================================================
@@ -2651,6 +2674,7 @@ function rnLetzteFeldEinrichten(inputEl, opts={}){
 // Zeitfensters zusätzlich direkt document.hidden/hasFocus() geprüft, falls
 // keines der Events ausgelöst wurde, obwohl der Wechsel stattfand.
 function excelDateiOeffnen(url){
+  url = sichereUrl(url); if(!url){ appToastAnzeigen('Der Link wurde aus Sicherheitsgründen nicht geöffnet.', 3000); return; }
   let appGeoeffnet = false;
   const alsGeoeffnetMarkieren = ()=>{ appGeoeffnet = true; };
   document.addEventListener('visibilitychange', alsGeoeffnetMarkieren);
@@ -2662,7 +2686,7 @@ function excelDateiOeffnen(url){
     window.removeEventListener('blur', alsGeoeffnetMarkieren);
     window.removeEventListener('pagehide', alsGeoeffnetMarkieren);
     if(!appGeoeffnet && !document.hidden && document.hasFocus()){
-      window.open(url, '_blank');
+      linkOeffnen(url);
     }
   }, 2000);
 }
@@ -2844,7 +2868,7 @@ async function excelDateiUeberGraphOeffnen(pfadRelativZuOneDrive, statischerFall
     const link = (await r.json()).webUrl;
     if(!link) throw new Error('keine Adresse');
     // im Browser (Excel fuer das Web, mit der eigenen Microsoft-Anmeldung) -- die Excel-App fand die direkte Adresse frueher nicht
-    const w = window.open(link, '_blank'); if(!w) location.href = link;
+    const w = linkOeffnen(link); if(!w && sichereUrl(link)) location.href = sichereUrl(link);
   }catch(e){
     appToastAnzeigen('Die Datei konnte nicht geöffnet werden (' + (e.message || e) + ').', 3500);
   }
@@ -7296,7 +7320,7 @@ function alleRechnungenListeRendern(cache, suchtext){
     el.onclick = async ()=>{
       const platz = el.querySelector('.pdf-platz');
       if(el.dataset.geladen === '1'){
-        if(el.dataset.url) window.open(el.dataset.url, '_blank');
+        if(el.dataset.url) linkOeffnen(el.dataset.url);
         return;
       }
       platz.innerHTML = ' <span style="font-size:12px; color:var(--text-schwach);">lädt…</span>';
@@ -7305,7 +7329,7 @@ function alleRechnungenListeRendern(cache, suchtext){
       if(url){
         el.dataset.url = url;
         platz.innerHTML = '<span class="badge-pdf" title="Rechnung als PDF ansehen">&#128196;</span>';
-        window.open(url, '_blank');
+        linkOeffnen(url);
       } else {
         el.classList.remove('unvollstaendig');
         alsUnvollstaendigMarkieren(el, f);
@@ -10791,7 +10815,7 @@ async function betaPdfAnzeigen(opt){
   }catch(e){
     seitenEl.innerHTML = '<div class="leer-hinweis">PDF konnte nicht angezeigt werden: ' + htmlEsc(e.message || String(e)) + '</div>' +
       (opt.webUrl ? '<div style="text-align:center;"><button type="button" class="btn-sekundaer" id="btnPdfOneDrive" style="width:auto; padding:10px 16px;">In OneDrive öffnen</button></div>' : '');
-    const b = document.getElementById('btnPdfOneDrive'); if(b) b.onclick = ()=> window.open(opt.webUrl, '_blank');
+    const b = document.getElementById('btnPdfOneDrive'); if(b) b.onclick = ()=> linkOeffnen(opt.webUrl);
   }
 }
 
@@ -20097,7 +20121,16 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v444';
+// Links, die aus Antworten von Microsoft stammen, nur als https-Adresse oeffnen (kein javascript:, data: o. ae.)
+function sichereUrl(u){ try{ const a = new URL(String(u), location.href); return a.protocol === 'https:' ? a.href : ''; }catch(_){ return ''; } }
+function linkOeffnen(u){
+  const s = sichereUrl(u);
+  if(!s){ appToastAnzeigen('Der Link wurde aus Sicherheitsgründen nicht geöffnet.', 3000); return null; }
+  const w = window.open(s, '_blank');
+  if(w){ try{ w.opener = null; }catch(_){} }
+  return w;
+}
+const APP_VERSION = 'v445';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{

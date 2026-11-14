@@ -1,0 +1,9 @@
+# Dependabot: meldet neue Versionen der in package.json aufgefuehrten Bibliotheken (Kopien liegen in lib/).
+# Ein Vorschlag (Pull Request) ist nur das Signal; die Dateien in lib/ werden von Hand aktualisiert und geprueft.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
