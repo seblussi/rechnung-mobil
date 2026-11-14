@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-Qi/WA42Qby8YHNuJSm0HxvKGl6K+IC4vTchcFfgk6Fc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-/h4p47u/hd9khnNPyIhwbTgTal8V5OImF3ZElZQhuEA=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -7983,7 +7983,7 @@ async function arztdatenLaden(){
 function lsEmpfaengerOptionen(w){
   const t = (x)=> String(x || '').trim(), adr = (a, b)=> [t(a), t(b)].filter(Boolean).join(', ');
   const o = [];
-  if(t(w.txtBName)) o.push({ key: 'bestatter', label: 'Bestatter: ' + t(w.txtBName) + (adr(w.txtAdresse1, w.txtAdresse2) ? ', ' + adr(w.txtAdresse1, w.txtAdresse2) : '') });
+  if(t(w.txtBName) && adr(w.txtAdresse1, w.txtAdresse2)) o.push({ key: 'bestatter', label: 'Bestatter: ' + t(w.txtBName) + ', ' + adr(w.txtAdresse1, w.txtAdresse2) });
   if(!o.length) return o;
   if(adr(w.txtPAdresse1, w.txtPAdresse2)) o.push({ key: 'patient', label: 'Patientenadresse (Angehörige): ' + adr(w.txtPAdresse1, w.txtPAdresse2) });
   const s = adr(w.txtSterbeAdr1, w.txtSterbeAdr2);
@@ -8008,7 +8008,8 @@ function fallRechnungsdaten(f, arzt){
   if(f.art === 'pt'){
     daten.diag = diagnosenVolltext(w.diagnosen);
   } else {
-    const bestatter = String(w.txtBName || '').trim();
+    // Bestatter nur als Empfaenger, wenn auch seine Anschrift eingetragen ist
+    const bestatter = (String(w.txtAdresse1 || '').trim() || String(w.txtAdresse2 || '').trim()) ? String(w.txtBName || '').trim() : '';
     const empf = w.txtEmpfaenger || '';
     const sterbeAbw = String(w.txtSterbeAdr1 || '').trim() || String(w.txtSterbeAdr2 || '').trim();
     if(empf === 'sterbe' && sterbeAbw){
@@ -8361,9 +8362,17 @@ function reservierteNummernNormaleApp(ana){
   return erg;
 }
 // Naechste freie Nummer nach der hoechsten festen
-async function betaFreieNummer(token, ue, ana){
+async function betaFreieNummer(token, ue, ana, fall){
   const fest = await hoechsteFesteNr(token, ue, ana);
   const belegt = new Set([...ana.nachNr.keys(), ...reservierteNummernNormaleApp(ana)]);
+  // Nummern anderer Faelle auf diesem Geraet, deren Word/PDF schon erzeugt wurde (hochgeladen oder mit
+  // Fehler haengen geblieben) -- sonst bekaeme z. B. eine Leichenschau dieselbe Nummer wie die kurz
+  // vorher erstellte Privatrechnung, wenn diese noch nicht in der Uebersicht steht.
+  try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach(x=>{
+    if(fall && x.zeitstempel === fall.zeitstempel && art === fall.art) return;
+    if(!(x.hochgeladen || x.uploadFehler)) return;
+    const n = renuZaehlerAusText(x.rechnungsnummer); if(n !== null) belegt.add(n);
+  })); }catch(_){}
   let n = fest + 1;
   while(belegt.has(n)) n++;
   return n;
@@ -8573,7 +8582,14 @@ async function graphItemLaden(token, id){
 // Ein Fall komplett: Nummer, Pruefungen, Word + PDF, Eintrag in der Uebersicht
 // =====================================================================
 // frage(text) -> Promise<boolean> (OK/Abbrechen). kontext: {token, arzt, ziel, vorlagen}
-async function betaRechnungErstellen(f, meldung, frage, kontext){
+let betaErstellenKette = Promise.resolve();
+function betaRechnungErstellen(f, meldung, frage, kontext){
+  // nacheinander statt gleichzeitig: sonst lesen zwei Uploads dieselbe Uebersicht und vergeben dieselbe Nummer
+  const lauf = betaErstellenKette.then(()=> betaRechnungErstellenEinzeln(f, meldung, frage, kontext));
+  betaErstellenKette = lauf.catch(()=>{});
+  return lauf;
+}
+async function betaRechnungErstellenEinzeln(f, meldung, frage, kontext){
   const { token, arzt, ziel } = kontext;
   const w = f.werte || {};
   const { nachname, vorname } = nameAufteilen(w.txtName);
@@ -8604,7 +8620,7 @@ async function betaRechnungErstellen(f, meldung, frage, kontext){
   // nie verschickte Rechnungen werden so wieder aufgefuellt). Eine vorher
   // auf dem Handy vergebene Nummer zaehlt nicht, solange nichts verschickt ist.
   if(!renu){
-    const naechste = await betaFreieNummer(token, ue, ana);
+    const naechste = await betaFreieNummer(token, ue, ana, f);
     renu = rechnungsnummerBerechnen(nachname, vorname, normalisiereDatum(w.txtDatumExcel || ''), naechste);
     if(!renu) throw new Error('Rechnungsnummer konnte nicht gebildet werden (Name und Datum prüfen).');
   }
@@ -20074,7 +20090,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v438';
+const APP_VERSION = 'v439';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
