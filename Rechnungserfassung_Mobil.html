@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-VVJPN/Q4Cg5RcV7yEs9sllo3VkZpiD8WDpupD6CdcVU=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-Qi/WA42Qby8YHNuJSm0HxvKGl6K+IC4vTchcFfgk6Fc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -8485,6 +8485,7 @@ async function uebersichtVersandVermerken(token, ue, sid, nr, bisherU, flag, ori
     }
     neuU = lxpFlagSetzenText(bisherU, flag);
     if(plan && plan.datum){ const pl = versandPlaene(neuU); pl[versandSchluessel(flag)] = plan; neuU = versandPlaeneSetzen(neuU, pl); }
+    else { const pl = versandPlaene(neuU), k = versandSchluessel(flag); if(pl[k] && pl[k].modus === 'test'){ delete pl[k]; neuU = versandPlaeneSetzen(neuU, pl); } }   // echter Versand nach Testbrief: Testvermerk weg
     if(neuU !== String(bisherU || '')) await gx(token, 'PATCH', zelle(ue, 'U' + nr), { values: [[neuU]] }, sid);
   } finally {
     await blattSchutzWiederherstellen(token, ue, schutz, sid);
@@ -8862,7 +8863,9 @@ async function betaBriefeVersenden(liste, frage, opts){
     const z = ana.nachRenu.get(e.renu);
     if(!z){ fehlt.push(e); continue; }
     const u = String(z.v[20] == null ? '' : z.v[20]);
-    if(lxpFlagVorhanden(u, lxpFlagFuerTyp(e.typ))) schon.push(e); else offen.push({ e, z });
+    // nur ein Testbrief (mit Termin vermerkt) sperrt den echten Versand nicht
+    const plVorher = versandPlaene(u)[versandSchluessel(lxpFlagFuerTyp(e.typ))];
+    if(lxpFlagVorhanden(u, lxpFlagFuerTyp(e.typ)) && !(plVorher && plVorher.modus === 'test')) schon.push(e); else offen.push({ e, z });
   }
   if(!offen.length){
     throw new Error(schon.length ? 'Laut Übersicht ist alles Ausgewählte bereits verschickt – es wird kein zweiter Brief verschickt.'
@@ -9049,7 +9052,8 @@ async function betaRechnungenFuerAuswahl(faelleAusw, zeigeHinweis){
       try{
         const r = await betaBriefVersenden(e);
         if(r.abgebrochen){ b.textContent = alt; b.disabled = false; return; }
-        b.textContent = r.test ? (r.vermerkt ? '✓ Testbrief angenommen, vermerkt' : '✓ Testbrief angenommen (nicht vermerkt)') : '✓ Brief verschickt, vermerkt';
+        if(r.test){ b.textContent = alt; b.disabled = false; try{ appToastAnzeigen('Testbrief angenommen – nichts wurde verschickt. Du kannst jetzt echt senden.', 4000); }catch(_){} }
+        else b.textContent = '✓ Brief verschickt, vermerkt';
       }catch(err){
         b.textContent = alt; b.disabled = false;
         betaOverlay.meldung(err.message || String(err));
@@ -10174,7 +10178,8 @@ async function betaErgebnisseZeigen(ergebnisse, ziel){
       try{
         const r = await betaBriefVersenden(e, (t, ja, nein, extra)=> betaInlineFrage(b.closest('.beta-erg'), t, ja, nein, extra));
         if(r.abgebrochen){ b.textContent = alt; b.disabled = false; return; }
-        b.textContent = r.test ? (r.vermerkt ? '✓ Testbrief angenommen, vermerkt' : '✓ Testbrief angenommen (nicht vermerkt)') : '✓ Brief verschickt, vermerkt';
+        if(r.test){ b.textContent = alt; b.disabled = false; try{ appToastAnzeigen('Testbrief angenommen – nichts wurde verschickt. Du kannst jetzt echt senden.', 4000); }catch(_){} }
+        else b.textContent = '✓ Brief verschickt, vermerkt';
       }catch(err){
         b.textContent = alt; b.disabled = false;
         betaInlineHinweis(b.closest('.beta-erg'), '✗ ' + (err.message || String(err)));
@@ -10728,7 +10733,7 @@ async function betaPdfAnzeigen(opt){
   const sk = el.querySelector('[data-a="senden"]');
   sk.hidden = !opt.senden || typeof betaBriefeVersenden !== 'function';
   sk.onclick = async ()=>{ if(!opt.senden) return; const e = Object.assign({}, opt.senden); if(blob && !e.pdfBlob && !e.pdfItemId) e.pdfBlob = blob;
-    const r = await briefSendenDialog(e); if(r && r.gesendet && r.gesendet.length){ sk.textContent = r.test ? '✓ Test' : '✓ Gesendet'; sk.disabled = true; } };
+    const r = await briefSendenDialog(e); if(r && r.gesendet && r.gesendet.length){ if(r.test){ try{ appToastAnzeigen('Testbrief angenommen – nichts wurde verschickt. Du kannst jetzt echt senden.', 4000); }catch(_){} } else { sk.textContent = '✓ Gesendet'; sk.disabled = true; } } };
   el.querySelector('[data-a="teilen"]').onclick = async ()=>{
     if(!blob) return;
     const datei = new File([blob], (opt.titel || 'Rechnung') + '.pdf', { type:'application/pdf' });
@@ -20069,7 +20074,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v437';
+const APP_VERSION = 'v438';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
