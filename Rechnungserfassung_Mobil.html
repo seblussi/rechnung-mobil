@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-+bXzaPD389DN9Nort2LzkTvtpz3w4VdpJq9FEEjIHSk=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-49kgMUqp57j1pCqCMnC8ZTO5UQTHvDE1iOhShxQtGvA=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 // =====================================================================
 // Umstieg Beta -> Hauptversion (laeuft einmalig je Geraet)
@@ -2764,10 +2764,24 @@ async function msGraphTokenHolen(){
   if(!konto) return null;
   try{
     const ergebnis = await msGraphMsal.acquireTokenSilent({ scopes: MSGRAPH_SCOPES, account: konto });
+    window.__msTokenFehler = '';
     return ergebnis.accessToken;
   }catch(e){
+    // Typisch: Langzeitschluessel abgelaufen (bei Browser-Apps max. 24 h) und die stille Erneuerung im
+    // Hintergrund scheitert, weil Safari/iPhone die Microsoft-Cookies fremder Seiten blockiert.
+    window.__msTokenFehler = (e && (e.errorCode || e.name || e.message)) || 'unbekannt';
+    if(msGraphNeuAnmeldenNoetig(e)) msGraphAbgelaufenHinweis();
     return null;
   }
+}
+function msGraphNeuAnmeldenNoetig(e){
+  const c = String((e && (e.errorCode || '')) + ' ' + (e && e.name || '') + ' ' + (e && e.message || ''));
+  return /interaction_required|login_required|consent_required|no_tokens_found|InteractionRequired|monitor_window_timeout|token_renewal|invalid_grant|AADSTS700084|AADSTS50173/i.test(c);
+}
+let msGraphAbgelaufenGemeldet = false;
+function msGraphAbgelaufenHinweis(){
+  if(msGraphAbgelaufenGemeldet) return; msGraphAbgelaufenGemeldet = true;
+  try{ appToastAnzeigen('Microsoft-Anmeldung abgelaufen. Bitte in den Einstellungen unter OneDrive auf „Erneut anmelden“ klicken.', 7000); }catch(_){}
 }
 
 // Ersetzt/ergaenzt excelDateiOeffnen(url) um eine vorgeschaltete, LIVE ueber
@@ -9315,7 +9329,13 @@ async function oneDriveVerbindungstest(ausgabe){
   zeilen.push('Anmeldestatus: ' + htmlEsc(String(msGraphStatus)));
   zeigen('Token wird geholt');
   const token = await msGraphTokenHolen();
-  if(!token){ zeilen.push('✗ <b>Kein Zugriffstoken</b> -- bitte im Abschnitt OneDrive neu anmelden.'); zeigen(''); return; }
+  if(!token){
+    zeilen.push('✗ <b>Kein Zugriffstoken</b>' + (window.__msTokenFehler ? ' (' + htmlEsc(String(window.__msTokenFehler)) + ')' : '') + ' – die Microsoft-Anmeldung ist abgelaufen oder wurde vom Browser blockiert.');
+    zeilen.push('<button type="button" class="btn-sekundaer" id="btnMsNeuAnmelden" style="margin-top:8px;">Erneut anmelden</button>');
+    zeigen('');
+    setTimeout(()=>{ const b = document.getElementById('btnMsNeuAnmelden'); if(b) b.onclick = ()=> msGraphAnmelden(); }, 0);
+    return;
+  }
   zeilen.push('✓ Zugriffstoken vorhanden');
   const H = {headers:{Authorization:'Bearer ' + token}, cache:'no-store'};
   const uebersicht = msGraphPfadUrl(MSGRAPH_PFAD_UEBERSICHT);
@@ -19985,7 +20005,7 @@ const DESIGNS = [
 ];
 const DESIGN_WT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 // sichtbare Versionsnummer (Einstellungen > Allgemein) -- bei jedem Release mit sw.js hochzaehlen
-const APP_VERSION = 'v430';
+const APP_VERSION = 'v431';
 function designAktuell(){ const d = (ladeEinstellungen() || {}).design; return DESIGNS.some(x=> x.k === d) ? d : 'einhand'; }   // Vorauswahl: Einhand
 function designAnwenden(){
   try{ document.documentElement.classList.remove('frueh-dunkel'); }catch(_){}
@@ -21379,7 +21399,7 @@ const MsEigen = (function(){
     if(zugriff && Date.now() < zugriffBis) return zugriff;
     const rt = rtLesen(); if(!rt) return null;
     if(!laeuft) laeuft = tokenAnfrage({ grant_type: 'refresh_token', refresh_token: rt })
-      .catch(e=>{ if(e.code === 'invalid_grant' || e.code === 'interaction_required'){ rtSchreiben(''); } console.warn('Schlüssel erneuern', e); return null; })
+      .catch(e=>{ if(e.code === 'invalid_grant' || e.code === 'interaction_required'){ rtSchreiben(''); window.__msTokenFehler = e.code; try{ msGraphAbgelaufenHinweis(); }catch(_){} } console.warn('Schlüssel erneuern', e); return null; })
       .finally(()=>{ laeuft = null; });
     return laeuft;
   }
@@ -21566,6 +21586,7 @@ function msGraphAbschnittHtml(){
       Jeder Fall wird zusätzlich automatisch gesichert (Backups).
     </div>
     ${msGraphBleibenHtml()}
+    <button type="button" id="btnMsGraphNeu" class="btn-sekundaer">Erneut anmelden</button>
     <button type="button" id="btnMsGraphAbmelden" class="btn-sekundaer">Abmelden</button>`;
   }
   return `<div class="hinweis" style="font-size:13px; color:var(--text-schwach); margin-bottom:10px;">
@@ -21583,6 +21604,8 @@ function msGraphAbschnittWiring(){
   if(chkE) chkE.onchange = ()=> msAnmeldeArtSetzen(chkE.checked ? 'eigen' : 'msal');
   const chkB = document.getElementById('chkMsBleiben');
   if(chkB) chkB.onchange = ()=> msGraphAngemeldetBleibenSetzen(chkB.checked);
+  const btnNeu = document.getElementById('btnMsGraphNeu');
+  if(btnNeu) btnNeu.onclick = ()=> msGraphAnmelden();
   const btnAb = document.getElementById('btnMsGraphAbmelden');
   if(btnAb) btnAb.onclick = ()=>{
     msGraphAbmelden();
