@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-CPY4htd2kXZfcTQg0MiBWXvPi7C69d+McQ9BXqotZoc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-S3d6J3AmZqTWJRVCnlvYdCW5xVgnmJ7vqwrZ0v1QlCE=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -11945,6 +11945,7 @@ function betaEntwurfVerdrahten(art, korrekturIdx, vorbelegt, holen, geaendert){
   let id = (vorbelegt && vorbelegt.entwurfId) || (betaAktuellerEntwurf && betaAktuellerEntwurf.art === art ? betaAktuellerEntwurf.id : null);
   if(!id) id = 'E' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36);
   betaAktuellerEntwurf = { art, id };
+  if(maskeProfilStand && maskeProfilStand.art === art) maskeProfilStand.entwurf = id;
   const root = app.querySelector('.maske');
   if(!root) return;
   const sichern = ()=>{
@@ -11953,7 +11954,7 @@ function betaEntwurfVerdrahten(art, korrekturIdx, vorbelegt, holen, geaendert){
     const d = holen();
     if(!vorhanden && !geaendert() && !(d.positionen && d.positionen.size)) return false;
     betaEntwurfSpeichern({ id, art, werte: d.werte, positionen: d.positionen ? Array.from(d.positionen) : null,
-      details: (d.positionen && d.positionen.details) || null, geaendert: new Date().toISOString() });
+      details: (d.positionen && d.positionen.details) || null, profilStand: (maskeProfilStand && maskeProfilStand.art === art) ? maskeProfilStand.profil : null, geaendert: new Date().toISOString() });
     return true;
   };
   let timer = null;
@@ -12644,7 +12645,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
                     ...fest.filter(p=> p.gruppe === 'grund')];
   const geordnet0 = betaGruppenOrdnen(art, grundStd, betaEigene(art).map(betaEigenePositionAlsAuswahl));
   // im aktiven Profil entfernte Positionen nicht zeigen (ausser sie sind gewaehlt)
-  const profilAus = new Set((betaProfilAktiv(art) || {}).ausgeblendet || []);
+  const profilAus = new Set((betaProfilFuerFall(art) || {}).ausgeblendet || []);
   const sichtbar = (p)=> !profilAus.has(p.ziffer) || (ausgewaehlteZiffern && ausgewaehlteZiffern.has(p.ziffer));
   const geordnet = { grund: geordnet0.grund.filter(sichtbar), eigene: geordnet0.eigene.filter(sichtbar) };
   const manuellJetzt = new Set(Array.from(ausgewaehlteZiffern || []).filter(z=> !AUTO_SCHL(z)));
@@ -12670,7 +12671,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   // Positionen merken, damit ein Ab- und wieder Anhaken nichts verliert
   const det = { faktoren: {}, begruendungen: {}, ...JSON.parse(JSON.stringify((ausgewaehlteZiffern && ausgewaehlteZiffern.details) || {})) };
   // neue Rechnung (noch keine Details): Vorgaben des aktiven Profils
-  if(ausgewaehlteZiffern && !ausgewaehlteZiffern.details && !ausgewaehlteZiffern.legacy) betaProfilDetailsAnwenden(art, det, betaProfilAktiv(art));
+  if(ausgewaehlteZiffern && !ausgewaehlteZiffern.details && !ausgewaehlteZiffern.legacy) betaProfilDetailsAnwenden(art, det, betaProfilFuerFall(art));
   det.faktoren = det.faktoren || {}; det.begruendungen = det.begruendungen || {};
   det.anzahl = det.anzahl || {}; det.abgewaehlt = (det.abgewaehlt || []).map(goaeNorm); det.behalten = (det.behalten || []).map(goaeNorm);
   // 56: Uhrzeit des Besuchs in der Maske geaendert -> Beginn nachziehen und
@@ -12700,7 +12701,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
     return kn('voll', !kurz, i.voll + ' · volle Gebühr') + kn('kurz', kurz, i.kurz + ' · 60 %');
   };
 
-  const profile = betaProfile(art), profilId = betaProfilAktivId(art);
+  const profile = betaProfile(art), profilId = (betaProfilFuerFall(art) || {}).id || betaProfilAktivId(art);
   let html = `<div class="maske ${art}">`;
   if(profile.length > 1) html += `<div class="profil-leiste">${profile.map(p=> `<button type="button" class="profil-chip${p.id === profilId ? ' aktiv' : ''}" data-profil="${htmlEsc(p.id)}">${htmlEsc(p.name)}</button>`).join('')}</div>`;
   html += `<div class="eigene-hinweis" style="margin-top:2px;">${art === 'ls' ? 'Lang drücken und ziehen: Reihenfolge ändern.' : 'Lang drücken und ziehen: Reihenfolge ändern oder zwischen Grundpauschalen und eigenen Positionen verschieben.'}</div>`;
@@ -12869,6 +12870,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
   app.querySelectorAll('.profil-chip').forEach(b=> b.onclick = ()=>{
     const p = betaProfile(art).find(x=> x.id === b.dataset.profil); if(!p) return;
     betaProfilWaehlen(art, p.id);
+    if(maskeProfilStand && maskeProfilStand.art === art) maskeProfilStand.profil = JSON.parse(JSON.stringify(p));   // bewusst gewechselt
     det.abgewaehlt = []; det.behalten = [];
     betaProfilDetailsAnwenden(art, det, p, true);
     const neu = new Set(p.vorauswahl); neu.details = det;
@@ -13026,7 +13028,7 @@ function betaZuschlagFamilie(art, auswahl){
 // Wegegeld/Reiseentschaedigung nur bei einem Besuch bzw. einer Leichenschau
 // Profil "telefonisch": nie Wegegeld (es wird nicht gefahren)
 function betaProfilOhneFahrt(art){
-  try{ const p = betaProfilAktiv(art); return !!p && (p.id === 'telefon' || /telefon/i.test(String(p.name || ''))); }catch(_){ return false; }
+  try{ const p = betaProfilFuerFall(art); return !!p && (p.id === 'telefon' || /telefon/i.test(String(p.name || ''))); }catch(_){ return false; }
 }
 function betaBesuchDabei(art, auswahl){
   if(betaProfilOhneFahrt(art)) return false;
@@ -13077,9 +13079,13 @@ function betaProfilAktivId(art){
   return liste.some(p=> p.id === id) ? id : (liste[0] ? liste[0].id : null);
 }
 function betaProfilAktiv(art){ const id = betaProfilAktivId(art); return betaProfile(art).find(p=> p.id === id) || null; }
+// Stand des Profils fuer den gerade offenen (neuen) Fall: eine spaetere Profilaenderung gilt nur fuer neue Faelle,
+// ein begonnener Fall behaelt Vorauswahl, Faktoren/Begruendungen und ausgeblendete Positionen von seinem Beginn.
+let maskeProfilStand = null;   // { art, entwurf, profil }
+function betaProfilFuerFall(art){ return (maskeProfilStand && maskeProfilStand.art === art && maskeProfilStand.profil) || betaProfilAktiv(art); }
 function betaProfilWaehlen(art, id){ const e = ladeEinstellungen(); e.profilAktiv = { ...(e.profilAktiv || {}), [art]: id }; speichereEinstellungen(e); }
 function betaProfilVorauswahl(art){
-  const p = betaProfilAktiv(art);
+  const p = betaProfilFuerFall(art);
   const gibt = new Set(betaKatalogFlach(art).map(x=> x.ziffer));
   return (p ? p.vorauswahl : []).filter(z=> gibt.has(z));
 }
@@ -14196,24 +14202,7 @@ function gkvProfileLaden(){
   const tel = m.get('tel'); if(tel && tel.name === 'Tel. Konsultation') tel.name = 'Telefonische Konsultation';
   return [...m.values()].filter(p=> !p.geloescht);
 }
-function gkvProfilSichern(p){
-  const vorher = gkvProfileLaden().find(x=> x.id === p.id);
-  const { standard, ...rest } = p;
-  const r = betaProfilSpeichern('gkv', rest);
-  // Offene, noch leere GKV-Maske mit diesem Profil: neue Vorauswahl uebernehmen -- aber nur,
-  // wenn dort noch nichts von Hand geaendert wurde (Wegepauschale aus der Adresse bleibt).
-  try{
-    const e = typeof gkvEntwurf !== 'undefined' ? gkvEntwurf : null;
-    const ohneWeg = (a)=>{ const o = Object.assign({}, a || {}); delete o.weg; return gkvAuswahlNorm(o); };
-    if(e && !e.id && e.profil === p.id && !p.geloescht && (!vorher || ohneWeg(e.auswahl) === ohneWeg(vorher.auswahl))){
-      const neu = JSON.parse(JSON.stringify(p.auswahl || {}));
-      if(e.auswahl && e.auswahl.weg && neu.weg !== undefined) neu.weg = e.auswahl.weg;
-      if(gkvIstSitzProfil(p)) delete neu.weg;
-      e.auswahl = neu;
-    }
-  }catch(_){}
-  return r;
-}
+function gkvProfilSichern(p){ const { standard, ...rest } = p; return betaProfilSpeichern('gkv', rest); }   // ein begonnener GKV-Fall behaelt seine Auswahl
 function gkvProfilLoeschen(id){ const p = gkvProfileLaden().find(x=> x.id === id) || { id }; return gkvProfilSichern({ ...p, geloescht: true }); }
 // Profile/Liste aus der ersten Fassung (nur auf dem Handy) einmalig uebernehmen
 function gkvAltMigrieren(){
@@ -20151,7 +20140,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v454';
+const APP_VERSION = 'v455';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22220,7 +22209,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // (falschen) Einstellungen-DOM lesen und dort hängen bleiben.
   vorbereiteRuecksprung = ()=>{
     const snap = werteEinsammeln();
-    ruecksprungAusEinstellungen = ()=>ansichtMaske(art, korrekturIdx, {werte: snap, positionen: positionenAuswahl});
+    const stand = maskeProfilStand && maskeProfilStand.art === art ? maskeProfilStand.profil : null;
+    ruecksprungAusEinstellungen = ()=>ansichtMaske(art, korrekturIdx, {werte: snap, positionen: positionenAuswahl, profilStand: stand});
   };
   // Wurde die Maske aus der Rechnungsübersicht heraus geöffnet (Klick auf
   // eine bestehende Rechnung -- erkennbar an gesetztem korrekturIdx), soll
@@ -22270,6 +22260,16 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const heute = heuteAlsText();
     werte = {txtDatum: naechsterWerktagText(heute), txtDatumExcel: heute};
     if(art==='ls') werte.txtSterbedatum = heute;
+  }
+  // Profil-Stand dieses Falls (siehe betaProfilFuerFall)
+  if(korrekturIdx !== undefined) maskeProfilStand = null;
+  else {
+    const eId = (vorbelegt && vorbelegt.entwurfId) || (betaAktuellerEntwurf && betaAktuellerEntwurf.art === art ? betaAktuellerEntwurf.id : null);
+    const rec = eId ? betaEntwuerfe().find(x=> x.id === eId) : null;
+    const pr = (vorbelegt && vorbelegt.profilStand) || (rec && rec.profilStand)
+      || (eId && maskeProfilStand && maskeProfilStand.art === art && maskeProfilStand.entwurf === eId ? maskeProfilStand.profil : null)
+      || betaProfilAktiv(art);
+    maskeProfilStand = { art, entwurf: eId, profil: pr ? JSON.parse(JSON.stringify(pr)) : null };
   }
   // Mehrfach-Diagnosen (nur PT) -- analog zu gDiagnosen am PC: je Eintrag
   // {text:"Beschreibung [Code]", flags:"" / "G" / "V" / "GV"}.
