@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-kGN3WcNbUWf8f9scZyCU502+vCKvbyyrHcdVQ1Si13M=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-6SBiwbew7XxoMfBwk3ewdh2L5JyvBKv+MLFwVSgQrao=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -14961,16 +14961,56 @@ async function fbJahresblattAnlegen(kx, jahr, meldung){
 }
 
 function fbDienstFinden(fb, dt){
+  const t = dt.getTime(), H = 3600000;
+  const bl = fb.daten.bloecke.map(b=> ({ b, z: fbBlockZeitraum(b) })).filter(x=> x.z);
+  // 1) Dienst, in dessen Zeitraum der Fall liegt (bei zwei aneinandergrenzenden der spaeter begonnene)
+  const genau = bl.filter(x=> t >= x.z.von.getTime() && t < x.z.bis.getTime()).sort((p, q)=> q.z.von - p.z.von);
+  if(genau.length) return genau[0].b;
+  // 2) In der App angelegter/gestarteter Dienst umfasst den Zeitpunkt: genau dessen Block -- fehlt er noch,
+  //    wird er neu angelegt (null) statt den Fall per Toleranz in den vorherigen Dienst zu schreiben
+  //    (Fehler: Faelle aus dem Spaetdienst landeten im Fruehdienst, solange der Spaetdienst noch keinen Block hatte)
+  try{
+    const ad = typeof appDienstFuer === 'function' ? appDienstFuer(dt) : null;
+    if(ad && ad.fenster){
+      const passt = bl.find(x=> Math.abs(x.z.von - ad.fenster.von) <= H && Math.abs(x.z.bis - ad.fenster.bis) <= H);
+      return passt ? passt.b : null;
+    }
+  }catch(_){}
+  // 3) sonst Toleranz: 1 h vor Beginn, 3 h nach Ende (Nachdokumentation)
   let best = null, bestAbstand = Infinity;
-  fb.daten.bloecke.forEach(b=>{
-    const z = fbBlockZeitraum(b); if(!z) return;
-    const t = dt.getTime();
-    // Toleranz: 1 h vor Beginn, 3 h nach Ende (Nachdokumentation)
-    if(t < z.von.getTime() - 3600000 || t > z.bis.getTime() + 3 * 3600000) return;
-    const abstand = t < z.von.getTime() ? z.von.getTime() - t : t > z.bis.getTime() ? t - z.bis.getTime() : 0;
+  bl.forEach(({ b, z })=>{
+    if(t < z.von.getTime() - H || t > z.bis.getTime() + 3 * H) return;
+    const abstand = t < z.von.getTime() ? z.von.getTime() - t : t - z.bis.getTime();
     if(abstand < bestAbstand){ best = b; bestAbstand = abstand; }
   });
   return best;
+}
+// Derselbe Fall (Art, Name, Uhrzeit) steht noch in einem ANDEREN Dienst desselben Tages -- z. B. frueher
+// faelschlich dort eingetragen: nach dem Eintragen an der richtigen Stelle dort entfernen (nur bei genau einem Treffer)
+async function fbStreuzeileEntfernen(kx, fall, dt, blatt, meldung){
+  const zt = fbZeitAusZelle(fall.zeit); if(!zt) return null;
+  const f = await fbLesen(meldung, kx, blatt);
+  const ziel = fbDienstFinden(f, dt); if(!ziel) return null;
+  const norm = (t)=> String(t == null ? '' : t).trim().toLowerCase().replace(/\s+/g, ' ');
+  const namen = [fall.name].concat(fall.namen || []).map(norm).filter(Boolean);
+  const tag0 = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime(), D = 86400000;
+  const treffer = [];
+  f.daten.bloecke.forEach(b=>{
+    if(b.zeileStart === ziel.zeileStart) return;
+    const z = fbBlockZeitraum(b); if(!z || z.bis.getTime() < tag0 - D || z.von.getTime() > tag0 + 2 * D) return;
+    for(let r = b.zeileStart; r <= b.zeileEnde; r++){
+      const zr = f.werte[r - 1] || [];
+      const kat = String(zr[FB_COL.E] == null ? '' : zr[FB_COL.E]).trim().toUpperCase();
+      const katGleich = (fall.kat === 'LS' ? (kat === 'L' || kat === 'LS') : fall.kat === 'P' ? (kat === 'P' || kat === 'PT') : kat === '');
+      if(katGleich && namen.includes(norm(zr[FB_COL.D])) && fbZeitAusZelle(zr[FB_COL.AS]) === zt) treffer.push({ b, r });
+    }
+  });
+  if(treffer.length !== 1) return null;
+  const { b, r } = treffer[0];
+  meldung && meldung('Fall aus dem falschen Dienst ' + b.datumText + ' wird entfernt …');
+  const n = await fbZeileEntfernen(f, b, r, fall.name);
+  const zt2 = fbZeitParsen(b.zeitRoh);
+  return { blatt: f.blatt, zeile: r, geschoben: n > 0, dienst: b.datumText + ' ' + (zt2 ? fbZeitText(zt2) : String(b.zeitRoh || '')) };
 }
 
 // Vorauswahl fuer "von-bis": in der Datei haeufige Zeiten zuerst
@@ -15376,6 +15416,7 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   // Datum/Uhrzeit geaendert und dadurch anderer Dienst: alte Zeile entfernen (keine Dopplung)
   let verschoben = null, verschiebFehler = '';
   if(fall.vorher){ try{ verschoben = await fbAlteZeileEntfernen(kx, fall, dt, meldung); }catch(e){ verschiebFehler = e.message || String(e); } }
+  if(!verschoben && !verschiebFehler && fall.name !== GKV_PSEUDO_NAME){ try{ verschoben = await fbStreuzeileEntfernen(kx, fall, dt, fb.blatt, meldung); }catch(_){} }
   // Statistik rechts nachziehen (verschobene Blockenden, Quartalssummen)
   try{ await fahrdienstStatistikSchreiben(meldung, { blatt: fb.blatt }); }catch(e){}
   if(verschoben && verschoben.blatt && verschoben.blatt !== fb.blatt) try{ await fahrdienstStatistikSchreiben(meldung, { blatt: verschoben.blatt }); }catch(e){}
@@ -15783,7 +15824,7 @@ function ansichtGkv(bearbeitenId){
       [...app.querySelectorAll('input:not([type=search]):not([type=hidden]), select, textarea')].map(i=> i.type === 'checkbox' ? i.checked : i.value)]);
     let basis = null;
     const pruefen = ()=>{ if(!document.body.contains(knopf)){ clearInterval(tm); return; } if(basis === null) return;
-      const g = zustand() !== basis; knopf.disabled = !g; knopf.classList.toggle('geaendert', g); };
+      const g = zustand() !== basis; knopf.classList.toggle('geaendert', g); };
     knopf.style.setProperty('--aend-farbe', 'var(--ds-gkv, #6b3fa0)');
     const tm = setInterval(pruefen, 500);
     setTimeout(()=>{ basis = zustand(); pruefen(); }, 400);
@@ -20278,7 +20319,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v461';
+const APP_VERSION = 'v462';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
