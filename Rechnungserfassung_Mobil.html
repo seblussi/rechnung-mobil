@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-GTPQoQ/JwlqGBg1BiRn25rXFjTYtTkAiMmhUNiXNAK0=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-AwY9ES0fjrfL30tpqwLbhvoaDlr/Zq4R1m12RHVLHTg=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -5036,7 +5036,7 @@ function automatischeAuswahlRoh(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuf
   const fahrVal = parseFloat((kmFahrstreckeGesamt||'').toString().replace(',','.'));
   const luftVal = parseFloat((kmLuftlinie||'').toString().replace(',','.'));
 
-  if(modus==='REISE' && (isNaN(luftVal) || luftVal > 25)){
+  if(modus==='REISE' && !isNaN(luftVal) && luftVal > 25){
     // bewusst als Reiseentschaedigung gewaehlt -- nur zulaessig bei Luftlinie ueber 25 km (sonst unten: Wegegeld)
     if(!isNaN(fahrVal) && fahrVal>0) ausgewaehlt.add('REISE');
     return ausgewaehlt;
@@ -5059,14 +5059,11 @@ function automatischeAuswahlRoh(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuf
     return ausgewaehlt;
   }
 
-  if(!isNaN(fahrVal) && fahrVal>0){
-    // Luftlinie (Einfachstrecke) fehlt evtl., wenn km manuell eingetragen
-    // wurden statt per Routenberechnung -- als Schaetzung dann die HALBE
-    // Fahrstrecke (Hin+Rück) verwenden, NICHT die volle. Das war zuvor der
-    // Bug, der dazu führte, dass praktisch immer WT25/WN25 (letzte Staffel)
-    // gewählt wurde, da die volle (verdoppelte) Strecke fast immer über der
-    // 25-km-Einfachstrecken-Schwelle lag.
-    const luftEinfach = isNaN(luftVal) ? fahrVal/2 : luftVal;
+  // Ohne bekannte Luftlinie (z. B. nur eine Fahrstrecke von Hand eingetippt) weder Wegegeld
+  // noch Reiseentschaedigung vorschlagen: die Stufe haengt allein an der Luftlinie, und die
+  // Strasse ist immer laenger -- aus der Fahrstrecke laesst sie sich nicht ableiten.
+  if(!isNaN(fahrVal) && fahrVal>0 && !isNaN(luftVal) && luftVal>0){
+    const luftEinfach = luftVal;
     if(sollReiseGelten(fahrVal, luftEinfach)){
       ausgewaehlt.add('REISE');
     } else if(normZeit){
@@ -20182,7 +20179,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v452';
+const APP_VERSION = 'v453';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -23212,9 +23209,9 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     let label, wert, istFahrstrecke = false;
     if(manuellerModus==='LUFTLINIE' && !isNaN(luftVal) && luftVal>0){
       label = 'Luftlinie (einfach), manuell gewählt'; wert = luftVal;
-    } else if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0 && (isNaN(luftVal) || luftVal > 25)){
+    } else if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0 && !isNaN(luftVal) && luftVal > 25){
       label = 'Fahrstrecke (Hin- und Rückfahrt), manuell gewählt'; wert = fahrVal; istFahrstrecke = true;
-    } else if(!isNaN(fahrVal) && fahrVal>0 && sollReiseGelten(fahrVal, isNaN(luftVal)?fahrVal/2:luftVal)){
+    } else if(!isNaN(fahrVal) && fahrVal>0 && !isNaN(luftVal) && sollReiseGelten(fahrVal, luftVal)){
       label = 'Fahrstrecke (Hin- und Rückfahrt)'; wert = fahrVal; istFahrstrecke = true;
     } else if(!isNaN(luftVal) && luftVal>0){
       label = 'Luftlinie (einfach)'; wert = luftVal;
@@ -23256,13 +23253,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // entscheidet NICHT mehr sollReiseGelten, sondern der Modus selbst --
       // sonst widersprach dieser Infotext zuvor der tatsächlich gesetzten
       // Position (z.B. "Reiseentschädigung greift" trotz gewählter Luftlinie).
-      if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0 && (isNaN(luftVal) || luftVal > 25)){
+      if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0 && !isNaN(luftVal) && luftVal > 25){
         info.textContent = 'Reiseentschädigung greift';
       } else if(manuellerModus==='LUFTLINIE' && !isNaN(luftVal) && luftVal>0){
         info.textContent = 'Wegegeld greift';
       } else if(!isNaN(fahrVal) && fahrVal>0){
-        const reise = sollReiseGelten(fahrVal, isNaN(luftVal)?fahrVal/2:luftVal);
-        info.textContent = reise ? 'Reiseentschädigung greift' : 'Wegegeld greift';
+        if(isNaN(luftVal)) info.textContent = 'Luftlinie unbekannt – bitte Adresse des Patienten eintragen (oder Einsatzort auf der Karte wählen)';
+        else info.textContent = sollReiseGelten(fahrVal, luftVal) ? 'Reiseentschädigung greift' : 'Wegegeld greift';
       }
     }
 
