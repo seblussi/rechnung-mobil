@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-m/uzg+iTS91oDYx7d4MVhbQ55XkZftH6Sh8GOPeBvcM=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-MQe5wjnjlrDDrLQsQ5XsshMqd4tYTxJ46ifLig+puUM=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1725,6 +1725,22 @@ try{
   .wf-schwebe button{margin:0; width:52px; height:44px; padding:0; border-radius:10px; border:2px solid #fff; background:rgba(255,255,255,.92); color:#2b3a55; font-weight:700; font-size:13px; box-shadow:0 2px 8px rgba(0,0,0,.2);}
   .wf-schwebe button.an{background:#2b3a55; color:#fff;}
   .wf-schwebe button.laedt{opacity:.5;}
+  /* Dienst-Editor (Musterwoche) */
+  .dw .dw-kopf{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:14px 0 8px;}
+  .dw .dw-kopf small{display:block; color:var(--text-schwach, #777); font-size:13px; margin-top:2px;}
+  .dw .dw-klein{width:auto; flex:0 0 auto; margin:0; padding:8px 12px; font-size:14px;}
+  .dw-profile small{opacity:.7; font-size:11px; font-weight:400;}
+  .dw-woche{display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;}
+  .dw-tag{border:1px solid var(--rand); border-radius:12px; background:var(--karte); padding:8px; display:flex; flex-direction:column; gap:6px; min-height:84px; box-sizing:border-box;}
+  .dw-tag.we{border-color:color-mix(in srgb, var(--rand) 50%, #2b6cb0);}
+  .dw-tag.fe{border-color:#d9a400;}
+  .dw-tag-kopf{display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:14px;}
+  .dw-mini{width:30px; height:30px; margin:0 0 0 4px; padding:0; border-radius:8px; border:1px solid var(--rand); background:transparent; color:var(--text); font-size:16px; line-height:1; cursor:pointer;}
+  .dw-dienst{display:flex; justify-content:space-between; align-items:baseline; gap:6px; width:100%; margin:0; padding:7px 8px; border-radius:8px; border:none; background:color-mix(in srgb, #2b6cb0 14%, var(--karte)); color:var(--text); font:inherit; font-size:13px; text-align:left; cursor:pointer; box-sizing:border-box;}
+  .dw-dienst span{color:var(--text-schwach, #666); font-size:12px; white-space:nowrap;}
+  .dw-leer{color:var(--text-schwach, #888); font-size:13px; padding:4px 2px;}
+  .dw-lbl{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .dw-lbl .dw-link{font-weight:400; width:auto; margin:0;}
   .wf-modus{display:flex; flex-direction:column; gap:4px; margin-top:6px;}
   /* Datensicherung */
   .ods-liste{margin-top:8px; display:flex; flex-direction:column; gap:6px;}
@@ -6415,7 +6431,7 @@ function ansichtEinrichtung(schritt){
   const angemeldet = typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet';
   // App-Sperre ist kein eigener Schritt mehr: die Abfrage kommt direkt nach der Einrichtung auf der Startseite
   if(schritt === 'sperre') schritt = 'anmelden';
-  const schritte = ['start', 'anmelden', 'dateien', 'daten', 'brief', 'fertig'];
+  const schritte = ['start', 'anmelden', 'dateien', 'daten', 'dienste', 'brief', 'fertig'];
   const nr = schritte.indexOf(schritt) + 1;
   const kopf = '<div class="einr-fort">' + schritte.map((s, i)=> '<span class="' + (i < nr ? 'an' : '') + '"></span>').join('') + '</div>';
   const knoepfe = (zurueck, weiter, weiterText, weiterAus)=> '<div class="einr-knoepfe">' + (zurueck ? '<button type="button" class="btn-sekundaer" data-einr="' + zurueck + '">Zurück</button>' : '<span></span>') +
@@ -6445,7 +6461,13 @@ function ansichtEinrichtung(schritt){
       feld('ARZTNAME', 'Name (ohne Titel)', 'Vorname Nachname') + feldMz('ARZTFUNKTION', 'Funktion (unter dem Namen, mehrere Zeilen möglich)', 'z. B. Facharzt für Allgemeinmedizin\nNotfallmedizin') + feld('ARZTADRESSE1', 'Straße Hausnummer') + feld('ARZTADRESSE2', 'PLZ Ort') + feld('ARZTEMAIL', 'E-Mail') +
       '<h3>Bankverbindung</h3>' + '<label class="ts-check einr-check"><input type="checkbox" id="einrInhaberGleich"' + (inhaberGleich ? ' checked' : '') + '> Kontoinhaber ist mein Name</label>' + feld('ARZTKONTOINHABER', 'Kontoinhaber') + feld('ARZTBANKNAME', 'Bank') + feld('ARZTIBAN', 'IBAN') + feld('ARZTBIC', 'BIC') +
       '<h3>Wegegeld</h3>' + feld('GKV_STARTADRESSE', 'Ausgangspunkt für die Luftlinie (Wache)', 'Straße Nr., PLZ Ort') +
-      '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'brief', 'Speichern und weiter');
+      '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'dienste', 'Speichern und weiter');
+  } else if(schritt === 'dienste'){
+    const a = dwProfile(), zahl = a.reduce((s, p)=> s + DW_TAGE.reduce((t, [k])=> t + p.woche[k].length, 0), 0);
+    html = '<h2>Deine Dienste</h2><p>Beim Dienststart wählst du deinen Dienst aus einer Liste. Diese Liste legst du hier einmal als <b>Musterwoche</b> an: je Profil (z. B. Fahrdienst, Sitzdienst, Telemedizin) die Dienste mit Name und Zeit für Mo–So und Feiertage.</p>' +
+      (a.length ? '<p class="einr-ok">✓ ' + a.length + (a.length === 1 ? ' Profil' : ' Profile') + ' mit ' + zahl + ' Diensten pro Woche: ' + htmlEsc(a.map(p=> p.name).join(', ')) + '.</p>' : '<p class="einr-klein">Noch keine Dienste angelegt.</p>') +
+      '<button type="button" class="btn-sekundaer" id="einrDienste">' + (a.length ? 'Dienste ansehen und anpassen' : 'Dienste anlegen') + '</button>' +
+      '<p class="einr-klein">Später unter Einstellungen › Fahrten &amp; Wegegeld › Dienste änderbar.</p>' + knoepfe('daten', 'brief', a.length ? 'Weiter' : 'Überspringen');
   } else if(schritt === 'brief'){
     const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
     const eigen0 = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG), eigen = eigen0 === LXP_WEITERLEITUNG_STANDARD ? '' : eigen0;
@@ -6460,7 +6482,7 @@ function ansichtEinrichtung(schritt){
       '<input type="hidden" id="einrLxpUrl" value="' + htmlEsc(eigen) + '">' +
       '<button type="button" class="btn-sekundaer" id="einrLxpPruefen">Prüfen</button><div id="einrLxpErgebnis" class="einr-liste"></div>' +
       '<div id="einrBriefInfo" class="einr-klein"></div>' +
-      '<div class="einr-knoepfe"><button type="button" class="btn-sekundaer" data-einr="daten">Zurück</button><button type="button" class="btn-primaer" id="einrBriefSpeichern" disabled>Speichern und weiter</button></div>' +
+      '<div class="einr-knoepfe"><button type="button" class="btn-sekundaer" data-einr="dienste">Zurück</button><button type="button" class="btn-primaer" id="einrBriefSpeichern" disabled>Speichern und weiter</button></div>' +
       '<p style="text-align:center; margin-top:10px;"><button type="button" class="einr-link" data-einr="fertig">Überspringen – später in den Einstellungen</button></p>';
   } else {
     html = '<h2>Fertig 🎉</h2><p>Die App ist eingerichtet. Ein paar Tipps:</p><ul class="einr-tipps">' +
@@ -6484,7 +6506,7 @@ function ansichtEinrichtung(schritt){
     neu();
   }
   app.querySelectorAll('[data-einr]').forEach(b=> b.onclick = async ()=>{
-    if(schritt === 'daten' && b.dataset.einr === 'brief'){
+    if(schritt === 'daten' && b.dataset.einr === 'dienste'){
       const aend = {};
       app.querySelectorAll('[data-ini]').forEach(i=>{ aend[i.dataset.ini] = i.dataset.mz ? i.value.replace(/\r/g, '').split('\n').map(s=> s.trim()).join('~NL~').replace(/(~NL~)+$/, '').replace(/^(~NL~)+/, '') : i.value.trim(); });
       if(aend.ARZTIBAN) aend.ARZTIBAN = ibanFormat(aend.ARZTIBAN);
@@ -6532,6 +6554,7 @@ function ansichtEinrichtung(schritt){
     ah.onchange = ()=>{ if(los) los.disabled = !ah.checked; };
     if(los){ const alt = los.onclick; los.onclick = async (ev)=>{ if(!ah.checked) return; if(!alphaZugestimmt()) await alphaZustimmen(); if(alt) alt.call(los, ev); }; }
   }
+  { const ed = document.getElementById('einrDienste'); if(ed) ed.onclick = ()=> ansichtDienste(()=> ansichtEinrichtung('dienste')); }
   const fe = document.getElementById('einrFertig'); if(fe) fe.onclick = beenden;
   if(schritt === 'dateien') einrDateienPruefen();
   if(schritt === 'brief') einrBriefStarten();
@@ -14900,7 +14923,7 @@ function fbZeitVorschlaege(fb, datum){
     if(typ(fbDatumAusText(b.datumText)) === zielTyp) zaehlTyp.set(t, (zaehlTyp.get(t) || 0) + 1);
   });
   const kurz = (t)=>{ const [h, m] = t.split(':'); return String(+h) + (m !== '00' ? ':' + m : ''); };
-  const schichten = [...new Set(fahrdienstSchichten(datum).map(x=> kurz(x.von) + '-' + kurz(x.bis)))];
+  const schichten = [...new Set(dienstSchichten('Fahrdienst', datum).map(x=> kurz(x.von) + '-' + kurz(x.bis)))];
   const liste = schichten.concat([...zaehl.keys()].filter(t=> !schichten.includes(t) && t !== '8-8' && t !== '18-8').sort((a, b)=> (zaehlTyp.get(b) || 0) - (zaehlTyp.get(a) || 0) || zaehl.get(b) - zaehl.get(a)));
   return liste.slice(0, 10);
 }
@@ -14958,6 +14981,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
   let aerzte = fbAerzte(fb);
   let arzt = aerzte[0] || '';
   let art = LS.get('fb_dienstart', 'Fahrdienst');
+  let fbProfil = dwProfilPassend(art, LS.get('fb_dienstprofil', ''));
   let schicht = '';
   let fehler = '';
   // gewaehlter Live-Dienst (Startseite) fuellt vor
@@ -14967,6 +14991,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
     const z = fbZeitParsen(live.von + '-' + live.bis);
     if(z){ zeit = z; const t = fbZeitText(z); if(!vorschlaege.includes(t)) vorschlaege.unshift(t); }
     art = live.art || art;
+    fbProfil = dwProfilPassend(art, live.profilId || fbProfil);
     schicht = live.schicht || '';
     if(live.arzt) arzt = live.arzt;
   }
@@ -14983,7 +15008,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
       '<div class="fb-zeile"><label>von<input type="text" inputmode="decimal" id="fbVon" value="' + (zeit ? htmlEsc(fbZeitText(zeit).split('-')[0]) : '') + '"></label>' +
       '<label>bis<input type="text" inputmode="decimal" id="fbBis" value="' + (zeit ? htmlEsc(fbZeitText(zeit).split('-')[1]) : '') + '"></label><span class="fb-uhr">Uhr</span></div>' +
       '<div class="fb-lbl">Dienstart</div>' +
-      '<div class="fb-chips" id="fbArtChips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-art="' + a + '">' + a + '</button>').join('') + '</div>' +
+      dwChipsHtml(art, fbProfil, 'art') +
       '<div id="fbSchichtBox"></div>' +
       '<div class="fb-lbl">Vertretener Arzt (Dienstinhaber)</div>' +
       '<div class="fb-chips" id="fbArztChips">' + aerzte.map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-arzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-weg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>' +
@@ -15006,7 +15031,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
         const box = wurzel.querySelector('#fbSchichtBox'); if(!box) return;
         const dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec((wurzel.querySelector('#fbDatum') || {}).value || '');
         const tag = dm ? new Date(+dm[1], +dm[2] - 1, +dm[3]) : datum;
-        const liste = dienstSchichten(art, tag);
+        const liste = dienstSchichten(art, tag, fbProfil);
         if(schicht && !liste.some(x=> x.label === schicht)) schicht = '';
         box.innerHTML = liste.length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div>' + schichtZeilenHtml(liste, schicht) : '';
         box.querySelectorAll('[data-lschicht]').forEach(b=> b.onclick = ()=>{
@@ -15023,7 +15048,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
       schichtZeichnen();
       const dEl = wurzel.querySelector('#fbDatum'); if(dEl) dEl.addEventListener('change', schichtZeichnen);
       wurzel.querySelectorAll('[data-art]').forEach(b=> b.onclick = ()=>{
-        art = b.dataset.art; schicht = ''; wurzel.querySelectorAll('[data-art]').forEach(x=> x.classList.toggle('an', x === b));
+        art = b.dataset.art; fbProfil = b.dataset.dwp || ''; schicht = ''; wurzel.querySelectorAll('[data-art]').forEach(x=> x.classList.toggle('an', x === b));
         schichtZeichnen();
       });
       wurzel.querySelectorAll('[data-arzt]').forEach(b=> b.onclick = ()=>{
@@ -15049,7 +15074,7 @@ async function fbDienstAbfragen(fb, dt, fallText){
     if(!zeit){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen (z.B. 18 und 23).'; continue; }
     if(!arzt){ fehler = 'Bitte den vertretenen Arzt eintragen.'; continue; }
     fbArztMerken(arzt);
-    LS.set('fb_dienstart', art);
+    LS.set('fb_dienstart', art); LS.set('fb_dienstprofil', fbProfil);
     return { datum, zeit, arzt, art, schicht };
   }
 }
@@ -19981,6 +20006,12 @@ const SYNC_SAETZE = {
     laden: ()=>{ const a = LS.get('entwuerfe', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
     setzen: (a)=> LS.set('entwuerfe', a)
   },
+  // Dienst-Profile mit Musterwoche (Vorlage zaehlt als alt, siehe dwRoh)
+  dienst_wochen: {
+    laden: ()=>{ const a = LS.get('dienst_wochen', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
+    setzen: (a)=>{ LS.set('dienst_wochen', a); if(a.length) LS.set('dienst_wochen_init', true); },
+    zeit: (x)=> Date.parse(x.am || '') || 0
+  },
   // gezeichnete Wegegeld-Zonen (je Flaeche ein Eintrag, dazu '_modus')
   weg_flaechen: {
     laden: ()=>{ const a = LS.get('weg_flaechen', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
@@ -20132,7 +20163,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v447';
+const APP_VERSION = 'v448';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -20429,7 +20460,218 @@ function schichtZeilenHtml(liste, schicht, passend){
   return Object.keys(zeilen).sort().map(g=> '<div class="fb-chips fb-schichten">' + zeilen[g].map(x=>
     '<button type="button" class="fb-chip schicht' + (x.label === schicht ? ' an' : '') + (passend && passend.has(x.label) && x.label !== schicht ? ' passt' : '') + '" data-lzeit="' + x.von + '-' + x.bis + '" data-lschicht="' + x.label + '"><b' + (x.label.split(' ').some(w=> w.length > 8) ? ' class="lang"' : '') + '>' + x.label + '</b><small>' + (x.von + '–' + x.bis).replace(/:00/g, '') + '</small></button>').join('') + '</div>').join('');
 }
-function dienstSchichten(art, tag){ return art === 'Fahrdienst' ? fahrdienstSchichten(tag) : art === 'Sitzdienst' ? sitzdienstSchichten(tag) : art === 'Telemedizin' ? telemedizinSchichten(tag) : []; }
+// =====================================================================
+// Dienste: Profile mit Musterwoche (Einstellungen › Dienste)
+// =====================================================================
+// Jedes Profil (z. B. "Fahrdienst" oder "Sitzdienst Lahr") hat eine Dienstart
+// (Fahrdienst / Sitzdienst / Telemedizin -- bestimmt Fahrtenbuch und Foerdersatz)
+// und eine Musterwoche: je Wochentag und fuer Feiertage die Dienste mit Name
+// und Zeit. Beim Dienststart stehen sie zur Auswahl.
+// Privatversion: eigene Liste (dienst_wochen, per OneDrive abgeglichen), beim
+// ersten Start mit den Ortenau-Diensten vorbelegt. Launch: die Dienstprofile
+// (Ausgangspunkt fuers Wegegeld) tragen die Woche mit, am Anfang leer.
+const DW_TAGE = [['mo', 'Mo'], ['di', 'Di'], ['mi', 'Mi'], ['do', 'Do'], ['fr', 'Fr'], ['sa', 'Sa'], ['so', 'So'], ['fe', 'Feiertag']];
+function dwLaunch(){ return typeof dienstprofilBearbeiten === 'function' && typeof dienstprofile === 'function'; }
+function dwTag(d){ d = d || new Date(); if(istFeiertagBW(d) || fahrdienstSilvesterHeiligabend(d)) return 'fe'; return ['so', 'mo', 'di', 'mi', 'do', 'fr', 'sa'][d.getDay()]; }
+function dwZeit(t){ const m = /^(\d{1,2}):(\d{2})$/.exec(String(t || '').trim()); return m && +m[1] < 24 && +m[2] < 60 ? zz2(+m[1]) + ':' + m[2] : ''; }
+function dwMin(t){ const m = /^(\d{1,2}):(\d{2})$/.exec(t || ''); return m ? +m[1] * 60 + +m[2] : 0; }
+function dwKurz(t){ return String(t || '').replace(/^0(\d)/, '$1').replace(/:00$/, ''); }
+function dwSortiert(l){ return l.slice().sort((a, b)=> dwMin(a.von) - dwMin(b.von) || String(a.name).localeCompare(String(b.name), 'de', { numeric: true })); }
+function dwNorm(p){
+  const w = {}, q = (p && p.woche) || {};
+  DW_TAGE.forEach(([k])=>{ w[k] = dwSortiert((Array.isArray(q[k]) ? q[k] : []).map(x=> ({ name: String((x && x.name) || '').trim(), von: dwZeit(x && x.von), bis: dwZeit(x && x.bis) })).filter(x=> x.name && x.von && x.bis)); });
+  return Object.assign({}, p, { name: String((p && p.name) || '').trim() || 'Dienste', dienstart: FB_DIENSTARTEN.includes(p && p.dienstart) ? p.dienstart : 'Fahrdienst', woche: w });
+}
+// Ortenau-Vorlage aus den bisher fest eingebauten Plaenen (nur Privatversion)
+function dwVorlageOrtenau(am){
+  if(dwLaunch() || typeof fahrdienstSchichten !== 'function') return [];
+  const ref = { mo: new Date(2026, 10, 16), di: new Date(2026, 10, 17), mi: new Date(2026, 10, 18), do: new Date(2026, 10, 19), fr: new Date(2026, 10, 20), sa: new Date(2026, 10, 21), so: new Date(2026, 10, 22), fe: new Date(2026, 10, 21) };
+  const bau = (id, name, art, fn)=>{ const woche = {}; DW_TAGE.forEach(([k])=>{ woche[k] = fn(ref[k]).map(x=> ({ name: x.label, von: x.von, bis: x.bis })); }); return Object.assign(dwNorm({ id, name, dienstart: art, woche }), { am }); };
+  return [bau('ortenau-fahrdienst', 'Fahrdienst', 'Fahrdienst', fahrdienstSchichten), bau('ortenau-sitzdienst', 'Sitzdienst', 'Sitzdienst', sitzdienstSchichten), bau('ortenau-telemedizin', 'Telemedizin', 'Telemedizin', telemedizinSchichten)];
+}
+function dwRoh(){
+  if(dwLaunch()) return dienstprofile();
+  if(!LS.get('dienst_wochen_init', false)){
+    LS.set('dienst_wochen_init', true);
+    // Vorlage gilt beim Abgleich als aelter als alles, was auf einem anderen Geraet schon geaendert wurde
+    if(!(LS.get('dienst_wochen', []) || []).length) LS.set('dienst_wochen', dwVorlageOrtenau(new Date(1).toISOString()));
+  }
+  const a = LS.get('dienst_wochen', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : [];
+}
+function dwProfile(){ return dwRoh().map(dwNorm); }
+function dwProfilSpeichern(p){
+  p = dwNorm(p);
+  if(dwLaunch()){
+    const a = dienstprofile(), i = a.findIndex(x=> x.id === p.id);
+    const neu = Object.assign({}, i >= 0 ? a[i] : { id: p.id, art: 'servicestandort', adresse: '', geo: null, standard: !a.length }, { name: p.name, dienstart: p.dienstart, woche: p.woche });
+    if(i >= 0) a[i] = neu; else a.push(neu);
+    dienstprofileSpeichern(a);
+  } else {
+    const a = dwRoh(), i = a.findIndex(x=> x.id === p.id);
+    p.am = new Date().toISOString();
+    if(i >= 0) a[i] = p; else a.push(p);
+    LS.set('dienst_wochen', a);
+  }
+  syncBaldSchreiben();
+}
+function dwProfilLoeschen(id){
+  if(dwLaunch()) dienstprofileSpeichern(dienstprofile().filter(x=> x.id !== id));
+  else LS.set('dienst_wochen', dwRoh().filter(x=> x.id !== id));
+  syncBaldSchreiben();
+}
+// Auswahl beim Dienststart: alle Profile, dazu jede Dienstart ohne Profil (ohne Dienste, nur Zeit)
+function dwAuswahl(){
+  const a = dwProfile(), l = a.map(p=> ({ art: p.dienstart, profil: p.id, name: p.name }));
+  FB_DIENSTARTEN.forEach(art=>{ if(!a.some(p=> p.dienstart === art)) l.push({ art, profil: '', name: art }); });
+  return l;
+}
+function dwProfilPassend(art, id){
+  const a = dwProfile();
+  const p = id && a.find(x=> x.id === id && (!art || x.dienstart === art)); if(p) return p.id;
+  const q = a.find(x=> x.dienstart === art); return q ? q.id : '';
+}
+function dwChipsHtml(art, profil, attr){
+  const l = dwAuswahl();
+  const sel = l.find(x=> profil ? x.profil === profil : (!x.profil && x.art === art)) || l.find(x=> x.art === art);
+  return '<div class="fb-chips">' + l.map(x=> '<button type="button" class="fb-chip' + (x === sel ? ' an' : '') + '" data-' + attr + '="' + htmlEsc(x.art) + '" data-dwp="' + htmlEsc(x.profil) + '">' + htmlEsc(x.name) + '</button>').join('') + '</div>';
+}
+// Dienste eines Tages (Profil oder erstes Profil der Dienstart) -> [{label, von, bis}]
+function dienstSchichten(art, tag, profilId){
+  const id = dwProfilPassend(art, profilId); if(!id) return [];
+  const p = dwProfile().find(x=> x.id === id); if(!p) return [];
+  return p.woche[dwTag(tag)].map(x=> ({ label: x.name, von: x.von, bis: x.bis }));
+}
+
+// ---------- Editor ----------
+let dwAktiv = '';
+function ansichtDienste(zurueck){
+  zurueck = zurueck || (()=> ansichtEinstellungen());
+  setzeTitel('Dienste', zurueck);
+  const zeichnen = ()=>{
+    const a = dwProfile();
+    if(!a.some(x=> x.id === dwAktiv)) dwAktiv = (a[0] || {}).id || '';
+    const p = a.find(x=> x.id === dwAktiv);
+    let h = '<div class="abschnitt start-abschnitt dw">' +
+      '<div class="design-hinweis">Lege deine Dienste je Profil als Musterwoche an. Beim Dienststart stehen sie dann zur Auswahl. Ein Dienst hat einen Namen (z. B. „Früh 3“) und eine Zeit; Feiertage haben eine eigene Spalte.</div>' +
+      '<div class="fb-lbl">Profile</div><div class="fb-chips dw-profile">' + a.map(x=> '<button type="button" class="fb-chip' + (x.id === dwAktiv ? ' an' : '') + '" data-dwprofil="' + htmlEsc(x.id) + '">' + htmlEsc(x.name) + (x.name !== x.dienstart ? ' <small>' + htmlEsc(x.dienstart) + '</small>' : '') + '</button>').join('') +
+      '<button type="button" class="fb-chip dw-plus" id="dwProfilNeu">+ Profil</button></div>';
+    if(!p){
+      h += '<div class="design-hinweis">Noch keine Dienste angelegt. Lege zuerst ein Profil an, z. B. „Fahrdienst“, „Sitzdienst Musterstadt“ oder „Telemedizin“. Danach trägst du die Dienste in die Woche ein.</div>';
+    } else {
+      const zahl = DW_TAGE.reduce((s, [k])=> s + p.woche[k].length, 0);
+      h += '<div class="dw-kopf"><div><b>' + htmlEsc(p.name) + '</b><small>' + htmlEsc(p.dienstart) + (dwLaunch() && p.adresse ? ' · ' + htmlEsc(p.adresse) : '') + ' · ' + zahl + (zahl === 1 ? ' Dienst' : ' Dienste') + ' pro Woche</small></div>' +
+        '<button type="button" class="btn-sekundaer dw-klein" id="dwProfilBearb">Profil bearbeiten</button></div>' +
+        '<div class="dw-woche">' + DW_TAGE.map(([k, t])=> '<div class="dw-tag' + (k === 'fe' ? ' fe' : (k === 'sa' || k === 'so') ? ' we' : '') + '">' +
+          '<div class="dw-tag-kopf"><span>' + t + '</span><span>' + (p.woche[k].length ? '<button type="button" class="dw-mini" data-dwkopie="' + k + '" title="Tag auf andere Tage übertragen" aria-label="' + t + ' kopieren">⧉</button>' : '') +
+          '<button type="button" class="dw-mini" data-dwneu="' + k + '" title="Dienst hinzufügen" aria-label="Dienst am ' + t + ' hinzufügen">+</button></span></div>' +
+          (p.woche[k].length ? p.woche[k].map((x, i)=> '<button type="button" class="dw-dienst" data-dwtag="' + k + '" data-dwi="' + i + '"><b>' + htmlEsc(x.name) + '</b><span>' + dwKurz(x.von) + '–' + dwKurz(x.bis) + '</span></button>').join('') : '<div class="dw-leer">frei</div>') +
+          '</div>').join('') + '</div>' +
+        '<div class="design-hinweis" style="margin-top:10px;">Dienst anklicken zum Ändern; dort legst du auch fest, an welchen Tagen er gilt. ⧉ überträgt einen ganzen Tag auf andere Tage.</div>';
+    }
+    if(!dwLaunch()) h += '<button type="button" class="btn-sekundaer" id="dwOrtenau" style="margin-top:12px;">Vorlage Ortenau laden</button>';
+    h += '</div>';
+    app.innerHTML = h;
+    app.querySelectorAll('[data-dwprofil]').forEach(b=> b.onclick = ()=>{ dwAktiv = b.dataset.dwprofil; zeichnen(); });
+    const neu = document.getElementById('dwProfilNeu');
+    if(neu) neu.onclick = async ()=>{
+      const vorher = new Set(dwProfile().map(x=> x.id));
+      if(dwLaunch()) await dienstprofilBearbeiten(null); else await dwProfilDialog(null);
+      const dazu = dwProfile().find(x=> !vorher.has(x.id)); if(dazu) dwAktiv = dazu.id;
+      zeichnen();
+    };
+    const bearb = document.getElementById('dwProfilBearb');
+    if(bearb) bearb.onclick = async ()=>{ if(dwLaunch()) await dienstprofilBearbeiten(p.id); else await dwProfilDialog(p); zeichnen(); };
+    app.querySelectorAll('[data-dwneu]').forEach(b=> b.onclick = async ()=>{ await dwDienstDialog(p, b.dataset.dwneu, -1); zeichnen(); });
+    app.querySelectorAll('[data-dwi]').forEach(b=> b.onclick = async ()=>{ await dwDienstDialog(p, b.dataset.dwtag, +b.dataset.dwi); zeichnen(); });
+    app.querySelectorAll('[data-dwkopie]').forEach(b=> b.onclick = async ()=>{ await dwTagKopieren(p, b.dataset.dwkopie); zeichnen(); });
+    const ort = document.getElementById('dwOrtenau');
+    if(ort) ort.onclick = async ()=>{
+      if(!await betaFrage('Die Ortenau-Dienste (Fahrdienst, Sitzdienst, Telemedizin) als Profile laden? Gleichnamige Ortenau-Profile werden dabei auf den Stand der Vorlage zurückgesetzt, eigene Profile bleiben.', 'Laden', 'Abbrechen')) return;
+      dwVorlageOrtenau(new Date().toISOString()).forEach(x=> dwProfilSpeichern(x));
+      dwAktiv = 'ortenau-fahrdienst'; zeichnen();
+    };
+  };
+  zeichnen();
+}
+// Privatversion: Profil anlegen/aendern (Launch: dienstprofilBearbeiten mit Ausgangspunkt)
+async function dwProfilDialog(p0){
+  const neu = !p0;
+  const p = neu ? dwNorm({ id: 'dw' + Date.now().toString(36), name: '', dienstart: 'Fahrdienst' }) : JSON.parse(JSON.stringify(p0));
+  if(neu) p.name = '';
+  let fehler = '';
+  for(;;){
+    const html = '<div class="fb-dialog">' + (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<label class="fb-lbl">Name<input type="text" id="dwPName" value="' + htmlEsc(p.name) + '" placeholder="z. B. Fahrdienst, Sitzdienst Lahr"></label>' +
+      '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(k=> '<button type="button" class="fb-chip' + (p.dienstart === k ? ' an' : '') + '" data-dwart="' + k + '">' + k + '</button>').join('') + '</div>' +
+      '<div class="fb-info">Die Dienstart bestimmt den Eintrag im Fahrtenbuch und den Fördersatz.</div></div>';
+    const kn = [{ label: 'Abbrechen', akt: 'nein' }];
+    if(!neu) kn.push({ label: 'Löschen', akt: 'weg' });
+    kn.push({ label: 'Speichern', akt: 'ok', primaer: true });
+    const warte = betaOverlay.ergebnis(neu ? 'Neues Profil' : 'Profil', html, kn);
+    document.querySelectorAll('.beta-overlay [data-dwart]').forEach(b=> b.onclick = ()=>{ p.dienstart = b.dataset.dwart; document.querySelectorAll('.beta-overlay [data-dwart]').forEach(x=> x.classList.toggle('an', x === b)); });
+    const akt = await warte;
+    const n = document.getElementById('dwPName'); if(n) p.name = n.value.trim();
+    betaOverlay.schliessen();
+    if(akt === 'weg'){ if(await betaFrage('Profil „' + p.name + '“ mit allen Diensten löschen?', 'Löschen', 'Abbrechen')){ dwProfilLoeschen(p.id); return true; } continue; }
+    if(akt !== 'ok') return false;
+    if(!p.name){ fehler = 'Bitte einen Namen eingeben.'; continue; }
+    dwProfilSpeichern(p);
+    return true;
+  }
+}
+// Dienst anlegen/aendern; "Gilt an" setzt denselben Dienst (Name + Zeit) auf mehrere Tage
+async function dwDienstDialog(p0, tagK, i){
+  const p = dwNorm(JSON.parse(JSON.stringify(p0)));
+  const alt = i >= 0 ? p.woche[tagK][i] : null;
+  const gleich = (x)=> alt && x.name === alt.name && x.von === alt.von && x.bis === alt.bis;
+  let name = alt ? alt.name : '', von = alt ? alt.von : '', bis = alt ? alt.bis : '', fehler = '';
+  const tage = new Set(alt ? DW_TAGE.map(([k])=> k).filter(k=> p.woche[k].some(gleich)) : [tagK]);
+  const vorher = new Set(tage);
+  for(;;){
+    const html = '<div class="fb-dialog">' + (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<label class="fb-lbl">Name<input type="text" id="dwName" value="' + htmlEsc(name) + '" placeholder="z. B. Früh 3, Spät, Nacht 1"></label>' +
+      '<div class="fb-zeile"><label>von<input type="time" id="dwVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="dwBis" value="' + htmlEsc(bis) + '"></label></div>' +
+      '<div class="fb-lbl">Gilt an</div><div class="fb-chips">' + DW_TAGE.map(([k, t])=> '<button type="button" class="fb-chip' + (tage.has(k) ? ' an' : '') + '" data-dwt="' + k + '">' + t + '</button>').join('') + '</div>' +
+      '<div class="fb-info">Ein Dienst über Mitternacht (z. B. 23–08) gehört zum Tag, an dem er beginnt. Gibt es am Tag schon einen Dienst mit diesem Namen, wird er ersetzt.</div></div>';
+    const kn = [{ label: 'Abbrechen', akt: 'nein' }];
+    if(alt) kn.push({ label: 'Löschen', akt: 'weg' });
+    kn.push({ label: 'Speichern', akt: 'ok', primaer: true });
+    const warte = betaOverlay.ergebnis(alt ? 'Dienst ändern' : 'Neuer Dienst', html, kn);
+    document.querySelectorAll('.beta-overlay [data-dwt]').forEach(b=> b.onclick = ()=>{ const k = b.dataset.dwt; if(tage.has(k)) tage.delete(k); else tage.add(k); b.classList.toggle('an', tage.has(k)); });
+    const akt = await warte;
+    const el = (id)=> document.getElementById(id);
+    if(el('dwName')){ name = el('dwName').value.trim(); von = el('dwVon').value; bis = el('dwBis').value; }
+    betaOverlay.schliessen();
+    if(akt === 'weg'){
+      const wo = tage.size ? tage : vorher;
+      wo.forEach(k=>{ p.woche[k] = p.woche[k].filter(x=> !gleich(x)); });
+      dwProfilSpeichern(p); return true;
+    }
+    if(akt !== 'ok') return false;
+    if(!name){ fehler = 'Bitte einen Namen eingeben.'; continue; }
+    if(!dwZeit(von) || !dwZeit(bis)){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen.'; continue; }
+    if(!tage.size){ fehler = 'Bitte mindestens einen Tag wählen.'; continue; }
+    if(alt) vorher.forEach(k=>{ p.woche[k] = p.woche[k].filter(x=> !gleich(x)); });
+    tage.forEach(k=>{ p.woche[k] = p.woche[k].filter(x=> x.name !== name).concat([{ name, von: dwZeit(von), bis: dwZeit(bis) }]); });
+    dwProfilSpeichern(p);
+    return true;
+  }
+}
+async function dwTagKopieren(p0, k){
+  const p = dwNorm(JSON.parse(JSON.stringify(p0)));
+  const t0 = (DW_TAGE.find(x=> x[0] === k) || [])[1] || k;
+  const ziel = new Set();
+  const html = '<div class="fb-dialog"><div class="fb-info">Die ' + p.woche[k].length + (p.woche[k].length === 1 ? ' Dienst' : ' Dienste') + ' von <b>' + htmlEsc(t0) + '</b> auf diese Tage übertragen. Was dort schon steht, wird ersetzt.</div>' +
+    '<div class="fb-chips">' + DW_TAGE.filter(x=> x[0] !== k).map(([kk, t])=> '<button type="button" class="fb-chip" data-dwz="' + kk + '">' + t + '</button>').join('') + '</div></div>';
+  const warte = betaOverlay.ergebnis('Tag übertragen', html, [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Übertragen', akt: 'ok', primaer: true }]);
+  document.querySelectorAll('.beta-overlay [data-dwz]').forEach(b=> b.onclick = ()=>{ const z = b.dataset.dwz; if(ziel.has(z)) ziel.delete(z); else ziel.add(z); b.classList.toggle('an', ziel.has(z)); });
+  const akt = await warte; betaOverlay.schliessen();
+  if(akt !== 'ok' || !ziel.size) return false;
+  ziel.forEach(z=>{ p.woche[z] = p.woche[k].map(x=> Object.assign({}, x)); });
+  dwProfilSpeichern(p);
+  return true;
+}
+
 const LIVE_DIENSTZEITEN = {
   Fahrdienst:  { werktag: [], wochenende: [] },
   Sitzdienst:  { werktag: [], wochenende: [] },
@@ -20493,19 +20735,22 @@ function liveDienstAuto(){
 // Mehrere passende Dienste: die gerade beginnenden gehen vor. Bleibt genau einer, wird er vorausgewaehlt;
 // sonst werden alle passenden nur markiert und die Nummer wird von Hand gewaehlt (kandidaten).
 function liveSchichtJetzt(){
-  const jetzt = new Date(), T = 30 * 60000, a0 = LS.get('fb_dienstart', 'Fahrdienst');
-  const arten = [a0].concat(FB_DIENSTARTEN.filter(a=> a !== a0));
+  const jetzt = new Date(), T = 30 * 60000, a0 = LS.get('fb_dienstart', 'Fahrdienst'), p0 = LS.get('fb_dienstprofil', '');
+  // zuletzt benutztes Profil zuerst, dann die zuletzt benutzte Dienstart
+  const ausw = dwAuswahl().filter(x=> x.profil);
+  const haupt = (ausw.find(x=> x.profil === p0) || ausw.find(x=> x.art === a0) || {}).profil;
+  ausw.sort((x, y)=> (y.profil === haupt) - (x.profil === haupt) || (y.art === a0) - (x.art === a0));
   const zeit = (tag, hhmm)=>{ const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm || ''); if(!m) return null; const d = new Date(tag); d.setHours(+m[1], +m[2], 0, 0); return d; };
-  for(const art of arten){
-    const beginnt = [], laeuft = [];
+  for(const w of ausw){
+    const art = w.art, beginnt = [], laeuft = [];
     [0, -1, 1].forEach(off=>{
       const tag = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate() + off);
-      dienstSchichten(art, tag).forEach(x=>{
+      dienstSchichten(art, tag, w.profil).forEach(x=>{
         const st = zeit(tag, x.von); let en = zeit(tag, x.bis); if(!st || !en) return;
         if(en <= st) en = new Date(en.getTime() + 86400000);   // ueber Mitternacht
-        const t = { art, datum: liveIso(tag), von: x.von, bis: x.bis, label: x.label };
+        const t = { art, profil: w.profil, datum: liveIso(tag), von: x.von, bis: x.bis, label: x.label };
         if(Math.abs(st - jetzt) <= T) beginnt.push(t);
-        else if(art === a0 && jetzt >= st - T && jetzt < en) laeuft.push(t);
+        else if(w.profil === haupt && jetzt >= st - T && jetzt < en) laeuft.push(t);
       });
     });
     const treffer = beginnt.length ? beginnt : laeuft;
@@ -20528,7 +20773,7 @@ function appDiensteSpeichern(a){ LS.set(APP_DIENSTE_KEY, a.slice(-400)); syncBal
 function syncBaldSchreiben(){ try{ if(typeof msGraphSyncSchreiben === 'function') msGraphSyncSchreiben(); }catch(_){} }
 function appDienstMerken(d){
   if(!d || !liveDienstFenster(d)) return null;
-  const neu = { id: d.id || ('d' + Date.now().toString(36)), datum: d.datum, von: d.von, bis: d.bis, art: d.art || 'Fahrdienst', schicht: d.schicht || '', arzt: d.arzt || '' };
+  const neu = { id: d.id || ('d' + Date.now().toString(36)), datum: d.datum, von: d.von, bis: d.bis, art: d.art || 'Fahrdienst', schicht: d.schicht || '', arzt: d.arzt || '', profilId: d.profilId || '' };
   const fe = liveDienstFenster(neu);
   // gleicher Tag und ueberlappend -> ersetzt (Dienst geaendert)
   const a = appDiensteLaden().filter(x=>{ if(x.id === neu.id) return false; const f = liveDienstFenster(x); return !(x.datum === neu.datum && f.von < fe.bis && fe.von < f.bis); });
@@ -20683,12 +20928,13 @@ async function liveDienstDialog(){
   let datumD = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate()); if(jetzt.getHours() < 8) datumD.setDate(datumD.getDate() - 1);
   let datum = vorschlag ? vorschlag.datum : liveIso(datumD);
   let art = vorschlag ? vorschlag.art : LS.get('fb_dienstart', 'Fahrdienst');
+  let profil = dwProfilPassend(art, vorschlag ? (vorschlag.profil || vorschlag.profilId) : LS.get('fb_dienstprofil', ''));
   let von = vorschlag ? vorschlag.von : '', bis = vorschlag ? vorschlag.bis : '', arzt = vorschlag ? (vorschlag.arzt || '') : '', schicht = vorschlag ? (vorschlag.schicht || '') : '';
   let fehler = '';
   const vorschlaege = ()=>{
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum), tag = m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD;
     const we = fahrdienstWochenendSatz(tag), std = (LIVE_DIENSTZEITEN[art] || {})[we ? 'wochenende' : 'werktag'] || [];
-    const schichten = dienstSchichten(art, tag).map(x=> x.von + '-' + x.bis);
+    const schichten = dienstSchichten(art, tag, profil).map(x=> x.von + '-' + x.bis);
     const zuletzt = ((LS.get('live_dienst_zeiten', {}) || {})[art + (we ? '|we' : '|wt')]) || [];
     // bei Fahrdienst stehen die Schichten als eigene Auswahl darueber -- hier nur weitere Zeiten (z.B. 18-08 am Stueck)
     const l = []; zuletzt.concat(std).forEach(z=>{ if(z && z !== '08:00-08:00' && z !== '18:00-08:00' && !l.includes(z) && !schichten.includes(z)) l.push(z); });
@@ -20696,7 +20942,7 @@ async function liveDienstDialog(){
   };
   const tagVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD; };
   let passtJetzt = null;
-  if(!akt){ passtJetzt = liveSchichtJetzt(); if(passtJetzt){ datum = passtJetzt.datum; art = passtJetzt.art;
+  if(!akt){ passtJetzt = liveSchichtJetzt(); if(passtJetzt){ datum = passtJetzt.datum; art = passtJetzt.art; profil = passtJetzt.profil || dwProfilPassend(art, '');
     if(passtJetzt.kandidaten.length === 1){ von = passtJetzt.von; bis = passtJetzt.bis; schicht = passtJetzt.label; } } }
   const mehrere = ()=> !!(passtJetzt && passtJetzt.kandidaten.length > 1 && art === passtJetzt.art && datum === passtJetzt.datum);
   const passendSet = ()=> mehrere() ? new Set(passtJetzt.kandidaten.map(k=> k.label)) : null;
@@ -20715,9 +20961,9 @@ async function liveDienstDialog(){
         (passtJetzt && !mehrere() && schicht === passtJetzt.label && art === passtJetzt.art ? ' <b>Vorausgewählt: ' + htmlEsc(passtJetzt.art + ' · ' + passtJetzt.label) + '</b> (' + passtJetzt.von + '–' + passtJetzt.bis + ').' : '') +
         (mehrere() && !schicht ? ' <b>Passt zur Uhrzeit: ' + htmlEsc(passtJetzt.kandidaten.map(k=> k.label).join(', ')) + '</b> – bitte deine Nummer anklicken (orange markiert).' : '') + '</div>' +
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
-      '<div class="fb-lbl">Dienstart</div><div class="fb-chips">' + FB_DIENSTARTEN.map(a=> '<button type="button" class="fb-chip' + (a === art ? ' an' : '') + '" data-lart="' + a + '">' + a + '</button>').join('') + '</div>' +
+      '<div class="fb-lbl dw-lbl"><span>Dienst</span><button type="button" class="einr-link dw-link" id="dwAnlegen">' + (dwProfile().length ? 'Dienste bearbeiten' : 'Dienste anlegen') + '</button></div>' + dwChipsHtml(art, profil, 'lart') + (dwProfile().length ? '' : '<div class="fb-info">Noch keine eigenen Dienste angelegt. Über „Dienste anlegen“ trägst du sie einmal als Musterwoche ein; danach stehen sie hier zur Auswahl.</div>') +
       '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
-      (dienstSchichten(art, tagVon()).length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div>' + schichtZeilenHtml(dienstSchichten(art, tagVon()), schicht, passendSet()) : '') +
+      (dienstSchichten(art, tagVon(), profil).length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div>' + schichtZeilenHtml(dienstSchichten(art, tagVon(), profil), schicht, passendSet()) : '') +
       (art === 'Telemedizin' ? '<div class="fb-info"><b>docdirekt</b> (werktags 8–13 und 13–19) ist das telemedizinische Angebot der KVBW: Patienten melden sich über 116117 bzw. die docdirekt-App und werden per Telefon oder Video beraten und behandelt. docdirekt-Schichten werden <b>ohne Förderung</b> geführt. <b>Telearzt ÄBD</b> (ärztlicher Bereitschaftsdienst als Telearzt; werktags 19–23, Wochenende und Feiertag 9–16 / 16–23) wird mit 50 €/h gefördert.</div>' : '') +
       '<div class="fb-lbl">Dienstzeit</div>' +
       (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis && !schicht ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace(/:00/g, '').replace('-', '–') + '</button>').join('') + '</div>' : '') +
@@ -20732,7 +20978,7 @@ async function liveDienstDialog(){
     kn.push({ label: akt ? 'Übernehmen' : 'Dienst starten', akt: 'ok', primaer: true });
     const warte = betaOverlay.ergebnis(akt ? 'Dienst ändern' : 'Welcher Dienst?', html, kn);
     const lesen = ()=>{ datum = (document.getElementById('liveDatum') || {}).value || datum; von = (document.getElementById('liveVon') || {}).value || ''; bis = (document.getElementById('liveBis') || {}).value || ''; arzt = String((document.getElementById('liveArzt') || {}).value || '').trim(); };
-    document.querySelectorAll('.beta-overlay [data-lart]').forEach(b=> b.onclick = ()=>{ lesen(); art = b.dataset.lart; schicht = ''; const v = vorschlaege()[0]; if(v) [von, bis] = v.split('-'); betaOverlay.loesen && betaOverlay.loesen('neu'); });
+    document.querySelectorAll('.beta-overlay [data-lart]').forEach(b=> b.onclick = ()=>{ lesen(); art = b.dataset.lart; profil = b.dataset.dwp || ''; schicht = ''; const v = vorschlaege()[0]; if(v) [von, bis] = v.split('-'); betaOverlay.loesen && betaOverlay.loesen('neu'); });
     document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(b=> b.onclick = ()=>{ const [v1, b1] = b.dataset.lzeit.split('-'); document.getElementById('liveVon').value = v1; document.getElementById('liveBis').value = b1;
       schicht = b.dataset.lschicht || '';
       document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(x=> x.classList.toggle('an', x === b)); });
@@ -20745,9 +20991,11 @@ async function liveDienstDialog(){
       const chip = b.closest('.fb-chip'); if(chip) chip.remove();
       if(document.getElementById('liveArzt').value === b.dataset.larztweg) document.getElementById('liveArzt').value = '';
     });
+    { const dw = document.getElementById('dwAnlegen'); if(dw) dw.onclick = ()=>{ if(betaOverlay.loesen) betaOverlay.loesen('dw'); }; }
     const dEl = document.getElementById('liveDatum'); if(dEl) dEl.onchange = ()=>{ lesen(); schicht = ''; betaOverlay.loesen && betaOverlay.loesen('neu'); };
     const a = await warte;
     lesen();
+    if(a === 'dw'){ betaOverlay.schliessen(); ansichtDienste(()=> ansichtStart()); return false; }
     if(a === 'neu'){ fehler = ''; continue; }
     if(a === 'ende'){ betaOverlay.schliessen(); liveDienstLeeren(); syncBaldSchreiben(); return true; }
     if(a !== 'ok'){ betaOverlay.schliessen(); return false; }
@@ -20755,12 +21003,12 @@ async function liveDienstDialog(){
     if(mehrere() && !schicht && (!von || !bis)){ fehler = 'Bitte deinen Dienst (Nummer) anklicken – oder eigene Uhrzeiten eintragen.'; continue; }
     if(!/^\d{1,2}:\d{2}$/.test(von) || !/^\d{1,2}:\d{2}$/.test(bis)){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen.'; continue; }
     betaOverlay.schliessen();
-    if(!dienstSchichten(art, tagVon()).length) schicht = '';
-    LS.set('live_dienst', { datum, von, bis, art, arzt, schicht, am: new Date().toISOString() }); syncBaldSchreiben();
+    if(!dienstSchichten(art, tagVon(), profil).length) schicht = '';
+    LS.set('live_dienst', { datum, von, bis, art, arzt, schicht, profilId: profil, am: new Date().toISOString() }); syncBaldSchreiben();
     // ersetzt einen geaenderten Dienst (gleicher Tag, ueberlappend) bzw. legt ihn neu an
-    try{ appDienstMerken({ datum, von, bis, art, arzt, schicht }); }catch(_){}
+    try{ appDienstMerken({ datum, von, bis, art, arzt, schicht, profilId: profil }); }catch(_){}
     if(schicht){ const ls = LS.get('live_letzte_schicht', {}) || {}; ls[art] = schicht; LS.set('live_letzte_schicht', ls); }
-    LS.set('fb_dienstart', art);
+    LS.set('fb_dienstart', art); LS.set('fb_dienstprofil', profil);
     // zuletzt benutzte Zeiten merken (je Dienstart, Werktag/Wochenende)
     try{
       const fe = liveDienstFenster({ datum, von, bis }), k = art + (fe.wochenende ? '|we' : '|wt'), z = LS.get('live_dienst_zeiten', {}) || {};
@@ -21178,6 +21426,11 @@ function ansichtEinstellungen(){
         <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br><span style="display:block; margin-top:5px;">Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></span></div>
       </div>
       <div class="feld" style="margin-top:14px;">
+        <label>Dienste</label>
+        <div style="font-size:13px; color:var(--text-schwach, #777); margin-bottom:6px;">Deine Dienste je Profil als Musterwoche (Mo–So und Feiertag); beim Dienststart stehen sie zur Auswahl.</div>
+        <button type="button" class="btn-sekundaer" id="btnDienste">Dienste und Musterwoche bearbeiten</button>
+      </div>
+      <div class="feld" style="margin-top:14px;">
         <label>Wegegeld berechnen nach</label>
         <div id="wfEinst"></div>
         <div id="wfKvbwTeil">
@@ -21264,6 +21517,7 @@ function ansichtEinstellungen(){
       ungueltig: 'Die Zonen-Datei in OneDrive hat ein unbekanntes Format.', abgemeldet: 'Dafür bitte zuerst bei Microsoft/OneDrive anmelden.',
       fehler: 'OneDrive nicht erreichbar' + (r.text ? ' (' + htmlEsc(r.text) + ')' : '') + '.' })[r.status] || '';
   };
+  document.getElementById('btnDienste').onclick = ()=> ansichtDienste(()=> ansichtEinstellungen());
   document.getElementById('btnEinrichtung').onclick = ()=>{ LS.set('einr_aus_einst', true); ansichtEinrichtung('start'); };
   document.getElementById('btnEinrichtungBrief').onclick = ()=>{ LS.set('einr_aus_einst', true); ansichtEinrichtung('brief'); };
   document.getElementById('chkLsAssistent').onchange = (ev)=>{ const e = ladeEinstellungen() || {}; e.lsAssistent = ev.target.checked; speichereEinstellungen(e); };
