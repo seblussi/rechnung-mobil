@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-cE5f0wrx1xGNyoH4neD3x6ACKEFC2FElo8EgCS5aC0c=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-dR6X1XPBrlz+dR1x78OmHxZeVOaKwsFlE+xEu47C8GM=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -4767,14 +4767,13 @@ function kmLuftlinieEinfach(a, b){
   const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLon/2)**2;
   return R*2*Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
 }
-// Entscheidet Reiseentschaedigung vs. Wegegeld -- analog SollReiseGelten()
-// am PC: Standard = Fahrstrecke (Hin+Rueck) > 50 km; Einstellung
-// "Reiseentschaedigung nach Luftlinie priorisieren" schaltet stattdessen
-// auf Luftlinie (Einfachstrecke) > 25 km um.
+// Entscheidet Reiseentschaedigung vs. Wegegeld: allein die Luftlinie (einfach) zaehlt --
+// ueber 25 km Reiseentschaedigung (§ 9 GOAE), sonst Wegegeld. Die gefahrene Strecke
+// (Hin + Rueck) bestimmt nur den km-Anteil der Reiseentschaedigung, nicht ob sie greift.
+// (Frueher gab es die Option "im Grenzbereich Reiseentschaedigung priorisieren" = Fahrstrecke
+// ueber 50 km genuegte; das ist nicht zulaessig und wurde entfernt.)
 function sollReiseGelten(kmFahrstreckeGesamt, kmLuftlinie){
-  const e = ladeEinstellungen();
-  if(e.reiseBasisLuftlinie) return kmLuftlinie > 25;
-  return kmFahrstreckeGesamt > 50;
+  return kmLuftlinie > 25;
 }
 
 /* ==========================================================
@@ -5036,8 +5035,8 @@ function automatischeAuswahlRoh(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuf
   const fahrVal = parseFloat((kmFahrstreckeGesamt||'').toString().replace(',','.'));
   const luftVal = parseFloat((kmLuftlinie||'').toString().replace(',','.'));
 
-  if(modus==='REISE'){
-    // Wie am PC: bewusst erzwungen, unabhängig von den km (solange > 0).
+  if(modus==='REISE' && (isNaN(luftVal) || luftVal > 25)){
+    // bewusst als Reiseentschaedigung gewaehlt -- nur zulaessig bei Luftlinie ueber 25 km (sonst unten: Wegegeld)
     if(!isNaN(fahrVal) && fahrVal>0) ausgewaehlt.add('REISE');
     return ausgewaehlt;
   }
@@ -9317,10 +9316,6 @@ async function iniVonOneDriveLaden(){
   if((ini.werte.PRAXISADRESSE||'').trim() !== '' && ini.werte.PRAXISADRESSE.trim() !== (e.praxisadresse||'')){
     e.praxisadresse = ini.werte.PRAXISADRESSE.trim(); geaendert = true;
   }
-  if('REISE_BASIS_LUFTLINIE' in ini.werte){
-    const v = ini.werte.REISE_BASIS_LUFTLINIE.trim()==='1';
-    if(v !== !!e.reiseBasisLuftlinie){ e.reiseBasisLuftlinie = v; geaendert = true; }
-  }
   if(geaendert) speichereEinstellungen(e);
   return ini;
 }
@@ -9669,7 +9664,7 @@ function betaIniWerteAusFormular(){
   // App-eigene allgemeine Einstellungen, die der PC ebenfalls kennt
   const e = ladeEinstellungen();
   werte.PRAXISADRESSE = (e.praxisadresse || '').trim();
-  werte.REISE_BASIS_LUFTLINIE = e.reiseBasisLuftlinie ? '1' : '0';
+  werte.REISE_BASIS_LUFTLINIE = '1';   // feste Regel: Luftlinie ueber 25 km (auch fuer die PC-Version)
   return werte;
 }
 
@@ -20169,7 +20164,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v449';
+const APP_VERSION = 'v450';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21427,10 +21422,6 @@ function ansichtEinstellungen(){
   app.innerHTML = `
     <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Fahrten &amp; Wegegeld</div>
-      <div class="einstellung-zeile" id="zReise">
-        <input type="checkbox" id="chkReiseBasisLuftlinie" ${!e.reiseBasisLuftlinie?'checked':''}>
-        <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br><span style="display:block; margin-top:5px;">Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></span></div>
-      </div>
       <div class="feld" style="margin-top:14px;">
         <label>Dienste</label>
         <div style="font-size:13px; color:var(--text-schwach, #777); margin-bottom:6px;">Deine Dienste je Profil als Musterwoche (Mo–So und Feiertag); beim Dienststart stehen sie zur Auswahl.</div>
@@ -21544,17 +21535,14 @@ function ansichtEinstellungen(){
     // zum intern gespeicherten Flag reiseBasisLuftlinie (True = Luftlinie
     // priorisiert, wie EinstellungSchreiben("REISE_BASIS_LUFTLINIE", Not
     // chkReiseBasisLuftlinie.checked) am PC).
-    e.reiseBasisLuftlinie = !document.getElementById('chkReiseBasisLuftlinie').checked;
     e.praxisadresse = document.getElementById('txtPraxisadresse').value.trim();
     { const fr = ladeEinstellungen(); e.praxen = fr.praxen; e.praxisAktiv = fr.praxisAktiv; }   // Liste der Wachen/Praxen nicht mit altem Stand ueberschreiben
     speichereEinstellungen(e); themaAnwenden();
   };
   if(document.getElementById('chkDunkel')) document.getElementById('chkDunkel').onchange = anwenden;
-  document.getElementById('chkReiseBasisLuftlinie').onchange = anwenden;
   document.getElementById('txtPraxisadresse').addEventListener('blur', anwenden);
   praxenListeZeichnen();
 
-  document.getElementById('zReise').onclick = (ev)=>{ if(ev.target.tagName!=='INPUT'){ document.getElementById('chkReiseBasisLuftlinie').click(); } };
   msGraphAbschnittWiring();
   try{ odsAbschnittZeichnen(); }catch(e){ console.warn('Datensicherung', e); }
   { const neu = ()=>{ const el = document.getElementById('asAbschnitt'); if(el){ el.innerHTML = AppSperre.abschnittHtml(); AppSperre.abschnittWiring(neu); } }; AppSperre.abschnittWiring(neu); }
@@ -22979,8 +22967,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
             // Auswahlliste bleibt offen, damit eine andere Kachel gewählt
             // werden kann.
             const kmGesamt = parseFloat(btn.dataset.km.replace(',','.'));
-            if(!(kmGesamt>50)){
-              appToastAnzeigen('Eine Reiseentschädigung ist erst ab über 50 km (Hin- und Rückfahrt) zulässig -- diese Route hat nur '+btn.dataset.km.replace('.',',')+' km. Bitte eine andere Route oder die Luftlinie wählen.', 3500);
+            if(!(kmLuft>25)){
+              appToastAnzeigen('Eine Reiseentschädigung ist erst ab einer Luftlinie über 25 km zulässig – hier sind es ' + kmLuft.toFixed(1).replace('.', ',') + ' km. Bitte die Luftlinie wählen (Wegegeld).', 4500);
               return;
             }
             // Fahrstrecke-Kachel: wie am PC (RouteWaehlen idx<>0) wird
@@ -23203,7 +23191,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     let label, wert, istFahrstrecke = false;
     if(manuellerModus==='LUFTLINIE' && !isNaN(luftVal) && luftVal>0){
       label = 'Luftlinie (einfach), manuell gewählt'; wert = luftVal;
-    } else if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0){
+    } else if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0 && (isNaN(luftVal) || luftVal > 25)){
       label = 'Fahrstrecke (Hin- und Rückfahrt), manuell gewählt'; wert = fahrVal; istFahrstrecke = true;
     } else if(!isNaN(fahrVal) && fahrVal>0 && sollReiseGelten(fahrVal, isNaN(luftVal)?fahrVal/2:luftVal)){
       label = 'Fahrstrecke (Hin- und Rückfahrt)'; wert = fahrVal; istFahrstrecke = true;
@@ -23247,7 +23235,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // entscheidet NICHT mehr sollReiseGelten, sondern der Modus selbst --
       // sonst widersprach dieser Infotext zuvor der tatsächlich gesetzten
       // Position (z.B. "Reiseentschädigung greift" trotz gewählter Luftlinie).
-      if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0){
+      if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0 && (isNaN(luftVal) || luftVal > 25)){
         info.textContent = 'Reiseentschädigung greift';
       } else if(manuellerModus==='LUFTLINIE' && !isNaN(luftVal) && luftVal>0){
         info.textContent = 'Wegegeld greift';
