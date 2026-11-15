@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-EeV+KDqUX+5SoDjwyP3bZqwF7FqmaN93JN1PhpZpZCw=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-kGN3WcNbUWf8f9scZyCU502+vCKvbyyrHcdVQ1Si13M=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1292,6 +1292,7 @@ try{
   .ds-live .ds-dz-liste{margin-top:0;}
   .ds-dz-fall{display:grid; grid-template-columns:40px auto minmax(0, 1fr) auto; align-items:center; gap:7px; width:100%; margin:0; padding:6px 4px; border:0; border-bottom:1px solid var(--rand); background:none; color:var(--text); font:inherit; font-size:13px; line-height:1.25; text-align:left; cursor:pointer;}
   .ds-dz-fall:last-child{border-bottom:0;}
+  .ds-dz-liste .ds-dz-wisch{margin:0; border-radius:0;} .ds-dz-liste .ds-dz-wisch .ds-dz-fall{background:var(--karte); position:relative;} .ds-dz-liste .ds-dz-wisch:last-child .ds-dz-fall{border-bottom:0;}
   .ds-dz-zeit{font-variant-numeric:tabular-nums; color:var(--text-schwach);}
   .ds-dz-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;}
   .ds-dz-betrag{font-variant-numeric:tabular-nums;}
@@ -3674,6 +3675,53 @@ function fbGkvAusExcelOeffnen(d, f){
   ansichtGkv(id);
   setTimeout(()=>{ const m = document.getElementById('gkvMeldung'); if(m) m.innerHTML = '<div class="gkv-warn">Aus dem Fahrtenbuch übernommen.' + (f.zeit ? '' : ' Die Uhrzeit stand nicht in der Excel – bitte oben eintragen (bestimmt Tag-/Nacht-Ziffern).') + ' „Speichern“ überschreibt die Zeile im Fahrtenbuch.</div>'; }, 0);
 }
+// Eine Fall-Zeile im Fahrtenbuch entfernen -> Anzahl der nach oben geschobenen Zeilen (0 = in einer Kopfzeile nur geleert)
+async function fbZeileEntfernen(L, b, zeile, name){
+  const url = L.blattUrl, tok = L.token;
+  const r = L.werte[zeile - 1] || [];
+  if(fbNameNorm(String(r[FB_COL.D] == null ? '' : r[FB_COL.D])) !== fbNameNorm(String(name || ''))) throw new Error('Die Zeile wurde inzwischen verändert – bitte das Fahrtenbuch neu laden.');
+  if(zeile <= b.zeileStart + 1){
+    const leer = new Array(FB_COL.AG - FB_COL.D + 1).fill('');
+    await gx(tok, 'PATCH', url + "/range(address='D" + zeile + ':AG' + zeile + "')", { values: [leer] });
+    await gx(tok, 'PATCH', url + "/range(address='AS" + zeile + ':AU' + zeile + "')", { values: [['', '', '']] });
+    return 0;
+  }
+  await gx(tok, 'POST', url + "/range(address='A" + zeile + ':AG' + zeile + "')/delete", { shift: 'Up' });
+  await gx(tok, 'POST', url + "/range(address='AS" + zeile + ':AU' + zeile + "')/delete", { shift: 'Up' });
+  return 1;
+}
+// Nach dem Herausschieben von n Zeilen ab "ab": gemerkte Zeilennummern der GKV-Faelle darunter anpassen
+function gkvZeilenNachruecken(blatt, ab, n){
+  if(!n) return;
+  const a = gkvFaelleLaden(); let g = false;
+  a.forEach(x=>{ if(x && x.status === 'eingetragen' && x.zeile > ab && (!x.blatt || !blatt || x.blatt === blatt)){ x.zeile -= n; g = true; } });
+  if(g) gkvFaelleSpeichern(a);
+}
+// GKV-Fall in der App UND (falls schon eingetragen) im Fahrtenbuch loeschen -- z. B. aus "Faelle in diesem Dienst"
+async function gkvFallUeberallLoeschen(id){
+  const x = gkvFaelleLaden().find(y=> y.id === id); if(!x) return false;
+  const imFb = x.status === 'eingetragen' && x.zeile;
+  if(!await betaFrage('„' + (x.name || 'Fall') + '“ löschen?' + (imFb ? '\n\nDer Fall wird auch aus dem Fahrtenbuch entfernt. Rückgängig nur über den Versionsverlauf der Excel in OneDrive.' : ''), 'Löschen', 'Abbrechen')) return false;
+  if(imFb){
+    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ await betaOverlay.meldung('Zum Löschen im Fahrtenbuch braucht es die OneDrive-Anmeldung.', 'Fahrtenbuch'); return false; }
+    betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
+    try{
+      const kx = await fbKontext(t=> betaOverlay.schritt(t));
+      const L = await fbLesen(t=> betaOverlay.schritt(t), kx, x.blatt || undefined);
+      const b = L.daten.bloecke.find(bb=> x.zeile >= bb.zeileStart && x.zeile <= bb.zeileEnde);
+      if(!b) throw new Error('Die Zeile im Fahrtenbuch wurde nicht gefunden – bitte im Fahrtenbuch löschen.');
+      betaOverlay.schritt('Eintrag wird gelöscht …');
+      const n = await fbZeileEntfernen(L, b, x.zeile, x.name);
+      try{ await fahrdienstStatistikSchreiben(t=> betaOverlay.schritt(t), { blatt: L.blatt }); }catch(_){}
+      gkvFaelleSpeichern(gkvFaelleLaden().filter(y=> y.id !== id));
+      gkvZeilenNachruecken(L.blatt, x.zeile, n);
+      betaOverlay.schliessen();
+    }catch(e){ betaOverlay.schliessen(); await betaOverlay.meldung('Löschen hat nicht geklappt: ' + (e.message || e), 'Fahrtenbuch'); return false; }
+    try{ fbBuchCache = null; }catch(_){}
+  } else gkvFaelleSpeichern(gkvFaelleLaden().filter(y=> y.id !== id));
+  appToastAnzeigen('Gelöscht.', 2000);
+  return true;
+}
 // Faelle bzw. ganze Dienste aus dem Fahrtenbuch loeschen. Die Zeilen werden
 // in A:AG und AS nach oben herausgeschoben (die Statistik AH:AQ bleibt stehen
 // und wird danach neu geschrieben). In den beiden Kopfzeilen eines Diensts
@@ -3696,26 +3744,33 @@ async function fbLoeschen(d, f){
       await gx(tok, 'POST', url + "/range(address='A" + von + ':AG' + bis + "')/delete", { shift: 'Up' });
       await gx(tok, 'POST', url + "/range(address='AS" + von + ':AU' + bis + "')/delete", { shift: 'Up' });   // Uhrzeit, Adresse, Koordinaten
     };
+    let geschoben = 0;
     if(ganz){
       betaOverlay.schritt('Dienst wird gelöscht …');
       await schiebe(b.zeileStart, b.zeileEnde);
+      geschoben = b.zeileEnde - b.zeileStart + 1;
       try{ const fe = fbBlockZeitraum(b); if(fe) appDiensteSpeichern(appDiensteLaden().filter(x=>{ const f = liveDienstFenster(x); return !(f && Math.abs(f.von - fe.von) <= 3600000); })); }catch(_){}
     } else {
-      const r = L.werte[f.zeile - 1] || [];
-      if(String(r[FB_COL.D] == null ? '' : r[FB_COL.D]).trim() !== f.name) throw new Error('Die Zeile wurde inzwischen verändert – bitte das Fahrtenbuch neu laden.');
       betaOverlay.schritt('Eintrag wird gelöscht …');
-      if(f.zeile <= b.zeileStart + 1){
-        const leer = new Array(FB_COL.AG - FB_COL.D + 1).fill('');
-        await gx(tok, 'PATCH', url + "/range(address='D" + f.zeile + ':AG' + f.zeile + "')", { values: [leer] });
-        await gx(tok, 'PATCH', url + "/range(address='AS" + f.zeile + ':AU' + f.zeile + "')", { values: [['', '', '']] });
-      } else await schiebe(f.zeile, f.zeile);
+      geschoben = await fbZeileEntfernen(L, b, f.zeile, f.name);
     }
     try{ await fahrdienstStatistikSchreiben(t=> betaOverlay.schritt(t), { blatt: L.blatt }); }catch(_){}
-    // passende GKV-Faelle auf dem Geraet ebenfalls entfernen
-    const nn = new Set((ganz ? d.faelle : [f]).filter(x=> x.art === 'gkv').map(x=> fbNameNorm(x.name)));
-    if(nn.size){
-      const tag = d.tag.getTime();
-      gkvFaelleSpeichern(gkvFaelleLaden().filter(x=>{ const t = designFallZeit(x); return !(nn.has(fbNameNorm(x.name)) && t && Math.abs(t - tag) < 1.5 * 86400000); }));
+    // passende GKV-Faelle auf dem Geraet ebenfalls entfernen -- beim einzelnen Fall genau diesen (gleiche Zeile),
+    // nicht alle gleichnamigen (sonst verschwand bei einem doppelt eingetragenen Fall auch der andere aus "Faelle in diesem Dienst")
+    {
+      const tag = d.tag.getTime(), nahe = (x)=>{ const t = designFallZeit(x); return t && Math.abs(t - tag) < 1.5 * 86400000; };
+      const gleichesBlatt = (x)=> !x.blatt || !L.blatt || x.blatt === L.blatt;
+      let a = gkvFaelleLaden();
+      if(ganz){
+        const nn = new Set(d.faelle.filter(x=> x.art === 'gkv').map(x=> fbNameNorm(x.name)));
+        a = a.filter(x=> !((x.zeile >= b.zeileStart && x.zeile <= b.zeileEnde && gleichesBlatt(x)) || (nn.has(fbNameNorm(x.name)) && nahe(x) && !x.zeile)));
+      } else if(f.art === 'gkv'){
+        let i = a.findIndex(x=> x.zeile === f.zeile && gleichesBlatt(x) && fbNameNorm(x.name) === fbNameNorm(f.name));
+        if(i < 0) i = a.findIndex(x=> fbNameNorm(x.name) === fbNameNorm(f.name) && nahe(x));
+        if(i >= 0) a.splice(i, 1);
+      }
+      gkvFaelleSpeichern(a);
+      gkvZeilenNachruecken(L.blatt, ganz ? b.zeileEnde : f.zeile, geschoben);
     }
     betaOverlay.schliessen();
     appToastAnzeigen(ganz ? 'Dienst gelöscht.' : 'Eintrag gelöscht.', 2500);
@@ -19132,23 +19187,30 @@ function standortKarteFaelle(info){
   const weg = ()=>{ try{ vorbereiteRuecksprung(); }catch(_){} einstellungenOffen = false; };
   try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=> f && lsPt(art, f.werte, ()=>{ weg(); ansichtMaske(art, i); }))); }catch(_){}
   try{ betaEntwuerfe().forEach(e=> e && (e.art === 'ls' || e.art === 'pt') && lsPt(e.art, e.werte, ()=>{ weg(); betaEntwurfOeffnen(e, null); }, e)); }catch(_){}
+  out.forEach(x=>{ if(x.unfertig && !x.verwerfen && x.art !== 'gkv'){ const e = betaEntwuerfe().find(y=> y.art === x.art && ((y.werte || {}).txtName || '').trim() === (x.name === 'ohne Namen' ? '' : x.name)); if(e) x.verwerfen = ()=> betaEntwurfEntfernen(e.id); } });
   // GKV-Patient, der gerade erfasst wird (noch nicht gespeichert)
   try{
     if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()){
       const t = designFallZeit(gkvEntwurf) || new Date();
-      if(drin(t)) out.push({ art: 'gkv', t, name: gkvEntwurf.name, adr: gkvEntwurf.adresse || '', geo: null, euro: null, unfertig: true, oeffnen: ()=>{ weg(); ansichtGkv(); } });
+      if(drin(t)) out.push({ art: 'gkv', t, name: gkvEntwurf.name, adr: gkvEntwurf.adresse || '', geo: null, euro: null, unfertig: true, oeffnen: ()=>{ weg(); ansichtGkv(); }, verwerfen: ()=> gkvEntwurfVerwerfen() });
     }
   }catch(_){}
   try{
     gkvFaelleLaden().forEach(f=>{
       if(!f || f.name === GKV_PSEUDO_NAME) return;
       const t = designFallZeit(f); if(!drin(t)) return;
-      out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', adr: f.adresse || '', geo: f.geo || null, euro: f.euro, oeffnen: ()=>{ weg(); ansichtGkv(f.id); } });
+      out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', adr: f.adresse || '', geo: f.geo || null, euro: f.euro, gkvId: f.id, oeffnen: ()=>{ weg(); ansichtGkv(f.id); } });
     });
   }catch(_){}
   // gleiche Person/Zeit doppelt (Entwurf + gespeicherter Fall) nur einmal -- der gespeicherte gewinnt
   const ges = new Set();
-  return out.sort((a, b)=> (a.t - b.t) || ((a.unfertig ? 1 : 0) - (b.unfertig ? 1 : 0))).filter(x=>{ const k = x.art + '|' + x.name + '|' + x.t.getTime(); if(ges.has(k)) return false; ges.add(k); return true; });
+  // Entwurf neben dem gespeicherten Fall nur einmal; zwei gespeicherte GKV-Faelle (auch gleichnamig) beide -- wie im Fahrtenbuch
+  const basis = new Set();
+  return out.sort((a, b)=> (a.t - b.t) || ((a.unfertig ? 1 : 0) - (b.unfertig ? 1 : 0))).filter(x=>{
+    const k0 = x.art + '|' + x.name + '|' + x.t.getTime();
+    if(x.unfertig){ if(basis.has(k0) || ges.has(k0)) return false; ges.add(k0); return true; }
+    const k = k0 + (x.gkvId ? '|' + x.gkvId : ''); if(ges.has(k)) return false; ges.add(k); basis.add(k0); return true;
+  });
 }
 let standortKarteLauf = 0;
 async function standortKarteZeichnen(info, mitDialog){
@@ -20216,7 +20278,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v460';
+const APP_VERSION = 'v461';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21320,9 +21382,9 @@ function designDienstHtml(info){
         '<span class="ds-balken"><i style="width:' + p + '%"></i></span></span>' : '') + '</button>' +
     '<button type="button" class="ds-dz-auf" aria-expanded="' + auf + '"><span>Fälle in diesem Dienst (' + faelle.length + ')</span><span class="ds-dz-pfeil" aria-hidden="true">▾</span></button>' +
     '<div class="ds-dz-liste"' + (auf ? '' : ' hidden') + '>' +
-      (faelle.length ? faelle.map((f, i)=> '<button type="button" class="ds-dz-fall" data-dzfall="' + i + '"><span class="ds-dz-zeit">' + designUhr(f.t) + '</span>' +
+      (faelle.length ? faelle.map((f, i)=> ((f.gkvId || f.verwerfen) ? '<div class="wisch-huelle ds-dz-wisch"><div class="wisch-hinter">&#128465; Löschen</div>' : '') + '<button type="button" class="ds-dz-fall" data-dzfall="' + i + '"><span class="ds-dz-zeit">' + designUhr(f.t) + '</span>' +
         '<span class="ds-fall-marke ' + f.art + '">' + f.art.toUpperCase() + '</span><span class="ds-dz-name">' + htmlEsc(f.name) + '</span>' +
-        '<span class="ds-dz-betrag">' + (f.unfertig ? '<span class="ds-unfertig">unfertig</span>' : (f.euro != null && f.euro !== '' ? betaEuro(f.euro).replace(' €', '') : '')) + '</span></button>').join('')
+        '<span class="ds-dz-betrag">' + (f.unfertig ? '<span class="ds-unfertig">unfertig</span>' : (f.euro != null && f.euro !== '' ? betaEuro(f.euro).replace(' €', '') : '')) + '</span></button>' + ((f.gkvId || f.verwerfen) ? '</div>' : '')).join('')
         : '<div class="ds-leer">Noch keine Fälle in diesem Dienst.</div>') +
     '</div></div>';
 }
@@ -21331,6 +21393,15 @@ function designDienstWiring(wurzel){
   const knopf = box.querySelector('.ds-dz-auf'), liste = box.querySelector('.ds-dz-liste');
   knopf.onclick = ()=>{ const auf = liste.hidden; liste.hidden = !auf; knopf.setAttribute('aria-expanded', String(auf)); LS.set('dienst_liste_auf', auf); };
   box.querySelectorAll('[data-dzfall]').forEach(b=> b.onclick = ()=>{ const f = (designDienstHtml.faelle || [])[+b.dataset.dzfall]; if(f && f.oeffnen) f.oeffnen(); });
+  // wegwischen (oder lange druecken): GKV-Fall in App und Fahrtenbuch loeschen, unfertigen Fall verwerfen
+  box.querySelectorAll('.ds-dz-wisch [data-dzfall]').forEach(b=> betaWischen(b, async ()=>{
+    const f = (designDienstHtml.faelle || [])[+b.dataset.dzfall]; if(!f) return false;
+    let ok = false;
+    if(f.gkvId) ok = await gkvFallUeberallLoeschen(f.gkvId);
+    else if(f.verwerfen){ ok = await betaFrage('Unfertigen Fall „' + f.name + '“ verwerfen? Die Eingaben gehen verloren.', 'Verwerfen', 'Abbrechen'); if(ok){ f.verwerfen(); appToastAnzeigen('Verworfen.', 1800); } }
+    if(ok) setTimeout(()=>{ try{ ansichtStart(); }catch(_){} }, 150);
+    return ok;
+  }));
 }
 function liveAnzeigeHtml(info){
   const l = liveEinst();
