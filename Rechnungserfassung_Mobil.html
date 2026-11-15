@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-6D/g6CcleAd9qVMkKFYaqv5KQBOCuDHZgfWKXwX7yo4=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-GTPQoQ/JwlqGBg1BiRn25rXFjTYtTkAiMmhUNiXNAK0=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -14227,7 +14227,24 @@ function gkvProfileLaden(){
   const tel = m.get('tel'); if(tel && tel.name === 'Tel. Konsultation') tel.name = 'Telefonische Konsultation';
   return [...m.values()].filter(p=> !p.geloescht);
 }
-function gkvProfilSichern(p){ const { standard, ...rest } = p; return betaProfilSpeichern('gkv', rest); }
+function gkvProfilSichern(p){
+  const vorher = gkvProfileLaden().find(x=> x.id === p.id);
+  const { standard, ...rest } = p;
+  const r = betaProfilSpeichern('gkv', rest);
+  // Offene, noch leere GKV-Maske mit diesem Profil: neue Vorauswahl uebernehmen -- aber nur,
+  // wenn dort noch nichts von Hand geaendert wurde (Wegepauschale aus der Adresse bleibt).
+  try{
+    const e = typeof gkvEntwurf !== 'undefined' ? gkvEntwurf : null;
+    const ohneWeg = (a)=>{ const o = Object.assign({}, a || {}); delete o.weg; return gkvAuswahlNorm(o); };
+    if(e && !e.id && e.profil === p.id && !p.geloescht && (!vorher || ohneWeg(e.auswahl) === ohneWeg(vorher.auswahl))){
+      const neu = JSON.parse(JSON.stringify(p.auswahl || {}));
+      if(e.auswahl && e.auswahl.weg && neu.weg !== undefined) neu.weg = e.auswahl.weg;
+      if(gkvIstSitzProfil(p)) delete neu.weg;
+      e.auswahl = neu;
+    }
+  }catch(_){}
+  return r;
+}
 function gkvProfilLoeschen(id){ const p = gkvProfileLaden().find(x=> x.id === id) || { id }; return gkvProfilSichern({ ...p, geloescht: true }); }
 // Profile/Liste aus der ersten Fassung (nur auf dem Handy) einmalig uebernehmen
 function gkvAltMigrieren(){
@@ -20165,7 +20182,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v451';
+const APP_VERSION = 'v452';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
