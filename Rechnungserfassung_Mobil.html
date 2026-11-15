@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-6SBiwbew7XxoMfBwk3ewdh2L5JyvBKv+MLFwVSgQrao=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-ruP+0TNRx0oqiP4ayHVAQMmHyZLbnn8hKiQZUN5YzR8=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -3538,7 +3538,7 @@ async function ansichtFahrtenbuch(blatt){
     '<div class="fbx-eigen" id="fbxEigen" hidden><label>von<input type="date" id="fbxVon"></label><label>bis<input type="date" id="fbxBis"></label></div>' +
     '<div class="fbx-leiste"><div class="fbx-varianten">' + [['a', 'Karten'], ['b', 'Tabelle'], ['c', 'Woche']].map(([k, t])=> '<button type="button" data-fbv="' + k + '">' + t + '</button>').join('') + '</div>' +
     '</div>' +
-    '<div id="fbxInhalt" class="quer-breit"><div class="leer-hinweis">Fahrtenbuch wird gelesen …</div></div>';
+    '<div id="fbxUmzug"></div><div id="fbxInhalt" class="quer-breit"><div class="leer-hinweis">Fahrtenbuch wird gelesen …</div></div>';
   fbTabsWiring();
   const inhalt = document.getElementById('fbxInhalt');
   try{
@@ -3561,6 +3561,24 @@ async function ansichtFahrtenbuch(blatt){
   }catch(e){ inhalt.innerHTML = '<div class="gkv-warn">Fahrtenbuch konnte nicht gelesen werden: ' + htmlEsc(e.message || String(e)) + '</div>'; return; }
   const buch = fbBuchCache;
   fbLokalAuffrischen(buch);
+  // falsch zugeordnete Faelle: Hinweis + mit einem Klick in den richtigen Dienst
+  try{
+    const falsch = fbFalschZugeordnet(buch), box = document.getElementById('fbxUmzug');
+    if(falsch.length && box){
+      const bsp = falsch.slice(0, 3).map(x=> x.f.name + ' (' + x.f.zeit + ' im Dienst ' + fbZeitText(fbZeitParsen(x.d.zeitRoh) || { s: 0, e: 0 }) + ')').join(', ');
+      box.innerHTML = '<div class="gkv-warn fbx-umzug">' + '<b>' + falsch.length + (falsch.length === 1 ? ' Fall steht' : ' Fälle stehen') + ' im falschen Dienst</b> (Uhrzeit außerhalb des Dienstzeitraums): ' + htmlEsc(bsp) + (falsch.length > 3 ? ' …' : '') +
+        '<br><button type="button" class="btn-primaer" id="fbxUmzugLos" style="margin-top:8px;">In den richtigen Dienst verschieben</button></div>';
+      document.getElementById('fbxUmzugLos').onclick = async ()=>{
+        betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
+        const e = await fbFaelleUmziehen(falsch, (t)=> betaOverlay.schritt(t));
+        betaOverlay.schliessen();
+        fbBuchCache = null;
+        if(e.fehler.length) await betaOverlay.meldung(e.n + ' verschoben. Nicht verschoben: ' + e.fehler.join('; '), 'Fahrtenbuch');
+        else appToastAnzeigen(e.n + (e.n === 1 ? ' Fall' : ' Fälle') + ' verschoben.', 2600);
+        ansichtFahrtenbuch(blatt);
+      };
+    }
+  }catch(_){}
   const sel = document.getElementById('fbxJahr');
   sel.innerHTML = buch.blaetter.slice().reverse().map(b=> '<option' + (b === buch.blatt ? ' selected' : '') + '>' + htmlEsc(b) + '</option>').join('');
   sel.onchange = ()=>{ fbBuchCache = null; ansichtFahrtenbuch(sel.value); };
@@ -3708,19 +3726,63 @@ async function gkvFallUeberallLoeschen(id){
     try{
       const kx = await fbKontext(t=> betaOverlay.schritt(t));
       const L = await fbLesen(t=> betaOverlay.schritt(t), kx, x.blatt || undefined);
-      const b = L.daten.bloecke.find(bb=> x.zeile >= bb.zeileStart && x.zeile <= bb.zeileEnde);
-      if(!b) throw new Error('Die Zeile im Fahrtenbuch wurde nicht gefunden – bitte im Fahrtenbuch löschen.');
+      // gemerkte Zeile pruefen; stimmt sie nicht mehr (Zeilen verschoben), den Fall im Dienst seiner Uhrzeit suchen
+      let zeile = x.zeile, b = L.daten.bloecke.find(bb=> zeile >= bb.zeileStart && zeile <= bb.zeileEnde);
+      const nameIn = (z)=> fbNameNorm(String(((L.werte[z - 1] || [])[FB_COL.D]) || '')) === fbNameNorm(x.name);
+      if(!b || !nameIn(zeile)){
+        const dt = designFallZeit(x); b = dt ? fbDienstFinden(L, dt) : null; zeile = 0;
+        if(b) for(let z = b.zeileStart; z <= b.zeileEnde; z++){ if(nameIn(z) && (!x.zeit || fbZeitAusZelle((L.werte[z - 1] || [])[FB_COL.AS]) === fbZeitAusZelle(x.zeit))){ zeile = z; break; } }
+      }
+      if(!b || !zeile) throw new Error('Die Zeile im Fahrtenbuch wurde nicht gefunden – bitte im Fahrtenbuch löschen.');
       betaOverlay.schritt('Eintrag wird gelöscht …');
-      const n = await fbZeileEntfernen(L, b, x.zeile, x.name);
+      const n = await fbZeileEntfernen(L, b, zeile, x.name);
       try{ await fahrdienstStatistikSchreiben(t=> betaOverlay.schritt(t), { blatt: L.blatt }); }catch(_){}
       gkvFaelleSpeichern(gkvFaelleLaden().filter(y=> y.id !== id));
-      gkvZeilenNachruecken(L.blatt, x.zeile, n);
+      gkvZeilenNachruecken(L.blatt, zeile, n);
       betaOverlay.schliessen();
     }catch(e){ betaOverlay.schliessen(); await betaOverlay.meldung('Löschen hat nicht geklappt: ' + (e.message || e), 'Fahrtenbuch'); return false; }
     try{ fbBuchCache = null; }catch(_){}
   } else gkvFaelleSpeichern(gkvFaelleLaden().filter(y=> y.id !== id));
   appToastAnzeigen('Gelöscht.', 2000);
   return true;
+}
+// Faelle, die im Fahrtenbuch in einem Dienst stehen, in dessen Zeitraum sie nicht liegen (z. B. frueher per
+// Toleranz in den vorherigen Dienst geschrieben) -- nur die letzten 30 Tage, nur mit bekannter Uhrzeit
+function fbFalschZugeordnet(buch){
+  const out = [], grenze = Date.now() - 30 * 86400000;
+  const echt = buch.dienste.filter(d=> !d.lokal && d.zeileStart);
+  const fb = { daten: { bloecke: echt } };
+  echt.forEach(d=>{
+    const z = fbBlockZeitraum(d); if(!z || z.bis.getTime() < grenze) return;
+    d.faelle.forEach(f=>{
+      if(f.pseudo || !f.zeile || !/^\d{2}:\d{2}$/.test(f.zeit || '')) return;
+      const [hh, mm] = f.zeit.split(':').map(Number);
+      let dt = new Date(z.von.getFullYear(), z.von.getMonth(), z.von.getDate(), hh, mm);
+      if(dt.getTime() < z.von.getTime() - 3600000) dt = new Date(dt.getTime() + 86400000);   // Dienst ueber Mitternacht
+      if(dt >= z.von && dt < z.bis) return;   // liegt in seinem Dienst
+      const ziel = fbDienstFinden(fb, dt);
+      let neu = false;
+      if(!ziel){ try{ neu = !!appDienstFuer(dt); }catch(_){} }
+      if((ziel && ziel.zeileStart !== d.zeileStart) || neu) out.push({ d, f, dt, ziel });
+    });
+  });
+  return out;
+}
+async function fbFaelleUmziehen(liste, meldung){
+  let n = 0; const fehler = [];
+  for(const { f, dt } of liste){
+    try{
+      meldung && meldung(f.name + ' wird verschoben …');
+      const r = await fahrtenbuchEintragen({ kat: f.art === 'ls' ? 'LS' : f.art === 'pt' ? 'P' : '', name: f.name, datum: new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()), zeit: f.zeit,
+        euro: f.euro, positionen: f.art === 'gkv' ? (f.ziffern || []).map(z=> ({ gop: z.gop, anz: z.anz })) : [], adresse: f.adr || '', geo: f.geo || null }, meldung, { fragen: false });
+      if(r && !r.uebersprungen){
+        if(r.verschoben) n++; else fehler.push(f.name + ' (im richtigen Dienst eingetragen, alte Zeile bitte von Hand löschen)');
+        // Zeile des passenden GKV-Falls in der App nachfuehren
+        if(f.art === 'gkv'){ const a = gkvFaelleLaden(), iso = liveIso(dt); const x = a.find(y=> fbNameNorm(y.name) === fbNameNorm(f.name) && y.datum === iso && (y.zeit || '').slice(0, 5) === f.zeit); if(x){ x.zeile = r.zeile; if(r.blatt) x.blatt = r.blatt; gkvFaelleSpeichern(a); } }
+      } else fehler.push(f.name + (r && r.grund ? ' (' + r.grund + ')' : ''));
+    }catch(e){ fehler.push(f.name + ': ' + (e.message || e)); }
+  }
+  return { n, fehler };
 }
 // Faelle bzw. ganze Dienste aus dem Fahrtenbuch loeschen. Die Zeilen werden
 // in A:AG und AS nach oben herausgeschoben (die Statistik AH:AQ bleibt stehen
@@ -20319,7 +20381,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v462';
+const APP_VERSION = 'v463';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
