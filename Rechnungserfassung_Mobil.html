@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-2KcCnIGVpnG9fO7k8MM+BHRmrAy15anDnLma6fRTFf8=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-m/uzg+iTS91oDYx7d4MVhbQ55XkZftH6Sh8GOPeBvcM=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2115,7 +2115,7 @@ try{
   .ds-neu-knopf.pt .ds-code{background:var(--pt-farbe);} .ds-neu-knopf.gkv .ds-code{background:var(--ds-gkv);}
   /* Einhand: GKV in einer Reihe mit LS und PT */
   body.design-einhand #app .kachelreihe.drei{grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px;}
-  body.design-einhand #app .kachelreihe.drei .karte, body.design-einhand #app .kachelreihe.drei .karte.gkv{grid-column:auto; order:0; min-height:150px; padding:14px 12px; border-radius:22px;}
+  body.design-einhand #app .kachelreihe.drei .karte, body.design-einhand #app .kachelreihe.drei .karte.gkv{grid-column:auto; order:0; aspect-ratio:1/1; min-height:0; padding:12px 12px; border-radius:22px;}   /* quadratisch auf jedem Geraet (schmale Handys: vorher 118x150) */
   body.design-einhand .karte .ds-code, body.design-einhand .karte.gkv .ds-code{font-size:32px;}
   body.design-einhand .karte .ds-lang{font-size:13px; line-height:1.2;}
   body.design-einhand .karte .ds-unter{font-size:11.5px;}
@@ -2124,6 +2124,7 @@ try{
   body.design-einhand .karte .ds-plus{position:absolute; top:12px; right:12px;}
   body.design-einhand #app .kachelreihe.drei .karte{position:relative;}
   body.design-einhand .karte .ds-plus{top:auto; bottom:18px; right:12px;}
+  @media (max-width:385px){ body.design-einhand #app .kachelreihe.drei .karte, body.design-einhand #app .kachelreihe.drei .karte.gkv{padding:10px 9px;} body.design-einhand .karte .ds-code, body.design-einhand .karte.gkv .ds-code{font-size:25px;} body.design-einhand .karte .ds-lang{font-size:11.5px;} body.design-einhand .karte .ds-unter{font-size:10px;} body.design-einhand .karte .ds-plus{bottom:13px; right:8px;} }
 
   /* ---------- Querformat-Ansicht (Einstellung, zum Testen): Tablet/PC und Handy quer ---------- */
   body.quer main:has(.quer-breit){max-width:min(1500px, calc(100% - 24px)) !important; margin-left:auto; margin-right:auto;}
@@ -20131,7 +20132,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v446';
+const APP_VERSION = 'v447';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
