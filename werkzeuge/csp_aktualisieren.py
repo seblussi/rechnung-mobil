@@ -6,7 +6,7 @@ import sys, re, hashlib, base64
 pfad, variante = sys.argv[1], sys.argv[2]
 s = open(pfad, encoding='utf-8').read()
 hashes = []
-for m in re.finditer(r'<script(?![^>]*\bsrc=)([^>]*)>(.*?)</script>', s, re.S):
+for m in re.finditer(r'<script\b(?![^>]*\bsrc\s*=)([^>]*)>(.*?)</script[^>]*>', s, re.S | re.I):
     body = m.group(2)
     h = "'sha256-" + base64.b64encode(hashlib.sha256(body.encode('utf-8')).digest()).decode() + "'"
     if h not in hashes: hashes.append(h)
