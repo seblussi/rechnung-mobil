@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-AUnKIdxR2Za6igHJmF2cYun0FXsCV5ODufR9VUhSsKc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-2KcCnIGVpnG9fO7k8MM+BHRmrAy15anDnLma6fRTFf8=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1741,9 +1741,10 @@ try{
   .ods-frame{width:100%; height:100%; border:0; display:block;}
   .ods-kurz{padding:12px 14px; font-size:14px; line-height:1.5; border-bottom:1px solid var(--rand);}
   .ods-text{margin:0; padding:12px 14px; font-size:12px; white-space:pre-wrap; word-break:break-word;}
-  .wf-modus .wf-cb{display:flex; align-items:center; gap:10px; margin:0; padding:6px 0; font-size:15px; text-align:left; cursor:pointer;}
+  #wfKvbwTeil[hidden], #wfZeichnenTeil[hidden]{display:none !important;}
+  .wf-modus .wf-cb{display:flex; align-items:flex-start; gap:10px; margin:0; padding:6px 0; font-size:15px; text-align:left; cursor:pointer;}
   .wf-modus .wf-cb input{width:20px; height:20px; margin:0; flex:0 0 auto; accent-color:#2b6cb0;}
-  .wf-modus .wf-cb small{color:var(--text-grau, #777);}
+  .wf-modus .wf-cb small{color:var(--text-grau, #777); font-size:13px; line-height:1.35; margin-top:2px;}
   .wf-modus .wf-vorrang{display:flex; flex-direction:column; gap:4px; margin:4px 0 0; font-size:14px;}
   .wf-modus .wf-vorrang[hidden]{display:none;}
   .wf-modus select{width:100%; min-height:40px; padding:6px 8px; border-radius:8px; border:1px solid var(--rand); background:var(--karte); color:var(--text); font-size:15px;}
@@ -20130,7 +20131,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v445';
+const APP_VERSION = 'v446';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21176,6 +21177,16 @@ function ansichtEinstellungen(){
         <div class="txt">Im Grenzbereich Reiseentschädigung priorisieren<span class="hinweis">Angehakt (Standard): Im Grenzbereich wird die Reiseentschädigung über der Luftlinie priorisiert; es wird ab 50 km die Reiseentschädigung aktiv, obwohl die Luftlinie noch &lt;25 km liegen könnte.<br><span style="display:block; margin-top:5px;">Nicht angehakt: Im Grenzbereich wird die Luftlinie über der Reiseentschädigung priorisiert; es wird die Reiseentschädigung erst aktiv, wenn die Luftlinie &gt;25 km überschritten hat.</span></span></div>
       </div>
       <div class="feld" style="margin-top:14px;">
+        <label>Wegegeld berechnen nach</label>
+        <div id="wfEinst"></div>
+        <div id="wfKvbwTeil">
+          <div class="design-hinweis">Grenzen der Zonen auf der KVBW-Karte selbst nachzeichnen. Gilt sofort für Wegegeld und alle Karten; mit OneDrive-Anmeldung auf allen Geräten.${LS.get('nfp_zonen_eigen', null) ? ' <b>Eigene Korrekturen aktiv</b> (Stand ' + new Date(LS.get('nfp_zonen_eigen', {}).am || Date.now()).toLocaleDateString('de-DE') + ').' : ''}</div>
+          <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:8px;">KVBW-Zonen auf dem Kartenbild korrigieren</button>
+          <button type="button" class="btn-sekundaer" id="btnZonenLaden" style="margin-top:8px;">Eigene Zonen mit OneDrive abgleichen</button>
+          <div class="design-hinweis" id="zonenLadenInfo"></div>
+        </div>
+      </div>
+      <div class="feld" style="margin-top:14px;">
         <label>Wachen/Praxen (Startpunkt für km-Berechnung)</label>
         <div id="praxenListe" class="praxen-liste"></div>
         <button type="button" class="btn-sekundaer praxis-neu" id="praxisNeu">+ Wache/Praxis hinzufügen</button>
@@ -21204,14 +21215,12 @@ function ansichtEinstellungen(){
       <div id="asAbschnitt">${AppSperre.abschnittHtml()}</div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">Wegegeld-Zonen</div>
-      <div class="design-hinweis">Grenzen der Zonen auf der KVBW-Karte selbst nachzeichnen. Gilt sofort für Wegegeld und alle Karten; mit OneDrive-Anmeldung auf allen Geräten.${LS.get('nfp_zonen_eigen', null) ? ' <b>Eigene Korrekturen aktiv</b> (Stand ' + new Date(LS.get('nfp_zonen_eigen', {}).am || Date.now()).toLocaleDateString('de-DE') + ').' : ''}</div>
-      <div id="wfEinst"></div>
-      <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:8px;">KVBW-Zonen auf dem Kartenbild korrigieren</button>
-      <button type="button" class="btn-sekundaer" id="btnZonenLaden" style="margin-top:8px;">Eigene Zonen mit OneDrive abgleichen</button>
-      <div class="design-hinweis" id="zonenLadenInfo"></div>
+      <div class="trennlinie">Einrichtung</div>
       <button type="button" class="btn-sekundaer" id="btnEinrichtung" style="margin-top:8px;">Einrichtungsassistent (neues Gerät / neuer Nutzer)</button>
       <button type="button" class="btn-sekundaer" id="btnEinrichtungBrief" style="margin-top:8px;">Briefversand einrichten</button>
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Karten</div>
       <div class="einstellung-zeile" style="margin-top:14px;">
         <input type="checkbox" id="chkKarteVektor"${(ladeEinstellungen() || {}).karteVektor !== false ? ' checked' : ''}>
         <div class="txt">Karten als Vektorkarte (Standard)<span class="hinweis">Scharf gezeichnete Karte (OpenFreeMap), braucht Internet. Im Nachtmodus automatisch dunkel; in der Karte über ◐ Stil und Ebenen (Medizinisch, Parkplätze) umschaltbar; Hausnummern immer sichtbar. Die KVBW-Ansicht und die Auswahl der Einsatzstelle (GKV) nutzen weiter die normale Karte.</span></div>
@@ -23900,7 +23909,7 @@ nfpBewertung = function(p){
   let wahl = zo ? 'z' : (ri ? 'r' : null), zusatz = '';
   if(zo && ri && c.modus.ringe){
     const iz = wfStufeIndex(zo.stufe, c), ir = wfStufeIndex(ri.stufe, c);
-    if(c.modus.vorrang === 'guenstig'){ wahl = ir > iz ? 'r' : 'z'; if(ir !== iz) zusatz = ' (günstiger als ' + (wahl === 'r' ? zo.text : ri.text) + ')'; }
+    if(c.modus.vorrang === 'guenstig'){ wahl = ir > iz ? 'r' : 'z'; if(ir !== iz) zusatz = ' (höherer Wert als ' + (wahl === 'r' ? zo.text : ri.text) + ')'; }
     else wahl = c.modus.vorrang === 'ringe' ? 'r' : 'z';
   }
   if(!wahl) return basis || { x: p.x, y: p.y, zone: 9, stufe: '', text: 'keine Zone und kein Ausgangspunkt', km: null, quelle: 'luftlinie' };
@@ -23936,25 +23945,23 @@ vkZonenGeo = function(){
   return { type: 'FeatureCollection', features };
 };
 // --- Einstellungen: Wegegeld nach Zonen / Ringen / beidem ---
+function wfArtVon(m){ return m.zonen && m.ringe ? 'beide' : (m.ringe ? 'ringe' : 'kvbw'); }
 function wfModusHtml(m, hatFlaechen){
+  const art = wfArtVon(m);
+  const opt = (k, titel, text)=> '<label class="wf-cb"><input type="radio" name="wfArt" value="' + k + '"' + (art === k ? ' checked' : '') + '><span>' + titel + '<small style="display:block;">' + text + '</small></span></label>';
   return '<div class="wf-modus">' +
-    '<label class="wf-cb"><input type="checkbox" id="wfZonen"' + (m.zonen ? ' checked' : '') + '> Gezeichnete Zonen' + (hatFlaechen ? '' : ' <small>(noch keine gezeichnet)</small>') + '</label>' +
-    '<label class="wf-cb"><input type="checkbox" id="wfRinge"' + (m.ringe ? ' checked' : '') + '> km-Ringe (Luftlinie ab Ausgangspunkt)</label>' +
-    '<label class="wf-vorrang"' + (m.zonen && m.ringe ? '' : ' hidden') + '><span>Wenn beides passt, gilt</span><select id="wfVorrang">' +
-      [['guenstig', 'die günstigere Stufe'], ['zonen', 'immer die Zone'], ['ringe', 'immer der km-Ring']].map(([k, t])=> '<option value="' + k + '"' + (m.vorrang === k ? ' selected' : '') + '>' + t + '</option>').join('') +
-    '</select></label><div class="fb-info wf-modus-info">Außerhalb aller Zonen gilt immer der km-Ring.</div></div>';
+    opt('kvbw', 'Nur KVBW-Karte', 'Wegegeld nach den Zonen der KVBW-Karte (Bereitschaftsdienst)' + (hatFlaechen ? ', mit deinen gezeichneten Zonen' : '') + '. Außerhalb aller Zonen gilt der km-Ring.') +
+    opt('ringe', 'Nur km-Ringe', 'Wegegeld nach der Luftlinie ab dem Ausgangspunkt (Wache oder Praxis), ohne KVBW-Karte.') +
+    opt('beide', 'KVBW-Karte und km-Ringe zusammen', 'Im überlappenden Bereich gilt der höhere Wegegeld-Wert.') +
+    '</div>';
 }
 function wfModusLesen(alt){
-  const z = document.getElementById('wfZonen'), r = document.getElementById('wfRinge'), v = document.getElementById('wfVorrang');
-  if(!z || !r) return alt;
-  const m = { zonen: z.checked, ringe: r.checked, vorrang: v ? v.value : (alt && alt.vorrang) || 'guenstig' };
-  if(!m.zonen && !m.ringe) m.ringe = true;
-  return m;
+  const r = document.querySelector('input[name="wfArt"]:checked');
+  if(!r) return alt;
+  return { zonen: r.value !== 'ringe', ringe: r.value !== 'kvbw', vorrang: 'guenstig' };
 }
 function wfModusVerdrahten(beiAenderung){
-  const z = document.getElementById('wfZonen'), r = document.getElementById('wfRinge'), v = document.getElementById('wfVorrang');
-  const sicht = ()=>{ const l = document.querySelector('.wf-vorrang'); if(l) l.hidden = !(z.checked && r.checked); };
-  [z, r, v].forEach(el=>{ if(el) el.addEventListener('change', ()=>{ if(el !== v && !z.checked && !r.checked) (el === z ? r : z).checked = true; sicht(); if(beiAenderung) beiAenderung(); }); });
+  document.querySelectorAll('input[name="wfArt"]').forEach(el=> el.addEventListener('change', ()=>{ if(beiAenderung) beiAenderung(); }));
 }
 // --- Zeichnen ---
 async function wegZonenZeichnen(p){
@@ -24171,7 +24178,7 @@ function wfKontext(){
   const farben = mo.farben && typeof mo.farben === 'object' ? mo.farben : {};
   return {
     flaechen: a.filter(x=> x && x.id !== '_modus' && Array.isArray(x.pts) && x.pts.length > 2),
-    modus: { zonen: mo.zonen !== false, ringe: !!mo.ringe, vorrang: mo.vorrang || 'guenstig' },
+    modus: { zonen: mo.zonen !== false, ringe: !!mo.ringe, vorrang: 'guenstig' },   // bei KVBW + Ringe gilt immer der hoehere Wert
     farben,
     stufen: EBM_GRUPPEN.weg.stufen.filter(s=> s.k !== '2').map(s=> ({ k: s.k, label: s.label, farbe: farben[s.k] || WF_FARBEN_PRIVAT[s.k] || '#777' })),   // 'bis 2 km' gibt es am NFP nicht
     mitte: kreisMitte(),
@@ -24206,9 +24213,11 @@ function wfEinstellungenZeichnen(){
   const box = document.getElementById('wfEinst'); if(!box) return;
   const c = wfKontext();
   box.innerHTML = wfModusHtml(c.modus, c.flaechen.length > 0) +
-    '<div class="design-hinweis">' + (c.flaechen.length ? '<b>' + c.flaechen.length + ' gezeichnete ' + (c.flaechen.length === 1 ? 'Zone' : 'Zonen') + '</b> – gelten statt der KVBW-Zonen.' : 'Noch keine eigenen Zonen gezeichnet – es gelten die Zonen der KVBW-Karte. Beim ersten Zeichnen werden sie als Vorlage übernommen.') + '</div>' +
-    '<button type="button" class="btn-sekundaer" id="btnWfZeichnen" style="margin-top:8px;">Zonen zeichnen</button>';
-  wfModusVerdrahten(()=>{ const c2 = wfKontext(); c2.speichern(c2.flaechen, wfModusLesen(c2.modus), c2.farben); try{ miniKartenNeu(); }catch(_){} });
+    '<div class="fb-info wf-modus-info" id="wfZeichnenTeil"' + (c.modus.zonen ? '' : ' hidden') + '>' + (c.flaechen.length ? '<b>' + c.flaechen.length + ' gezeichnete ' + (c.flaechen.length === 1 ? 'Zone' : 'Zonen') + '</b> – gelten statt der KVBW-Zonen.' : 'Noch keine eigenen Zonen gezeichnet – es gelten die Zonen der KVBW-Karte. Beim ersten Zeichnen werden sie als Vorlage übernommen.') +
+    '<button type="button" class="btn-sekundaer" id="btnWfZeichnen" style="margin-top:8px;">Zonen zeichnen</button></div>';
+  const sicht = ()=>{ const kv = document.getElementById('wfKvbwTeil'), zt = document.getElementById('wfZeichnenTeil'), m = wfModusLesen(c.modus); if(kv) kv.hidden = !m.zonen; if(zt) zt.hidden = !m.zonen; };
+  sicht();
+  wfModusVerdrahten(()=>{ const c2 = wfKontext(); c2.speichern(c2.flaechen, wfModusLesen(c2.modus), c2.farben); sicht(); try{ miniKartenNeu(); }catch(_){} });
   document.getElementById('btnWfZeichnen').onclick = async ()=>{ await wegZonenZeichnen(); wfEinstellungenZeichnen(); };
 }
 
