@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-AwY9ES0fjrfL30tpqwLbhvoaDlr/Zq4R1m12RHVLHTg=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-CPY4htd2kXZfcTQg0MiBWXvPi7C69d+McQ9BXqotZoc=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -5036,46 +5036,18 @@ function automatischeAuswahlRoh(katalog, datum, zeit, kmFahrstreckeGesamt, kmLuf
   const fahrVal = parseFloat((kmFahrstreckeGesamt||'').toString().replace(',','.'));
   const luftVal = parseFloat((kmLuftlinie||'').toString().replace(',','.'));
 
-  if(modus==='REISE' && !isNaN(luftVal) && luftVal > 25){
-    // bewusst als Reiseentschaedigung gewaehlt -- nur zulaessig bei Luftlinie ueber 25 km (sonst unten: Wegegeld)
-    if(!isNaN(fahrVal) && fahrVal>0) ausgewaehlt.add('REISE');
-    return ausgewaehlt;
-  }
-
-  // BUGFIX (exakt wie am PC, WegegeldZifferBestimmen): im Luftlinie-Modus
-  // entscheidet AUSSCHLIESSLICH die Luftlinie (einfache Strecke) -- eine
-  // (noch) unbekannte Fahrstrecke wird dafuer nicht gebraucht. Vorher hing
-  // die GESAMTE Wegegeld-Ermittlung an "if(fahrVal>0)", wodurch eine manuell
-  // eingetippte ODER per Alternativrouten gewaehlte Luftlinie ganz ohne
-  // WT/WN blieb, sobald txtKmFahrstrecke (noch) leer war (z.B. bei manueller
-  // Eingabe ohne vorherige automatische Routenberechnung).
-  if(modus==='LUFTLINIE'){
-    if(isNaN(luftVal) || luftVal<=0 || !normZeit) return ausgewaehlt;
+  // GOAE §§ 8/9: allein die Luftlinie (einfach) entscheidet -- bis 25 km Wegegeld (Tag/Nacht-Staffel),
+  // darueber Reiseentschaedigung (km-Anteil aus der Fahrstrecke hin und zurueck). Ohne bekannte
+  // Luftlinie wird nichts vorgeschlagen (aus der Fahrstrecke laesst sie sich nicht ableiten).
+  if(isNaN(luftVal) || luftVal <= 0) return ausgewaehlt;
+  if(sollReiseGelten(fahrVal, luftVal)){ ausgewaehlt.add('REISE'); return ausgewaehlt; }
+  if(normZeit){
+    // Tag = 07:00-18:59, Nacht = 19:00-06:59 (eigene Grenze, nicht die der Zeitzuschlaege)
     const min = zeitInMinuten(normZeit);
     const nacht = !(min>=7*60 && min<19*60);
     const tabelle = nacht ? WEGEGELD_NACHT : WEGEGELD_TAG;
     const bucket = tabelle.find(w => luftVal <= w.bisKm) || tabelle[tabelle.length-1];
     ausgewaehlt.add(bucket.ziffer);
-    return ausgewaehlt;
-  }
-
-  // Ohne bekannte Luftlinie (z. B. nur eine Fahrstrecke von Hand eingetippt) weder Wegegeld
-  // noch Reiseentschaedigung vorschlagen: die Stufe haengt allein an der Luftlinie, und die
-  // Strasse ist immer laenger -- aus der Fahrstrecke laesst sie sich nicht ableiten.
-  if(!isNaN(fahrVal) && fahrVal>0 && !isNaN(luftVal) && luftVal>0){
-    const luftEinfach = luftVal;
-    if(sollReiseGelten(fahrVal, luftEinfach)){
-      ausgewaehlt.add('REISE');
-    } else if(normZeit){
-      // Tag/Nacht-Staffel wie am PC (WegegeldZifferBestimmen): Tag =
-      // 07:00-18:59, Nacht = 19:00-06:59 -- eigenstaendige Grenze, NICHT
-      // identisch mit der F/G-Zeitzuschlag-Grenze (20/6 Uhr).
-      const min = zeitInMinuten(normZeit);
-      const nacht = !(min>=7*60 && min<19*60);
-      const tabelle = nacht ? WEGEGELD_NACHT : WEGEGELD_TAG;
-      const bucket = tabelle.find(w => luftEinfach <= w.bisKm) || tabelle[tabelle.length-1];
-      ausgewaehlt.add(bucket.ziffer);
-    }
   }
   return ausgewaehlt;
 }
@@ -15930,7 +15902,7 @@ function wegVomStandortText(w){
 // -- genutzt von LS, PT und GKV. Ohne "weg" wird die Strecke selbst geholt.
 // Jeder Aufruf ersetzt den Inhalt; ein veralteter, noch laufender Aufruf
 // zeichnet in einen bereits entfernten Rahmen und bleibt dadurch unsichtbar.
-async function routenKarteSetzen(el, start, ziel, weg, zielText){
+async function routenKarteSetzen(el, start, ziel, weg, zielText, wegAlt){
   if(typeof el === 'string') el = document.getElementById(el);
   if(!el) return;
   const rahmen = document.createElement('div');
@@ -15939,7 +15911,7 @@ async function routenKarteSetzen(el, start, ziel, weg, zielText){
   if(weg === undefined){
     try{ const r = await routeMitWeg(start, ziel); weg = (r && r.length) ? r[0].coords : null; }catch(_){ weg = null; }
   }
-  try{ await luftKarteZeigen(rahmen, start, ziel, weg, zielText, undefined, { wegegeld: true }); }catch(_){}
+  try{ await luftKarteZeigen(rahmen, start, ziel, weg, zielText, wegAlt, { wegegeld: true }); }catch(_){}
 }
 // Ausschnitt der Wegegeld-Karte NFP unter dem Ergebnis: Start, Ziel, NFP,
 // Luftlinie (gestrichelt) und berechnete Fahrstrecke
@@ -20179,7 +20151,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v453';
+const APP_VERSION = 'v454';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22964,56 +22936,25 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // laesst, siehe RouteWaehlen(idx=0)).
       document.getElementById('txtKmFahrstrecke').value = (routen[0].km*2).toFixed(1);
       document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
-      // Wie am PC: doppelte/fast identische Alternativen (gleiche km auf 1
-      // Nachkommastelle gerundet) werden nicht mehrfach angezeigt.
+      // doppelte/fast identische Alternativen (gleiche km auf 1 Nachkommastelle) nur einmal
       const gesehen = new Set();
       routen = routen.filter(r=>{ const key=(r.km*2).toFixed(1); if(gesehen.has(key)) return false; gesehen.add(key); return true; });
-      let html = '';
+      // Karte: gewaehlte Route kraeftig, die anderen als "andere Varianten"
+      const karte = (i)=> routenKarteSetzen('routeKarte', start, ziel, routen[i].coords, zielAdresse, routen.filter((_, k)=> k !== i).map(r=> r.coords));
+      karte(0);
+      const regel = kmLuft > 25 ? 'über 25 km → Reiseentschädigung (km-Anteil aus der gewählten Strecke)' : 'bis 25 km → Wegegeld (die Strecke spielt dafür keine Rolle)';
+      let html = '<div class="routenoptionen-hinweis">Luftlinie ' + kmLuft.toFixed(1).replace('.', ',') + ' km: ' + regel + '. Gefahrene Strecke wählen:</div>';
       routen.forEach((r,i)=>{
         const kmGesamt = r.km*2;
-        html += `<button type="button" data-km="${kmGesamt.toFixed(1)}" data-luft="" data-idx="${i}">Fahrstrecke ${i+1}: ${kmGesamt.toFixed(1).replace('.',',')} km hin&amp;zurück (${Math.round(r.minuten)} min)</button>`;
+        html += `<button type="button" data-km="${kmGesamt.toFixed(1)}" data-idx="${i}">Route ${i+1}: ${kmGesamt.toFixed(1).replace('.',',')} km hin&amp;zurück (${Math.round(r.minuten)} min einfach)</button>`;
       });
-      html += `<button type="button" data-km="" data-luft="${kmLuft.toFixed(1)}">Luftlinie (einfach): ${kmLuft.toFixed(1).replace('.',',')} km</button>`;
       box.innerHTML = html;
-      box.querySelectorAll('button').forEach(btn=>{
+      box.querySelectorAll('button[data-km]').forEach(btn=>{
         btn.onclick = ()=>{
-          if(btn.dataset.km){
-            // Fahrstrecke-Kachel: wie am PC (RouteWaehlen idx<>0) ist das
-            // gleichbedeutend mit "bewusst als Reiseentschädigung wählen" --
-            // unter 50 km ist das nicht zulässig (dort: MsgBox-Ablehnung).
-            // Ohne native Popups hier stattdessen als kurzer Toast, die
-            // Auswahlliste bleibt offen, damit eine andere Kachel gewählt
-            // werden kann.
-            const kmGesamt = parseFloat(btn.dataset.km.replace(',','.'));
-            if(!(kmLuft>25)){
-              appToastAnzeigen('Eine Reiseentschädigung ist erst ab einer Luftlinie über 25 km zulässig – hier sind es ' + kmLuft.toFixed(1).replace('.', ',') + ' km. Bitte die Luftlinie wählen (Wegegeld).', 4500);
-              return;
-            }
-            // Fahrstrecke-Kachel: wie am PC (RouteWaehlen idx<>0) wird
-            // gFahrstreckeGesamt auf GENAU diese gewählte Route gesetzt.
-            manuellerModus = 'REISE';
-            document.getElementById('txtKmFahrstrecke').value = btn.dataset.km;
-            // Routenkarte: genau diese gewaehlte Alternative einzeichnen
-            const gew = routen[parseInt(btn.dataset.idx, 10)];
-            if(gew) routenKarteSetzen('routeKarte', start, ziel, gew.coords, zielAdresse);
-          } else {
-            // Luftlinie-Kachel: KORREKTUR -- die Wegegeld-Staffel (WT/WN)
-            // deckt nur bis 25 km einfach ab; darüber kommt ausschließlich
-            // eine Reiseentschädigung infrage. Eine Luftlinie >25 km wird
-            // deshalb NICHT mehr übernommen, sondern abgelehnt -- der
-            // 25-50-km-Graubereich soll (wie gewünscht) NUR über diesen Weg
-            // überhaupt entstehen können, und genau das wird hier verhindert.
-            if(kmLuft>25){
-              appToastAnzeigen('Luftlinie '+kmLuft.toFixed(1).replace('.',',')+' km liegt über 25 km -- dafür kommt nur eine Reiseentschädigung infrage. Bitte stattdessen eine Fahrstrecke-Kachel über 50 km wählen.', 4000);
-              return;
-            }
-            // Wie am PC (RouteWaehlen idx=0): NUR der Modus wird gesetzt,
-            // gFahrstreckeGesamt/txtKmFahrstrecke bleibt unangetastet (wurde
-            // oben bereits auf die beste automatisch gefundene Route gesetzt).
-            manuellerModus = 'LUFTLINIE';
-            // Routenkarte: wieder die beste Route (Route 1) einzeichnen
-            routenKarteSetzen('routeKarte', start, ziel, routen[0].coords, zielAdresse);
-          }
+          // gewaehlte Route = gefahrene Strecke (nur fuer den km-Anteil der Reiseentschaedigung)
+          document.getElementById('txtKmFahrstrecke').value = btn.dataset.km;
+          document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
+          karte(parseInt(btn.dataset.idx, 10));
           box.classList.remove('aktiv'); box.innerHTML='';
           feldWarnung('txtKm', '');
           streckenAnzeigeAktualisieren();
@@ -23209,8 +23150,6 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     let label, wert, istFahrstrecke = false;
     if(manuellerModus==='LUFTLINIE' && !isNaN(luftVal) && luftVal>0){
       label = 'Luftlinie (einfach), manuell gewählt'; wert = luftVal;
-    } else if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0 && !isNaN(luftVal) && luftVal > 25){
-      label = 'Fahrstrecke (Hin- und Rückfahrt), manuell gewählt'; wert = fahrVal; istFahrstrecke = true;
     } else if(!isNaN(fahrVal) && fahrVal>0 && !isNaN(luftVal) && sollReiseGelten(fahrVal, luftVal)){
       label = 'Fahrstrecke (Hin- und Rückfahrt)'; wert = fahrVal; istFahrstrecke = true;
     } else if(!isNaN(luftVal) && luftVal>0){
@@ -23249,18 +23188,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     if(info){
       const fahrVal = parseFloat((kmFahrstrecke||'').replace(',','.'));
       const luftVal = parseFloat((kmLuftlinie||'').replace(',','.'));
-      // Wie bei der Ziffernwahl (automatischeAuswahl): im erzwungenen Modus
-      // entscheidet NICHT mehr sollReiseGelten, sondern der Modus selbst --
-      // sonst widersprach dieser Infotext zuvor der tatsächlich gesetzten
-      // Position (z.B. "Reiseentschädigung greift" trotz gewählter Luftlinie).
-      if(manuellerModus==='REISE' && !isNaN(fahrVal) && fahrVal>0 && !isNaN(luftVal) && luftVal > 25){
-        info.textContent = 'Reiseentschädigung greift';
-      } else if(manuellerModus==='LUFTLINIE' && !isNaN(luftVal) && luftVal>0){
-        info.textContent = 'Wegegeld greift';
-      } else if(!isNaN(fahrVal) && fahrVal>0){
-        if(isNaN(luftVal)) info.textContent = 'Luftlinie unbekannt – bitte Adresse des Patienten eintragen (oder Einsatzort auf der Karte wählen)';
-        else info.textContent = sollReiseGelten(fahrVal, luftVal) ? 'Reiseentschädigung greift' : 'Wegegeld greift';
-      }
+      if(!isNaN(luftVal) && luftVal>0) info.textContent = sollReiseGelten(fahrVal, luftVal) ? 'Luftlinie über 25 km: Reiseentschädigung greift' : 'Luftlinie bis 25 km: Wegegeld greift';
+      else if(!isNaN(fahrVal) && fahrVal>0) info.textContent = 'Luftlinie unbekannt – bitte Adresse des Patienten eintragen (oder Einsatzort auf der Karte wählen)';
     }
 
     positionenAutomatikNachziehen(datum, zeit, kmFahrstrecke, kmLuftlinie);
