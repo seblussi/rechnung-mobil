@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-S3d6J3AmZqTWJRVCnlvYdCW5xVgnmJ7vqwrZ0v1QlCE=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-TwP/y1/Wl0YqL9IzhM5MpJwjZhilGNE0us0LfGPMyqY=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1021,6 +1021,10 @@ try{
   }
   .maske.pt .route-btn-reihe button{border-color:var(--pt-farbe); color:var(--pt-farbe);}
   .routenoptionen{margin-top:8px; display:none;}
+  .km-zeile{display:flex; gap:8px; align-items:stretch;} .km-zeile input{flex:1 1 auto; min-width:0;}
+  .km-gmaps{flex:0 0 auto; width:auto !important; margin:0 !important; padding:0 12px; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text); font-size:13px; cursor:pointer;}
+  .routenoptionen .routen-chips .fb-chip{display:inline-block; width:auto; margin:0; text-align:center;}
+  .luft-weg-alt-klick{fill:none; stroke:transparent; stroke-width:16; vector-effect:non-scaling-stroke; cursor:pointer; pointer-events:stroke;}
   .routenoptionen.aktiv{display:block;}
   .routenoptionen button{
     display:block; width:100%; text-align:left; padding:10px 11px; margin-bottom:6px;
@@ -15891,11 +15895,12 @@ function wegVomStandortText(w){
 // -- genutzt von LS, PT und GKV. Ohne "weg" wird die Strecke selbst geholt.
 // Jeder Aufruf ersetzt den Inhalt; ein veralteter, noch laufender Aufruf
 // zeichnet in einen bereits entfernten Rahmen und bleibt dadurch unsichtbar.
-async function routenKarteSetzen(el, start, ziel, weg, zielText, wegAlt){
+async function routenKarteSetzen(el, start, ziel, weg, zielText, wegAlt, altWahl){
   if(typeof el === 'string') el = document.getElementById(el);
   if(!el) return;
   const rahmen = document.createElement('div');
   el.replaceChildren(rahmen);
+  if(altWahl) rahmen.addEventListener('routeAltWahl', (ev)=> altWahl(+ev.detail));
   if(!start || !ziel) return;
   if(weg === undefined){
     try{ const r = await routeMitWeg(start, ziel); weg = (r && r.length) ? r[0].coords : null; }catch(_){ weg = null; }
@@ -15914,7 +15919,8 @@ async function luftKarteZeigen(ziel_el, start, ziel, weg, zielText, wegAlt, kopt
   // OSM-Ansicht immer moeglich; KVBW nur, wenn Start oder Ziel auf der KVBW-Karte liegt.
   // Startansicht: KVBW, wenn alles darauf liegt, sonst OSM.
   const osmDaten = { pois: [{ lat: start.lat, lon: start.lon, kl: 'start' }, { lat: ziel.lat, lon: ziel.lon, kl: 'ziel' }], weg: weg || [], wegAlt: wegAlt || [], linie: [start, ziel], nfp: true, rahmen: true };
-  const allesDrin = nfpImBild(pS) && nfpImBild(pZ) && !wegP.some(p=> !nfpImBild(p));
+  const altP = [].concat(...(wegAlt || []).map(w=> (w || []).map(c=> nfpGeoZuPixel(c[1], c[0])))).filter(Boolean);
+  const allesDrin = nfpImBild(pS) && nfpImBild(pZ) && !wegP.some(p=> !nfpImBild(p)) && !altP.some(p=> !nfpImBild(p));
     (wegP.length > 1 ? '<span><i class="w"></i>Fahrstrecke</span>' : '') + ((wegAlt || []).length ? '<span><i class="r"></i>andere Varianten</span>' : '') + '<span><i class="n"></i>NFP</span><span><i class="rtw"></i>Wache</span><span><i class="k50"></i>50 km</span></div>';
   const kvbwOk = nfpImBild(pS) || nfpImBild(pZ);
   const gross = (ebene, ansicht)=>{
@@ -16189,7 +16195,7 @@ function osmOfflineHtml(z, x0, y0, bw, bh){
 }
 function osmWelt(lat, lon, z){ const n = 256 * Math.pow(2, z), r = lat * Math.PI / 180; return { x: (lon + 180) / 360 * n, y: (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n }; }
 function osmGeo(x, y, z){ const n = 256 * Math.pow(2, z); return { lon: x / n * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI }; }
-function osmGeoListe(d){ const a = (d.pois || []).slice(); (d.weg || []).forEach(c=> a.push({ lat: c[1], lon: c[0] })); (d.linie || []).forEach(g=>{ if(g && isFinite(g.lat)) a.push({ lat: g.lat, lon: g.lon }); }); return a; }
+function osmGeoListe(d){ const a = (d.pois || []).slice(); (d.weg || []).forEach(c=> a.push({ lat: c[1], lon: c[0] })); (d.wegAlt || []).forEach(w=> (w || []).forEach(c=> a.push({ lat: c[1], lon: c[0] }))); (d.linie || []).forEach(g=>{ if(g && isFinite(g.lat)) a.push({ lat: g.lat, lon: g.lon }); }); return a; }
 // Uebersicht der kleinen Karte passend zur echten Fenstergroesse: alle Punkte sichtbar, rechts Platz fuer die Knoepfe,
 // hoechstens Ortsebene (in Grossstaedten etwa ein Stadtteil). Ergebnis im Raster-Zoom (MapLibre = z - 1).
 const MINI_FIT_ZMAX = 14;
@@ -16247,7 +16253,8 @@ function osmAusschnitt(d, opt){
   let svg = '<svg viewBox="' + f(x0) + ' ' + f(y0) + ' ' + f(bw) + ' ' + f(bh) + '" preserveAspectRatio="none" aria-hidden="true">';
   // KVBW-Ebene: Kartenbild immer zeigen (das Auge schaltet nur die Zonenfarben der OSM-Ebene)
   if(d.rahmen && typeof NFP_KARTE !== 'undefined' && (opt.zonen !== false || (opt.ebene === 'kvbw' && opt.kvbwUrl))) svg += osmKartenBereichSvg(z, opt.ebene === 'kvbw' && opt.kvbwUrl ? opt.kvbwUrl : null);
-  (d.wegAlt || []).forEach(w=>{ if(w && w.length > 1) svg += '<polyline class="luft-weg-alt" points="' + w.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>'; });
+  (d.wegAlt || []).forEach((w, i)=>{ if(w && w.length > 1){ const pts = w.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ');
+    svg += '<polyline class="luft-weg-alt" points="' + pts + '"/><polyline class="luft-weg-alt-klick" data-alt="' + i + '" points="' + pts + '"/>'; } });
   if(d.gpsWeg && d.gpsWeg.length > 1) svg += '<polyline class="luft-weg-gps-rand" points="' + d.gpsWeg.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/><polyline class="luft-weg-gps" points="' + d.gpsWeg.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>';
   if(d.weg && d.weg.length > 1) svg += '<polyline class="luft-weg" points="' + d.weg.map(c=>{ const q = osmWelt(c[1], c[0], z); return f(q.x) + ',' + f(q.y); }).join(' ') + '"/>';
   if(d.linie && d.linie[0] && d.linie[1]){ const a = P(d.linie[0]), b = P(d.linie[1]); svg += '<line class="luft-linie" x1="' + f(a.x) + '" y1="' + f(a.y) + '" x2="' + f(b.x) + '" y2="' + f(b.y) + '"/>'; }
@@ -16603,6 +16610,8 @@ function miniKarteStarten(w){
   w.addEventListener('click', (ev)=>{
     if(ev.target.closest('.mini-ebene-knopf, .karte-auge, .mini-stil, .mini-aed, .mini-pos, .mini-ueber')) return;
     if(gezogen){ ev.stopPropagation(); return; }
+    const alt = ev.target.closest('[data-alt]');
+    if(alt){ ev.stopPropagation(); w.dispatchEvent(new CustomEvent('routeAltWahl', { detail: +alt.dataset.alt, bubbles: true })); return; }
     const t = ev.target.closest('[data-fall]');
     if(t && opt.fallKlick){ ev.stopPropagation(); opt.fallKlick(+t.dataset.fall); return; }
     if(opt.gross){ ev.stopPropagation(); opt.gross(ebene, ansicht ? { ...ansicht } : null); }
@@ -16625,7 +16634,7 @@ function vkDatenEbenen(map, d){
   map.addSource('vk-k50', { type: 'geojson', data: linie(nfp50Kreis().map(ll)) });
   map.addLayer({ id: 'vk-k50', type: 'line', source: 'vk-k50', layout: { visibility: karteModus() === 'an' ? 'visible' : 'none' }, paint: { 'line-color': '#c0392b', 'line-width': 2, 'line-dasharray': [3, 2] } });
   vkKreiseEbenen(map);
-  map.addSource('vk-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: (d.wegAlt || []).filter(x=> x && x.length > 1).map(linie) } });
+  map.addSource('vk-alt', { type: 'geojson', data: { type: 'FeatureCollection', features: (d.wegAlt || []).map((x, i)=> x && x.length > 1 ? Object.assign(linie(x), { properties: { i } }) : null).filter(Boolean) } });
   map.addLayer({ id: 'vk-alt', type: 'line', source: 'vk-alt', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#6b7686', 'line-width': 4, 'line-dasharray': [2, 1.6], 'line-opacity': 0.85 } });
   map.addSource('vk-weg', { type: 'geojson', data: { type: 'FeatureCollection', features: d.weg && d.weg.length > 1 ? [linie(d.weg)] : [] } });
   map.addLayer({ id: 'vk-weg', type: 'line', source: 'vk-weg', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1a55c9', 'line-width': 5, 'line-opacity': 0.9 } });
@@ -16695,7 +16704,13 @@ function miniKarteVektor(w, cfg){
     }
     map.on('movestart', (ev)=>{ if(ev.originalEvent) gezogen = true; });
     map.on('moveend', ()=>{ setTimeout(()=> gezogen = false, 300); });
-    map.on('click', ()=>{ if(gezogen || !opt.gross) return; opt.gross('osm', ansichtJetzt()); });
+    map.on('click', (ev)=>{
+      if(gezogen) return;
+      // andere Routen-Variante angeklickt -> diese waehlen statt die grosse Karte zu oeffnen
+      try{ if(map.getLayer('vk-alt')){ const fa = map.queryRenderedFeatures([[ev.point.x - 10, ev.point.y - 10], [ev.point.x + 10, ev.point.y + 10]], { layers: ['vk-alt'] });
+        if(fa.length){ w.dispatchEvent(new CustomEvent('routeAltWahl', { detail: +fa[0].properties.i, bubbles: true })); return; } } }catch(_){}
+      if(!opt.gross) return; opt.gross('osm', ansichtJetzt());
+    });
     // Stilwechsel im Nachtmodus / in der grossen Karte uebernehmen
     w._mk.stilPruefen = ()=>{ const s = vkStil(); if(s !== stil && map){ stil = s; vkStilJson(s).then(o=> map.setStyle(o, { diff: false })).catch(()=>{}); } };
     // Stil-/Ebenen-Knopf wie in der grossen Karte
@@ -20140,7 +20155,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v455';
+const APP_VERSION = 'v456';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22357,15 +22372,11 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 
   html += abschnitt('Routenberechnung',
     `<div class="feld"><label id="txtKm_label" for="txtKm">Strecke (Hin- und Rückfahrt)</label>
-      <input type="text" id="txtKm" value="${(werte.txtKm||'')}" placeholder="wird automatisch berechnet">
+      <div class="km-zeile"><input type="text" id="txtKm" value="${(werte.txtKm||'')}" placeholder="wird automatisch berechnet"><button type="button" id="btnGoogleMapsRoute" class="km-gmaps" title="Route in Google Maps öffnen (Test)">Maps</button></div>
       <input type="hidden" id="txtKmFahrstrecke" value="${(werte.txtKmFahrstrecke||werte.txtKm||'')}">
       <input type="hidden" id="txtKmLuftlinie" value="${(werte.txtKmLuftlinie||'')}">
       <div class="streckeninfo" id="streckeninfo"></div>
       <div class="warnhinweis" id="txtKm_warn"></div>
-      <div class="route-btn-reihe">
-        <button type="button" id="btnAlternativrouten">Alternativrouten</button>
-        <button type="button" id="btnGoogleMapsRoute">Google Maps Route</button>
-      </div>
       <div class="routenoptionen" id="routenoptionen"></div>
       <div class="routen-karte" id="routeKarte"></div>
     </div>`);
@@ -22714,8 +22725,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 
   document.getElementById('btnZwischenablage').onclick = ()=>ausZwischenablageEinlesen(art, ctx);
 
-  document.getElementById('btnAlternativrouten').onclick = ()=> alternativroutenAnzeigen();
-  document.getElementById('btnGoogleMapsRoute').onclick = ()=> googleMapsRouteOeffnen();
+  { const gm = document.getElementById('btnGoogleMapsRoute'); if(gm) gm.onclick = ()=> googleMapsRouteOeffnen(); }
 
   if(art==='ls'){
     const bnameEl = document.getElementById('txtBName');
@@ -22871,28 +22881,36 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // Verlauf wird unten in die Routenkarte eingezeichnet.
       const routenW = await routeMitWeg(start, ziel);
       if(!routenW.length){ info.textContent = 'Route nicht berechenbar.'; routenKarteSetzen('routeKarte', null, null); return; }
-      const einweg = routenW[0].km;
-      routenKarteSetzen('routeKarte', start, ziel, routenW[0].coords, zielAdresse);
-      // Wie am PC: Fahrstrecke wird als Hin- und Rückfahrt gerechnet,
-      // Luftlinie bleibt die reine Einfachstrecke (Grundlage für die
-      // Wegegeld-Bänder und ggf. für die Reise-Entscheidung).
-      const kmFahrstreckeGesamt = einweg * 2;
+      // Varianten des Routendiensts (gleiche km nur einmal); die erste ist vorausgewaehlt.
+      // Die gewaehlte Route ist nur die gefahrene Strecke (km-Anteil der Reiseentschaedigung) --
+      // Wegegeld oder Reise entscheidet allein die Luftlinie.
+      const gesehen = new Set();
+      const routen = routenW.filter(r=>{ const k = (r.km * 2).toFixed(1); if(gesehen.has(k)) return false; gesehen.add(k); return true; });
       const kmLuft = kmLuftlinieEinfach(start, ziel);
-      document.getElementById('txtKmFahrstrecke').value = kmFahrstreckeGesamt.toFixed(1);
-      document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
-      feldWarnung('txtKm', '');
-      const reise = sollReiseGelten(kmFahrstreckeGesamt, kmLuft);
-      streckenAnzeigeAktualisieren();
-      info.textContent = 'Route: '+kmFahrstreckeGesamt.toFixed(1)+' km Hin+Rück, '+kmLuft.toFixed(1)+' km Luftlinie'
-        + (reise ? ' -- Reiseentschädigung greift' : ' -- Wegegeld greift');
-      // Bereits ausgewaehlte Automatik-Positionen (falls Nutzer schon auf der
-      // Rechnungspositionen-Seite war) live nachziehen -- wie bei manueller
-      // km-Aenderung.
-      positionenAutomatikNachziehen(
-        document.getElementById('txtDatumExcel').value,
-        document.getElementById('txtZeitLS').value,
-        kmFahrstreckeGesamt.toFixed(1), kmLuft.toFixed(1)
-      );
+      const box = document.getElementById('routenoptionen');
+      const waehle = (i)=>{
+        const r = routen[i]; if(!r) return;
+        const kmFahrstreckeGesamt = r.km * 2;
+        document.getElementById('txtKmFahrstrecke').value = kmFahrstreckeGesamt.toFixed(1);
+        document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
+        feldWarnung('txtKm', '');
+        const altIdx = routen.map((_, k)=> k).filter(k=> k !== i);
+        routenKarteSetzen('routeKarte', start, ziel, r.coords, zielAdresse, altIdx.map(k=> routen[k].coords), (j)=>{ if(altIdx[j] !== undefined) waehle(altIdx[j]); });
+        if(box){
+          if(routen.length > 1){
+            box.innerHTML = '<div class="fb-chips routen-chips">' + routen.map((x, k)=> '<button type="button" class="fb-chip' + (k === i ? ' an' : '') + '" data-route="' + k + '">Route ' + (k + 1) + ' · ' + (x.km * 2).toFixed(1).replace('.', ',') + ' km · ' + Math.round(x.minuten) + ' min</button>').join('') + '</div>';
+            box.classList.add('aktiv');
+            box.querySelectorAll('[data-route]').forEach(b=> b.onclick = ()=> waehle(+b.dataset.route));
+          } else { box.innerHTML = ''; box.classList.remove('aktiv'); }
+        }
+        const reise = sollReiseGelten(kmFahrstreckeGesamt, kmLuft);
+        streckenAnzeigeAktualisieren();
+        info.textContent = 'Route: '+kmFahrstreckeGesamt.toFixed(1)+' km Hin+Rück, '+kmLuft.toFixed(1)+' km Luftlinie'
+          + (reise ? ' -- Reiseentschädigung greift' : ' -- Wegegeld greift');
+        positionenAutomatikNachziehen(document.getElementById('txtDatumExcel').value, document.getElementById('txtZeitLS').value, kmFahrstreckeGesamt.toFixed(1), kmLuft.toFixed(1));
+        try{ automatikVorschauAktualisieren(); }catch(_){}
+      };
+      waehle(0);
     }catch(e){
       // Gleiche Unterscheidung wie bei der Adress-/PLZ-Prüfung
       // (keinInternetHinweisText()): hier landet man ausschließlich, wenn
@@ -22901,68 +22919,6 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // separat und ohne diesen Zusatz gemeldet.
       info.textContent = 'Route konnte nicht berechnet werden.'+keinInternetHinweisText()+' km bitte manuell eintragen.';
       routenKarteSetzen('routeKarte', null, null);
-    }
-  }
-
-  // Analog zur PC-Funktion KmBerechnen/RoutenAnzeigen: zeigt bis zu mehrere
-  // Routenalternativen (falls der Routendienst welche liefert) plus die
-  // Luftlinie als eigene Kachel an -- Anklicken uebernimmt die gewaehlte
-  // Strecke in "Strecke (Hin- und Rückfahrt)", genau wie am PC RouteWaehlen()
-  // (Luftlinie bleibt Einfachstrecke, echte Routen werden Hin+Rück verdoppelt).
-  async function alternativroutenAnzeigen(){
-    const e = ladeEinstellungen();
-    const box = document.getElementById('routenoptionen');
-    if(!e.praxisadresse){ box.innerHTML = '<div class="routenoptionen-hinweis warn">Keine Praxisadresse hinterlegt (Zahnrad -> Einstellungen).</div>'; box.classList.add('aktiv'); return; }
-    const zielAdresse = ermittleZielAdresse();
-    if(!zielAdresse.trim() || zielAdresse.trim()===','){ box.innerHTML = '<div class="routenoptionen-hinweis warn">Bitte zuerst die Zieladresse eintragen.</div>'; box.classList.add('aktiv'); return; }
-    box.innerHTML = '<div class="routenoptionen-hinweis">Routenalternativen werden ermittelt …</div>';
-    box.classList.add('aktiv');
-    try{
-      const start = await geocode(e.praxisadresse);
-      if(!start){ box.innerHTML = '<div class="routenoptionen-hinweis warn">Praxisadresse nicht auffindbar -- bitte in den Einstellungen prüfen.</div>'; return; }
-      const ziel = await geocode(zielAdresse);
-      if(!ziel){ box.innerHTML = '<div class="routenoptionen-hinweis warn">Zieladresse nicht gefunden.</div>'; return; }
-      const kmLuft = kmLuftlinieEinfach(start, ziel);
-      // Routen MIT Verlauf (fuer die Routenkarte: gewaehlte Alternative einzeichnen)
-      let routen = await routeMitWeg(start, ziel);
-      if(!routen.length){ box.innerHTML = '<div class="routenoptionen-hinweis warn">Route konnte nicht berechnet werden -- km bitte manuell eintragen oder über \'Google Maps Route\' prüfen.</div>'; return; }
-      // Wie am PC (RoutenErmitteln liefert Luftlinie als ByRef-Parameter,
-      // die erste/beste Route wird -- unabhaengig von einer spaeteren
-      // manuellen Kachel-Wahl -- bereits jetzt als Rechengrundlage
-      // hinterlegt): Fahrstrecke UND Luftlinie werden hier sofort auf die
-      // besten automatisch ermittelten Werte gesetzt, damit auch dann eine
-      // gueltige Fahrstrecke bekannt ist, wenn spaeter NUR die Luftlinie-
-      // Kachel gewaehlt wird (die PC-seitig gFahrstreckeGesamt unangetastet
-      // laesst, siehe RouteWaehlen(idx=0)).
-      document.getElementById('txtKmFahrstrecke').value = (routen[0].km*2).toFixed(1);
-      document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
-      // doppelte/fast identische Alternativen (gleiche km auf 1 Nachkommastelle) nur einmal
-      const gesehen = new Set();
-      routen = routen.filter(r=>{ const key=(r.km*2).toFixed(1); if(gesehen.has(key)) return false; gesehen.add(key); return true; });
-      // Karte: gewaehlte Route kraeftig, die anderen als "andere Varianten"
-      const karte = (i)=> routenKarteSetzen('routeKarte', start, ziel, routen[i].coords, zielAdresse, routen.filter((_, k)=> k !== i).map(r=> r.coords));
-      karte(0);
-      const regel = kmLuft > 25 ? 'über 25 km → Reiseentschädigung (km-Anteil aus der gewählten Strecke)' : 'bis 25 km → Wegegeld (die Strecke spielt dafür keine Rolle)';
-      let html = '<div class="routenoptionen-hinweis">Luftlinie ' + kmLuft.toFixed(1).replace('.', ',') + ' km: ' + regel + '. Gefahrene Strecke wählen:</div>';
-      routen.forEach((r,i)=>{
-        const kmGesamt = r.km*2;
-        html += `<button type="button" data-km="${kmGesamt.toFixed(1)}" data-idx="${i}">Route ${i+1}: ${kmGesamt.toFixed(1).replace('.',',')} km hin&amp;zurück (${Math.round(r.minuten)} min einfach)</button>`;
-      });
-      box.innerHTML = html;
-      box.querySelectorAll('button[data-km]').forEach(btn=>{
-        btn.onclick = ()=>{
-          // gewaehlte Route = gefahrene Strecke (nur fuer den km-Anteil der Reiseentschaedigung)
-          document.getElementById('txtKmFahrstrecke').value = btn.dataset.km;
-          document.getElementById('txtKmLuftlinie').value = kmLuft.toFixed(1);
-          karte(parseInt(btn.dataset.idx, 10));
-          box.classList.remove('aktiv'); box.innerHTML='';
-          feldWarnung('txtKm', '');
-          streckenAnzeigeAktualisieren();
-          automatikVorschauAktualisieren();
-        };
-      });
-    }catch(err){
-      box.innerHTML = '<div class="routenoptionen-hinweis warn">Alternativrouten konnten nicht berechnet werden.'+keinInternetHinweisText()+' km bitte manuell eintragen.</div>';
     }
   }
 
