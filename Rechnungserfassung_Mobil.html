@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-TwP/y1/Wl0YqL9IzhM5MpJwjZhilGNE0us0LfGPMyqY=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-/qOCrJI96JCK79D4cUoQCkRc10R3aulTTibCvXt26Zo=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1184,6 +1184,8 @@ try{
     margin-right:8px; vertical-align:middle;}
   .badge-neu.ls{background:var(--ls-farbe);}
   .badge-neu.pt{background:var(--pt-farbe);}
+  .badge-neu.gkv{background:var(--ds-gkv, #6b3fa0);}
+  .fall-zeile.gkv{border-left-color:var(--ds-gkv, #6b3fa0);}
   /* Versand-/PDF-Status, nur in der Rechnungsverwaltung (ansichtAlleRechnungen):
      Brief-Symbol = bereits versendet, Dokument-Symbol = PDF vorhanden und
      anklickbar. Ein goldenes "S" ("bereits in der Übersicht vorhanden") gibt
@@ -6745,6 +6747,30 @@ function gkvPseudoFoerderungHtml(f){
   const v = gkvPseudoFoerderung(f);
   return v == null ? '<span class="fbx-foerd">Förderung siehe Fahrtenbuch</span>' : '<span class="fbx-foerd">Förderung</span> ' + betaEuro(v).replace(' €', '');
 }
+// Angefangener GKV-Patient in der Rechnungsverwaltung (Reiter GKV), wie die unfertigen LS/PT-Rechnungen
+function gkvUnfertigHtml(q){
+  const e = (typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()) ? gkvEntwurf : null;
+  if(!e || (q && ![e.name, isoDe(e.datum || '')].join(' ').toLowerCase().includes(q))) return '';
+  return '<div class="gesamt-abschnitt">Unfertig</div><div class="wisch-huelle" data-gkventwurf="1"><div class="wisch-hinter">&#128465; Löschen</div>' +
+    '<div class="fall-zeile gkv offen unfertig"><div class="inhalt">' +
+    '<div class="name"><span class="badge-neu gkv">G</span>' + htmlEsc(e.name) + '</div>' +
+    '<div class="info">' + htmlEsc(e.datum ? isoDe(e.datum) : '') + (e.zeit ? ', ' + htmlEsc(e.zeit) : '') + ' &middot; Kassenpatient</div>' +
+    '<div class="info offen-text">unfertig – anklicken zum Weitermachen</div></div></div></div>';
+}
+function gkvUnfertigVerdrahten(root, neu){
+  (root || document).querySelectorAll('.wisch-huelle[data-gkventwurf]').forEach(h=>{
+    const zeileEl = h.querySelector('.fall-zeile');
+    zeileEl.querySelector('.inhalt').onclick = ()=> ansichtGkv();
+    betaWischen(zeileEl, async ()=>{
+      if(typeof gkvEntwurf === 'undefined' || !gkvEntwurf) return false;
+      if(!await betaFrage('Angefangenen Kassenpatienten „' + (gkvEntwurf.name || 'ohne Namen') + '“ verwerfen?', 'Verwerfen', 'Abbrechen')) return false;
+      gkvEntwurf = null;
+      appToastAnzeigen('Verworfen.', 1800);
+      if(neu) neu();
+      return true;
+    });
+  });
+}
 function ansichtGkvVerwaltung(){
   einstellungenOffen = false;
   LS.set('vw_tab', 'gkv');
@@ -6796,7 +6822,8 @@ function ansichtGkvVerwaltung(){
       : (mehrLokal || !blaetterAlle || blaetterAlle.some(b=> !blaetterGeladen.includes(b)))
         ? '<button type="button" class="btn-sekundaer gv-weitere" id="gvWeitere">' + (mehrLokal ? 'Weitere laden' : blaetterGeladen.length ? 'Ältere laden (Fahrtenbuch ' + htmlEsc(blaetterAlle.slice().reverse().find(b=> !blaetterGeladen.includes(b)) || '') + ')' : 'Weitere aus dem Fahrtenbuch laden') + '</button>' : '';
     const weiterVerdrahten = ()=>{ const b = document.getElementById('gvWeitere'); if(b) b.onclick = ()=>{ if(mehrLokal){ anzahl = Infinity; zeichnen(); } else weitereLaden(); }; };
-    if(!alle.length){ document.getElementById('gvListe').innerHTML = '<div class="leer-hinweis">' + (q ? 'Nichts gefunden.' : 'Noch keine GKV-Patienten erfasst.') + '</div>' + weiterKnopf; weiterVerdrahten(); return; }
+    const unfertig = gkvUnfertigHtml(q);
+    if(!alle.length){ document.getElementById('gvListe').innerHTML = unfertig + (unfertig ? '' : '<div class="leer-hinweis">' + (q ? 'Nichts gefunden.' : 'Noch keine GKV-Patienten erfasst.') + '</div>') + weiterKnopf; weiterVerdrahten(); gkvUnfertigVerdrahten(document.getElementById('gvListe'), zeichnen); return; }
     const gruppen = [];
     alle.forEach(x=>{
       const tag = diensttag(x.t), k = tag.getTime();
@@ -6804,7 +6831,7 @@ function ansichtGkvVerwaltung(){
       if(!g || g.k !== k){ g = { k, tag, faelle: [] }; gruppen.push(g); }
       g.faelle.push(x);
     });
-    document.getElementById('gvListe').innerHTML = gruppen.map(g=>{
+    document.getElementById('gvListe').innerHTML = unfertig + gruppen.map(g=>{
       const betrag = (x)=> x.excel ? (x.f.pseudo ? Math.max(0, (Number(x.d.gkv) || 0) - (Number(x.d.gkvRoh) || 0)) : (Number(x.f.euro) || 0))
         : x.f.name === GKV_PSEUDO_NAME ? (gkvPseudoFoerderung(x.f) || 0) : (Number(x.f.euro) || 0);
       const summe = g.faelle.reduce((s, x)=> s + betrag(x), 0);
@@ -6832,6 +6859,7 @@ function ansichtGkvVerwaltung(){
       if(x.f.pseudo){ appToastAnzeigen('Pseudo-Fall: im Fahrtenbuch bearbeiten.', 2500); return; }
       gkvHerkunft = 'verwaltung'; fbGkvAusExcelOeffnen(x.d, x.f);
     });
+    gkvUnfertigVerdrahten(document.getElementById('gvListe'), zeichnen);
     document.querySelectorAll('[data-gvoeffnen]').forEach(b=> b.onclick = ()=>{ if(Date.now() - (b._wischZeit || 0) < 400) return; gkvHerkunft = 'verwaltung'; ansichtGkv(b.dataset.gvoeffnen); });
     document.querySelectorAll('.wisch-huelle[data-gvid]').forEach(h=> betaWischen(h.querySelector('.gv-fall'), async ()=>{
       const f = gkvFaelleLaden().find(x=> x.id === h.dataset.gvid);
@@ -10393,7 +10421,7 @@ function betaOffenAnzahl(){
   return n;
 }
 function betaStartUntertitel(){
-  const n = betaOffenAnzahl(), u = betaEntwuerfe().length;
+  const n = betaOffenAnzahl(), u = betaEntwuerfe().length + ((typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()) ? 1 : 0);
   const teile = [];
   if(u) teile.push(u + ' unfertig');
   if(n) teile.push(n + ' nicht hochgeladen');
@@ -20155,7 +20183,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v456';
+const APP_VERSION = 'v457';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
