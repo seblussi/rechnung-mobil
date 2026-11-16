@@ -115,7 +115,9 @@ const FEHL_FENSTER = 60 * 60 * 1000, FEHL_MAX = 10, SPERRE_MS = 60 * 60 * 1000;
 let fehlGesamt = [];
 const schlafen = (ms) => new Promise((r) => setTimeout(r, ms));
 function absender(request) {
-  const ip = String(request.headers.get('x-forwarded-for') || '').split(',')[0].trim().replace(/:\d+$/, '') || 'unbekannt';
+  // X-Client-IP setzt Azure selbst (mitgeschickte Werte werden ueberschrieben); X-Forwarded-For nur als Rueckfall,
+  // denn dessen ersten Wert liefert der Aufrufer und koennte die Bremse so umgehen.
+  const ip = String(request.headers.get('x-client-ip') || request.headers.get('x-forwarded-for') || '').split(',')[0].trim().replace(/:\d+$/, '') || 'unbekannt';
   return crypto.createHash('sha256').update('lxp|' + ip).digest('hex').slice(0, 16);
 }
 function aufraeumen(jetzt) {

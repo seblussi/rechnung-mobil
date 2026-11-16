@@ -58,7 +58,8 @@
   const dMeta = new Map();             // id -> {id, pfad, name, ordner, groesse, typ, geaendert, mappe}
   const pfadIdx = new Map();           // pfad (klein) -> id
   const hoerer = [];
-  const kvSchreibt = new Map();        // schluessel -> {laeuft, naechster}
+  const kvSchreibt = new Map();        // schluessel -> {laeuft, nochmal, p}
+  let epoche = 0;                      // zaehlt jedes Sperren: Schreibvorgaenge von davor brechen ab
 
   function pfadNorm(p){ return String(p || '').replace(/\\/g, '/').split('/').map(s=> s.trim()).filter(Boolean).join('/'); }
   function pfadKlein(p){ return pfadNorm(p).toLowerCase(); }
@@ -185,7 +186,7 @@
     return code;
   }
   async function pruefePasswort(pw){ const r = await Krypto.auswickeln(info, pw, false); if(r){ r.roh.fill(0); return true; } return false; }
-  function sperren(){ key = null; kvMem.clear(); dMeta.clear(); pfadIdx.clear(); status = 'gesperrt'; }
+  function sperren(){ epoche++; kvSchreibt.clear(); key = null; kvMem.clear(); dMeta.clear(); pfadIdx.clear(); status = 'gesperrt'; }
   async function allesLoeschen(){
     sperren();
     if(DEMO){ demoDb.clear(); status = 'neu'; return; }
@@ -289,15 +290,19 @@
     let z = kvSchreibt.get(k); if(!z){ z = { laeuft: false, nochmal: false }; kvSchreibt.set(k, z); }
     if(z.laeuft){ z.nochmal = true; return z.p; }
     z.laeuft = true;
+    const e = epoche, schluessel = key;   // Stand beim Start: gilt nur, solange nicht gesperrt wird
     z.p = (async ()=>{
       try{
         do{
           z.nochmal = false;
+          // Inzwischen gesperrt? Dann ist der Arbeitsspeicher geleert -- ein fehlender Wert bedeutet
+          // jetzt NICHT "geloescht". Nichts mehr schreiben und vor allem nichts loeschen.
+          if(e !== epoche || !schluessel) break;
           const t = kvMem.get(k);
           if(t == null) await weg('kv', k);
-          else await setzen('kv', k, await Krypto.verschluesseln(key, t));
+          else await setzen('kv', k, await Krypto.verschluesseln(schluessel, t));
         } while(z.nochmal);
-      }catch(e){ console.error('Tresor: Schreiben fehlgeschlagen', k, e); melden({ art: 'fehler', text: 'Speichern fehlgeschlagen: ' + (e.message || e) }); }
+      }catch(err){ console.error('Tresor: Schreiben fehlgeschlagen', k, err); melden({ art: 'fehler', text: 'Speichern fehlgeschlagen: ' + (err.message || err) }); }
       finally{ z.laeuft = false; }
     })();
     return z.p;
@@ -480,7 +485,7 @@
     pruefen, einrichten, einrichtenMitInfo, demoOeffnen, entsperren, sperren, allesLoeschen, geraetMerken, istGemerkt, passwortAendern, codeErneuern, pruefePasswort, passwortFehlt, passwortRegelFehler, PASSWORT_REGEL,
     passkeyUnterstuetzt, passkeys, passkeyEinrichten, passkeyEntsperren, passkeyEntfernen,
     status: ()=> status, offen, schluesselInfo: ()=> info, geraetId: ()=> geraet && geraet.id,
-    kvText, kvSetzenText, kvLoeschen, kvSchluessel: ()=> Array.from(kvMem.keys()), kvWarten,
+    kvText, kvSetzenText, kvLoeschen, kvSchluessel: ()=> Array.from(kvMem.keys()), kvWarten, schreibtNoch: ()=> Array.from(kvSchreibt.values()).some(z=> z.laeuft),
     pfadNorm, pfadKlein, metaPfad, metaId, ordnerAnlegen, dateiSchreiben, dateiLesen, dateiLoeschen, dateiUmbenennen, kinder, alleDateien,
     syncHolen, syncSetzen, syncAlle, dateiEinspielen, dateiEntfernenId, ver, ent, schnappschuss, wiederherstellen,
     speicherDauerhaft, speicherPlatz, demo: DEMO,

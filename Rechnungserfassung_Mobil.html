@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-lQtJ7fc9Z8p0hwxWOaQCy8ojMTtPKGGQ/uGpayZd0Mg=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-I2EaTO34Kqz4uzG+CM/lOv5KIv6++0XGeXnL4io5Rsk=' 'sha256-LmOuD6M4rBNHCmDWKsk2sF9yJN2Roy6aWYwZAanZtiU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -20658,7 +20658,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v466';
+const APP_VERSION = 'v467';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -24229,7 +24229,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     // "Nachname, Vorname"; ohne Komma "Vorname Nachname" (mind. 2 Wörter).
     if(!nameAufteilen(w.txtName).nachname){
       document.getElementById('txtName').classList.add('pflichtfeld-fehlt');
-      alertBanner(`Name "${w.txtName}" nicht erkannt -- bitte im Format "Nachname, Vorname" oder "Vorname Nachname" eingeben.`);
+      alertBanner(`Name "${htmlEsc(w.txtName)}" nicht erkannt -- bitte im Format "Nachname, Vorname" oder "Vorname Nachname" eingeben.`);
       return;
     }
     if(art==='ls' && w.txtBName){
@@ -25466,7 +25466,8 @@ const Speicher = (()=>{
   function appLos(){ const q = document.getElementById('hauptskript'); const sk = document.createElement('script'); sk.textContent = q.textContent; document.body.appendChild(sk); }
   function fehlerZeigen(e){
     const app = document.getElementById('app');
-    if(app) app.innerHTML = '<div style="padding:24px; font-family:sans-serif;"><h3>Daten konnten nicht geöffnet werden</h3><p>' + String((e && e.message) || e).replace(/[<>&]/g, '') + '</p><p>Bitte die App einmal ganz schließen und neu öffnen. Ist sie noch in einem zweiten Fenster/Tab offen, dieses schließen.</p><button onclick="location.reload()">Neu laden</button></div>';
+    if(app) app.innerHTML = '<div style="padding:24px; font-family:sans-serif;"><h3>Daten konnten nicht geöffnet werden</h3><p>' + String((e && e.message) || e).replace(/[<>&]/g, '') + '</p><p>Bitte die App einmal ganz schließen und neu öffnen. Ist sie noch in einem zweiten Fenster/Tab offen, dieses schließen.</p><button id="fehlerNeuLaden">Neu laden</button></div>';
+    { const k = document.getElementById('fehlerNeuLaden'); if(k) k.addEventListener('click', ()=> location.reload()); }   // CSP blockiert onclick im HTML
   }
   if(!window.indexedDB || !window.crypto || !crypto.subtle){ fehlerZeigen(new Error('Dieser Browser kann die Daten nicht verschlüsselt speichern.')); return; }
   if(window.DEMO_MODUS){ demoVorbereiten().then(appLos, fehlerZeigen); return; }
