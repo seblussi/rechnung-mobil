@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-bjZt9jJMUMh0LrhjE9KEDur1QpSmP5tsL7OP1XWwU7w=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-lQtJ7fc9Z8p0hwxWOaQCy8ojMTtPKGGQ/uGpayZd0Mg=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2327,6 +2327,8 @@ try{
   .od-popup-karte{position:relative; width:100%; max-width:420px; box-sizing:border-box; background:var(--karte); color:var(--text); border-radius:16px; padding:18px 18px 16px; box-shadow:0 12px 40px rgba(0,0,0,.3);}
   .od-popup-karte b{font-size:17px;} .od-popup-karte p{margin:8px 34px 14px 0; font-size:14px; color:var(--text-schwach);}
   .od-popup-x{position:absolute; top:8px; right:8px; width:40px; height:40px; margin:0; padding:0; border:0; border-radius:20px; background:transparent; color:var(--text-schwach); font-size:18px; cursor:pointer;}
+  .fall-zeile .name, .fall-zeile .info, .fall-zeile .gkv-v-unter, .fbx-nm, .ds-dz-name, .bst-zeile b, .bst-zeile small, .warnhinweis, .ds-dz b, .ds-dz small, .ds-ring-kopf, .ds-schicht, .ds-schicht b{overflow-wrap:anywhere; min-width:0;}
+  .ds-schicht{max-width:45%;}
 </style>
 </head>
 <body>
@@ -7229,7 +7231,7 @@ function ansichtKorrigieren(){
           <input type="checkbox" class="chk" data-art="${f.art}" data-idx="${f.idx}">
           <div class="inhalt">
             <div class="name"><span class="badge-neu ${f.art}">${f.art==='ls'?'L':'P'}</span>${htmlEsc(f.werte.txtName || '(ohne Namen)')}</div>
-            <div class="info">${htmlEsc(f.werte.txtDatum || '')} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}${f.rechnungsnummer ? ' &middot; <span class="renu-reset" data-art="'+f.art+'" data-idx="'+f.idx+'" title="Anklicken, um diese Nummer zurückzusetzen (z.B. bei Dopplungen)">Nr. '+f.rechnungsnummer+' &#9998;</span>' : ' &middot; ohne Rechnungsnummer'}</div>
+            <div class="info">${htmlEsc(f.werte.txtDatum || '')} &middot; gespeichert ${new Date(f.zeitstempel).toLocaleString('de-DE')}${f.rechnungsnummer ? ' &middot; <span class="renu-reset" data-art="'+f.art+'" data-idx="'+f.idx+'" title="Anklicken, um diese Nummer zurückzusetzen (z.B. bei Dopplungen)">Nr. '+htmlEsc(f.rechnungsnummer)+' &#9998;</span>' : ' &middot; ohne Rechnungsnummer'}</div>
           </div>
         </div>`).join('')}
     </div>
@@ -15950,8 +15952,8 @@ function ansichtGkv(bearbeitenId){
     el('gkvVerlauf').innerHTML = a.length ? a.map(x=>
       '<div class="fall-zeile gkv-verlauf' + (x.status === 'eingetragen' ? '' : ' offen') + '" data-id="' + htmlEsc(x.id) + '">' +
       '<div class="name">' + htmlEsc(x.name) + '</div>' +
-      '<div class="gkv-v-unter">' + htmlEsc(isoDe(x.datum)) + ', ' + htmlEsc(x.zeit || '') + ' · ' + x.positionen.map(p=> p.gop + (p.anz > 1 ? '×' + p.anz : '')).join(' ') + ' · ' + betaEuro(x.euro) + '</div>' +
-      '<div class="gkv-v-status">' + (x.status === 'eingetragen' ? '✓ Fahrtenbuch ' + (x.blatt ? x.blatt + ', ' : '') + 'Zeile ' + x.zeile : '<span class="offen-text">noch nicht im Fahrtenbuch' + (x.fehler ? ': ' + htmlEsc(x.fehler) : '') + '</span>') + '</div>' +
+      '<div class="gkv-v-unter">' + htmlEsc(isoDe(x.datum)) + ', ' + htmlEsc(x.zeit || '') + ' · ' + (Array.isArray(x.positionen) ? x.positionen : []).map(p=> htmlEsc(p && p.gop != null ? p.gop : '') + (p && p.anz > 1 ? '×' + htmlEsc(p.anz) : '')).join(' ') + ' · ' + betaEuro(x.euro) + '</div>' +
+      '<div class="gkv-v-status">' + (x.status === 'eingetragen' ? '✓ Fahrtenbuch ' + (x.blatt ? htmlEsc(x.blatt) + ', ' : '') + 'Zeile ' + htmlEsc(x.zeile) : '<span class="offen-text">noch nicht im Fahrtenbuch' + (x.fehler ? ': ' + htmlEsc(x.fehler) : '') + '</span>') + '</div>' +
       '<div class="aktionen">' + (x.status === 'eingetragen' ? '' : '<button type="button" data-nochmal="' + htmlEsc(x.id) + '">Jetzt eintragen</button>') +
       '<button type="button" data-bearb="' + htmlEsc(x.id) + '">Bearbeiten</button><button type="button" data-loesch="' + htmlEsc(x.id) + '">Aus Liste löschen</button></div></div>').join('')
       : '<div class="leer-hinweis">Noch keine GKV-Patienten erfasst.</div>';
@@ -20368,9 +20370,50 @@ function syncMetaFuer(art, f, meta){
   return meta[id];
 }
 // Lokal + entfernt zusammenfuehren -> {geaendert, daten (fuer die Datei)}
+// ---------- Pruefung an der Grenze: Inhalte der OneDrive-Abgleichsdatei ----------
+// Die Datei kann ausserhalb der App veraendert worden sein. Uebernommen werden nur einfache JSON-Werte;
+// gefaehrliche Schluessel (__proto__, constructor, prototype) fallen weg, Texte und Listen sind begrenzt,
+// und jeder Eintrag muss den erwarteten Aufbau haben -- sonst wird er ignoriert statt die App zu stoeren.
+const SYNC_MAX_TEXT = 4000, SYNC_MAX_LISTE = 5000;
+function syncObjekt(x){ return x !== null && typeof x === 'object' && !Array.isArray(x); }
+function syncSaeubern(v, tiefe){
+  tiefe = tiefe || 0;
+  if(v === null || typeof v === 'boolean') return v;
+  if(typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if(typeof v === 'string') return v.length > SYNC_MAX_TEXT ? v.slice(0, SYNC_MAX_TEXT) : v;
+  if(tiefe > 8) return null;
+  if(Array.isArray(v)) return v.slice(0, SYNC_MAX_LISTE).map(x=> syncSaeubern(x, tiefe + 1));
+  if(typeof v === 'object'){
+    const o = {};
+    Object.keys(v).slice(0, 500).forEach(k=>{ if(k === '__proto__' || k === 'constructor' || k === 'prototype') return; const w = syncSaeubern(v[k], tiefe + 1); if(w !== undefined) o[k] = w; });
+    return o;
+  }
+  return undefined;
+}
+// Felder, die Texte sein muessen: Zahlen werden zu Text, alles andere faellt weg
+function syncTexte(x, felder){ felder.forEach(k=>{ if(x[k] == null) return; if(typeof x[k] === 'number') x[k] = String(x[k]); else if(typeof x[k] !== 'string') delete x[k]; }); return x; }
+// geloescht-Liste: nur Kennung -> Zeitpunkt (Zahl)
+function syncWegPruefen(w){ const o = {}; if(syncObjekt(w)) Object.keys(w).forEach(id=>{ if(id !== '__proto__' && Number.isFinite(w[id])) o[id] = w[id]; }); return o; }
+function syncFallPruefen(art, x0){
+  const x = syncSaeubern(x0); if(!syncObjekt(x)) return null;
+  if(art === 'gkv'){
+    if(typeof x.id !== 'string' || !x.id) return null;
+    syncTexte(x, ['name', 'datum', 'zeit', 'status', 'adresse', 'profil', 'dienst', 'blatt', 'fehler', 'dokuId']);
+    x.positionen = Array.isArray(x.positionen) ? x.positionen.filter(syncObjekt).map(p=> Object.assign({}, p, { gop: String(p.gop == null ? '' : p.gop), anz: Number(p.anz) || 1 })) : [];
+    if(!syncObjekt(x.auswahl)) x.auswahl = {};
+    if(x.euro != null) x.euro = Number(x.euro) || 0;
+    if(x.zeile != null && !Number.isFinite(Number(x.zeile))) delete x.zeile;
+    if(x.geo != null && !(syncObjekt(x.geo) && Number.isFinite(x.geo.lat) && Number.isFinite(x.geo.lon))) x.geo = null;
+    return x;
+  }
+  if(!syncObjekt(x.werte) || typeof x.zeitstempel !== 'string') return null;
+  syncTexte(x.werte, Object.keys(x.werte));
+  syncTexte(x, ['rechnungsnummer', 'art']);
+  return x;
+}
 function syncZusammenfuehren(entfernt){
   const meta = LS.get(SYNC_META, {}), weg = LS.get(SYNC_GELOESCHT, {});
-  const rWeg = (entfernt && entfernt.geloescht) || {};
+  const rWeg = syncWegPruefen(entfernt && entfernt.geloescht);
   Object.keys(rWeg).forEach(id=>{ if(!weg[id] || rWeg[id] > weg[id]) weg[id] = rWeg[id]; });
   const grenze = Date.now() - 120 * 86400000;
   Object.keys(weg).forEach(id=>{ if(weg[id] < grenze) delete weg[id]; });
@@ -20379,8 +20422,9 @@ function syncZusammenfuehren(entfernt){
   SYNC_ARTEN.forEach(art=>{
     const lokal = syncListeLaden(art), m = new Map(); let gA = false;
     lokal.forEach(f=>{ if(f){ const mm = syncMetaFuer(art, f, meta); m.set(syncId(art, f), { f, t: mm.t, lokal: true }); } });
-    const rListe = art === 'gkv' ? ((entfernt && entfernt.gkv) || []) : ((entfernt && entfernt.faelle) || []).filter(x=> x && x.art === art);
-    rListe.forEach(x=>{
+    const rListe = art === 'gkv' ? (Array.isArray(entfernt && entfernt.gkv) ? entfernt.gkv : []) : (Array.isArray(entfernt && entfernt.faelle) ? entfernt.faelle : []).filter(x=> x && x.art === art);
+    rListe.forEach(x0=>{
+      const x = syncFallPruefen(art, x0);
       if(!x) return;
       const { art: _a, _t, ...f } = x;
       if(art !== 'gkv' && !f.werte) return;
@@ -20416,11 +20460,13 @@ function syncZusammenfuehren(entfernt){
 const SYNC_SAETZE = {
   // Bestatter-Liste (in den Einstellungen bearbeitbar)
   bestatter: {
+    pruefen: (x)=>{ syncTexte(x, ['name', 'adr1', 'adr2', 'herkunft', 'zeitstempel']); return typeof x.name === 'string' && !!x.name.trim(); },
     laden: ()=> ladeKatalog().filter(b=> b && b.id),
     setzen: (a)=> LS.set('bestatter_katalog', a.slice().sort((x, y)=> String(x.name).localeCompare(String(y.name), 'de'))),
     zeit: (x)=> Date.parse(x.zeitstempel || '') || 0
   },
   live_dienst: {
+    pruefen: (x)=> syncDienstPruefen(x),
     laden: ()=>{ const d = LS.get('live_dienst', null); return d && typeof d === 'object' ? [Object.assign({}, d, { id: 'live' })] : []; },
     setzen: (a)=>{ const d = a[0]; if(d){ const { id, ...rest } = d; LS.set('live_dienst', rest); } else LS.set('live_dienst', null); },
     // es zaehlt der Zeitpunkt des Startens bzw. Beendens, nicht der des Abgleichs (wichtig nach einer Zeit ohne Netz)
@@ -20429,15 +20475,18 @@ const SYNC_SAETZE = {
     ersetzt: (alt, neu)=> liveDienstErsetztHinweis(alt, neu)
   },
   app_dienste: {
+    pruefen: (x)=> syncDienstPruefen(x),
     laden: ()=>{ const a = LS.get('app_dienste', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
     setzen: (a)=>{ const v = (d)=>{ try{ return liveDienstFenster(d).von.getTime(); }catch(_){ return 0; } }; LS.set('app_dienste', a.slice().sort((x, y)=> v(x) - v(y))); }
   },
   entwuerfe: {
+    pruefen: (x)=>{ if(!syncObjekt(x.werte)) return false; syncTexte(x.werte, Object.keys(x.werte)); syncTexte(x, ['art']); return x.art === 'ls' || x.art === 'pt'; },
     laden: ()=>{ const a = LS.get('entwuerfe', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
     setzen: (a)=> LS.set('entwuerfe', a)
   },
   // angefangener GKV-Patient (ein Eintrag)
   gkv_entwurf: {
+    pruefen: (x)=>{ syncTexte(x, ['name', 'datum', 'zeit', 'adresse', 'profil', 'dienst', 'dokuId']); if(!syncObjekt(x.auswahl)) x.auswahl = {}; return typeof x.name === 'string'; },
     laden: ()=>{ const e = LS.get('gkv_entwurf', null); return e && String(e.name || '').trim() ? [Object.assign({}, e, { id: 'gkv' })] : []; },
     setzen: (a)=>{ const d = a[0]; if(d){ const { id, ...rest } = d; rest.id = ''; LS.set('gkv_entwurf', rest); } else { LS.set('gkv_entwurf', null); if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && !document.getElementById('gkvName')) gkvEntwurf = null; } },
     zeit: (x)=> Date.parse(x.am || '') || 0,
@@ -20455,9 +20504,14 @@ const SYNC_SAETZE = {
     setzen: (a)=> LS.set('weg_flaechen', a)
   }
 };
+// Dienst (gestartet bzw. angelegt): Datum und Uhrzeiten muessen stimmen, Texte muessen Texte sein
+function syncDienstPruefen(x){
+  syncTexte(x, ['datum', 'von', 'bis', 'art', 'schicht', 'arzt', 'profilId', 'profil', 'am']);
+  return /^\d{4}-\d{2}-\d{2}$/.test(x.datum || '') && /^\d{1,2}:\d{2}$/.test(x.von || '') && /^\d{1,2}:\d{2}$/.test(x.bis || '');
+}
 function syncSaetzeZusammenfuehren(entfernt){
   const meta = LS.get('sync_saetze_meta', {}), weg = LS.get('sync_saetze_weg', {}), jetzt = Date.now();
-  const rS = (entfernt && entfernt.saetze) || {}, raus = {}, grenze = jetzt - 60 * 86400000;
+  const rS = syncObjekt(entfernt && entfernt.saetze) ? entfernt.saetze : {}, raus = {}, grenze = jetzt - 60 * 86400000;
   let geaendert = false;
   Object.keys(SYNC_SAETZE).forEach(k=>{
     const def = SYNC_SAETZE[k], erst = !meta[k];
@@ -20470,13 +20524,15 @@ function syncSaetzeZusammenfuehren(entfernt){
       if(!m[id]){ m[id] = { h, t: erst ? 1 : tAend(x) }; if(!erst) neuLokal.add(id); }
       else if(m[id].h !== h){ m[id] = { h, t: tAend(x) }; neuLokal.add(id); } });
     Object.keys(m).forEach(id=>{ if(!ids.has(id)){ w[id] = Math.min(jetzt, (def.wegZeit && def.wegZeit()) || jetzt); delete m[id]; } });
-    const rW = (rS[k] && rS[k].geloescht) || {};
+    const rW = syncWegPruefen(syncObjekt(rS[k]) ? rS[k].geloescht : null);
     Object.keys(rW).forEach(id=>{ if(!w[id] || rW[id] > w[id]) w[id] = rW[id]; });
     Object.keys(w).forEach(id=>{ if(w[id] < grenze) delete w[id]; });
     const map = new Map();
     lokal.forEach(x=> map.set(String(x.id), { x, t: m[String(x.id)].t, lokal: true }));
-    (Array.isArray(rS[k] && rS[k].liste) ? rS[k].liste : []).forEach(r=>{
-      if(!r || r.id == null) return;
+    (Array.isArray(syncObjekt(rS[k]) && rS[k].liste) ? rS[k].liste : []).forEach(r0=>{
+      const r = syncSaeubern(r0);
+      if(!syncObjekt(r) || r.id == null || (typeof r.id !== 'string' && typeof r.id !== 'number')) return;
+      if(def.pruefen && !def.pruefen(r)) return;
       const { _t, ...x } = r, id = String(x.id), t = Number(_t) || 0, da = map.get(id);
       if(!da || t > da.t){ map.set(id, { x, t, lokal: false, ersetzt: !!da });
         // lokaler Stand vom anderen Geraet ersetzt -> Hinweis
@@ -20602,7 +20658,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v465';
+const APP_VERSION = 'v466';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22832,7 +22888,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   };
 
   function feldHtml(labelText, name, opts={}){
-    const val = werte[name] || '';
+    const val = werte[name] == null ? '' : String(werte[name]);   // Werte aus dem Abgleich koennen auch Zahlen sein
     const grauKlasse = opts.grau ? 'grau' : '';
     return `<div class="feld">
       <label for="${name}">${labelText}</label>
@@ -22860,7 +22916,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   html += abschnitt('Rechnungsstellung',
     feldHtml('Rechnungsdatum (Versanddatum)', 'txtDatum') +
     `<div class="feld"><label>Rechnungsbetrag (&euro;)</label>
-      <input type="text" id="txtBetrag" class="grau" value="${werte.txtBetrag||''}" readonly></div>`);
+      <input type="text" id="txtBetrag" class="grau" value="${htmlEsc(werte.txtBetrag||'')}" readonly></div>`);
 
   // Abweichender Sterbeort (nur LS): wie am PC standardmäßig eingeklappt,
   // aber automatisch aufgeklappt, wenn schon Werte dafür gespeichert sind
@@ -22905,9 +22961,9 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
 
   html += abschnitt('Routenberechnung',
     `<div class="feld"><label id="txtKm_label" for="txtKm">Strecke (Hin- und Rückfahrt)</label>
-      <div class="km-zeile"><input type="text" id="txtKm" value="${(werte.txtKm||'')}" placeholder="wird automatisch berechnet"><button type="button" id="btnGoogleMapsRoute" class="km-gmaps" title="Route in Google Maps öffnen (Test)">Maps</button></div>
-      <input type="hidden" id="txtKmFahrstrecke" value="${(werte.txtKmFahrstrecke||werte.txtKm||'')}">
-      <input type="hidden" id="txtKmLuftlinie" value="${(werte.txtKmLuftlinie||'')}">
+      <div class="km-zeile"><input type="text" id="txtKm" value="${htmlEsc(werte.txtKm||'')}" placeholder="wird automatisch berechnet"><button type="button" id="btnGoogleMapsRoute" class="km-gmaps" title="Route in Google Maps öffnen (Test)">Maps</button></div>
+      <input type="hidden" id="txtKmFahrstrecke" value="${htmlEsc(werte.txtKmFahrstrecke||werte.txtKm||'')}">
+      <input type="hidden" id="txtKmLuftlinie" value="${htmlEsc(werte.txtKmLuftlinie||'')}">
       <div class="streckeninfo" id="streckeninfo"></div>
       <div class="warnhinweis" id="txtKm_warn"></div>
       <div class="routenoptionen" id="routenoptionen"></div>
@@ -23855,7 +23911,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       // vollständig; plus Internet-Hinweis bei Netzwerkfehler
       // (plzErmitteln()===null statt '' bei nur leerem Ergebnis).
       const zusatz = plzLautKarte===null ? keinInternetHinweisText() : '';
-      feldWarnung(plzOrtId, `Die Adresse "${adrVoll}" konnte laut Kartendienst nicht gefunden werden.${zusatz} Bitte prüfen.
+      feldWarnung(plzOrtId, `Die Adresse "${htmlEsc(adrVoll)}" konnte laut Kartendienst nicht gefunden werden.${zusatz} Bitte prüfen.
         <div class="aktionen"><button data-akt="behalten">So belassen</button></div>`);
       const warnEl = document.getElementById(plzOrtId+'_warn');
       warnEl.querySelector('[data-akt="behalten"]').onclick = ()=> feldWarnung(plzOrtId, '');
@@ -23909,7 +23965,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const roh = input.value.trim();
     if(!roh){ feldWarnung(id, ''); return true; }
     if(!normalisiereZeit(roh)){
-      feldWarnung(id, `${bezeichnung}: "${roh}" ist kein gültiges Uhrzeitformat. Bitte als HH:MM eintragen (z.B. 14:30).`);
+      feldWarnung(id, `${bezeichnung}: "${htmlEsc(roh)}" ist kein gültiges Uhrzeitformat. Bitte als HH:MM eintragen (z.B. 14:30).`);
       return false;
     }
     feldWarnung(id, '');
@@ -23936,7 +23992,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const zSterbe = normalisiereZeit(rohTod);
     if(!zSterbe){
       // Format-Fehler hat Vorrang vor der Reihenfolge-Pruefung.
-      feldWarnung('txtTodeszeit', `Sterbezeitpunkt: "${rohTod}" ist kein gültiges Uhrzeitformat. Bitte als HH:MM eintragen (z.B. 03:15).`);
+      feldWarnung('txtTodeszeit', `Sterbezeitpunkt: "${htmlEsc(rohTod)}" ist kein gültiges Uhrzeitformat. Bitte als HH:MM eintragen (z.B. 03:15).`);
       return;
     }
     if(!zLS){ feldWarnung('txtTodeszeit', ''); return; }
