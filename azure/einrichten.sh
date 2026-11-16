@@ -247,7 +247,7 @@ echo "6/6 Selbsttest ..."
 OK=""
 for i in $(seq 1 20); do
   ANTWORT="$(curl -s -m 30 -X POST -H "Origin: $HERKUNFT" -H 'Content-Type: application/json' -d '{}' "$URL/v3/_version" || true)"
-  if echo "$ANTWORT" | grep -q '"weiterleitung":2'; then OK=1; break; fi
+  if echo "$ANTWORT" | grep -q '"weiterleitung":5'; then OK=1; break; fi
   sleep 10
 done
 
