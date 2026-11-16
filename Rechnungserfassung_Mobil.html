@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-ypN7EVjXOCVIpREVXMycvi8K5r4wR/PTGYWJ2pSW9zQ=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-bjZt9jJMUMh0LrhjE9KEDur1QpSmP5tsL7OP1XWwU7w=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2278,6 +2278,55 @@ try{
   #appSperre .as-text{font-size:14px; opacity:.75; margin-bottom:20px;}
   #appSperre button{font-size:16px; padding:12px 28px; border-radius:10px; border:0; background:var(--titelfarbe); color:#fff;}
   .as-fehler{color:#c62828; font-size:13px; margin-top:12px; min-height:1em;}
+
+  /* Neuer Fall bei laufendem/geplantem Dienst: schmale Kacheln (nur Kuerzel und +) */
+  body.design-einhand #app .kachelreihe.drei.kompakt .karte, body.design-einhand #app .kachelreihe.drei.kompakt .karte.gkv{aspect-ratio:auto !important; min-height:0 !important; height:52px; padding:0 12px !important; border-radius:16px !important; display:flex !important; flex-direction:row; align-items:center; justify-content:center; gap:6px;}
+  body.design-einhand #app .kachelreihe.kompakt .ds-kt{display:none;}
+  body.design-einhand #app .kachelreihe.kompakt .ds-code, body.design-einhand #app .kachelreihe.kompakt .karte.gkv .ds-code{font-size:23px; line-height:1;}
+  body.design-einhand #app .kachelreihe.kompakt .ds-plus{position:static !important; display:flex; margin:0 !important; align-self:center !important; transform:none !important;}
+  body.design-einhand #app .kachelreihe.kompakt .ds-code{margin:0 !important; align-self:center !important; transform:none !important;}
+  body.design-einhand #app .kachelreihe.kompakt .ds-plus svg{width:20px; height:20px;}
+  /* Uhr: Datum/Dienst ueber der Uhrzeit, Beginn/Ende als Pfeile am Ring, Einsaetze in ihrer Farbe */
+  .ds-ring.mit-rand{width:min(320px, 84vw);}
+  .ds-ring-kopf{font-size:11px; font-weight:600; letter-spacing:.06em; color:var(--text-schwach); text-transform:uppercase; margin-bottom:2px; max-width:60%; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .ds-ring-fall.ls{fill:var(--ls-farbe);} .ds-ring-fall.pt{fill:var(--pt-farbe);} .ds-ring-fall.gkv{fill:var(--ds-gkv);}
+  .ds-ring-betrag{font-size:10px; font-weight:700; fill:var(--text-schwach);}
+  .ds-ring-betrag.ls{fill:var(--ls-farbe);} .ds-ring-betrag.pt{fill:var(--pt-farbe);} .ds-ring-betrag.gkv{fill:var(--ds-gkv);}
+  body.dunkel .ds-ring-betrag.ls{fill:#9cc4ee;} body.dunkel .ds-ring-betrag.pt{fill:#8fd9a8;} body.dunkel .ds-ring-betrag.gkv{fill:#cfb2ea;}
+  .ds-ring-bogen{fill:none; stroke:var(--text-schwach); stroke-width:1.6; stroke-linecap:round;}
+  .ds-ring-pfeilkopf{fill:var(--text-schwach);}
+  .ds-ring-grenze{font-size:12.5px; font-weight:600; fill:var(--text-schwach); letter-spacing:.02em;}
+  .ds-live .ds-dz .ds-zahlen.fuenf{grid-template-columns:repeat(5, minmax(0, 1fr)); gap:5px;}
+  .ds-live .ds-dz .ds-zahlen.fuenf > span{padding:7px 6px;}
+  .ds-live .ds-dz .ds-zahlen.fuenf b{font-size:14px;}
+  /* Karten: dunkle Ladeflaeche im Nachtmodus */
+  body.dunkel .mini-fenster, body.dunkel .osm-flaeche, body.dunkel .osm-scroll, body.dunkel .wf-rahmen, body.dunkel .maplibregl-map{background:#1e2228;}
+  body.dunkel .luft-linie{stroke:#eef1f5;}
+  /* Bestatter verwalten */
+  .bst-liste{display:flex; flex-direction:column; gap:6px; margin-top:10px;}
+  .bst-zeile{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; margin:0; padding:10px 12px; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text); font:inherit; text-align:left; cursor:pointer;}
+  .bst-zeile b{font-size:15px;} .bst-zeile small{font-size:12.5px; color:var(--text-schwach);}
+  .bst-suche{width:100%; box-sizing:border-box; font:inherit; font-size:16px; padding:9px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text); margin-top:8px;}
+  /* Menueleiste im Querformat links oder rechts (Einstellung) */
+  @media (orientation: landscape) and (min-width: 640px){
+    body.design-einhand.nav-links .ds-nav, body.design-einhand.nav-rechts .ds-nav{left:auto; right:auto; top:50%; bottom:auto; transform:translateY(-50%); width:62px; height:auto; padding:10px 0; border-radius:31px;
+      grid-template-columns:1fr; grid-auto-rows:auto; row-gap:8px; justify-items:center;}
+    body.design-einhand.nav-links .ds-nav{left:calc(10px + env(safe-area-inset-left));}
+    body.design-einhand.nav-rechts .ds-nav{right:calc(10px + env(safe-area-inset-right));}
+    body.design-einhand.nav-links .ds-nav-btn, body.design-einhand.nav-rechts .ds-nav-btn{width:46px; height:46px; border-radius:23px;}
+    body.design-einhand.nav-links .ds-nav-btn span, body.design-einhand.nav-rechts .ds-nav-btn span{display:none;}
+    body.design-einhand.nav-links .ds-nav-btn.gross, body.design-einhand.nav-rechts .ds-nav-btn.gross{width:52px; height:52px; margin:2px 0; border-radius:16px;}
+    body.design-einhand.nav-links .ds-nav-btn.gross svg, body.design-einhand.nav-rechts .ds-nav-btn.gross svg{width:26px; height:26px;}
+    body.ds-leiste-global.design-einhand.nav-links, body.ds-leiste-global.design-einhand.nav-rechts{--ds-leiste-h:env(safe-area-inset-bottom);}
+    body.ds-leiste-global.design-einhand.nav-links main{padding-left:80px !important;}
+    body.ds-leiste-global.design-einhand.nav-rechts main{padding-right:80px !important;}
+    body.ds-leiste-global.design-einhand.nav-links .gkv-summe-leiste, body.ds-leiste-global.design-einhand.nav-links .pos-fuss{left:80px;}
+    body.ds-leiste-global.design-einhand.nav-rechts .gkv-summe-leiste, body.ds-leiste-global.design-einhand.nav-rechts .pos-fuss{right:80px;}
+  }
+  .od-popup{position:fixed; inset:0; z-index:200; background:rgba(10,14,20,.45); display:flex; align-items:flex-start; justify-content:center; padding:calc(70px + env(safe-area-inset-top)) 16px 16px;}
+  .od-popup-karte{position:relative; width:100%; max-width:420px; box-sizing:border-box; background:var(--karte); color:var(--text); border-radius:16px; padding:18px 18px 16px; box-shadow:0 12px 40px rgba(0,0,0,.3);}
+  .od-popup-karte b{font-size:17px;} .od-popup-karte p{margin:8px 34px 14px 0; font-size:14px; color:var(--text-schwach);}
+  .od-popup-x{position:absolute; top:8px; right:8px; width:40px; height:40px; margin:0; padding:0; border:0; border-radius:20px; background:transparent; color:var(--text-schwach); font-size:18px; cursor:pointer;}
 </style>
 </head>
 <body>
@@ -2395,9 +2444,63 @@ function ladeKatalog(){
     LS.set('bestatter_katalog', bestehend);
     LS.set('bestatter_katalog_seed_v1', true);
   }
-  return LS.get('bestatter_katalog', []);
+  const k = LS.get('bestatter_katalog', []);
+  if(Array.isArray(k) && k.some(b=> b && !b.id)){ k.forEach(b=>{ if(b && !b.id) b.id = bestatterId(b); }); LS.set('bestatter_katalog', k); }
+  return Array.isArray(k) ? k : [];
 }
 function speichereKatalog(k){ LS.set('bestatter_katalog', k); synchronisiereAlle(); }
+// feste Kennung je Bestatter (aus Name + Strasse beim Anlegen) -- gleich auf allen Geraeten, bleibt beim Bearbeiten
+function bestatterId(b){ const s = (String(b.name || '').trim() + '|' + String(b.adr1 || '').trim()).toLowerCase(); let x = 0; for(let i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) | 0; return 'b' + (x >>> 0).toString(36); }
+// Bestatter verwalten (Einstellungen): suchen, anlegen, aendern, loeschen
+function ansichtBestatter(zurueck){
+  zurueck = zurueck || (()=> ansichtEinstellungen());
+  setzeTitel('Bestatter', zurueck);
+  let such = '';
+  app.innerHTML = '<div class="abschnitt start-abschnitt bst"><div class="design-hinweis">Die Liste, aus der die Leichenschau-Maske Bestatter vorschlägt. Neue Bestatter kommen beim Speichern einer LS-Rechnung automatisch dazu. Anklicken zum Ändern oder Löschen.</div>' +
+    '<input type="search" class="bst-suche" id="bstSuche" placeholder="Suchen (Name, Straße, Ort)" autocomplete="off">' +
+    '<button type="button" class="btn-primaer" id="bstNeu" style="margin-top:10px;">+ Bestatter anlegen</button><div class="bst-liste" id="bstListe"></div></div>';
+  const listeEl = document.getElementById('bstListe');
+  const zeichnen = ()=>{
+    const k = ladeKatalog().slice().sort((a, b)=> String(a.name).localeCompare(String(b.name), 'de') || String(a.adr2 || '').localeCompare(String(b.adr2 || ''), 'de'));
+    const q = such.trim().toLowerCase();
+    const l = q ? k.filter(b=> [b.name, b.adr1, b.adr2].join(' ').toLowerCase().includes(q)) : k;
+    listeEl.innerHTML = l.length ? l.map(b=> '<button type="button" class="bst-zeile" data-bst="' + htmlEsc(b.id) + '"><b>' + htmlEsc(b.name) + '</b><small>' + htmlEsc([b.adr1, b.adr2].filter(Boolean).join(', ') || 'ohne Adresse') + '</small></button>').join('')
+      : '<div class="leer-hinweis">' + (q ? 'Kein Treffer.' : 'Noch keine Bestatter gespeichert.') + '</div>';
+    listeEl.querySelectorAll('[data-bst]').forEach(x=> x.onclick = async ()=>{ if(await bestatterDialog(x.dataset.bst)) zeichnen(); });
+  };
+  document.getElementById('bstSuche').oninput = (e)=>{ such = e.target.value; zeichnen(); };
+  document.getElementById('bstNeu').onclick = async ()=>{ if(await bestatterDialog(null)) zeichnen(); };
+  zeichnen();
+}
+async function bestatterDialog(id){
+  const k = ladeKatalog(), alt = id ? k.find(b=> b.id === id) : null;
+  let name = alt ? alt.name : '', adr1 = alt ? alt.adr1 || '' : '', adr2 = alt ? alt.adr2 || '' : '', fehler = '';
+  for(;;){
+    const html = '<div class="fb-dialog">' + (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<label class="fb-lbl">Name<input type="text" id="bstName" value="' + htmlEsc(name) + '" placeholder="z. B. Bestattungen Muster"></label>' +
+      '<label class="fb-lbl">Straße + Hausnummer<input type="text" id="bstAdr1" value="' + htmlEsc(adr1) + '"></label>' +
+      '<label class="fb-lbl">PLZ + Ort<input type="text" id="bstAdr2" value="' + htmlEsc(adr2) + '"></label></div>';
+    const kn = [{ label: 'Abbrechen', akt: 'nein' }];
+    if(alt) kn.push({ label: 'Löschen', akt: 'weg' });
+    kn.push({ label: 'Speichern', akt: 'ok', primaer: true });
+    const akt = await betaOverlay.ergebnis(alt ? 'Bestatter ändern' : 'Neuer Bestatter', html, kn);
+    const el = (x)=> document.getElementById(x);
+    if(el('bstName')){ name = grossKleinKorrigieren(el('bstName').value.trim()); adr1 = grossKleinKorrigieren(strasseAusschreiben(el('bstAdr1').value.trim())); adr2 = grossKleinKorrigieren(el('bstAdr2').value.trim()); }
+    betaOverlay.schliessen();
+    if(akt === 'weg'){
+      if(!await betaFrage('„' + alt.name + '“ aus der Liste löschen? Bereits geschriebene Rechnungen bleiben unverändert.', 'Löschen', 'Abbrechen')) return false;
+      speichereKatalog(ladeKatalog().filter(b=> b.id !== alt.id)); appToastAnzeigen('Gelöscht.', 1600); return true;
+    }
+    if(akt !== 'ok') return false;
+    if(!name){ fehler = 'Bitte einen Namen eingeben.'; continue; }
+    const k2 = ladeKatalog(), klein = (x)=> String(x || '').trim().toLowerCase();
+    if(k2.some(b=> b.id !== (alt && alt.id) && klein(b.name) === klein(name) && klein(b.adr1) === klein(adr1))){ fehler = 'Diesen Bestatter gibt es schon.'; continue; }
+    const jetzt = new Date().toISOString();
+    if(alt){ const x = k2.find(b=> b.id === alt.id); if(x){ Object.assign(x, { name, adr1, adr2, herkunft: 'handy', zeitstempel: jetzt }); } }
+    else { const n = { name, adr1, adr2, herkunft: 'handy', zeitstempel: jetzt }; n.id = bestatterId(n); k2.push(n); }
+    speichereKatalog(k2); appToastAnzeigen('Gespeichert.', 1600); return true;
+  }
+}
 // Bestatter aus einer gespeicherten LS-Rechnung in den Katalog uebernehmen (ohne Dubletten; Adresse ergaenzen, wenn leer)
 function bestatterEintragen(name, adr1, adr2){
   name = String(name || '').trim(); adr1 = String(adr1 || '').trim(); adr2 = String(adr2 || '').trim();
@@ -2408,7 +2511,9 @@ function bestatterEintragen(name, adr1, adr2){
     if(!gleich.adr1 && adr1){ gleich.adr1 = adr1; gleich.adr2 = adr2; gleich.zeitstempel = new Date().toISOString(); speichereKatalog(k); return true; }
     return false;
   }
-  k.push({ name, adr1, adr2, herkunft: 'handy', zeitstempel: new Date().toISOString() });
+  const n = { name, adr1, adr2, herkunft: 'handy', zeitstempel: new Date().toISOString() }; n.id = bestatterId(n);
+  if(k.some(b=> b.id === n.id)) return false;
+  k.push(n);
   speichereKatalog(k);
   return true;
 }
@@ -3705,7 +3810,6 @@ async function ansichtFahrtenbuch(blatt){
     inhalt.innerHTML = ansicht === 'b' ? fbAnsichtB(buch) : ansicht === 'c' ? fbAnsichtC(buch) : aQuer ? fbAnsichtAQuer(buch) : fbAnsichtA(buch);
     if(aQuer){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
     if(ansicht === 'c'){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
-    if(ansicht === 'a' && !aQuer && buch.dienste.length) setTimeout(()=> fbTagKarteZeichnen(buch.dienste[0], 0).catch(()=>{}), 0);
     inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=>{ if(k._lang){ k._lang = false; return; } k.closest('.fbx-karte').classList.toggle('zu'); });
     inhalt.querySelectorAll('[data-fbtag]').forEach(k=> k.onclick = ()=>{ LS.set('fb_tag', k.dataset.fbtag); zeichnen(); });
     // Loeschen nur durch langes Druecken (Handy) bzw. Rechtsklick (PC), jeweils mit Nachfrage
@@ -3937,11 +4041,11 @@ async function fbLoeschen(d, f){
 }
 // A: Dienst-Karten, neuester offen
 function fbAnsichtA(buch){
-  return buch.dienste.map((d, di)=> '<div class="fbx-karte' + (di ? ' zu' : '') + (fbLaufend(d) ? ' laeuft' : '') + '">' +
+  return buch.dienste.map((d, di)=> '<div class="fbx-karte zu' + (fbLaufend(d) ? ' laeuft' : '') + '">' +
     '<button type="button" class="fbx-kopf" data-fbauf="1" data-fbdienst="' + di + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '<small>' + (fbLaufend(d) ? 'bisher' : 'gesamt') + '</small></span></button>' +
     '<div class="fbx-detail">' + fbSummenHtml(d) + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + di + '-' + fi + '">' +
       '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art, f) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
-      '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + (di ? '' : '<div class="fbx-ortkarte" id="fbxKarte"></div>') + '</div></div>').join('');
+      '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + '</div></div>').join('');   // Karte nur im Querformat (fbAnsichtAQuer)
 }
 // A im Querformat: links der gewaehlte Dienst aufgeklappt (Faelle + Karte), rechts die Liste aller Dienste
 function fbAnsichtAQuer(buch){
@@ -16822,9 +16926,9 @@ function miniKarteHtml(d, opt){
   const aedKnopf = opt.gross && !opt.ohneAed ? '<button type="button" class="mini-aed" aria-label="Nächster AED (Defibrillator)" title="Nächster AED">' + VK_AED_KNOPF_SVG + '</button>' : '';
   const posKnopf = '<button type="button" class="mini-pos" aria-label="Eigene Position" title="Position"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>';
   const ueberKnopf = '<button type="button" class="mini-ueber" aria-label="Übersicht" title="Übersicht"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="2.5"/></svg></button>';
-  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" data-ar="' + (fit.bw / fit.bh).toFixed(4) + '" style="aspect-ratio:' + fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0) + ';"></div>' +
+  return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" data-ar="' + (fit.bw / fit.bh).toFixed(4) + '" style="aspect-ratio:' + (opt.festeGroesse ? '560 / 330' : fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0)) + ';"></div>' +
     '<div class="mini-gruppe oben">' + knopf + auge + '</div><div class="mini-gruppe mitte">' + aedKnopf + posKnopf + ueberKnopf + '</div><div class="mini-gruppe unten">' + grossKnopf + '</div></div>' +
-    '<div class="sk-hinweis mini-attr">© <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' + OSM_ATTR_HTML + ' · Zoom: zwei Finger bzw. Mausrad</div>' + (opt.ohneLegende ? '' : karteLegendeHtml(d));
+    '<div class="sk-hinweis mini-attr">' + (vkAn() ? VK_ATTR_HTML : '© <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' + OSM_ATTR_HTML) + '</div>' + (opt.ohneLegende ? '' : karteLegendeHtml(d));
 }
 function miniKarteAnsicht(el){
   const w = el && (el.classList && el.classList.contains('mini-ebenen') ? el : el.querySelector && el.querySelector('.mini-ebenen'));
@@ -16956,7 +17060,7 @@ function vkDatenEbenen(map, d){
   map.addSource('vk-weg', { type: 'geojson', data: { type: 'FeatureCollection', features: d.weg && d.weg.length > 1 ? [linie(d.weg)] : [] } });
   map.addLayer({ id: 'vk-weg', type: 'line', source: 'vk-weg', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1a55c9', 'line-width': 5, 'line-opacity': 0.9 } });
   map.addSource('vk-luft', { type: 'geojson', data: { type: 'FeatureCollection', features: d.linie && d.linie[0] && d.linie[1] ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] } });
-  map.addLayer({ id: 'vk-luft', type: 'line', source: 'vk-luft', paint: { 'line-color': '#111', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
+  map.addLayer({ id: 'vk-luft', type: 'line', source: 'vk-luft', paint: { 'line-color': vkStilDunkel() ? '#eef1f5' : '#111', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
 }
 function miniKarteVektor(w, cfg){
   const f = w.querySelector('.mini-fenster');
@@ -17751,6 +17855,8 @@ const VK_STILE = { osm: 'OSM', liberty: 'Hell', detail: 'Detail', bright: 'Bunt'
 const vkGrauFamilie = (st)=> st === 'dunkelgrau' || st === 'anthrazit' || st === 'nachtnavi';   // dunkle Stile auf Basis 'dark' mit eigener Palette
 const vkStilBasis = (st)=> (st === 'detail' || st === 'osm') ? 'liberty' : (vkGrauFamilie(st) ? 'dark' : st);
 function vkNacht(){ return document.body.classList.contains('dunkel'); }
+// dunkler Kartenstil gerade aktiv? (Luftlinie dann hell statt schwarz)
+function vkStilDunkel(st){ st = st || vkStil(); return st === 'dark' || vkGrauFamilie(st); }
 function vkStil(){
   if(vkNacht()){
     // Standard im Dunkelmodus: Dunkelgrau (einmalig auch statt des alten Standards "Dunkel"); sonst der zuletzt gewaehlte dunkle Stil
@@ -18984,7 +19090,7 @@ function vektorKarteOverlay(d, text, opt){
       map.addLayer({ id: 'vk-gps-rand', type: 'line', source: 'vk-gps', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffffff', 'line-width': 8 } });
       map.addLayer({ id: 'vk-gps', type: 'line', source: 'vk-gps', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#8e2bd6', 'line-width': 4.5 } });
       map.addSource('vk-luft', { type: 'geojson', data: { type: 'FeatureCollection', features: d.linie && d.linie[0] && d.linie[1] ? [linie([ll(d.linie[0]), ll(d.linie[1])])] : [] } });
-      map.addLayer({ id: 'vk-luft', type: 'line', source: 'vk-luft', paint: { 'line-color': '#111', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
+      map.addLayer({ id: 'vk-luft', type: 'line', source: 'vk-luft', paint: { 'line-color': vkStilDunkel() ? '#eef1f5' : '#111', 'line-width': 2.5, 'line-dasharray': [2, 2] } });
       sichtbar();
       // Medizin/Parkplaetze/Hausnummern ganz oben (Vorrang vor allen anderen Beschriftungen)
       try{ vkZusatzEbenen(map, stil); }catch(e){ console.warn('Vektorkarte: Zusatzebenen', e); }
@@ -19005,6 +19111,7 @@ function vektorKarteOverlay(d, text, opt){
         const neu = b.dataset.vkst; if(neu === stil){ menue.hidden = true; return; }
         stil = neu; vkStilSetzen(neu); menue.hidden = true;
         vkStilJson(neu).then(o=> map.setStyle(o, { diff: false })).catch(()=> appToastAnzeigen('Kartenstil nicht erreichbar (offline?).', 2500));
+        map.once('styledata', ()=>{ try{ if(map.getLayer('vk-luft')) map.setPaintProperty('vk-luft', 'line-color', vkStilDunkel(neu) ? '#eef1f5' : '#111'); }catch(_){} });
         vkAlleMinisStil();
       });
       menue.querySelectorAll('[data-vkeb]').forEach(c=> c.onchange = ()=>{
@@ -19470,7 +19577,7 @@ async function standortKarteZeichnen(info, mitDialog){
       // der Positions-Knopf fragt dann wie gewohnt nach der Standortfreigabe
       let mitte = null;
       try{ mitte = gkvStartGeo() || nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); }catch(_){}
-      const leer = '<div class="sk-hinweis">Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.') + '</div>';
+      const leer = faelle.length ? '' : '<div class="sk-hinweis">Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.') + '</div>';
       if(!mitte){ box.innerHTML = kopf(unter) + leer + listeHtml; verdrahten(); return; }
       const d0 = { pois: [], nfp: true, rahmen: true, fallKlick };
       gross = (ebene, ansicht)=> osmKarteOverlay(d0, 'Karte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Karte' });
@@ -19481,7 +19588,7 @@ async function standortKarteZeichnen(info, mitDialog){
     const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
     const d = { pois: allePois, nfp: true, rahmen: true, fallKlick };
     gross = (ebene, ansicht)=> osmKarteOverlay(d, 'Einsatzorte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Einsatzorte' });
-    box.innerHTML = kopf(unter) + miniKarteHtml(d, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk: etwasDrin, fallKlick, gross }) + listeHtml;
+    box.innerHTML = kopf(unter) + miniKarteHtml(d, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk: etwasDrin, fallKlick, gross, festeGroesse: true }) + listeHtml;   // gleiche Groesse wie ohne Einsaetze
     verdrahten();
   };
   try{ await nfpHintergrund(); }catch(_){}
@@ -20307,6 +20414,12 @@ function syncZusammenfuehren(entfernt){
 // vielen Stellen, die diese Listen schreiben.
 // ---------------------------------------------------------------------
 const SYNC_SAETZE = {
+  // Bestatter-Liste (in den Einstellungen bearbeitbar)
+  bestatter: {
+    laden: ()=> ladeKatalog().filter(b=> b && b.id),
+    setzen: (a)=> LS.set('bestatter_katalog', a.slice().sort((x, y)=> String(x.name).localeCompare(String(y.name), 'de'))),
+    zeit: (x)=> Date.parse(x.zeitstempel || '') || 0
+  },
   live_dienst: {
     laden: ()=>{ const d = LS.get('live_dienst', null); return d && typeof d === 'object' ? [Object.assign({}, d, { id: 'live' })] : []; },
     setzen: (a)=>{ const d = a[0]; if(d){ const { id, ...rest } = d; LS.set('live_dienst', rest); } else LS.set('live_dienst', null); },
@@ -20407,7 +20520,9 @@ async function faelleAbgleichen(schreiben){
       for(let versuch = 0; versuch < 3; versuch++){
         const { etag, daten } = await syncDateiLesen(token);
         // Bestatter aus der Datei (wie bisher additiv)
-        if(daten && Array.isArray(daten.bestatterAenderungen)) daten.bestatterAenderungen.forEach(b=>{ if(b && b.name) try{ bestatterEintragen(b.name, b.adr1, b.adr2); }catch(_){} });
+        // aeltere App-Staende: nur Bestatter ergaenzen, die hier weder vorhanden noch geloescht sind
+        if(daten && Array.isArray(daten.bestatterAenderungen)){ const weg = (LS.get('sync_saetze_weg', {}) || {}).bestatter || {}, da = new Set(ladeKatalog().map(b=> b.id));
+          daten.bestatterAenderungen.forEach(b=>{ if(!b || !b.name) return; const id = b.id || bestatterId(b); if(!weg[id] && !da.has(id)) try{ bestatterEintragen(b.name, b.adr1, b.adr2); }catch(_){} }); }
         const { geaendert, daten: raus } = syncZusammenfuehren(daten);
         if(geaendert) geaendertGesamt = true;
         const ss = syncSaetzeZusammenfuehren(daten);
@@ -20487,7 +20602,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v464';
+const APP_VERSION = 'v465';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -20695,6 +20810,9 @@ function designWahlHtml(){
       <div class="sync-unter-titel" style="margin-top:14px;">Querformat (Test)</div>
       <div class="pos-stil-wahl live-wahl"><label class="pos-stil-option${querEinst() ? ' an' : ''}"><input type="checkbox" id="chkQuerLayout"${querEinst() ? ' checked' : ''}>
         <span><b>Breite Ansicht im Querformat</b><small>Sobald Tablet, PC oder Handy quer liegen: Startseite in drei Spalten (Neuer Fall · Dienst · Karte), beim Erfassen rechts die Rechnungsvorschau, Rechnungsverwaltung mit Details rechts, Fahrtenbuch und Luftlinie-Werkzeug zweispaltig.</small></span></label></div>
+      <div class="sync-unter-titel" style="margin-top:14px;">Menüleiste im Querformat</div>
+      <div class="pos-stil-wahl live-wahl">${[['links', 'Links', 'senkrecht am linken Rand (Standard)'], ['rechts', 'Rechts', 'senkrecht am rechten Rand'], ['unten', 'Unten', 'wie im Hochformat']].map(([k, t, s])=> `
+        <label class="pos-stil-option${navQuerEinst() === k ? ' an' : ''}"><input type="radio" name="navQuer" value="${k}"${navQuerEinst() === k ? ' checked' : ''}><span><b>${t}</b><small>${s}</small></span></label>`).join('')}</div>
       <div class="sync-unter-titel" style="margin-top:14px;">Live-Dienst-Anzeige auf der Startseite</div>
       <div class="design-hinweis">Optional, jede einzeln. Den Dienst wählst du durch Anklicken der Anzeige; er füllt beim ersten GKV-Patienten die Abfrage „Neuer Dienst“ vor.</div>
       <div class="pos-stil-wahl live-wahl">${LIVE_ANZEIGEN.map(x=> `
@@ -20703,7 +20821,13 @@ function designWahlHtml(){
       </div>
       <div class="sync-unter-titel" style="margin-top:14px;">Darstellung der Rechnungspositionen (PT, LS, GKV)</div>`;
 }
+function navQuerEinst(){ const v = (ladeEinstellungen() || {}).navQuer; return v === 'rechts' || v === 'unten' ? v : 'links'; }
+function navQuerAnwenden(){ const v = navQuerEinst(); document.body.classList.toggle('nav-links', v === 'links'); document.body.classList.toggle('nav-rechts', v === 'rechts'); }
 function designWahlWiring(){
+  document.querySelectorAll('input[name="navQuer"]').forEach(r=> r.onchange = ()=>{
+    const e = ladeEinstellungen(); e.navQuer = r.value; speichereEinstellungen(e); navQuerAnwenden();
+    document.querySelectorAll('input[name="navQuer"]').forEach(x=> x.closest('.pos-stil-option').classList.toggle('an', x.checked));
+  });
   { const q = document.getElementById('chkQuerLayout'); if(q) q.onchange = ()=>{ const e = ladeEinstellungen(); e.querLayout = q.checked; speichereEinstellungen(e); q.closest('.pos-stil-option').classList.toggle('an', q.checked); querAnwenden(); }; }
   document.querySelectorAll('input[name="liveAnzeige"]').forEach(c=> c.onchange = ()=>{
     const e = ladeEinstellungen(); e.liveDienst = { ...(e.liveDienst || {}), [c.value]: c.checked }; speichereEinstellungen(e);
@@ -21003,7 +21127,8 @@ const LIVE_DIENSTZEITEN = {
   docdirekt:   { werktag: [], wochenende: [] }
 };
 const LIVE_ANZEIGEN = [
-  { k: 'ring', titel: 'Uhr', text: 'Uhrzeit und Restzeit des Dienstes im Ring, Einsätze als Punkte.' },
+  { k: 'ring', titel: 'Uhr', text: 'Uhrzeit und Restzeit des Dienstes im Ring, Einsätze als Punkte (LS, PT, GKV in ihrer Farbe).' },
+  { k: 'ringBetrag', titel: 'Beträge an der Uhr', text: 'Neben jedem Einsatz-Punkt klein der Betrag in Euro.' },
   { k: 'dienst', titel: 'Dienst', text: 'Status, Fälle, GKV-Summe und Förderung mit Balken; darunter die Fälle des Dienstes als einklappbare Liste.' },
   { k: 'standort', titel: 'Standortkarte', text: 'Kleine Karte mit deinem Standort und der Zone; ausgeklappt alle Einsatzorte dieses Dienstes (LS, PT, GKV).' }
 ];
@@ -21012,7 +21137,7 @@ function liveEinst(){
   const l = (ladeEinstellungen() || {}).liveDienst || { dienst: true, ring: true, standort: true, auto: false };
   // "Karte mit Balken" und "Kompakte Zeile" sind jetzt ein Feature "Dienst"
   const dienst = l.dienst !== undefined ? !!l.dienst : !!(l.karte || l.zeile);
-  return { dienst, ring: !!l.ring, standort: !!l.standort, auto: !!l.auto };
+  return { dienst, ring: !!l.ring, standort: !!l.standort, auto: !!l.auto, ringBetrag: !!l.ringBetrag };
 }
 function liveAuto(){ return false; }   // frueher Einstellung "Dienst automatisch erkennen" -- ersetzt durch die Vorauswahl beim Dienststart
 // Standard-Fahrdienstfenster um einen Zeitpunkt: Werktag 18-08, Wochenende/Feiertag/24.12./31.12. 08-08
@@ -21483,6 +21608,7 @@ function designNavWiring(wurzel){
 function designGlobalNav(){
   try{
     let nav = document.getElementById('dsGlobalNav');
+    navQuerAnwenden();
     const d = designAktuell(), an = d === 'klinik' || d === 'einhand';
     document.body.classList.toggle('ds-leiste-global', an);
     if(nav && (!an || nav.dataset.design !== d)){ nav.remove(); nav = null; }
@@ -21528,6 +21654,8 @@ function designAktSeite(){
 }
 setzeTitel = (function(basis){ return function(){ const r = basis.apply(this, arguments); setTimeout(designGlobalNav, 0); try{ werkzeugStapelSchliessen(); }catch(_){} return r; }; })(setzeTitel);
 function designKachelnUmbauen(info){
+  // laufender/geplanter Dienst: schmale Kacheln, damit Uhr und Dienst mehr Platz haben
+  { const reihe = document.querySelector('#app .kachelreihe'); if(reihe) reihe.classList.toggle('kompakt', info.modus === 'laufend' || info.modus === 'geplant'); }
   const anz = { ls: 0, pt: 0 };
   try{ betaEntwuerfe().forEach(e=>{ if(anz[e.art] !== undefined) anz[e.art]++; }); }catch(_){}
   [['kLS', 'ls'], ['kPT', 'pt'], ['kGKV', 'gkv']].forEach(([id, art])=>{
@@ -21560,12 +21688,20 @@ function designZeileHtml(info){
 function designRingBlockHtml(info){
   const fe = info.fenster;
   return '<div class="ds-ring-block">' +
-    '<div class="ds-kopfzeile">' + (info.modus === 'leer' ? 'LIVE-DIENST' : (DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + info.art).toUpperCase()) + '</div>' +
     '<button type="button" class="ds-ring-knopf" data-live="1" aria-label="Dienst wählen oder ändern">' + designRingHtml(info) + '</button>' +
     (true ? '' : '<section class="ds-foerd"><div><span class="ds-klein">FÖRDERUNG' + (info.modus === 'vorbei' ? '' : ' BISHER') + '</span><span class="ds-foerd-wert">' + betaEuro(info.foerderung) + '</span></div>' +
       '<div class="ds-foerd-rechts"><span>GKV ' + betaEuro(info.gkv) + '</span><span class="ds-schwach">Pauschale ' + betaEuro(info.pauschale) + '</span></div></section>' +
       '<section class="ds-zeitleiste"><h2 class="ds-klein">EINSÄTZE IN DIESEM DIENST</h2>' + designZeitleisteHtml(info) + '</section>') +
     '</div>';
+}
+// laufender Stundenlohn: Einnahmen vom Dienstbeginn bis jetzt (GKV mindestens anteilige Foerderpauschale, dazu LS/PT) je Stunde
+function designStundenlohn(info, faelle){
+  const fe = info.fenster; if(!fe || info.modus === 'geplant' || !fe.stunden) return null;
+  const h = (Math.min(fe.bis.getTime(), info.jetzt.getTime()) - fe.von.getTime()) / 3600000; if(h < 0.25) return null;
+  const satzH = (info.pauschale || 0) / fe.stunden;
+  const zusH = Math.max(0, (info.foerderung || 0) - Math.max(0, (info.pauschale || 0) - (info.gkv || 0))) / fe.stunden;
+  const ptls = (faelle || []).filter(f=> (f.art === 'pt' || f.art === 'ls') && !f.unfertig).reduce((a, f)=> a + (Number(f.euro) || 0), 0);
+  return (Math.max(info.gkv || 0, satzH * h) + zusH * h + ptls) / h;
 }
 // Dienst: kompakte Zeile + Balken (GKV gegen Pauschale) + einklappbare Fallliste
 function designDienstHtml(info){
@@ -21581,12 +21717,14 @@ function designDienstHtml(info){
   const kurzEuro = (v)=> betaEuro(v).replace(' €', '');
   // Balken nur, solange die Foerderung noch greift (GKV unter der Pauschale)
   const balken = info.pauschale > 0 && info.gkv < info.pauschale;
+  const lohn = designStundenlohn(info, faelle);
   return '<div class="ds-dz">' +
     '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status-zeile"><span class="ds-status">' + htmlEsc(status) + '</span>' +
       '<span class="ds-schicht">' + (info.schicht ? '<b>' + htmlEsc(info.schicht) + '</b>' : '') + '<small>' + designUhr(fe.von) + '–' + designUhr(fe.bis) + '</small></span></span>' +
       '<span class="ds-status-unter">' + htmlEsc(unter) + '</span>' +
-      '<span class="ds-zahlen vier"><span><span>Fälle</span><b>' + faelle.length + '</b></span><span><span>GKV</span><b>' + kurzEuro(info.gkv) + '</b></span>' +
-      '<span><span>PT</span><b>' + kurzEuro(summe('pt')) + '</b></span><span><span>LS</span><b>' + kurzEuro(summe('ls')) + '</b></span></span>' +
+      '<span class="ds-zahlen ' + (lohn != null ? 'fuenf' : 'vier') + '"><span><span>Fälle</span><b>' + faelle.length + '</b></span><span><span>GKV</span><b>' + kurzEuro(info.gkv) + '</b></span>' +
+      '<span><span>PT</span><b>' + kurzEuro(summe('pt')) + '</b></span><span><span>LS</span><b>' + kurzEuro(summe('ls')) + '</b></span>' +
+      (lohn != null ? '<span title="Einnahmen seit Dienstbeginn je Stunde (GKV mindestens anteilige Förderpauschale, dazu LS/PT)"><span>€/h</span><b id="dsLohn">' + kurzEuro(lohn) + '</b></span>' : '') + '</span>' +
       (balken ? '<span class="ds-fort"><span class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + kurzEuro(info.gkv) + ' / ' + betaEuro(info.pauschale) + '</b></span>' +
         '<span class="ds-balken"><i style="width:' + p + '%"></i></span></span>' : '') + '</button>' +
     '<button type="button" class="ds-dz-auf" aria-expanded="' + auf + '"><span>Fälle in diesem Dienst (' + faelle.length + ')</span><span class="ds-dz-pfeil" aria-hidden="true">▾</span></button>' +
@@ -21633,19 +21771,40 @@ function designZeitleisteHtml(info){
     '<span class="ds-ein-betrag">' + betaEuro(x.f.euro).replace(' €', '') + '</span></button>').join('');
 }
 function designRingHtml(info){
-  const r = 110, u = 2 * Math.PI * r, p = designFortschritt(info), fe = info.fenster;
-  const punkte = !fe ? '' : info.faelle.map(x=>{
-    const q = Math.max(0, Math.min(1, (x.t - fe.von) / (fe.bis - fe.von))), w = -Math.PI / 2 + q * 2 * Math.PI;
-    return '<circle cx="' + (140 + r * Math.cos(w)).toFixed(1) + '" cy="' + (140 + r * Math.sin(w)).toFixed(1) + '" r="6" class="ds-ring-fall"/>';
+  const r = 110, u = 2 * Math.PI * r, p = designFortschritt(info), fe = info.fenster, l = liveEinst();
+  const pkt = (grad, rr)=>{ const w = (grad - 90) * Math.PI / 180; return [140 + rr * Math.cos(w), 140 + rr * Math.sin(w)]; };
+  const f1 = (v)=> v.toFixed(1);
+  let faelle = [];
+  if(fe){ try{ faelle = standortKarteFaelle(info).filter(x=> x.t); }catch(_){ faelle = info.faelle.map(x=> ({ art: 'gkv', t: x.t, euro: x.f.euro })); } }
+  // Einsaetze als Punkte in ihrer Farbe; optional der Betrag klein daneben (aussen)
+  const punkte = !fe ? '' : faelle.map(x=>{
+    const q = Math.max(0, Math.min(1, (x.t - fe.von) / (fe.bis - fe.von))), [cx, cy] = pkt(q * 360, r);
+    let s = '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="6" class="ds-ring-fall ' + x.art + '"/>';
+    if(l.ringBetrag && !x.unfertig && x.euro != null && x.euro !== '' && isFinite(Number(x.euro))){
+      const [tx, ty] = pkt(q * 360, r + 21);
+      s += '<text x="' + f1(tx) + '" y="' + f1(ty) + '" class="ds-ring-betrag ' + x.art + '" text-anchor="middle" dominant-baseline="middle">' + Math.round(Number(x.euro)) + '</text>';
+    }
+    return s;
   }).join('');
+  // Beginn rechts oben: Pfeil vom Dienstbeginn weg; Ende links oben: Pfeil auf das Dienstende zu
+  const bogen = (a1, a2, rr)=>{ const [x1, y1] = pkt(a1, rr), [x2, y2] = pkt(a2, rr); return 'M' + f1(x1) + ' ' + f1(y1) + ' A' + rr + ' ' + rr + ' 0 0 1 ' + f1(x2) + ' ' + f1(y2); };
+  let grenzen = '';
+  if(fe){
+    const [sx, sy] = pkt(31, 141), [ex, ey] = pkt(-31, 141);
+    grenzen = '<defs><marker id="dsPfeilKopf" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="ds-ring-pfeilkopf"/></marker></defs>' +
+      '<path d="' + bogen(5, 24, 136) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
+      '<path d="' + bogen(-24, -5, 136) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
+      '<text x="' + f1(sx) + '" y="' + f1(sy) + '" class="ds-ring-grenze" text-anchor="start" dominant-baseline="middle">' + designUhr(fe.von) + '</text>' +
+      '<text x="' + f1(ex) + '" y="' + f1(ey) + '" class="ds-ring-grenze" text-anchor="end" dominant-baseline="middle">' + designUhr(fe.bis) + '</text>';
+  }
   const gross = designUhr(info.jetzt);
   const unter = info.modus === 'leer' ? 'Dienst wählen' : designRestText(info);
-  return '<div class="ds-ring" id="dsRing"><svg viewBox="0 0 280 280" role="img" aria-label="Dienstzeit ' + Math.round(p * 100) + ' Prozent vorbei">' +
+  const kopf = info.modus === 'leer' || !fe ? 'Live-Dienst' : DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + info.art + (info.schicht ? ' ' + info.schicht : '');
+  return '<div class="ds-ring mit-rand" id="dsRing"><svg viewBox="-20 -20 320 320" role="img" aria-label="Dienstzeit ' + Math.round(p * 100) + ' Prozent vorbei">' + grenzen +
     '<circle cx="140" cy="140" r="126" class="ds-ring-aussen"/><circle cx="140" cy="140" r="' + r + '" class="ds-ring-spur"/>' +
     '<circle cx="140" cy="140" r="' + r + '" class="ds-ring-fort" stroke-dasharray="' + (u * p).toFixed(1) + ' ' + u.toFixed(1) + '" transform="rotate(-90 140 140)"/>' +
     '<circle cx="140" cy="140" r="94" class="ds-ring-innen"/>' + punkte + '</svg>' +
-    '<div class="ds-ring-mitte"><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-rest">' + unter + '</span></div></div>' +
-    (fe ? '<div class="ds-ring-grenzen"><span>' + designUhr(fe.von) + '</span><span>' + designUhr(fe.bis) + '</span></div>' : '');
+    '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + htmlEsc(kopf) + '</span><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-rest">' + unter + '</span></div></div>';
 }
 
 function designStartErgaenzen(){
@@ -21745,9 +21904,10 @@ function designUhrStarten(){
     if(!ring){ clearInterval(designUhrTimer); designUhrTimer = null; return; }
     const info = designDienstInfo();
     const neu = document.createElement('div'); neu.innerHTML = designRingHtml(info);
-    const grenzen = ring.nextElementSibling;
     ring.replaceWith(neu.firstElementChild);
-    if(grenzen && grenzen.classList.contains('ds-ring-grenzen')) grenzen.replaceWith(neu.lastElementChild);
+    // laufender Stundenlohn mitfuehren
+    const lohn = document.getElementById('dsLohn');
+    if(lohn){ try{ const v = designStundenlohn(info, standortKarteFaelle(info)); if(v != null) lohn.textContent = betaEuro(v).replace(' €', ''); }catch(_){} }
   }, 30000);
 }
 
@@ -21828,6 +21988,11 @@ function ansichtEinstellungen(){
       </div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Bestatter</div>
+      <div class="design-hinweis">${(()=>{ try{ const n = ladeKatalog().length; return n + (n === 1 ? ' Bestatter' : ' Bestatter') + ' in der Liste der Leichenschau-Maske.'; }catch(_){ return ''; } })()}</div>
+      <button type="button" class="btn-sekundaer" id="btnBestatter" style="margin-top:8px;">Bestatter-Liste bearbeiten</button>
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Dienste und Musterwochen</div>
       <div class="design-hinweis">Deine Dienste je Profil als Musterwoche (Mo–So und Feiertag); beim Dienststart stehen sie zur Auswahl.</div>
       ${(()=>{ try{ const a = dwProfile(); return a.length ? '<div class="dw-uebersicht">' + a.map(p=> '<div><b>' + htmlEsc(p.name) + '</b> <small>' + htmlEsc(p.dienstart) + ' · ' + DW_TAGE.reduce((s, [k])=> s + p.woche[k].length, 0) + ' Dienste pro Woche</small></div>').join('') + '</div>' : '<div class="design-hinweis">Noch keine Dienste angelegt.</div>'; }catch(_){ return ''; } })()}
@@ -21861,6 +22026,9 @@ function ansichtEinstellungen(){
       fehler: 'OneDrive nicht erreichbar' + (r.text ? ' (' + htmlEsc(r.text) + ')' : '') + '.' })[r.status] || '';
   };
   document.getElementById('btnDienste').onclick = ()=> ansichtDienste(()=> ansichtEinstellungen());
+  { const b = document.getElementById('btnBestatter'); if(b) b.onclick = ()=> ansichtBestatter(()=> ansichtEinstellungen()); }
+  // Bestatter direkt unter "Leichenschau"
+  { const b = document.getElementById('btnBestatter'), ab = b && b.closest('.abschnitt'); const ls = [...app.querySelectorAll('.abschnitt > .trennlinie')].find(t=> /^Leichenschau/i.test(t.textContent.trim())); if(ab && ls) ls.parentElement.after(ab); }
   document.getElementById('btnEinrichtung').onclick = ()=>{ LS.set('einr_aus_einst', true); ansichtEinrichtung('start'); };
   document.getElementById('btnEinrichtungBrief').onclick = ()=>{ LS.set('einr_aus_einst', true); ansichtEinrichtung('brief'); };
   document.getElementById('chkLsAssistent').onchange = (ev)=>{ const e = ladeEinstellungen() || {}; e.lsAssistent = ev.target.checked; speichereEinstellungen(e); };
@@ -22206,9 +22374,13 @@ async function msGraphInstanzSicherstellen(){
 // Nutzer-Geste, das entspricht dem Auto-Sync-Verhalten (autoSyncInitialisieren).
 async function msGraphInitialisieren(){
   if(window.DEMO_MODUS){ msGraphStatus = 'angemeldet'; msGraphKonto = { name: 'Demo', username: 'demo@beispiel.de' }; return; }
+  // nach bewusstem Abmelden: Reste verwerfen, bis man sich wieder aktiv anmeldet
+  const warAbgemeldet = !!LS.get('ms_abgemeldet', false);
   if(msAnmeldeArt() === 'eigen'){
     let frisch = false;
     try{ frisch = await MsEigen.rueckkehr(); }catch(e){ console.warn('Anmeldung', e); setTimeout(()=>{ try{ appToastAnzeigen('Microsoft-Anmeldung: ' + e.message, 6000); }catch(_){} }, 1500); }
+    if(warAbgemeldet && !frisch){ MsEigen.abmelden(); MsEigen.msalReste(); }
+    if(frisch) LS.set('ms_abgemeldet', false);
     if(MsEigen.angemeldet()){
       const k = MsEigen.konto() || {};
       msGraphKonto = { name: k.name || '', username: k.username || '' };
@@ -22229,6 +22401,8 @@ async function msGraphInitialisieren(){
     if(geradeFrischAngemeldet){
       inst.setActiveAccount(ergebnis.account);
     }
+    if(geradeFrischAngemeldet) LS.set('ms_abgemeldet', false);
+    else if(warAbgemeldet && inst.getAllAccounts().length){ try{ await inst.clearCache(); }catch(_){} MsEigen.msalReste(); }
     const konten = inst.getAllAccounts();
     if(konten.length > 0){
       inst.setActiveAccount(konten[0]);
@@ -22298,13 +22472,18 @@ function msGraphBleibenHtml(){
 }
 
 function msGraphAbmelden(){
+  // bewusst abgemeldet: beim naechsten Start keine Reste einer Anmeldung (Token im Speicher, MSAL-Cache) mehr gelten lassen
+  LS.set('ms_abgemeldet', true);
+  msGraphStatus = 'abgemeldet'; msGraphKonto = null;
+  try{ dsSyncAuffrischen(); }catch(_){}
+  try{ if(msAnmeldeArt() !== 'eigen') MsEigen.abmelden(); }catch(_){}   // MSAL-Cache leert logoutRedirect selbst; Reste faengt der naechste Start ab
   if(msAnmeldeArt() === 'eigen'){
     fbBuchCache = null; fahrdienstAuswertungCache = null; betaGesamtCache = null;
     MsEigen.abmelden();
     ZwSpeicher.leeren().finally(()=> Speicher.warten().finally(()=> location.assign(MSE_AUTH + '/logout?post_logout_redirect_uri=' + encodeURIComponent(MSGRAPH_REDIRECT_URI))));
     return;
   }
-  if(!msGraphMsal) return;
+  if(!msGraphMsal){ Speicher.warten().finally(()=> location.reload()); return; }
   const konto = msGraphMsal.getActiveAccount();
   fbBuchCache = null; fahrdienstAuswertungCache = null; betaGesamtCache = null;
   ZwSpeicher.leeren().finally(()=> msGraphMsal.logoutRedirect({ account: konto, postLogoutRedirectUri: MSGRAPH_REDIRECT_URI }));
@@ -24317,8 +24496,27 @@ try{
 // nur wenn man die Einstellungen gerade offen hat. War man vor dem Redirect
 // in den Einstellungen (einstellungenOffen), diese danach einmal neu
 // aufbauen, damit der aktualisierte Anmeldestatus sichtbar wird.
+// OneDrive nicht verbunden: bei jedem Start (und nach laengerer Pause) ein Hinweis mit Anmelde-Knopf; X schliesst ihn
+function odAnmeldePopup(){
+  try{
+    if(window.DEMO_MODUS || msGraphStatus !== 'abgemeldet' || navigator.onLine === false) return;
+    if(LS.get('einrichtung_schritt', null) || document.querySelector('.od-popup, .beta-overlay.aktiv, .nfp-overlay')) return;
+    if(!LS.get('einrichtung_fertig', false)) return;
+    const d = document.createElement('div'); d.className = 'od-popup'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'OneDrive nicht verbunden');
+    d.innerHTML = '<div class="od-popup-karte"><button type="button" class="od-popup-x" aria-label="Schließen">✕</button><b>OneDrive nicht verbunden</b>' +
+      '<p>Ohne Anmeldung werden Rechnungen, Fahrtenbuch und Abgleich nicht in deinem OneDrive gespeichert.</p>' +
+      '<button type="button" class="btn-primaer" id="odPopupAnmelden">Mit Microsoft anmelden</button></div>';
+    document.body.appendChild(d);
+    const zu = ()=> d.remove();
+    d.querySelector('.od-popup-x').onclick = zu;
+    d.onclick = (e)=>{ if(e.target === d) zu(); };
+    document.getElementById('odPopupAnmelden').onclick = ()=>{ zu(); msGraphAnmelden(); };
+  }catch(_){}
+}
+{ let weg = 0; document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ weg = Date.now(); return; } if(weg && Date.now() - weg > 10 * 60000) setTimeout(odAnmeldePopup, 600); }); }
 try{
   msGraphInitialisieren().then(()=>{
+    setTimeout(odAnmeldePopup, 1800);
     // Einrichtungsassistent: nach der Rueckkehr von der Microsoft-Anmeldung weiter, sonst ggf. anbieten
     const einrLaeuft = !!LS.get('einrichtung_schritt', null);
     if(einrLaeuft) ansichtEinrichtung(); else setTimeout(()=> einrNachAnmeldungPruefen(), 2500);
