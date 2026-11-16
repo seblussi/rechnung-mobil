@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-ruP+0TNRx0oqiP4ayHVAQMmHyZLbnn8hKiQZUN5YzR8=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-ypN7EVjXOCVIpREVXMycvi8K5r4wR/PTGYWJ2pSW9zQ=' 'sha256-rTy+FtCf3l5qP6Kjv8PRncWrxwErK1vuPgvFQSqNC60='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -516,6 +516,9 @@ try{
   .gkv-kopf{background:var(--karte); border:1px solid var(--rand); border-radius:12px; padding:10px 12px; margin-bottom:6px;}
   .gkv-feld{display:block; font-size:12.5px; color:var(--text-schwach); margin-bottom:8px; flex:1; min-width:0;}
   .gkv-feld input{display:block; width:100%; box-sizing:border-box; margin-top:3px; font:inherit; font-size:16px; padding:9px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
+  .gkv-feld select{display:block; width:100%; box-sizing:border-box; margin-top:3px; font:inherit; font-size:15px; padding:9px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
+  .dienst-wahl-hinw{display:block; font-size:12px; color:var(--text-schwach); margin-top:4px;}
+  .dienst-wahl-hinw.warn{color:#c76a00;}
   .gkv-feld input.pflichtfeld-fehlt{border:2px solid var(--fehler, #c0392b);}
   .gkv-optional{font-size:11.5px;}
   .gkv-adr-knoepfe{display:flex; gap:8px; margin:0 0 6px;}
@@ -3360,6 +3363,81 @@ const ZwSpeicher = (()=>{
   return { setzen, holen, loeschen, leeren };
 })();
 let fbBuchCache = null;
+// ---------- Dienst-Zuordnung eines Falls (Auswahl "Dienst" in der Maske) ----------
+// Wert: 'yyyy-mm-dd|HH:MM|HH:MM|Art|Schicht|ProfilId'; '' = automatisch nach Uhrzeit.
+// Ein gewaehlter Dienst gilt immer -- auch wenn die Uhrzeit ausserhalb liegt (z. B. freie Rechnung).
+function dienstWahlKey(d){ return d && d.datum && d.von && d.bis ? [d.datum, d.von, d.bis, d.art || 'Fahrdienst', d.schicht || '', d.profilId || d.profil || ''].join('|') : ''; }
+function dienstWahlParsen(k){
+  const p = String(k || '').split('|'); if(p.length < 3) return null;
+  const d = { datum: p[0], von: p[1], bis: p[2], art: p[3] || 'Fahrdienst', schicht: p[4] || '', profilId: p[5] || '' };
+  const fe = liveDienstFenster(d); if(!fe) return null;
+  try{ const a = appDiensteLaden().concat([liveDienstLaden()].filter(Boolean)).find(x=> x.datum === d.datum && x.von === d.von); if(a && a.arzt) d.arzt = a.arzt; }catch(_){}
+  return Object.assign(d, { fenster: fe });
+}
+function dienstFensterGleich(a, b){ const H = 3600000; return !!(a && b) && Math.abs(a.von - b.von) <= H && Math.abs(a.bis - b.bis) <= H; }
+// gehoert ein Fall (Zeitpunkt t, gewaehlter Dienst k) zum Dienst mit dem Fenster fe?
+function fallGehoertZu(t, k, fe, spiel){
+  if(!fe) return false;
+  const w = dienstWahlParsen(k);
+  if(w) return dienstFensterGleich(w.fenster, fe);
+  const s = spiel || 0;
+  return !!t && t.getTime() >= fe.von.getTime() - s && t.getTime() < fe.bis.getTime() + s;
+}
+function dienstWahlLabel(d){
+  const fe = d.fenster || liveDienstFenster(d); if(!fe) return '';
+  return DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + (d.art || 'Fahrdienst') + (d.schicht ? ' ' + d.schicht : '') + ' · ' + d.von.replace(/:00$/, '') + '–' + d.bis.replace(/:00$/, '');
+}
+// Vorbelegung neuer Faelle: der laufende (oder gleich beginnende) Dienst
+function dienstWahlVorschlag(){
+  try{
+    const d = liveDienstLaden(); if(!d) return '';
+    const fe = liveDienstFenster(d), t = Date.now();
+    return fe && t >= fe.von.getTime() - 3600000 && t <= fe.bis.getTime() + 3600000 ? dienstWahlKey(d) : '';
+  }catch(_){ return ''; }
+}
+// Auswahl: Dienste rund um den Falltag -- in der App angelegte, laut Musterwoche geplante und solche aus dem Fahrtenbuch
+function dienstWahlOptionen(datumIso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datumIso || '');
+  const tag = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(); tag.setHours(0, 0, 0, 0);
+  const tage = [-1, 0].map(o=> new Date(tag.getFullYear(), tag.getMonth(), tag.getDate() + o));   // Vortag (ueber Mitternacht) und Falltag
+  const out = new Map();
+  const add = (d)=>{
+    const fe = liveDienstFenster(d); if(!fe) return;
+    if(fe.tag < tage[0] || fe.tag > tage[1]) return;
+    if(fe.tag.getTime() === tage[0].getTime() && fe.bis <= tag) return;   // Vortag nur, wenn bis in den Falltag
+    const k = d.datum + '|' + d.von + '|' + d.bis; if(out.has(k)) return;
+    out.set(k, { key: dienstWahlKey(d), label: dienstWahlLabel(Object.assign({}, d, { fenster: fe })), von: fe.von });
+  };
+  try{ appDiensteLaden().concat([liveDienstLaden()].filter(Boolean)).forEach(add); }catch(_){}
+  try{ dwAuswahl().filter(x=> x.profil).forEach(x=> tage.forEach(t=> dienstSchichten(x.art, t, x.profil).forEach(s=> add({ datum: liveIso(t), von: s.von, bis: s.bis, art: x.art, schicht: s.label || '', profilId: x.profil })))); }catch(_){}
+  try{ (fbBuchCache && fbBuchCache.dienste || []).filter(d=> !d.lokal && d.zeileStart).forEach(d=>{ const z = fbBlockZeitraum(d); if(!z) return; const uhr = (x)=> zz2(x.getHours()) + ':' + zz2(x.getMinutes()); add({ datum: liveIso(z.von), von: uhr(z.von), bis: uhr(z.bis), art: d.dienstart || 'Fahrdienst' }); }); }catch(_){}
+  return Array.from(out.values()).sort((a, b)=> a.von - b.von);
+}
+function dienstWahlFeldHtml(id, wert, gkv){
+  return gkv ? '<label class="gkv-feld dienst-wahl">Dienst<select id="' + id + '" data-wert="' + htmlEsc(wert || '') + '"></select><span class="dienst-wahl-hinw" id="' + id + '_hinw"></span></label>'
+    : '<div class="feld dienst-wahl"><label for="' + id + '">Dienst</label><select id="' + id + '" data-wert="' + htmlEsc(wert || '') + '"></select><div class="dienst-wahl-hinw" id="' + id + '_hinw"></div></div>';
+}
+function dienstWahlZeitpunkt(datumIso, zeit){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datumIso || ''), z = /^(\d{1,2}):(\d{2})/.exec(zeit || '');
+  return m && z ? new Date(+m[1], +m[2] - 1, +m[3], +z[1], +z[2]) : null;
+}
+function dienstWahlFuellen(id, datumIso, zeit){
+  const sel = document.getElementById(id); if(!sel) return;
+  const wert = sel.options.length ? sel.value : (sel.dataset.wert || '');
+  const liste = dienstWahlOptionen(datumIso);
+  if(wert && !liste.some(o=> o.key === wert)){ const w = dienstWahlParsen(wert); if(w) liste.unshift({ key: wert, label: dienstWahlLabel(w) }); }
+  sel.innerHTML = '<option value="">Automatisch nach Uhrzeit</option>' + liste.map(o=> '<option value="' + htmlEsc(o.key) + '">' + htmlEsc(o.label) + '</option>').join('');
+  sel.value = wert; if(sel.value !== wert) sel.value = '';
+  dienstWahlHinweis(id, datumIso, zeit);
+}
+function dienstWahlHinweis(id, datumIso, zeit){
+  const sel = document.getElementById(id), h = document.getElementById(id + '_hinw'); if(!sel || !h) return;
+  const t = dienstWahlZeitpunkt(datumIso, zeit), w = dienstWahlParsen(sel.value), H = 3600000;
+  let txt = '', warn = false;
+  if(w){ if(t && !(t >= w.fenster.von.getTime() - H && t <= w.fenster.bis.getTime() + H)){ txt = 'Die Uhrzeit liegt außerhalb dieses Dienstes – der Fall wird trotzdem diesem Dienst zugeordnet.'; warn = true; } }
+  else if(t){ let ad = null; try{ ad = appDienstFuer(t); }catch(_){} txt = ad ? 'Nach Uhrzeit: ' + dienstWahlLabel(ad) : 'Nach Uhrzeit: passender Dienst im Fahrtenbuch, sonst Abfrage beim Eintragen.'; }
+  h.textContent = txt; h.classList.toggle('warn', warn);
+}
 function fbNameNorm(n){ return String(n || '').toLowerCase().replace(/[^a-zäöüß]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' '); }
 // Faelle auf dem Geraet (gespeichert, Entwurf, GKV in Erfassung) fuer das Fahrtenbuch
 function fbLokaleSammeln(){
@@ -3371,24 +3449,24 @@ function fbLokaleSammeln(){
     return abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
   };
   const euroAus = (v)=>{ const n = parseFloat(String(v == null ? '' : v).replace(/\./g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
-  try{ gkvFaelleLaden().forEach(f=>{ if(!f || f.name === GKV_PSEUDO_NAME) return; const t = designFallZeit(f); if(t) lokal.push({ art: 'gkv', n: fbNameNorm(f.name), name: f.name, t, zeit: f.zeit || '', geo: f.geo || null, adr: f.adresse || '',
+  try{ gkvFaelleLaden().forEach(f=>{ if(!f || f.name === GKV_PSEUDO_NAME) return; const t = designFallZeit(f); if(t) lokal.push({ art: 'gkv', n: fbNameNorm(f.name), name: f.name, t, zeit: f.zeit || '', dienst: f.dienst || '', geo: f.geo || null, adr: f.adresse || '',
     euro: Number(f.euro) || 0, ziffern: (f.positionen || []).map(p=> ({ gop: ebmNorm(p.gop), anz: Number(p.anz) || 1 })), status: 'offen', oeffnen: ()=> ansichtGkv(f.id) }); }); }catch(_){}
   try{
     if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()){
       const t = designFallZeit(gkvEntwurf) || new Date();
-      lokal.push({ art: 'gkv', n: fbNameNorm(gkvEntwurf.name), name: gkvEntwurf.name, t, zeit: gkvEntwurf.zeit || '', geo: gkvEntwurf.kmGeo && gkvEntwurf.kmGeo.lat ? { lat: +gkvEntwurf.kmGeo.lat, lon: +gkvEntwurf.kmGeo.lon } : null,
+      lokal.push({ art: 'gkv', n: fbNameNorm(gkvEntwurf.name), name: gkvEntwurf.name, t, zeit: gkvEntwurf.zeit || '', dienst: gkvEntwurf.dienst || '', geo: gkvEntwurf.kmGeo && gkvEntwurf.kmGeo.lat ? { lat: +gkvEntwurf.kmGeo.lat, lon: +gkvEntwurf.kmGeo.lon } : null,
         adr: gkvEntwurf.adresse || '', euro: 0, ziffern: [], status: 'unfertig', oeffnen: ()=> ansichtGkv() });
     }
   }catch(_){}
   try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=>{
     const w = (f && f.werte) || {}; const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS);
-    if(t) lokal.push({ art, n: fbNameNorm(w.txtName), name: (w.txtName || '').trim() || 'ohne Namen', t, zeit: w.txtZeitLS || '', adr: lsPtAdr(art, w), positionen: f.positionen || [],
+    if(t) lokal.push({ art, n: fbNameNorm(w.txtName), name: (w.txtName || '').trim() || 'ohne Namen', t, zeit: w.txtZeitLS || '', dienst: w.txtDienst || '', adr: lsPtAdr(art, w), positionen: f.positionen || [],
       euro: euroAus(w.txtBetrag), status: 'offen', oeffnen: ()=> ansichtMaske(art, i) });
   })); }catch(_){}
   try{ betaEntwuerfe().forEach(e=>{
     if(!e || (e.art !== 'ls' && e.art !== 'pt')) return;
     const w = e.werte || {}; const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS) || (e.geaendert ? new Date(e.geaendert) : null);
-    if(t) lokal.push({ art: e.art, n: fbNameNorm(w.txtName), name: (w.txtName || '').trim() || 'ohne Namen', t, zeit: w.txtZeitLS || '', adr: lsPtAdr(e.art, w), positionen: [],
+    if(t) lokal.push({ art: e.art, n: fbNameNorm(w.txtName), name: (w.txtName || '').trim() || 'ohne Namen', t, zeit: w.txtZeitLS || '', dienst: w.txtDienst || '', adr: lsPtAdr(e.art, w), positionen: [],
       euro: euroAus(w.txtBetrag), status: 'unfertig', oeffnen: ()=> betaEntwurfOeffnen(e, null) });
   }); }catch(_){}
   return lokal;
@@ -3418,7 +3496,7 @@ async function fbBuchLaden(blatt, meldung){
       const nn = fbNameNorm(name);
       const treffer = tag ? lokal.find(x=> x.art === art && x.n === nn && tage(x.t, tag) <= 1.5 && x.status !== 'unfertig') : null;
       if(treffer){
-        treffer.imBuch = true;
+        treffer.imBuch = true; f.dienstWahl = treffer.dienst || '';
         if(!f.zeit) f.zeit = fbZeitAusZelle(treffer.zeit); f.oeffnen = treffer.oeffnen;
         f.geo = treffer.geo || null; f.adr = treffer.adr || '';
         if(!ziffern.length && treffer.positionen) f.ziffern = treffer.positionen.map(g=> ({ gop: String(g), anz: 1 }));
@@ -3441,7 +3519,7 @@ function fbLokalAuffrischen(buch){
     const nn = fbNameNorm(f.name);
     const x = lokal.find(y=> !y.imBuch && y.art === f.art && y.n === nn && Math.abs(y.t - d.tag) / 86400000 <= 1.5 && y.status !== 'unfertig');
     if(x){
-      x.imBuch = true;
+      x.imBuch = true; f.dienstWahl = x.dienst || '';
       if(!f.oeffnen){   // nach dem Wiederherstellen aus dem Zwischenspeicher: Verknuepfung zum App-Fall neu setzen
         f.oeffnen = x.oeffnen; if(!f.zeit) f.zeit = fbZeitAusZelle(x.zeit);
         if(!f.geo) f.geo = x.geo || null; if(!f.adr) f.adr = x.adr || '';
@@ -3480,9 +3558,18 @@ function fbLokaleZuordnen(dienste, lokal, blatt){
       zeitLabel: a.von.replace(/:00$/, '') + '–' + a.bis.replace(/:00$/, ''), arzt: a.arzt || '',
       gesamt: 0, gkv: 0, gkvRoh: 0, ls: 0, pt: 0, pauschale: false, dienststunden: 0, stundenlohn: 0, faelle: [] });
   });
-  // Faelle einsortieren: zuerst ein Dienst der Excel, sonst ein App-Dienst
+  // gewaehlte Dienste, die es noch nirgends gibt
+  lokal.filter(x=> !x.imBuch && x.dienst).forEach(x=>{
+    const w = dienstWahlParsen(x.dienst); if(!w) return;
+    const tag = new Date(w.fenster.tag); tag.setHours(0, 0, 0, 0);
+    if(!jahrOk(tag) || dienste.some(dd=> dienstFensterGleich(fbDienstFenster(dd), w.fenster))) return;
+    dienste.push({ lokal: true, appId: 'wahl:' + x.dienst, tag, fenster: { von: w.fenster.von, bis: w.fenster.bis }, dienstart: w.art + (w.schicht ? ' ' + w.schicht : ''),
+      zeitLabel: w.von.replace(/:00$/, '') + '–' + w.bis.replace(/:00$/, ''), arzt: w.arzt || '',
+      gesamt: 0, gkv: 0, gkvRoh: 0, ls: 0, pt: 0, pauschale: false, dienststunden: 0, stundenlohn: 0, faelle: [] });
+  });
+  // Faelle einsortieren: gewaehlter Dienst; sonst nach Uhrzeit zuerst ein Dienst der Excel, sonst ein App-Dienst
   lokal.filter(x=> !x.imBuch).sort((a, b)=> a.t - b.t).forEach(x=>{
-    const passt = (dd)=>{ const fe = fbDienstFenster(dd); return x.t >= fe.von - H && x.t <= fe.bis.getTime() + H; };
+    const passt = (dd)=> fallGehoertZu(x.t, x.dienst, fbDienstFenster(dd), H);
     const d = dienste.find(dd=> !dd.lokal && passt(dd)) || dienste.find(dd=> dd.lokal && passt(dd));
     if(!d) return;
     const ziffern = x.ziffern || (x.positionen || []).map(g=> ({ gop: String(g), anz: 1 }));
@@ -3566,7 +3653,7 @@ async function ansichtFahrtenbuch(blatt){
     const falsch = fbFalschZugeordnet(buch), box = document.getElementById('fbxUmzug');
     if(falsch.length && box){
       const bsp = falsch.slice(0, 3).map(x=> x.f.name + ' (' + x.f.zeit + ' im Dienst ' + fbZeitText(fbZeitParsen(x.d.zeitRoh) || { s: 0, e: 0 }) + ')').join(', ');
-      box.innerHTML = '<div class="gkv-warn fbx-umzug">' + '<b>' + falsch.length + (falsch.length === 1 ? ' Fall steht' : ' Fälle stehen') + ' im falschen Dienst</b> (Uhrzeit außerhalb des Dienstzeitraums): ' + htmlEsc(bsp) + (falsch.length > 3 ? ' …' : '') +
+      box.innerHTML = '<div class="gkv-warn fbx-umzug">' + '<b>' + falsch.length + (falsch.length === 1 ? ' Fall steht' : ' Fälle stehen') + ' im falschen Dienst</b> (Uhrzeit außerhalb des Dienstzeitraums bzw. anderer Dienst gewählt): ' + htmlEsc(bsp) + (falsch.length > 3 ? ' …' : '') +
         '<br><button type="button" class="btn-primaer" id="fbxUmzugLos" style="margin-top:8px;">In den richtigen Dienst verschieben</button></div>';
       document.getElementById('fbxUmzugLos').onclick = async ()=>{
         betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
@@ -3730,7 +3817,7 @@ async function gkvFallUeberallLoeschen(id){
       let zeile = x.zeile, b = L.daten.bloecke.find(bb=> zeile >= bb.zeileStart && zeile <= bb.zeileEnde);
       const nameIn = (z)=> fbNameNorm(String(((L.werte[z - 1] || [])[FB_COL.D]) || '')) === fbNameNorm(x.name);
       if(!b || !nameIn(zeile)){
-        const dt = designFallZeit(x); b = dt ? fbDienstFinden(L, dt) : null; zeile = 0;
+        const dt = designFallZeit(x), w = dienstWahlParsen(x.dienst); b = w ? fbBlockFuerFenster(L, w.fenster) : dt ? fbDienstFinden(L, dt) : null; zeile = 0;
         if(b) for(let z = b.zeileStart; z <= b.zeileEnde; z++){ if(nameIn(z) && (!x.zeit || fbZeitAusZelle((L.werte[z - 1] || [])[FB_COL.AS]) === fbZeitAusZelle(x.zeit))){ zeile = z; break; } }
       }
       if(!b || !zeile) throw new Error('Die Zeile im Fahrtenbuch wurde nicht gefunden – bitte im Fahrtenbuch löschen.');
@@ -3759,6 +3846,11 @@ function fbFalschZugeordnet(buch){
       const [hh, mm] = f.zeit.split(':').map(Number);
       let dt = new Date(z.von.getFullYear(), z.von.getMonth(), z.von.getDate(), hh, mm);
       if(dt.getTime() < z.von.getTime() - 3600000) dt = new Date(dt.getTime() + 86400000);   // Dienst ueber Mitternacht
+      const w = dienstWahlParsen(f.dienstWahl);
+      if(w){   // in der Maske gewaehlter Dienst
+        if(dienstFensterGleich(z, w.fenster)) return;
+        out.push({ d, f, dt, ziel: fbBlockFuerFenster(fb, w.fenster), dienst: f.dienstWahl }); return;
+      }
       if(dt >= z.von && dt < z.bis) return;   // liegt in seinem Dienst
       const ziel = fbDienstFinden(fb, dt);
       let neu = false;
@@ -3770,11 +3862,11 @@ function fbFalschZugeordnet(buch){
 }
 async function fbFaelleUmziehen(liste, meldung){
   let n = 0; const fehler = [];
-  for(const { f, dt } of liste){
+  for(const { f, dt, dienst } of liste){
     try{
       meldung && meldung(f.name + ' wird verschoben …');
       const r = await fahrtenbuchEintragen({ kat: f.art === 'ls' ? 'LS' : f.art === 'pt' ? 'P' : '', name: f.name, datum: new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()), zeit: f.zeit,
-        euro: f.euro, positionen: f.art === 'gkv' ? (f.ziffern || []).map(z=> ({ gop: z.gop, anz: z.anz })) : [], adresse: f.adr || '', geo: f.geo || null }, meldung, { fragen: false });
+        euro: f.euro, positionen: f.art === 'gkv' ? (f.ziffern || []).map(z=> ({ gop: z.gop, anz: z.anz })) : [], adresse: f.adr || '', geo: f.geo || null, dienst: dienst || '' }, meldung, { fragen: false });
       if(r && !r.uebersprungen){
         if(r.verschoben) n++; else fehler.push(f.name + ' (im richtigen Dienst eingetragen, alte Zeile bitte von Hand löschen)');
         // Zeile des passenden GKV-Falls in der App nachfuehren
@@ -15022,6 +15114,12 @@ async function fbJahresblattAnlegen(kx, jahr, meldung){
   await gx(kx.token, 'PATCH', nUrl + "/range(address='AR1')", { values: [['App-angelegt']] });
 }
 
+// Block im Fahrtenbuch zu einem bestimmten Dienst (Beginn und Ende je +- 1 h)
+function fbBlockFuerFenster(fb, fe){
+  const bl = fb.daten.bloecke.map(b=> ({ b, z: fbBlockZeitraum(b) })).filter(x=> x.z && dienstFensterGleich(x.z, fe));
+  bl.sort((p, q)=> Math.abs(p.z.von - fe.von) - Math.abs(q.z.von - fe.von));
+  return bl.length ? bl[0].b : null;
+}
 function fbDienstFinden(fb, dt){
   const t = dt.getTime(), H = 3600000;
   const bl = fb.daten.bloecke.map(b=> ({ b, z: fbBlockZeitraum(b) })).filter(x=> x.z);
@@ -15052,7 +15150,8 @@ function fbDienstFinden(fb, dt){
 async function fbStreuzeileEntfernen(kx, fall, dt, blatt, meldung){
   const zt = fbZeitAusZelle(fall.zeit); if(!zt) return null;
   const f = await fbLesen(meldung, kx, blatt);
-  const ziel = fbDienstFinden(f, dt); if(!ziel) return null;
+  const wahl = dienstWahlParsen(fall.dienst);
+  const ziel = wahl ? fbBlockFuerFenster(f, wahl.fenster) : fbDienstFinden(f, dt); if(!ziel) return null;
   const norm = (t)=> String(t == null ? '' : t).trim().toLowerCase().replace(/\s+/g, ' ');
   const namen = [fall.name].concat(fall.namen || []).map(norm).filter(Boolean);
   const tag0 = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime(), D = 86400000;
@@ -15355,16 +15454,19 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   const kx = await fbKontext(meldung);
   const zm = /^(\d{1,2}):(\d{2})/.exec(String(fall.zeit || ''));
   const dt = new Date(fall.datum.getFullYear(), fall.datum.getMonth(), fall.datum.getDate(), zm ? +zm[1] : 12, zm ? +zm[2] : 0);
+  // in der Maske gewaehlter Dienst: gilt vor der Uhrzeit
+  const wahl = dienstWahlParsen(fall.dienst);
+  const dtB = wahl ? new Date(wahl.fenster.von) : dt;
   // Jahresblatt des Falls; Anfang Januar auch das Vorjahr (Dienst ueber Silvester)
   let kandidaten = [kx.info.blaetter[0]];
   if(kx.info.jahresModus){
-    const y = dt.getFullYear();
-    kandidaten = [String(y)].concat(dt.getMonth() === 0 && dt.getDate() <= 2 ? [String(y - 1)] : []).filter(n=> kx.info.blaetter.includes(n));
+    const y = dtB.getFullYear();
+    kandidaten = [String(y)].concat(dtB.getMonth() === 0 && dtB.getDate() <= 2 ? [String(y - 1)] : []).filter(n=> kx.info.blaetter.includes(n));
   }
   let fb = null, block = null;
   for(const n of kandidaten){
     const f = await fbLesen(meldung, kx, n);
-    const b = fbDienstFinden(f, dt);
+    const b = wahl ? fbBlockFuerFenster(f, wahl.fenster) : fbDienstFinden(f, dt);
     if(b){ fb = f; block = b; break; }
     if(!fb) fb = f;
   }
@@ -15373,7 +15475,7 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   if(!block){
     // in der App angelegter Dienst, in dessen Zeitraum der Fall faellt -> ohne Rueckfrage
     let d = null;
-    const ad = appDienstFuer(dt);
+    const ad = wahl || appDienstFuer(dt);
     if(ad){
       const z = fbZeitParsen(ad.von + '-' + ad.bis);
       if(z){
@@ -15519,7 +15621,7 @@ async function fahrtenbuchAusRechnung(fall, erg, meldung){
   const fe = fall.fbEingetragen, feD = fe && /^(\d{4})-(\d{2})-(\d{2})$/.exec(fe.datum || '');
   const vorher = feD ? { datum: new Date(+feD[1], +feD[2] - 1, +feD[3]), zeit: fe.zeit || '', name: fe.name || '', namen: fe.namen || [] } : null;
   const r = await fahrtenbuchEintragen({
-    kat: fall.art === 'ls' ? 'LS' : 'P', name, namen, datum: d, zeit, euro: erg.summe, vorher
+    kat: fall.art === 'ls' ? 'LS' : 'P', name, namen, datum: d, zeit, euro: erg.summe, vorher, dienst: w.txtDienst || ''
   }, meldung, { fragen: alter < 14 });
   if(r.abgelehnt && fall.zeitstempel && typeof betaFallAendern === 'function') betaFallAendern(fall.art, fall.zeitstempel, x=>{ x.fahrtenbuch = 'nein'; });
   if(!r.uebersprungen && fall.zeitstempel && typeof betaFallAendern === 'function')
@@ -15565,8 +15667,8 @@ function ansichtGkv(bearbeitenId){
   const alle = gkvFaelleLaden();
   let f = bearbeitenId ? alle.find(x=> x.id === bearbeitenId) : null;
   if(f && (!f.auswahl || !Object.keys(f.auswahl).length) && f.positionen && f.positionen.length) f = Object.assign({}, f, { auswahl: gkvAuswahlAusPositionen(f.positionen) });
-  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null, dokuId: f.dokuId || null }
-    : (gkvEntwurf || Object.assign({ id: '', name: '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()) }, gkvStartAuswahl()));
+  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null, dokuId: f.dokuId || null, dienst: f.dienst || '' }
+    : (gkvEntwurf || Object.assign({ id: '', name: '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()), dienst: dienstWahlVorschlag() }, gkvStartAuswahl()));
   gkvEntwurf = st.id ? null : st;
   let liste = gkvListeLaden();
   const dtVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(st.datum || ''), z = /^(\d{1,2}):(\d{2})/.exec(st.zeit || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3], z ? +z[1] : 12, z ? +z[2] : 0) : new Date(); };
@@ -15577,6 +15679,7 @@ function ansichtGkv(bearbeitenId){
         <label class="gkv-feld">Datum<input type="date" id="gkvDatum" value="${htmlEsc(st.datum)}"></label>
         <label class="gkv-feld">Uhrzeit<input type="time" id="gkvZeit" value="${htmlEsc(st.zeit)}"></label>
       </div>
+      ${dienstWahlFeldHtml('gkvDienst', st.dienst, true)}
       <div class="gkv-zeitinfo" id="gkvZeitInfo"></div>
       <button type="button" class="btn-primaer blass gkv-zwischenablage" id="gkvZwischenablage">Aus Zwischenablage einlesen</button>
       <div class="gkv-zeitinfo" id="gkvZwHinweis"></div>
@@ -15830,8 +15933,10 @@ function ansichtGkv(bearbeitenId){
     if(strasse || ort){ el('gkvAdresse').oninput(); el('gkvKmBtn').click(); }
     h.textContent = 'Eingelesen' + (patient ? ': ' + grossKleinNormalisieren(patient) : '') + '. Bitte prüfen.';
   };
-  el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); werteZeichnen(); };
-  el('gkvZeit').onchange = ()=>{ st.zeit = el('gkvZeit').value; zeichnen(); };
+  el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); werteZeichnen(); dienstWahlFuellen('gkvDienst', st.datum, st.zeit); };
+  el('gkvZeit').onchange = ()=>{ st.zeit = el('gkvZeit').value; zeichnen(); dienstWahlHinweis('gkvDienst', st.datum, st.zeit); };
+  dienstWahlFuellen('gkvDienst', st.datum, st.zeit);
+  el('gkvDienst').onchange = ()=>{ st.dienst = el('gkvDienst').value; dienstWahlHinweis('gkvDienst', st.datum, st.zeit); };
   function werteZeichnen(){
     const p = LS.get('ebm_pruefung', {}) || {};
     el('gkvStandText').textContent = ebmStandText(dtVon()) + (p.am ? ' · online geprüft ' + isoDe(String(p.am).slice(0, 10)) : '');
@@ -15860,7 +15965,7 @@ function ansichtGkv(bearbeitenId){
     const eintrag = { id: st.id || ('g' + Date.now().toString(36)), name: st.name, datum: st.datum, zeit: st.zeit,
       auswahl: JSON.parse(JSON.stringify(st.auswahl)), profil: st.profil || '', positionen: pos.map(p=> ({ gop: p.gop, anz: p.anz })),
       euro: betaRund2(pos.reduce((s, p)=> s + p.euro, 0)), status: 'offen', alterName: null,
-      adresse: st.adresse || '', geo: st.kmGeo && st.kmGeo.lat ? { lat: +(+st.kmGeo.lat).toFixed(5), lon: +(+st.kmGeo.lon).toFixed(5) } : null, dokuId: st.dokuId || null };
+      adresse: st.adresse || '', geo: st.kmGeo && st.kmGeo.lat ? { lat: +(+st.kmGeo.lat).toFixed(5), lon: +(+st.kmGeo.lon).toFixed(5) } : null, dokuId: st.dokuId || null, dienst: st.dienst || '' };
     const i = arr.findIndex(x=> x.id === eintrag.id);
     if(i >= 0){
       eintrag.alterName = arr[i].name !== eintrag.name ? arr[i].name : (arr[i].alterName || null); eintrag.zeile = arr[i].zeile;
@@ -15907,7 +16012,7 @@ function ansichtGkv(bearbeitenId){
       const mv = x.vorher && /^(\d{4})-(\d{2})-(\d{2})$/.exec(x.vorher.datum || '');
       const vorher = mv ? { datum: new Date(+mv[1], +mv[2] - 1, +mv[3]), zeit: x.vorher.zeit || '', name: x.vorher.name || '' } : null;
       const r = await fahrtenbuchEintragen({ kat: '', name: x.name, namen: x.alterName ? [x.alterName] : [], datum: new Date(+m[1], +m[2] - 1, +m[3]),
-        zeit: x.zeit, euro: x.euro, positionen: x.positionen, vorher, adresse: x.adresse || '', geo: x.geo || null }, t=> betaOverlay.schritt(t));
+        zeit: x.zeit, euro: x.euro, positionen: x.positionen, vorher, adresse: x.adresse || '', geo: x.geo || null, dienst: x.dienst || '' }, t=> betaOverlay.schritt(t));
       text = fahrtenbuchErgebnisText(r);
       const a2 = gkvFaelleLaden(), y = a2.find(z=> z.id === id);
       if(y){
@@ -19277,15 +19382,16 @@ function kartenZeitAus(datum, zeit){
 function standortKarteFaelle(info){
   const von = info && info.fenster ? info.fenster.von : new Date(Date.now() - 24 * 3600000);
   const bis = info && info.fenster ? info.fenster.bis : new Date(Date.now() + 3600000);
-  const drin = (t)=> t && t >= von && t < bis;
+  const fe0 = info && info.fenster ? info.fenster : null;
+  const drin = (t, k)=> fe0 ? fallGehoertZu(t, k, fe0) : !!(t && t >= von && t < bis);
   const out = [];
   const lsPt = (art, w, oeffnen, entwurf)=>{
     w = w || {};
     // unfertige Faelle (Entwurf) ohne Datum/Uhrzeit: Zeitpunkt der letzten Bearbeitung
-    const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS) || (entwurf && entwurf.geaendert ? new Date(entwurf.geaendert) : null); if(!drin(t)) return;
+    const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS) || (entwurf && entwurf.geaendert ? new Date(entwurf.geaendert) : null); if(!drin(t, w.txtDienst)) return;
     const abw = art === 'ls' && (w.txtSterbeAdr1 || '').trim() && (w.txtSterbeAdr2 || '').trim() && !/^idem\b/i.test(w.txtSterbeAdr1.trim());
     const adr = abw ? w.txtSterbeAdr1.trim() + ', ' + w.txtSterbeAdr2.trim() : [(w.txtPAdresse1 || '').trim(), (w.txtPAdresse2 || '').trim()].filter(Boolean).join(', ');
-    out.push({ art, t, name: (w.txtName || '').trim() || 'ohne Namen', adr, oeffnen, unfertig: !!entwurf, euro: w.txtBetrag ? parseFloat(String(w.txtBetrag).replace(/\./g, '').replace(',', '.')) : null });
+    out.push({ art, t, name: (w.txtName || '').trim() || 'ohne Namen', adr, oeffnen, unfertig: !!entwurf, dienst: w.txtDienst || '', euro: w.txtBetrag ? parseFloat(String(w.txtBetrag).replace(/\./g, '').replace(',', '.')) : null });
   };
   const weg = ()=>{ try{ vorbereiteRuecksprung(); }catch(_){} einstellungenOffen = false; };
   try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=> f && lsPt(art, f.werte, ()=>{ weg(); ansichtMaske(art, i); }))); }catch(_){}
@@ -19295,14 +19401,14 @@ function standortKarteFaelle(info){
   try{
     if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()){
       const t = designFallZeit(gkvEntwurf) || new Date();
-      if(drin(t)) out.push({ art: 'gkv', t, name: gkvEntwurf.name, adr: gkvEntwurf.adresse || '', geo: null, euro: null, unfertig: true, oeffnen: ()=>{ weg(); ansichtGkv(); }, verwerfen: ()=> gkvEntwurfVerwerfen() });
+      if(drin(t, gkvEntwurf.dienst)) out.push({ art: 'gkv', t, name: gkvEntwurf.name, dienst: gkvEntwurf.dienst || '', adr: gkvEntwurf.adresse || '', geo: null, euro: null, unfertig: true, oeffnen: ()=>{ weg(); ansichtGkv(); }, verwerfen: ()=> gkvEntwurfVerwerfen() });
     }
   }catch(_){}
   try{
     gkvFaelleLaden().forEach(f=>{
       if(!f || f.name === GKV_PSEUDO_NAME) return;
-      const t = designFallZeit(f); if(!drin(t)) return;
-      out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', adr: f.adresse || '', geo: f.geo || null, euro: f.euro, gkvId: f.id, oeffnen: ()=>{ weg(); ansichtGkv(f.id); } });
+      const t = designFallZeit(f); if(!drin(t, f.dienst)) return;
+      out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', dienst: f.dienst || '', adr: f.adresse || '', geo: f.geo || null, euro: f.euro, gkvId: f.id, oeffnen: ()=>{ weg(); ansichtGkv(f.id); } });
     });
   }catch(_){}
   // gleiche Person/Zeit doppelt (Entwurf + gespeicherter Fall) nur einmal -- der gespeicherte gewinnt
@@ -20381,7 +20487,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v463';
+const APP_VERSION = 'v464';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21066,7 +21172,7 @@ function designDienstInfo(){
   const modus = jetzt < fe.von ? 'geplant' : jetzt < fe.bis ? 'laufend' : 'vorbei';
   const drin = (typeof gkvFaelleLaden === 'function' ? gkvFaelleLaden() : [])
     .filter(f=> f && f.name !== (typeof GKV_PSEUDO_NAME !== 'undefined' ? GKV_PSEUDO_NAME : ''))
-    .map(f=> ({ f, t: designFallZeit(f) })).filter(x=> x.t && x.t >= fe.von && x.t < fe.bis)
+    .map(f=> ({ f, t: designFallZeit(f) })).filter(x=> x.t && fallGehoertZu(x.t, x.f.dienst, fe))
     .sort((a, b)=> b.t - a.t);
   const gkv = betaRund2(drin.reduce((s, x)=> s + (Number(x.f.euro) || 0), 0));
   const dt = designDatumDe(fe.tag);
@@ -22521,7 +22627,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     // Hausbesuchs, das seinerseits mit dem heutigen Datum vorbelegt ist;
     // UserForm_Initialize: Sterbedatum bei LS ebenfalls mit heute vorbelegt).
     const heute = heuteAlsText();
-    werte = {txtDatum: naechsterWerktagText(heute), txtDatumExcel: heute};
+    werte = {txtDatum: naechsterWerktagText(heute), txtDatumExcel: heute, txtDienst: dienstWahlVorschlag()};
     if(art==='ls') werte.txtSterbedatum = heute;
   }
   // Profil-Stand dieses Falls (siehe betaProfilFuerFall)
@@ -22565,11 +22671,11 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   if(art==='ls'){
     html += abschnitt('Todesfeststellung',
       feldHtml('Datum Todesbescheinigung', 'txtDatumExcel', {typ:'datum'}) +
-      feldHtml('Zeitpunkt Leichenschau (HH:MM)', 'txtZeitLS'));
+      feldHtml('Zeitpunkt Leichenschau (HH:MM)', 'txtZeitLS') + dienstWahlFeldHtml('txtDienst', werte.txtDienst));
   } else {
     html += abschnitt('Hausbesuch',
       feldHtml('Datum Hausbesuch', 'txtDatumExcel', {typ:'datum'}) +
-      feldHtml('Uhrzeit Hausbesuch (HH:MM)', 'txtZeitLS'));
+      feldHtml('Uhrzeit Hausbesuch (HH:MM)', 'txtZeitLS') + dienstWahlFeldHtml('txtDienst', werte.txtDienst));
   }
 
   html += abschnitt('Rechnungsstellung',
@@ -22705,8 +22811,8 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   }
 
   const feldIds = art==='ls'
-    ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2','txtDokuId']
-    : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtDokuId'];
+    ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2','txtDokuId','txtDienst']
+    : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtDokuId','txtDienst'];
   // Dokumentation (optional) zum Fall
   document.getElementById('btnDoku').onclick = async ()=>{
     const idEl = document.getElementById('txtDokuId');
@@ -22889,6 +22995,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
   // txtZeitLS existiert in BEIDEN Masken (LS: "Zeitpunkt Leichenschau",
   // PT: "Uhrzeit Hausbesuch") -- Format-Pruefung gilt daher fuer beide.
   document.getElementById('txtZeitLS').addEventListener('blur', ()=>{ zeitFeldBlur('txtZeitLS'); automatikVorschauAktualisieren(); });
+  // Dienst-Auswahl: Dienste rund um das Datum; Hinweis, wenn die Uhrzeit nicht zum gewaehlten Dienst passt
+  const dwIso = ()=>{ try{ const d = fbDatumAusText(normalisiereDatum(document.getElementById('txtDatumExcel').value) || ''); return d ? liveIso(d) : ''; }catch(_){ return ''; } };
+  const dwZeit = ()=> normalisiereZeit(document.getElementById('txtZeitLS').value || '') || '';
+  dienstWahlFuellen('txtDienst', dwIso(), dwZeit());
+  ['input', 'change', 'blur'].forEach(n=> document.getElementById('txtDatumExcel').addEventListener(n, ()=> dienstWahlFuellen('txtDienst', dwIso(), dwZeit())));
+  ['input', 'change', 'blur'].forEach(n=> document.getElementById('txtZeitLS').addEventListener(n, ()=> dienstWahlHinweis('txtDienst', dwIso(), dwZeit())));
+  document.getElementById('txtDienst').addEventListener('change', ()=> dienstWahlHinweis('txtDienst', dwIso(), dwZeit()));
   // km-Feld: exakt wie am PC (Txt_Change setzt dort NUR gKmGetippt=True,
   // die eigentliche Neuinterpretation + Live-Neuberechnung der Positionen
   // passiert erst beim Verlassen des Feldes ueber KmFeldManuellUebernehmen/
