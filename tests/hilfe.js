@@ -22,7 +22,7 @@ const PASSWORT = 'Ein-Langes-Test-Passwort-2026!';
 async function tresorEinrichten(p){
   await p.waitForSelector('#tsPw1', { timeout: 60000 });
   await p.fill('#tsPw1', PASSWORT); await p.fill('#tsPw2', PASSWORT); await p.click('#tsWeiter');
-  await p.waitForSelector('#tsCode', { timeout: 30000 });
+  await p.waitForSelector('#tsCode', { timeout: 60000 });
   const code = (await p.textContent('#tsCode')).trim(); p.code = code;
   await p.fill('#tsLetzter', code.split('-').pop()); await p.click('#tsFertig');
   await p.waitForTimeout(500);

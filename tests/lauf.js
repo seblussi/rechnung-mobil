@@ -44,7 +44,7 @@ function server(){
     try{
       await Promise.race([ require(path.join(__dirname, n))({ browser, basis, pr }),
         new Promise((_, nein)=> setTimeout(()=> nein(new Error('Zeitüberschreitung (5 Minuten)')), 300000)) ]);
-    }catch(e){ gesamt++; fehl++; console.log('  FEHLER Abbruch: ' + String((e && e.message) || e).split('\n')[0].slice(0, 400)); }
+    }catch(e){ gesamt++; fehl++; console.log('  FEHLER Abbruch: ' + String((e && e.message) || e).split('\n')[0].slice(0, 400) + ((e && e.stack && /\.test\.js:\d+/.exec(e.stack)) ? ' (' + /[^\/(]+\.test\.js:\d+/.exec(e.stack)[0] + ')' : '')); }
   }
   await browser.close().catch(()=>{}); s.close();
   console.log('\n' + (fehl ? fehl + ' von ' + gesamt + ' Prüfungen FEHLGESCHLAGEN' : 'Alle ' + gesamt + ' Prüfungen bestanden') + ' (' + Math.round((Date.now() - t0) / 1000) + ' s, ' + dateien.length + ' Dateien)');

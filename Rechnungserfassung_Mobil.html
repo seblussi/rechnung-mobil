@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-b9f/Do9IGypuDkOcMkJJXkZXBj/uDZMiPyVu5UjXHcU=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-Seno/jBNf3uOSUkZGtDg4xU8ASWJzNNJNJfEO91J29k=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -680,6 +680,11 @@ try{
   .fb-zeile label{flex:1; font-size:12.5px; color:var(--text-schwach);}
   .fb-uhr{padding-bottom:10px; font-size:14px;}
   .fb-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .empf-liste{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+  .empf-wahl{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; padding:10px 12px; border:2px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text); font-size:14px; min-height:auto; margin:0;}
+  .empf-wahl span{font-size:13px; color:var(--text-schwach); font-weight:400;}
+  .empf-wahl.an{border-color:#2f6fd6; box-shadow:0 0 0 3px rgba(47,111,214,.22);}
+  .empf-wahl.an b::before{content:'✓ ';}
   .fb-chip{width:auto; margin:0; padding:5px 11px; font-size:13.5px; border-radius:14px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .fb-chip.an{background:#7d4e9e; border-color:#7d4e9e; color:#fff; font-weight:600;}
   .fb-chip.arzt{display:inline-flex; padding:0; overflow:hidden;}
@@ -1978,20 +1983,25 @@ try{
   #demoLeiste{position:fixed; top:0; left:0; right:0; z-index:60; display:flex; align-items:center; justify-content:center; gap:10px; height:28px; box-sizing:content-box; padding:env(safe-area-inset-top) 10px 0; background:#d9861a; color:#fff; font-size:12.5px; white-space:nowrap;}
   #demoLeiste button{border:0; border-radius:12px; padding:3px 10px; background:rgba(255,255,255,.25); color:#fff; font:inherit; font-weight:700;}
   body.demo-an{padding-top:calc(28px + env(safe-area-inset-top));} body.demo-an header{top:calc(28px + env(safe-area-inset-top));}
-  .einr a{color:var(--akzent, #2f6fd6);} .einr-liste{display:flex; flex-direction:column; gap:6px; margin:8px 0 12px;}
+  .einr a{color:var(--titelfarbe);} .einr-liste{display:flex; flex-direction:column; gap:6px; margin:8px 0 12px;}
   .einr-z{display:flex; justify-content:space-between; gap:10px; padding:9px 12px; border-radius:10px; background:var(--karte); border:1px solid var(--rand); font-size:14px;}
   .einr-z{line-height:20px; align-items:flex-start;} .einr-z b{font-weight:600; text-align:right; flex:none; height:20px; line-height:20px; display:inline-flex; align-items:center; overflow:visible;} .einr-z.ok b{color:#2fa84f;} .einr-z.fehlt b{color:#c77700;}
   .einr-z.prueft b{color:var(--text-schwach); font-weight:500;}
-  .alpha-text{margin:10px 0; font-size:13.5px; text-align:left;} .alpha-text summary{cursor:pointer; font-weight:600; color:var(--akzent, #2f6fd6);}
+  .alpha-text{margin:10px 0; font-size:13.5px; text-align:left;} .alpha-text summary{cursor:pointer; font-weight:600; color:var(--titelfarbe);}
   .alpha-bed{max-height:45vh; overflow:auto; border:1px solid var(--rand); border-radius:10px; padding:4px 12px; margin-top:8px; background:var(--karte);}
   .alpha-bed h3{font-size:14px; margin:12px 0 6px;} .alpha-bed ol{padding-left:18px; margin:0 0 8px;} .alpha-bed li{margin-bottom:5px;}
-  .einr-erweitert{margin:8px 0; font-size:14px;} .einr-erweitert summary{cursor:pointer; color:var(--akzent, #2f6fd6); font-weight:600;}
+  .einr-erweitert{margin:8px 0; font-size:14px;} .einr-erweitert summary{cursor:pointer; color:var(--titelfarbe); font-weight:600;}
   .alpha-check{display:flex; gap:8px; align-items:flex-start; text-align:left; font-size:14px; margin:8px 0;}
   .einr-lade{display:inline-block; width:14px; height:14px; border:2px solid var(--rand); border-top-color:var(--text-schwach); border-radius:50%; animation:einrDreh .8s linear infinite; vertical-align:-2px; margin-right:6px;}
   @keyframes einrDreh{to{transform:rotate(360deg);}}
   .kto-hinweis{font-size:12.5px; font-weight:500; margin:3px 2px 0;} .kto-hinweis.ok{color:#2e8b57;} .kto-hinweis.fehler{color:#c62828;} .kto-hinweis.warn{color:#c77700;}
   .einr-feld textarea{box-sizing:border-box; margin:0; padding:10px 12px; font:inherit; font-size:16px; line-height:1.35; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text); resize:vertical; min-height:64px;}
   .einr-gesperrt{opacity:.65;} .einr-check{margin:2px 0 6px;}
+  .zonen-rahmen{margin-top:12px; padding:8px 12px 12px; border:1px solid var(--rand); border-radius:14px;}
+  .zonen-rahmen[hidden]{display:none;} .zonen-titel{font-weight:600; font-size:14px; margin-bottom:2px;}
+  .zonen-rahmen .design-hinweis, .zonen-rahmen .wf-modus-info{margin-top:4px; font-size:13px;}
+  .zonen-rahmen #wfKvbwTeil{margin-top:10px; padding-top:8px; border-top:1px solid var(--rand);}
+  .einr-feld .einr-markiert{border:2px solid #e67e22; box-shadow:0 0 0 3px rgba(230,126,34,.2);}
   .einr-feld{display:flex; flex-direction:column; gap:3px; margin:0 0 8px; font-size:12.5px; font-weight:600; color:var(--text-schwach);}
   .einr-feld input{height:44px; box-sizing:border-box; margin:0; padding:0 12px; font:inherit; font-size:16px; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text);}
   .einr-titel{margin:4px 0 10px;} .einr-tipps{padding-left:20px; font-size:15px; line-height:1.5;} .einr-tipps li{margin-bottom:6px;}
@@ -2208,6 +2218,8 @@ try{
   /* Quartalsuebersicht: Knoepfe rechts in der Jahreszeile */
   .fd-jahre{align-items:center;}
   #appCodeTor{position:fixed; inset:0; z-index:2147483000; background:var(--bg, #f6f7f9); display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; overflow:auto;}
+  #appCodeTor .act-oder{display:flex; align-items:center; gap:10px; margin:16px 0 12px; color:var(--text-schwach, #6b7280); font-size:14px;}
+  #appCodeTor .act-oder::before, #appCodeTor .act-oder::after{content:''; flex:1; height:1px; background:var(--rand, #d6dbe3);}
   #appCodeTor .act-karte{width:100%; max-width:420px; background:var(--karte, #fff); color:var(--text, #141a24); border-radius:18px; padding:22px 20px; box-shadow:0 6px 30px rgba(0,0,0,.12);}
   #appCodeTor h2{margin:0 0 10px;} #appCodeTor .btn-primaer{width:100%; margin-top:10px;} #appCodeTor #actInfo{min-height:1.2em; color:#c0392b;}
   body.app-code-tor{overflow:hidden;}
@@ -5663,7 +5675,7 @@ function appCodeTor(meldung){
   const vorschlag = appCodeAktuell() || String(ini || '').trim();
   const d = document.createElement('div'); d.id = 'appCodeTor';
   d.innerHTML = '<div class="act-karte"><h2>Freischaltung</h2>' +
-    '<p>Diese App ist nur für eingeladene Testerinnen und Tester. Bitte gib deinen persönlichen <b>Freischaltcode</b> ein. Du bekommst ihn vom App-Entwickler.</p>' +
+    '<p>Diese App ist nur für eingeladene Testerinnen und Tester. Gib deinen persönlichen <b>Freischaltcode</b> ein (du bekommst ihn vom App-Entwickler) <b>oder</b> melde dich mit Microsoft an.</p>' +
     '<label class="einr-feld"><span>Freischaltcode</span><input type="text" id="actCode" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. a07-xxxx-xxxx"></label>' +
     '<div id="actInfo" class="einr-klein">' + htmlEsc(meldung || '') + '</div>' +
     '<button type="button" class="btn-primaer" id="actOk">Freischalten</button>' +
@@ -5707,8 +5719,10 @@ function appCodeTor(meldung){
     else {
       window.addEventListener('msgraph-angemeldet', nachAnmeldung);
       if(msBox){
-        msBox.innerHTML = '<div class="einr-klein" style="margin-top:14px;">Auf einem anderen Gerät schon freigeschaltet?</div>' +
-          '<button type="button" class="btn-sekundaer" id="actMsAn" style="margin-top:6px;">Mit Microsoft anmelden – Code aus OneDrive übernehmen</button>';
+        // gleichrangig zum Freischaltcode (Wunsch 17.11.2026): „oder“ und derselbe Knopfstil
+        msBox.innerHTML = '<div class="act-oder"><span>oder</span></div>' +
+          '<button type="button" class="btn-primaer" id="actMsAn">Mit Microsoft anmelden</button>' +
+          '<div class="einr-klein" style="margin-top:6px; text-align:center;">wenn die App auf einem anderen Gerät schon freigeschaltet ist – der Code kommt dann aus deinem OneDrive</div>';
         msBox.querySelector('#actMsAn').onclick = ()=>{ if(typeof msGraphAnmelden === 'function') msGraphAnmelden(); };
       }
     }
@@ -6756,9 +6770,9 @@ async function einrFehlt(){
       if(fehlen.length) f.push({ schritt: 'dateien', text: 'Dateien in OneDrive: ' + fehlen.join(', ') });
     }
   }catch(_){}
-  const daten = [['ARZTNAME', 'Name'], ['ARZTADRESSE1', 'Straße'], ['ARZTADRESSE2', 'PLZ Ort'], ['ARZTEMAIL', 'E-Mail'], ['ARZTIBAN', 'IBAN']].filter(([k])=> !String(w[k] || '').trim()).map(([, t])=> t);
-  try{ if(!gkvStartAdresse()) daten.push('Ausgangspunkt (Wache/Praxis)'); }catch(_){}
-  if(daten.length) f.push({ schritt: 'daten', text: 'Deine Daten: ' + daten.join(', ') });
+  const datenK = [['ARZTNAME', 'Name'], ['ARZTADRESSE1', 'Straße'], ['ARZTADRESSE2', 'PLZ Ort'], ['ARZTEMAIL', 'E-Mail'], ['ARZTIBAN', 'IBAN'], ['ARZTBANKNAME', 'Bank']].filter(([k])=> !String(w[k] || '').trim());
+  try{ if(!gkvStartAdresse()) datenK.push(['GKV_STARTADRESSE', 'Ausgangspunkt (Wache/Praxis)']); }catch(_){}
+  if(datenK.length) f.push({ schritt: 'daten', text: 'Deine Daten: ' + datenK.map(([, t])=> t).join(', '), felder: datenK.map(([k])=> k) });
   try{ if(typeof dienstprofile === 'function' && !dienstprofile().length && typeof ansichtEinrichtung === 'function' && /'dienst'/.test(String(ansichtEinrichtung))) f.push({ schritt: 'dienst', text: 'Dienstprofil (Ausgangspunkt fürs Wegegeld)' }); }catch(_){}
   // Weiterleitung: eigene Adresse, oder die Standard-Weiterleitung (leer bzw. Standard-Adresse) mit Zugangsdaten --
   // die Standard-Weiterleitung laesst nur freigegebene LetterXpress-Benutzer durch; ob man dazugehoert, zeigt "Prüfen"/der Versand
@@ -6772,12 +6786,34 @@ async function einrUnvollstaendigFragen(fehlt, nebenbei){
   const akt = await betaOverlay.ergebnis('Einrichtung unvollständig',
     (w.ARZTNAME ? 'Deine Einstellungen (einstellungen.ini) sind da – <b>' + htmlEsc(w.ARZTNAME) + '</b>. ' : '') + 'Es fehlt noch:' +
     '<ul class="einr-fehlt">' + fehlt.map(x=> '<li>' + htmlEsc(x.text) + '</li>').join('') + '</ul>' +
-    'Der Assistent springt zum ersten fehlenden Schritt und geht von dort weiter; was schon eingerichtet ist, ist vorausgefüllt.',
-    (nebenbei ? [{ label: 'Später', akt: 'ende' }] : []).concat([{ label: 'Weiter einrichten', akt: 'weiter', primaer: true }]));   // ohne Einstellungen-Aufruf kein Abbrechen
+    'Es öffnen sich nur die Schritte, in denen etwas fehlt; danach geht es zurück, wo du warst.',
+    (nebenbei ? [{ label: 'Später', akt: 'ende' }] : []).concat([{ label: 'Jetzt ergänzen', akt: 'weiter', primaer: true }]));   // ohne Einstellungen-Aufruf kein Abbrechen
   betaOverlay.schliessen();
-  if(akt === 'weiter'){ LS.set('einrichtung_fehlt', fehlt.map(x=> x.schritt)); if(nebenbei) LS.set('einr_aus_einst', true); ansichtEinrichtung(fehlt[0].schritt); return true; }
+  if(akt === 'weiter'){
+    const ord = EINR_SCHRITTE, schritte = [...new Set(fehlt.map(x=> x.schritt))].filter(x=> ord.includes(x)).sort((a, b)=> ord.indexOf(a) - ord.indexOf(b));
+    let zurueck = null; try{ zurueck = JSON.parse(sessionStorage.getItem(ANSICHT_SCHL) || 'null'); }catch(_){}
+    LS.set('einrichtung_fehlt', schritte);
+    LS.set('einr_nur', { schritte, felder: [].concat(...fehlt.map(x=> x.felder || [])), zurueck: nebenbei ? zurueck : null });
+    if(nebenbei) LS.set('einr_aus_einst', true);
+    LS.set('einrichtung_schritt', null);
+    if(schritte.length) ansichtEinrichtung(schritte[0]); else einrNurBeenden(false);
+    return true;
+  }
   if(!nebenbei){ LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); ansichtStart(); }
   return false;
+}
+// Nur die fehlenden Schritte (Wunsch 17.11.2026): LS 'einr_nur' = { schritte, felder, zurueck }. Der Assistent zeigt
+// nur diese Schritte; „Weiter“ springt zum naechsten fehlenden, nach dem letzten geht es zurueck, wo man vorher war.
+const EINR_SCHRITTE = ['start', 'anmelden', 'dateien', 'daten', 'dienste', 'brief', 'fertig'];
+function einrNur(){ const n = LS.get('einr_nur', null); return n && Array.isArray(n.schritte) && n.schritte.length ? n : null; }
+function einrNurBeenden(gespeichert){
+  const n = einrNur();
+  LS.set('einr_nur', null); LS.set('einrichtung_schritt', null); LS.set('einr_aus_einst', false); LS.set('einrichtung_fehlt', null);
+  LS.set('einr_ini_entschieden', false); LS.set('einr_daten_leer', false);
+  ansichtStart();
+  const z = n && n.zurueck;
+  if(z && z.typ && z.typ !== 'start'){ ansichtVorDemLaden = Object.assign({}, z, { am: Date.now() }); try{ ansichtWiederherstellen(); }catch(_){} }
+  if(gespeichert) appToastAnzeigen('✓ Gespeichert', 2000);
 }
 // In der einstellungen.ini vermerkt: Einrichtung wurde schon einmal komplett durchlaufen (auch auf anderem Geraet)
 function einrIniFertig(){ const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {}; return !!String(w.EINRICHTUNG_FERTIG || '').trim() && einrSchonEingerichtet(); }
@@ -6865,6 +6901,13 @@ function ansichtEinrichtung(schritt){
   einstellungenOffen = false;
   schritt = schritt || LS.get('einrichtung_schritt', 'start');
   if(schritt === 'sperre') schritt = 'anmelden';   // frueherer Schritt App-Sperre
+  const nur = einrNur();
+  if(nur && !nur.schritte.includes(schritt)){
+    // Ziel ist kein fehlender Schritt: vorwaerts -> naechster fehlende (sonst fertig, zurueck); rueckwaerts -> voriger (sonst abbrechen)
+    const ia = EINR_SCHRITTE.indexOf(LS.get('einrichtung_schritt', null)), iz = EINR_SCHRITTE.indexOf(schritt);
+    if(iz > ia || iz < 0){ const n = nur.schritte.find(x=> EINR_SCHRITTE.indexOf(x) > ia); if(n) schritt = n; else { einrNurBeenden(true); return; } }
+    else { const v = nur.schritte.slice().reverse().find(x=> EINR_SCHRITTE.indexOf(x) < ia); if(v) schritt = v; else { einrNurBeenden(false); return; } }
+  }
   LS.set('einrichtung_schritt', schritt);
   LS.set('einrichtung_gesehen', true);
   if(schritt === 'fertig'){
@@ -6892,11 +6935,15 @@ function ansichtEinrichtung(schritt){
   const angemeldet = typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet';
   // App-Sperre ist kein eigener Schritt mehr: die Abfrage kommt direkt nach der Einrichtung auf der Startseite
   if(schritt === 'sperre') schritt = 'anmelden';
-  const schritte = ['start', 'anmelden', 'dateien', 'daten', 'dienste', 'brief', 'fertig'];
+  const schritte = nur ? nur.schritte : EINR_SCHRITTE;
   const nr = schritte.indexOf(schritt) + 1;
-  const kopf = '<div class="einr-fort">' + schritte.map((s, i)=> '<span class="' + (i < nr ? 'an' : '') + '"></span>').join('') + '</div>';
-  const knoepfe = (zurueck, weiter, weiterText, weiterAus)=> '<div class="einr-knoepfe">' + (zurueck ? '<button type="button" class="btn-sekundaer" data-einr="' + zurueck + '">Zurück</button>' : '<span></span>') +
-    (weiter ? '<button type="button" class="btn-primaer" data-einr="' + weiter + '"' + (weiterAus ? ' disabled' : '') + '>' + (weiterText || 'Weiter') + '</button>' : '') + '</div>';
+  const kopf = '<div class="einr-fort">' + schritte.map((s, i)=> '<span class="' + (i < nr ? 'an' : '') + '"></span>').join('') + '</div>' +
+    (nur ? '<p class="einr-klein" style="margin:-4px 0 8px;">Nur ergänzen, was fehlt' + (schritte.length > 1 ? ' – Schritt ' + nr + ' von ' + schritte.length : '') + '</p>' : '');
+  // im Nur-Modus: letzter fehlender Schritt -> „… fertig“, erster -> „Abbrechen“
+  const nurLetzter = !!nur && nr === schritte.length, nurErster = !!nur && nr === 1;
+  const fertigText = (t)=> !nurLetzter ? t : /^Speichern/.test(t || '') ? 'Speichern und fertig' : 'Fertig';
+  const knoepfe = (zurueck, weiter, weiterText, weiterAus)=> '<div class="einr-knoepfe">' + (zurueck || nurErster ? '<button type="button" class="btn-sekundaer" data-einr="' + (zurueck || 'start') + '">' + (nurErster ? 'Abbrechen' : 'Zurück') + '</button>' : '<span></span>') +
+    (weiter ? '<button type="button" class="btn-primaer" data-einr="' + weiter + '"' + (weiterAus ? ' disabled' : '') + '>' + fertigText(weiterText || 'Weiter') + '</button>' : '') + '</div>';
   let html = '';
   if(schritt === 'start'){
     html = '<h2>Willkommen</h2><p>Diese App erstellt Rechnungen für Leichenschau und Privatpatienten, erfasst GKV-Patienten im Fahrdienst, führt das Fahrtenbuch und berechnet das Wegegeld (NFP Offenburg).</p>' +
@@ -6920,7 +6967,7 @@ function ansichtEinrichtung(schritt){
     html = '<h2>Deine Daten</h2><p>Erscheinen auf deinen Rechnungen. Alles lässt sich später unter Einstellungen ändern.</p>' +
       '<div class="fb-chips einr-titel">' + [['TITEL_DR', 'Dr.'], ['TITEL_DRMED', 'Dr. med.'], ['TITEL_PRIVDOZ', 'Priv.-Doz.'], ['TITEL_PROF', 'Prof.']].map(([k, t])=> '<button type="button" class="fb-chip' + (w[k] === '1' ? ' an' : '') + '" data-titel="' + k + '">' + t + '</button>').join('') + '</div>' +
       feld('ARZTNAME', 'Name (ohne Titel)', 'Vorname Nachname') + feldMz('ARZTFUNKTION', 'Funktion (unter dem Namen, mehrere Zeilen möglich)', 'z. B. Facharzt für Allgemeinmedizin\nNotfallmedizin') + feld('ARZTADRESSE1', 'Straße Hausnummer') + feld('ARZTADRESSE2', 'PLZ Ort') + feld('ARZTEMAIL', 'E-Mail') +
-      '<h3>Bankverbindung</h3>' + '<label class="ts-check einr-check"><input type="checkbox" id="einrInhaberGleich"' + (inhaberGleich ? ' checked' : '') + '> Kontoinhaber ist mein Name</label>' + feld('ARZTKONTOINHABER', 'Kontoinhaber') + feld('ARZTBANKNAME', 'Bank') + feld('ARZTIBAN', 'IBAN') + feld('ARZTBIC', 'BIC') +
+      '<h3>Bankverbindung</h3>' + '<label class="ts-check einr-check"><input type="checkbox" id="einrInhaberGleich"' + (inhaberGleich ? ' checked' : '') + '> Kontoinhaber ist mein Name</label>' + feld('ARZTKONTOINHABER', 'Kontoinhaber') + feld('ARZTIBAN', 'IBAN') + feld('ARZTBANKNAME', 'Bank') + feld('ARZTBIC', 'BIC') +
       '<h3>Wegegeld</h3>' + feld('GKV_STARTADRESSE', 'Ausgangspunkt für die Luftlinie (Wache)', 'Straße Nr., PLZ Ort') +
       '<div id="einrDatenInfo" class="einr-klein"></div>' + knoepfe('dateien', 'dienste', 'Speichern und weiter');
   } else if(schritt === 'dienste'){
@@ -6944,7 +6991,7 @@ function ansichtEinrichtung(schritt){
       '<input type="hidden" id="einrLxpUrl" value="' + htmlEsc(eigen) + '">' +
       '<button type="button" class="btn-sekundaer" id="einrLxpPruefen">Prüfen</button><div id="einrLxpErgebnis" class="einr-liste"></div>' +
       '<div id="einrBriefInfo" class="einr-klein"></div>' +
-      '<div class="einr-knoepfe"><button type="button" class="btn-sekundaer" data-einr="dienste">Zurück</button><button type="button" class="btn-primaer" id="einrBriefSpeichern" disabled>Speichern und weiter</button></div>' +
+      '<div class="einr-knoepfe"><button type="button" class="btn-sekundaer" data-einr="dienste">' + (nurErster ? 'Abbrechen' : 'Zurück') + '</button><button type="button" class="btn-primaer" id="einrBriefSpeichern" disabled>' + fertigText('Speichern und weiter') + '</button></div>' +
       '<p style="text-align:center; margin-top:10px;"><button type="button" class="einr-link" data-einr="fertig">Überspringen – später in den Einstellungen</button></p>';
   } else {
     html = '<h2>Fertig 🎉</h2><p>Die App ist eingerichtet. Ein paar Tipps:</p><ul class="einr-tipps">' +
@@ -6984,14 +7031,20 @@ function ansichtEinrichtung(schritt){
         if(fB && !/^Hinweis/.test(fB)){ infoK.textContent = fB; return; } }
       app.querySelectorAll('[data-titel]').forEach(t=>{ aend[t.dataset.titel] = t.classList.contains('an') ? '1' : '0'; });
       const info = document.getElementById('einrDatenInfo');
-      const fehlt = [['ARZTNAME', 'Name'], ['ARZTFUNKTION', 'Funktion'], ['ARZTADRESSE1', 'Straße'], ['ARZTADRESSE2', 'PLZ Ort'], ['ARZTEMAIL', 'E-Mail']].filter(([k])=> !aend[k]).map(([, l])=> l);
-      if(fehlt.length){ info.textContent = 'Bitte noch eintragen: ' + fehlt.join(', ') + ' (stehen auf jeder Rechnung).'; return; }
+      // Bankverbindung ist Pflicht (Wunsch 17.11.2026): sonst entstuenden Rechnungen ohne Kontoangaben
+      if(!aend.ARZTKONTOINHABER) aend.ARZTKONTOINHABER = aend.ARZTNAME || '';
+      const fehlt = [['ARZTNAME', 'Name'], ['ARZTFUNKTION', 'Funktion'], ['ARZTADRESSE1', 'Straße'], ['ARZTADRESSE2', 'PLZ Ort'], ['ARZTEMAIL', 'E-Mail'], ['ARZTIBAN', 'IBAN'], ['ARZTBANKNAME', 'Bank']].filter(([k])=> !aend[k]).map(([, l])=> l);
+      if(fehlt.length){ info.textContent = 'Bitte noch eintragen: ' + fehlt.join(', ') + ' (stehen auf jeder Rechnung).';
+        const f0 = { Name: 'ARZTNAME', Funktion: 'ARZTFUNKTION', Straße: 'ARZTADRESSE1', 'PLZ Ort': 'ARZTADRESSE2', 'E-Mail': 'ARZTEMAIL', IBAN: 'ARZTIBAN', Bank: 'ARZTBANKNAME' }[fehlt[0]];
+        const el0 = f0 && app.querySelector('[data-ini="' + f0 + '"]'); if(el0){ el0.classList.add('einr-markiert'); if(!el0.readOnly){ el0.focus(); } el0.scrollIntoView({ block: 'center' }); }
+        return; }
       b.disabled = true; info.textContent = 'Wird in OneDrive gespeichert …';
       try{
         const r = await iniAenderungenSchreiben(aend, (iniCacheLaden() || {}).werte || {});
         if(r && r.abgebrochen){ b.disabled = false; info.textContent = ''; return; }
         try{ await iniVonOneDriveLaden(); }catch(_){}
-        const e = ladeEinstellungen(); if(aend.ARZTADRESSE1 && !e.praxisadresse){ e.praxisadresse = [aend.ARZTADRESSE1, aend.ARZTADRESSE2].filter(Boolean).join(', '); speichereEinstellungen(e); }
+        // Ausgangspunkt fuers Wegegeld = die eingetragene Wache (nicht die Arztanschrift, gemeldet 17.11.2026)
+        einrWacheUebernehmen(aend.GKV_STARTADRESSE, [aend.ARZTADRESSE1, aend.ARZTADRESSE2].filter(Boolean).join(', '));
       }catch(err){ b.disabled = false; info.textContent = 'Nicht gespeichert: ' + (err.message || err); return; }
     }
     ansichtEinrichtung(b.dataset.einr);
@@ -7004,6 +7057,7 @@ function ansichtEinrichtung(schritt){
       gleich.onchange = ()=>{ sync(); if(!gleich.checked) inh.focus(); }; nameEl.addEventListener('input', sync); sync();
     }
     app.querySelectorAll(SEL_IBAN + ',' + SEL_BIC).forEach(el=>{ if(el.value) ktoPruefenEl(el); });
+    bankFelderAlle(app);
   }
   // Automatisch gestartet, aber fuer dieses Konto gibt es schon Einstellungen -> nicht noetig
   if((schritt === 'anmelden' || schritt === 'dateien') && !LS.get('einr_aus_einst', false) && !window.DEMO_MODUS &&
@@ -7022,6 +7076,11 @@ function ansichtEinrichtung(schritt){
     if(los){ const alt = los.onclick; los.onclick = async (ev)=>{ if(!ah.checked) return; if(!alphaZugestimmt()) await alphaZustimmen(); if(alt) alt.call(los, ev); }; }
   }
   { const ed = document.getElementById('einrDienste'); if(ed) ed.onclick = ()=> ansichtDienste(()=> ansichtEinrichtung('dienste')); }
+  if(nur && schritt === 'daten' && (nur.felder || []).length){
+    const els = nur.felder.map(k=> app.querySelector('[data-ini="' + k + '"]')).filter(Boolean);
+    els.forEach(el=>{ el.classList.add('einr-markiert'); el.addEventListener('input', ()=>{ if(el.value.trim()) el.classList.remove('einr-markiert'); }); });
+    if(els[0]) setTimeout(()=>{ try{ els[0].scrollIntoView({ block: 'center' }); els[0].focus({ preventScroll: true }); }catch(_){} }, 150);
+  }
   const fe = document.getElementById('einrFertig'); if(fe) fe.onclick = beenden;
   if(schritt === 'dateien') einrDateienPruefen();
   if(schritt === 'brief') einrBriefStarten();
@@ -8541,9 +8600,11 @@ async function arztdatenLaden(){
     adresse1: w.ARZTADRESSE1 || '', adresse2: w.ARZTADRESSE2 || '', email: w.ARZTEMAIL || '',
     bank: w.ARZTBANKNAME || '', bic: w.ARZTBIC || '', iban: w.ARZTIBAN || '', kontoinhaber: w.ARZTKONTOINHABER || ''
   };
-  const fehlt = [['ARZTNAME','Name'],['ARZTFUNKTION','Funktion'],['ARZTADRESSE1','Adresse 1'],['ARZTADRESSE2','Adresse 2'],['ARZTEMAIL','E-Mail']]
+  // Bankverbindung ist Pflicht: keine Rechnung ohne Kontoangaben (Wunsch 17.11.2026)
+  const fehlt = [['ARZTNAME','Name'],['ARZTFUNKTION','Funktion'],['ARZTADRESSE1','Adresse 1'],['ARZTADRESSE2','Adresse 2'],['ARZTEMAIL','E-Mail'],['ARZTIBAN','IBAN'],['ARZTBANKNAME','Bank']]
     .filter(([k])=> !String(w[k]||'').trim()).map(([,l])=> l);
-  if(fehlt.length) throw new Error('In den Arztinfos fehlen: ' + fehlt.join(', ') + ' (Einstellungen > Arztinfos).');
+  if(fehlt.length) throw new Error('In den Arztinfos fehlen: ' + fehlt.join(', ') + ' (Einstellungen › Arzt bzw. Bankverbindung).');
+  { const f = ibanPruefen(w.ARZTIBAN); if(f) throw new Error('Die IBAN in den Arztinfos ist ungültig: ' + f + ' (Einstellungen › Bankverbindung).'); }
   return {arzt: a, ini: w};
 }
 
@@ -8557,6 +8618,18 @@ function lsEmpfaengerOptionen(w){
   const s = adr(w.txtSterbeAdr1, w.txtSterbeAdr2);
   if(s && s !== adr(w.txtPAdresse1, w.txtPAdresse2)) o.push({ key: 'sterbe', label: 'Abweichender Sterbeort: ' + s });
   return o;
+}
+// Auswahl des Rechnungsempfaengers: Klick markiert nur, „Übernehmen“ bestaetigt (Wunsch 17.11.2026). -> key oder null
+async function lsEmpfaengerWaehlen(opts, vorher){
+  let gewaehlt = opts.some(o=> o.key === vorher) ? vorher : opts[0].key;
+  const html = 'Anschrift anklicken, an die die Rechnung adressiert wird:<div class="empf-liste">' +
+    opts.map(o=>{ const [kopf, ...rest] = o.label.split(': '); return '<button type="button" class="empf-wahl' + (o.key === gewaehlt ? ' an' : '') + '" data-empf="' + htmlEsc(o.key) + '" aria-pressed="' + (o.key === gewaehlt) + '"><b>' + htmlEsc(kopf) + '</b><span>' + htmlEsc(rest.join(': ')) + '</span></button>'; }).join('') + '</div>';
+  const warte = betaOverlay.ergebnis('An wen geht die Rechnung?', html, [{ label: 'Abbrechen', akt: 'abbrechen' }, { label: 'Übernehmen', akt: 'ok', primaer: true }]);
+  document.querySelectorAll('.beta-overlay.aktiv [data-empf]').forEach(b=> b.onclick = ()=>{ gewaehlt = b.dataset.empf;
+    document.querySelectorAll('.beta-overlay.aktiv [data-empf]').forEach(x=>{ const an = x === b; x.classList.toggle('an', an); x.setAttribute('aria-pressed', String(an)); }); });
+  const wahl = await warte;
+  betaOverlay.schliessen();
+  return wahl === 'ok' ? gewaehlt : null;
 }
 function fallRechnungsdaten(f, arzt){
   const w = f.werte || {};
@@ -9692,8 +9765,8 @@ const INI_FELDER = [
 const INI_GRUPPEN = [
   {titel:'Titel', keys:['TITEL_PROF','TITEL_PRIVDOZ','TITEL_DR','TITEL_DRMED'], nebeneinander:true},
   {titel:'Arzt', keys:['ARZTNAME','ARZTFUNKTION','ARZTADRESSE1','ARZTADRESSE2','ARZTEMAIL']},
-  {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTBANKNAME','ARZTIBAN','ARZTBIC']},
-  {titel:'Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)', keys:['AERZTE_KONTOINHABER','AERZTE_BANKNAME','AERZTE_IBAN','AERZTE_BIC']},
+  {titel:'Bankverbindung', keys:['ARZTKONTOINHABER','ARZTIBAN','ARZTBANKNAME','ARZTBIC']},
+  {titel:'Konto für Rechnungen an Vertretungsärzte (leer = obige Bankverbindung)', keys:['AERZTE_KONTOINHABER','AERZTE_IBAN','AERZTE_BANKNAME','AERZTE_BIC']},
   {titel:'GKV-Patient: Wegepauschale', keys:['GKV_STARTADRESSE']},
   {titel:'LetterXpress', keys:['BRIEF_AKTIVIERT','BRIEF_BENUTZER','BRIEF_APIKEY']}   // eigene Weiterleitung (BRIEF_WEITERLEITUNG) bleibt in der INI, wird aber nicht mehr angezeigt
 ];
@@ -9813,6 +9886,32 @@ function praxenListeZeichnen(){
   });
   const neu = document.getElementById('praxisNeu');
   if(neu) neu.onclick = ()=>{ const { l, a } = lesen(); l.push({ name: '', adresse: '' }); praxenSpeichern(l, a); praxenListeZeichnen(); const z = box.querySelector('.praxis-zeile:last-child .praxis-name'); if(z) z.focus(); };
+}
+// Einrichtung: eingetragene Wache als aktive Wache/Praxis (Ausgangspunkt Wegegeld). Bisher setzte der Assistent die
+// Arztanschrift, wenn noch keine Praxisadresse da war; eine solche aktive Adresse wird dabei ersetzt.
+function einrWacheUebernehmen(wache, arztAdresse){
+  wache = String(wache || '').trim(); if(!wache) return false;
+  const { liste, aktiv } = praxenLaden(), l = liste.map(x=> Object.assign({}, x));
+  const gleich = (a, b)=> String(a || '').replace(/\s+/g, ' ').trim().toLowerCase() === String(b || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  const j = l.findIndex(x=> gleich(x.adresse, wache));
+  if(j >= 0){ praxenSpeichern(l, j); return true; }
+  const akt = l[aktiv] || {};
+  if(!String(akt.adresse || '').trim() || (arztAdresse && gleich(akt.adresse, arztAdresse))){ l[aktiv] = Object.assign({}, akt, { adresse: wache, name: akt.name || 'Wache' }); praxenSpeichern(l, aktiv); return true; }
+  l.push({ name: 'Wache', adresse: wache }); praxenSpeichern(l, l.length - 1); return true;
+}
+// einmalig: aktive Wache ist die Arztanschrift (alter Fehler des Assistenten), in der ini steht aber eine andere Wache
+function wacheAusArztanschriftKorrigieren(){
+  try{
+    if(LS.get('wache_korr_v1', false) || window.DEMO_MODUS) return;
+    const w = ((iniCacheLaden() || {}).werte || {}); if(!w.ARZTADRESSE1) return;   // ini noch nicht geladen
+    LS.set('wache_korr_v1', true);
+    const wache = String(w.GKV_STARTADRESSE || '').trim(), arzt = [w.ARZTADRESSE1, w.ARZTADRESSE2].filter(Boolean).join(', ');
+    const { liste, aktiv } = praxenLaden(); if(!wache || !arzt || liste.length > 1) return;
+    const n = (x)=> String(x || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    if(n((liste[aktiv] || {}).adresse) !== n(arzt) || n(wache) === n(arzt)) return;
+    einrWacheUebernehmen(wache, arzt);
+    setTimeout(()=>{ try{ appToastAnzeigen('Ausgangspunkt fürs Wegegeld korrigiert: ' + wache + ' (statt deiner Anschrift).', 6000); }catch(_){} }, 2500);
+  }catch(e){ console.warn('Wache korrigieren', e); }
 }
 function praxenSpeichern(liste, aktiv){
   const e = ladeEinstellungen();
@@ -10295,6 +10394,7 @@ function betaEinstellungenWiring(){
     }catch(e){ ablageErgebnis('✗ ' + htmlEsc(e.message || String(e))); }
     finally{ btn.disabled = false; }
   };
+  bankFelderAlle(document);
   document.querySelectorAll('.ini-zeigen').forEach(b=>{
     b.onclick = ()=>{ const el=document.getElementById(b.dataset.for); const vis = el.type==='password'; el.type = vis?'text':'password'; b.textContent = vis?'verbergen':'zeigen'; };
   });
@@ -10304,7 +10404,7 @@ function betaEinstellungenWiring(){
       if(!stumm) meldung('Lade einstellungen.ini ...', true);
       const ini = await iniVonOneDriveLaden();
       betaIniBasis = {...ini.werte};
-      if(!betaIniBearbeitet || !stumm){ betaIniFormularFuellen(ini.werte); betaIniBearbeitet = false; }
+      if(!betaIniBearbeitet || !stumm){ betaIniFormularFuellen(ini.werte); betaIniBearbeitet = false; bankFelderAlle(document); }
       const pa = document.getElementById('txtPraxisadresse'); if(pa){ pa.value = ladeEinstellungen().praxisadresse || ''; praxenListeZeichnen(); }
       const rb = document.getElementById('chkReiseBasisLuftlinie'); if(rb) rb.checked = !ladeEinstellungen().reiseBasisLuftlinie;
       statusSetzen();
@@ -14951,6 +15051,8 @@ async function gkvProfilBearbeiten(id){
 // ---------- Luftlinie -> Wegepauschalen-Stufe ----------
 // Ausgangspunkt: GKV_STARTADRESSE aus der einstellungen.ini, sonst die
 // Praxisadresse. Nur die Adresse (ohne Namen) geht an den Kartendienst.
+// eigener Name ohne Titel (Arztinfo) -- Dienstinhaber, wenn kein vertretener Arzt eingetragen ist
+function eigenerArztName(){ try{ return String((((iniCacheLaden() || {}).werte) || {}).ARZTNAME || '').trim(); }catch(_){ return ''; } }
 function gkvStartAdresse(){
   const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {};
   // die in den Einstellungen gewaehlte Wache/Praxis gilt -- erst danach die ini (aeltere Eintraege)
@@ -15000,7 +15102,14 @@ function adrZweizeiligMachen(el){
   if(document.getElementById('plzOrtListe')) ort.setAttribute('list', 'plzOrtListe');
   str.value = t.strasse; ort.value = t.plzOrt; hin.className = 'adr-zwei-hinweis';
   GROSS_FELDER[str.id] = 's'; GROSS_FELDER[ort.id] = 'g';
-  const sync = (art)=>{ const v = gkvAdrZusammen(str.value, ort.value); if(el.value !== v){ el.value = v; el.dispatchEvent(new Event(art || 'input', { bubbles: true })); } };
+  // 'change' muss beim Verlassen auch dann kommen, wenn 'input' den Wert schon nachgefuehrt hat -- sonst speichern
+  // Felder, die auf 'change' hoeren (Wachen/Praxen, Einstellungen), neue Adressen nie (gemeldet 17.11.2026)
+  let gemeldet = el.value;
+  const sync = (art)=>{
+    const v = gkvAdrZusammen(str.value, ort.value);
+    if(el.value !== v){ el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); }
+    if(art === 'change' && el.value !== gemeldet){ gemeldet = el.value; el.dispatchEvent(new Event('change', { bubbles: true })); }
+  };
   str.addEventListener('input', ()=> sync('input')); ort.addEventListener('input', ()=> sync('input'));
   str.addEventListener('change', ()=> sync('change'));
   ort.addEventListener('blur', async ()=>{
@@ -15585,9 +15694,9 @@ async function fbDienstAbfragen(fb, dt, fallText){
       '<div class="fb-lbl">Dienstart</div>' +
       dwChipsHtml(art, fbProfil, 'art') +
       '<div id="fbSchichtBox"></div>' +
-      '<div class="fb-lbl">Vertretener Arzt (Dienstinhaber)</div>' +
+      '<div class="fb-lbl">Vertretener Arzt (optional – leer = eigener Dienst)</div>' +
       '<div class="fb-chips" id="fbArztChips">' + aerzte.map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-arzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-weg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>' +
-      '<input type="text" id="fbArzt" placeholder="Name (neu eintippen oder oben wählen)" value="' + htmlEsc(arzt) + '">' +
+      '<input type="text" id="fbArzt" placeholder="leer = eigener Dienst (' + htmlEsc(eigenerArztName() || 'dein Name') + ')" value="' + htmlEsc(arzt) + '">' +
       '</div>';
     const p = betaOverlay.ergebnis('Neuer Dienst', html, [
       { label: 'Nicht eintragen', akt: 'nein' }, { label: 'Dienst anlegen', akt: 'ok', primaer: true }]);
@@ -15640,15 +15749,15 @@ async function fbDienstAbfragen(fb, dt, fallText){
     if(akt !== 'ok') return null;
     const dW = (document.getElementById('fbDatum') || {}).value || '';
     const von = (document.getElementById('fbVon') || {}).value || '', bis = (document.getElementById('fbBis') || {}).value || '';
-    arzt = String((document.getElementById('fbArzt') || {}).value || '').trim();
+    arzt = grossKleinKorrigieren(String((document.getElementById('fbArzt') || {}).value || '').trim());
     const dm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dW);
     if(dm) datum = new Date(+dm[1], +dm[2] - 1, +dm[3]);
     zeit = fbZeitParsen(von.trim() + '-' + bis.trim());
     aerzte = fbAerzte(fb);
     if(!dm){ fehler = 'Bitte das Datum des Dienstbeginns wählen.'; continue; }
     if(!zeit){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen (z.B. 18 und 23).'; continue; }
-    if(!arzt){ fehler = 'Bitte den vertretenen Arzt eintragen.'; continue; }
-    fbArztMerken(arzt);
+    // vertretener Arzt optional (Wunsch 17.11.2026): leer = eigener Dienst, im Fahrtenbuch steht dann der eigene Name
+    if(arzt) fbArztMerken(arzt);
     LS.set('fb_dienstart', art); LS.set('fb_dienstprofil', fbProfil);
     return { datum, zeit, arzt, art, schicht };
   }
@@ -15827,9 +15936,9 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
     }
     await gx(fb.token, 'PATCH', fb.blattUrl + "/range(address='A" + z1 + ':C' + (z1 + 1) + "')", {
       numberFormat: [['0', 'dd.mm.yyyy', '@'], ['General', '@', '@']],
-      values: [[Math.floor(d.datum.getMonth() / 3) + 1, fbSerial(d.datum), fbZeitText(d.zeit)], ['', fbDienstartText(d.art, d.schicht), d.arzt]]
+      values: [[Math.floor(d.datum.getMonth() / 3) + 1, fbSerial(d.datum), fbZeitText(d.zeit)], ['', fbDienstartText(d.art, d.schicht), d.arzt || eigenerArztName()]]
     });
-    block = { zeileStart: z1, zeileEnde: z1 + 1, datumText: fbDatumText(d.datum), zeitRoh: fbZeitText(d.zeit), arzt: d.arzt, frisch: true };
+    block = { zeileStart: z1, zeileEnde: z1 + 1, datumText: fbDatumText(d.datum), zeitRoh: fbZeitText(d.zeit), arzt: d.arzt || eigenerArztName(), frisch: true };
     neuerDienst = true;
   }
   // Zielzeile: derselbe Patient schon im Block? -> aktualisieren; sonst erste Zeile ohne Namen; sonst neue Zeile
@@ -17889,6 +17998,7 @@ document.addEventListener('input', (ev)=>{
     if(f !== el.value){ el.value = f; let i = 0, c = 0; while(i < f.length && c < n){ if(f[i] !== ' ') c++; i++; } try{ el.setSelectionRange(i, i); }catch(_){} }
     ktoPruefenEl(el);
     if(ibanPruefen(el.value) === '') ibanBankFuellen(el);
+    bankFelderSteuern(el);
     return;
   }
   const neu = istBic ? el.value.replace(/\s/g, '').toUpperCase() : el.value.toUpperCase();
@@ -17926,6 +18036,24 @@ async function bankAusIban(iban){
   const bic = String(x[1] || '').toUpperCase();
   return { name: x[0], bic: bic.length === 11 && /XXX$/.test(bic) ? bic.slice(0, 8) : bic };
 }
+// Bank und BIC folgen aus der IBAN (Wunsch 17.11.2026): IBAN zuerst, Bank/BIC ausgegraut. Erst wenn die Bank im
+// Verzeichnis fehlt (z. B. Auslands-IBAN), lassen sie sich von Hand eintragen.
+function bankFelder(el){
+  const k = el.dataset.ini || String(el.id || '').replace(/^ini_/, ''), m = /^(.*)IBAN$/.exec(k); if(!m) return [];
+  const bereich = el.closest('.einr, .beta-overlay, #app') || document;
+  return [m[1] + 'BANKNAME', m[1] + 'BIC'].map(kk=> bereich.querySelector('[data-ini="' + kk + '"], #ini_' + kk)).filter(Boolean);
+}
+function bankFelderSperren(el, sperren){
+  bankFelder(el).forEach(f=>{ f.readOnly = !!sperren; f.classList.toggle('einr-gesperrt', !!sperren); f.title = sperren ? 'Wird aus der IBAN ermittelt' : '';
+    if(sperren && !f.value) f.placeholder = 'wird aus der IBAN ermittelt'; else if(!sperren) f.placeholder = ''; });
+}
+async function bankFelderSteuern(el){
+  const i = ibanNorm(el.value);
+  if(ibanPruefen(i) !== ''){ bankFelderSperren(el, true); return; }   // leer oder ungueltig: erst die IBAN
+  const b = await bankAusIban(i); if(ibanNorm(el.value) !== i) return;
+  bankFelderSperren(el, !!b);   // Bank bekannt -> automatisch befuellt und gesperrt; sonst von Hand
+}
+function bankFelderAlle(wurzel){ try{ (wurzel || document).querySelectorAll(SEL_IBAN).forEach(el=> bankFelderSteuern(el)); }catch(_){} }
 async function ibanBankFuellen(el){
   const k = el.dataset.ini || String(el.id || '').replace(/^ini_/, ''), m = /^(.*)IBAN$/.exec(k); if(!m) return;
   const jetzt = ibanNorm(el.value); if(el.dataset.bankFuer === jetzt) return; el.dataset.bankFuer = jetzt;
@@ -21022,7 +21150,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v477';
+const APP_VERSION = 'v478';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21846,7 +21974,7 @@ async function liveDienstDialog(opt){
     if(akt) kn.push({ label: 'Dienst beenden', akt: 'ende' });
     kn.push({ label: akt ? 'Übernehmen' : 'Dienst starten', akt: 'ok', primaer: true });
     const warte = betaOverlay.ergebnis(akt ? 'Dienst ändern' : 'Welcher Dienst?', html, kn);
-    const lesen = ()=>{ datum = (document.getElementById('liveDatum') || {}).value || datum; von = (document.getElementById('liveVon') || {}).value || ''; bis = (document.getElementById('liveBis') || {}).value || ''; arzt = String((document.getElementById('liveArzt') || {}).value || '').trim(); };
+    const lesen = ()=>{ datum = (document.getElementById('liveDatum') || {}).value || datum; von = (document.getElementById('liveVon') || {}).value || ''; bis = (document.getElementById('liveBis') || {}).value || ''; arzt = grossKleinKorrigieren(String((document.getElementById('liveArzt') || {}).value || '').trim()); };
     document.querySelectorAll('.beta-overlay [data-lart]').forEach(b=> b.onclick = ()=>{ lesen(); art = b.dataset.lart; profil = b.dataset.dwp || ''; schicht = ''; const v = vorschlaege()[0]; if(v) [von, bis] = v.split('-'); betaOverlay.loesen && betaOverlay.loesen('neu'); });
     document.querySelectorAll('.beta-overlay [data-lzeit]').forEach(b=> b.onclick = ()=>{ const [v1, b1] = b.dataset.lzeit.split('-'); document.getElementById('liveVon').value = v1; document.getElementById('liveBis').value = b1;
       schicht = b.dataset.lschicht || '';
@@ -22132,7 +22260,8 @@ function designDienstHtml(info){
   try{ faelle = standortKarteFaelle(info).slice().reverse(); }catch(_){}
   designDienstHtml.faelle = faelle;
   const p = info.pauschale ? Math.min(100, Math.round(info.gkv / info.pauschale * 1000) / 10) : 0;
-  const auf = !!LS.get('dienst_liste_auf', false);
+  // „Fälle in diesem Dienst“: standardmaessig ausgeklappt (Wunsch 17.11.2026); Zuklappen gilt nur bis zum Neustart
+  let auf = true; try{ auf = sessionStorage.getItem('dienst_liste_zu') !== '1'; }catch(_){}
   const summe = (art)=> faelle.filter(f=> f.art === art).reduce((a, f)=> a + (Number(f.euro) || 0), 0);
   const kurzEuro = (v)=> betaEuro(v).replace(' €', '');
   // Balken nur, solange die Foerderung noch greift (GKV unter der Pauschale)
@@ -22158,7 +22287,7 @@ function designDienstHtml(info){
 function designDienstWiring(wurzel){
   const box = wurzel.querySelector('.ds-dz'); if(!box) return;
   const knopf = box.querySelector('.ds-dz-auf'), liste = box.querySelector('.ds-dz-liste');
-  knopf.onclick = ()=>{ const auf = liste.hidden; liste.hidden = !auf; knopf.setAttribute('aria-expanded', String(auf)); LS.set('dienst_liste_auf', auf); };
+  knopf.onclick = ()=>{ const auf = liste.hidden; liste.hidden = !auf; knopf.setAttribute('aria-expanded', String(auf)); try{ if(auf) sessionStorage.removeItem('dienst_liste_zu'); else sessionStorage.setItem('dienst_liste_zu', '1'); }catch(_){} };
   box.querySelectorAll('[data-dzfall]').forEach(b=> b.onclick = ()=>{ const f = (designDienstHtml.faelle || [])[+b.dataset.dzfall]; if(f && f.oeffnen) f.oeffnen(); });
   // wegwischen (oder lange druecken): GKV-Fall in App und Fahrtenbuch loeschen, unfertigen Fall verwerfen
   box.querySelectorAll('.ds-dz-wisch [data-dzfall]').forEach(b=> betaWischen(b, async ()=>{
@@ -22348,20 +22477,24 @@ function ansichtEinstellungen(){
     <div class="abschnitt start-abschnitt">
       <div class="trennlinie">Fahrten &amp; Wegegeld</div>
       <div class="feld" style="margin-top:14px;">
-        <label>Wegegeld berechnen nach</label>
-        <div id="wfEinst"></div>
-        <div id="wfKvbwTeil">
-          <div class="design-hinweis">Grenzen der Zonen auf der KVBW-Karte selbst nachzeichnen. Gilt sofort für Wegegeld und alle Karten; mit OneDrive-Anmeldung auf allen Geräten.${LS.get('nfp_zonen_eigen', null) ? ' <b>Eigene Korrekturen aktiv</b> (Stand ' + new Date(LS.get('nfp_zonen_eigen', {}).am || Date.now()).toLocaleDateString('de-DE') + ').' : ''}</div>
-          <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:8px;">KVBW-Zonen auf dem Kartenbild korrigieren</button>
-          <button type="button" class="btn-sekundaer" id="btnZonenLaden" style="margin-top:8px;">Eigene Zonen mit OneDrive abgleichen</button>
-          <div class="design-hinweis" id="zonenLadenInfo"></div>
-        </div>
-      </div>
-      <div class="feld" style="margin-top:14px;">
         <label>Wachen/Praxen (Startpunkt für km-Berechnung)</label>
         <div id="praxenListe" class="praxen-liste"></div>
         <button type="button" class="btn-sekundaer praxis-neu" id="praxisNeu">+ Wache/Praxis hinzufügen</button>
         <input type="hidden" id="txtPraxisadresse" value="${(e.praxisadresse||'').replace(/"/g,'&quot;')}">
+      </div>
+      <div class="feld" style="margin-top:14px;">
+        <label>Wegegeld berechnen nach</label>
+        <div id="wfEinst"></div>
+        <div class="zonen-rahmen" id="wfZonenRahmen">
+        <div class="zonen-titel">Zonen</div>
+        <div id="wfZeichnenBox"></div>
+        <div id="wfKvbwTeil">
+          <div class="design-hinweis">Grenzen der Zonen auf der KVBW-Karte selbst nachzeichnen. Gilt sofort für Wegegeld und alle Karten; mit OneDrive-Anmeldung auf allen Geräten.${LS.get('nfp_zonen_eigen', null) ? ' <b>Eigene Korrekturen aktiv</b> (Stand ' + new Date(LS.get('nfp_zonen_eigen', {}).am || Date.now()).toLocaleDateString('de-DE') + ').' : ''}</div>
+          <button type="button" class="btn-sekundaer" id="btnZonenBearbeiten" style="margin-top:6px;">KVBW-Zonen auf dem Kartenbild korrigieren</button>
+          <button type="button" class="btn-sekundaer" id="btnZonenLaden" style="margin-top:6px;">Eigene Zonen mit OneDrive abgleichen</button>
+          <div class="design-hinweis" id="zonenLadenInfo"></div>
+        </div>
+        </div>
       </div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
@@ -24815,11 +24948,9 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       const opts = lsEmpfaengerOptionen(w);
       if(opts.length > 1){
         const vorher = w.txtEmpfaenger || (korrekturIdx!==undefined && faelle[korrekturIdx] && faelle[korrekturIdx].werte && faelle[korrekturIdx].werte.txtEmpfaenger) || 'bestatter';
-        const wahl = await betaOverlay.ergebnis('An wen geht die Rechnung?', 'Bitte die Anschrift wählen, an die die Rechnung adressiert wird:',
-          opts.map(o=> ({ label: o.label, akt: o.key, primaer: o.key === vorher })).concat([{ label: 'Abbrechen', akt: 'abbrechen' }]));
-        betaOverlay.schliessen();
-        if(!wahl || wahl === 'abbrechen') return;
-        w.txtEmpfaenger = wahl;
+        const gewaehlt = await lsEmpfaengerWaehlen(opts, vorher);
+        if(!gewaehlt) return;
+        w.txtEmpfaenger = gewaehlt;
       } else delete w.txtEmpfaenger;
     }
     if(korrekturIdx!==undefined) faelle[korrekturIdx]=eintrag; else { faelle.push(eintrag); neuGespeichert = true; }
@@ -25041,7 +25172,8 @@ try{
   if(ersterStart) LS.set('einrichtung_auto', true);
 }catch(e){}
 try{ appCodeStartPruefen(); }catch(e){}
-setTimeout(()=>{ try{ einrIniFertigNachtragen(); }catch(_){} }, 15000);   // Vermerk "Einrichtung fertig" in der einstellungen.ini nachtragen   // Freischaltung per Zugangscode (Sperrfenster ueber allem)
+setTimeout(()=>{ try{ einrIniFertigNachtragen(); }catch(_){} }, 15000);
+setTimeout(()=>{ try{ wacheAusArztanschriftKorrigieren(); }catch(_){} }, 6000); setTimeout(()=>{ try{ wacheAusArztanschriftKorrigieren(); }catch(_){} }, 30000);   // Vermerk "Einrichtung fertig" in der einstellungen.ini nachtragen   // Freischaltung per Zugangscode (Sperrfenster ueber allem)
 try{ ansichtStart(); }catch(e){}   // laeuft die Einrichtung (oder erster Start), zeigt das direkt den Assistenten
 try{
   const einrOffen = !window.DEMO_MODUS && (ersterStart || !!LS.get('einrichtung_schritt', null) || (!LS.get('einrichtung_fertig', false) && !einrSchonEingerichtet()));
@@ -25521,10 +25653,13 @@ function wfAusKvbw(){
 function wfEinstellungenZeichnen(){
   const box = document.getElementById('wfEinst'); if(!box) return;
   const c = wfKontext();
-  box.innerHTML = wfModusHtml(c.modus, c.flaechen.length > 0) +
-    '<div class="fb-info wf-modus-info" id="wfZeichnenTeil"' + (c.modus.zonen ? '' : ' hidden') + '>' + (c.flaechen.length ? '<b>' + c.flaechen.length + ' gezeichnete ' + (c.flaechen.length === 1 ? 'Zone' : 'Zonen') + '</b> – gelten statt der KVBW-Zonen.' : 'Noch keine eigenen Zonen gezeichnet – es gelten die Zonen der KVBW-Karte. Beim ersten Zeichnen werden sie als Vorlage übernommen.') +
-    '<button type="button" class="btn-sekundaer" id="btnWfZeichnen" style="margin-top:8px;">Zonen zeichnen</button></div>';
-  const sicht = ()=>{ const kv = document.getElementById('wfKvbwTeil'), zt = document.getElementById('wfZeichnenTeil'), m = wfModusLesen(c.modus); if(kv) kv.hidden = !m.zonen; if(zt) zt.hidden = !m.zonen; };
+  // Einstellungen: Zeichnen-Teil im eigenen Rahmen „Zonen“ zusammen mit den KVBW-Werkzeugen (Wunsch 17.11.2026)
+  const zbox = document.getElementById('wfZeichnenBox');
+  const zeichnenHtml = '<div class="' + (zbox ? '' : 'fb-info ') + 'wf-modus-info" id="wfZeichnenTeil"' + (c.modus.zonen ? '' : ' hidden') + '>' + (c.flaechen.length ? '<b>' + c.flaechen.length + ' gezeichnete ' + (c.flaechen.length === 1 ? 'Zone' : 'Zonen') + '</b> – gelten statt der KVBW-Zonen.' : 'Noch keine eigenen Zonen gezeichnet – es gelten die Zonen der KVBW-Karte. Beim ersten Zeichnen werden sie als Vorlage übernommen.') +
+    '<button type="button" class="btn-sekundaer" id="btnWfZeichnen" style="margin-top:6px;">Zonen zeichnen</button></div>';
+  if(zbox){ box.innerHTML = wfModusHtml(c.modus, c.flaechen.length > 0); zbox.innerHTML = zeichnenHtml; }
+  else box.innerHTML = wfModusHtml(c.modus, c.flaechen.length > 0) + zeichnenHtml;
+  const sicht = ()=>{ const kv = document.getElementById('wfKvbwTeil'), zt = document.getElementById('wfZeichnenTeil'), zr = document.getElementById('wfZonenRahmen'), m = wfModusLesen(c.modus); if(kv) kv.hidden = !m.zonen; if(zt) zt.hidden = !m.zonen; if(zr) zr.hidden = !m.zonen; };
   sicht();
   wfModusVerdrahten(()=>{ const c2 = wfKontext(); c2.speichern(c2.flaechen, wfModusLesen(c2.modus), c2.farben); sicht(); try{ miniKartenNeu(); }catch(_){} });
   document.getElementById('btnWfZeichnen').onclick = async ()=>{ await wegZonenZeichnen(); wfEinstellungenZeichnen(); };
