@@ -8,6 +8,20 @@ module.exports = async ({ browser, basis, pr })=>{
   const r = await roh(p);
   pr('Eintrag liegt in der Datenbank', r.schluessel.includes('pruef_probe'), r.schluessel.slice(0, 8));
   pr('Datenbank enthält keinen Klartext', r.klartext === false);
+  // alle Datenbanken des Browsers (auch Binärdaten) nach dem Testinhalt durchsuchen
+  const funde = await p.evaluate(async ()=>{
+    const treffer = [], dec = new TextDecoder('utf-8', { fatal: false });
+    const flach = (x)=>{ if(x == null) return ''; if(x instanceof ArrayBuffer) return dec.decode(new Uint8Array(x)); if(ArrayBuffer.isView(x)) return dec.decode(new Uint8Array(x.buffer, x.byteOffset, x.byteLength)); if(typeof x === 'string') return x; if(typeof x === 'object'){ if(x instanceof CryptoKey || x instanceof Blob) return ''; try{ return Object.keys(x).map((k)=> k + ' ' + flach(x[k])).join(' '); }catch(_){ return ''; } } return String(x); };
+    for(const info of await indexedDB.databases()){
+      const d = await new Promise((ok, nein)=>{ const q = indexedDB.open(info.name); q.onsuccess = ()=> ok(q.result); q.onerror = ()=> nein(q.error); });
+      for(const n of Array.from(d.objectStoreNames)){
+        const [ks, vs] = await new Promise((ok)=>{ const t = d.transaction(n).objectStore(n), a = t.getAllKeys(), b = t.getAll(); b.onsuccess = ()=> ok([a.result, b.result]); });
+        vs.forEach((v, i)=>{ if(/Geheimtest/.test(flach(v))) treffer.push(info.name + '/' + n + '/' + String(ks[i]).slice(0, 20)); });
+      }
+      d.close();
+    }
+    return treffer; });
+  pr('kein Klartext in irgendeiner Datenbank des Browsers', funde.length === 0, funde);
   pr('Patientendaten liegen nicht im localStorage', await p.evaluate(()=> !Object.keys(localStorage).some((k)=> /Geheimtest/.test(localStorage.getItem(k) || '') || /^faelle_|^pruef_/.test(k))));
   await p.reload(); await p.waitForFunction(()=> typeof LS !== 'undefined' && typeof ansichtStart === 'function', null, { timeout: 40000 });
   pr('nach dem Neuladen: letzter Stand lesbar', await p.evaluate(()=> (LS.get('pruef_probe', null) || {}).n) === 3);
