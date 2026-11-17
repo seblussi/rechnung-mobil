@@ -111,10 +111,16 @@
     };
   }
   // -> {key, roh} oder null (falsches Passwort/Code)
+  // Letzter technischer Fehler beim Auswickeln: Die Schluesselableitung selbst ist gescheitert (Argon2 nicht
+  // geladen, Arbeitsspeicher reicht nicht). Das ist KEIN falsches Passwort und darf nicht als Fehlversuch zaehlen.
+  let technFehler = null;
   async function auswickeln(info, geheim, mitCode){
     const t = mitCode ? info.code : info.pw;
+    technFehler = null;
+    let k;
+    try{ k = await huelleSchluessel(t, mitCode ? codeNormal(geheim) : geheim); }
+    catch(e){ if(t) technFehler = e || new Error('unbekannter Fehler'); return null; }
     try{
-      const k = await huelleSchluessel(t, mitCode ? codeNormal(geheim) : geheim);
       const roh = await entschluesseln(k, ausB64(t.wrap));
       const key = await subtle.importKey('raw', roh, 'AES-GCM', false, ['encrypt', 'decrypt']);
       return { key, roh };
@@ -144,6 +150,6 @@
   }
 
   global.Krypto = { verfuegbar: !!subtle, zufall, b64, ausB64, verschluesseln, entschluesseln, jsonVer, jsonEnt,
-    neuerCode, codeNormal, hauptschluesselNeu, einwickeln, auswickeln, passwortNeu, codeHuelleNeu, veraltet, argonDa, nichtExportierbar, sha256Hex, prfSchluessel,
+    neuerCode, codeNormal, hauptschluesselNeu, einwickeln, auswickeln, technischerFehler: ()=> technFehler, passwortNeu, codeHuelleNeu, veraltet, argonDa, nichtExportierbar, sha256Hex, prfSchluessel,
     text: (b)=> dec.decode(b), bytes: alsBytes };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-NgemSeCvbvus9FJelFiljOdzCIlBLT8AXe1f73TXo+g=' 'sha256-nNmxVJc0vjhJFop0VitXM/FxL9uW8MzIOhKzQmHzLBk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-e1a9P2nsgAtabj+ElkhcOttS0Bqine1GLaMoTu3YBgo=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -411,6 +411,32 @@ try{
      je nach App-Zustand ohnehin nochmal praeziser (nur "light" ODER "dark"
      statt "light dark") ueberschrieben. */
   html{color-scheme:light dark;}
+  /* Datentresor: Sperrseite, Passwort, Wiederherstellungsschluessel */
+  #tresorSeite{position:fixed; inset:0; z-index:20000; background:var(--bg, #f4f6f9); color:var(--text, #1d2433); overflow:auto; display:flex; align-items:flex-start; justify-content:center; padding:max(24px, env(safe-area-inset-top)) 16px 32px; box-sizing:border-box;}
+  html.frueh-dunkel #tresorSeite{background:#0f131a; color:#e8ebf0;}
+  .ts-karte{width:100%; max-width:420px; margin-top:6vh;}
+  .ts-logo{font-size:40px; text-align:center; margin-bottom:6px;}
+  .ts-karte h1{font-size:23px; text-align:center; margin:0 0 12px;}
+  .ts-karte p{font-size:15px; line-height:1.5; margin:0 0 14px;}
+  .ts-klein{font-size:13px !important; opacity:.75;}
+  .ts-voll{display:block; width:100%; margin:10px 0 0; box-sizing:border-box; text-align:center;}
+  .ts-datei{cursor:pointer;}
+  .ts-feld{display:flex; flex-direction:column; gap:4px; margin:0 0 10px; font-size:13px; font-weight:600; opacity:.9;}
+  .ts-feld input{height:48px; font-size:17px; padding:0 12px; border-radius:12px; border:1px solid #c5ccd6; background:#fff; color:#111; box-sizing:border-box;}
+  html.frueh-dunkel .ts-feld input{background:#1b2230; color:#eef; border-color:#334;}
+  .ts-check{display:flex; align-items:center; gap:8px; font-size:14px; margin:8px 0;}
+  .ts-check input{width:20px; height:20px;}
+  .ts-fehler{color:#c62828; font-size:14px; min-height:18px; margin:4px 0;}
+  .ts-link{display:block; margin:14px auto 0; background:none; border:0; color:#2f6fd6; font:inherit; font-size:14px; text-decoration:underline; cursor:pointer; width:auto;}
+  .ts-oder{text-align:center; font-size:13px; color:#888; margin:12px 0 4px;}
+  .ts-code{font:700 21px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing:1px; text-align:center; padding:16px 10px; border:2px dashed #2f6fd6; border-radius:12px; margin:8px 0 12px; user-select:all; word-break:break-all;}
+  .ts-reihe{display:flex; gap:8px;} .ts-reihe button{flex:1; margin:0;}
+  .ts-staerke{display:flex; align-items:center; gap:8px; font-size:12.5px; margin:-4px 0 10px; min-height:14px;}
+  .ts-staerke i{display:block; height:6px; border-radius:3px; background:#c62828; min-width:8px;}
+  .ts-staerke i.s2{background:#e0a100;} .ts-staerke i.s3, .ts-staerke i.s4{background:#2fa84f;}
+  .ts-code{word-break:normal !important; overflow-wrap:normal !important; font-size:clamp(15px, 5vw, 21px) !important;}
+  .spa-knoepfe{display:flex; flex-wrap:wrap; gap:8px; margin:8px 0;}
+  .spa-knoepfe > *{width:auto; flex:1 1 auto; margin:0;}
 </style>
 <script src="icd_katalog.js"></script>
 <!-- amtliches GOÄ-Gebuehrenverzeichnis (Punktzahlen, Ausschluesse) -->
@@ -420,7 +446,13 @@ try{
      "OneDrive-Anmeldung" weiter unten. -->
 <script src="lib/msal/msal-browser.min.js"></script>  <!-- @azure/msal-browser 3.30.0 (MIT), lokal statt CDN -->
 <!-- BETA: JSZip zum Erzeugen der Word-Datei (.docx) -->
-<script>window.DEMO_MODUS = (function(){ try{ return sessionStorage.getItem('demo_modus') || ''; }catch(_){ return ''; } })();</script>
+<script>window.DEMO_MODUS = (function(){ try{ return sessionStorage.getItem('demo_modus') || ''; }catch(_){ return ''; } })(); window.TRESOR_DB_NAME = 'rechnung_privat_tresor';</script>
+<!-- Datentresor wie in der Launch-Version (Sicherheitsbericht P1): Passwort / Fingerabdruck oeffnet den Schluessel -->
+<script src="lib/argon2.umd.min.js"></script>  <!-- hash-wasm 4.12.0 (MIT): Argon2id -->
+<script src="lokal/krypto.js"></script>
+<script src="lokal/sperrliste.js"></script>
+<script src="lokal/tresor.js"></script>
+<script src="lokal/tresor_start.js"></script>
 <script src="lib/jszip.min.js"></script>
 <style>
   :root{
@@ -6329,8 +6361,9 @@ const dokuDb = (()=>{
   const oeffnen = ()=> p || (p = new Promise((ok, f)=>{ const r = indexedDB.open('rechnung_doku', 1); r.onupgradeneeded = ()=> r.result.createObjectStore('fotos'); r.onsuccess = ()=> ok(r.result); r.onerror = ()=> f(r.error); }));
   const tx = async (modus, fn)=>{ const db = await oeffnen(); return new Promise((ok, f)=>{ const t = db.transaction('fotos', modus), s = t.objectStore('fotos'); const r = fn(s); t.oncomplete = ()=> ok(r && 'result' in r ? r.result : undefined); t.onerror = ()=> f(t.error); t.onabort = ()=> f(t.error || new Error('abgebrochen')); }); };
   const roh = { holen: (k)=> tx('readonly', s=> s.get(k)), setzen: (k, v)=> tx('readwrite', s=> s.put(v, k)), weg: (k)=> tx('readwrite', s=> s.delete(k)), schluessel: ()=> tx('readonly', s=> s.getAllKeys()) };
-  const istPaket = (x)=> !!(x && x.v === 1 && x.iv && x.d);
-  const verpacken = async (blob, oben)=>{ const c = await Speicher.verBytes(await blob.arrayBuffer()); return { v: 1, iv: c.iv, d: c.d, typ: blob.type || 'image/jpeg', am: Date.now(), oben: oben ? Date.now() : 0 }; };
+  // v1: Geraeteschluessel (bisheriger Speicher), v2: Datentresor
+  const istPaket = (x)=> !!(x && ((x.v === 1 && x.iv && x.d) || (x.v === 2 && x.d)));
+  const verpacken = async (blob, oben)=> Object.assign(await Speicher.verBytes(await blob.arrayBuffer()), { typ: blob.type || 'image/jpeg', am: Date.now(), oben: oben ? Date.now() : 0 });
   // -> Blob | undefined
   async function holen(k){
     if(window.DEMO_MODUS) return demo.get(k);
@@ -6839,8 +6872,8 @@ function ansichtEinrichtung(schritt){
       '<p class="einr-klein">Du brauchst ein privates Microsoft-Konto (outlook.de, hotmail.com, live.de …) mit OneDrive.</p>' + '<div id="einrAlpha">' + alphaZustimmungHtml('einrAlphaHaken') + '</div>' + knoepfe(null, 'anmelden', 'Los geht’s', !alphaZugestimmt()) +
       (window.DEMO_MODUS ? '' : '<p style="text-align:center; margin-top:10px;"><button type="button" class="einr-link" id="einrDemo">Erst ausprobieren: Demo mit Beispieldaten</button></p>');
   } else if(schritt === 'sperre'){
-    html = '<h2>App-Sperre (empfohlen)</h2><p>Die App enthält Patientendaten. Damit niemand außer dir sie öffnen kann, empfiehlt sich eine Sperre mit <b>Fingerabdruck / Face ID</b> oder <b>PIN</b>. Sie ist freiwillig und lässt sich später unter Einstellungen ein- und ausschalten.</p>' +
-      '<div id="einrSperre"></div>' + knoepfe('start', 'anmelden', AppSperre.aktiv() ? 'Weiter' : 'Ohne Sperre weiter');
+    html = (window.TRESOR_MODUS ? '<h2>Sicherheit</h2>' : '<h2>App-Sperre (empfohlen)</h2><p>Die App enthält Patientendaten. Damit niemand außer dir sie öffnen kann, empfiehlt sich eine Sperre mit <b>Fingerabdruck / Face ID</b> oder <b>PIN</b>. Sie ist freiwillig und lässt sich später unter Einstellungen ein- und ausschalten.</p>') +
+      '<div id="einrSperre"></div>' + knoepfe('start', 'anmelden', AppSperre.aktiv() || window.TRESOR_MODUS ? 'Weiter' : 'Ohne Sperre weiter');
   } else if(schritt === 'anmelden'){
     html = '<h2>Microsoft-Anmeldung</h2>' + (angemeldet
       ? '<p class="einr-ok">✓ Angemeldet als <b>' + htmlEsc((msGraphKonto && (msGraphKonto.username || msGraphKonto.name)) || '') + '</b>.</p>' + knoepfe('start', 'dateien')
@@ -6894,6 +6927,10 @@ function ansichtEinrichtung(schritt){
   if(schritt === 'sperre'){
     const pf = document.getElementById('asPflicht'); if(pf) pf.remove();   // der Assistent fragt selbst
     const box = document.getElementById('einrSperre');
+    if(window.TRESOR_MODUS){
+      box.innerHTML = '<p class="einr-ok">✓ Die App ist mit deinem Passwort geschützt' + '. Fingerabdruck / Face ID richtest du unter Einstellungen › Sicherheit ein.</p>';
+      const w = app.querySelector('[data-einr="anmelden"]'); if(w){ w.disabled = false; w.textContent = 'Weiter'; }
+    } else {
     const neu = ()=>{
       const ok = AppSperre.aktiv();
       box.innerHTML = ok ? '<p class="einr-ok">✓ App-Sperre ist eingerichtet (' + (AppSperre.art() === 'pin' ? 'PIN' : 'Fingerabdruck / Face ID') + '). Ändern geht später unter Einstellungen.</p>' : AppSperre.abschnittHtml();
@@ -6901,6 +6938,7 @@ function ansichtEinrichtung(schritt){
       const w = app.querySelector('[data-einr="anmelden"]'); if(w){ w.disabled = false; w.textContent = ok ? 'Weiter' : 'Ohne Sperre weiter'; }
     };
     neu();
+    }
   }
   app.querySelectorAll('[data-einr]').forEach(b=> b.onclick = async ()=>{
     if(schritt === 'daten' && b.dataset.einr === 'dienste'){
@@ -20776,7 +20814,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v471';
+const APP_VERSION = 'v472';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22136,8 +22174,8 @@ function ansichtEinstellungen(){
       <div id="odsAbschnitt"></div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
-      <div class="trennlinie">App-Sperre</div>
-      <div id="asAbschnitt">${AppSperre.abschnittHtml()}</div>
+      <div class="trennlinie">${window.TRESOR_MODUS ? 'Sicherheit' : 'App-Sperre'}</div>
+      <div id="asAbschnitt">${window.TRESOR_MODUS ? tresorAbschnittHtml() : umzugAngebotHtml() + AppSperre.abschnittHtml()}</div>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Einrichtung</div>
@@ -22233,7 +22271,8 @@ function ansichtEinstellungen(){
 
   msGraphAbschnittWiring();
   try{ odsAbschnittZeichnen(); }catch(e){ console.warn('Datensicherung', e); }
-  { const neu = ()=>{ const el = document.getElementById('asAbschnitt'); if(el){ el.innerHTML = AppSperre.abschnittHtml(); AppSperre.abschnittWiring(neu); } }; AppSperre.abschnittWiring(neu); }
+  if(window.TRESOR_MODUS) tresorAbschnittWiring();
+  else { const neu = ()=>{ const el = document.getElementById('asAbschnitt'); if(el){ el.innerHTML = umzugAngebotHtml() + AppSperre.abschnittHtml(); AppSperre.abschnittWiring(neu); umzugAngebotWiring(); } }; AppSperre.abschnittWiring(neu); umzugAngebotWiring(); }
   betaEinstellungenWiring();
   // Register "Dienste und Musterwochen" direkt ueber die Profile
   { const d = document.getElementById('btnDienste'), ab = d && d.closest('.abschnitt'); const pr = [...app.querySelectorAll('.abschnitt > .trennlinie')].find(t=> /^Profile/.test(t.textContent.trim())); if(ab && pr) pr.parentElement.before(ab); }
@@ -25227,6 +25266,106 @@ async function odsWiederherstellen(datei){
   return true;
 }
 // --- Einstellungen ---
+// Eingabe im eigenen Fenster (wie in der Launch-Version) -> Text oder null
+async function betaEingabe(text, vorgabe, typ){
+  const id = 'betaEin' + Math.random().toString(36).slice(2, 7);
+  const warte = betaOverlay.ergebnis('', '<div style="white-space:pre-line;">' + htmlEsc(text) + '</div><input type="' + (typ || 'text') + '" id="' + id + '" value="' + htmlEsc(vorgabe || '') + '" autocomplete="off" style="width:100%; margin-top:10px; box-sizing:border-box;">',
+    [{ label: 'Abbrechen', akt: 'nein' }, { label: 'OK', akt: 'ok', primaer: true }]);
+  setTimeout(()=>{ const el = document.getElementById(id); if(el){ el.focus(); el.onkeydown = (ev)=>{ if(ev.key === 'Enter' && betaOverlay.loesen) betaOverlay.loesen('ok'); }; } }, 50);
+  let wert = null;
+  const el0 = ()=> document.getElementById(id);
+  const a = await Promise.race([warte, new Promise(res=>{ const iv = setInterval(()=>{ const e = el0(); if(e) wert = e.value; else clearInterval(iv); }, 100); warte.then(()=> clearInterval(iv)); })]);
+  const e = el0(); if(e) wert = e.value;
+  betaOverlay.schliessen();
+  return a === 'ok' ? wert : null;
+}
+// =====================================================================
+// Einstellungen › Sicherheit (Datentresor, Sicherheitsbericht P1) -- wie in der Launch-Version
+// =====================================================================
+// Bisheriger Speicher: Angebot zur Umstellung auf den Passwortschutz
+function umzugAngebotHtml(){
+  if(window.DEMO_MODUS) return '';
+  return '<div class="einstellung-zeile" style="border:2px solid #2f6fd6; border-radius:12px; padding:10px 12px; margin:6px 0 12px;"><div class="txt"><b>Neu: Passwortschutz für deine Daten</b>' +
+    '<span class="hinweis">Bisher liegt der Schlüssel zu deinen Daten direkt neben den Daten im Browser; die App-Sperre ist nur ein Sichtschutz. Mit dem Passwortschutz öffnet nur dein Passwort (oder Fingerabdruck / Face ID) die Daten. Die Umstellung dauert etwa eine Minute; danach ersetzt sie die App-Sperre.</span>' +
+    '<button type="button" class="btn-primaer" id="umzugJetzt" style="margin-top:8px;">Jetzt umstellen</button></div></div>';
+}
+function umzugAngebotWiring(){
+  const b = document.getElementById('umzugJetzt'); if(!b) return;
+  b.onclick = async ()=>{
+    if(!await betaFrage('Jetzt auf den Passwortschutz umstellen?\n\nDu legst ein Passwort fest und bekommst einen Wiederherstellungsschlüssel, den du dir notieren musst. Ohne Passwort und Schlüssel sind die Daten auf diesem Gerät danach nicht mehr zu öffnen – auch nicht von mir.\n\nRechnungen und Dateien im OneDrive bleiben unberührt.', 'Weiter', 'Abbrechen')) return;
+    try{ await Speicher.warten(); }catch(_){}
+    TresorStart.umzugStarten();
+  };
+}
+function tresorAbschnittHtml(){
+  return `<div id="spaPasskeyBox"></div>
+    <div class="feld" style="margin-top:8px;"><label for="spaSperre">Automatisch sperren nach</label>
+      <select id="spaSperre">${[5, 15, 30, 60, 240].map(m=> '<option value="' + m + '"' + ((Number(ladeEinstellungen().sperreMinuten) || 15) === m ? ' selected' : '') + '>' + (m < 60 ? m + ' Minuten' : (m / 60) + ' Stunde' + (m > 60 ? 'n' : '')) + ' im Hintergrund</option>').join('')}</select></div>
+    <div class="spa-knoepfe">
+      <button type="button" class="btn-sekundaer" id="spaSperrenJetzt">Jetzt sperren</button>
+      <button type="button" class="btn-sekundaer" id="spaPasswort">Passwort ändern</button>
+      <button type="button" class="btn-sekundaer" id="spaCode">Neuen Wiederherstellungsschlüssel</button>
+      <button type="button" class="btn-sekundaer" id="spaProtokoll">Sicherheitsprotokoll</button>
+    </div>`;
+}
+async function passkeyBoxZeichnen(){
+  const box = document.getElementById('spaPasskeyBox'); if(!box) return;
+  const geht = await Tresor.passkeyUnterstuetzt();
+  if(!geht){ box.innerHTML = '<div class="design-hinweis">Entsperren mit Fingerabdruck/Face ID ist in diesem Browser nicht verfügbar (nötig: aktuelles iOS/Safari bzw. Android/Chrome mit Bildschirmsperre).</div>'; return; }
+  const liste = await Tresor.passkeys();
+  box.innerHTML = '<div class="einstellung-zeile spa-pk"><div class="txt">Entsperren mit Fingerabdruck / Face ID<span class="hinweis">' +
+    (liste.length ? 'Eingerichtet: ' + liste.map(p=> htmlEsc(p.name) + ' (' + new Date(p.am).toLocaleDateString('de-DE') + ')').join(', ') : 'Statt des Passworts. Passwort und Wiederherstellungsschlüssel bleiben gültig.') + '</span></div></div>' +
+    '<div class="spa-knoepfe"><button type="button" class="btn-sekundaer" id="spaPkNeu">' + (liste.length ? 'Weiteres Gerät einrichten' : 'Einrichten') + '</button>' +
+    liste.map(p=> '<button type="button" class="btn-sekundaer" data-pkweg="' + htmlEsc(p.id) + '">„' + htmlEsc(p.name) + '“ entfernen</button>').join('') + '</div>';
+  document.getElementById('spaPkNeu').onclick = async ()=>{
+    const pw = await betaEingabe('Zur Bestätigung dein Passwort:', '', 'password'); if(pw == null) return;
+    const vorschlag = /iPhone|iPad/.test(navigator.userAgent) ? 'iPhone' : /Android/.test(navigator.userAgent) ? 'Android-Handy' : 'Dieses Gerät';
+    const r = await Tresor.passkeyEinrichten(pw, vorschlag);
+    if(r.ok){ appToastAnzeigen('Fingerabdruck / Face ID eingerichtet.', 2500); passkeyBoxZeichnen(); return; }
+    const t = { passwort: 'Passwort falsch.', abbruch: null, kein_prf: 'Dieses Gerät bzw. dieser Passwort-Manager unterstützt das Entsperren per Passkey (PRF) noch nicht. Bitte System und Browser aktualisieren.', vorhanden: 'Auf diesem Gerät ist bereits ein Passkey eingerichtet.' }[r.fehler];
+    if(t !== null) betaOverlay.meldung(t || ('Einrichten fehlgeschlagen: ' + r.fehler));
+  };
+  box.querySelectorAll('[data-pkweg]').forEach(b=> b.onclick = async ()=>{
+    if(!await betaFrage('Entsperren per Fingerabdruck/Face ID für dieses Gerät entfernen?\n\nDen Passkey selbst kannst du danach in den Passwort-Einstellungen des Geräts löschen.', 'Entfernen', 'Abbrechen')) return;
+    await Tresor.passkeyEntfernen(b.dataset.pkweg); passkeyBoxZeichnen();
+  });
+}
+function tresorAbschnittWiring(){
+  const $ = (id)=> document.getElementById(id);
+  if(!$('spaSperre')) return;
+  passkeyBoxZeichnen();
+  $('spaSperre').onchange = ()=>{ const e = ladeEinstellungen(); e.sperreMinuten = Number($('spaSperre').value) || 15; speichereEinstellungen(e); };
+  $('spaSperrenJetzt').onclick = ()=> TresorStart.sperrenJetzt();
+  $('spaPasswort').onclick = async ()=>{
+    const alt = await betaEingabe('Bisheriges Passwort:', '', 'password'); if(alt == null) return;
+    if(!await Tresor.pruefePasswort(alt)){ betaOverlay.meldung('Passwort falsch.'); return; }
+    const n1 = await betaEingabe('Neues Passwort\n' + Tresor.PASSWORT_REGEL + ':', '', 'password'); if(n1 == null) return;
+    if(Tresor.passwortRegelFehler(n1)){ betaOverlay.meldung(Tresor.passwortRegelFehler(n1)); return; }
+    const n2 = await betaEingabe('Neues Passwort wiederholen:', '', 'password'); if(n2 == null) return;
+    if(n1 !== n2){ betaOverlay.meldung('Die Passwörter sind nicht gleich.'); return; }
+    await Tresor.passwortAendern(alt, false, n1);
+    appToastAnzeigen('Passwort geändert.', 3000);
+  };
+  $('spaCode').onclick = async ()=>{
+    const pw = await betaEingabe('Zur Bestätigung dein Passwort. Der bisherige Wiederherstellungsschlüssel gilt danach nicht mehr:', '', 'password'); if(pw == null) return;
+    const code = await Tresor.codeErneuern(pw);
+    if(!code){ betaOverlay.meldung('Passwort falsch.'); return; }
+    TresorStart.codeZeigen(code, ()=>{ const el = document.getElementById('tresorSeite'); if(el) el.remove(); });
+  };
+  $('spaProtokoll').onclick = async ()=>{
+    const l = await Tresor.protokollLesen();
+    const zeit = (iso)=>{ const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); };
+    const farbe = { fehlversuch: '#c0392b', fehler: '#c0392b', schluessel: '#8a5a00', passwort: '#8a5a00', umzug: '#2f6fd6' };
+    const zeilen = l.length ? l.slice(0, 200).map(e=> '<div class="prot-zeile"><span class="prot-zeit">' + htmlEsc(zeit(e.am)) + '</span> <b style="color:' + (farbe[e.art] || 'inherit') + '">' + htmlEsc(e.art) + '</b> ' + htmlEsc(e.text) + '</div>').join('') : '<div>Noch keine Einträge.</div>';
+    await betaOverlay.ergebnis('Sicherheitsprotokoll', '<div class="design-hinweis" style="margin-bottom:8px;">Nur auf diesem Gerät gespeichert, ohne Inhalte. ' + l.length + ' Ereignisse, neueste zuerst.</div><div id="protListe" style="max-height:55vh; overflow:auto; font-size:13px; line-height:1.45; text-align:left;">' + zeilen + '</div>', [{ label: 'Schließen', akt: 'ok', primaer: true }]);
+    betaOverlay.schliessen();
+  };
+}
+// Fehlversuche seit dem letzten Entsperren anzeigen (lokales Sicherheitsprotokoll)
+if(window.TRESOR_MODUS) setTimeout(()=>{ try{
+  const f = Tresor.fehlversucheVorher && Tresor.fehlversucheVorher();
+  if(f && f.n > 0) betaOverlay.meldung('Seit dem letzten Entsperren gab es ' + (f.n === 1 ? 'einen fehlgeschlagenen Versuch' : f.n + ' fehlgeschlagene Versuche') + ' (zuletzt ' + new Date(f.zuletzt).toLocaleString('de-DE') + ').\n\nWarst du das nicht, ändere dein Passwort. Einzelheiten: Einstellungen › Sicherheit › Sicherheitsprotokoll.');
+}catch(_){} }, 1500);
 function odsAbschnittZeichnen(){
   const box = document.getElementById('odsAbschnitt'); if(!box) return;
   const zul = LS.get('ods_zuletzt', 0);
@@ -25478,6 +25617,7 @@ const AppSperre = (()=>{
   // Pflicht: ist noch keine Sperre eingerichtet, kommt ein Fenster, das sich erst nach dem Einrichten schliesst
   // freiwillig: ist noch keine Sperre eingerichtet, wird sie einmal empfohlen -- "Ohne App-Sperre weiter" merkt sich die Wahl
   function pflichtPruefen(){
+    if(window.TRESOR_MODUS) return;   // Datentresor ersetzt die App-Sperre
     if(aktiv() || document.getElementById('asPflicht') || document.getElementById('einrSperre')) return;
     try{ if(LS.get('app_sperre_abgelehnt', false)) return; }catch(_){}
     const d = document.createElement('div'); d.id = 'asPflicht'; d.className = 'as-dialog';
@@ -25508,7 +25648,7 @@ const AppSperre = (()=>{
 // App-Sperre und der oeffentliche GOAE-Katalog-Cache.
 const Speicher = (()=>{
   const DB = 'rechnung-daten', V = 1;
-  const BLEIBT = /^(msal\.|server-telemetry|app_sperre$|ui_vorlieben$|hauptversion_v1$|beta___init$|positionsKatalogCache_v2$|einst_offen$)|login\.microsoftonline|login\.windows\.net|login\.live\.com/;
+  const BLEIBT = /^(msal\.|server-telemetry|app_sperre$|ui_vorlieben$|hauptversion_v1$|beta___init$|positionsKatalogCache_v2$|einst_offen$|tresor_|privat_umzug$)|login\.microsoftonline|login\.windows\.net|login\.live\.com/;
   const mem = new Map(), schreibt = new Map();
   let db = null, key = null, bereit = false, fehler = null;
   const enc = new TextEncoder(), dec = new TextDecoder();
@@ -25566,18 +25706,35 @@ const Speicher = (()=>{
     })();
     return z.p;
   }
+  // Tresor-Modus (Sicherheitsbericht P1): Alle Werte liegen im Datentresor (lokal/tresor.js), dessen Schluessel
+  // erst Passwort / Fingerabdruck / Wiederherstellungsschluessel oeffnet. Die Schnittstelle bleibt gleich, die App
+  // merkt keinen Unterschied. Eingeschaltet von lokal/tresor_start.js nach dem Entsperren.
+  let tresor = false;
   return {
-    start, bereit: ()=> bereit,
-    text(k){ return mem.has(k) ? mem.get(k) : null; },
-    setzen(k, text){ if(mem.get(k) === text) return; mem.set(k, text); einreihen(k); },
-    loeschen(k){ if(!mem.has(k)) return; mem.delete(k); einreihen(k); },
-    schluesselListe(){ return Array.from(mem.keys()); },
+    start, bereit: ()=> bereit || tresor,
+    tresorModus(){ tresor = true; mem.clear(); key = null; if(db){ try{ db.close(); }catch(_){} db = null; } },
+    // bisherige Datenbank schliessen (sonst blockiert sie das Loeschen nach dem Umzug)
+    altSchliessen(){ if(db){ try{ db.close(); }catch(_){} db = null; } },
+    istTresor: ()=> tresor,
+    // fuer den Umzug: alle bisherigen Eintraege (Text)
+    altAlles(){ const o = {}; mem.forEach((v, k)=>{ o[k] = v; }); return o; },
+    text(k){ if(tresor) return Tresor.kvText(k); return mem.has(k) ? mem.get(k) : null; },
+    setzen(k, text){ if(tresor){ if(Tresor.kvText(k) !== text) Tresor.kvSetzenText(k, text); return; } if(mem.get(k) === text) return; mem.set(k, text); einreihen(k); },
+    loeschen(k){ if(tresor){ if(Tresor.kvText(k) != null) Tresor.kvLoeschen(k); return; } if(!mem.has(k)) return; mem.delete(k); einreihen(k); },
+    schluesselListe(){ return tresor ? Tresor.kvSchluessel() : Array.from(mem.keys()); },
     demoFuellen(kv){ if(!window.DEMO_MODUS) return; mem.clear(); Object.entries(kv || {}).forEach(([k, v])=> mem.set(k, v)); },
-    // Rohdaten (Dokumentationsfotos) mit dem Geraeteschluessel ver-/entschluesseln -- Sicherheitsbericht P2
-    hatSchluessel(){ return !!key; },
-    async verBytes(buf){ if(!key) throw new Error('Speicher nicht bereit'); const iv = crypto.getRandomValues(new Uint8Array(12)); return { iv, d: new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, buf)) }; },
-    async entBytes(c){ if(!key) throw new Error('Speicher nicht bereit'); return crypto.subtle.decrypt({ name: 'AES-GCM', iv: c.iv }, key, c.d); },
-    warten(){ return Promise.all(Array.from(schreibt.values()).map(z=> z.p).filter(Boolean)); }
+    // Rohdaten (Dokumentationsfotos) ver-/entschluesseln -- Sicherheitsbericht P2.
+    // Format v1: Geraeteschluessel { v:1, iv, d }; v2: Tresor { v:2, d } (d = Paket aus Tresor.ver)
+    hatSchluessel(){ return tresor ? Tresor.offen() : !!key; },
+    async verBytes(buf){
+      if(tresor) return { v: 2, d: await Tresor.ver(new Uint8Array(buf)) };
+      if(!key) throw new Error('Speicher nicht bereit'); const iv = crypto.getRandomValues(new Uint8Array(12)); return { v: 1, iv, d: new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, buf)) };
+    },
+    async entBytes(c){
+      if(c && c.v === 2){ if(!tresor) throw new Error('Tresor nicht offen'); return (await Tresor.ent(c.d)).buffer; }
+      if(!key) throw new Error(tresor ? 'Foto mit dem alten Geräteschlüssel – wird beim nächsten Start umgestellt' : 'Speicher nicht bereit'); return crypto.subtle.decrypt({ name: 'AES-GCM', iv: c.iv }, key, c.d);
+    },
+    async warten(){ if(tresor){ for(let i = 0; i < 20; i++){ await Tresor.kvWarten(); if(!Tresor.schreibtNoch()) break; } return; } return Promise.all(Array.from(schreibt.values()).map(z=> z.p).filter(Boolean)); }
   };
 })();
 
@@ -25591,7 +25748,9 @@ const Speicher = (()=>{
   }
   if(!window.indexedDB || !window.crypto || !crypto.subtle){ fehlerZeigen(new Error('Dieser Browser kann die Daten nicht verschlüsselt speichern.')); return; }
   if(window.DEMO_MODUS){ demoVorbereiten().then(appLos, fehlerZeigen); return; }
-  Speicher.start().then(appLos, fehlerZeigen);
+  // Datentresor (lokal/tresor_start.js): Sperrseite bzw. Einrichten; bis zum Umzug laeuft der bisherige Speicher
+  const los = ()=> TresorStart.start({ appLos, altStart: ()=> Speicher.start() }).catch(fehlerZeigen);
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', los); else los();
   // ---------- Demo: erfundene Daten, alles nur im Arbeitsspeicher ----------
   // OneDrive wird durch eine lokale Nachbildung ersetzt (lokal/lokalgraph.js auf einem
   // Tresor im Arbeitsspeicher); die echten Daten (Speicher, OneDrive) bleiben unberuehrt.
@@ -25600,7 +25759,7 @@ const Speicher = (()=>{
     const app = document.getElementById('app');
     if(app) app.innerHTML = '<div style="padding:32px 20px; text-align:center;"><h3>Demo wird vorbereitet …</h3><p>Mit erfundenen Daten. Deine echten Daten bleiben unberührt; in der Demo wird nichts gespeichert.</p>' + '<div style="height:8px; border-radius:4px; background:rgba(127,127,127,.25); overflow:hidden; margin:18px auto 6px; max-width:320px;"><div id="demoBalken" style="height:100%; width:0; background:#7d4e9e; transition:width .2s;"></div></div><div id="demoSchritt" style="font-size:13px; opacity:.75;">Demo-Daten werden geladen …</div>' + '</div>';
     const stand = (a, t)=>{ const b = document.getElementById('demoBalken'); if(b) b.style.width = Math.round(Math.max(0, Math.min(1, a)) * 100) + '%'; const s = document.getElementById('demoSchritt'); if(s && t) s.textContent = t; };
-    for(const f of ['lib/pdf-lib.min.js', 'lokal/krypto.js', 'lokal/tresor.js', 'lokal/mappe.js', 'lokal/docxpdf.js', 'lokal/lokalgraph.js']) await skript(f);
+    for(const f of ['lib/pdf-lib.min.js', 'lokal/mappe.js', 'lokal/docxpdf.js', 'lokal/lokalgraph.js']) await skript(f);
     await Speicher.start();
     await Tresor.pruefen(); await Tresor.demoOeffnen();
     stand(0.03, 'Demo-Daten werden geladen …');

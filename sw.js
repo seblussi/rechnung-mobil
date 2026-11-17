@@ -12,11 +12,11 @@
 //
 // Bei JEDER Veröffentlichung: CACHE_NAME erhöhen und danach „node werkzeuge/sw_dateien.js“ ausführen (trägt die
 // Prüfsummen ein; tests/statisch.js prüft das). Neue Dateien der App hier in DATEIEN aufnehmen.
-const CACHE_NAME = 'rechnungserfassung-v471';
+const CACHE_NAME = 'rechnungserfassung-v472';
 const CACHE_PRAEFIX = CACHE_NAME.replace(/\d+$/, '');   // alle Versionen dieser App: gleicher Anfang, andere Nummer
 const DATEIEN = {
 // >>> DATEIEN (Prüfsummen erzeugt von werkzeuge/sw_dateien.js – nicht von Hand ändern)
-  './Rechnungserfassung_Mobil.html': 'M0qGUroI9rSZq75V6KhgU+BUMtXvWOyJkwJlJZUiCZI=',
+  './Rechnungserfassung_Mobil.html': 'L8NzxBROZDA4oBBEQSvp+6yPpi7CDP28PD+GkqSjNjE=',
   './manifest.json': 'oGmycJijIIy67JQt2/9DPvS7LFo04ldRKRTIcpUcfxY=',
   './': 'HAHncj5UelMdOHtP3EGp0CI7BT/TzLQ7grnGteDXT60=',
   './lib/msal/msal-browser.min.js': 'oW1XExMUwEJRJjFmLVpFT6UqcZoxojm+4rsSOZfth4E=',
@@ -36,10 +36,13 @@ const DATEIEN = {
   './lib/pdf-lib.min.js': 'D5pcrQeUHwgmWGyU4InYm5GMRuXBfPLVo8b2ZuO8aU8=',
   './lib/xlsx/xlsx.full.min.js': 'yVBhl8r4CaB1tt7h2g02+xnacVj/6KiOewyWxdhiPJk=',
   './lokal/docxpdf.js': '4UQ77dDAw1GjB6DwMBp9uwnlX6x0PGGQOUZKrA7i7MA=',
-  './lokal/krypto.js': 'AJtaShbl+s0HQk3rd2Dvk3hhhXlF4PSgiqIQKIBgQDQ=',
+  './lokal/krypto.js': 'j9HHt3IQYGDy7ei52Ax9+RJzaHtKmki2jraAHWnS1XA=',
   './lokal/lokalgraph.js': 'm1JWexsTvx9bUnWGRvROSUvoS+C9Z7WHZFHLlu3vJTA=',
   './lokal/mappe.js': 'egrkS5t7q7gobcjPyN6WvgCtYtvIcAAtLyF+FenRYHk=',
-  './lokal/tresor.js': '5nSAa4h89X/rScO3F/q7A4L4hObkes+NbUoHyMbo+5w=',
+  './lokal/tresor_start.js': 'pe+yyAXMuUMMuJiey/+Uqh4/JQ+1SeI+QslaNyM8QDk=',
+  './lokal/sperrliste.js': '4Ml51NOEu8uk1tqq9/FM0B4a8bBO1z3hLr7FgtWHFFY=',
+  './lib/argon2.umd.min.js': 'sPJ7Mmh0Fi/T+GVaGZT4WIHEMq/YfF23Flyb93WmykE=',
+  './lokal/tresor.js': 'noikxcsBLy98iRMjOFViQnfX+1uG+Wzx+6CFVwJH7oI=',
 // <<< DATEIEN
 };
 const NIE_CACHEN = ['nominatim.openstreetmap.org', '/karten-bw/', 'routing.openstreetmap.de', 'overpass-api.de', 'overpass.kumi.systems', 'overpass.private.coffee', 'tile.openstreetmap.org', 'tiles.openfreemap.org', 'project-osrm.org', 'graph.microsoft.com', 'login.microsoftonline.com', 'login.live.com'];

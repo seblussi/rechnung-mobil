@@ -17,10 +17,24 @@ async function geraet(browser, basis, opt){
   return p;
 }
 // App laden und warten, bis das Hauptskript läuft
-async function oeffnen(p, basis){
+const PASSWORT = 'Ein-Langes-Test-Passwort-2026!';
+// Neues Geraet im echten Betrieb: Passwort festlegen, Wiederherstellungsschluessel bestaetigen (Datentresor)
+async function tresorEinrichten(p){
+  await p.waitForSelector('#tsPw1', { timeout: 30000 });
+  await p.fill('#tsPw1', PASSWORT); await p.fill('#tsPw2', PASSWORT); await p.click('#tsWeiter');
+  await p.waitForSelector('#tsCode', { timeout: 30000 });
+  const code = (await p.textContent('#tsCode')).trim(); p.code = code;
+  await p.fill('#tsLetzter', code.split('-').pop()); await p.click('#tsFertig');
+  await p.waitForTimeout(500);
+  if(await p.$('#tsPkSpaeter')) await p.click('#tsPkSpaeter');
+}
+async function entsperren(p, pw){ await p.waitForSelector('#tsPw', { timeout: 30000 }); await p.fill('#tsPw', pw || PASSWORT); await p.evaluate(()=> document.getElementById('tsAuf').click()); }
+async function oeffnen(p, basis, opt){
+  opt = opt || {};
   await p.goto(basis + SEITE);
+  if(opt.einrichten) await tresorEinrichten(p);
   await p.waitForFunction(()=> typeof ansichtStart === 'function' && typeof APP_VERSION !== 'undefined' && typeof LS !== 'undefined', null, { timeout: 40000 });
   await p.waitForTimeout(2500);
 }
 const appLaeuft = async ()=>{};
-module.exports = { SEITE, geraet, oeffnen, appLaeuft };
+module.exports = { SEITE, geraet, oeffnen, appLaeuft, tresorEinrichten, entsperren, PASSWORT };

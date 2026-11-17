@@ -7,7 +7,7 @@ const stand = (p)=> p.evaluate(async ()=>{
   db.close(); const out = {};
   for(let i = 0; i < ks.length; i++){ const v = vs[i], name = ks[i].split('/')[0];
     if(v instanceof Blob) out[name] = 'klartext';
-    else if(v && v.iv && v.d) out[name] = (v.d[0] === 0xFF && v.d[1] === 0xD8 ? 'JPEG-Kennung sichtbar' : 'verschlüsselt') + (v.oben ? ', im OneDrive' : '');
+    else if(v && v.d && (v.v === 2 || v.iv)) out[name] = (v.d[0] === 0xFF && v.d[1] === 0xD8 ? 'JPEG-Kennung sichtbar' : 'verschlüsselt') + (v.oben ? ', im OneDrive' : '');
     else out[name] = 'unbekannt'; }
   return out; });
 module.exports = async ({ browser, basis, pr })=>{
@@ -30,7 +30,7 @@ module.exports = async ({ browser, basis, pr })=>{
     db.close();
   });
   pr('Ausgangslage: drei unverschlüsselte Fotos', Object.values(await stand(p)).every((x)=> x === 'klartext'), await stand(p));
-  await oeffnen(p, basis);
+  await oeffnen(p, basis, { einrichten: true });
   const leer = { vital: {}, zustand: {}, ekg: { befunde: [], text: '' }, anamnese: '', befund: '', therapie: '', sonstiges: '' };
   await p.evaluate((leer)=>{
     LS.set('doku_Dalt', Object.assign({ id: 'Dalt', fotos: [{ name: 'foto_01.jpg', am: '2026-11-01T10:00:00Z', oben: true }] }, leer));

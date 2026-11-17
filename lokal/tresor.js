@@ -12,7 +12,8 @@
 //   unverschluesselt im localStorage -- enthaelt keine Patientendaten.
 (function(global){
   'use strict';
-  const DB_NAME = 'rechnungsapp_tresor', DB_VERSION = 1;
+  // eigener Datenbankname je App (Privatversion und Launch-Version liegen unter derselben Adresse seblussi.github.io)
+  const DB_NAME = global.TRESOR_DB_NAME || 'rechnungsapp_tresor', DB_VERSION = 1;
   let dbP = null;
   function db(){
     return dbP || (dbP = new Promise((ok, fehler)=>{
@@ -60,11 +61,37 @@
   const hoerer = [];
   const kvSchreibt = new Map();        // schluessel -> {laeuft, nochmal, p}
   let epoche = 0;                      // zaehlt jedes Sperren: Schreibvorgaenge von davor brechen ab
+  let umbau = false;                   // "Schluessel erneuern" laeuft: nichts darf mit dem alten Schluessel geschrieben werden
+  const umbauOffen = new Set();        // kv-Eintraege, die waehrenddessen geaendert wurden -> danach mit dem neuen Schluessel schreiben
+  let dateiSchreibt = 0;               // laufende Datei-Schreibvorgaenge (der Umbau wartet, bis keiner mehr laeuft)
+  const nichtLesbar = [];              // Eintraege, die sich beim Laden nicht entschluesseln liessen (nur Namen)
 
   function pfadNorm(p){ return String(p || '').replace(/\\/g, '/').split('/').map(s=> s.trim()).filter(Boolean).join('/'); }
   function pfadKlein(p){ return pfadNorm(p).toLowerCase(); }
   function neueId(){ return Array.from(Krypto.zufall(10), b=> b.toString(16).padStart(2, '0')).join(''); }
   function melden(e){ hoerer.forEach(f=>{ try{ f(e); }catch(_){} }); }
+
+  // ---------- Lokales Protokoll ----------
+  // Sicherheitsrelevante Ereignisse und Fehler mit Zeitpunkt (Sicherheitsbericht: "Lokales Sicherheitsprotokoll",
+  // "Fehler sichtbar machen"). Nur Art und kurzer Text -- keine Inhalte, keine Patientendaten. Liegt in 'meta', weil
+  // es auch im gesperrten Zustand schreibbar sein muss (Fehlversuche). Hoechstens PROTOKOLL_MAX Eintraege.
+  const PROTOKOLL_MAX = 300;
+  let protP = Promise.resolve(), fehlVorher = { n: 0, zuletzt: null };
+  function protokoll(art, text){
+    const e = { am: new Date().toISOString(), art: String(art || '').slice(0, 30), text: String(text || '').slice(0, 200) };
+    protP = protP.then(async ()=>{ const l = (await holen('meta', 'protokoll')) || []; l.push(e); await setzen('meta', 'protokoll', l.slice(-PROTOKOLL_MAX)); }).catch(()=>{});
+    return protP;
+  }
+  // -> neueste zuerst
+  async function protokollLesen(){ await protP; try{ return ((await holen('meta', 'protokoll')) || []).slice().reverse(); }catch(_){ return []; } }
+  // Fehlversuche seit dem letzten erfolgreichen Entsperren merken (die App zeigt sie nach dem Entsperren an)
+  async function fehlversucheZaehlen(){
+    try{
+      await protP; const l = (await holen('meta', 'protokoll')) || []; let n = 0, zuletzt = null;
+      for(let i = l.length - 1; i >= 0 && l[i].art !== 'entsperrt'; i--){ if(l[i].art === 'fehlversuch'){ n++; if(!zuletzt) zuletzt = l[i].am; } }
+      fehlVorher = { n, zuletzt };
+    }catch(_){ fehlVorher = { n: 0, zuletzt: null }; }
+  }
 
   // ---------- Status / Einrichten / Entsperren ----------
   async function pruefen(){
@@ -73,8 +100,12 @@
     geraet = await holen('meta', 'geraet');
     if(!geraet){ geraet = { id: neueId(), angelegt: new Date().toISOString() }; await setzen('meta', 'geraet', geraet); }
     if(!info){ status = 'neu'; return status; }
-    const gemerkt = await holen('meta', 'gemerkt');
-    if(gemerkt && gemerkt.key){ key = gemerkt.key; await laden(); status = 'offen'; return status; }
+    // Sicherheitsbericht L4: "Auf diesem Geraet entsperrt lassen" gibt es nicht mehr. Ein frueher auf dem Geraet
+    // hinterlegter Schluessel wird hier entfernt -- der Tresor oeffnet sich nur noch mit Passwort, mit
+    // Fingerabdruck/Face ID (Passkey) oder mit dem Wiederherstellungsschluessel. Die Sperrseite weist einmalig darauf hin.
+    try{
+      if(await holen('meta', 'gemerkt')){ await weg('meta', 'gemerkt'); await setzen('meta', 'merkenEntfernt', { am: new Date().toISOString() }); protokoll('umstellung', '„Entsperrt lassen“ abgeschaltet, hinterlegter Schlüssel gelöscht'); }
+    }catch(e){ console.warn('Tresor: hinterlegten Schlüssel entfernen', e); }
     status = 'gesperrt'; return status;
   }
   // Demo (Privatversion ohne Tresor-Passwort): zufaelliger Schluessel, nur im Arbeitsspeicher
@@ -85,10 +116,14 @@
     await laden(); status = 'offen';
   }
   async function laden(){
-    kvMem.clear(); dMeta.clear(); pfadIdx.clear();
+    kvMem.clear(); dMeta.clear(); pfadIdx.clear(); nichtLesbar.length = 0;
     for(const [k, paket] of await alle('kv')){
-      try{ kvMem.set(k, Krypto.text(await Krypto.entschluesseln(key, paket))); }catch(e){ console.warn('Tresor: Eintrag nicht lesbar', k); }
+      try{ kvMem.set(k, Krypto.text(await Krypto.entschluesseln(key, paket))); }
+      catch(e){ console.warn('Tresor: Eintrag nicht lesbar', k); nichtLesbar.push(k); protokoll('fehler', 'Eintrag nicht lesbar: ' + k); try{ melden({ art: 'fehler', text: 'Ein gespeicherter Eintrag ließ sich nicht lesen (' + k + '). Bitte nichts löschen und die letzte Sicherung bereithalten.' }); }catch(_){} }
     }
+    // Nicht lesbare Eintraege dauerhaft vormerken (ueberlebt Neustarts): Der Abgleich holt sie einmalig neu aus
+    // dem OneDrive, statt den fehlenden lokalen Stand als Loeschung oder Neuanfang zu verteilen. Nur Namen.
+    if(nichtLesbar.length){ try{ const alt = (await holen('sync', 'neuholen')) || []; await setzen('sync', 'neuholen', Array.from(new Set(alt.concat(nichtLesbar)))); }catch(e){ console.warn('Tresor: Vormerken nicht lesbarer Einträge', e); } }
     for(const [id, paket] of await alle('dmeta')){
       try{ const m = await Krypto.jsonEnt(key, paket); dMeta.set(id, m); pfadIdx.set(pfadKlein(m.pfad), id); }catch(e){ console.warn('Tresor: Dateiinfo nicht lesbar', id); }
     }
@@ -101,6 +136,7 @@
     await setzen('meta', 'schluessel', info);
     await laden();
     status = 'offen';
+    protokoll('eingerichtet', 'Datentresor neu angelegt');
     melden({ art: 'schluessel' });
     return { code };
   }
@@ -112,12 +148,19 @@
     info = fremdInfo; key = r.key;
     await setzen('meta', 'schluessel', info);
     await laden(); status = 'offen';
+    protokoll('eingerichtet', 'Mit vorhandenem Datentresor verbunden (' + (mitCode ? 'Wiederherstellungsschlüssel' : 'Passwort') + ')');
     return true;
   }
-  async function entsperren(geheim, mitCode, merken){
+  async function entsperren(geheim, mitCode){
     if(!info) info = await holen('meta', 'schluessel');
     const r = await Krypto.auswickeln(info, geheim, mitCode);
-    if(!r) return false;
+    if(!r){
+      // technischer Fehler (z. B. Argon2 nicht geladen) ist kein Fehlversuch
+      if(Krypto.technischerFehler && Krypto.technischerFehler()) protokoll('fehler', 'Technischer Fehler beim Entsperren');
+      else protokoll('fehlversuch', mitCode ? 'Wiederherstellungsschlüssel falsch' : 'Passwort falsch');
+      return false;
+    }
+    await fehlversucheZaehlen(); protokoll('entsperrt', mitCode ? 'mit Wiederherstellungsschlüssel' : 'mit Passwort');
     key = r.key;
     // aeltere Tresore beim Entsperren auf Argon2id umstellen (Hauptschluessel bleibt gleich)
     try{
@@ -128,18 +171,13 @@
         if(neu !== info){ info = neu; await setzen('meta', 'schluessel', info); melden({ art: 'schluessel' }); }
       }
     }catch(e){ console.warn('Tresor: Umstellung auf Argon2id', e); }
-    if(merken) await setzen('meta', 'gemerkt', { key: await Krypto.nichtExportierbar(r.roh), am: new Date().toISOString() });
     r.roh.fill(0);
     await laden(); status = 'offen';
     return true;
   }
-  async function geraetMerken(an, passwort){
-    if(!an){ await weg('meta', 'gemerkt'); return true; }
-    const r = await Krypto.auswickeln(info, passwort, false); if(!r) return false;
-    await setzen('meta', 'gemerkt', { key: await Krypto.nichtExportierbar(r.roh), am: new Date().toISOString() });
-    r.roh.fill(0); return true;
-  }
-  async function istGemerkt(){ return !!(await holen('meta', 'gemerkt')); }
+  // Hinweis fuer die Sperrseite: auf diesem Geraet war frueher "Entsperrt lassen" eingeschaltet (siehe pruefen)
+  async function merkenEntfernt(){ try{ return !!(await holen('meta', 'merkenEntfernt')); }catch(_){ return false; } }
+  async function merkenHinweisErledigt(){ try{ await weg('meta', 'merkenEntfernt'); }catch(_){} }
   // Passwort-Regeln nach NIST SP 800-63B Rev. 4: Laenge statt Zeichenarten-Pflicht,
   // dafuer Abgleich mit einer Sperrliste gaengiger Passwoerter und einfacher Muster.
   // Gilt beim Festlegen/Aendern und beim Entsperren (schwaches Altpasswort -> Wechsel).
@@ -168,20 +206,100 @@
     const f = passwortFehlt(pw); if(!f.length) return '';
     return /^mind\./.test(f[0]) ? 'Noch zu kurz: ' + f[0] + '.' : 'Zu leicht zu erraten: ' + f.join(', ') + '.';
   }
+  // ---------- Schluessel erneuern (Sicherheitsbericht L3) ----------
+  // Ein Passwortwechsel verpackt nur denselben Hauptschluessel neu: Wer eine aeltere Sicherungsdatei oder eine aeltere
+  // Schluesselinfo besitzt, kaeme mit dem alten Passwort weiter an den Schluessel. Hier entsteht ein NEUER
+  // Hauptschluessel mit neuem Passwort und neuem Wiederherstellungsschluessel. Alle Eintraege und Dateien werden mit
+  // dem alten Schluessel gelesen, mit dem neuen verschluesselt und in EINER Datenbank-Transaktion ersetzt -- ganz oder
+  // gar nicht. Geht vorher etwas schief (auch ein einziger nicht lesbarer Eintrag), bleibt alles, wie es war.
+  // Der Zustand des Abgleichs wird geleert und "erneuert" vorgemerkt: sync.js ersetzt danach den OneDrive-Ordner.
+  // Passkeys (Fingerabdruck) enthalten den alten Schluessel und werden entfernt.
+  // -> { ok: true, code } | { fehler: 'demo'|'passwort'|'regel'|'gleich'|'nichtlesbar'|'beschaeftigt'|text }
+  async function schluesselErneuern(altPasswort, neuesPasswort, fortschritt){
+    brauchtOffen();
+    if(DEMO) return { fehler: 'demo' };
+    if(umbau) return { fehler: 'beschaeftigt' };
+    const stand = (t)=>{ try{ if(fortschritt) fortschritt(t); }catch(_){} };
+    if(passwortRegelFehler(neuesPasswort)) return { fehler: 'regel' };
+    if(altPasswort === neuesPasswort) return { fehler: 'gleich' };
+    const alt = await Krypto.auswickeln(info, altPasswort, false); if(!alt) return { fehler: 'passwort' }; alt.roh.fill(0);
+    if(nichtLesbar.length) return { fehler: 'nichtlesbar', eintrag: nichtLesbar[0] };
+    umbau = true;
+    try{
+      // laufende Schreibvorgaenge abwarten; neue werden vorgemerkt (kv) bzw. abgewiesen (Dateien)
+      await kvWarten();
+      for(let i = 0; dateiSchreibt > 0; i++){ if(i > 1500) return { fehler: 'beschaeftigt' }; await new Promise(r=> setTimeout(r, 20)); }
+      stand('Neuer Schlüssel wird erzeugt …');
+      const code = Krypto.neuerCode();
+      const neu = await Krypto.hauptschluesselNeu(neuesPasswort, code); neu.roh.fill(0);
+      neu.info.erneuert = new Date().toISOString();
+      // Oeffnen neues Passwort und neuer Wiederherstellungsschluessel den neuen Schluessel wirklich? (vor jeder Aenderung pruefen)
+      const p1 = await Krypto.auswickeln(neu.info, neuesPasswort, false), p2 = await Krypto.auswickeln(neu.info, code, true);
+      if(!p1 || !p2) return { fehler: 'Der neue Schlüssel ließ sich nicht prüfen.' };
+      p1.roh.fill(0); p2.roh.fill(0);
+      // alles lesen und neu verschluesseln -- zunaechst nur im Arbeitsspeicher
+      const neuP = { kv: [], dmeta: [], ddaten: [] }; let nr = 0;
+      for(const n of ['kv', 'dmeta', 'ddaten']){
+        const saetze = await alle(n);
+        for(const [k, paket] of saetze){
+          let klar;
+          try{ klar = await Krypto.entschluesseln(key, paket); }catch(e){ return { fehler: 'nichtlesbar', eintrag: n + '/' + k }; }
+          const p = await Krypto.verschluesseln(neu.key, klar);
+          if(neuP[n].length === 0){   // Stichprobe je Ablage: laesst sich das Neue mit dem neuen Schluessel lesen?
+            const z = await Krypto.entschluesseln(p1.key, p);
+            if(z.length !== klar.length || z.some((b, i)=> b !== klar[i])) return { fehler: 'Die Gegenprobe der neuen Verschlüsselung ist fehlgeschlagen.' };
+          }
+          neuP[n].push([k, p]);
+          if(++nr % 25 === 0) stand('Verschlüssele neu … ' + nr);
+        }
+      }
+      const syncWeg = (await alle('sync')).map(([k])=> k).filter(k=> typeof k === 'string' && (k.startsWith('o:') || k === 'offen' || k === 'neuholen'));
+      // in einem Zug ersetzen: ganz oder gar nicht
+      stand('Speichere …');
+      const d = await db();
+      await new Promise((ok, nein)=>{
+        const t = d.transaction(['meta', 'kv', 'dmeta', 'ddaten', 'sync'], 'readwrite');
+        for(const n of ['kv', 'dmeta', 'ddaten']){ const st = t.objectStore(n); neuP[n].forEach(([k, v])=> st.put(v, k)); }
+        const m = t.objectStore('meta'); m.put(neu.info, 'schluessel'); m.delete('passkeys'); m.delete('gemerkt');
+        const sy = t.objectStore('sync'); syncWeg.forEach(k=> sy.delete(k)); sy.put({ am: neu.info.erneuert }, 'erneuert');
+        t.oncomplete = ()=> ok(); t.onerror = ()=> nein(t.error || new Error('Speichern fehlgeschlagen')); t.onabort = ()=> nein(t.error || new Error('Speichern abgebrochen'));
+      });
+      key = neu.key; info = neu.info;
+      protokoll('schluessel', 'Schlüssel erneuert (' + nr + ' Einträge neu verschlüsselt), neues Passwort, neuer Wiederherstellungsschlüssel');
+      melden({ art: 'schluessel', erneuert: true });
+      return { ok: true, code, eintraege: nr };
+    }catch(e){
+      return { fehler: (e && e.message) || String(e) };
+    }finally{
+      umbau = false;
+      // waehrend des Umbaus geaenderte Eintraege jetzt schreiben (mit dem dann gueltigen Schluessel)
+      const offenK = Array.from(umbauOffen); umbauOffen.clear(); offenK.forEach(k=> kvSchreibenEinreihen(k));
+    }
+  }
+  // Datei-Schreibvorgaenge: waehrend "Schluessel erneuern" abweisen und sonst mitzaehlen
+  function schreibend(f){
+    return async function(){
+      if(umbau) throw new Error('Der Datentresor wird gerade neu verschlüsselt – bitte einen Moment warten.');
+      dateiSchreibt++;
+      try{ return await f.apply(null, arguments); } finally{ dateiSchreibt--; }
+    };
+  }
   async function passwortAendern(altGeheim, mitCode, neu){
     const r = await Krypto.auswickeln(info, altGeheim, mitCode); if(!r) return false;
     info = await Krypto.passwortNeu(info, r.roh, neu); r.roh.fill(0);
     await setzen('meta', 'schluessel', info);
-    if(await istGemerkt()) await weg('meta', 'gemerkt');   // nach Passwortwechsel neu merken lassen
+    protokoll('passwort', 'Passwort geändert' + (mitCode ? ' (mit Wiederherstellungsschlüssel)' : ''));
     melden({ art: 'schluessel' });
     return true;
   }
   // Neuen Wiederherstellungsschluessel ausgeben (alter wird ungueltig)
   async function codeErneuern(passwort){
     const r = await Krypto.auswickeln(info, passwort, false); if(!r) return null;
-    const code = Krypto.neuerCode();
+    const code = Krypto.neuerCode(), erneuert = info && info.erneuert;
     info = await Krypto.einwickeln(r.roh, passwort, code); r.roh.fill(0);
+    if(erneuert) info.erneuert = erneuert;   // Kennzeichen "Schluessel erneuert am ..." behalten (Meldung auf anderen Geraeten)
     await setzen('meta', 'schluessel', info);
+    protokoll('passwort', 'Wiederherstellungsschlüssel erneuert');
     melden({ art: 'schluessel' });
     return code;
   }
@@ -261,6 +379,7 @@
       const k = await Krypto.prfSchluessel(aus, salt); aus.fill(0);
       eintrag.wrap = Krypto.b64(await Krypto.verschluesseln(k, r.roh));
       await setzen('meta', 'passkeys', vorhandene.concat([eintrag]));
+      protokoll('passkey', 'Fingerabdruck / Face ID eingerichtet (' + eintrag.name + ')');
       return { ok: true };
     } finally { r.roh.fill(0); }
   }
@@ -275,11 +394,12 @@
       const k = await Krypto.prfSchluessel(g.ausgabe, Krypto.ausB64(g.eintrag.salt)); g.ausgabe.fill(0);
       const roh = await Krypto.entschluesseln(k, Krypto.ausB64(g.eintrag.wrap));
       key = await Krypto.nichtExportierbar(roh); roh.fill(0);
-    }catch(e){ return 'Der Passkey passt nicht (mehr) zu diesem Datentresor.'; }
+    }catch(e){ protokoll('fehlversuch', 'Passkey passt nicht zum Datentresor'); return 'Der Passkey passt nicht (mehr) zu diesem Datentresor.'; }
+    await fehlversucheZaehlen(); protokoll('entsperrt', 'mit Fingerabdruck / Face ID');
     await laden(); status = 'offen';
     return true;
   }
-  async function passkeyEntfernen(id){ await setzen('meta', 'passkeys', (await passkeys()).filter(p=> p.id !== id)); }
+  async function passkeyEntfernen(id){ await setzen('meta', 'passkeys', (await passkeys()).filter(p=> p.id !== id)); protokoll('passkey', 'Fingerabdruck / Face ID entfernt'); }
 
   function offen(){ return status === 'offen' && !!key; }
   function brauchtOffen(){ if(!offen()) throw new Error('Der Datentresor ist gesperrt.'); }
@@ -290,19 +410,25 @@
     let z = kvSchreibt.get(k); if(!z){ z = { laeuft: false, nochmal: false }; kvSchreibt.set(k, z); }
     if(z.laeuft){ z.nochmal = true; return z.p; }
     z.laeuft = true;
-    const e = epoche, schluessel = key;   // Stand beim Start: gilt nur, solange nicht gesperrt wird
+    const e = epoche;   // Stand beim Start: gilt nur, solange nicht gesperrt wird
     z.p = (async ()=>{
       try{
         do{
           z.nochmal = false;
           // Inzwischen gesperrt? Dann ist der Arbeitsspeicher geleert -- ein fehlender Wert bedeutet
           // jetzt NICHT "geloescht". Nichts mehr schreiben und vor allem nichts loeschen.
-          if(e !== epoche || !schluessel) break;
-          const t = kvMem.get(k);
+          if(e !== epoche || !key) break;
+          // Der Schluessel wird gerade erneuert: nicht mit dem alten schreiben, sondern vormerken (schluesselErneuern holt es nach)
+          if(umbau){ umbauOffen.add(k); break; }
+          const schluessel = key, t = kvMem.get(k);
           if(t == null) await weg('kv', k);
-          else await setzen('kv', k, await Krypto.verschluesseln(schluessel, t));
+          else {
+            const paket = await Krypto.verschluesseln(schluessel, t);
+            if(umbau){ umbauOffen.add(k); break; }   // Umbau hat waehrend des Verschluesselns begonnen
+            await setzen('kv', k, paket);
+          }
         } while(z.nochmal);
-      }catch(err){ console.error('Tresor: Schreiben fehlgeschlagen', k, err); melden({ art: 'fehler', text: 'Speichern fehlgeschlagen: ' + (err.message || err) }); }
+      }catch(err){ console.error('Tresor: Schreiben fehlgeschlagen', k, err); protokoll('fehler', 'Speichern fehlgeschlagen: ' + k + ' (' + String((err && err.message) || err).slice(0, 80) + ')'); melden({ art: 'fehler', text: 'Speichern fehlgeschlagen: ' + (err.message || err) }); }
       finally{ z.laeuft = false; }
     })();
     return z.p;
@@ -433,13 +559,14 @@
   }
   // modus 'ersetzen': alles vorher loeschen; 'ergaenzen': nur fehlende/neuere
   async function wiederherstellen(s, modus, fortschritt){
+    protokoll('sicherung', 'Sicherung eingespielt (' + (modus === 'ersetzen' ? 'alles ersetzt' : 'ergänzt') + ')');
     brauchtOffen();
     if(!s || s.format !== 'rechnungsapp-sicherung') throw new Error('Das ist keine Sicherung dieser App.');
-    if(modus === 'ersetzen'){
-      for(const k of Array.from(kvMem.keys())) kvLoeschen(k, 'sicherung');
-      for(const m of Array.from(dMeta.values())) await dateiEntfernenId(m.id, 'sicherung');
-    }
-    for(const [k, v] of Object.entries(s.kv || {})){ if(modus === 'ersetzen' || !kvMem.has(k)) kvSetzenText(k, v, 'sicherung'); }
+    // "Alles ersetzen" in sicherer Reihenfolge: ERST den Stand der Sicherung schreiben, ZULETZT Ueberzaehliges
+    // loeschen. Wird die App mittendrin geschlossen, fehlt dadurch nichts -- schlimmstenfalls bleibt Altes stehen
+    // und ein zweiter Durchlauf raeumt auf. (Frueher: erst alles loeschen, dann schreiben.)
+    const kvNeu = s.kv || {};
+    for(const [k, v] of Object.entries(kvNeu)){ if(modus === 'ersetzen' || !kvMem.has(k)) kvSetzenText(k, v, 'sicherung'); }
     const alle = s.dateien || []; let nr = 0;
     for(const x of alle){
       if(fortschritt){ try{ fortschritt(++nr, alle.length); }catch(_){} }
@@ -448,6 +575,12 @@
       await dateiEinspielen(x.meta, x.daten ? Krypto.ausB64(x.daten) : null, 'sicherung');
     }
     await kvWarten();
+    if(modus === 'ersetzen'){
+      const kvBleibt = new Set(Object.keys(kvNeu)), idBleibt = new Set(alle.map(x=> x.meta.id));
+      for(const k of Array.from(kvMem.keys())) if(!kvBleibt.has(k)) kvLoeschen(k, 'sicherung');
+      for(const m of Array.from(dMeta.values())) if(!idBleibt.has(m.id)) await dateiEntfernenId(m.id, 'sicherung');
+      await kvWarten();
+    }
   }
   async function speicherDauerhaft(){
     if(DEMO) return false;
@@ -482,16 +615,16 @@
 
   global.Tresor = {
     jsonMitFortschritt,
-    pruefen, einrichten, einrichtenMitInfo, demoOeffnen, entsperren, sperren, allesLoeschen, geraetMerken, istGemerkt, passwortAendern, codeErneuern, pruefePasswort, passwortFehlt, passwortRegelFehler, PASSWORT_REGEL,
+    pruefen, einrichten, einrichtenMitInfo, demoOeffnen, entsperren, sperren, allesLoeschen, merkenEntfernt, merkenHinweisErledigt, passwortAendern, schluesselErneuern, protokoll, protokollLesen, fehlversucheVorher: ()=> Object.assign({}, fehlVorher), codeErneuern, pruefePasswort, passwortFehlt, passwortRegelFehler, PASSWORT_REGEL,
     passkeyUnterstuetzt, passkeys, passkeyEinrichten, passkeyEntsperren, passkeyEntfernen,
     status: ()=> status, offen, schluesselInfo: ()=> info, geraetId: ()=> geraet && geraet.id,
-    kvText, kvSetzenText, kvLoeschen, kvSchluessel: ()=> Array.from(kvMem.keys()), kvWarten, schreibtNoch: ()=> Array.from(kvSchreibt.values()).some(z=> z.laeuft),
-    pfadNorm, pfadKlein, metaPfad, metaId, ordnerAnlegen, dateiSchreiben, dateiLesen, dateiLoeschen, dateiUmbenennen, kinder, alleDateien,
-    syncHolen, syncSetzen, syncAlle, dateiEinspielen, dateiEntfernenId, ver, ent, schnappschuss, wiederherstellen,
+    kvText, kvSetzenText, kvLoeschen, kvSchluessel: ()=> Array.from(kvMem.keys()), kvWarten, nichtLesbar: ()=> nichtLesbar.slice(), schreibtNoch: ()=> Array.from(kvSchreibt.values()).some(z=> z.laeuft),
+    pfadNorm, pfadKlein, metaPfad, metaId, ordnerAnlegen: schreibend(ordnerAnlegen), dateiSchreiben: schreibend(dateiSchreiben), dateiLesen, dateiLoeschen: schreibend(dateiLoeschen), dateiUmbenennen: schreibend(dateiUmbenennen), kinder, alleDateien,
+    syncHolen, syncSetzen, syncAlle, dateiEinspielen: schreibend(dateiEinspielen), dateiEntfernenId: schreibend(dateiEntfernenId), ver, ent, schnappschuss, wiederherstellen: schreibend(wiederherstellen),
     speicherDauerhaft, speicherPlatz, demo: DEMO,
     // intern fuer Sync/Sicherung
     __key: async ()=>{ brauchtOffen(); return key; },
-    __infoSetzen: async (neu)=>{ info = neu; await setzen('meta', 'schluessel', info); if(await istGemerkt()) {} },
+    __infoSetzen: async (neu)=>{ info = neu; await setzen('meta', 'schluessel', info); },
     beiAenderung: (f)=>{ hoerer.push(f); return ()=>{ const i = hoerer.indexOf(f); if(i >= 0) hoerer.splice(i, 1); }; }
   };
 })(typeof window !== 'undefined' ? window : globalThis);
