@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-yhHgz7h8JooySTJZnMFhxG1C2hmwp3+rELfpFEhkF1o=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-LCobb2UPQ+PR+OF0OXr+zeYtnZXFtc9Ri9UEnnMXr7E=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -680,6 +680,8 @@ try{
   .fb-zeile label{flex:1; font-size:12.5px; color:var(--text-schwach);}
   .fb-uhr{padding-bottom:10px; font-size:14px;}
   .fb-chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .zw-leeren{display:block; margin:8px 0 0; padding:7px 12px; font:inherit; font-size:13px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text); cursor:pointer;}
+  .zw-geleert{font-size:12.5px; opacity:.8;}
   .empf-liste{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
   .empf-wahl{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; padding:10px 12px; border:2px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text); font-size:14px; min-height:auto; margin:0;}
   .empf-wahl span{font-size:13px; color:var(--text-schwach); font-weight:400;}
@@ -2333,7 +2335,9 @@ try{
   body.design-einhand #app .kachelreihe.kompakt .ds-plus svg{width:20px; height:20px;}
   /* Uhr: Datum/Dienst ueber der Uhrzeit, Beginn/Ende als Pfeile am Ring, Einsaetze in ihrer Farbe */
   .ds-ring.mit-rand{width:min(320px, 84vw);}
-  .ds-ring-kopf{font-size:11px; font-weight:600; letter-spacing:.06em; color:var(--text-schwach); text-transform:uppercase; margin-bottom:2px; max-width:60%; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .ds-ring-kopf{font-size:11px; font-weight:600; letter-spacing:.06em; color:var(--text-schwach); text-transform:uppercase; margin-bottom:2px; max-width:44%; text-align:center; display:flex; flex-direction:column; align-items:center; gap:1px;}
+  .ds-ring-datum{display:block; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .ds-ring-dienst{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; max-width:100%; overflow:hidden; line-height:1.25; font-size:10.5px;}
   .ds-ring-fall.ls{fill:var(--ls-farbe);} .ds-ring-fall.pt{fill:var(--pt-farbe);} .ds-ring-fall.gkv{fill:var(--ds-gkv);}
   .ds-ring-betrag{font-size:10px; font-weight:700; fill:var(--text-schwach);}
   .ds-ring-betrag.ls{fill:var(--ls-farbe);} .ds-ring-betrag.pt{fill:var(--pt-farbe);} .ds-ring-betrag.gkv{fill:var(--ds-gkv);}
@@ -4923,6 +4927,17 @@ function zwischenablageHinweisAnzeigen(text){
   el.innerHTML = text;
   el.classList.add('aktiv');
 }
+// Sicherheitsbericht (weitere Ebenen): Nach dem Einlesen einer Einsatzmeldung stehen die Patientendaten sonst weiter in
+// der Zwischenablage (andere Apps koennen sie lesen). Deshalb sofort leeren; geht das nicht (Browser verweigert das
+// Schreiben), einen Knopf anbieten.
+async function zwischenablageLeerenAnbieten(elId){
+  const el = document.getElementById(elId); if(!el || el.querySelector('.zw-leeren, .zw-geleert')) return;
+  let ok = false; try{ await navigator.clipboard.writeText(''); ok = true; }catch(_){}
+  if(ok){ const s = document.createElement('span'); s.className = 'zw-geleert'; s.textContent = ' · Zwischenablage geleert'; el.appendChild(s); return; }
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'zw-leeren'; b.textContent = 'Zwischenablage leeren';
+  b.onclick = async ()=>{ try{ await navigator.clipboard.writeText(''); b.textContent = 'Zwischenablage geleert'; b.disabled = true; }catch(_){ b.textContent = 'Leeren nicht möglich – bitte selbst etwas anderes kopieren'; } };
+  el.appendChild(b);
+}
 async function ausZwischenablageEinlesen(art, ctx){
   zwischenablageHinweisAnzeigen('');
   let text = '';
@@ -4955,6 +4970,7 @@ async function ausZwischenablageEinlesen(art, ctx){
   // haben daher kein einzelnes "Feld verlassen"-Ereignis ausgelöst.
   ctx.allePruefungenAusfuehren();
   if(strasse && ort) ctx.adresseVerlassen();
+  if(patient || geb || strasse || ort) zwischenablageLeerenAnbieten('zwischenablageHinweis');
 }
 
 /* ==========================================================
@@ -16349,6 +16365,7 @@ function ansichtGkv(bearbeitenId){
     if(ort) el('gkvPlzOrt').value = grossKleinNormalisieren(ort);
     if(strasse || ort){ el('gkvAdresse').oninput(); el('gkvKmBtn').click(); }
     h.textContent = 'Eingelesen' + (patient ? ': ' + grossKleinNormalisieren(patient) : '') + '. Bitte prüfen.';
+    zwischenablageLeerenAnbieten('gkvZwHinweis');
   };
   el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); werteZeichnen(); dienstWahlFuellen('gkvDienst', st.datum, st.zeit); };
   el('gkvZeit').onchange = ()=>{ st.zeit = el('gkvZeit').value; zeichnen(); dienstWahlHinweis('gkvDienst', st.datum, st.zeit); };
@@ -21146,7 +21163,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v479';
+const APP_VERSION = 'v480';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21311,7 +21328,8 @@ function querStartAnordnen(){
   // (direkt unter den Kacheln bzw. den unfertigen Faellen, vor Hinweisen -- so bleibt sie sichtbar)
   if(ring){
     const u = document.createElement('div'); u.className = 'ds-live quer-uhr'; u.appendChild(ring);
-    const nach = s1.querySelector(':scope > .ds-weiter-block') || s1.querySelector(':scope > .kachelreihe');
+    // wie hochkant: „Dienst beenden“ bzw. „Dienst starten“ steht ueber der Uhr (gemeldet 17.11.2026)
+    const nach = s1.querySelector(':scope > #dsDienstEnde, :scope > #dsDienstStart') || s1.querySelector(':scope > .ds-weiter-block') || s1.querySelector(':scope > .kachelreihe');
     if(nach) nach.after(u); else s1.appendChild(u);
   }
   s2.appendChild(live);
@@ -22331,25 +22349,29 @@ function designRingHtml(info){
     }
     return s;
   }).join('');
-  // Beginn rechts oben: Pfeil vom Dienstbeginn weg; Ende links oben: Pfeil auf das Dienstende zu
+  // Beginn rechts oben: Pfeil vom Dienstbeginn weg, rechts am Ring entlang nach unten; Ende links oben: Pfeil links am
+  // Ring hinauf auf das Dienstende zu (Wunsch 17.11.2026). Radius ausserhalb der Betraege (r + 21).
   const bogen = (a1, a2, rr)=>{ const [x1, y1] = pkt(a1, rr), [x2, y2] = pkt(a2, rr); return 'M' + f1(x1) + ' ' + f1(y1) + ' A' + rr + ' ' + rr + ' 0 0 1 ' + f1(x2) + ' ' + f1(y2); };
   let grenzen = '';
   if(fe){
     const [sx, sy] = pkt(31, 141), [ex, ey] = pkt(-31, 141);
     grenzen = '<defs><marker id="dsPfeilKopf" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="ds-ring-pfeilkopf"/></marker></defs>' +
-      '<path d="' + bogen(5, 24, 136) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
-      '<path d="' + bogen(-24, -5, 136) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
+      '<path d="' + bogen(46, 112, 148) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
+      '<path d="' + bogen(-112, -46, 148) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
       '<text x="' + f1(sx) + '" y="' + f1(sy) + '" class="ds-ring-grenze" text-anchor="start" dominant-baseline="middle">' + designUhr(fe.von) + '</text>' +
       '<text x="' + f1(ex) + '" y="' + f1(ey) + '" class="ds-ring-grenze" text-anchor="end" dominant-baseline="middle">' + designUhr(fe.bis) + '</text>';
   }
   const gross = designUhr(info.jetzt);
   const unter = info.modus === 'leer' ? 'Dienst wählen' : designRestText(info);
-  const kopf = info.modus === 'leer' || !fe ? 'Live-Dienst' : DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '. · ' + info.art + (info.schicht ? ' ' + info.schicht : '');
+  // Datum ueber der Dienstbezeichnung, beides schmal genug, dass nichts in den Ring ragt (Wunsch 17.11.2026)
+  const kopf = info.modus === 'leer' || !fe ? '<span class="ds-ring-dienst">Live-Dienst</span>'
+    : '<span class="ds-ring-datum">' + htmlEsc(DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '.') + '</span>' +
+      '<span class="ds-ring-dienst">' + htmlEsc(info.art + (info.schicht ? ' ' + info.schicht : '')) + '</span>';
   return '<div class="ds-ring mit-rand" id="dsRing"><svg viewBox="-20 -20 320 320" role="img" aria-label="Dienstzeit ' + Math.round(p * 100) + ' Prozent vorbei">' + grenzen +
     '<circle cx="140" cy="140" r="126" class="ds-ring-aussen"/><circle cx="140" cy="140" r="' + r + '" class="ds-ring-spur"/>' +
     '<circle cx="140" cy="140" r="' + r + '" class="ds-ring-fort" stroke-dasharray="' + (u * p).toFixed(1) + ' ' + u.toFixed(1) + '" transform="rotate(-90 140 140)"/>' +
     '<circle cx="140" cy="140" r="94" class="ds-ring-innen"/>' + punkte + '</svg>' +
-    '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + htmlEsc(kopf) + '</span><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-rest">' + unter + '</span></div></div>';
+    '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + kopf + '</span><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-rest">' + unter + '</span></div></div>';
 }
 
 function designStartErgaenzen(){
