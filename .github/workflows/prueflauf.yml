@@ -1,10 +1,11 @@
-# Prüflauf: läuft bei jedem Push und jedem Pull Request (und von Hand über "Run workflow").
+# Prüflauf: läuft bei jedem Push auf main und bei jedem Pull Request (und von Hand über "Run workflow").
 # Braucht keine Geheimnisse und nur Leserechte. Die Tests gehen nicht ins Internet; OneDrive wird nachgebildet.
 # Die Aktionen sind auf feste Stände (Prüfsummen) festgelegt; Dependabot meldet neue Versionen.
 name: Prüflauf
 
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
