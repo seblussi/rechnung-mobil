@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-LCobb2UPQ+PR+OF0OXr+zeYtnZXFtc9Ri9UEnnMXr7E=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-B3qclk6MopAZiCRY4o+ySsPMeAg63emppGsextJBd0Q=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2823,7 +2823,8 @@ async function naechsterRenuZaehlerErmitteln(){
     }
     return naechster;
   }
-  if(rnLiveFehler && !rnLiveFehlerGemeldet){
+  // nur beim Erstellen melden, nicht beim blossen Oeffnen der Einstellungen (dort steht es im Abschnitt)
+  if(rnLiveFehler && !rnLiveFehlerGemeldet && !(typeof einstellungenOffen !== 'undefined' && einstellungenOffen)){
     rnLiveFehlerGemeldet = true;
     try{ appToastAnzeigen('Rechnungsnummer: Live-Abgleich mit der Übersicht nicht möglich (' + rnLiveFehler + ') -- lokaler Zähler wird verwendet.', 6000); }catch(_){}
   }
@@ -3046,7 +3047,7 @@ async function msGraphTokenHolen(){
     // Typisch: Langzeitschluessel abgelaufen (bei Browser-Apps max. 24 h) und die stille Erneuerung im
     // Hintergrund scheitert, weil Safari/iPhone die Microsoft-Cookies fremder Seiten blockiert.
     window.__msTokenFehler = (e && (e.errorCode || e.name || e.message)) || 'unbekannt';
-    if(msGraphNeuAnmeldenNoetig(e)) msGraphAbgelaufenHinweis();
+    if(msGraphNeuAnmeldenNoetig(e)){ msGraphAlsAbgemeldet(); msGraphAbgelaufenHinweis(); }
     return null;
   }
 }
@@ -3060,6 +3061,19 @@ async function msZugriffErneuernAnbieten(){
     [{ label: 'Später', akt: 'nein' }, { label: 'Jetzt anmelden', akt: 'ja', primaer: true }]);
   betaOverlay.schliessen();
   if(akt === 'ja') msGraphAnmelden();
+}
+// Fehlt die Microsoft-Anmeldung (oder ist sie abgelaufen): Knopf zum direkten Anmelden, ohne Umweg ueber die
+// Einstellungen (Wunsch 17.11.2026). Klick: siehe Ereignis unten.
+function msAnmeldeKnopfHtml(fehler){
+  if(window.DEMO_MODUS) return '';
+  const t = String((fehler && fehler.message) || fehler || '');
+  if((typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') && !/Microsoft-Anmeldung|angemeldet|HTTP 401|abgelaufen/i.test(t)) return '';
+  return '<div style="text-align:center; margin:10px 0;"><button type="button" class="btn-primaer ms-anmelden-knopf" style="width:auto; padding:10px 18px;">Bei Microsoft anmelden</button></div>';
+}
+document.addEventListener('click', (ev)=>{ const b = ev.target.closest && ev.target.closest('.ms-anmelden-knopf'); if(!b) return; b.disabled = true; try{ msGraphAnmelden(); }catch(_){ b.disabled = false; } });
+// Anmeldung taugt nicht mehr (abgelaufen/widerrufen/ohne Recht): als abgemeldet anzeigen (OneDrive rot statt gruen)
+function msGraphAlsAbgemeldet(){
+  try{ if(typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet'){ msGraphStatus = 'abgemeldet'; } if(typeof dsSyncAuffrischen === 'function') dsSyncAuffrischen(); }catch(_){}
 }
 function msGraphNeuAnmeldenNoetig(e){
   const c = String((e && (e.errorCode || '')) + ' ' + (e && e.name || '') + ' ' + (e && e.message || ''));
@@ -3858,7 +3872,7 @@ async function ansichtFahrtenbuch(blatt){
         if(st && st !== c.stempel && fbBuchCache === c && document.getElementById('fbxInhalt')){ fbBuchCache = null; appToastAnzeigen('Fahrtenbuch wurde geändert – wird neu gelesen …', 2200); ansichtFahrtenbuch(blatt); }
       });
     }
-  }catch(e){ inhalt.innerHTML = '<div class="gkv-warn">Fahrtenbuch konnte nicht gelesen werden: ' + htmlEsc(e.message || String(e)) + '</div>'; return; }
+  }catch(e){ inhalt.innerHTML = '<div class="gkv-warn">Fahrtenbuch konnte nicht gelesen werden: ' + htmlEsc(e.message || String(e)) + '</div>' + msAnmeldeKnopfHtml(e); return; }
   const buch = fbBuchCache;
   fbLokalAuffrischen(buch);
   // falsch zugeordnete Faelle: Hinweis + mit einem Klick in den richtigen Dienst
@@ -3926,7 +3940,7 @@ async function ansichtFahrtenbuch(blatt){
     inhalt.querySelectorAll('[data-fbdienst]').forEach(z=> langDruecken(z, async ()=>{
       const dd = buch.dienste[+z.dataset.fbdienst]; if(!dd) return;
       if(dd.lokal){
-        if(!await betaFrage('Den Dienst ' + fbTagText(dd.tag) + ' ' + (dd.zeitLabel || '') + ' aus der App entfernen?\n\nDie Fälle selbst bleiben erhalten.', 'Entfernen', 'Abbrechen')) return;
+        if(!await betaFrage('Den Dienst ' + fbTagText(dd.tag) + ' ' + (dd.zeitLabel || '') + ' aus der App entfernen?\n\nEntfernt wird nur der in der App angelegte Dienst (Datum und Zeit). Die Fälle bleiben unter „Rechnungen“ (LS/PT) bzw. „Kassenpatienten“ (GKV); was schon im Fahrtenbuch steht, bleibt dort. Wird ein Fall aus diesem Zeitraum später ins Fahrtenbuch eingetragen, fragt die App nach dem Dienst.', 'Entfernen', 'Abbrechen')) return;
         if(dd.appId === 'live'){ liveDienstLeeren(); syncBaldSchreiben(); } else appDienstEntfernen(dd.appId);
         ansichtFahrtenbuch(buch.blatt); return;
       }
@@ -7853,7 +7867,7 @@ function alleRechnungenListeRendern(cache, suchtext){
   if(!zielEl) return;
   if(cache === null){
     const grund = rnLiveFehler ? String(rnLiveFehler).replace(/&/g,'&amp;').replace(/</g,'&lt;') : 'kein Netz oder nicht angemeldet';
-    zielEl.innerHTML = '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden (' + grund + '). Bitte "Neu laden" versuchen.</div>';
+    zielEl.innerHTML = '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden (' + grund + '). Bitte "Neu laden" versuchen.</div>' + msAnmeldeKnopfHtml(grund);
     return;
   }
   const liste = cache.liste, blattName = cache.blattName;
@@ -12345,7 +12359,7 @@ function betaGesamtZeichnen(suchtext, ziel){
       '<div style="font-size:12px;opacity:.75;margin-top:4px;">' + htmlEsc(c.schritt || '') + ' <span id="gesamtLadeSek">' +
       (c.seit ? Math.round((Date.now() - c.seit) / 1000) + ' s' : '') + '</span></div></div>';
   } else if(c.fehler){
-    html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '<br>„Neu laden“ versuchen.</div>';
+    html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '<br>„Neu laden“ versuchen.</div>' + msAnmeldeKnopfHtml(c.fehler);
   } else if(ana){
     // Treffer der Suche: Rechnung samt Unterpositionen
     const sichtbarZeilen = new Set(eintraege.filter(e=> e.typ === 'ORIG' && passt(e.name, e.renu, e.datum)).map(e=> e.z.nr));
@@ -14698,14 +14712,23 @@ function ebmVorschlagBilden(j){
   return v;
 }
 async function ebmWerteOnlineHolen(){
-  let r;
-  let basis = ''; try{ basis = lxpBasisUrl(); }catch(e){ basis = EBM_DIENST; }   // eigene Weiterleitung, sonst Werte-Dienst
-  try{ r = await fetch(basis + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
-  catch(e){ throw new Error('Keine Verbindung zur Weiterleitung (Internet?).'); }
-  if(r.status === 404) throw new Error('Die Weiterleitung kennt die Werte-Prüfung noch nicht – bitte dem App-Entwickler Bescheid geben.');
-  const j = await r.json().catch(()=> null);
-  if(!r.ok || !j) throw new Error('Werte-Prüfung fehlgeschlagen (HTTP ' + r.status + ').');
-  return j;
+  // erst die eigene bzw. Standard-Weiterleitung, sonst der Werte-Dienst; kennt keiner die Pruefung (404), ist sie
+  // schlicht nicht verfuegbar -- dann keine Warnung, sondern ein unauffaelliger Hinweis (gemeldet 17.11.2026)
+  const ziele = [];
+  try{ ziele.push(lxpBasisUrl()); }catch(_){}
+  if(!ziele.includes(EBM_DIENST)) ziele.push(EBM_DIENST);
+  let netz = false;
+  for(const basis of ziele){
+    let r;
+    try{ r = await fetch(basis + '/ebm/werte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); }
+    catch(e){ netz = true; continue; }
+    if(r.status === 404 || r.status === 403) continue;
+    const j = await r.json().catch(()=> null);
+    if(!r.ok || !j) throw new Error('Werte-Prüfung fehlgeschlagen (HTTP ' + r.status + ').');
+    return j;
+  }
+  if(netz) throw new Error('Keine Verbindung zur Werte-Prüfung (Internet?).');
+  const e = new Error('Die Online-Prüfung der Werte ist derzeit nicht verfügbar – Werte bei Bedarf „von Hand ändern“.'); e.nichtVerfuegbar = true; throw e;
 }
 function ebmWerteUebernehmen(v){
   const akt = ebmWerteFuer(new Date(v.ab + 'T12:00:00'));
@@ -14750,7 +14773,7 @@ async function ebmWertePruefen(manuell){
     if(manuell) await betaOverlay.meldung('Die Werte sind aktuell (' + ebmStandText(new Date()) + ').' + (v.hinweise.length || (j.fehler || []).length ? '\n\nHinweis: ' + v.hinweise.concat(j.fehler || []).join(' ') : ''), 'EBM-Werte');
     return 'aktuell';
   }catch(e){
-    LS.set('ebm_pruefung', { am: vorher.am || null, versuch: new Date().toISOString(), ok: false, fehler: e.message || String(e) });
+    LS.set('ebm_pruefung', { am: vorher.am || null, versuch: new Date().toISOString(), ok: false, fehler: e.message || String(e), nichtVerfuegbar: !!(e && e.nichtVerfuegbar) });
     if(manuell) await betaOverlay.meldung(e.message || String(e), 'EBM-Werte');
     return 'fehler';
   }
@@ -14854,7 +14877,7 @@ const GKV_LISTE_STANDARD = ['nfp', 'schwer', '01226', 'kons', '01418', '01413', 
 
 // ---------- Schnellwahl-Profile (wie bei PT: Hausbesuch / Telefon + eigene) ----------
 const GKV_PROFILE_STANDARD = [
-  { id: 'hb', name: 'Hausbesuch', auswahl: { nfp: { anz: 1 }, '01418': { anz: 1 }, weg: { anz: 1, stufe: '2' } } },
+  { id: 'hb', name: 'Hausbesuch', auswahl: { nfp: { anz: 1 }, '01418': { anz: 1 } } },   // Wegepauschale nicht vorausgewaehlt (Wunsch 17.11.2026)
   { id: 'tel', name: 'Telefonische Konsultation', auswahl: { kons: { anz: 1 } } },
   { id: 'sitz', name: 'Sitzdienst', auswahl: { nfp: { anz: 1 } } }
 ];
@@ -14994,7 +15017,7 @@ async function gkvProfilBearbeiten(id){
       '<div class="profil-gruppe-titel">Wegepauschale <span class="gkv-pe-hinweis">nur mit Besuch</span></div>' +
       (sitz ? '<div class="beta-erg-klein profil-leer">Sitzdienst/telefonisch – es wird nicht gefahren, keine Wegepauschale.</div>'
         : '<div class="gkv-pe-zeile' + (wa ? ' an' : '') + '"><label><input type="checkbox" data-gk="weg"' + (wa ? ' checked' : '') + '> <span>Wegepauschale vorauswählen</span></label>' +
-          '<select class="gkv-pe-stufe" data-gstufe="weg">' + EBM_GRUPPEN.weg.stufen.map(x=> '<option value="' + x.k + '"' + (((wa && wa.stufe) || '2') === x.k ? ' selected' : '') + '>' + htmlEsc(x.label) + '</option>').join('') + '</select></div>') +
+          '<select class="gkv-pe-stufe" data-gstufe="weg">' + EBM_GRUPPEN.weg.stufen.map(x=> '<option value="' + x.k + '"' + (((wa && wa.stufe) || '5') === x.k ? ' selected' : '') + '>' + htmlEsc(x.label) + '</option>').join('') + '</select></div>') +
       (weg.length ? '<button type="button" class="profil-aus-titel" data-akt="ausklappen">' + (ausOffen ? '&#9662;' : '&#9656;') + ' Entfernt (' + weg.length + ') – anklicken zum Zurückholen</button>' +
         (ausOffen ? '<div class="profil-ausgeblendet">' + weg.map(k=> '<button type="button" class="profil-zurueck" data-akt="zurueck:' + htmlEsc(k) + '"><b>' + htmlEsc(nrText(k)) + '</b> ' + htmlEsc(bezText(k)) + ' <span>＋</span></button>').join('') + '</div>' : '') : '');
     const knoepfe = [{ label: 'Abbrechen', akt: 'nein' }];
@@ -16376,7 +16399,7 @@ function ansichtGkv(bearbeitenId){
     el('gkvStandText').textContent = ebmStandText(dtVon()) + (p.am ? ' · online geprüft ' + isoDe(String(p.am).slice(0, 10)) : '');
     const vm = LS.get('ebm_vorschlag', null);
     el('gkvWerteHinweis').innerHTML = vm && vm.neu ? '<div class="gkv-warn">Neue EBM-Werte gefunden (gültig ab ' + htmlEsc(isoDe(vm.ab)) + '). <a href="#" id="gkvVorschlag">Ansehen</a></div>'
-      : (p.ok === false && p.fehler ? '<div class="gkv-warn">Letzte Online-Prüfung: ' + htmlEsc(p.fehler) + '</div>'
+      : (p.ok === false && p.fehler ? (p.nichtVerfuegbar || /kennt die Werte-Prüfung/.test(p.fehler) ? '<div class="beta-erg-klein">Die Online-Prüfung der Werte ist derzeit nicht verfügbar – Werte bei Bedarf „von Hand ändern“.</div>' : '<div class="gkv-warn">Letzte Online-Prüfung: ' + htmlEsc(p.fehler) + '</div>')
       : (p.hinweise && p.hinweise.length ? '<div class="gkv-warn">Online-Prüfung nur teilweise: ' + htmlEsc(p.hinweise.join(' ')) + '</div>' : ''));
     const vb = document.getElementById('gkvVorschlag');
     if(vb) vb.onclick = async (ev)=>{ ev.preventDefault(); await ebmVorschlagFragen(vm); werteZeichnen(); zeichnen(); };
@@ -19883,7 +19906,9 @@ async function standortKarteZeichnen(info, mitDialog){
   const lauf = ++standortKarteLauf, aktuell = ()=> lauf === standortKarteLauf && document.body.contains(box);
   const auf = true;   // immer Standort + Einsatzorte; vergroessern ueber den Vollbild-Knopf der Karte
   const ohneDienst = !info || !info.fenster;
-  const faelle = standortKarteFaelle(info);
+  // „Fälle in diesem Dienst“ zugeklappt -> Faelle auch nicht in der Karte; ausgeklappt -> in der Karte (Wunsch 17.11.2026)
+  let listeZu = false; try{ listeZu = !ohneDienst && sessionStorage.getItem('dienst_liste_zu') === '1'; }catch(_){}
+  const faelle = listeZu ? [] : standortKarteFaelle(info);
   // Standort (GPS) und Adresssuche dauern -- solange schon die Karte des Bezirks mit den bekannten Einsatzorten zeigen
   const posP = standortHolen({ still: !mitDialog }).catch(()=> null);
   const zeichnen = (pos, laedt)=>{
@@ -19892,7 +19917,7 @@ async function standortKarteZeichnen(info, mitDialog){
     let zone = '';
     if(ichDrin){ try{ zone = nfpBewertung(ich).text; }catch(_){} }
     else if(ich) zone = 'außerhalb der Wegegeld-Karte';
-    const kopf = (unter)=> '<div class="sk-kopf"><span class="sk-titel"><b>' + (auf ? 'Einsatzorte ' + (ohneDienst ? '(letzte 24 h)' : 'in diesem Dienst') : 'Standort') + '</b><small>' + htmlEsc(unter) + '</small></span>' +
+    const kopf = (unter)=> '<div class="sk-kopf"><span class="sk-titel"><b>' + (auf && faelle.length ? 'Einsatzorte ' + (ohneDienst ? '(letzte 24 h)' : 'in diesem Dienst') : 'Standort') + '</b><small>' + htmlEsc(unter) + '</small></span>' +
       (pos || laedt ? '' : '<button type="button" class="sk-pos">📍 Standort</button>') +
       '</div>';
     let gross = null;
@@ -19926,7 +19951,7 @@ async function standortKarteZeichnen(info, mitDialog){
       // der Positions-Knopf fragt dann wie gewohnt nach der Standortfreigabe
       let mitte = null;
       try{ mitte = gkvStartGeo() || nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); }catch(_){}
-      const leer = faelle.length ? '' : '<div class="sk-hinweis">Noch keine Einsätze ' + (ohneDienst ? 'in den letzten 24 h.' : 'in diesem Dienst.') + '</div>';
+      const leer = '';   // keine Einsaetze: nichts dazuschreiben (Wunsch 17.11.2026)
       if(!mitte){ box.innerHTML = kopf(unter) + leer + listeHtml; verdrahten(); return; }
       const d0 = { pois: [], nfp: true, rahmen: true, fallKlick };
       gross = (ebene, ansicht)=> osmKarteOverlay(d0, 'Karte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Karte' });
@@ -21163,7 +21188,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v480';
+const APP_VERSION = 'v481';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21292,7 +21317,12 @@ function dsSyncZustand(anmeldung){
 document.addEventListener('click', (ev)=>{
   const el = ev.target.closest && ev.target.closest('.ds-sync[data-angemeldet]'); if(!el) return;
   const t = el.getAttribute('title') || '';
-  if(el.dataset.angemeldet !== '1' && /nicht verbunden/.test(t)){ appToastAnzeigen('OneDrive nicht verbunden – Anmeldung in den Einstellungen.', 3000); return; }
+  // nicht verbunden: direkt anmelden (ohne Umweg ueber die Einstellungen, Wunsch 17.11.2026)
+  if(el.dataset.angemeldet !== '1' && /nicht verbunden/.test(t)){
+    if(navigator.onLine === false){ appToastAnzeigen('OneDrive nicht verbunden – keine Internetverbindung.', 3000); return; }
+    betaFrage('OneDrive ist nicht verbunden.\n\nJetzt bei Microsoft anmelden?', 'Anmelden', 'Abbrechen').then((ja)=>{ if(ja) msGraphAnmelden(); });
+    return;
+  }
   if(t) appToastAnzeigen(t + (dsOdGestoert() ? '. Erfassen geht weiter, Rechnungen erstellen und hochladen später.' : ''), 4000);
 });
 let dsSyncPlan = 0;
@@ -21696,10 +21726,10 @@ const LIVE_ANZEIGEN = [
 ];
 function liveEinst(){
   // Vorauswahl: alle Anzeigen an (ausser automatischer Erkennung)
-  const l = (ladeEinstellungen() || {}).liveDienst || { dienst: true, ring: true, standort: true, auto: false };
+  const l = (ladeEinstellungen() || {}).liveDienst || { dienst: true, ring: true, standort: true, auto: false, ringBetrag: true };
   // "Karte mit Balken" und "Kompakte Zeile" sind jetzt ein Feature "Dienst"
   const dienst = l.dienst !== undefined ? !!l.dienst : !!(l.karte || l.zeile);
-  return { dienst, ring: !!l.ring, standort: !!l.standort, auto: !!l.auto, ringBetrag: !!l.ringBetrag };
+  return { dienst, ring: !!l.ring, standort: !!l.standort, auto: !!l.auto, ringBetrag: l.ringBetrag !== false };   // Betraege: Standard an (Wunsch 17.11.2026)
 }
 function liveAuto(){ return false; }   // frueher Einstellung "Dienst automatisch erkennen" -- ersetzt durch die Vorauswahl beim Dienststart
 // Standard-Fahrdienstfenster um einen Zeitpunkt: Werktag 18-08, Wochenende/Feiertag/24.12./31.12. 08-08
@@ -22301,7 +22331,8 @@ function designDienstHtml(info){
 function designDienstWiring(wurzel){
   const box = wurzel.querySelector('.ds-dz'); if(!box) return;
   const knopf = box.querySelector('.ds-dz-auf'), liste = box.querySelector('.ds-dz-liste');
-  knopf.onclick = ()=>{ const auf = liste.hidden; liste.hidden = !auf; knopf.setAttribute('aria-expanded', String(auf)); try{ if(auf) sessionStorage.removeItem('dienst_liste_zu'); else sessionStorage.setItem('dienst_liste_zu', '1'); }catch(_){} };
+  knopf.onclick = ()=>{ const auf = liste.hidden; liste.hidden = !auf; knopf.setAttribute('aria-expanded', String(auf)); try{ if(auf) sessionStorage.removeItem('dienst_liste_zu'); else sessionStorage.setItem('dienst_liste_zu', '1'); }catch(_){}
+    try{ if(document.getElementById('skKarte')) standortKarteZeichnen(designDienstInfo()); }catch(_){} };   // Karte zeigt die Faelle nur ausgeklappt
   box.querySelectorAll('[data-dzfall]').forEach(b=> b.onclick = ()=>{ const f = (designDienstHtml.faelle || [])[+b.dataset.dzfall]; if(f && f.oeffnen) f.oeffnen(); });
   // wegwischen (oder lange druecken): GKV-Fall in App und Fahrtenbuch loeschen, unfertigen Fall verwerfen
   box.querySelectorAll('.ds-dz-wisch [data-dzfall]').forEach(b=> betaWischen(b, async ()=>{
@@ -22898,7 +22929,7 @@ const MsEigen = (function(){
       .catch(e=>{
         // Microsoft hat abgelehnt (Fehlercode, nicht Netz/Serverstoerung): Langzeitschluessel taugt nicht mehr -> neu anmelden
         const c = String(e.code == null ? '' : e.code), abgelehnt = c !== '' && !/^(5\d\d|429|0)$/.test(c);
-        if(c === 'recht_fehlt' || abgelehnt){ rtSchreiben(''); window.__msTokenFehler = c; try{ msZugriffErneuernAnbieten(); }catch(_){} }
+        if(c === 'recht_fehlt' || abgelehnt){ rtSchreiben(''); window.__msTokenFehler = c; try{ msGraphAlsAbgemeldet(); msZugriffErneuernAnbieten(); }catch(_){} }
         console.warn('Schlüssel erneuern', e); return null; })
       .finally(()=>{ laeuft = null; });
     return laeuft;
