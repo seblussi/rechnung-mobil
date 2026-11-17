@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-Ki3TvQE3o914MKyCVwv1wv+DRQe+OMNdW75P1UU59kI=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-pq0N6UVomftXxoL1Lezy/YsUrNTEufUmJ9K4ONizUSw=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -20754,7 +20754,27 @@ async function syncSchluesselHochladen(token, ersterMal){
   return r.ok || r.status === 412 || r.status === 409;
 }
 // Schluessel abgleichen. -> true: gleicher Schluessel (Abgleich darf laufen)
+// Nach "Schluessel erneuern": Schluesselinfo und verschluesselte Abgleichsdatei (samt Kopien unter "Sicherungen")
+// loeschen und neu anlegen. Loeschen statt Ueberschreiben, damit im Versionsverlauf keine Fassung mit dem alten
+// Schluessel stehen bleibt. Die Abgleichsdatei entsteht danach neu aus dem Stand dieses Geraets.
+async function syncNachErneuern(token){
+  const weg = async (pfad)=>{ const r = await syncFetch(token, pfad, { method: 'DELETE' }); if(!r.ok && r.status !== 404) throw new Error('OneDrive: Löschen fehlgeschlagen (' + r.status + ')'); };
+  await weg(SYNC_PFAD_SCHLUESSEL);
+  await weg(SYNC_PFAD_ENC);
+  try{
+    const l = await fetch(msGraphPfadUrl(ODS_ORDNER) + '/children?$select=id,name,folder&$top=200', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+    if(l.ok) for(const o of ((await l.json()).value || []).filter(x=> x.folder)){
+      const k = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + o.id + '/children?$select=id,name&$top=200', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+      if(!k.ok) continue;
+      for(const d of ((await k.json()).value || []).filter(x=> /rechnungserfassung_abgleich/i.test(x.name || ''))) await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + d.id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+    }
+  }catch(e){ console.warn('Kopien mit altem Schlüssel löschen', e); }
+  if(!await syncSchluesselHochladen(token, true)) throw new Error('Neue Schlüsselinfo ließ sich nicht hochladen.');
+  LS.set('sync_schluessel_neu', false);
+  Tresor.protokoll('abgleich', 'OneDrive nach „Schlüssel erneuern“ ersetzt (Schlüsselinfo und Abgleichsdatei neu, alte Kopien gelöscht)');
+}
 async function syncSchluesselPruefen(token){
+  if(LS.get('sync_schluessel_neu', false)){ await syncNachErneuern(token); syncFremd = null; return true; }
   const fern = await syncSchluesselHolen(token);
   if(!fern){ await syncSchluesselHochladen(token, true); syncFremd = null; return true; }
   if(!await Tresor.gleicherSchluessel(fern)){ syncFremd = fern; syncPause = 'Dieses Gerät nutzt einen anderen Schlüssel als deine anderen Geräte.'; return false; }
@@ -20970,7 +20990,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v474';
+const APP_VERSION = 'v475';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -25596,6 +25616,7 @@ function tresorAbschnittHtml(){
       <button type="button" class="btn-sekundaer" id="spaSperrenJetzt">Jetzt sperren</button>
       <button type="button" class="btn-sekundaer" id="spaPasswort">Passwort ändern</button>
       <button type="button" class="btn-sekundaer" id="spaCode">Neuen Wiederherstellungsschlüssel</button>
+      <button type="button" class="btn-sekundaer" id="spaSchluesselNeu">Schlüssel erneuern …</button>
       <button type="button" class="btn-sekundaer" id="spaProtokoll">Sicherheitsprotokoll</button>
     </div>`;
 }
@@ -25645,6 +25666,54 @@ function tresorAbschnittWiring(){
     if(!code){ betaOverlay.meldung('Passwort falsch.'); return; }
     LS.set('sync_schluessel_zeit', new Date().toISOString()); try{ faelleAbgleichen(true); }catch(_){}
     TresorStart.codeZeigen(code, ()=>{ const el = document.getElementById('tresorSeite'); if(el) el.remove(); });
+  };
+  // Sicherheitsbericht L3: neuer Datenschluessel (nicht nur neues Passwort) -- falls Passwort, Wiederherstellungsschluessel
+  // oder eine aeltere Schluesselinfo aus dem OneDrive in falsche Haende geraten sein koennten
+  $('spaSchluesselNeu').onclick = async ()=>{
+    const abgleich = !!LS.get('sync_schluessel_zeit', '');
+    if(!await betaFrage('Schlüssel erneuern?\n\nGedacht für den Fall, dass dein Passwort oder dein Wiederherstellungsschlüssel in falsche Hände geraten sein könnte. Ein Passwortwechsel allein hilft dann nicht: Im Versionsverlauf deines OneDrive steht noch der Schlüssel, verpackt mit dem alten Passwort.\n\nDabei passiert:\n• Alle Daten und Fotos auf diesem Gerät werden mit einem neuen Schlüssel neu verschlüsselt.\n• Du legst ein neues Passwort fest und bekommst einen neuen Wiederherstellungsschlüssel.\n• Fingerabdruck / Face ID richtest du danach neu ein.' +
+        (abgleich ? '\n• Im OneDrive werden Schlüsselinfo und verschlüsselte Abgleichsdatei ersetzt. Deine ANDEREN GERÄTE zeigen danach „Jetzt verbinden“ – dort das neue Passwort eingeben. Gleiche sie vorher ab.' : '') +
+        '\n\nRechnungen, Übersicht, Fahrtenbuch, Dokumentation und Einstellungen im OneDrive sind davon nicht betroffen (sie liegen unverschlüsselt dort).', 'Weiter', 'Abbrechen')) return;
+    const alt = await betaEingabe('Bisheriges Passwort:', '', 'password'); if(alt == null) return;
+    if(!await Tresor.pruefePasswort(alt)){ betaOverlay.meldung('Passwort falsch.'); return; }
+    const n1 = await betaEingabe('Neues Passwort (ein anderes als bisher)\n' + Tresor.PASSWORT_REGEL + ':', '', 'password'); if(n1 == null) return;
+    if(Tresor.passwortRegelFehler(n1)){ betaOverlay.meldung(Tresor.passwortRegelFehler(n1)); return; }
+    if(n1 === alt){ betaOverlay.meldung('Bitte ein anderes Passwort als bisher wählen.'); return; }
+    const n2 = await betaEingabe('Neues Passwort wiederholen:', '', 'password'); if(n2 == null) return;
+    if(n1 !== n2){ betaOverlay.meldung('Die Passwörter sind nicht gleich.'); return; }
+    betaOverlay.zeigen('Schlüssel erneuern'); betaOverlay.fortschritt(null);
+    try{
+      if(abgleich){
+        // vorher vollstaendig abgleichen: danach wird die Abgleichsdatei im OneDrive neu angelegt
+        betaOverlay.schritt('Gleiche zuerst mit OneDrive ab …');
+        if(msGraphStatus !== 'angemeldet' || navigator.onLine === false){ betaOverlay.schliessen(); betaOverlay.meldung('Dafür ist eine Internetverbindung und die Anmeldung bei Microsoft nötig. Es wurde nichts geändert.'); return; }
+        await Speicher.warten(); window.__syncPauseGemeldet = true; await faelleAbgleichen(true); await Speicher.warten();
+        if(syncPause){ betaOverlay.schliessen(); betaOverlay.meldung('Der Abgleich hat nicht geklappt (' + syncPause + '). Bitte erst das klären – es wurde nichts geändert.'); return; }
+      }
+      betaOverlay.schritt('Schlüssel wird erneuert … bitte die App offen lassen.');
+      let fotos = null;
+      const r = await Tresor.schluesselErneuern(alt, n1, (t)=> betaOverlay.schritt(t), async (ent, ver)=>{ fotos = await dokuDb.umschluesseln(ent, ver); return fotos.length; });
+      if(!r.ok){
+        betaOverlay.schliessen();
+        betaOverlay.meldung(({ passwort: 'Passwort falsch.', regel: 'Das neue Passwort erfüllt die Regeln nicht.', gleich: 'Bitte ein anderes Passwort als bisher wählen.', beschaeftigt: 'Die App speichert gerade noch. Bitte gleich noch einmal versuchen.',
+          nichtlesbar: 'Ein gespeicherter Eintrag lässt sich nicht lesen (' + (r.eintrag || '?') + '). Mit einem neuen Schlüssel ginge er endgültig verloren.' }[r.fehler] || ('Fehler: ' + r.fehler)) + '\n\nEs wurde nichts geändert.');
+        return;
+      }
+      try{ if(fotos && fotos.length){ betaOverlay.schritt('Fotos werden gespeichert …'); await dokuDb.paketeSchreiben(fotos); } }catch(e){ console.warn('Fotos nach Schlüssel erneuern', e); }
+      let od = '';
+      if(abgleich){
+        LS.set('sync_schluessel_neu', true); await Speicher.warten();
+        betaOverlay.schritt('OneDrive wird ersetzt …');
+        try{ window.__syncPauseGemeldet = true; await faelleAbgleichen(true); }catch(_){}
+        od = !LS.get('sync_schluessel_neu', false) && !syncPause
+          ? '\n\nIm OneDrive sind Schlüsselinfo und Abgleichsdatei ersetzt. Die gelöschten alten Fassungen liegen noch einige Zeit im OneDrive-Papierkorb – leere ihn, wenn du sichergehen willst. Auf deinen anderen Geräten jetzt „Jetzt verbinden“ mit dem neuen Passwort.'
+          : '\n\nACHTUNG: Das OneDrive konnte noch nicht ersetzt werden. Das holt die App beim nächsten Abgleich nach – deine anderen Geräte bis dahin bitte nicht benutzen.';
+      }
+      betaOverlay.schliessen();
+      await betaOverlay.meldung('Der Schlüssel ist erneuert (' + r.eintraege + ' Einträge' + (fotos && fotos.length ? ', ' + fotos.length + ' Fotos' : '') + ' neu verschlüsselt). Ab jetzt gilt das neue Passwort.' + od + '\n\nAls Nächstes siehst du den neuen Wiederherstellungsschlüssel.');
+      TresorStart.codeZeigen(r.code, ()=>{ const el = document.getElementById('tresorSeite'); if(el) el.remove(); try{ ansichtEinstellungen(); }catch(_){} });
+    }catch(e){ betaOverlay.schliessen(); betaOverlay.meldung('Schlüssel erneuern: ' + (e.message || e)); }
+    finally{ window.__syncPauseGemeldet = false; }
   };
   $('spaProtokoll').onclick = async ()=>{
     const l = await Tresor.protokollLesen();

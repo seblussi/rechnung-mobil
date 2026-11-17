@@ -163,14 +163,88 @@
       '<p>Alle Daten liegen verschlüsselt auf diesem Gerät. Lege ein Passwort fest – <b>ohne Passwort oder Wiederherstellungsschlüssel kommt niemand an die Daten.</b> Danach kannst du das Entsperren mit Fingerabdruck / Face ID einrichten.</p>' +
       passwortFelder() + '<div class="ts-fehler" id="tsFehler"></div>' +
       '<button type="button" class="btn-primaer ts-voll" id="tsWeiter">Weiter</button>' +
+      '<div class="ts-oder">oder</div>' +
+      '<button type="button" class="btn-sekundaer ts-voll" id="tsAnderesGeraet">Ich nutze die App schon auf einem anderen Gerät</button>' +
       '<button type="button" class="ts-link" id="tsDemo">Erst ausprobieren: Demo mit Beispieldaten</button>');
     const lesen = passwortFelderVerdrahten();
+    $('tsAnderesGeraet').onclick = ()=> weiteresGeraetAnmelden();
     $('tsDemo').onclick = ()=>{ try{ sessionStorage.setItem('demo_modus', '1'); sessionStorage.setItem('demo_frei', '1'); }catch(_){} location.reload(); };
     $('tsWeiter').onclick = async ()=>{
       const r = lesen(); if(r.fehler){ $('tsFehler').textContent = r.fehler; return; }
       const b = $('tsWeiter'); b.disabled = true; b.textContent = 'Wird eingerichtet …';
       try{ const { code } = await Tresor.einrichten(r.pw); codeZeigen(code, ()=> passkeyAnbieten(r.pw)); }
       catch(e){ $('tsFehler').textContent = 'Einrichten fehlgeschlagen: ' + (e.message || e); b.disabled = false; b.textContent = 'Weiter'; }
+    };
+  }
+
+  // ---------- Weiteres Geraet: mit Microsoft anmelden, Passwort des anderen Geraets eingeben ----------
+  // Die Schluesselinfo (mit dem Passwort verpackter Schluessel) liegt im OneDrive neben der verschluesselten
+  // Abgleichsdatei. Dieses Geraet holt sie mit einer eigenen, kurzen Anmeldung (OAuth 2.0 + PKCE, wie die App),
+  // oeffnet sie mit dem Passwort und uebernimmt die Anmeldung danach verschluesselt in den Tresor.
+  const MS = { client: '579a39e0-b7fd-4c46-8684-af22e1bc45a2', auth: 'https://login.microsoftonline.com/consumers/oauth2/v2.0',
+    zurueck: 'https://seblussi.github.io/rechnung-mobil/Rechnungserfassung_Mobil.html', scope: 'openid profile offline_access Files.ReadWrite User.Read' };
+  const PKCE_KEY = 'ts_weiteres_pkce';
+  const b64url = (buf)=> btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  async function weiteresGeraetAnmelden(){
+    if(navigator.onLine === false){ const f = $('tsFehler'); if(f) f.textContent = 'Dafür ist eine Internetverbindung nötig.'; return; }
+    const verifier = b64url(crypto.getRandomValues(new Uint8Array(48))), state = b64url(crypto.getRandomValues(new Uint8Array(18)));
+    const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+    try{ sessionStorage.setItem(PKCE_KEY, JSON.stringify({ verifier, state, t: Date.now() })); }catch(_){}
+    location.assign(MS.auth + '/authorize?' + new URLSearchParams({ client_id: MS.client, response_type: 'code', redirect_uri: MS.zurueck, response_mode: 'query',
+      scope: MS.scope, state, code_challenge: challenge, code_challenge_method: 'S256', prompt: 'select_account' }).toString());
+  }
+  function weiteresGeraetRueckkehrDa(){
+    try{ const q = new URLSearchParams(location.search); return (q.has('code') || q.has('error')) && !!sessionStorage.getItem(PKCE_KEY); }catch(_){ return false; }
+  }
+  async function weiteresGeraetRueckkehr(){
+    const q = new URLSearchParams(location.search);
+    let p = null; try{ p = JSON.parse(sessionStorage.getItem(PKCE_KEY) || 'null'); sessionStorage.removeItem(PKCE_KEY); }catch(_){}
+    history.replaceState(null, '', location.pathname);   // Code sofort aus der Adresszeile
+    const fehler = (t)=>{ seite('<h1>Anmeldung</h1><div class="ts-fehler">' + esc(t) + '</div><button type="button" class="btn-primaer ts-voll" id="tsOk">Zurück</button>'); $('tsOk').onclick = ()=> neuEinrichten(); };
+    if(q.has('error')) return fehler(q.get('error_description') || q.get('error'));
+    if(!p || p.state !== q.get('state') || Date.now() - p.t > 15 * 60000) return fehler('Anmeldung abgelaufen. Bitte noch einmal versuchen.');
+    seite('<h1>Einen Moment …</h1><p>Deine Daten im OneDrive werden gesucht.</p>');
+    let tok, fern = null, appOrdner = false;
+    try{
+      const r = await fetch(MS.auth + '/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ client_id: MS.client, scope: MS.scope, grant_type: 'authorization_code', code: q.get('code'), redirect_uri: MS.zurueck, code_verifier: p.verifier }) });
+      tok = await r.json().catch(()=> ({}));
+      if(!r.ok || !tok.access_token) throw new Error(tok.error_description || ('Anmeldung fehlgeschlagen (HTTP ' + r.status + ')'));
+      for(const [wurzel, app] of [['root', false], ['special/approot', true]]){
+        const x = await fetch('https://graph.microsoft.com/v1.0/me/drive/' + wurzel + ':/KVBW%20Onedrive/tresor_schluessel.json:/content', { headers: { Authorization: 'Bearer ' + tok.access_token }, cache: 'no-store' });
+        if(x.ok){ const j = await x.json().catch(()=> null); if(j && j.pruef && j.pw){ fern = j; appOrdner = app; break; } }
+      }
+    }catch(e){ return fehler(e.message || String(e)); }
+    if(!fern){
+      seite('<h1>Kein Passwortschutz gefunden</h1><p>In diesem OneDrive gibt es noch keine verschlüsselten Daten der App. Stelle zuerst dein bisheriges Gerät um (Einstellungen › App-Sperre › „Jetzt umstellen“) und lass es einmal abgleichen – oder beginne hier neu.</p>' +
+        '<button type="button" class="btn-primaer ts-voll" id="tsOk">Zurück</button>');
+      $('tsOk').onclick = ()=> neuEinrichten(); return;
+    }
+    let konto = null; try{ const t = JSON.parse(decodeURIComponent(escape(atob(String(tok.id_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))))); konto = { name: t.name || '', username: t.preferred_username || t.email || '' }; }catch(_){}
+    seite('<h1>Mit deinen Geräten verbinden</h1>' + (konto && konto.username ? '<p class="ts-klein">Angemeldet als ' + esc(konto.username) + '</p>' : '') +
+      '<p>Gib das Passwort ein, das du auf deinem anderen Gerät verwendest. Es gilt dann auch hier, ebenso dein Wiederherstellungsschlüssel.</p>' +
+      '<label class="ts-feld"><span id="tsPwTitel">Passwort deines anderen Geräts</span><input type="password" id="tsPw" autocomplete="current-password"></label>' +
+      '<div class="ts-fehler" id="tsFehler"></div><button type="button" class="btn-primaer ts-voll" id="tsWeiter">Verbinden</button>' +
+      '<button type="button" class="ts-link" id="tsMitCode">Stattdessen mit Wiederherstellungsschlüssel</button><button type="button" class="ts-link" id="tsZurueck">Zurück</button>');
+    let mitCode = false;
+    $('tsMitCode').onclick = ()=>{ mitCode = true; $('tsPw').type = 'text'; $('tsPw').placeholder = 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX'; $('tsPwTitel').textContent = 'Wiederherstellungsschlüssel'; $('tsMitCode').remove(); };
+    $('tsZurueck').onclick = ()=> neuEinrichten();
+    setTimeout(()=> $('tsPw').focus(), 50);
+    $('tsWeiter').onclick = async ()=>{
+      const pw = $('tsPw').value; if(!pw){ $('tsFehler').textContent = 'Bitte eingeben.'; return; }
+      const b = $('tsWeiter'); b.disabled = true; b.textContent = 'Prüfe …';
+      let ok = false; try{ ok = await Tresor.einrichtenMitInfo(fern, pw, mitCode); }catch(e){ console.warn(e); }
+      if(!ok){ b.disabled = false; b.textContent = 'Verbinden'; $('tsFehler').textContent = mitCode ? 'Der Schlüssel passt nicht.' : 'Das Passwort passt nicht zu deinem anderen Gerät.'; return; }
+      // Anmeldung (nur verschluesselt im Tresor) und Ordnerort fuer die App hinterlegen
+      Tresor.kvSetzenText('ms_angemeldet_bleiben', 'true');
+      if(tok.refresh_token) Tresor.kvSetzenText('ms_eigen_rt', JSON.stringify(tok.refresh_token));
+      if(konto) Tresor.kvSetzenText('ms_eigen_konto', JSON.stringify(konto));
+      Tresor.kvSetzenText('ms_app_ordner', JSON.stringify(appOrdner));
+      Tresor.kvSetzenText('sync_schluessel_zeit', JSON.stringify(fern.geaendert || new Date().toISOString()));
+      Tresor.protokoll('eingerichtet', 'Weiteres Gerät: mit dem Schlüssel aus dem OneDrive verbunden');
+      for(let i = 0; i < 20; i++){ await Tresor.kvWarten(); if(!Tresor.schreibtNoch()) break; }
+      tok = null;
+      passkeyAnbieten(mitCode ? null : pw);
     };
   }
 
@@ -423,6 +497,7 @@
     catch(e){ seite('<h1>Fehler</h1><p>Der Gerätespeicher ist nicht verfügbar: ' + esc(e.message || e) + '</p><p class="ts-klein">Im privaten Modus mancher Browser gibt es keinen dauerhaften Speicher.</p>'); return; }
     if(st === 'nicht_unterstuetzt'){ seite('<h1>Browser zu alt</h1><p>Dieser Browser unterstützt die nötige Verschlüsselung nicht. Bitte einen aktuellen Browser verwenden.</p>'); return; }
     const alt = await altDa();
+    if(st === 'neu' && !alt && weiteresGeraetRueckkehrDa()) return weiteresGeraetRueckkehr();
     if(st === 'neu'){
       if(lsGet(UMZUG_KEY) === 'kopiert'){ lsSet(UMZUG_KEY, null); }   // Tresor fehlt trotz Vermerk: wie bisher weiter
       if(!alt) return neuEinrichten();

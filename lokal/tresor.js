@@ -215,7 +215,8 @@
   // Der Zustand des Abgleichs wird geleert und "erneuert" vorgemerkt: sync.js ersetzt danach den OneDrive-Ordner.
   // Passkeys (Fingerabdruck) enthalten den alten Schluessel und werden entfernt.
   // -> { ok: true, code } | { fehler: 'demo'|'passwort'|'regel'|'gleich'|'nichtlesbar'|'beschaeftigt'|text }
-  async function schluesselErneuern(altPasswort, neuesPasswort, fortschritt){
+  // zusatz(ent, ver): optional wie bei schluesselUebernehmen (z. B. Fotos ausserhalb des Tresors umschluesseln)
+  async function schluesselErneuern(altPasswort, neuesPasswort, fortschritt, zusatz){
     brauchtOffen();
     if(DEMO) return { fehler: 'demo' };
     if(umbau) return { fehler: 'beschaeftigt' };
@@ -253,6 +254,8 @@
           if(++nr % 25 === 0) stand('Verschlüssele neu … ' + nr);
         }
       }
+      let zusatzErg = null;
+      if(zusatz) zusatzErg = await zusatz((paket)=> Krypto.entschluesseln(key, paket), (bytes)=> Krypto.verschluesseln(neu.key, bytes));
       const syncWeg = (await alle('sync')).map(([k])=> k).filter(k=> typeof k === 'string' && (k.startsWith('o:') || k === 'offen' || k === 'neuholen'));
       // in einem Zug ersetzen: ganz oder gar nicht
       stand('Speichere …');
@@ -267,7 +270,7 @@
       key = neu.key; info = neu.info;
       protokoll('schluessel', 'Schlüssel erneuert (' + nr + ' Einträge neu verschlüsselt), neues Passwort, neuer Wiederherstellungsschlüssel');
       melden({ art: 'schluessel', erneuert: true });
-      return { ok: true, code, eintraege: nr };
+      return { ok: true, code, eintraege: nr, zusatz: zusatzErg };
     }catch(e){
       return { fehler: (e && e.message) || String(e) };
     }finally{
