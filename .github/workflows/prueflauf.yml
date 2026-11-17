@@ -1,0 +1,53 @@
+# Prüflauf: läuft bei jedem Push und jedem Pull Request (und von Hand über "Run workflow").
+# Braucht keine Geheimnisse und nur Leserechte. Die Tests gehen nicht ins Internet; OneDrive wird nachgebildet.
+# Die Aktionen sind auf feste Stände (Prüfsummen) festgelegt; Dependabot meldet neue Versionen.
+name: Prüflauf
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prueflauf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  statisch:
+    name: Statische Prüfungen
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Syntax, Sicherheitsrichtlinie, Bibliotheken, Dateiliste
+        run: node tests/statisch.js
+
+  browser:
+    name: Tests im Browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Playwright in fester Version (außerhalb des Projektordners, nur für diesen Lauf)
+        run: |
+          mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw"
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund --ignore-scripts playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: Tests
+        run: node tests/lauf.js
+        env:
+          NODE_PATH: ${{ runner.temp }}/pw/node_modules
