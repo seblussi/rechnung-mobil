@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-I2EaTO34Kqz4uzG+CM/lOv5KIv6++0XGeXnL4io5Rsk=' 'sha256-LmOuD6M4rBNHCmDWKsk2sF9yJN2Roy6aWYwZAanZtiU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-dq5i2mQtR+AbphKUnn8sSxJ/IvnZqvClV0ZZGkJ8gUo=' 'sha256-nNmxVJc0vjhJFop0VitXM/FxL9uW8MzIOhKzQmHzLBk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1983,6 +1983,7 @@ try{
   .doku-score b{font-size:15px;} .doku-score.rot{border-color:#d62828;} .doku-score.orange{border-color:#e07b00;} .doku-score.gelb{border-color:#e0b400;} .doku-score.gruen{border-color:#2fa84f;} .doku-score.aus{opacity:.65;}
   .doku-fehlt{color:var(--text-schwach); font-size:12px;} .doku-quelle{font-size:11.5px; color:var(--text-schwach); margin-top:6px;}
   .doku-fotos{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; margin-bottom:8px;}
+  .doku-foto-laedt{text-align:center; padding:0 6px; line-height:1.3;}
   .doku-foto{position:relative; aspect-ratio:3/4; border-radius:10px; background:#ccd center/cover no-repeat; border:1px solid var(--rand); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; color:#555;}
   .doku-foto-weg{position:absolute; top:4px; right:4px; width:28px; height:28px; margin:0; padding:0; border-radius:50%; border:0; background:rgba(0,0,0,.55); color:#fff; font-size:18px; line-height:28px;}
   .doku-leer{font-size:13px; color:var(--text-schwach); margin-bottom:8px; grid-column:1 / -1;}
@@ -6268,19 +6269,78 @@ async function rechnungsnummernVergeben(faelleAusw){
 // Befund, Therapie, Vitalwerte, EKG, Sonstiges -- mit Scores (NEWS2, qSOFA,
 // CRB-65 mit Entscheidungshilfe, Schockindex). Ablage in OneDrive unter
 // KVBW Onedrive/Dokumentation/<ID>/ (doku.json, foto_*.jpg, Export als HTML),
-// lokal als Kopie (Text im Geraet, Fotos in IndexedDB bis zum Hochladen).
+// lokal als Kopie (Text im Geraet; Fotos verschluesselt in IndexedDB, nach dem Hochladen nur noch einige Tage).
 // =====================================================================
 const DOKU_ORDNER = 'KVBW Onedrive/Dokumentation';
 function dokuNeueId(){ const d = new Date(); return 'D' + d.getFullYear() + zz2(d.getMonth() + 1) + zz2(d.getDate()) + '-' + Math.random().toString(36).slice(2, 7); }
 function dokuLaden(id){ return id ? LS.get('doku_' + id, null) : null; }
 function dokuSpeichernLokal(d){ d.geaendert = new Date().toISOString(); LS.set('doku_' + d.id, d); }
 // --- Fotos lokal (IndexedDB) ---
+// Sicherheitsbericht P2: Fotos liegen NUR verschluesselt im Geraet (AES-GCM 256 mit dem Geraeteschluessel des
+// Speichers). Eintrag: { v:1, iv, d, typ, am, oben }. Aeltere, unverschluesselt abgelegte Fotos (Blob) werden
+// beim Lesen und beim Aufraeumen nach dem Start umgestellt. Kopien von Fotos, die sicher im OneDrive liegen,
+// werden DOKU_FOTO_TAGE Tage nach dem Hochladen bzw. Nachladen vom Geraet geloescht und bei Bedarf neu aus dem
+// OneDrive geholt. Noch NICHT hochgeladene Fotos bleiben immer erhalten. Demo: nur im Arbeitsspeicher.
+const DOKU_FOTO_TAGE = 3;
 const dokuDb = (()=>{
-  let p = null;
+  let p = null; const demo = new Map();
   const oeffnen = ()=> p || (p = new Promise((ok, f)=>{ const r = indexedDB.open('rechnung_doku', 1); r.onupgradeneeded = ()=> r.result.createObjectStore('fotos'); r.onsuccess = ()=> ok(r.result); r.onerror = ()=> f(r.error); }));
-  const tx = async (modus, fn)=>{ const db = await oeffnen(); return new Promise((ok, f)=>{ const t = db.transaction('fotos', modus), s = t.objectStore('fotos'); const r = fn(s); t.oncomplete = ()=> ok(r && 'result' in r ? r.result : undefined); t.onerror = ()=> f(t.error); }); };
-  return { holen: (k)=> tx('readonly', s=> s.get(k)), setzen: (k, v)=> tx('readwrite', s=> s.put(v, k)), weg: (k)=> tx('readwrite', s=> s.delete(k)) };
+  const tx = async (modus, fn)=>{ const db = await oeffnen(); return new Promise((ok, f)=>{ const t = db.transaction('fotos', modus), s = t.objectStore('fotos'); const r = fn(s); t.oncomplete = ()=> ok(r && 'result' in r ? r.result : undefined); t.onerror = ()=> f(t.error); t.onabort = ()=> f(t.error || new Error('abgebrochen')); }); };
+  const roh = { holen: (k)=> tx('readonly', s=> s.get(k)), setzen: (k, v)=> tx('readwrite', s=> s.put(v, k)), weg: (k)=> tx('readwrite', s=> s.delete(k)), schluessel: ()=> tx('readonly', s=> s.getAllKeys()) };
+  const istPaket = (x)=> !!(x && x.v === 1 && x.iv && x.d);
+  const verpacken = async (blob, oben)=>{ const c = await Speicher.verBytes(await blob.arrayBuffer()); return { v: 1, iv: c.iv, d: c.d, typ: blob.type || 'image/jpeg', am: Date.now(), oben: oben ? Date.now() : 0 }; };
+  // -> Blob | undefined
+  async function holen(k){
+    if(window.DEMO_MODUS) return demo.get(k);
+    const x = await roh.holen(k); if(!x) return undefined;
+    if(istPaket(x)){
+      try{ return new Blob([await Speicher.entBytes(x)], { type: x.typ || 'image/jpeg' }); }
+      catch(e){ console.warn('Doku-Foto nicht lesbar', k, e); return undefined; }
+    }
+    if(x instanceof Blob){   // Altbestand: sofort verschluesselt ablegen
+      try{ await roh.setzen(k, await verpacken(x, false)); }catch(e){ console.warn('Doku-Foto: Umstellen fehlgeschlagen', k, e); }
+      return x;
+    }
+    return undefined;
+  }
+  // oben = true: Das Foto liegt bereits im OneDrive (nachgeladene Kopie) -> Frist zum Loeschen laeuft ab jetzt
+  async function setzen(k, blob, oben){
+    if(window.DEMO_MODUS){ demo.set(k, blob); return; }
+    await roh.setzen(k, await verpacken(blob, !!oben));
+  }
+  async function weg(k){ if(window.DEMO_MODUS){ demo.delete(k); return; } await roh.weg(k); }
+  // nach erfolgreichem Hochladen: Frist zum Loeschen der lokalen Kopie starten
+  async function obenMerken(k){
+    if(window.DEMO_MODUS) return;
+    const x = await roh.holen(k);
+    if(x instanceof Blob){ await roh.setzen(k, await verpacken(x, true)); return; }
+    if(istPaket(x) && !x.oben){ x.oben = Date.now(); await roh.setzen(k, x); }
+  }
+  // Altbestand verschluesseln; Kopien loeschen, die seit DOKU_FOTO_TAGE Tagen sicher im OneDrive liegen
+  async function aufraeumen(jetzt){
+    const erg = { umgestellt: 0, geloescht: 0, bleibt: 0 };
+    if(window.DEMO_MODUS || !Speicher.hatSchluessel()) return erg;
+    const grenze = (jetzt || Date.now()) - DOKU_FOTO_TAGE * 86400000;
+    for(const k of (await roh.schluessel()) || []){
+      try{
+        let x = await roh.holen(k); if(!x) continue;
+        if(x instanceof Blob){ x = await verpacken(x, false); await roh.setzen(k, x); erg.umgestellt++; }
+        if(!istPaket(x)) continue;
+        if(!x.oben){
+          // Liegt das Foto laut Dokumentation schon im OneDrive? Dann beginnt die Frist jetzt.
+          const t = String(k), i = t.lastIndexOf('/'), d = i > 0 ? dokuLaden(t.slice(0, i)) : null;
+          const f = d && Array.isArray(d.fotos) ? d.fotos.find(y=> y && y.name === t.slice(i + 1)) : null;
+          if(f && f.oben === true){ x.oben = Date.now(); await roh.setzen(k, x); }
+          erg.bleibt++; continue;
+        }
+        if(x.oben < grenze){ await roh.weg(k); erg.geloescht++; } else erg.bleibt++;
+      }catch(e){ console.warn('Doku-Fotos aufräumen', k, e); }
+    }
+    return erg;
+  }
+  return { holen, setzen, weg, obenMerken, aufraeumen };
 })();
+setTimeout(()=>{ dokuDb.aufraeumen().catch(e=> console.warn('Doku-Fotos aufräumen', e)); }, 7000);
 // Foto verkleinern (laengste Seite 1600 px, JPEG ~0,8) -> Blob
 function dokuFotoVerkleinern(datei){
   return new Promise((ok, fehler)=>{
@@ -6359,6 +6419,7 @@ async function dokuHochladen(d, meldung){
     if(meldung) meldung('Foto ' + f.name + ' wird hochgeladen …');
     await msGraphDateiHochladen(token, ordner + '/' + f.name, blob, 'image/jpeg');
     f.oben = true; dokuSpeichernLokal(d);
+    await dokuDb.obenMerken(d.id + '/' + f.name).catch(()=>{});   // lokale Kopie wird nach DOKU_FOTO_TAGE Tagen geloescht
   }
   await msGraphDateiHochladen(token, ordner + '/doku.json', JSON.stringify(d, null, 1), 'application/json');
   d.obenAm = new Date().toISOString(); dokuSpeichernLokal(d);
@@ -6379,7 +6440,7 @@ async function dokuFotoBlob(d, f){
     const token = await msGraphTokenHolen(); if(!token) return null;
     const r = await fetch(msGraphPfadUrl(DOKU_ORDNER + '/' + d.id + '/' + f.name) + '/content', { headers: { Authorization: 'Bearer ' + token } });
     if(!r.ok) return null;
-    b = await r.blob(); await dokuDb.setzen(d.id + '/' + f.name, b).catch(()=>{}); return b;
+    b = await r.blob(); await dokuDb.setzen(d.id + '/' + f.name, b, true).catch(()=>{}); return b;
   }catch(_){ return null; }
 }
 // Kurzinfo fuer den Knopf in den Masken
@@ -6483,7 +6544,7 @@ async function dokuOeffnen(fall){
     for(let i = 0; i < d.fotos.length; i++){
       const b = await dokuFotoBlob(d, d.fotos[i]); const el = box.querySelector('[data-foto="' + i + '"]'); if(!el) continue;
       if(b){ const u = URL.createObjectURL(b); fotoUrls.push(u); el.style.backgroundImage = 'url(' + u + ')'; el.querySelector('.doku-foto-laedt').remove(); el.dataset.url = u; }
-      else el.querySelector('.doku-foto-laedt').textContent = 'nicht geladen';
+      else el.querySelector('.doku-foto-laedt').textContent = d.fotos[i].oben ? 'im OneDrive – Internet nötig' : 'nicht geladen';
     }
     box.querySelectorAll('[data-foto]').forEach(el=> el.onclick = (ev)=>{ if(ev.target.closest('[data-fotoweg]') || !el.dataset.url) return; const w = document.createElement('div'); w.className = 'doku-gross'; w.innerHTML = '<img src="' + el.dataset.url + '" alt="">'; w.onclick = ()=> w.remove(); document.body.appendChild(w); });
     box.querySelectorAll('[data-fotoweg]').forEach(b=> b.onclick = async ()=>{
@@ -20658,7 +20719,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v467';
+const APP_VERSION = 'v468';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -25457,6 +25518,10 @@ const Speicher = (()=>{
     loeschen(k){ if(!mem.has(k)) return; mem.delete(k); einreihen(k); },
     schluesselListe(){ return Array.from(mem.keys()); },
     demoFuellen(kv){ if(!window.DEMO_MODUS) return; mem.clear(); Object.entries(kv || {}).forEach(([k, v])=> mem.set(k, v)); },
+    // Rohdaten (Dokumentationsfotos) mit dem Geraeteschluessel ver-/entschluesseln -- Sicherheitsbericht P2
+    hatSchluessel(){ return !!key; },
+    async verBytes(buf){ if(!key) throw new Error('Speicher nicht bereit'); const iv = crypto.getRandomValues(new Uint8Array(12)); return { iv, d: new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, buf)) }; },
+    async entBytes(c){ if(!key) throw new Error('Speicher nicht bereit'); return crypto.subtle.decrypt({ name: 'AES-GCM', iv: c.iv }, key, c.d); },
     warten(){ return Promise.all(Array.from(schreibt.values()).map(z=> z.p).filter(Boolean)); }
   };
 })();
