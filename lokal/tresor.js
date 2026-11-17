@@ -276,6 +276,66 @@
       const offenK = Array.from(umbauOffen); umbauOffen.clear(); offenK.forEach(k=> kvSchreibenEinreihen(k));
     }
   }
+  // ---------- Schluessel eines anderen Geraets uebernehmen ----------
+  // Dieses Geraet hat einen eigenen Tresor, die anderen Geraete desselben Nutzers einen anderen Schluessel (z. B. neues
+  // Geraet, auf dem zuerst ein eigenes Passwort festgelegt wurde). Mit dem Passwort bzw. Wiederherstellungsschluessel der
+  // anderen Geraete wird deren Schluessel uebernommen: alles wird gelesen, mit dem fremden Schluessel neu verschluesselt
+  // und in EINER Transaktion ersetzt (ganz oder gar nicht). Danach gelten Passwort und Wiederherstellungsschluessel der
+  // anderen Geraete; Passkeys dieses Geraets (enthalten den alten Schluessel) werden entfernt.
+  // zusatz(ent, ver): optional, wird VOR dem Ersetzen aufgerufen, solange beide Schluessel da sind (z. B. Fotos
+  // ausserhalb des Tresors umschluesseln) -- ent(paket) mit dem bisherigen, ver(bytes) mit dem neuen Schluessel.
+  // -> { ok, eintraege, zusatz } | { fehler: 'demo'|'passwort'|'nichtlesbar'|'gleich'|'beschaeftigt'|text }
+  async function schluesselUebernehmen(fremdInfo, geheim, mitCode, fortschritt, zusatz){
+    brauchtOffen();
+    if(DEMO) return { fehler: 'demo' };
+    if(umbau) return { fehler: 'beschaeftigt' };
+    const stand = (t)=>{ try{ if(fortschritt) fortschritt(t); }catch(_){} };
+    const r = await Krypto.auswickeln(fremdInfo, geheim, mitCode); if(!r) return { fehler: 'passwort' };
+    const neuKey = r.key; r.roh.fill(0);
+    // schon derselbe Schluessel?
+    try{ await Krypto.entschluesseln(key, Krypto.ausB64(fremdInfo.pruef)); return { fehler: 'gleich' }; }catch(_){}
+    if(nichtLesbar.length) return { fehler: 'nichtlesbar', eintrag: nichtLesbar[0] };
+    umbau = true;
+    try{
+      await kvWarten();
+      for(let i = 0; dateiSchreibt > 0; i++){ if(i > 1500) return { fehler: 'beschaeftigt' }; await new Promise(r=> setTimeout(r, 20)); }
+      const neuP = { kv: [], dmeta: [], ddaten: [] }; let nr = 0;
+      for(const n of ['kv', 'dmeta', 'ddaten']){
+        for(const [k, paket] of await alle(n)){
+          let klar;
+          try{ klar = await Krypto.entschluesseln(key, paket); }catch(e){ return { fehler: 'nichtlesbar', eintrag: n + '/' + k }; }
+          const p = await Krypto.verschluesseln(neuKey, klar);
+          const z = await Krypto.entschluesseln(neuKey, p);   // Gegenprobe
+          if(z.length !== klar.length || z.some((b, i)=> b !== klar[i])) return { fehler: 'Die Gegenprobe der neuen Verschlüsselung ist fehlgeschlagen.' };
+          neuP[n].push([k, p]);
+          if(++nr % 25 === 0) stand('Verschlüssele neu … ' + nr);
+        }
+      }
+      let zusatzErg = null;
+      if(zusatz) zusatzErg = await zusatz((paket)=> Krypto.entschluesseln(key, paket), (bytes)=> Krypto.verschluesseln(neuKey, bytes));
+      const syncWeg = (await alle('sync')).map(([k])=> k).filter(k=> typeof k === 'string' && (k.startsWith('o:') || k === 'offen' || k === 'neuholen'));
+      stand('Speichere …');
+      const d = await db();
+      await new Promise((ok, nein)=>{
+        const t = d.transaction(['meta', 'kv', 'dmeta', 'ddaten', 'sync'], 'readwrite');
+        for(const n of ['kv', 'dmeta', 'ddaten']){ const st = t.objectStore(n); st.clear(); neuP[n].forEach(([k, v])=> st.put(v, k)); }
+        const m = t.objectStore('meta'); m.put(fremdInfo, 'schluessel'); m.delete('passkeys'); m.delete('gemerkt');
+        const sy = t.objectStore('sync'); syncWeg.forEach(k=> sy.delete(k));
+        t.oncomplete = ()=> ok(); t.onerror = ()=> nein(t.error || new Error('Speichern fehlgeschlagen')); t.onabort = ()=> nein(t.error || new Error('Speichern abgebrochen'));
+      });
+      key = neuKey; info = fremdInfo;
+      protokoll('schluessel', 'Schlüssel der anderen Geräte übernommen (' + nr + ' Einträge neu verschlüsselt); es gelten deren Passwort und Wiederherstellungsschlüssel');
+      melden({ art: 'schluessel' });
+      return { ok: true, eintraege: nr, zusatz: zusatzErg };
+    }catch(e){
+      return { fehler: (e && e.message) || String(e) };
+    }finally{
+      umbau = false;
+      const offenK = Array.from(umbauOffen); umbauOffen.clear(); offenK.forEach(k=> kvSchreibenEinreihen(k));
+    }
+  }
+  // Gehoert diese (fremde) Schluesselinfo zum selben Schluessel wie dieser Tresor?
+  async function gleicherSchluessel(fremdInfo){ brauchtOffen(); try{ await Krypto.entschluesseln(key, Krypto.ausB64(fremdInfo.pruef)); return true; }catch(_){ return false; } }
   // Datei-Schreibvorgaenge: waehrend "Schluessel erneuern" abweisen und sonst mitzaehlen
   function schreibend(f){
     return async function(){
@@ -615,7 +675,7 @@
 
   global.Tresor = {
     jsonMitFortschritt,
-    pruefen, einrichten, einrichtenMitInfo, demoOeffnen, entsperren, sperren, allesLoeschen, merkenEntfernt, merkenHinweisErledigt, passwortAendern, schluesselErneuern, protokoll, protokollLesen, fehlversucheVorher: ()=> Object.assign({}, fehlVorher), codeErneuern, pruefePasswort, passwortFehlt, passwortRegelFehler, PASSWORT_REGEL,
+    pruefen, einrichten, einrichtenMitInfo, demoOeffnen, entsperren, sperren, allesLoeschen, merkenEntfernt, merkenHinweisErledigt, passwortAendern, schluesselErneuern, schluesselUebernehmen, gleicherSchluessel, protokoll, protokollLesen, fehlversucheVorher: ()=> Object.assign({}, fehlVorher), codeErneuern, pruefePasswort, passwortFehlt, passwortRegelFehler, PASSWORT_REGEL,
     passkeyUnterstuetzt, passkeys, passkeyEinrichten, passkeyEntsperren, passkeyEntfernen,
     status: ()=> status, offen, schluesselInfo: ()=> info, geraetId: ()=> geraet && geraet.id,
     kvText, kvSetzenText, kvLoeschen, kvSchluessel: ()=> Array.from(kvMem.keys()), kvWarten, nichtLesbar: ()=> nichtLesbar.slice(), schreibtNoch: ()=> Array.from(kvSchreibt.values()).some(z=> z.laeuft),

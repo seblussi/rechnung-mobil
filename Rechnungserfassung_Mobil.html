@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-wWslytvI6E02MvOZqbetis4Huhz28yr0lY/5UZn0wp8=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-Ki3TvQE3o914MKyCVwv1wv+DRQe+OMNdW75P1UU59kI=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -6419,7 +6419,19 @@ const dokuDb = (()=>{
     }
     return erg;
   }
-  return { holen, setzen, weg, obenMerken, aufraeumen };
+  // Geraet verbinden (Schluessel der anderen Geraete uebernehmen): Fotos im Arbeitsspeicher umschluesseln (v2), Schreiben danach
+  async function umschluesseln(ent, ver){
+    if(window.DEMO_MODUS) return [];
+    const neu = [];
+    for(const k of (await roh.schluessel()) || []){
+      const x = await roh.holen(k); if(!x || x.v !== 2 || !x.d) continue;
+      const klar = await ent(x.d);
+      neu.push([k, Object.assign({}, x, { d: await ver(klar) })]);
+    }
+    return neu;
+  }
+  async function paketeSchreiben(liste){ for(const [k, v] of liste) await roh.setzen(k, v); }
+  return { holen, setzen, weg, obenMerken, aufraeumen, umschluesseln, paketeSchreiben };
 })();
 setTimeout(()=>{ dokuDb.aufraeumen().catch(e=> console.warn('Doku-Fotos aufräumen', e)); }, 7000);
 // Foto verkleinern (laengste Seite 1600 px, JPEG ~0,8) -> Blob
@@ -20715,7 +20727,77 @@ function syncSaetzeZusammenfuehren(entfernt){
 }
 
 let syncLaeuft = null, syncNochmal = false, syncTimer = null, syncZuletzt = 0;
+// ---------------------------------------------------------------------
+// Verschluesselter Abgleich (Datentresor): Die Abgleichsdatei liegt nur noch verschluesselt im OneDrive
+// (SYNC_PFAD_ENC, AES-GCM mit dem Tresorschluessel). Daneben liegt die Schluesselinfo (SYNC_PFAD_SCHLUESSEL: der mit
+// Passwort bzw. Wiederherstellungsschluessel verpackte Schluessel -- ohne Passwort wertlos), damit weitere Geraete
+// desselben Nutzers denselben Schluessel verwenden. Die bisherige Klartext-Datei wird einmal gelesen, danach geloescht
+// (samt ihrer Kopien unter "Sicherungen"). Geraete ohne Tresor gleichen nicht mehr ab, sobald die Schluesselinfo da ist.
+const SYNC_PFAD_ENC = 'KVBW Onedrive/rechnungserfassung_abgleich.rsync';
+const SYNC_PFAD_SCHLUESSEL = 'KVBW Onedrive/tresor_schluessel.json';
+let syncFremd = null;   // Schluesselinfo der anderen Geraete, falls dieses Geraet einen anderen Schluessel hat
+let syncPause = '';     // Grund, warum dieses Geraet nicht abgleicht (Text)
+async function syncFetch(token, pfad, opt){
+  opt = opt || {};
+  return fetch(msGraphPfadUrl(pfad) + (opt.teil || ''), { method: opt.method || 'GET', headers: Object.assign({ Authorization: 'Bearer ' + token }, opt.headers || {}), body: opt.body, cache: 'no-store' });
+}
+async function syncSchluesselHolen(token){
+  const r = await syncFetch(token, SYNC_PFAD_SCHLUESSEL, { teil: '/content' });
+  if(r.status === 404) return null;
+  if(!r.ok) throw new Error('OneDrive ' + r.status);
+  try{ const j = await r.json(); return j && j.pruef && j.pw ? j : null; }catch(_){ return null; }
+}
+async function syncSchluesselHochladen(token, ersterMal){
+  const info = Object.assign({}, Tresor.schluesselInfo(), { geaendert: new Date().toISOString() });
+  const r = await syncFetch(token, SYNC_PFAD_SCHLUESSEL, { teil: '/content', method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, ersterMal ? { 'If-None-Match': '*' } : {}), body: JSON.stringify(info) });
+  if(r.ok) LS.set('sync_schluessel_zeit', info.geaendert);
+  return r.ok || r.status === 412 || r.status === 409;
+}
+// Schluessel abgleichen. -> true: gleicher Schluessel (Abgleich darf laufen)
+async function syncSchluesselPruefen(token){
+  const fern = await syncSchluesselHolen(token);
+  if(!fern){ await syncSchluesselHochladen(token, true); syncFremd = null; return true; }
+  if(!await Tresor.gleicherSchluessel(fern)){ syncFremd = fern; syncPause = 'Dieses Gerät nutzt einen anderen Schlüssel als deine anderen Geräte.'; return false; }
+  syncFremd = null;
+  // gleicher Schluessel, aber Passwort/Code auf einem Geraet geaendert -> neuere Huelle uebernehmen bzw. hochladen
+  const lokal = Tresor.schluesselInfo();
+  if(JSON.stringify({ pw: lokal.pw, code: lokal.code }) !== JSON.stringify({ pw: fern.pw, code: fern.code })){
+    const lokalZeit = Date.parse(LS.get('sync_schluessel_zeit', '') || 0) || 0, fernZeit = Date.parse(fern.geaendert || 0) || 0;
+    if(fernZeit > lokalZeit){ const i = Object.assign({}, fern); delete i.geaendert; await Tresor.__infoSetzen(i); LS.set('sync_schluessel_zeit', fern.geaendert); Tresor.protokoll('passwort', 'Passwort bzw. Wiederherstellungsschlüssel von einem anderen Gerät übernommen'); }
+    else await syncSchluesselHochladen(token, false);
+  }
+  return true;
+}
 async function syncDateiLesen(token){
+  if(window.TRESOR_MODUS){
+    if(!await syncSchluesselPruefen(token)){ const e = new Error(syncPause); e.fremd = true; throw e; }
+    syncPause = '';
+    const m = await syncFetch(token, SYNC_PFAD_ENC, { teil: '?$select=eTag,size' });
+    if(m.status === 404){
+      // erster verschluesselter Abgleich: bisherige Klartext-Datei einlesen (wird nach dem Schreiben geloescht)
+      const alt = await syncDateiLesenKlartext(token);
+      return { etag: null, daten: alt.daten, klartextDa: alt.etag !== null };
+    }
+    if(!m.ok) throw new Error('OneDrive ' + m.status);
+    const etag = (await m.json()).eTag;
+    const c = await syncFetch(token, SYNC_PFAD_ENC, { teil: '/content' });
+    if(!c.ok) throw new Error('OneDrive ' + c.status);
+    let daten = null;
+    try{ daten = JSON.parse(new TextDecoder().decode(await Tresor.ent(new Uint8Array(await c.arrayBuffer())))); }
+    catch(e){ throw new Error('Abgleichsdatei nicht lesbar (beschädigt oder mit einem anderen Schlüssel).'); }
+    return { etag, daten, klartextDa: false };
+  }
+  // ohne Tresor: Klartext-Datei wie bisher -- aber nicht mehr, sobald ein Geraet verschluesselt abgleicht
+  const fern = await syncSchluesselHolen(token);
+  if(fern){
+    try{ sessionStorage.setItem('umzug_fern_info', JSON.stringify(fern)); }catch(_){}
+    syncPause = 'Auf einem anderen Gerät ist der Passwortschutz eingeschaltet; der Abgleich läuft dort nur noch verschlüsselt. Stelle dieses Gerät ebenfalls um (Einstellungen › App-Sperre › „Jetzt umstellen“) – mit dem Passwort deines anderen Geräts.';
+    const e = new Error(syncPause); e.pause = true; throw e;
+  }
+  syncPause = '';
+  return syncDateiLesenKlartext(token);
+}
+async function syncDateiLesenKlartext(token){
   const url = msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON);
   const m = await fetch(url + '?$select=eTag,size', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
   if(m.status === 404) return { etag: null, daten: null };
@@ -20725,6 +20807,39 @@ async function syncDateiLesen(token){
   if(!c.ok) throw new Error('OneDrive ' + c.status);
   let daten = null; try{ daten = JSON.parse(await c.text()); }catch(_){}
   return { etag, daten };
+}
+async function syncDateiSchreiben(token, raus, etag){
+  const kopf = { Authorization: 'Bearer ' + token };
+  if(etag) kopf['If-Match'] = etag; else kopf['If-None-Match'] = '*';
+  if(window.TRESOR_MODUS){
+    kopf['Content-Type'] = 'application/octet-stream';
+    const paket = await Tresor.ver(new TextEncoder().encode(JSON.stringify(raus)));
+    return fetch(msGraphPfadUrl(SYNC_PFAD_ENC) + '/content', { method: 'PUT', headers: kopf, body: paket });
+  }
+  kopf['Content-Type'] = 'application/json';
+  return fetch(msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON) + '/content', { method: 'PUT', headers: kopf, body: JSON.stringify(raus, null, 1) });
+}
+// nach dem ersten verschluesselten Schreiben: Klartext-Datei und ihre Kopien unter "Sicherungen" loeschen
+async function syncKlartextLoeschen(token){
+  let n = 0;
+  const r = await fetch(msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON), { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+  if(r.ok) n++;
+  try{
+    const l = await fetch(msGraphPfadUrl(ODS_ORDNER) + '/children?$select=id,name,folder&$top=200', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+    if(l.ok){
+      const ordner = ((await l.json()).value || []).filter(x=> x.folder);
+      for(const o of ordner){
+        const k = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + o.id + '/children?$select=id,name&$top=200', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+        if(!k.ok) continue;
+        for(const d of ((await k.json()).value || []).filter(x=> /rechnungserfassung_app_sicherung/i.test(x.name || ''))){
+          const w = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + d.id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
+          if(w.ok) n++;
+        }
+      }
+    }
+  }catch(e){ console.warn('Klartext-Kopien löschen', e); }
+  Tresor.protokoll('abgleich', 'Abgleich jetzt verschlüsselt; Klartext-Abgleichsdatei' + (n > 1 ? ' und ' + (n - 1) + ' Kopie(n) aus „Sicherungen“' : '') + ' gelöscht');
+  return n;
 }
 // Ein Abgleich: lesen, zusammenfuehren, (nur wenn noetig) schreiben
 async function faelleAbgleichen(schreiben){
@@ -20736,7 +20851,7 @@ async function faelleAbgleichen(schreiben){
       const token = await msGraphTokenHolen(); if(!token) return false;
       if(schreiben && typeof rechnungsnummernVorSyncVergeben === 'function'){ try{ await rechnungsnummernVorSyncVergeben(); }catch(_){} }
       for(let versuch = 0; versuch < 3; versuch++){
-        const { etag, daten } = await syncDateiLesen(token);
+        const { etag, daten, klartextDa } = await syncDateiLesen(token);
         // Bestatter aus der Datei (wie bisher additiv)
         // aeltere App-Staende: nur Bestatter ergaenzen, die hier weder vorhanden noch geloescht sind
         if(daten && Array.isArray(daten.bestatterAenderungen)){ const weg = (LS.get('sync_saetze_weg', {}) || {}).bestatter || {}, da = new Set(ladeKatalog().map(b=> b.id));
@@ -20748,15 +20863,17 @@ async function faelleAbgleichen(schreiben){
         raus.bestatterAenderungen = ladeKatalog().filter(b=> b.herkunft === 'handy');
         const vorher = daten ? JSON.stringify({ f: daten.faelle, g: daten.gkv, w: daten.geloescht, s: daten.saetze }) : '';
         const nachher = JSON.stringify({ f: raus.faelle, g: raus.gkv, w: raus.geloescht, s: raus.saetze });
-        if(vorher === nachher && !(schreiben && !daten)) break;   // Datei ist schon aktuell
-        const kopf = { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
-        if(etag) kopf['If-Match'] = etag; else kopf['If-None-Match'] = '*';
-        const r = await fetch(msGraphPfadUrl(MSGRAPH_PFAD_SYNC_JSON) + '/content', { method: 'PUT', headers: kopf, body: JSON.stringify(raus, null, 1) });
+        if(vorher === nachher && !(schreiben && !daten) && !klartextDa) break;   // Datei ist schon aktuell
+        const r = await syncDateiSchreiben(token, raus, etag);
         if(r.status === 412 || r.status === 409) continue;   // anderes Geraet war schneller -> neu lesen
+        if(r.ok && klartextDa) await syncKlartextLoeschen(token);
         break;
       }
       syncZuletzt = Date.now();
-    }catch(_){ /* still -- naechster Versuch beim naechsten Anlass */ }
+    }catch(e){
+      // anderer Schluessel bzw. Abgleich pausiert: einmal je Sitzung deutlich melden
+      if((e && (e.fremd || e.pause)) && !window.__syncPauseGemeldet){ window.__syncPauseGemeldet = true; setTimeout(()=> syncPauseMelden(), 800); }
+    }
     finally{
       syncLaeuft = null;
       if(syncNochmal){ syncNochmal = false; setTimeout(()=> faelleAbgleichen(true), 50); }
@@ -20765,6 +20882,39 @@ async function faelleAbgleichen(schreiben){
     return geaendertGesamt;
   })();
   return syncLaeuft;
+}
+// Meldung, wenn dieses Geraet nicht abgleicht -- mit dem passenden naechsten Schritt
+async function syncPauseMelden(){
+  if(!syncPause) return;
+  if(syncFremd && window.TRESOR_MODUS){
+    const ja = await betaFrage('Abgleich angehalten\n\n' + syncPause + '\n\nVerbinde dieses Gerät mit deinen anderen Geräten: Du gibst das Passwort ein, das du dort verwendest. Danach gelten dieses Passwort und der Wiederherstellungsschlüssel der anderen Geräte auch hier; die Daten dieses Geräts bleiben erhalten und werden abgeglichen.', 'Jetzt verbinden', 'Später');
+    if(ja) geraetVerbinden();
+    return;
+  }
+  betaOverlay.meldung('Abgleich angehalten\n\n' + syncPause);
+}
+async function geraetVerbinden(){
+  const fern = syncFremd; if(!fern) return;
+  const pw = await betaEingabe('Passwort deiner anderen Geräte (oder deren Wiederherstellungsschlüssel):', '', 'password'); if(pw == null) return;
+  betaOverlay.zeigen('Gerät verbinden'); betaOverlay.fortschritt(null); betaOverlay.schritt('Daten werden mit dem Schlüssel deiner anderen Geräte neu verschlüsselt …');
+  try{ await Speicher.warten(); }catch(_){}
+  const mitCode = /^[A-Za-z0-9]{5}(-?[A-Za-z0-9]{5}){4}$/.test(pw.trim());
+  // Fotos (ausserhalb des Tresors) im selben Zug umschluesseln
+  let fotos = null;
+  const zusatz = async (ent, ver)=>{ fotos = await dokuDb.umschluesseln(ent, ver); return fotos.length; };
+  let r = await Tresor.schluesselUebernehmen(fern, pw, mitCode, (t)=> betaOverlay.schritt(t), zusatz);
+  if(r.fehler === 'passwort' && !mitCode) r = await Tresor.schluesselUebernehmen(fern, pw, true, (t)=> betaOverlay.schritt(t), zusatz);
+  if(!r.ok){
+    betaOverlay.schliessen();
+    betaOverlay.meldung({ passwort: 'Das Passwort bzw. der Schlüssel passt nicht zu deinen anderen Geräten.', gleich: 'Dieses Gerät nutzt bereits denselben Schlüssel.', nichtlesbar: 'Ein Eintrag auf diesem Gerät ist nicht lesbar (' + (r.eintrag || '') + ').' }[r.fehler] || ('Verbinden fehlgeschlagen: ' + r.fehler));
+    return;
+  }
+  try{ if(fotos && fotos.length) await dokuDb.paketeSchreiben(fotos); }catch(e){ console.warn('Fotos nach dem Verbinden', e); }
+  LS.set('sync_schluessel_zeit', fern.geaendert || new Date().toISOString());
+  syncFremd = null; syncPause = ''; window.__syncPauseGemeldet = false;
+  betaOverlay.schliessen();
+  await betaOverlay.meldung('✓ Dieses Gerät ist verbunden. Ab jetzt gelten das Passwort und der Wiederherstellungsschlüssel deiner anderen Geräte.\n\nFingerabdruck / Face ID musst du hier neu einrichten (Einstellungen › Sicherheit).');
+  faelleAbgleichen(true);
 }
 function syncAnsichtAuffrischen(){
   try{
@@ -20820,7 +20970,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v473';
+const APP_VERSION = 'v474';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -25295,7 +25445,7 @@ const ODS_ORDNER = 'KVBW Onedrive/Sicherungen', ODS_BEHALTEN = 10, ODS_TAGE = 7;
 const ODS_DATEIEN = [
   [MSGRAPH_PFAD_FAHRTENBUCH, 'Fahrtenbuch'],
   [MSGRAPH_PFAD_UEBERSICHT, 'Rechnungsübersicht'],
-  [MSGRAPH_PFAD_SYNC_JSON, 'Abgleich (Fälle, Dienste, Zonen)'],
+  [window.TRESOR_MODUS ? SYNC_PFAD_ENC : MSGRAPH_PFAD_SYNC_JSON, 'Abgleich (Fälle, Dienste, Zonen)' + (window.TRESOR_MODUS ? ', verschlüsselt' : '')],
   [MSGRAPH_PFAD_INI, 'Einstellungen (ini)'],
   [EIGENE_POS_PFAD, 'Eigene Positionen'],
   [NFP_ZONEN_PFAD, 'Wegegeld-Zonen (KVBW-Karte)']
@@ -25433,6 +25583,8 @@ function umzugAngebotWiring(){
   b.onclick = async ()=>{
     if(!await betaFrage('Jetzt auf den Passwortschutz umstellen?\n\nDu legst ein Passwort fest und bekommst einen Wiederherstellungsschlüssel, den du dir notieren musst. Ohne Passwort und Schlüssel sind die Daten auf diesem Gerät danach nicht mehr zu öffnen – auch nicht von mir.\n\nRechnungen und Dateien im OneDrive bleiben unberührt.', 'Weiter', 'Abbrechen')) return;
     try{ await Speicher.warten(); }catch(_){}
+    // Laeuft auf einem anderen Geraet schon der Passwortschutz? Dann dessen Schluessel verwenden (gleicher Abgleich)
+    try{ if(msGraphStatus === 'angemeldet'){ const t = await msGraphTokenHolen(); const f = t ? await syncSchluesselHolen(t) : null; if(f) sessionStorage.setItem('umzug_fern_info', JSON.stringify(f)); else sessionStorage.removeItem('umzug_fern_info'); } }catch(_){}
     TresorStart.umzugStarten();
   };
 }
@@ -25483,12 +25635,15 @@ function tresorAbschnittWiring(){
     const n2 = await betaEingabe('Neues Passwort wiederholen:', '', 'password'); if(n2 == null) return;
     if(n1 !== n2){ betaOverlay.meldung('Die Passwörter sind nicht gleich.'); return; }
     await Tresor.passwortAendern(alt, false, n1);
-    appToastAnzeigen('Passwort geändert.', 3000);
+    LS.set('sync_schluessel_zeit', new Date().toISOString());   // neue Huelle an die anderen Geraete weitergeben
+    try{ faelleAbgleichen(true); }catch(_){}
+    appToastAnzeigen('Passwort geändert – gilt nach dem nächsten Abgleich auch auf deinen anderen Geräten.', 3600);
   };
   $('spaCode').onclick = async ()=>{
     const pw = await betaEingabe('Zur Bestätigung dein Passwort. Der bisherige Wiederherstellungsschlüssel gilt danach nicht mehr:', '', 'password'); if(pw == null) return;
     const code = await Tresor.codeErneuern(pw);
     if(!code){ betaOverlay.meldung('Passwort falsch.'); return; }
+    LS.set('sync_schluessel_zeit', new Date().toISOString()); try{ faelleAbgleichen(true); }catch(_){}
     TresorStart.codeZeigen(code, ()=>{ const el = document.getElementById('tresorSeite'); if(el) el.remove(); });
   };
   $('spaProtokoll').onclick = async ()=>{

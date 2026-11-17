@@ -50,6 +50,9 @@
     return ()=>{ const a = $('tsPw1').value, b = $('tsPw2').value; if(Tresor.passwortRegelFehler(a)) return { fehler: Tresor.passwortRegelFehler(a) }; if(a !== b) return { fehler: 'Die beiden Passwörter sind nicht gleich.' }; return { pw: a }; };
   }
 
+  // interner Wert im Tresor (nach dem Kopieren: Zeitpunkt der uebernommenen Schluesselinfo, fuer den Abgleich)
+  function LS_setzenIntern(k, text){ try{ Tresor.kvSetzenText(k, text); }catch(_){} }
+
   // ---------- alte Datenbank ----------
   function altOeffnen(){
     return new Promise((ok)=>{
@@ -172,7 +175,32 @@
   }
 
   // ---------- Umzug der vorhandenen Daten ----------
+  function fernInfo(){ try{ const f = JSON.parse(sessionStorage.getItem('umzug_fern_info') || 'null'); return f && f.pruef && f.pw ? f : null; }catch(_){ return null; } }
   function umzugSeite(fehler){
+    const fern = fernInfo();
+    if(fern){
+      // anderes Geraet hat schon einen Tresor: dessen Schluessel uebernehmen (gleiches Passwort, gemeinsamer verschluesselter Abgleich)
+      seite('<h1>Passwortschutz einrichten</h1>' +
+        '<p>Auf einem anderen Gerät hast du den Passwortschutz schon eingerichtet. Gib das <b>Passwort von dort</b> ein – es gilt dann auch hier, ebenso dein Wiederherstellungsschlüssel.</p>' +
+        '<p class="ts-klein">Alle Daten auf diesem Gerät werden neu verschlüsselt und anschließend vollständig nachgeprüft. Geht etwas schief, bleibt alles, wie es war.</p>' +
+        '<label class="ts-feld"><span>Passwort deines anderen Geräts</span><input type="password" id="tsPw" autocomplete="current-password"></label>' +
+        '<div class="ts-fehler" id="tsFehler">' + esc(fehler || '') + '</div>' +
+        '<button type="button" class="btn-primaer ts-voll" id="tsWeiter">Umstellen</button>' +
+        '<button type="button" class="ts-link" id="tsMitCode">Stattdessen mit Wiederherstellungsschlüssel</button>' +
+        (UMZUG_PFLICHT ? '' : '<button type="button" class="ts-link" id="tsSpaeter">Später</button>'));
+      if($('tsSpaeter')) $('tsSpaeter').onclick = ()=>{ try{ sessionStorage.removeItem('umzug_jetzt'); }catch(_){} location.reload(); };
+      let mitCode = false;
+      $('tsMitCode').onclick = ()=>{ mitCode = true; $('tsPw').type = 'text'; $('tsPw').placeholder = 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX'; document.querySelector('.ts-feld span').textContent = 'Wiederherstellungsschlüssel'; $('tsMitCode').remove(); };
+      $('tsWeiter').onclick = async ()=>{
+        const pw = $('tsPw').value; if(!pw){ $('tsFehler').textContent = 'Bitte eingeben.'; return; }
+        const b = $('tsWeiter'); b.disabled = true; b.textContent = 'Prüfe …';
+        let ok = false; try{ const r = await Krypto.auswickeln(fern, pw, mitCode); if(r){ r.roh.fill(0); ok = true; } }catch(_){}
+        if(!ok){ b.disabled = false; b.textContent = 'Umstellen'; $('tsFehler').textContent = mitCode ? 'Der Schlüssel passt nicht.' : 'Das Passwort passt nicht zu deinem anderen Gerät.'; return; }
+        umzugAusfuehren(pw, fern, mitCode);
+      };
+      setTimeout(()=> $('tsPw').focus(), 50);
+      return;
+    }
     seite('<h1>Passwortschutz einrichten</h1>' +
       '<p>Bisher lag der Schlüssel zu deinen Daten direkt neben den Daten im Browser. Ab jetzt öffnet <b>nur dein Passwort</b> (oder Fingerabdruck / Face ID) die Daten.</p>' +
       '<p class="ts-klein">Dabei werden alle Daten auf diesem Gerät neu verschlüsselt und anschließend vollständig nachgeprüft. Geht etwas schief, bleibt alles, wie es war. Rechnungen und Dateien im OneDrive bleiben unberührt.</p>' +
@@ -186,7 +214,7 @@
       umzugAusfuehren(r.pw);
     };
   }
-  async function umzugAusfuehren(pw){
+  async function umzugAusfuehren(pw, fern, mitCode){
     seite('<h1>Daten werden umgestellt …</h1><p id="tsStand">Bitte die App offen lassen.</p>');
     const stand = (t)=>{ const el = $('tsStand'); if(el) el.textContent = t; };
     let tresorAngelegt = false;
@@ -200,22 +228,32 @@
       // Minuten der bisherigen App-Sperre fuer die automatische Sperre uebernehmen
       try{ const as = JSON.parse(lsGet('app_sperre') || 'null'); const e = JSON.parse(alt.einstellungen || '{}') || {};
         if(as && Number(as.minuten) > 0 && !e.sperreMinuten){ e.sperreMinuten = Math.max(5, Number(as.minuten)); alt.einstellungen = JSON.stringify(e); } }catch(_){}
-      stand('Neuer Schlüssel wird erzeugt …');
-      const { code } = await Tresor.einrichten(pw); tresorAngelegt = true;
+      let code = null;
+      if(fern){
+        stand('Schlüssel deines anderen Geräts wird übernommen …');
+        if(!await Tresor.einrichtenMitInfo(fern, pw, !!mitCode)) throw new Error('Das Passwort passt nicht zu deinem anderen Gerät.');
+        tresorAngelegt = true;
+        LS_setzenIntern('sync_schluessel_zeit', JSON.stringify(fern.geaendert || new Date().toISOString()));
+      } else {
+        stand('Neuer Schlüssel wird erzeugt …');
+        code = (await Tresor.einrichten(pw)).code; tresorAngelegt = true;
+      }
       stand('Daten werden verschlüsselt (' + schluessel.length + ' Einträge) …');
       schluessel.forEach((k)=> Tresor.kvSetzenText(k, alt[k]));
       for(let i = 0; i < 20; i++){ await Tresor.kvWarten(); if(!Tresor.schreibtNoch()) break; }
       // Gegenprobe mit dem neuen Passwort: sperren, oeffnen, jeden Eintrag vergleichen
       stand('Nachprüfung …');
       Tresor.sperren();
-      if(!await Tresor.entsperren(pw, false)) throw new Error('Der neue Tresor ließ sich mit dem Passwort nicht öffnen.');
+      if(!await Tresor.entsperren(pw, !!mitCode)) throw new Error('Der neue Tresor ließ sich mit dem Passwort nicht öffnen.');
       const falsch = schluessel.filter((k)=> Tresor.kvText(k) !== alt[k]);
       if(falsch.length || Tresor.nichtLesbar().length) throw new Error('Nachprüfung fehlgeschlagen (' + (falsch.length || Tresor.nichtLesbar().length) + ' Einträge)');
       lsSet(UMZUG_KEY, 'kopiert');   // ab hier gilt der Tresor; ein Abbruch wird beim naechsten Start abgeschlossen
       stand('Fotos werden neu verschlüsselt …');
       const fotos = await fotosUmziehen(await altSchluessel());
       Tresor.protokoll('umzug', 'Daten aus dem bisherigen Speicher übernommen (' + schluessel.length + ' Einträge, ' + fotos + ' Fotos)');
-      codeZeigen(code, async ()=>{ await umzugAbschliessen(); passkeyAnbieten(pw, true); });
+      try{ sessionStorage.removeItem('umzug_fern_info'); }catch(_){}
+      if(code) codeZeigen(code, async ()=>{ await umzugAbschliessen(); passkeyAnbieten(pw, true); });
+      else { await umzugAbschliessen(); passkeyAnbieten(mitCode ? null : pw, true); }
     }catch(e){
       console.error('Umzug', e);
       if(lsGet(UMZUG_KEY) === 'kopiert'){
@@ -241,6 +279,7 @@
 
   // ---------- Fingerabdruck / Face ID anbieten ----------
   async function passkeyAnbieten(pw, nachUmzug){
+    if(!pw) return appStarten();
     let geht = false; try{ geht = await Tresor.passkeyUnterstuetzt() && !(await Tresor.passkeys()).length; }catch(_){}
     if(!geht){ pw = null; return appStarten(); }
     seite('<h1>Fingerabdruck / Face ID</h1>' + (nachUmzug ? '<p>✓ Die Umstellung ist abgeschlossen.</p>' : '') + '<p>Damit entsperrst du die App auf diesem Gerät künftig ohne Passwort. Passwort und Wiederherstellungsschlüssel bleiben gültig.</p>' +
