@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-Seno/jBNf3uOSUkZGtDg4xU8ASWJzNNJNJfEO91J29k=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-yhHgz7h8JooySTJZnMFhxG1C2hmwp3+rELfpFEhkF1o=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2939,11 +2939,9 @@ async function odStempel(pfad){
     const j = await r.json(); return [j.cTag || '', j.eTag || '', j.lastModifiedDateTime || '', j.size || ''].join('|');
   }catch(_){ return null; }
 }
-// Sicherheitsbericht P3: Nach dem Verschieben liegt "KVBW Onedrive" im App-Ordner (OneDrive › Apps › …) und die App
-// bekommt nur noch Zugriff auf diesen Ordner (Files.ReadWrite.AppFolder) statt auf das ganze OneDrive.
-// Alle Pfade der App bleiben gleich ("KVBW Onedrive/..."), nur die Wurzel wechselt.
-function msAppOrdner(){ try{ return !!LS.get('ms_app_ordner', false); }catch(_){ return false; } }
-function msGraphWurzel(){ return 'https://graph.microsoft.com/v1.0/me/drive/' + (msAppOrdner() ? 'special/approot' : 'root'); }
+// Die App arbeitet im Hauptverzeichnis des OneDrive. (Der App-Ordner aus Sicherheitsbericht P3 ist in der Privatversion
+// zurueckgenommen: die Excel-Schnittstelle verlangt Zugriff aufs ganze OneDrive, siehe appOrdnerHinweisPruefen.)
+function msGraphWurzel(){ return 'https://graph.microsoft.com/v1.0/me/drive/root'; }
 function msGraphPfadUrl(pfadRelativZuOneDrive){
   if(!pfadRelativZuOneDrive) return msGraphWurzel();
   const segmente = pfadRelativZuOneDrive.split('/').map(encodeURIComponent).join('/');
@@ -3052,11 +3050,9 @@ async function msGraphTokenHolen(){
 let msZugriffErneuernGezeigt = false;
 async function msZugriffErneuernAnbieten(){
   if(msZugriffErneuernGezeigt || window.DEMO_MODUS) return; msZugriffErneuernGezeigt = true;
-  const app = msAppOrdner();
-  try{ if(window.TRESOR_MODUS && window.Tresor && Tresor.protokoll) Tresor.protokoll('anmeldung', 'Microsoft-Anmeldung reicht nicht für ' + (app ? 'den App-Ordner' : 'das OneDrive') + ' – neue Anmeldung nötig'); }catch(_){}
-  const akt = await betaOverlay.ergebnis('Microsoft-Anmeldung erneuern', app
-      ? 'Dein Ordner „KVBW Onedrive“ liegt im App-Ordner deines OneDrive. Damit die App darauf zugreifen darf, ist <b>einmal eine neue Microsoft-Anmeldung</b> nötig. Sie gilt dann nur noch für den App-Ordner.<br><br>Bis dahin kann die App nichts aus dem OneDrive laden oder dort speichern.'
-      : 'Die Microsoft-Anmeldung dieses Geräts ist abgelaufen oder reicht für den Zugriff auf dein OneDrive nicht aus. Bitte einmal neu anmelden.<br><br>Bis dahin kann die App nichts aus dem OneDrive laden oder dort speichern.',
+  try{ if(window.TRESOR_MODUS && window.Tresor && Tresor.protokoll) Tresor.protokoll('anmeldung', 'Microsoft-Anmeldung abgelaufen oder ohne nötiges Recht – neue Anmeldung nötig'); }catch(_){}
+  const akt = await betaOverlay.ergebnis('Microsoft-Anmeldung erneuern',
+    'Die Microsoft-Anmeldung dieses Geräts ist abgelaufen oder reicht für den Zugriff auf dein OneDrive nicht aus. Bitte einmal neu anmelden.<br><br>Bis dahin kann die App nichts aus dem OneDrive laden oder dort speichern.',
     [{ label: 'Später', akt: 'nein' }, { label: 'Jetzt anmelden', akt: 'ja', primaer: true }]);
   betaOverlay.schliessen();
   if(akt === 'ja') msGraphAnmelden();
@@ -21150,7 +21146,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v478';
+const APP_VERSION = 'v479';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22806,9 +22802,7 @@ let msGraphMsal = null;
    ========================================================== */
 const MSE_AUTH = MSGRAPH_AUTHORITY + '/oauth2/v2.0';
 const MSE_SCOPE_ALT = 'openid profile offline_access Files.ReadWrite User.Read';
-const MSE_SCOPE_APP = 'openid profile offline_access Files.ReadWrite.AppFolder User.Read';
-// nach dem Verschieben in den App-Ordner nur noch dieser Ordner; fuer das Verschieben selbst einmalig beides
-function msScope(){ try{ if(sessionStorage.getItem('ms_scope_umzug')) return MSE_SCOPE_ALT.replace('Files.ReadWrite', 'Files.ReadWrite Files.ReadWrite.AppFolder'); }catch(_){} return msAppOrdner() ? MSE_SCOPE_APP : MSE_SCOPE_ALT; }
+function msScope(){ return MSE_SCOPE_ALT; }
 function msAnmeldeArt(){
   try{
     // Datentresor (P3): eigene Anmeldung, Langzeitschluessel nur verschluesselt im Tresor. Notausgang ?msal=alt gilt nur fuer diese Sitzung.
@@ -22849,7 +22843,7 @@ const MsEigen = (function(){
       body: new URLSearchParams(Object.assign({ client_id: MSGRAPH_CLIENT_ID, scope: msScope() }, params)) });
     let j = {}; try{ j = await r.json(); }catch(_){}
     if(!r.ok || !j.access_token){ const e = new Error(j.error_description || ('Anmeldung fehlgeschlagen (HTTP ' + r.status + ')')); e.code = j.error || r.status; throw e; }
-    if(rechtFehlt(j)){ const e = new Error('Microsoft hat den Zugriff auf ' + (msAppOrdner() ? 'den App-Ordner' : 'OneDrive') + ' nicht erteilt – bitte neu anmelden.'); e.code = 'recht_fehlt'; throw e; }
+    if(rechtFehlt(j)){ const e = new Error('Microsoft hat den Zugriff auf OneDrive nicht erteilt – bitte neu anmelden.'); e.code = 'recht_fehlt'; throw e; }
     zugriff = j.access_token; zugriffBis = Date.now() + Math.max(60, (j.expires_in || 3600) - 120) * 1000;
     if(j.refresh_token) rtSchreiben(j.refresh_token);
     if(j.id_token){ const k = kontoAusIdToken(j.id_token); if(k) LS.set('ms_eigen_konto', k); }
@@ -22917,141 +22911,28 @@ function msAnmeldeArtSetzen(art){
 }
 
 // =====================================================================
-// App-Ordner (Sicherheitsbericht P3): "KVBW Onedrive" einmalig in den App-Ordner verschieben
+// App-Ordner (Sicherheitsbericht P3, zweiter Teil): in der Privatversion zurueckgenommen (17.11.2026). Die
+// Excel-Schnittstelle von Microsoft (Rechnungsuebersicht, Fahrtenbuch, Positionen) verlangt Zugriff aufs ganze
+// OneDrive; im App-Ordner antwortet sie "403 Could not obtain a WAC access token". Die App arbeitet nur im
+// Hauptverzeichnis. Hat dieses Geraet den App-Ordner benutzt (v471-v477) und liegt "KVBW Onedrive" noch dort,
+// kommt einmal je Sitzung der Hinweis, ihn zurueckzuverschieben. Nur dann wird der App-Ordner ueberhaupt
+// angefragt (eine Anfrage legt ihn sonst bei Microsoft neu an).
 // =====================================================================
-// Ablauf (nur im Tresor-Modus, eigene Anmeldung):
-//  1. Klick "In den App-Ordner verschieben": Anmeldung einmalig mit Zugriff auf OneDrive UND App-Ordner
-//     (Microsoft fragt nach Zustimmung). Merker 'ms_ordner_aktion' = 'hin' im localStorage (ohne Inhalte).
-//  2. Rueckkehr: App-Ordner anlegen lassen, "KVBW Onedrive" dorthin verschieben (Microsoft verschiebt nur den
-//     Verweis; Dateien, Freigaben und Kennungen bleiben gleich), Ergebnis pruefen, 'ms_app_ordner' = true.
-//  3. Danach holt die App Zugriffsschluessel nur noch fuer den App-Ordner.
-// Andere Geraete merken beim naechsten Start, dass der Ordner schon verschoben ist.
-// Rueckweg (falls etwas nicht geht): 'ms_ordner_aktion' = 'zurueck' verschiebt den Ordner wieder ins Hauptverzeichnis.
 const APP_ORDNER = 'KVBW Onedrive';
-async function appOrdnerAbruf(token, url, opt){
-  opt = opt || {};
-  const r = await fetch(url, { method: opt.method || 'GET', headers: Object.assign({ Authorization: 'Bearer ' + token }, opt.body ? { 'Content-Type': 'application/json' } : {}), body: opt.body ? JSON.stringify(opt.body) : undefined, cache: 'no-store' });
-  let j = null; try{ j = await r.json(); }catch(_){}
-  return { status: r.status, ok: r.ok, j };
-}
-const APP_ORDNER_G = 'https://graph.microsoft.com/v1.0/me/drive';
-async function appOrdnerStand(token){
-  const enc = encodeURIComponent(APP_ORDNER);
-  const [wurzel, app, approot] = await Promise.all([
-    appOrdnerAbruf(token, APP_ORDNER_G + '/root:/' + enc + '?$select=id,name,folder'),
-    appOrdnerAbruf(token, APP_ORDNER_G + '/special/approot:/' + enc + '?$select=id,name,folder'),
-    appOrdnerAbruf(token, APP_ORDNER_G + '/special/approot?$select=id,name,parentReference')
-  ]);
-  return { wurzel, app, approot };
-}
-// Verschieben (hin) bzw. zurueck. -> Text fuer die Meldung
-async function appOrdnerVerschieben(token, richtung){
-  const st = await appOrdnerStand(token);
-  if(!st.approot.ok) throw new Error('App-Ordner nicht erreichbar (HTTP ' + st.approot.status + ').');
-  if(richtung === 'hin'){
-    if(st.app.ok && st.wurzel.ok) throw new Error('„' + APP_ORDNER + '“ gibt es sowohl im Hauptordner als auch im App-Ordner. Bitte im OneDrive einen davon umbenennen und erneut versuchen.');
-    if(st.app.ok) return 'schon';   // anderes Geraet war schneller
-    if(st.wurzel.status === 404) return 'leer';   // neuer Nutzer: Ordner entsteht gleich im App-Ordner
-    if(!st.wurzel.ok) throw new Error('Ordner nicht erreichbar (HTTP ' + st.wurzel.status + ').');
-    const r = await appOrdnerAbruf(token, APP_ORDNER_G + '/items/' + st.wurzel.j.id + '?@microsoft.graph.conflictBehavior=fail', { method: 'PATCH', body: { parentReference: { id: st.approot.j.id } } });
-    if(!r.ok) throw new Error('Verschieben fehlgeschlagen (HTTP ' + r.status + (r.j && r.j.error ? ': ' + r.j.error.message : '') + ').');
-    const nach = await appOrdnerStand(token);
-    if(!nach.app.ok || nach.wurzel.ok || nach.app.j.id !== st.wurzel.j.id) throw new Error('Nachprüfung nach dem Verschieben fehlgeschlagen.');
-    return 'verschoben';
-  }
-  // zurueck
-  if(st.wurzel.ok && !st.app.ok) return 'schon';
-  if(st.wurzel.ok && st.app.ok) throw new Error('„' + APP_ORDNER + '“ gibt es in beiden Ordnern. Bitte im OneDrive einen davon umbenennen.');
-  if(!st.app.ok) throw new Error('„' + APP_ORDNER + '“ wurde im App-Ordner nicht gefunden.');
-  const root = await appOrdnerAbruf(token, APP_ORDNER_G + '/root?$select=id');
-  const r = await appOrdnerAbruf(token, APP_ORDNER_G + '/items/' + st.app.j.id + '?@microsoft.graph.conflictBehavior=fail', { method: 'PATCH', body: { parentReference: { id: root.j.id } } });
-  if(!r.ok) throw new Error('Zurückverschieben fehlgeschlagen (HTTP ' + r.status + ').');
-  return 'verschoben';
-}
-// nach jeder Anmeldung im Tresor-Modus. true = App laedt gleich neu (weitere Schritte ueberspringen)
-async function appOrdnerNachAnmeldung(frisch){
-  let aktion = null; try{ aktion = localStorage.getItem('ms_ordner_aktion'); }catch(_){}
-  if(aktion && frisch){
-    try{ localStorage.removeItem('ms_ordner_aktion'); sessionStorage.removeItem('ms_scope_umzug'); }catch(_){}
-    const token = await MsEigen.token();
-    try{
-      const erg = await appOrdnerVerschieben(token, aktion);
-      LS.set('ms_app_ordner', aktion === 'hin');
-      Tresor.protokoll('anmeldung', aktion === 'hin' ? 'Ordner „' + APP_ORDNER + '“ in den App-Ordner ' + (erg === 'verschoben' ? 'verschoben' : 'übernommen') + '; Zugriff nur noch auf den App-Ordner' : 'Ordner „' + APP_ORDNER + '“ ins Hauptverzeichnis zurückverschoben');
-      // ab jetzt Zugriffsschluessel nur noch fuer den App-Ordner (bzw. wieder das ganze OneDrive)
-      MsEigen.zugriffVergessen();
-      await Speicher.warten();
-      setTimeout(()=> betaOverlay.meldung(aktion === 'hin'
-        ? (erg === 'leer' ? 'Die App arbeitet ab jetzt im App-Ordner deines OneDrive und greift nur noch darauf zu.' : '✓ Der Ordner „' + APP_ORDNER + '“ liegt jetzt in deinem OneDrive unter „Apps“ – am PC unter OneDrive › Apps. Die App greift ab jetzt nur noch auf diesen Ordner zu.') +
-          '\n\nOptional: Unter account.microsoft.com › Datenschutz › „Apps und Dienste“ kannst du der App die frühere Zustimmung für das ganze OneDrive entziehen. Danach einmal in der App neu anmelden – Microsoft fragt dann nur noch nach dem App-Ordner.'
-        : 'Der Ordner liegt wieder im Hauptverzeichnis deines OneDrive.'), 800);
-      return false;
-    }catch(e){
-      Tresor.protokoll('fehler', 'App-Ordner: ' + (e.message || e));
-      betaOverlay.meldung('App-Ordner: ' + (e.message || e) + '\n\nEs wurde nichts verschoben bzw. der bisherige Stand bleibt gültig.');
-      return false;
-    }
-  }
-  // Dieses Geraet arbeitet noch im App-Ordner (siehe appOrdnerHtml: geht mit der Excel-Schnittstelle nicht)
-  if(msAppOrdner()){
-    const token = await MsEigen.token(); if(!token) return false;   // Anmeldung reicht nicht -> msZugriffErneuernAnbieten
-    const app = await appOrdnerAbruf(token, APP_ORDNER_G + '/special/approot:/' + encodeURIComponent(APP_ORDNER) + '?$select=id').catch(()=> null);
-    if(app && app.status === 404){
-      // auf einem anderen Geraet schon zurueckverschoben: ab jetzt wieder das ganze OneDrive (Anmeldung ggf. erneuern)
-      LS.set('ms_app_ordner', false); MsEigen.zugriffVergessen(); await Speicher.warten();
-      Tresor.protokoll('anmeldung', 'Ordner liegt wieder im Hauptverzeichnis (anderes Gerät); Zugriff wieder aufs ganze OneDrive');
-      setTimeout(()=>{ try{ msGraphTokenHolen(); }catch(_){} }, 300);   // prueft die Anmeldung; reicht sie nicht, kommt das Angebot zur neuen Anmeldung
-      return false;
-    }
-    if(app && app.ok && !appOrdnerNachAnmeldung.gefragt){
-      appOrdnerNachAnmeldung.gefragt = true;
-      setTimeout(async ()=>{
-        const akt = await betaOverlay.ergebnis('Ordner zurückverschieben', 'Dein Ordner „' + APP_ORDNER + '“ liegt im App-Ordner deines OneDrive. Dort lässt Microsoft die Excel-Schnittstelle nicht zu: <b>Rechnungsübersicht, Fahrtenbuch und Positionen</b> können nicht gelesen oder eingetragen werden.<br><br>Bitte den Ordner zurück ins Hauptverzeichnis verschieben. Du wirst dazu einmal zu Microsoft weitergeleitet. Dateien und Rechnungsübersicht bleiben unverändert.',
-          [{ label: 'Später', akt: 'nein' }, { label: 'Zurückverschieben', akt: 'ja', primaer: true }]);
-        betaOverlay.schliessen();
-        if(akt === 'ja') appOrdnerZurueckStarten();
-      }, 1200);
-    }
-    return false;
-  }
-  // Ordner auf einem anderen Geraet schon verschoben? (dieses Geraet hat noch den weiten Zugriff)
-  if(!msAppOrdner()){
-    const token = await MsEigen.token(); if(!token) return false;
-    const st = await appOrdnerStand(token).catch(()=> null);
-    if(st && st.app.ok && st.wurzel.status === 404){
-      LS.set('ms_app_ordner', true); MsEigen.zugriffVergessen(); await Speicher.warten();
-      Tresor.protokoll('anmeldung', 'Ordner liegt bereits im App-Ordner (anderes Gerät); Zugriff auf den App-Ordner beschränkt');
-      setTimeout(()=>{ try{ appToastAnzeigen('Der Ordner „' + APP_ORDNER + '“ liegt jetzt im App-Ordner (auf einem anderen Gerät verschoben). Auch dieses Gerät greift nur noch darauf zu.', 6000); }catch(_){} }, 1500);
-      return false;
-    }
-  }
-  return false;
-}
-// App-Ordner (P3, zweiter Teil) ist in der Privatversion NICHT moeglich: Die Excel-Schnittstelle von Microsoft
-// (Rechnungsuebersicht, Fahrtenbuch, Positionen) verlangt Zugriff aufs ganze OneDrive (Files.ReadWrite); mit dem
-// App-Ordner-Recht antwortet sie "403 Could not obtain a WAC access token" (beobachtet 17.11.2026 mit dem Testkonto,
-// so auch in der Microsoft-Doku je Excel-Aufruf). Das Angebot ist deshalb entfernt; schon verschobene Ordner werden
-// zurueckverschoben. (Die Launch-Version nutzt die Excel-Schnittstelle nicht und bleibt beim App-Ordner.)
-function appOrdnerHtml(){
-  if(window.DEMO_MODUS) return '';
-  if(msAppOrdner()) return '<div class="einstellung-zeile" style="border:2px solid #c0392b; border-radius:12px; padding:10px 12px; margin:6px 0 12px;"><div class="txt"><b>Ordner liegt im App-Ordner</b>' +
-    '<span class="hinweis">Dort lässt Microsoft die Excel-Schnittstelle nicht zu: Rechnungsübersicht, Fahrtenbuch und Positionen können nicht gelesen oder eingetragen werden. Bitte „' + APP_ORDNER + '“ zurück ins Hauptverzeichnis verschieben.</span>' +
-    '<button type="button" class="btn-primaer" id="appOrdnerZurueck" style="margin-top:8px;">Ordner zurückverschieben</button></div></div>';
-  return '<div class="hinweis" style="font-size:13px; margin:8px 0;">✓ Die Microsoft-Anmeldung liegt verschlüsselt im Datentresor.</div>';
-}
-// Rueckweg starten: Anmeldung mit Zugriff aufs ganze OneDrive (und App-Ordner), danach verschiebt appOrdnerNachAnmeldung
-async function appOrdnerZurueckStarten(){
-  if(!navigator.onLine){ appToastAnzeigen('Keine Internetverbindung.', 2500); return; }
-  try{ localStorage.setItem('ms_ordner_aktion', 'zurueck'); sessionStorage.setItem('ms_scope_umzug', '1'); }catch(_){}
-  await Speicher.warten();
-  MsEigen.anmelden();
-}
-function appOrdnerWiring(){
-  const zur = document.getElementById('appOrdnerZurueck');
-  if(zur) zur.onclick = async ()=>{
-    if(!await betaFrage('Ordner „' + APP_ORDNER + '“ wieder ins Hauptverzeichnis deines OneDrive zurückverschieben?\n\nDu wirst zu Microsoft weitergeleitet und bestätigst dort einmal den Zugriff. Dateien und Rechnungsübersicht bleiben unverändert.', 'Weiter', 'Abbrechen')) return;
-    appOrdnerZurueckStarten();
-  };
+async function appOrdnerHinweisPruefen(){
+  if(window.DEMO_MODUS || appOrdnerHinweisPruefen.fertig || !LS.get('ms_app_ordner', false)) return;
+  appOrdnerHinweisPruefen.fertig = true;
+  try{
+    const t = await msGraphTokenHolen(); if(!t) return;
+    const g = 'https://graph.microsoft.com/v1.0/me/drive', enc = encodeURIComponent(APP_ORDNER), H = { headers: { Authorization: 'Bearer ' + t }, cache: 'no-store' };
+    const w = await fetch(g + '/root:/' + enc + '?$select=id', H);
+    if(w.ok){ LS.set('ms_app_ordner', null); return; }   // liegt im Hauptverzeichnis: alter Merker weg
+    if(w.status !== 404) return;
+    const a = await fetch(g + '/special/approot:/' + enc + '?$select=id', H);
+    if(!a.ok){ LS.set('ms_app_ordner', null); return; }
+    betaOverlay.meldung('Dein Ordner „' + APP_ORDNER + '“ liegt noch im App-Ordner deines OneDrive (OneDrive › Apps). Dort arbeitet die App nicht, weil Microsoft die Excel-Schnittstelle nur im Hauptverzeichnis zulässt.\n\n' +
+      'Bitte den Ordner im OneDrive (am PC oder auf onedrive.live.com) zurück ins Hauptverzeichnis „Meine Dateien“ verschieben und die App danach neu laden. Bis dahin in der Einrichtung nichts neu anlegen lassen.', 'Ordner zurückverschieben');
+  }catch(e){ console.warn('App-Ordner prüfen', e); }
 }
 
 // 'unbekannt' (direkt nach Laden, bevor msGraphInitialisieren fertig ist),
@@ -23105,7 +22986,6 @@ async function msGraphInitialisieren(){
       const k = MsEigen.konto() || {};
       msGraphKonto = { name: k.name || '', username: k.username || '' };
       msGraphStatus = 'angemeldet';
-      if(window.TRESOR_MODUS){ try{ if(await appOrdnerNachAnmeldung(frisch)) return; }catch(e){ console.warn('App-Ordner', e); } }
       msGraphNachAnmeldung(frisch);
     } else { msGraphKonto = null; msGraphStatus = 'abgemeldet'; }
     return;
@@ -23141,14 +23021,7 @@ async function msGraphInitialisieren(){
 
 // Folgearbeiten nach erfolgreicher Anmeldung (beide Anmeldearten)
 function msGraphNachAnmeldung(frisch){
-      // Geraet noch ohne Datentresor (Microsoft-Bibliothek, Zugriff aufs ganze OneDrive): wurde der Ordner auf einem
-      // anderen Geraet in den App-Ordner verschoben, die Pfade hier ebenfalls umstellen
-      // (und umgekehrt: wieder zurueckverschoben -> Hauptverzeichnis)
-      if(!window.TRESOR_MODUS && !window.DEMO_MODUS) setTimeout(async ()=>{
-        try{ const t = await msGraphTokenHolen(); if(!t) return; const st = await appOrdnerStand(t);
-          if(msAppOrdner()){ if(st.wurzel.ok && st.app.status === 404){ LS.set('ms_app_ordner', false); appToastAnzeigen('Der Ordner „' + APP_ORDNER + '“ liegt wieder im Hauptverzeichnis deines OneDrive – die App nutzt ihn dort.', 5000); } return; }
-          if(st.app.ok && st.wurzel.status === 404){ LS.set('ms_app_ordner', true); appToastAnzeigen('Der Ordner „' + APP_ORDNER + '“ liegt jetzt im App-Ordner (OneDrive › Apps) – die App nutzt ihn dort.', 5000); } }catch(e){ console.warn('App-Ordner prüfen', e); }
-      }, 2000);
+      setTimeout(()=>{ try{ appOrdnerHinweisPruefen(); }catch(_){} }, 2000);
       try{ window.dispatchEvent(new Event('msgraph-angemeldet')); }catch(_){}
       setTimeout(()=>{ odsAutomatisch().catch(e=> console.warn('Sicherung', e)); }, 30000);
       setTimeout(()=>{ gkvAdressenNachtragen().then(n=>{ if(n && typeof appToastAnzeigen === 'function') appToastAnzeigen('Fahrtenbuch: Adressen von ' + n + ' GKV-Fällen nachgetragen.', 3500); }).catch(e=> console.warn('Adressen nachtragen', e)); }, 15000);
@@ -23197,7 +23070,7 @@ function msGraphAngemeldetBleibenSetzen(an){
   Speicher.warten().finally(()=> location.reload());
 }
 function msGraphBleibenHtml(){
-  if(window.TRESOR_MODUS) return appOrdnerHtml();
+  if(window.TRESOR_MODUS) return '<div class="hinweis" style="font-size:13px; margin:8px 0;">✓ Die Microsoft-Anmeldung liegt verschlüsselt im Datentresor.</div>';
   return `<div class="einstellung-zeile" style="margin:10px 0 6px;"><input type="checkbox" id="chkMsEigen"${msAnmeldeArt() === 'eigen' ? ' checked' : ''}><div class="txt">Neue Anmeldung (verschlüsselt, Test)<span class="hinweis">An: schlanke eigene Anmeldung, der Zugangsschlüssel liegt verschlüsselt im App-Speicher. Aus: bisherige Microsoft-Bibliothek. Notausgang, falls nichts mehr geht: die App-Adresse mit ?msal=alt am Ende öffnen.</span></div></div>` + `<div class="einstellung-zeile" style="margin:10px 0 6px;"><input type="checkbox" id="chkMsBleiben"${msGraphAngemeldetBleiben() ? ' checked' : ''}><div class="txt">Angemeldet bleiben<span class="hinweis">Aus: Nach dem Schließen der App bzw. des Browsers ist die Microsoft-Anmeldung vom Gerät gelöscht, beim nächsten Öffnen einmal „Mit Microsoft anmelden“ klicken.</span></div></div>`;
 }
 
@@ -23249,7 +23122,6 @@ function msGraphAbschnittHtml(){
 function msGraphAbschnittWiring(){
   const btnAn = document.getElementById('btnMsGraphAnmelden');
   if(btnAn) btnAn.onclick = ()=>{ msGraphAnmelden(); };
-  appOrdnerWiring();
   const chkE = document.getElementById('chkMsEigen');
   if(chkE) chkE.onchange = ()=> msAnmeldeArtSetzen(chkE.checked ? 'eigen' : 'msal');
   const chkB = document.getElementById('chkMsBleiben');

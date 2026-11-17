@@ -181,27 +181,18 @@
   // Die Schluesselinfo (mit dem Passwort verpackter Schluessel) liegt im OneDrive neben der verschluesselten
   // Abgleichsdatei. Dieses Geraet holt sie mit einer eigenen, kurzen Anmeldung (OAuth 2.0 + PKCE, wie die App),
   // oeffnet sie mit dem Passwort und uebernimmt die Anmeldung danach verschluesselt in den Tresor.
-  // Zwei Stufen: 1. Anmeldung fuers ganze OneDrive, nur um die Schluesselinfo zu finden (Hauptordner oder App-Ordner).
-  // 2. Liegt sie im App-Ordner, gleich noch einmal anmelden -- nur fuer den App-Ordner. Bei privaten Microsoft-Konten
-  // gilt ein Langzeitschluessel nur fuer die Rechte seiner Anmeldung; ein Schluessel aus Stufe 1 liefert spaeter keinen
-  // Zugriff auf den App-Ordner (OneDrive: 401) und haette ausserdem unnoetig Zugriff aufs ganze OneDrive.
-  // Der Schluessel aus Stufe 1 wird in diesem Fall verworfen, nichts davon wird gespeichert.
+  // (Der App-Ordner ist in der Privatversion zurueckgenommen: Anmeldung und Suche nur im Hauptverzeichnis.)
   const MS = { client: '579a39e0-b7fd-4c46-8684-af22e1bc45a2', auth: 'https://login.microsoftonline.com/consumers/oauth2/v2.0',
-    zurueck: 'https://seblussi.github.io/rechnung-mobil/Rechnungserfassung_Mobil.html',
-    scope: 'openid profile offline_access Files.ReadWrite User.Read', scopeApp: 'openid profile offline_access Files.ReadWrite.AppFolder User.Read' };
+    zurueck: 'https://seblussi.github.io/rechnung-mobil/Rechnungserfassung_Mobil.html', scope: 'openid profile offline_access Files.ReadWrite User.Read' };
   const PKCE_KEY = 'ts_weiteres_pkce';
   const b64url = (buf)=> btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  async function weiteresGeraetAnmelden(stufe, konto){
+  async function weiteresGeraetAnmelden(){
     if(navigator.onLine === false){ const f = $('tsFehler'); if(f) f.textContent = 'Dafür ist eine Internetverbindung nötig.'; return; }
-    const app = stufe === 'app';
     const verifier = b64url(crypto.getRandomValues(new Uint8Array(48))), state = b64url(crypto.getRandomValues(new Uint8Array(18)));
     const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
-    try{ sessionStorage.setItem(PKCE_KEY, JSON.stringify({ verifier, state, t: Date.now(), stufe: app ? 'app' : 'suche' })); }catch(_){}
-    const q = { client_id: MS.client, response_type: 'code', redirect_uri: MS.zurueck, response_mode: 'query',
-      scope: app ? MS.scopeApp : MS.scope, state, code_challenge: challenge, code_challenge_method: 'S256' };
-    if(app && konto && konto.username) q.login_hint = konto.username;   // gleiches Konto, keine erneute Kontoauswahl
-    else q.prompt = 'select_account';
-    location.assign(MS.auth + '/authorize?' + new URLSearchParams(q).toString());
+    try{ sessionStorage.setItem(PKCE_KEY, JSON.stringify({ verifier, state, t: Date.now() })); }catch(_){}
+    location.assign(MS.auth + '/authorize?' + new URLSearchParams({ client_id: MS.client, response_type: 'code', redirect_uri: MS.zurueck, response_mode: 'query',
+      scope: MS.scope, state, code_challenge: challenge, code_challenge_method: 'S256', prompt: 'select_account' }).toString());
   }
   // Hat Microsoft das noetige Dateirecht erteilt? (Antwortfeld "scope"; fehlt es, nicht pruefbar)
   const rechtDa = (tok, recht)=> typeof tok.scope !== 'string' || tok.scope.split(/\s+/).some((x)=> x.replace(/^.*\//, '').toLowerCase() === recht.toLowerCase());
@@ -215,28 +206,18 @@
     const fehler = (t)=>{ seite('<h1>Anmeldung</h1><div class="ts-fehler">' + esc(t) + '</div><button type="button" class="btn-primaer ts-voll" id="tsOk">Zurück</button>'); $('tsOk').onclick = ()=> neuEinrichten(); };
     if(q.has('error')) return fehler(q.get('error_description') || q.get('error'));
     if(!p || p.state !== q.get('state') || Date.now() - p.t > 15 * 60000) return fehler('Anmeldung abgelaufen. Bitte noch einmal versuchen.');
-    const stufeApp = p.stufe === 'app';
     seite('<h1>Einen Moment …</h1><p>Deine Daten im OneDrive werden gesucht.</p>');
-    let tok, fern = null, appOrdner = false;
+    let tok, fern = null;
     try{
       const r = await fetch(MS.auth + '/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ client_id: MS.client, scope: stufeApp ? MS.scopeApp : MS.scope, grant_type: 'authorization_code', code: q.get('code'), redirect_uri: MS.zurueck, code_verifier: p.verifier }) });
+        body: new URLSearchParams({ client_id: MS.client, scope: MS.scope, grant_type: 'authorization_code', code: q.get('code'), redirect_uri: MS.zurueck, code_verifier: p.verifier }) });
       tok = await r.json().catch(()=> ({}));
       if(!r.ok || !tok.access_token) throw new Error(tok.error_description || ('Anmeldung fehlgeschlagen (HTTP ' + r.status + ')'));
-      if(!rechtDa(tok, stufeApp ? 'Files.ReadWrite.AppFolder' : 'Files.ReadWrite')) throw new Error('Microsoft hat den Zugriff auf ' + (stufeApp ? 'den App-Ordner' : 'dein OneDrive') + ' nicht erteilt. Bitte noch einmal versuchen und bei Microsoft zustimmen.');
-      for(const [wurzel, app] of (stufeApp ? [['special/approot', true]] : [['root', false], ['special/approot', true]])){
-        const x = await fetch('https://graph.microsoft.com/v1.0/me/drive/' + wurzel + ':/KVBW%20Onedrive/tresor_schluessel.json:/content', { headers: { Authorization: 'Bearer ' + tok.access_token }, cache: 'no-store' });
-        if(x.ok){ const j = await x.json().catch(()=> null); if(j && j.pruef && j.pw){ fern = j; appOrdner = app; break; } }
-        else if(x.status === 401 || x.status === 403) throw new Error('OneDrive lehnt den Zugriff ab (HTTP ' + x.status + '). Bitte noch einmal versuchen.');
-      }
+      if(!rechtDa(tok, 'Files.ReadWrite')) throw new Error('Microsoft hat den Zugriff auf dein OneDrive nicht erteilt. Bitte noch einmal versuchen und bei Microsoft zustimmen.');
+      const x = await fetch('https://graph.microsoft.com/v1.0/me/drive/root:/KVBW%20Onedrive/tresor_schluessel.json:/content', { headers: { Authorization: 'Bearer ' + tok.access_token }, cache: 'no-store' });
+      if(x.ok){ const j = await x.json().catch(()=> null); if(j && j.pruef && j.pw) fern = j; }
+      else if(x.status === 401 || x.status === 403) throw new Error('OneDrive lehnt den Zugriff ab (HTTP ' + x.status + '). Bitte noch einmal versuchen.');
     }catch(e){ return fehler(e.message || String(e)); }
-    if(fern && appOrdner && !stufeApp){
-      // Ordner liegt im App-Ordner: Anmeldung aus Stufe 1 verwerfen, neu anmelden nur fuer den App-Ordner
-      let k0 = null; try{ const t = JSON.parse(decodeURIComponent(escape(atob(String(tok.id_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))))); k0 = { username: t.preferred_username || t.email || '' }; }catch(_){}
-      tok = null; fern = null;
-      seite('<h1>Einen Moment …</h1><p>Deine Daten liegen im App-Ordner. Die Anmeldung wird auf den App-Ordner beschränkt …</p>');
-      return weiteresGeraetAnmelden('app', k0);
-    }
     if(!fern){
       seite('<h1>Kein Passwortschutz gefunden</h1><p>In diesem OneDrive gibt es noch keine verschlüsselten Daten der App. Stelle zuerst dein bisheriges Gerät um (Einstellungen › App-Sperre › „Jetzt umstellen“) und lass es einmal abgleichen – oder beginne hier neu.</p>' +
         '<button type="button" class="btn-primaer ts-voll" id="tsOk">Zurück</button>');
@@ -261,7 +242,6 @@
       Tresor.kvSetzenText('ms_angemeldet_bleiben', 'true');
       if(tok.refresh_token) Tresor.kvSetzenText('ms_eigen_rt', JSON.stringify(tok.refresh_token));
       if(konto) Tresor.kvSetzenText('ms_eigen_konto', JSON.stringify(konto));
-      Tresor.kvSetzenText('ms_app_ordner', JSON.stringify(appOrdner));
       Tresor.kvSetzenText('sync_schluessel_zeit', JSON.stringify(fern.geaendert || new Date().toISOString()));
       Tresor.protokoll('eingerichtet', 'Weiteres Gerät: mit dem Schlüssel aus dem OneDrive verbunden');
       for(let i = 0; i < 20; i++){ await Tresor.kvWarten(); if(!Tresor.schreibtNoch()) break; }

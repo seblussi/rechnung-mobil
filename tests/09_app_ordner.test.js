@@ -1,9 +1,9 @@
-// P3: Microsoft-Anmeldung im Datentresor und Zugriff nur auf den App-Ordner.
-// Microsoft-Anmeldung (authorize/token) und OneDrive (Graph) sind nachgebildet. Geprüft wird:
+// P3: Microsoft-Anmeldung im Datentresor. Microsoft-Anmeldung (authorize/token) und OneDrive (Graph) sind nachgebildet.
 //  - die bisherige Anmeldung der Microsoft-Bibliothek wird übernommen, ihre Klartext-Daten im Browser gelöscht
-//  - App-Ordner in der Privatversion NICHT mehr angeboten: die Excel-Schnittstelle verlangt Zugriff aufs ganze OneDrive
-//    (mit App-Ordner-Recht: 403 „Could not obtain a WAC access token“, beobachtet 17.11.2026)
-//  - schon verschobene Ordner: Angebot zum Zurückverschieben; ein zweites Gerät erkennt das und meldet sich neu an
+//  - kein App-Ordner in der Privatversion (die Excel-Schnittstelle verlangt Zugriff aufs ganze OneDrive; mit
+//    App-Ordner-Recht: 403 „Could not obtain a WAC access token“, beobachtet 17.11.2026); liegt der Ordner bei einem
+//    Gerät, das ihn benutzt hat, noch dort: Hinweis zum Zurückverschieben
+//  - lehnt Microsoft das Erneuern ab (abgelaufen/widerrufen): Angebot zur neuen Anmeldung statt stiller 401-Fehler
 const { geraet, oeffnen, entsperren } = require('./hilfe');
 const KLIENT = '579a39e0-b7fd-4c46-8684-af22e1bc45a2';
 const { msKonto } = require('./ms_konto');
@@ -90,64 +90,43 @@ module.exports = async ({ browser, basis, pr })=>{
   pr('bisherige Anmeldung übernommen (ohne neue Anmeldung), Microsoft-Bibliothek nicht mehr im Spiel', await A.evaluate(()=> msAnmeldeArt() === 'eigen' && MsEigen.angemeldet()));
   pr('keine Anmeldedaten mehr im Klartext im Browser', (await imKlartext(A)).length === 0, await imKlartext(A));
   pr('Langzeitschlüssel liegt nur verschlüsselt im Tresor', await A.evaluate(()=> /RT-/.test(Tresor.kvText('ms_eigen_rt') || '')));
-  pr('Hauptordner, Zugriff aufs ganze OneDrive', od.wo() === 'Hauptordner' && await A.evaluate(()=> !msAppOrdner() && /\/root:/.test(msGraphPfadUrl('KVBW Onedrive/x'))));
+  pr('Hauptordner, Pfade im Hauptverzeichnis', od.wo() === 'Hauptordner' && await A.evaluate(()=> /\/root:/.test(msGraphPfadUrl('KVBW Onedrive/x'))));
   await A.evaluate(async ()=>{ await ansichtEinstellungen(); await new Promise((r)=> setTimeout(r, 800)); });
   pr('Einstellungen: kein Angebot „In den App-Ordner verschieben“ mehr, kein Test-Schalter', await A.evaluate(()=> !document.getElementById('appOrdnerHin') && !document.getElementById('chkMsEigen') && /verschlüsselt im Datentresor/.test(document.body.textContent)));
   const lesen = (p, was)=> p.evaluate(async (was)=>{ const t = await msGraphTokenHolen(); if(!t) return 'kein Token';
-    const r = await fetch(msGraphPfadUrl(was === 'excel' ? 'KVBW Onedrive/einstellungen.ini' : 'KVBW Onedrive/einstellungen.ini') + (was === 'excel' ? '/workbook/worksheets' : '/content'), { headers: { Authorization: 'Bearer ' + t } });
+    const r = await fetch(msGraphPfadUrl('KVBW Onedrive/einstellungen.ini') + (was === 'excel' ? '/workbook/worksheets' : '/content'), { headers: { Authorization: 'Bearer ' + t } });
     return r.status + ' ' + (await r.text()).slice(0, 140); }, was);
   pr('Hauptordner: Datei und Excel-Schnittstelle erreichbar', /^200 \[ARZT\]/.test(await lesen(A, 'datei')) && /^200 /.test(await lesen(A, 'excel')));
+  pr('nur Anfragen ans Hauptverzeichnis, kein App-Ordner angefragt (sonst legt Microsoft ihn an)', !od.log.some((l)=> /approot/.test(l)), od.log.filter((l)=> /approot/.test(l)).slice(0, 3));
+  pr('Gerät A: keine Skriptfehler', A.fehler.length === 0, A.fehler.slice(0, 3));
 
-  // ---- Stand wie beim Test am 17.11.2026: Ordner wurde mit v471–v476 in den App-Ordner verschoben (alter Ablauf) ----
-  await A.evaluate(async ()=>{ localStorage.setItem('ms_ordner_aktion', 'hin'); sessionStorage.setItem('ms_scope_umzug', '1'); await Speicher.warten(); MsEigen.anmelden(); });
-  await A.waitForURL(/code=CODE123/, { timeout: 30000 });
-  await ladenUndEntsperren(A); await angemeldet(A); await A.waitForTimeout(2500);
-  await A.evaluate(()=>{ const o = document.querySelector('.beta-overlay.aktiv .beta-overlay-knoepfe button'); if(o) o.click(); });
-  pr('(Ausgangslage) Ordner im App-Ordner', od.wo() === 'App-Ordner' && await A.evaluate(()=> msAppOrdner()), od.wo());
-  pr('im App-Ordner: Datei lesbar, Excel-Schnittstelle verweigert (403 WAC) – darum kein App-Ordner in der Privatversion', /^200 /.test(await lesen(A, 'datei')) && /^403 .*WAC/.test(await lesen(A, 'excel')), { datei: await lesen(A, 'datei'), excel: await lesen(A, 'excel') });
-
-  // ---- Gerät B: anderes Gerät, Anmeldung fürs ganze OneDrive (Microsoft-Bibliothek) -> stellt sich auf den App-Ordner um ----
-  const B = await neuesGeraet(browser, basis, od, true);
-  await oeffnen(B, basis, { einrichten: true });
-  await angemeldet(B); await B.waitForFunction(()=> msAppOrdner(), null, { timeout: 20000 }).catch(()=>{});
-  const vorher = await lesen(B, 'datei');
-  await B.waitForFunction(()=> /neue Microsoft-Anmeldung/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || ''), null, { timeout: 15000 }).catch(()=>{});
-  const ueberB = await B.evaluate(()=> (document.querySelector('.beta-overlay.aktiv') || {}).textContent || '');
-  pr('B: Anmeldung reicht nicht für den App-Ordner -> neue Anmeldung angeboten statt überall 401', vorher === 'kein Token' && /neue Microsoft-Anmeldung/.test(ueberB), { vorher, ueberB: ueberB.slice(0, 120), anmeldung: od.konto.protokoll.slice(-2) });
-  od.scopes.length = 0;
-  await B.evaluate(()=> document.querySelector('.beta-overlay.aktiv .beta-overlay-knoepfe .btn-primaer').click());
-  await B.waitForURL(/code=CODE123/, { timeout: 30000 });
-  await ladenUndEntsperren(B); await angemeldet(B); await B.waitForTimeout(2000);
-  pr('B: neu angemeldet (nur App-Ordner), Datei lesbar', od.scopes.some((x)=> /^authorize: .*Files\.ReadWrite\.AppFolder/.test(x)) && /^200 \[ARZT\]/.test(await lesen(B, 'datei')), { scopes: od.scopes, datei: await lesen(B, 'datei') });
-  const zurueckB = await B.evaluate(()=> /Ordner zurückverschieben/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || ''));
-  pr('B: beim Start Angebot „Ordner zurückverschieben“', zurueckB);
-  await B.evaluate(()=>{ const k = [...document.querySelectorAll('.beta-overlay.aktiv .beta-overlay-knoepfe button')].find((b)=> /Später/.test(b.textContent)); if(k) k.click(); });
-
-  // ---- Gerät A: beim Start Angebot zum Zurückverschieben ----
+  // ---- Stand vom Test am 17.11.2026: Ordner liegt (mit v471–v477 verschoben) noch im App-Ordner ----
+  await A.evaluate(async ()=>{ LS.set('ms_app_ordner', true); await Speicher.warten(); });
+  await A.evaluate(async ()=> fetch('https://graph.microsoft.com/v1.0/me/drive/special/approot', { headers: { Authorization: 'Bearer ' + await msGraphTokenHolen() } }));
+  od.el.get('F1').eltern = 'APPR';
+  pr('(Ausgangslage) Ordner im App-Ordner, Excel-Schnittstelle dort mit App-Ordner-Recht verweigert (403 WAC)', od.wo() === 'App-Ordner' &&
+    /^403 .*WAC/.test(await A.evaluate(async ()=>{ const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/special/approot:/KVBW%20Onedrive/einstellungen.ini:/workbook/worksheets', { headers: { Authorization: 'Bearer AT Files.ReadWrite.AppFolder' } }); return r.status + ' ' + await r.text(); })));
   await A.reload(); await ladenUndEntsperren(A); await angemeldet(A);
-  await A.waitForFunction(()=> /Ordner zurückverschieben/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || ''), null, { timeout: 15000 }).catch(()=>{});
-  if(process.env.BILDER) await A.screenshot({ path: process.env.BILDER + '/4_app_ordner_zurueck.png' });
-  pr('A: beim Start Angebot „Ordner zurückverschieben“ mit Begründung (Excel)', await A.evaluate(()=> /Excel-Schnittstelle/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || '')));
+  await A.waitForFunction(()=> /App-Ordner/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || ''), null, { timeout: 15000 }).catch(()=>{});
+  if(process.env.BILDER) await A.screenshot({ path: process.env.BILDER + '/4_app_ordner_hinweis.png' });
+  pr('Hinweis: Ordner liegt noch im App-Ordner, bitte im OneDrive zurückverschieben', await A.evaluate(()=> /zurück ins Hauptverzeichnis/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || '')));
+  await A.evaluate(()=>{ const o = document.querySelector('.beta-overlay.aktiv .beta-overlay-knoepfe button'); if(o) o.click(); });
+  // zurückverschoben (vom Nutzer im OneDrive) -> Merker verschwindet, kein Hinweis mehr
+  od.el.get('F1').eltern = 'ROOT';
+  await A.reload(); await ladenUndEntsperren(A); await angemeldet(A); await A.waitForTimeout(3500);
+  pr('nach dem Zurückverschieben: kein Hinweis, Merker entfernt, Dateien lesbar', await A.evaluate(()=> !document.querySelector('.beta-overlay.aktiv') && !LS.get('ms_app_ordner', false)) && /^200 \[ARZT\]/.test(await lesen(A, 'datei')));
+
+  // ---- Microsoft lehnt das Erneuern ab (abgelaufen/widerrufen) ----
+  od.konto.allesWiderrufen();
+  await A.reload(); await ladenUndEntsperren(A); await angemeldet(A);
+  const vorher = await lesen(A, 'datei');
+  await A.waitForFunction(()=> /Microsoft-Anmeldung erneuern/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || ''), null, { timeout: 15000 }).catch(()=>{});
+  pr('abgelehnte Erneuerung: neue Anmeldung angeboten statt stiller 401-Fehler', vorher === 'kein Token' && await A.evaluate(()=> /Microsoft-Anmeldung erneuern/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || '')), { vorher, protokoll: od.konto.protokoll.slice(-2) });
   od.scopes.length = 0;
   await A.evaluate(()=> document.querySelector('.beta-overlay.aktiv .beta-overlay-knoepfe .btn-primaer').click());
   await A.waitForURL(/code=CODE123/, { timeout: 30000 });
-  await ladenUndEntsperren(A); await angemeldet(A); await A.waitForTimeout(2500);
-  pr('A: Ordner wieder im Hauptordner (Kennung unverändert), App nutzt ihn dort', od.wo() === 'Hauptordner' && od.el.get('F2').eltern === 'F1' && await A.evaluate(()=> !msAppOrdner()), od.wo());
-  await A.evaluate(()=>{ const o = document.querySelector('.beta-overlay.aktiv .beta-overlay-knoepfe button'); if(o) o.click(); });
-  pr('A: Datei und Excel-Schnittstelle wieder erreichbar', /^200 \[ARZT\]/.test(await lesen(A, 'datei')) && /^200 /.test(await lesen(A, 'excel')), { datei: await lesen(A, 'datei'), excel: await lesen(A, 'excel') });
-  pr('A: Zurückverschieben steht im Sicherheitsprotokoll', await A.evaluate(async ()=> (await Tresor.protokollLesen()).some((e)=> /zurückverschoben/.test(e.text))));
-  pr('A: keine Skriptfehler', A.fehler.length === 0, A.fehler.slice(0, 3));
+  await ladenUndEntsperren(A); await angemeldet(A); await A.waitForTimeout(1500);
+  pr('nach neuer Anmeldung (ganzes OneDrive): Datei und Excel-Schnittstelle erreichbar', od.scopes.some((x)=> /^authorize: .*Files\.ReadWrite User/.test(x)) && /^200 \[ARZT\]/.test(await lesen(A, 'datei')) && /^200 /.test(await lesen(A, 'excel')), { scopes: od.scopes });
+  pr('keine Skriptfehler', A.fehler.length === 0, A.fehler.slice(0, 3));
   await A.context().close();
-
-  // ---- Gerät B (Anmeldung nur für den App-Ordner): erkennt das Zurückverschieben, meldet sich neu an ----
-  await B.reload(); await ladenUndEntsperren(B);
-  await B.waitForFunction(()=> !msAppOrdner(), null, { timeout: 20000 }).catch(()=>{});
-  await B.waitForFunction(()=> /Microsoft-Anmeldung erneuern/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || ''), null, { timeout: 15000 }).catch(()=>{});
-  pr('B: erkennt den zurückverschobenen Ordner, bietet neue Anmeldung an', await B.evaluate(()=> !msAppOrdner() && /Microsoft-Anmeldung erneuern/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || '')));
-  await B.evaluate(()=> document.querySelector('.beta-overlay.aktiv .beta-overlay-knoepfe .btn-primaer').click());
-  await B.waitForURL(/code=CODE123/, { timeout: 30000 });
-  await ladenUndEntsperren(B); await angemeldet(B); await B.waitForTimeout(2000);
-  pr('B: danach Datei und Excel-Schnittstelle erreichbar', /^200 \[ARZT\]/.test(await lesen(B, 'datei')) && /^200 /.test(await lesen(B, 'excel')), { datei: await lesen(B, 'datei'), excel: await lesen(B, 'excel') });
-  pr('B: keine Skriptfehler', B.fehler.length === 0, B.fehler.slice(0, 3));
-  await B.context().close();
 };

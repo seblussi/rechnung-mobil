@@ -12,12 +12,13 @@ const STANDARD = ['openid', 'profile', 'offline_access', VOLL, 'User.Read'];
 //   'ablehnen': Fehler invalid_grant (die App bekam dann gar keinen Schlüssel und schickte „Bearer null“ -> 401)
 function msKonto(){
   const modus = process.env.MS_MODUS || 'kuerzen';
-  const rechte = new Map(); let nr = 0, letzte = null; const protokoll = [];
+  const rechte = new Map(), widerrufen = new Set(); let nr = 0, letzte = null; const protokoll = [];
   const teile = (s)=> String(s || '').split(/\s+/).filter(Boolean);
   function authorize(scope){ letzte = teile(scope); protokoll.push('authorize: ' + scope); }
   // b: URLSearchParams des Token-Aufrufs -> Antwort (ohne id_token)
   function token(b){
     const gefragt = teile(b.get('scope'));
+    if(b.get('grant_type') === 'refresh_token' && widerrufen.has(b.get('refresh_token'))){ protokoll.push('refresh_token: WIDERRUFEN'); return { status: 400, error: 'invalid_grant', error_description: 'AADSTS70008: The refresh token has expired or was revoked.' }; }
     const grund = b.get('grant_type') === 'authorization_code' ? (letzte || gefragt) : (rechte.get(b.get('refresh_token')) || STANDARD);
     const erteilt = gefragt.filter((s)=> grund.includes(s));
     protokoll.push(b.get('grant_type') + ': ' + b.get('scope') + ' -> ' + (modus === 'ablehnen' && erteilt.length < gefragt.length ? 'ABGELEHNT' : erteilt.join(' ')));
@@ -40,6 +41,8 @@ function msKonto(){
     }
     return [401, { error: { code: 'unauthenticated', message: "Must be authenticated to use '/drive' syntax" } }];
   }
-  return { authorize, token, pruefen, protokoll, rechte };
+  // alle bisher ausgegebenen Langzeitschluessel (und den der Microsoft-Bibliothek) ungueltig machen
+  function allesWiderrufen(){ for(const k of rechte.keys()) widerrufen.add(k); widerrufen.add('RT-MSAL-KLARTEXT'); }
+  return { authorize, token, pruefen, protokoll, rechte, allesWiderrufen };
 }
 module.exports = { msKonto, VOLL, APP };
