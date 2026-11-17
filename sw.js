@@ -12,11 +12,11 @@
 //
 // Bei JEDER Veröffentlichung: CACHE_NAME erhöhen und danach „node werkzeuge/sw_dateien.js“ ausführen (trägt die
 // Prüfsummen ein; tests/statisch.js prüft das). Neue Dateien der App hier in DATEIEN aufnehmen.
-const CACHE_NAME = 'rechnungserfassung-v475';
+const CACHE_NAME = 'rechnungserfassung-v476';
 const CACHE_PRAEFIX = CACHE_NAME.replace(/\d+$/, '');   // alle Versionen dieser App: gleicher Anfang, andere Nummer
 const DATEIEN = {
 // >>> DATEIEN (Prüfsummen erzeugt von werkzeuge/sw_dateien.js – nicht von Hand ändern)
-  './Rechnungserfassung_Mobil.html': 'tHnvKoRxWLMA+p1e88G6V73HxFYgskLwh7kCWkMFgj4=',
+  './Rechnungserfassung_Mobil.html': 'FhBqZHX4iaZhodzgQGefWax9sxlR0g7oCWzYG5n3n5E=',
   './manifest.json': 'oGmycJijIIy67JQt2/9DPvS7LFo04ldRKRTIcpUcfxY=',
   './': 'HAHncj5UelMdOHtP3EGp0CI7BT/TzLQ7grnGteDXT60=',
   './lib/msal/msal-browser.min.js': 'oW1XExMUwEJRJjFmLVpFT6UqcZoxojm+4rsSOZfth4E=',
@@ -34,7 +34,7 @@ const DATEIEN = {
   './icon-512-maskable.png': 'MzpydXDHTa3C59Ql+Z6ttsgOC2j/pI0zPtmd8Y9TPVM=',
   './apple-touch-icon.png': 'AK/AjVLtHMaWtfMANF5svZpWdvInryUXFEEC3BffUW0=',
   './lib/pdf-lib.min.js': 'D5pcrQeUHwgmWGyU4InYm5GMRuXBfPLVo8b2ZuO8aU8=',
-  './lib/xlsx/xlsx.full.min.js': 'yVBhl8r4CaB1tt7h2g02+xnacVj/6KiOewyWxdhiPJk=',
+  './lib/xlsx/xlsx.full.min.js': 'zAFRMKqFIefwiPiImOupSczcv7ON8L0Sm0S3Jzw6b0E=',
   './lokal/docxpdf.js': '4UQ77dDAw1GjB6DwMBp9uwnlX6x0PGGQOUZKrA7i7MA=',
   './lokal/krypto.js': 'j9HHt3IQYGDy7ei52Ax9+RJzaHtKmki2jraAHWnS1XA=',
   './lokal/lokalgraph.js': 'm1JWexsTvx9bUnWGRvROSUvoS+C9Z7WHZFHLlu3vJTA=',
