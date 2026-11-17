@@ -118,10 +118,11 @@ module.exports = async ({ browser, basis, pr })=>{
 
   // ---- Microsoft lehnt das Erneuern ab (abgelaufen/widerrufen) ----
   od.konto.allesWiderrufen();
-  await A.reload(); await ladenUndEntsperren(A); await angemeldet(A);
+  await A.reload(); await ladenUndEntsperren(A);
+  await A.waitForFunction(()=> typeof msGraphStatus !== 'undefined' && msGraphStatus !== 'unbekannt', null, { timeout: 30000 });   // angemeldet oder schon als abgelaufen erkannt
   const vorher = await lesen(A, 'datei');
   await A.waitForFunction(()=> /Microsoft-Anmeldung erneuern/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || ''), null, { timeout: 15000 }).catch(()=>{});
-  pr('abgelehnte Erneuerung: neue Anmeldung angeboten statt stiller 401-Fehler', vorher === 'kein Token' && await A.evaluate(()=> /Microsoft-Anmeldung erneuern/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || '')), { vorher, protokoll: od.konto.protokoll.slice(-2) });
+  pr('abgelehnte Erneuerung: neue Anmeldung angeboten statt stiller 401-Fehler, OneDrive als nicht verbunden', vorher === 'kein Token' && await A.evaluate(()=> /Microsoft-Anmeldung erneuern/.test((document.querySelector('.beta-overlay.aktiv') || {}).textContent || '') && msGraphStatus === 'abgemeldet'), { vorher, protokoll: od.konto.protokoll.slice(-2) });
   od.scopes.length = 0;
   await A.evaluate(()=> document.querySelector('.beta-overlay.aktiv .beta-overlay-knoepfe .btn-primaer').click());
   await A.waitForURL(/code=CODE123/, { timeout: 30000 });

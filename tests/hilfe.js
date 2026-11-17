@@ -20,9 +20,11 @@ async function geraet(browser, basis, opt){
 const PASSWORT = 'Ein-Langes-Test-Passwort-2026!';
 // Neues Geraet im echten Betrieb: Passwort festlegen, Wiederherstellungsschluessel bestaetigen (Datentresor)
 async function tresorEinrichten(p){
-  await p.waitForSelector('#tsPw1', { timeout: 60000 });
+  try{ await p.waitForSelector('#tsPw1', { timeout: 60000 }); }
+  catch(e){ const t = await p.evaluate(()=> document.body ? document.body.innerText.slice(0, 300) : '').catch(()=> '?'); throw new Error('Einrichtungsseite erscheint nicht. Seite zeigt: ' + JSON.stringify(t)); }
   await p.fill('#tsPw1', PASSWORT); await p.fill('#tsPw2', PASSWORT); await p.click('#tsWeiter');
-  await p.waitForSelector('#tsCode', { timeout: 60000 });
+  try{ await p.waitForSelector('#tsCode', { timeout: 60000 }); }
+  catch(e){ const t = await p.evaluate(()=> document.body ? document.body.innerText.slice(0, 300) : '').catch(()=> '?'); throw new Error('Wiederherstellungsschlüssel erscheint nicht. Seite zeigt: ' + JSON.stringify(t)); }
   const code = (await p.textContent('#tsCode')).trim(); p.code = code;
   await p.fill('#tsLetzter', code.split('-').pop()); await p.click('#tsFertig');
   await p.waitForTimeout(500);
