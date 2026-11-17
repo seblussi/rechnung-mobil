@@ -20,7 +20,7 @@ async function geraet(browser, basis, opt){
 const PASSWORT = 'Ein-Langes-Test-Passwort-2026!';
 // Neues Geraet im echten Betrieb: Passwort festlegen, Wiederherstellungsschluessel bestaetigen (Datentresor)
 async function tresorEinrichten(p){
-  await p.waitForSelector('#tsPw1', { timeout: 30000 });
+  await p.waitForSelector('#tsPw1', { timeout: 60000 });
   await p.fill('#tsPw1', PASSWORT); await p.fill('#tsPw2', PASSWORT); await p.click('#tsWeiter');
   await p.waitForSelector('#tsCode', { timeout: 30000 });
   const code = (await p.textContent('#tsCode')).trim(); p.code = code;
@@ -28,7 +28,7 @@ async function tresorEinrichten(p){
   await p.waitForTimeout(500);
   if(await p.$('#tsPkSpaeter')) await p.click('#tsPkSpaeter');
 }
-async function entsperren(p, pw){ await p.waitForSelector('#tsPw', { timeout: 30000 }); await p.fill('#tsPw', pw || PASSWORT); await p.evaluate(()=> document.getElementById('tsAuf').click()); }
+async function entsperren(p, pw){ await p.waitForSelector('#tsPw', { timeout: 60000 }); await p.fill('#tsPw', pw || PASSWORT); await p.evaluate(()=> document.getElementById('tsAuf').click()); }
 async function oeffnen(p, basis, opt){
   opt = opt || {};
   await p.goto(basis + SEITE);

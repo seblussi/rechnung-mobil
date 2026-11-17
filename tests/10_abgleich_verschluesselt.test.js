@@ -142,6 +142,23 @@ module.exports = async ({ browser, basis, pr })=>{
   await entsperren(D, NEU2); await D.waitForFunction(()=> typeof ansichtStart === 'function', null, { timeout: 40000 });
   pr('D: öffnet mit dem gemeinsamen Passwort', (await namen(D)).length === 4);
   await D.context().close();
+  // ================= E: weiteres Gerät, Ordner liegt schon im App-Ordner (Beobachtung 17.11.2026: überall HTTP 401) =================
+  for(const [k, v] of [...od.dateien]) if(k.startsWith('ROOT/KVBW Onedrive/')){ od.dateien.delete(k); od.dateien.set('APP/' + k.slice(5), v); }
+  od.konto.protokoll.length = 0;
+  const E = await geraet(browser, basis, { echt: true }); await od.verbinden(E, basis, false);
+  await E.goto(basis + 'Rechnungserfassung_Mobil.html'); await E.waitForSelector('#tsAnderesGeraet', { timeout: 30000 });
+  await E.click('#tsAnderesGeraet'); await E.waitForSelector('#tsPw', { timeout: 30000 });
+  await E.fill('#tsPw', NEU2); await E.click('#tsWeiter');
+  await E.waitForTimeout(800); if(await E.$('#tsPkSpaeter')) await E.click('#tsPkSpaeter');
+  await E.waitForFunction(()=> typeof ansichtStart === 'function' && typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet', null, { timeout: 40000 });
+  const eIni = await E.evaluate(async ()=>{ const t = await msGraphTokenHolen(); if(!t) return 'kein Token'; const r = await fetch(msGraphPfadUrl('KVBW Onedrive/rechnungserfassung_abgleich.rsync'), { headers: { Authorization: 'Bearer ' + t } }); return r.status; });
+  pr('E (Ordner im App-Ordner): OneDrive erreichbar, kein 401', eIni === 200 && await E.evaluate(()=> msAppOrdner()), { eIni, anmeldung: od.konto.protokoll });
+  r = await sync(E);
+  pr('E: Abgleich läuft, alle Fälle da', !r.pause && (await namen(E)).length === 4, { r, n: await namen(E) });
+  const zuletzt = od.konto.protokoll.filter((x)=> /^authorize/.test(x)).pop() || '';
+  pr('E: gespeicherte Anmeldung gilt nur für den App-Ordner (nicht fürs ganze OneDrive)', /Files\.ReadWrite\.AppFolder/.test(zuletzt) && !/Files\.ReadWrite(?!\.AppFolder)/.test(zuletzt), od.konto.protokoll);
+  pr('E: keine Skriptfehler', E.fehler.length === 0, E.fehler.slice(0, 3));
+  await E.context().close();
   pr('keine Skriptfehler', [...A.fehler, ...B.fehler, ...C.fehler].length === 0, [...A.fehler, ...B.fehler, ...C.fehler].slice(0, 4));
   for(const x of [A, B, C]) await x.context().close();
 };

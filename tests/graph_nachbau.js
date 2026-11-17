@@ -1,8 +1,9 @@
 // Nachbildung von Microsoft-Anmeldung (authorize/token) und OneDrive (Graph, pfad- und kennungsbasiert) für Tests.
 // Dateien: Map 'ROOT/KVBW Onedrive/x.json' -> { bytes, eTag, id }. Ordner ergeben sich aus den Pfaden.
 const KLIENT = '579a39e0-b7fd-4c46-8684-af22e1bc45a2';
+const { msKonto } = require('./ms_konto');
 function nachbau(){
-  const dateien = new Map(); let nr = 0; const log = [];
+  const dateien = new Map(); let nr = 0; const log = []; const konto = msKonto();
   const idVon = new Map();   // id -> pfad (Dateien und Ordner)
   const neueId = (pfad)=>{ for(const [i, p] of idVon) if(p === pfad) return i; const i = 'I' + (++nr); idVon.set(i, pfad); return i; };
   const json = (route, status, body)=> route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body || {}) });
@@ -19,6 +20,8 @@ function nachbau(){
     else if((mm = p.match(/^\/root(\/.*)?$/))){ pfad = 'ROOT'; rest = mm[1] || ''; }
     else if((mm = p.match(/^\/items\/([^/]+)(\/.*)?$/))){ pfad = idVon.get(mm[1]) || null; rest = mm[2] || ''; if(!pfad) return json(route, 404, { error: { code: 'itemNotFound' } }); }
     else return json(route, 404, {});
+    const verwehrt = konto.pruefen(h['authorization'], pfad === 'APP' || pfad.startsWith('APP/'));
+    if(verwehrt) return json(route, verwehrt[0], verwehrt[1]);
     const d = dateien.get(pfad);
     if(rest === '/content' && m === 'PUT'){
       if(h['if-none-match'] === '*' && d) return json(route, 412, {});
@@ -45,12 +48,14 @@ function nachbau(){
     const q = route.request(), u = new URL(q.url());
     if(/\/authorize$/.test(u.pathname)){
       const zurueck = u.searchParams.get('redirect_uri').replace('https://seblussi.github.io/rechnung-mobil/', basis);
+      konto.authorize(u.searchParams.get('scope'));
       return route.fulfill({ status: 302, headers: { location: zurueck + '?code=CODE123&state=' + encodeURIComponent(u.searchParams.get('state')) } });
     }
     if(/\/token$/.test(u.pathname)){
       const b = new URLSearchParams(q.postData() || '');
       const idt = 'x.' + Buffer.from(JSON.stringify({ name: 'Test Arzt', preferred_username: 'test@beispiel.de' })).toString('base64url') + '.y';
-      return json(route, 200, { access_token: 'AT ' + b.get('scope'), refresh_token: 'RT-' + Date.now(), id_token: idt, expires_in: 3600 });
+      const t = konto.token(b); if(t.status) return json(route, t.status, t);
+      return json(route, 200, Object.assign(t, { id_token: idt }));
     }
     return json(route, 404, {});
   }
@@ -66,6 +71,6 @@ function nachbau(){
   }
   // irgendwo im OneDrive Klartext? -> Liste der Pfade
   const klartext = (wort)=> [...dateien].filter(([, d])=> d.bytes.toString('utf8').includes(wort)).map(([k])=> k);
-  return { dateien, setzen, graph, login, verbinden, log, klartext };
+  return { dateien, setzen, graph, login, verbinden, log, klartext, konto };
 }
 module.exports = { nachbau, KLIENT };
