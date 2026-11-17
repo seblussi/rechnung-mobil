@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-WYz1qKNB35qfkMdDfGcMpqWtITxc0qsQT41kRi9EmCE=' 'sha256-nNmxVJc0vjhJFop0VitXM/FxL9uW8MzIOhKzQmHzLBk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-KWb16RAH61cm+CG8TAD13sCr6upgFz/+fxCx4nBTXpw=' 'sha256-nNmxVJc0vjhJFop0VitXM/FxL9uW8MzIOhKzQmHzLBk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -6824,7 +6824,8 @@ function ansichtEinrichtung(schritt){
       '<p class="einr-klein">Später unter Einstellungen › Fahrten &amp; Wegegeld › Dienste änderbar.</p>' + knoepfe('daten', 'brief', a.length ? 'Weiter' : 'Überspringen');
   } else if(schritt === 'brief'){
     const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
-    const eigen0 = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG), eigen = eigen0 === LXP_WEITERLEITUNG_STANDARD ? '' : eigen0;
+    // eine hinterlegte, aber nicht freigegebene eigene Adresse wird nicht weiterverwendet (L6): dann gilt die Standard-Weiterleitung
+    const eigen0 = lxpAdresseNormal(w.BRIEF_WEITERLEITUNG), eigen = (eigen0 === LXP_WEITERLEITUNG_STANDARD || (eigen0 && !lxpAdresseFreigegeben(eigen0))) ? '' : eigen0;
     html = '<h2>Briefversand (optional)</h2>' +
       '<p>Rechnungen kann die App per Post über <b>LetterXpress</b> verschicken. Du brauchst dafür nur ein LetterXpress-Konto.</p>' +
       '<p class="einr-klein">Warum eine AVV? LetterXpress nimmt keine Aufträge direkt aus der App an. Die Briefe laufen deshalb kurz über den Server des App-Entwicklers (Rechenzentrum Frankfurt), der sie nur durchreicht und nichts speichert. Weil dabei Rechnungen mit Patientendaten durchgehen, gilt dafür die Vereinbarung zur Auftragsverarbeitung (AVV), die du mit den Alpha-Bedingungen bestätigt hast.</p>' +
@@ -6929,6 +6930,7 @@ async function einrWeiterleitungPruefen(adresse, nutzer, key, zugang){
   const url = lxpAdresseNormal(adresse);
   if(!url){ z('Bitte die Adresse aus der Cloud Shell eintragen.', false); return { ok: false, zeilen }; }
   if(!/^https:\/\//.test(url)){ z('Die Adresse muss mit https:// beginnen.', false); return { ok: false, zeilen }; }
+  if(!lxpAdresseFreigegeben(url)){ z(LXP_NICHT_FREIGEGEBEN + ' Bitte dem App-Entwickler Bescheid geben.', false); return { ok: false, zeilen, url, nichtFreigegeben: true }; }
   if(!/\.azurewebsites\.net\/api$/i.test(url)) z('Hinweis: Die Adresse endet nicht wie erwartet auf „.azurewebsites.net/api“.', null);
   if(typeof navigator !== 'undefined' && navigator.onLine === false){ z('Keine Internetverbindung.', false); return { ok: false, zeilen, url }; }
   let version = 0;
@@ -9275,7 +9277,7 @@ async function lxpWeiterleitungVersion(){
     if(!r.ok) return 1;
     const j = await r.json().catch(()=> null);
     return j && Number(j.weiterleitung) || 1;
-  }catch(e){ return 0; }
+  }catch(e){ if(e && e.keineWeiterleitung) throw e; return 0; }
 }
 async function lxpAuftrag(methode, id, modus, letter){
   const ini = iniCacheLaden(); const w = ini ? ini.werte : {};
@@ -9777,10 +9779,23 @@ function lxpMitZugang(koerper, w){
   const c = String((w && w.BRIEF_ZUGANGSCODE) || '').trim() || (typeof appCodeAktuell === 'function' ? appCodeAktuell() : '');
   return c ? Object.assign({}, koerper, { _zugang: c }) : koerper;
 }
+// Sicherheitsbericht L6: Die Sicherheitsrichtlinie der Seite (CSP, connect-src) laesst nur fest eingetragene Adressen zu.
+// Jede andere Weiterleitung wuerde der Browser stumm blockieren ("Failed to fetch") -- deshalb wird das hier
+// erkannt und klar gemeldet, statt eine Adresse anzunehmen, die nie erreichbar ist. Quelle ist die Richtlinie selbst.
+function lxpAdresseFreigegeben(url){
+  try{
+    const m = document.querySelector('meta[http-equiv="Content-Security-Policy"]'); if(!m) return true;
+    const regel = (m.getAttribute('content') || '').split(';').map(x=> x.trim()).find(x=> x.startsWith('connect-src')) || '';
+    return regel.split(/\s+/).includes(new URL(url).origin);
+  }catch(_){ return false; }
+}
+const LXP_NICHT_FREIGEGEBEN = 'Diese Adresse ist in dieser App-Version nicht freigegeben. Aus Sicherheitsgründen verbindet sich die App nur mit fest eingetragenen Adressen – eine andere würde der Browser blockieren.';
 function lxpBasisUrl(w){
   if(!w){ const ini = iniCacheLaden(); w = ini ? ini.werte : {}; }
   const eigen = lxpAdresseNormal(w && w.BRIEF_WEITERLEITUNG) || LXP_WEITERLEITUNG_STANDARD;
   if(!eigen){ const e = new Error('Für den Briefversand fehlt noch die eigene Weiterleitung (Einstellungen › „Briefversand einrichten“).'); e.keineWeiterleitung = true; throw e; }
+  // nicht stillschweigend auf die Standard-Weiterleitung umleiten: der Nutzer entscheidet das beim erneuten Einrichten
+  if(!lxpAdresseFreigegeben(eigen)){ const e = new Error('Briefversand nicht möglich: Die hinterlegte eigene Weiterleitung ist in dieser App-Version nicht freigegeben. Es wurde nichts gesendet. Bitte unter Einstellungen › „Briefversand einrichten“ neu prüfen und speichern – dann gilt die Standard-Weiterleitung mit Freischaltcode.'); e.keineWeiterleitung = true; e.nichtFreigegeben = true; throw e; }
   return eigen;
 }
 
@@ -20719,7 +20734,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v469';
+const APP_VERSION = 'v470';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
