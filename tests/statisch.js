@@ -49,5 +49,16 @@ const swDateien = Array.from(new Set((sw.match(/'\.\/[^']*'/g) || []).map((x)=> 
 const fehlen = swDateien.filter((d)=> !fs.existsSync(path.join(W, decodeURIComponent(d.split('?')[0]))));
 pr('alle im Service Worker genannten Dateien existieren (' + swDateien.length + ')', swDateien.length > 5 && fehlen.length === 0, fehlen);
 
+// ---- 6. Service Worker: Prüfsummen und Vollständigkeit der festen Dateiliste (L11) ----
+let abweichung = ['(Prüfung nicht möglich)'];
+try{ abweichung = require('../werkzeuge/sw_dateien.js').pruefen(W); }catch(e){ abweichung = [String(e.message || e)]; }
+pr('Prüfsummen in sw.js passen zu den Dateien (sonst kommt das Update bei niemandem an) – bei Fehler: node werkzeuge/sw_dateien.js', abweichung.length === 0, abweichung);
+const inListe = new Set(swDateien);
+const statischGeladen = quellen.map((q)=> q.replace(/^\.\//, '').split('?')[0]).filter((q)=> !/^(https?:)?\/\//i.test(q) && !/^(data|blob):/.test(q));
+const dynamisch = Array.from(new Set((html.match(/['"`](?:\.\/)?(?:lib|lokal)\/[A-Za-z0-9_.\/-]+\.(?:m?js|css|wasm)['"`]/g) || []).map((x)=> x.slice(1, -1).replace(/^\.\//, ''))));
+const nichtDrin = Array.from(new Set(statischGeladen.concat(dynamisch))).filter((q)=> !inListe.has(q));
+pr('alle von der Seite geladenen Skripte und Stile stehen in der Dateiliste des Service Workers (offline vollständig)', nichtDrin.length === 0, nichtDrin);
+pr('Service Worker duldet keine fehlenden Dateien und schaltet nicht ungefragt um', !/\.catch\(\(\) => null\)/.test(sw) && /if\(!self\.registration\.active\) await self\.skipWaiting\(\)/.test(sw));
+
 console.log('\n' + (fehl ? fehl + ' von ' + gesamt + ' Prüfungen FEHLGESCHLAGEN' : 'Alle ' + gesamt + ' Prüfungen bestanden'));
 process.exit(fehl ? 1 : 0);

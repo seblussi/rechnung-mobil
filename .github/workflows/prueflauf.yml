@@ -5,7 +5,7 @@ name: Prüflauf
 
 on:
   push:
-    branches: [main]
+    branches: [main, vorab]   # vorab = Zwischenstufe: erst dort prüfen, dann nach main (Veröffentlichung)
   pull_request:
   workflow_dispatch:
 

@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-KWb16RAH61cm+CG8TAD13sCr6upgFz/+fxCx4nBTXpw=' 'sha256-nNmxVJc0vjhJFop0VitXM/FxL9uW8MzIOhKzQmHzLBk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-MPXNBaBdhU7NTB7GpyqMo1lkUTCq1ia3BfNsfk5MhS8=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-NgemSeCvbvus9FJelFiljOdzCIlBLT8AXe1f73TXo+g=' 'sha256-nNmxVJc0vjhJFop0VitXM/FxL9uW8MzIOhKzQmHzLBk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2346,6 +2346,48 @@ try{
 <main id="app"></main>
 <div id="appToast" class="app-toast"></div>
 
+<script>
+// Service Worker anmelden und Updates anbieten (Sicherheitsbericht L11): Eine neue Version wird erst vollstaendig
+// geladen und geprueft (sw.js), wartet dann und wird hier uebernommen -- direkt nach dem Start von selbst, spaeter
+// ueber den Hinweis "Update verfuegbar", damit nichts mitten in der Arbeit neu laedt.
+(function(){
+  if(!('serviceWorker' in navigator) || !(location.protocol === 'https:' || location.hostname === 'localhost')) return;
+  var start = Date.now(), bedient = false, angefordert = false, hatte = !!navigator.serviceWorker.controller;
+  ['pointerdown', 'keydown'].forEach(function(n){ addEventListener(n, function(){ bedient = true; }, { capture: true, passive: true }); });
+  function hinweis(text, knopf, klick){
+    var alt = document.getElementById('updateHinweis'); if(alt) alt.remove();
+    var d = document.createElement('div'); d.id = 'updateHinweis'; d.setAttribute('role', 'status');
+    d.style.cssText = 'position:fixed; left:12px; right:12px; top:calc(12px + env(safe-area-inset-top, 0px)); z-index:2147483600; background:#1f2a44; color:#fff; border-radius:14px; padding:12px 14px; display:flex; align-items:center; gap:10px; font:15px/1.35 system-ui,sans-serif; box-shadow:0 6px 24px rgba(0,0,0,.35);';
+    var t = document.createElement('div'); t.style.flex = '1'; t.textContent = text; d.appendChild(t);
+    var b = document.createElement('button'); b.type = 'button'; b.id = 'updateJetzt'; b.textContent = knopf;
+    b.style.cssText = 'border:0; border-radius:10px; padding:9px 14px; font:inherit; font-weight:600; background:#fff; color:#1f2a44; cursor:pointer; width:auto; min-height:0;';
+    b.addEventListener('click', klick); d.appendChild(b);
+    var x = document.createElement('button'); x.type = 'button'; x.textContent = '×'; x.setAttribute('aria-label', 'Später');
+    x.style.cssText = 'border:0; background:none; color:#fff; font-size:22px; line-height:1; padding:4px 6px; cursor:pointer; width:auto; min-height:0;';
+    x.addEventListener('click', function(){ d.remove(); }); d.appendChild(x);
+    (document.body || document.documentElement).appendChild(d);
+  }
+  function uebernehmen(reg){ if(!reg.waiting) return; angefordert = true; reg.waiting.postMessage('update-uebernehmen'); }
+  function wartet(reg){
+    if(!reg.waiting || !navigator.serviceWorker.controller) return;
+    // direkt nach dem Start und noch nichts bedient: gleich umschalten; sonst fragen
+    if(!bedient && Date.now() - start < 4000) uebernehmen(reg);
+    else hinweis('Update verfügbar.', 'Jetzt neu laden', function(){ uebernehmen(reg); });
+  }
+  navigator.serviceWorker.addEventListener('controllerchange', function(){
+    if(!hatte){ hatte = true; return; }   // allererste Installation: nichts neu laden
+    if(angefordert) location.reload();
+    else hinweis('Die App wurde in einem anderen Fenster aktualisiert.', 'Neu laden', function(){ location.reload(); });
+  });
+  navigator.serviceWorker.register('./sw.js').then(function(reg){
+    wartet(reg);
+    reg.addEventListener('updatefound', function(){ var w = reg.installing; if(w) w.addEventListener('statechange', function(){ if(w.state === 'installed') wartet(reg); }); });
+    // die App bleibt oft tagelang offen: beim Zurueckkehren nach einer neuen Version sehen (hoechstens alle 30 Minuten)
+    var zuletzt = Date.now();
+    document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible' && Date.now() - zuletzt > 30 * 60000){ zuletzt = Date.now(); reg.update().catch(function(){}); } });
+  }).catch(function(){});
+})();
+</script>
 <script type="text/plain" id="hauptskript">
 
 /* ==========================================================
@@ -20734,7 +20776,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v470';
+const APP_VERSION = 'v471';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -24681,9 +24723,7 @@ try{
   }).catch(()=>{});
 }catch(e){}
 
-if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
-  navigator.serviceWorker.register('./sw.js').catch(()=>{});
-}
+// (Service Worker: wird ganz am Anfang der Seite angemeldet -- siehe Skript vor dem Hauptskript)
 
 // Offline erfasste/geänderte Fälle stossen normalerweise erst beim NÄCHSTEN
 // Speichern wieder einen Sync-Versuch an (siehe synchronisiereAlle -- läuft
