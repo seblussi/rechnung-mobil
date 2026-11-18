@@ -64,5 +64,27 @@ const nichtDrin = Array.from(new Set(statischGeladen.concat(dynamisch))).filter(
 pr('alle von der Seite geladenen Skripte und Stile stehen in der Dateiliste des Service Workers (offline vollständig)', nichtDrin.length === 0, nichtDrin);
 pr('Service Worker duldet keine fehlenden Dateien und schaltet nicht ungefragt um', !/\.catch\(\(\) => null\)/.test(sw) && /if\(!self\.registration\.active\) await self\.skipWaiting\(\)/.test(sw));
 
+// Sicherheitsbericht Architektur 6: Patienten-/Nutzerdaten nie ungeschützt ins HTML. (1) Die Hilfsvorlage html`…`
+// maskiert selbst; (2) keine neue Stelle, die Name, Adresse, Geburtsdatum usw. ohne htmlEsc/html`…` in HTML einsetzt.
+{
+  const vm = require('vm');
+  const teil = (re)=>{ const m = re.exec(html); return m ? m[0] : ''; };
+  const quelle = [teil(/function htmlEsc\(s\)\{[^\n]*\}/), teil(/class HtmlText extends String \{\}[\s\S]*?\nfunction html\(teile, \.\.\.werte\)\{[^\n]*\}/)].join('\n');
+  const k = vm.createContext({}); vm.runInContext(quelle + '\nthis.html = html; this.htmlRoh = htmlRoh;', k);
+  const name = '<img src=x onerror=alert(1)> "Müller" & Co';
+  const r = String(k.html`<b title="${name}">${name}</b>${[k.html`<i>${'<x>'}</i>`, '<y>']}${k.htmlRoh('<br>')}${null}${false}${0}`);
+  pr('html`…` maskiert eingesetzte Werte (auch in Listen), htmlRoh bleibt roh, leer bei null/false',
+    r === '<b title="&lt;img src=x onerror=alert(1)&gt; &quot;Müller&quot; &amp; Co">&lt;img src=x onerror=alert(1)&gt; &quot;Müller&quot; &amp; Co</b><i>&lt;x&gt;</i>&lt;y&gt;<br>0', r);
+  const FELD = /(?:\.|\b)(name|vorname|nachname|adresse|adr1|adr2|strasse|patient|geb|gebdat|bestatter|diagnose|befund|notiz|email|telefon|arzt|kontoinhaber|iban)\b/;
+  const roh = [];
+  html.split('\n').forEach((z, i)=>{
+    if(!z.includes('<') || z.includes('// kein HTML')) return;
+    const re = /\+\s*([A-Za-z_$][\w$.\[\]'"]*)\s*\+|\$\{\s*([A-Za-z_$][\w$.\[\]]*)\s*\}/g; let m;
+    while((m = re.exec(z))){ const a = m[1] || m[2]; if(FELD.test('.' + a.split('.').pop()) && !/htmlEsc|html`/.test(z.slice(Math.max(0, m.index - 12), m.index))) roh.push((i + 1) + ': ' + m[0]); }
+  });
+  pr('keine Patienten-/Nutzerdaten ohne Maskierung im HTML (Name, Adresse, Geburtsdatum, Bestatter, Diagnose, IBAN …)', roh.length === 0, roh.slice(0, 8));
+}
+
 console.log('\n' + (fehl ? fehl + ' von ' + gesamt + ' Prüfungen FEHLGESCHLAGEN' : 'Alle ' + gesamt + ' Prüfungen bestanden'));
 process.exit(fehl ? 1 : 0);
+

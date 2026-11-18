@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-QmDJUbedmvxDly/6UIuq3I4HHh+AXSNxo1XszES/gh4=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-ckLj7/GgLqXS/De6rQGeYU+4jfAtd2A/lrjtwwNHePw=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2980,7 +2980,7 @@ async function freigabelinksEntfernen(melde){
   const wer = (pm)=>{
     const l = [].concat(pm.grantedToIdentitiesV2 || [], pm.grantedToIdentities || [], pm.grantedToV2 ? [pm.grantedToV2] : [], pm.grantedTo ? [pm.grantedTo] : []);
     const namen = new Set();
-    l.forEach(g=>{ const u = (g && (g.user || g.siteUser)) || {}; const t = u.displayName || u.email || ''; if(t) namen.add(t + (u.email && u.displayName && u.email !== u.displayName ? ' <' + u.email + '>' : '')); });
+    l.forEach(g=>{ const u = (g && (g.user || g.siteUser)) || {}; const t = u.displayName || u.email || ''; if(t) namen.add(t + (u.email && u.displayName && u.email !== u.displayName ? ' <' + u.email + '>' : '')); });   // kein HTML (Text)
     if(!namen.size && pm.invitation && pm.invitation.email) namen.add(pm.invitation.email);
     return namen.size ? Array.from(namen).join(', ') : 'unbekannte Person';
   };
@@ -10190,6 +10190,18 @@ function iniFeldWertFuerAnzeige(f, werte){
   return String(roh);
 }
 function htmlEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Sicherheitsbericht Architektur 6: HTML-Vorlage, die jeden eingesetzten Wert selbst maskiert -- html`<b>${name}</b>`.
+// Bewusst schon fertiges HTML mit htmlRoh(...) kennzeichnen (oder eine weitere html`…`-Vorlage einsetzen); Listen werden
+// zusammengefuegt; null/undefined/false ergeben nichts. Fuer neuen Code statt '…' + htmlEsc(x) + '…' verwenden.
+class HtmlText extends String {}
+function htmlRoh(s){ return new HtmlText(s == null ? '' : String(s)); }
+function htmlWert(w){
+  if(w == null || w === false) return '';
+  if(w instanceof HtmlText) return String(w);
+  if(Array.isArray(w)) return w.map(htmlWert).join('');
+  return htmlEsc(w);
+}
+function html(teile, ...werte){ let o = teile[0]; werte.forEach((w, i)=>{ o += htmlWert(w) + teile[i + 1]; }); return new HtmlText(o); }
 
 function betaEinstellungenHtml(){
   const cache = iniCacheLaden();
@@ -13404,7 +13416,7 @@ function ansichtPositionen(art, ausgewaehlteZiffern, betragSchaetzung, weiter, k
         <div class="haupt"><span class="haupt-text"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> <span class="bez-text">${p.eigene ? htmlEsc(mitFaktor ? (p.eigeneBez || p.bez) : (p.fest ? p.eigeneBez : p.bez)) : betaBezMitVariante(p, det)}</span></span><span class="pos-konflikt" data-z="${htmlEsc(p.ziffer)}"></span>${aus ? '<span class="pos-abgewaehlt">automatisch – wegen GOÄ-Ausschluss abgewählt (anklicken = wieder rein)</span>' : ''}${mitFaktor ? `<div class="pos-zusatz" data-z="${htmlEsc(p.ziffer)}"></div>` : ''}</div>
         <div class="betrag">${betragVon(p).toFixed(2).replace('.',',')} &euro;</div>
       </label>${lsKurzChip(p) && ausgewaehlteZiffern && ausgewaehlteZiffern.has(p.ziffer) ? '<div class="ls-kurz-reihe ls-assi-reihe">' + lsKurzChip(p) + '</div>' : ''}`;
-    const innen = loeschbar ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>${label}</div>` : label;
+    const innen = loeschbar ? `<div class="wisch-huelle" data-eigene="${htmlEsc(p.ziffer)}"><div class="wisch-hinter">&#128465; Löschen</div>${label}</div>` : label;
     return g.drag ? `<div class="pos-item" data-key="${htmlEsc(p.ziffer)}" data-drag="1">${innen}</div>` : innen;
   };
   gruppen.forEach(g=>{
@@ -21083,6 +21095,46 @@ async function syncKlartextLoeschen(token){
   return n;
 }
 // Ein Abgleich: lesen, zusammenfuehren, (nur wenn noetig) schreiben
+// Sicherheitsbericht Architektur 5: Fehler sichtbar machen. Speicher- und Abgleichsfehler (und unerwartete Fehler im
+// Hintergrund) kommen in ein lokales Fehlerprotokoll OHNE Patientendaten (Text wird bereinigt: nichts in
+// Anfuehrungszeichen, keine Dateinamen/Pfade, keine E-Mail-Adressen, keine Daten und langen Zahlen) und -- bei Speicher
+// und Abgleich -- als Meldung auf den Bildschirm (je Bereich hoechstens alle 10 Minuten).
+const FEHLER_MAX = 60;
+function fehlerTextSicher(t){
+  return String(t == null ? '' : t)
+    .replace(/["„“”‚‘’'»«][^"„“”‚‘’'»«\n]{0,200}["„“”‚‘’'»«]/g, '…')
+    .replace(/\S*[_\/\\]\S*/g, '…')
+    .replace(/\S+@\S+/g, '…')
+    .replace(/\b\d{1,2}\.\d{1,2}\.(\d{2,4})?/g, '…')
+    .replace(/\d{5,}/g, '…')
+    .replace(/\s+/g, ' ').trim().slice(0, 140);
+}
+function fehlerProtokollLesen(){ try{ const l = JSON.parse(localStorage.getItem('fehler_protokoll') || '[]'); return Array.isArray(l) ? l : []; }catch(_){ return []; } }
+const fehlerZuletztGemeldet = {};
+function fehlerMelden(bereich, e, meldung){
+  try{
+    const status = e && (e.status || e.code || (e.response && e.response.status));
+    const eintrag = { t: Date.now(), b: String(bereich).slice(0, 20), n: fehlerTextSicher(e && e.name || ''), s: fehlerTextSicher(status == null ? '' : status), m: fehlerTextSicher(e && e.message != null ? e.message : e) };
+    const l = fehlerProtokollLesen(); l.push(eintrag); while(l.length > FEHLER_MAX) l.shift();
+    try{ localStorage.setItem('fehler_protokoll', JSON.stringify(l)); }catch(_){}
+    if(meldung && (!fehlerZuletztGemeldet[bereich] || Date.now() - fehlerZuletztGemeldet[bereich] > 600000)){
+      fehlerZuletztGemeldet[bereich] = Date.now();
+      try{ appToastAnzeigen(meldung + (eintrag.s ? ' (' + eintrag.s + ')' : '') + ' – Details: Einstellungen › Datensicherung › Fehlerprotokoll.', 6000); }catch(_){}
+    }
+  }catch(_){ /* das Protokoll selbst darf nie stoeren */ }
+}
+window.addEventListener('unhandledrejection', (ev)=>{ fehlerMelden('hintergrund', ev && ev.reason); });
+window.addEventListener('error', (ev)=>{ if(ev && ev.error) fehlerMelden('hintergrund', ev.error); });
+async function fehlerProtokollZeigen(){
+  const l = fehlerProtokollLesen().slice().reverse();
+  const zeile = (x)=> '<tr><td style="white-space:nowrap; padding-right:8px;">' + new Date(x.t).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + '</td><td style="padding-right:8px;">' + htmlEsc(x.b) + '</td><td>' + htmlEsc([x.n, x.s, x.m].filter(Boolean).join(' · ')) + '</td></tr>';
+  const akt = await betaOverlay.ergebnis('Fehlerprotokoll', '<div class="design-hinweis" style="margin-bottom:8px;">Nur auf diesem Gerät, ohne Patientendaten. ' + l.length + ' Einträge, neueste zuerst.</div>' +
+    (l.length ? '<div style="max-height:50vh; overflow:auto; font-size:12.5px;"><table style="width:100%; border-collapse:collapse;">' + l.map(zeile).join('') + '</table></div>' : '<p>Keine Fehler aufgezeichnet.</p>'),
+    [{ label: 'Leeren', akt: 'leeren' }, { label: 'Kopieren', akt: 'kopieren' }, { label: 'Schließen', akt: 'zu', primaer: true }]);
+  betaOverlay.schliessen();
+  if(akt === 'leeren'){ try{ localStorage.removeItem('fehler_protokoll'); }catch(_){} appToastAnzeigen('Fehlerprotokoll geleert.', 2000); }
+  else if(akt === 'kopieren'){ try{ await navigator.clipboard.writeText('Fehlerprotokoll ' + APP_VERSION + '\n' + l.map((x)=> new Date(x.t).toISOString() + ' ' + x.b + ' ' + [x.n, x.s, x.m].filter(Boolean).join(' · ')).join('\n')); appToastAnzeigen('Kopiert – zum Weitergeben einfügen.', 2500); }catch(_){ appToastAnzeigen('Kopieren nicht möglich.', 2500); } }
+}
 async function faelleAbgleichen(schreiben){
   if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return false;
   if(syncLaeuft){ if(schreiben) syncNochmal = true; return syncLaeuft; }
@@ -21114,6 +21166,7 @@ async function faelleAbgleichen(schreiben){
     }catch(e){
       // anderer Schluessel bzw. Abgleich pausiert: einmal je Sitzung deutlich melden
       if((e && (e.fremd || e.pause)) && !window.__syncPauseGemeldet){ window.__syncPauseGemeldet = true; setTimeout(()=> syncPauseMelden(), 800); }
+      else if(!(e && (e.fremd || e.pause))) fehlerMelden('abgleich', e, navigator.onLine === false ? null : 'Abgleich mit OneDrive fehlgeschlagen, wird später erneut versucht');
     }
     finally{
       syncLaeuft = null;
@@ -21211,7 +21264,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v483';
+const APP_VERSION = 'v484';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21520,8 +21573,9 @@ function schichtZeilenHtml(liste, schicht, passend){
   const gruppe = (l)=> /früh|vormittag/i.test(l) ? 1 : /spät|abend|nachmittag/i.test(l) ? 2 : /nacht/i.test(l) ? 3 : 4;
   const zeilen = {};
   liste.forEach(x=>{ const g = liste.length <= 4 ? 1 : gruppe(x.label); (zeilen[g] = zeilen[g] || []).push(x); });
-  return Object.keys(zeilen).sort().map(g=> '<div class="fb-chips fb-schichten">' + zeilen[g].map(x=>
-    '<button type="button" class="fb-chip schicht' + (x.label === schicht ? ' an' : '') + (passend && passend.has(x.label) && x.label !== schicht ? ' passt' : '') + '" data-lzeit="' + x.von + '-' + x.bis + '" data-lschicht="' + x.label + '"><b' + (x.label.split(' ').some(w=> w.length > 8) ? ' class="lang"' : '') + '>' + x.label + '</b><small>' + (x.von + '–' + x.bis).replace(/:00/g, '') + '</small></button>').join('') + '</div>').join('');
+  // Schicht-Bezeichnungen sind frei eingebbar (Dienstprofile): maskiert ueber html`…`
+  return Object.keys(zeilen).sort().map(g=> String(html`<div class="fb-chips fb-schichten">${zeilen[g].map(x=>
+    html`<button type="button" class="fb-chip schicht${x.label === schicht ? ' an' : ''}${passend && passend.has(x.label) && x.label !== schicht ? ' passt' : ''}" data-lzeit="${x.von + '-' + x.bis}" data-lschicht="${x.label}"><b${x.label.split(' ').some(w=> w.length > 8) ? htmlRoh(' class="lang"') : ''}>${x.label}</b><small>${(x.von + '–' + x.bis).replace(/:00/g, '')}</small></button>`)}</div>`)).join('');
 }
 // =====================================================================
 // Dienste: Profile mit Musterwoche (Einstellungen › Dienste)
@@ -22585,6 +22639,7 @@ function ansichtEinstellungen(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Datensicherung</div>
       <div id="odsAbschnitt"></div>
+      <button type="button" class="btn-sekundaer" id="btnFehlerProtokoll" style="margin-top:8px;">Fehlerprotokoll (ohne Patientendaten)</button>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">${window.TRESOR_MODUS ? 'Sicherheit' : 'App-Sperre'}</div>
@@ -22655,6 +22710,7 @@ function ansichtEinstellungen(){
   // Bestatter direkt unter "Leichenschau"
   { const b = document.getElementById('btnBestatter'), ab = b && b.closest('.abschnitt'); const ls = [...app.querySelectorAll('.abschnitt > .trennlinie')].find(t=> /^Leichenschau/i.test(t.textContent.trim())); if(ab && ls) ls.parentElement.after(ab); }
   document.getElementById('btnEinrichtung').onclick = ()=>{ LS.set('einr_aus_einst', true); ansichtEinrichtung('start'); };
+  { const fp = document.getElementById('btnFehlerProtokoll'); if(fp) fp.onclick = fehlerProtokollZeigen; }
   document.getElementById('btnEinrichtungBrief').onclick = ()=>{ LS.set('einr_aus_einst', true); ansichtEinrichtung('brief'); };
   document.getElementById('chkLsAssistent').onchange = (ev)=>{ const e = ladeEinstellungen() || {}; e.lsAssistent = ev.target.checked; speichereEinstellungen(e); };
   document.getElementById('chkKarteVektor').onchange = (ev)=>{ const e = ladeEinstellungen(); e.karteVektor = ev.target.checked; speichereEinstellungen(e); if(ev.target.checked) vkMaplibreHolen().catch(()=>{}); };
@@ -23361,7 +23417,7 @@ function ansichtPositionenAlt(art, ausgewaehlteZiffern, betragSchaetzung, weiter
       const istAuto = (typeof p.automatisch==='boolean') ? p.automatisch : g.automatisch;
       const checked = ausgewaehlteZiffern.has(p.ziffer) ? 'checked' : '';
       const gesperrt = istAuto ? 'disabled' : '';
-      html += `${p.eigene ? `<div class="wisch-huelle" data-eigene="${p.ziffer}"><div class="wisch-hinter">&#128465; Löschen</div>` : ''}<label class="position-zeile${istAuto?' auto-gesperrt':''}">
+      html += `${p.eigene ? `<div class="wisch-huelle" data-eigene="${htmlEsc(p.ziffer)}"><div class="wisch-hinter">&#128465; Löschen</div>` : ''}<label class="position-zeile${istAuto?' auto-gesperrt':''}">
         <input type="checkbox" data-ziffer="${p.ziffer}" data-betrag="${p.betrag}" data-auto="${istAuto?'1':'0'}" ${checked} ${gesperrt}>
         <div class="haupt"><span class="ziffer">${p.anzeigeZiffer!==undefined ? htmlEsc(p.anzeigeZiffer) : (p.ziffer||'')}</span> ${p.eigene ? htmlEsc(p.bez) : p.bez}${gemischt&&istAuto?' <span class="auto-hinweis">automatisch</span>':''}</div>
         <div class="betrag">${p.betrag.toFixed(2).replace('.',',')} &euro;</div>
@@ -23510,13 +23566,13 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     allePruefungenAusfuehren(){ alleChecksAusfuehren(); }
   };
 
-  function feldHtml(labelText, name, opts={}){
-    const val = werte[name] == null ? '' : String(werte[name]);   // Werte aus dem Abgleich koennen auch Zahlen sein
+  function feldHtml(labelText, feldId, opts={}){
+    const val = werte[feldId] == null ? '' : String(werte[feldId]);   // Werte aus dem Abgleich koennen auch Zahlen sein
     const grauKlasse = opts.grau ? 'grau' : '';
     return `<div class="feld">
-      <label for="${name}">${labelText}</label>
-      <input type="text" id="${name}" class="${grauKlasse}" value="${val.replace(/"/g,'&quot;')}" placeholder="${opts.platzhalter||''}">
-      <div class="warnhinweis" id="${name}_warn"></div>
+      <label for="${feldId}">${labelText}</label>
+      <input type="text" id="${feldId}" class="${grauKlasse}" value="${htmlEsc(val)}" placeholder="${opts.platzhalter||''}">
+      <div class="warnhinweis" id="${feldId}_warn"></div>
     </div>`;
   }
 
@@ -26223,7 +26279,7 @@ const Speicher = (()=>{
     z.laeuft = true;
     z.p = (async ()=>{
       try{ do{ z.nochmal = false; await schreiben(k); } while(z.nochmal); }
-      catch(e){ console.error('Speicher: Schreiben fehlgeschlagen', k, e); try{ appToastAnzeigen('Speichern fehlgeschlagen: ' + (e.message || e), 4000); }catch(_){} }
+      catch(e){ console.error('Speicher: Schreiben fehlgeschlagen', e); fehlerMelden('speicher', e, 'Speichern auf diesem Gerät fehlgeschlagen'); }
       finally{ z.laeuft = false; }
     })();
     return z.p;
