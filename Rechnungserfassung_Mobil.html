@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-Y9gmPewVnHWNjPA+PDN9wfzlD7dlwBG7ufef/EZy0Kc=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-IowqM7ygu3MkK3zhZezcYNIiciK1HOfNSsgMcrqrb5o=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -282,6 +282,9 @@ try{
   .profil-leiste{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px;}
   .profil-chip{width:auto; margin:0; padding:6px 12px; font-size:13.5px; font-weight:600; border-radius:16px; border:1px solid var(--rand); background:var(--karte); color:var(--text);}
   .profil-chip.aktiv{background:#2f6fed; border-color:#2f6fed; color:#fff;}
+  /* Sammelerfassung / Pseudo-Fall neben den GKV-Profilen: gestrichelt (keine normalen Profile) */
+  .profil-chip.gkv-sonder:not(.aktiv){border-style:dashed; outline:1.5px dashed color-mix(in srgb, var(--text-schwach) 60%, transparent); outline-offset:-3px;}
+  .profil-chip.gkv-sonder:not(.aktiv){outline:none;} body.design-einhand .profil-chip.gkv-sonder:not(.aktiv){outline:1.5px dashed color-mix(in srgb, var(--text-schwach) 60%, transparent); outline-offset:-3px;}
   .pos-gruppe{min-height:14px;}
   .pos-item{touch-action:pan-y; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;}
   .pos-item.pos-gezogen{display:none;}
@@ -653,6 +656,12 @@ try{
   .gkv-stufen button.an{background:#7d4e9e; border-color:#7d4e9e; color:#fff; font-weight:600;}
   .gkv-anz{display:flex; gap:8px; align-items:center; margin:6px 0 0 54px; font-size:14px;}
   .gkv-anz button{min-width:34px;}
+  /* Anzahl unter der Ziffer */
+  .gkv-pos .gkv-gop-sp{display:flex; flex-direction:column; align-items:flex-start; gap:5px; flex:0 0 auto; width:calc(var(--ziffer-breite) - 6px); min-width:0;}
+  .gkv-pos .gkv-gop-sp .gkv-gop{width:auto;}
+  .gkv-pos .gkv-gop-sp .gkv-anz, body.pos-stil-haken .gkv-pos .gkv-gop-sp .gkv-anz{margin:0; gap:2px; font-size:12.5px; white-space:nowrap; cursor:default;}
+  .gkv-pos .gkv-gop-sp .gkv-anz b{min-width:20px; text-align:center; font-variant-numeric:tabular-nums;}
+  .gkv-pos .gkv-gop-sp .gkv-anz button, body.design-einhand .gkv-pos .gkv-gop-sp .gkv-anz button{min-width:0; width:23px; height:25px; min-height:0; padding:0; font-size:16px; line-height:1; border-radius:7px; display:inline-flex; align-items:center; justify-content:center;}
   .gkv-suche{margin:10px 0 4px;}
   .gkv-suche input{width:100%; box-sizing:border-box; font:inherit; font-size:15px; padding:9px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
   .gkv-treffer{padding:8px 10px; border-bottom:1px solid var(--rand); background:var(--karte);}
@@ -16233,7 +16242,12 @@ function ansichtGkv(bearbeitenId, opt){
   const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null, dokuId: f.dokuId || null, dienst: f.dienst || '' }
     : ((sammel ? null : gkvEntwurf) || Object.assign({ id: '', name: sammel ? GKV_SAMMEL_NAME : '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()), dienst: dienstWahlVorschlag() }, gkvStartAuswahl()));
   gkvEntwurf = (st.id || sammel) ? null : st;
-  if(sammel){ st.name = GKV_SAMMEL_NAME; delete st.auswahl.weg; }
+  if(sammel){
+    st.name = GKV_SAMMEL_NAME; delete st.auswahl.weg;
+    // neue Sammelerfassung: Standardprofil Sitzdienst (Wunsch 18.11.2026); eine vorhandene behaelt ihr Profil
+    if(!f){ const sp = gkvProfileLaden().find(p=> p.id === 'sitz') || gkvProfileLaden().find(p=> gkvIstSitzProfil(p) && !/tel/i.test(p.id + ' ' + (p.name || '')));
+      if(sp){ st.profil = sp.id; st.auswahl = JSON.parse(JSON.stringify(sp.auswahl || {})); delete st.auswahl.weg; } }
+  }
   let liste = gkvListeLaden();
   const dtVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(st.datum || ''), z = /^(\d{1,2}):(\d{2})/.exec(st.zeit || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3], z ? +z[1] : 12, z ? +z[2] : 0) : new Date(); };
 
@@ -16268,9 +16282,6 @@ function ansichtGkv(bearbeitenId, opt){
     <div class="gkv-summe-leiste"><span id="gkvSumme"></span>
       <button type="button" class="btn-primaer" id="gkvSpeichern">${st.id ? 'Fahrtenbuch aktualisieren' : 'Ins Fahrtenbuch'}</button></div>
     <div id="gkvMeldung"></div>
-    ${sammel ? '<button type="button" class="btn-sekundaer gkv-pseudo-knopf" id="gkvEinzeln">Zurück zur Einzelerfassung (mit Namen)</button>'
-      : '<button type="button" class="btn-sekundaer gkv-pseudo-knopf" id="gkvSammel">Sammelerfassung: nur Anzahl je Ziffer (ohne Namen)</button>'}
-    <button type="button" class="btn-sekundaer gkv-pseudo-knopf" id="gkvPseudo"${sammel ? ' style="display:none"' : ''}>Dienst ohne GKV-Patient eintragen (Pseudo-Fall 99999)</button>
     <div id="gkvVerlauf" hidden></div>
     <div class="gkv-platz"></div>`;
   // Querformat: links Patient/Wegepauschale (+ zuletzt erfasst), rechts die Ziffern mit Summe
@@ -16305,12 +16316,13 @@ function ansichtGkv(bearbeitenId, opt){
       const anz = wst && wst.anz ? wst.anz : a ? Math.max(1, Number(a.anz) || 1) : 1;
       const x = aus[k];
       const innen = '<div class="gkv-pos' + (a ? ' an' : '') + (x ? (a ? ' gkv-konflikt' : ' gkv-aus') : '') + '" data-k="' + k + '">' +
-        '<div class="gkv-pos-haupt" data-tipp="' + k + '"><span class="gkv-haken" aria-hidden="true"></span><span class="gkv-gop">' + gop + '</span>' +
+        // Anzahl (− n× +) direkt unter der Ziffer statt in einer eigenen Zeile -> schlankere Boxen (Wunsch 18.11.2026)
+        '<div class="gkv-pos-haupt" data-tipp="' + k + '"><span class="gkv-haken" aria-hidden="true"></span><span class="gkv-gop-sp"><span class="gkv-gop">' + gop + '</span>' +
+          (mehr ? '<span class="gkv-anz"><button type="button" data-minus="' + k + '" aria-label="weniger">−</button><b>' + anz + '×</b><button type="button" data-plus="' + k + '" aria-label="mehr">+</button></span>' : '') + '</span>' +
         '<span class="gkv-txt">' + htmlEsc(titel) + (unter ? '<small>' + htmlEsc(unter) + '</small>' : '') +
           (x ? '<span class="gkv-aus-grund">' + (a ? '⚠ ' : '') + htmlEsc(x.grund) + '</span>' : '') + '</span>' +
         '<span class="gkv-eur">' + betaEuro(ebmEuro(gop, dt) * (a ? anz : 1)) + '</span></div>' +
         (k === 'weg' ? '<div class="gkv-stufen">' + g.stufen.map(s=> '<button type="button" data-stufe="' + s.k + '" class="' + (a && a.stufe === s.k ? 'an' : '') + '">' + String(s.label).replace(/\s*km$/, '').replace(/^über\s*/, '> ') + '</button>').join('') + '</div>' : '') +
-        (mehr ? '<div class="gkv-anz"><button type="button" data-minus="' + k + '">−</button><b>' + anz + '×</b><button type="button" data-plus="' + k + '">+</button></div>' : '') +
         '</div>';
       if(art === 'fest') return innen;
       // wie bei PT: eigene Positionen zum Entfernen nach links wischen
@@ -16391,13 +16403,20 @@ function ansichtGkv(bearbeitenId, opt){
       else st.auswahl.weg = { anz: 1, stufe: b.dataset.stufe };
       zeichnen();
     });
-    document.querySelectorAll('#gkvListe [data-plus], #gkvWegBlock [data-plus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.plus]; a.anz = Math.min(sammel ? 999 : 20, (Number(a.anz) || 1) + 1); zeichnen(); });
-    document.querySelectorAll('#gkvListe [data-minus], #gkvWegBlock [data-minus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.minus]; a.anz = Math.max(1, (Number(a.anz) || 1) - 1); zeichnen(); });
+    document.querySelectorAll('#gkvListe [data-plus], #gkvWegBlock [data-plus]').forEach(b=> b.onclick = (ev)=>{ ev.stopPropagation(); const a = st.auswahl[b.dataset.plus]; a.anz = Math.min(sammel ? 999 : 20, (Number(a.anz) || 1) + 1); zeichnen(); });
+    document.querySelectorAll('#gkvListe [data-minus], #gkvWegBlock [data-minus]').forEach(b=> b.onclick = (ev)=>{ ev.stopPropagation(); const a = st.auswahl[b.dataset.minus]; a.anz = Math.max(1, (Number(a.anz) || 1) - 1); zeichnen(); });
   }
   function profileZeichnen(){
     const pr = gkvProfileLaden();
     // wie bei PT/LS: das gewaehlte Profil bleibt markiert (Reihenfolge/Ausblenden gelten dafuer)
-    el('gkvProfile').innerHTML = pr.map(p=> '<button type="button" class="profil-chip' + (p.id === st.profil ? ' aktiv' : '') + '" data-profil="' + htmlEsc(p.id) + '">' + htmlEsc(p.name) + '</button>').join('');
+    // dazu (Wunsch 18.11.2026) wie Profile: Sammelerfassung (ohne Namen; nochmal klicken = zurueck zur Einzelerfassung)
+    // und der Pseudo-Fall 99999 (Dienst ohne GKV-Patient)
+    el('gkvProfile').innerHTML = pr.map(p=> '<button type="button" class="profil-chip' + (p.id === st.profil ? ' aktiv' : '') + '" data-profil="' + htmlEsc(p.id) + '">' + htmlEsc(p.name) + '</button>').join('') +
+      '<button type="button" class="profil-chip gkv-sonder' + (sammel ? ' aktiv' : '') + '" id="' + (sammel ? 'gkvEinzeln' : 'gkvSammel') + '" title="' + (sammel ? 'Zurück zur Einzelerfassung mit Namen' : 'Nur Anzahl je Ziffer, ohne Patientennamen') + '">Sammelerfassung' + (sammel ? ' ✕' : '') + '</button>' +
+      (sammel ? '' : '<button type="button" class="profil-chip gkv-sonder" id="gkvPseudo" title="Dienst ohne GKV-Patient ins Fahrtenbuch (Merkzeile mit 0 €)">Pseudo-Fall 99999</button>');
+    if(el('gkvSammel')) el('gkvSammel').onclick = ()=> ansichtGkv(null, { sammel: true });
+    if(el('gkvEinzeln')) el('gkvEinzeln').onclick = ()=> ansichtGkv();
+    if(el('gkvPseudo')) el('gkvPseudo').onclick = pseudoEintragen;
     el('gkvProfile').querySelectorAll('[data-profil]').forEach(b=> b.onclick = ()=>{
       const p = gkvProfileLaden().find(x=> x.id === b.dataset.profil); if(!p) return;
       st.auswahl = JSON.parse(JSON.stringify(p.auswahl || {})); st.profil = p.id;
@@ -16605,10 +16624,8 @@ function ansichtGkv(bearbeitenId, opt){
     el('gkvMeldung').innerHTML = '<div class="gkv-warn">' + htmlEsc(text) + '</div>';
     verlaufZeichnen();
   }
-  if(el('gkvSammel')) el('gkvSammel').onclick = ()=> ansichtGkv(null, { sammel: true });
-  if(el('gkvEinzeln')) el('gkvEinzeln').onclick = ()=> ansichtGkv();
   // Dienst ganz ohne GKV-Patient: Merkzeile "Pseudo-Fall 99999" mit 0 €
-  el('gkvPseudo').onclick = async ()=>{
+  async function pseudoEintragen(){
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(el('gkvDatum').value || st.datum || '');
     if(!m){ el('gkvMeldung').innerHTML = '<div class="gkv-warn">Bitte oben Datum und Uhrzeit (Dienstbeginn) eintragen.</div>'; return; }
     const r = await gkvPseudoEintragen(new Date(+m[1], +m[2] - 1, +m[3]), el('gkvZeit').value || st.zeit);
@@ -21406,7 +21423,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v485';
+const APP_VERSION = 'v486';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{

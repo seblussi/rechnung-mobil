@@ -9,6 +9,8 @@ module.exports = async ({ browser, basis, pr })=>{
   const einzel = await p.evaluate(()=> ({ name: getComputedStyle(document.getElementById('gkvName').closest('label')).display !== 'none', sammelKnopf: !!document.getElementById('gkvSammel') }));
   pr('Einzelerfassung mit Namen bleibt Standard, Sammelerfassung als eigener Knopf', einzel.name && einzel.sammelKnopf, einzel);
   await p.click('#gkvSammel'); await p.waitForSelector('.gkv-sammel-info');
+  const prof = await p.evaluate(()=> ({ aktiv: (document.querySelector('#gkvProfile .profil-chip.aktiv:not(.gkv-sonder)') || {}).textContent, sonder: [...document.querySelectorAll('#gkvProfile .gkv-sonder')].map((b)=> b.textContent) }));
+  pr('Sammelerfassung neben den Profilen, startet mit Profil Sitzdienst', prof.aktiv === 'Sitzdienst' && prof.sonder.some((t)=> /Sammelerfassung/.test(t)), prof);
   // erste Position waehlen und auf 14 zaehlen
   await p.evaluate(()=>{ const h = document.querySelector('#gkvListe .gkv-pos:not(.an) .gkv-pos-haupt') ; if(h) h.click(); });
   await p.waitForTimeout(200);
