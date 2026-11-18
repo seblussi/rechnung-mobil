@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-Z9fRaesXbRm7m6Xlw+Li9wMreMfEbfcwDIcrnEzW9d4=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-QmDJUbedmvxDly/6UIuq3I4HHh+AXSNxo1XszES/gh4=' 'sha256-TpZo/TEzwF3E4JDTdDhAuNMXMnPCRmkH3trBF+PBr1o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -682,6 +682,7 @@ try{
   .fb-chips{display:flex; flex-wrap:wrap; gap:6px;}
   .zw-leeren{display:block; margin:8px 0 0; padding:7px 12px; font:inherit; font-size:13px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text); cursor:pointer;}
   .zw-geleert{font-size:12.5px; opacity:.8;}
+  .gkv-sammel-info{margin:8px 0 10px; padding:9px 12px; border-radius:12px; border:1px solid var(--rand); background:var(--karte); font-size:13.5px; line-height:1.4;}
   .empf-liste{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
   .empf-wahl{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; padding:10px 12px; border:2px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text); font-size:14px; min-height:auto; margin:0;}
   .empf-wahl span{font-size:13px; color:var(--text-schwach); font-weight:400;}
@@ -16116,8 +16117,13 @@ function gkvEntwurfLaden(){
   window.addEventListener('pagehide', ()=>{ if(gkvEntwurf && document.getElementById('gkvName')) gkvEntwurfSichern(); });
 })();
 
-function ansichtGkv(bearbeitenId){
-  if(!bearbeitenId) gkvEntwurfLaden();
+// Sammelerfassung (Wunsch 18.11.2026, eigener Knopf): nur die Anzahl je Ziffer, ohne Patientennamen -- z. B. fuer den
+// Sitzdienst. Eine Zeile je Dienst im Fahrtenbuch („Sammelerfassung“, Zaehlungen in den Ziffern-Spalten); Statistik und
+// €/h rechnen damit wie mit Einzelfaellen. Einzelfaelle (mit Namen) bleiben der Standard und gehen daneben weiter.
+const GKV_SAMMEL_NAME = 'Sammelerfassung';
+function ansichtGkv(bearbeitenId, opt){
+  opt = opt || {};
+  if(!bearbeitenId && !opt.sammel) gkvEntwurfLaden();
   einstellungenOffen = false;
   const ausVerwaltung = gkvHerkunft === 'verwaltung'; gkvHerkunft = null;
   const herkunft = fallHerkunftNehmen();
@@ -16125,10 +16131,18 @@ function ansichtGkv(bearbeitenId){
   const jetzt = new Date();
   const alle = gkvFaelleLaden();
   let f = bearbeitenId ? alle.find(x=> x.id === bearbeitenId) : null;
+  const sammel = !!((f && f.sammel) || (!f && opt.sammel));
+  if(sammel && !f){
+    // je Dienst nur eine Sammelerfassung: vorhandene zum Ergaenzen oeffnen (eine zweite wuerde dieselbe Zeile ueberschreiben)
+    const dv = dienstWahlVorschlag(), heute = new Date(), hIso = heute.getFullYear() + '-' + zz2(heute.getMonth() + 1) + '-' + zz2(heute.getDate());
+    const ex = alle.find(x=> x.sammel && (dv ? x.dienst === dv : (!x.dienst && x.datum === hIso)));
+    if(ex) return ansichtGkv(ex.id);
+  }
   if(f && (!f.auswahl || !Object.keys(f.auswahl).length) && f.positionen && f.positionen.length) f = Object.assign({}, f, { auswahl: gkvAuswahlAusPositionen(f.positionen) });
   const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null, dokuId: f.dokuId || null, dienst: f.dienst || '' }
-    : (gkvEntwurf || Object.assign({ id: '', name: '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()), dienst: dienstWahlVorschlag() }, gkvStartAuswahl()));
-  gkvEntwurf = st.id ? null : st;
+    : ((sammel ? null : gkvEntwurf) || Object.assign({ id: '', name: sammel ? GKV_SAMMEL_NAME : '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()), dienst: dienstWahlVorschlag() }, gkvStartAuswahl()));
+  gkvEntwurf = (st.id || sammel) ? null : st;
+  if(sammel){ st.name = GKV_SAMMEL_NAME; delete st.auswahl.weg; }
   let liste = gkvListeLaden();
   const dtVon = ()=>{ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(st.datum || ''), z = /^(\d{1,2}):(\d{2})/.exec(st.zeit || ''); return m ? new Date(+m[1], +m[2] - 1, +m[3], z ? +z[1] : 12, z ? +z[2] : 0) : new Date(); };
 
@@ -16140,9 +16154,10 @@ function ansichtGkv(bearbeitenId){
       </div>
       ${dienstWahlFeldHtml('gkvDienst', st.dienst, true)}
       <div class="gkv-zeitinfo" id="gkvZeitInfo"></div>
-      <button type="button" class="btn-primaer blass gkv-zwischenablage" id="gkvZwischenablage">Aus Zwischenablage einlesen</button>
+      ${sammel ? '<div class="gkv-sammel-info"><b>Sammelerfassung</b> – nur die Anzahl je Ziffer, ohne Patientennamen. Im Fahrtenbuch steht dafür eine Zeile je Dienst; Einzelfälle mit Namen gehen daneben weiter.</div>' : ''}
+      <button type="button" class="btn-primaer blass gkv-zwischenablage" id="gkvZwischenablage"${sammel ? ' style="display:none"' : ''}>Aus Zwischenablage einlesen</button>
       <div class="gkv-zeitinfo" id="gkvZwHinweis"></div>
-      <label class="gkv-feld">Name<input type="text" id="gkvName" autocomplete="off" placeholder="Nachname, Vorname" value="${htmlEsc(st.name)}"></label>
+      <label class="gkv-feld"${sammel ? ' style="display:none"' : ''}>Name<input type="text" id="gkvName" autocomplete="off" placeholder="Nachname, Vorname" value="${htmlEsc(st.name)}"></label>
       <div id="gkvAdrBlock"><div class="gkv-feld">Adresse <span class="gkv-optional">(optional – für die Wegepauschale)</span>
         <input type="text" id="gkvAdresse" autocomplete="off" placeholder="Straße Nr." value="${htmlEsc(gkvAdrTeile(st.adresse).strasse)}" aria-label="Straße und Hausnummer">
         <input type="text" id="gkvPlzOrt" autocomplete="off" enterkeyhint="search" placeholder="PLZ Ort (PLZ oder Ort genügt)" value="${htmlEsc(gkvAdrTeile(st.adresse).plzOrt)}" aria-label="PLZ und Ort" style="margin-top:6px;">
@@ -16151,7 +16166,7 @@ function ansichtGkv(bearbeitenId){
       <div class="gkv-zeitinfo" id="gkvKmInfo">${st.kmInfo || ''}</div>
       <div id="gkvWegBlock"></div>
       <div class="routen-karte" id="gkvRouteKarte"></div></div>
-      <div id="gkvDokuBox">${dokuKnopfHtml(st.dokuId)}</div>
+      <div id="gkvDokuBox"${sammel ? ' style="display:none"' : ''}>${dokuKnopfHtml(st.dokuId)}</div>
     </div>
     <div class="profil-leiste gkv-profile" id="gkvProfile"></div>
     <div id="gkvListe"></div>
@@ -16162,7 +16177,9 @@ function ansichtGkv(bearbeitenId){
     <div class="gkv-summe-leiste"><span id="gkvSumme"></span>
       <button type="button" class="btn-primaer" id="gkvSpeichern">${st.id ? 'Fahrtenbuch aktualisieren' : 'Ins Fahrtenbuch'}</button></div>
     <div id="gkvMeldung"></div>
-    <button type="button" class="btn-sekundaer gkv-pseudo-knopf" id="gkvPseudo">Dienst ohne GKV-Patient eintragen (Pseudo-Fall 99999)</button>
+    ${sammel ? '<button type="button" class="btn-sekundaer gkv-pseudo-knopf" id="gkvEinzeln">Zurück zur Einzelerfassung (mit Namen)</button>'
+      : '<button type="button" class="btn-sekundaer gkv-pseudo-knopf" id="gkvSammel">Sammelerfassung: nur Anzahl je Ziffer (ohne Namen)</button>'}
+    <button type="button" class="btn-sekundaer gkv-pseudo-knopf" id="gkvPseudo"${sammel ? ' style="display:none"' : ''}>Dienst ohne GKV-Patient eintragen (Pseudo-Fall 99999)</button>
     <div id="gkvVerlauf" hidden></div>
     <div class="gkv-platz"></div>`;
   // Querformat: links Patient/Wegepauschale (+ zuletzt erfasst), rechts die Ziffern mit Summe
@@ -16174,9 +16191,9 @@ function ansichtGkv(bearbeitenId){
     const nacht = ebmWochenendeOderFeiertag(dt) ? (istFeiertagBW(dt) || (dt.getDay() === 0 ? 'Sonntag' : dt.getDay() === 6 ? 'Samstag' : 'Feiertag')) : (ebmStunde(dt) >= 7 && ebmStunde(dt) < 19 ? 'Werktag, 7–19 Uhr' : 'Werktag, Unzeit');
     el('gkvZeitInfo').textContent = 'Ziffern nach Zeitpunkt: ' + nacht;
     const prof = gkvProfileLaden().find(p=> p.id === st.profil) || null;
-    const wegOk = gkvWegMoeglich(st.auswahl, prof);
+    const wegOk = !sammel && gkvWegMoeglich(st.auswahl, prof);
     if(!wegOk && st.auswahl.weg) delete st.auswahl.weg;
-    el('gkvAdrBlock').style.display = gkvIstSitzProfil(prof) ? 'none' : '';
+    el('gkvAdrBlock').style.display = (sammel || gkvIstSitzProfil(prof)) ? 'none' : '';
     // Gruppen und Reihenfolge des aktiven Profils, ausgeblendete nur wenn gewaehlt
     const geo = gkvProfilGruppen(prof), ausP = new Set((prof && prof.ausgeblendet) || []);
     const sicht = (k)=> !ausP.has(k) || !!st.auswahl[k];
@@ -16184,7 +16201,7 @@ function ansichtGkv(bearbeitenId){
     Object.keys(st.auswahl).forEach(k=>{ if(k !== 'weg' && !gG.includes(k) && !gE.includes(k)) gE.push(k); });
     const stdK = gkvStdSchluessel();
     liste = gG.concat(gE, wegOk ? ['weg'] : []);
-    const aus = gkvAusschluesse(st.auswahl, liste, dt);
+    const aus = sammel ? {} : gkvAusschluesse(st.auswahl, liste, dt);   // Ausschluesse gelten je Patient, nicht fuer Summen
     const zeile = (k, art)=>{
       const g = EBM_GRUPPEN[k], a = st.auswahl[k];
       const gop = g ? g.waehle(dt, a && a.stufe) : k;
@@ -16192,7 +16209,7 @@ function ansichtGkv(bearbeitenId){
       if(!e) return '';
       const titel = g ? g.titel : e.text;
       const unter = g ? e.text.replace(/^[^(]*\(?/, '').replace(/\)$/, '') : (e.hinweis || '');
-      const mehr = a && (g ? g.mehrfach : EBM_MEHRFACH.includes(gop));
+      const mehr = a && (sammel || (g ? g.mehrfach : EBM_MEHRFACH.includes(gop)));
       const wst = k === 'weg' && a ? g.stufen.find(x=> x.k === a.stufe) : null;
       const anz = wst && wst.anz ? wst.anz : a ? Math.max(1, Number(a.anz) || 1) : 1;
       const x = aus[k];
@@ -16283,7 +16300,7 @@ function ansichtGkv(bearbeitenId){
       else st.auswahl.weg = { anz: 1, stufe: b.dataset.stufe };
       zeichnen();
     });
-    document.querySelectorAll('#gkvListe [data-plus], #gkvWegBlock [data-plus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.plus]; a.anz = Math.min(20, (Number(a.anz) || 1) + 1); zeichnen(); });
+    document.querySelectorAll('#gkvListe [data-plus], #gkvWegBlock [data-plus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.plus]; a.anz = Math.min(sammel ? 999 : 20, (Number(a.anz) || 1) + 1); zeichnen(); });
     document.querySelectorAll('#gkvListe [data-minus], #gkvWegBlock [data-minus]').forEach(b=> b.onclick = ()=>{ const a = st.auswahl[b.dataset.minus]; a.anz = Math.max(1, (Number(a.anz) || 1) - 1); zeichnen(); });
   }
   function profileZeichnen(){
@@ -16413,7 +16430,7 @@ function ansichtGkv(bearbeitenId){
   let gkvSpeichertGerade = false;
   el('gkvSpeichern').onclick = async ()=>{
     if(gkvSpeichertGerade) return;
-    st.name = el('gkvName').value.trim();
+    st.name = sammel ? GKV_SAMMEL_NAME : el('gkvName').value.trim();
     if(!st.name){ el('gkvName').classList.add('pflichtfeld-fehlt'); el('gkvName').focus(); return; }
     st.zeit = el('gkvZeit').value;
     if(!st.zeit){ el('gkvZeit').classList.add('pflichtfeld-fehlt'); el('gkvZeit').focus(); el('gkvMeldung').innerHTML = '<div class="gkv-warn">Bitte die Uhrzeit eintragen – sie bestimmt die Tag-/Nacht-Ziffern.</div>'; return; }
@@ -16425,7 +16442,8 @@ function ansichtGkv(bearbeitenId){
     const eintrag = { id: st.id || ('g' + Date.now().toString(36)), name: st.name, datum: st.datum, zeit: st.zeit,
       auswahl: JSON.parse(JSON.stringify(st.auswahl)), profil: st.profil || '', positionen: pos.map(p=> ({ gop: p.gop, anz: p.anz })),
       euro: betaRund2(pos.reduce((s, p)=> s + p.euro, 0)), status: 'offen', alterName: null,
-      adresse: st.adresse || '', geo: st.kmGeo && st.kmGeo.lat ? { lat: +(+st.kmGeo.lat).toFixed(5), lon: +(+st.kmGeo.lon).toFixed(5) } : null, dokuId: st.dokuId || null, dienst: st.dienst || '' };
+      adresse: sammel ? '' : (st.adresse || ''), geo: !sammel && st.kmGeo && st.kmGeo.lat ? { lat: +(+st.kmGeo.lat).toFixed(5), lon: +(+st.kmGeo.lon).toFixed(5) } : null, dokuId: sammel ? null : (st.dokuId || null), dienst: st.dienst || '' };
+    if(sammel) eintrag.sammel = true;
     const i = arr.findIndex(x=> x.id === eintrag.id);
     if(i >= 0){
       eintrag.alterName = arr[i].name !== eintrag.name ? arr[i].name : (arr[i].alterName || null); eintrag.zeile = arr[i].zeile;
@@ -16481,7 +16499,7 @@ function ansichtGkv(bearbeitenId){
         gkvFaelleSpeichern(a2);
       }
       betaOverlay.schliessen();
-      if(!r.uebersprungen){ ansichtGkv(); setTimeout(()=>{ const mm = document.getElementById('gkvMeldung'); if(mm) mm.innerHTML = '<div class="gkv-ok">' + htmlEsc(text) + '</div>'; }, 0); return; }
+      if(!r.uebersprungen){ if(x.sammel) ansichtGkv(x.id); else ansichtGkv(); setTimeout(()=>{ const mm = document.getElementById('gkvMeldung'); if(mm) mm.innerHTML = '<div class="gkv-ok">' + htmlEsc(text) + '</div>'; }, 0); return; }
     }catch(err){
       betaOverlay.schliessen();
       const a2 = gkvFaelleLaden(), y = a2.find(z=> z.id === id);
@@ -16491,6 +16509,8 @@ function ansichtGkv(bearbeitenId){
     el('gkvMeldung').innerHTML = '<div class="gkv-warn">' + htmlEsc(text) + '</div>';
     verlaufZeichnen();
   }
+  if(el('gkvSammel')) el('gkvSammel').onclick = ()=> ansichtGkv(null, { sammel: true });
+  if(el('gkvEinzeln')) el('gkvEinzeln').onclick = ()=> ansichtGkv();
   // Dienst ganz ohne GKV-Patient: Merkzeile "Pseudo-Fall 99999" mit 0 €
   el('gkvPseudo').onclick = async ()=>{
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(el('gkvDatum').value || st.datum || '');
@@ -21191,7 +21211,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v482';
+const APP_VERSION = 'v483';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
