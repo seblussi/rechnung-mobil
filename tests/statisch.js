@@ -16,6 +16,10 @@ const jsDateien = ['sw.js'].concat(fs.readdirSync(path.join(W, 'lokal')).filter(
 jsDateien.forEach((d)=>{ try{ new vm.Script(lies(d), { filename: d }); }catch(e){ syntax.push(d + ': ' + e.message); } });
 pr('Syntax: ' + inline.length + ' Skripte in der Seite, ' + jsDateien.length + ' Dateien', syntax.length === 0, syntax);
 
+// ---- 1b. Einrichtungsskript: Pruefsumme in der App passt (W3) ----
+{ const sha = crypto.createHash('sha256').update(fs.readFileSync(path.join(W, 'azure', 'einrichten.sh'))).digest('hex');
+  pr('Einrichtungsskript: Prüfsumme in der App passt zu azure/einrichten.sh – bei Fehler: node werkzeuge/skript_pruefsumme.js', html.includes("const EINR_AZURE_SHA256 = '" + sha + "';")); }
+
 // ---- 2. Sicherheitsrichtlinie (CSP) ----
 const csp = (html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/) || [])[1] || '';
 const skriptRegel = (csp.split(';').map((x)=> x.trim()).find((x)=> x.startsWith('script-src')) || '');

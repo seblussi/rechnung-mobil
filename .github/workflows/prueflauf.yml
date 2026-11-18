@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: 22
       - name: Syntax, Sicherheitsrichtlinie, Bibliotheken, Dateiliste
-        run: node tests/statisch.js
+        run: node tests/statisch.js && node tests/weiterleitung_funktion.js
 
   browser:
     name: Tests im Browser

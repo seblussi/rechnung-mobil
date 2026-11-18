@@ -81,7 +81,7 @@ cat > "$TMP/host.json" <<'EOF'
 }
 EOF
 cat > "$TMP/src/functions/lxp.js" <<'EOF'
-// LetterXpress-Weiterleitung fuer die Rechnungs-App (Azure Function), Version 5
+// LetterXpress-Weiterleitung fuer die Rechnungs-App (Azure Function), Version 6
 // LetterXpress erlaubt keine direkten Aufrufe aus dem Browser (CORS). Diese
 // Funktion reicht die Anfrage der App unveraendert an https://api.letterxpress.de
 // weiter. Sie speichert NICHTS, protokolliert keine Inhalte und enthaelt KEINE
@@ -91,9 +91,10 @@ cat > "$TMP/src/functions/lxp.js" <<'EOF'
 // verschieben/stornieren). "/v3/_version" meldet die Version, "/v3/_code" prueft nur den Zugangscode (App-Freischaltung).
 // Optional: App-Einstellung ERLAUBTE_LXP_NUTZER (Komma-getrennt) -> nur diese
 // LetterXpress-Benutzer werden weitergeleitet.
-// Optional: App-Einstellung ZUGANGSCODES (Komma-getrennt) -> nur Anfragen mit
-// einem dieser Codes ("_zugang" im Inhalt) werden weitergeleitet; der Code wird
-// vor dem Weiterreichen entfernt. Je Tester ein eigener Code (einzeln sperrbar).
+// Pflicht (ab Version 6, Sicherheitsbericht W1): App-Einstellung ZUGANGSCODES (Komma-getrennt) -> nur Anfragen
+// mit einem dieser Codes ("_zugang" im Inhalt) werden weitergeleitet; der Code wird vor dem Weiterreichen
+// entfernt. Je Nutzer ein eigener Code (einzeln sperrbar). Ohne hinterlegten Code leitet die Funktion nichts
+// weiter (das Einrichtungsskript legt beim ersten Mal einen Code an und zeigt ihn an).
 const { app } = require('@azure/functions');
 const crypto = require('crypto');
 function gleich(a, b) {
@@ -103,7 +104,7 @@ function gleich(a, b) {
 
 const ZIEL = 'https://api.letterxpress.de';
 const ERLAUBTE_HERKUNFT = ['https://seblussi.github.io'];
-const VERSION = 5;
+const VERSION = 6;
 const METHODEN = ['POST', 'PUT', 'DELETE'];
 
 // Schutz gegen Durchprobieren von Zugangscodes (nur im Arbeitsspeicher, nichts wird gespeichert):
@@ -163,14 +164,16 @@ app.http('lxp', {
 
     const pfad = String((request.params && request.params.pfad) || '');
     if (!/^[a-z_]+(\/[0-9]+)?$/.test(pfad)) return { status: 404, headers: cors, body: 'Unbekannter Pfad' };
-    if (pfad === '_version') return json(200, cors, { weiterleitung: VERSION, methoden: METHODEN });
+    const codes = String(process.env.ZUGANGSCODES || '').split(',').map((s) => s.trim()).filter(Boolean);
+    if (pfad === '_version') return json(200, cors, { weiterleitung: VERSION, methoden: METHODEN, zugangscode: codes.length > 0 });
+    // ohne Zugangscode keine offene Weiterleitung (W1)
+    if (!codes.length) return json(503, cors, { status: 503, message: 'Die Weiterleitung hat keinen Zugangscode – bitte das Einrichtungsskript erneut ausführen.' });
 
     let text = await request.text();
     let methode = 'POST';
     let daten = null;
     try { daten = JSON.parse(text); } catch (e) { daten = null; }
-    const codes = String(process.env.ZUGANGSCODES || '').split(',').map((s) => s.trim()).filter(Boolean);
-    if (codes.length) {
+    {
       const jetzt = Date.now(), id = absender(request);
       aufraeumen(jetzt);
       const min = gesperrt(id, jetzt);
@@ -243,11 +246,20 @@ if [ -z "$HOST" ]; then
 fi
 URL="https://${HOST}/api"
 
+# Zugangscode ist Pflicht (Version 6): fehlt er, einen anlegen und am Ende anzeigen. Vorhandene Codes bleiben.
+CODES="$(az functionapp config appsettings list -g "$RG" -n "$APP" --query "[?name=='ZUGANGSCODES'].value | [0]" -o tsv 2>/dev/null | tr -d '\r' || true)"
+NEUER_CODE=""
+if [ -z "$CODES" ]; then
+  NEUER_CODE="w$(openssl rand -hex 2)-$(openssl rand -hex 2)-$(openssl rand -hex 2)"
+  echo "   Zugangscode anlegen ..."
+  az functionapp config appsettings set -g "$RG" -n "$APP" --settings "ZUGANGSCODES=$NEUER_CODE" -o none
+fi
+
 echo "6/6 Selbsttest ..."
 OK=""
 for i in $(seq 1 20); do
   ANTWORT="$(curl -s -m 30 -X POST -H "Origin: $HERKUNFT" -H 'Content-Type: application/json' -d '{}' "$URL/v3/_version" || true)"
-  if echo "$ANTWORT" | grep -q '"weiterleitung":5'; then OK=1; break; fi
+  if echo "$ANTWORT" | grep -q '"weiterleitung":6'; then OK=1; break; fi
   sleep 10
 done
 
@@ -264,6 +276,18 @@ echo
 echo " Diese Adresse in der App eintragen:"
 echo
 echo "   $URL"
+if [ -n "$NEUER_CODE" ]; then
+  echo
+  echo " Zugangscode (neu angelegt) - ebenfalls in der App eintragen:"
+  echo
+  echo "   $NEUER_CODE"
+  echo
+  echo " Weitere Codes (z. B. je Geraet/Nutzer): Azure-Portal > Funktions-App '$APP'"
+  echo " > Umgebungsvariablen > ZUGANGSCODES, durch Komma getrennt."
+else
+  echo
+  echo " Zugangscode: unveraendert (bereits hinterlegt)."
+fi
 echo "=================================================================="
 }
 haupt "$@"
