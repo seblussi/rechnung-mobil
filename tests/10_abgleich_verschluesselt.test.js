@@ -61,7 +61,7 @@ module.exports = async ({ browser, basis, pr })=>{
   const C = await geraet(browser, basis, { echt: true }); await od.verbinden(C, basis, true);
   await C.goto(basis + 'Rechnungserfassung_Mobil.html');
   await C.waitForSelector('#tsPw1', { timeout: 30000 }); await C.fill('#tsPw1', PW_C); await C.fill('#tsPw2', PW_C); await C.click('#tsWeiter');
-  await C.waitForSelector('#tsCode'); const codeC = (await C.textContent('#tsCode')).trim(); await C.fill('#tsLetzter', codeC.split('-').pop()); await C.click('#tsFertig');
+  await C.waitForSelector('#tsCode', { timeout: 120000 }); const codeC = (await C.textContent('#tsCode')).trim(); await C.fill('#tsLetzter', codeC.split('-').pop()); await C.click('#tsFertig');
   await C.waitForTimeout(500); if(await C.$('#tsPkSpaeter')) await C.click('#tsPkSpaeter');
   await laeuft(C); await C.waitForTimeout(1000);
   await C.evaluate((f)=> LS.set('faelle_ls', [f]), fall('Geraet-C-Fall, Dora', 4));

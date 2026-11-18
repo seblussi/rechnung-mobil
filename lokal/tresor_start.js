@@ -46,7 +46,8 @@
   function passwortFelderVerdrahten(){
     const p1 = $('tsPw1');
     p1.oninput = ()=>{ const s = passwortStaerke(p1.value); $('tsStaerke').innerHTML = p1.value ? '<i style="width:' + (s * 25) + '%" class="s' + s + '"></i><span>' + (s ? STAERKE[s] : esc(Tresor.passwortRegelFehler(p1.value))) + '</span>' : ''; };
-    setTimeout(()=> p1.focus(), 50);
+    // nur fokussieren, wenn noch nichts anderes den Fokus hat (sonst landet schnell Getipptes/Eingefuegtes im falschen Feld)
+    setTimeout(()=>{ const a = document.activeElement; if(!a || a === document.body) p1.focus(); }, 50);
     return ()=>{ const a = $('tsPw1').value, b = $('tsPw2').value; if(Tresor.passwortRegelFehler(a)) return { fehler: Tresor.passwortRegelFehler(a) }; if(a !== b) return { fehler: 'Die beiden Passwörter sind nicht gleich.' }; return { pw: a }; };
   }
 

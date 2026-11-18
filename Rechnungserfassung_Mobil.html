@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-S2i7JdVXCBOKdUFLoe3jWwyNCbMRj72ZuZTcwH+rL94=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-7TUhBgVEfTezU8nX96QURpDslrvB3YKJivZg4VQePgE=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2376,8 +2376,9 @@ try{
   .ds-ring-betrag{font-size:10px; font-weight:700; fill:var(--text-schwach);}
   .ds-ring-betrag.ls{fill:var(--ls-farbe);} .ds-ring-betrag.pt{fill:var(--pt-farbe);} .ds-ring-betrag.gkv{fill:var(--ds-gkv);}
   body.dunkel .ds-ring-betrag.ls{fill:#9cc4ee;} body.dunkel .ds-ring-betrag.pt{fill:#8fd9a8;} body.dunkel .ds-ring-betrag.gkv{fill:#cfb2ea;}
-  .ds-ring-bogen{fill:none; stroke:var(--text-schwach); stroke-width:1.6; stroke-linecap:round;}
-  .ds-ring-pfeilkopf{fill:var(--text-schwach);}
+  .ds-ring-bogen{fill:none; stroke:var(--text-schwach); stroke-width:1.1; stroke-linecap:round; opacity:.85;}
+  .ds-ring-pfeilkopf{fill:var(--text-schwach); opacity:.85;}
+  .ds-ring-trenner{stroke:var(--text-schwach); stroke-width:1.4; stroke-linecap:round; opacity:.7;}
   .ds-ring-grenze{font-size:12.5px; font-weight:600; fill:var(--text-schwach); letter-spacing:.02em;}
   .ds-live .ds-dz .ds-zahlen.fuenf{grid-template-columns:repeat(5, minmax(0, 1fr)); gap:5px;}
   .ds-live .ds-dz .ds-zahlen.fuenf > span{padding:7px 6px;}
@@ -21426,7 +21427,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v487';
+const APP_VERSION = 'v488';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22640,17 +22641,19 @@ function designRingHtml(info){
     }
     return s;
   }).join('');
-  // Beginn rechts oben: Pfeil vom Dienstbeginn weg, rechts am Ring entlang nach unten; Ende links oben: Pfeil links am
-  // Ring hinauf auf das Dienstende zu (Wunsch 17.11.2026). Radius ausserhalb der Betraege (r + 21).
+  // Beginn/Ende oben an der 12-Uhr-Marke (Wunsch 18.11.2026, Mischung der Entwuerfe 1/2/5): feiner Trennstrich auf 12 Uhr,
+  // rechts "15:00" dem Ring folgend und danach ein kurzer, feiner Pfeil; links ein kurzer Pfeil und danach "23:00".
   const bogen = (a1, a2, rr)=>{ const [x1, y1] = pkt(a1, rr), [x2, y2] = pkt(a2, rr); return 'M' + f1(x1) + ' ' + f1(y1) + ' A' + rr + ' ' + rr + ' 0 0 1 ' + f1(x2) + ' ' + f1(y2); };
   let grenzen = '';
   if(fe){
-    const [sx, sy] = pkt(31, 141), [ex, ey] = pkt(-31, 141);
-    grenzen = '<defs><marker id="dsPfeilKopf" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="ds-ring-pfeilkopf"/></marker></defs>' +
-      '<path d="' + bogen(46, 112, 148) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
-      '<path d="' + bogen(-112, -46, 148) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
-      '<text x="' + f1(sx) + '" y="' + f1(sy) + '" class="ds-ring-grenze" text-anchor="start" dominant-baseline="middle">' + designUhr(fe.von) + '</text>' +
-      '<text x="' + f1(ex) + '" y="' + f1(ey) + '" class="ds-ring-grenze" text-anchor="end" dominant-baseline="middle">' + designUhr(fe.bis) + '</text>';
+    const [t1x, t1y] = pkt(0, 133), [t2x, t2y] = pkt(0, 149);
+    grenzen = '<defs><marker id="dsPfeilKopf" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="ds-ring-pfeilkopf"/></marker>' +
+        '<path id="dsRingTpVon" d="' + bogen(3.5, 70, 138) + '" fill="none"/><path id="dsRingTpBis" d="' + bogen(-70, -3.5, 138) + '" fill="none"/></defs>' +
+      '<line x1="' + f1(t1x) + '" y1="' + f1(t1y) + '" x2="' + f1(t2x) + '" y2="' + f1(t2y) + '" class="ds-ring-trenner"/>' +
+      '<text class="ds-ring-grenze"><textPath href="#dsRingTpVon" startOffset="0">' + designUhr(fe.von) + '</textPath></text>' +
+      '<path d="' + bogen(23, 37, 142) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
+      '<path d="' + bogen(-37, -23, 142) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
+      '<text class="ds-ring-grenze"><textPath href="#dsRingTpBis" startOffset="100%" text-anchor="end">' + designUhr(fe.bis) + '</textPath></text>';
   }
   const gross = designUhr(info.jetzt);
   const unter = info.modus === 'leer' ? 'Dienst wählen' : designRestText(info);
