@@ -17,5 +17,18 @@ module.exports = async ({ browser, basis, pr })=>{
   pr('Reiseentschädigung: 51,13 € + 0,26 € je angefangenem km', r.reise[0].basis === 51.13 && r.reise[0].kmGerundet === 61 && r.reise[0].kmZeile === 15.86 && r.reise[0].gesamt === 66.99 && r.reise[1].kmZeile === 13.52 && r.reise[1].gesamt === 64.65, r.reise.slice(0, 2));
   pr('Reiseentschädigung ohne gültige km: nur Grundbetrag', r.reise[2].gesamt === 51.13 && r.reise[3].gesamt === 51.13);
   pr('Luftlinie Stuttgart–Ulm rund 72 km, gleicher Ort 0 km', r.luft > 70 && r.luft < 75 && r.null0 === 0, r.luft);
+  // 0 km: kein Wegegeld, keine "0" im Feld (Wunsch 17.11.2026)
+  const n = await p.evaluate(async ()=>{
+    ansichtMaske('pt'); await new Promise(r=> setTimeout(r, 300));
+    const el = document.getElementById('txtKm'), d = document.getElementById('txtDatumExcel'), z = document.getElementById('txtZeitLS');
+    if(d && !d.value) d.value = '18.11.2026'; if(z) z.value = '23:10';
+    el.focus(); el.value = '3'; el.dispatchEvent(new Event('input')); el.blur();
+    const mit = automatischeAuswahlRoh(POSITIONEN_PT, '18.11.2026', '23:10', document.getElementById('txtKmFahrstrecke').value, document.getElementById('txtKmLuftlinie').value, '');
+    el.focus(); el.value = '0'; el.dispatchEvent(new Event('input')); el.blur();
+    const ohne = automatischeAuswahlRoh(POSITIONEN_PT, '18.11.2026', '23:10', document.getElementById('txtKmFahrstrecke').value, document.getElementById('txtKmLuftlinie').value, '');
+    return { mit: [...mit], ohne: [...ohne], feld: el.value, info: (document.getElementById('streckeninfo') || {}).textContent || '' };
+  });
+  pr('3 km nachts: Wegegeld WN5', n.mit.includes('WN5'), n.mit);
+  pr('0 km eingetragen: kein Wegegeld, Feld leer, Hinweis', !n.ohne.some((z)=> /^W[TN]|REISE/.test(z)) && n.feld === '' && /kein Wegegeld/.test(n.info), n);
   await p.context().close();
 };

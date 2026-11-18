@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-ckLj7/GgLqXS/De6rQGeYU+4jfAtd2A/lrjtwwNHePw=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-Y9gmPewVnHWNjPA+PDN9wfzlD7dlwBG7ufef/EZy0Kc=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -678,6 +678,16 @@ try{
   .fb-dialog input{display:block; width:100%; box-sizing:border-box; margin-top:3px; font:inherit; font-size:16px; padding:8px 10px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text);}
   .fb-zeile{display:flex; gap:8px; align-items:flex-end; margin-top:6px;}
   .fb-zeile label{flex:1; font-size:12.5px; color:var(--text-schwach);}
+  /* Dienst beginnen: kompakt (passt ohne Scrollen auf ein Handy) */
+  .ld-kompakt .fb-info{margin-bottom:4px; line-height:1.35;}
+  .ld-kompakt .fb-lbl{margin:7px 0 3px;}
+  .ld-kompakt .ld-zeit{margin-top:8px; gap:6px;} .ld-kompakt .ld-zeit label{min-width:0;} .ld-kompakt .ld-zeit .ld-tag{flex:1.35;}
+  .ld-kompakt .ld-zeit input{padding:7px 6px; font-size:15px; min-width:0;}
+  .ld-kompakt .ld-reihe{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; padding-bottom:2px;} .ld-kompakt .ld-reihe::-webkit-scrollbar{display:none;}
+  .ld-kompakt .ld-reihe .fb-chip{flex:none; white-space:nowrap;}
+  body.design-einhand .ld-kompakt .fb-chip:not(.schicht){padding:8px 13px; font-size:14px;}
+  .ld-kompakt .fb-chip.schicht{padding:6px 2px; white-space:nowrap;}
+  .ld-kompakt #liveArzt{margin-top:6px;}
   .fb-uhr{padding-bottom:10px; font-size:14px;}
   .fb-chips{display:flex; flex-wrap:wrap; gap:6px;}
   .zw-leeren{display:block; margin:8px 0 0; padding:7px 12px; font:inherit; font-size:13px; border:1px solid var(--rand); border-radius:8px; background:var(--karte); color:var(--text); cursor:pointer;}
@@ -1658,6 +1668,9 @@ try{
   .ds-weiter-text{flex:1; min-width:0; display:flex; flex-direction:column;}
   .ds-weiter-text span{font-size:12px; font-weight:600; opacity:.75;}
   .ds-weiter-text b{font-size:16px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  /* kleine LS/PT/GKV-Marke vor dem Namen (Wunsch 17.11.2026) */
+  .ds-weiter-text b .ds-fall-marke{display:inline-flex; vertical-align:2px; width:auto; height:auto; flex:none; padding:2px 6px; margin-right:4px; border-radius:6px; font-style:normal; font-size:11px; font-weight:700; color:#fff; background:var(--ls-farbe);}
+  .ds-weiter-text b .ds-fall-marke.pt{background:var(--pt-farbe);} .ds-weiter-text b .ds-fall-marke.gkv{background:#7d4e9e;}
   .ds-neu-titel{margin:22px 2px 8px; font-weight:800;}
   body.design-einhand .ds-nav{position:fixed; left:16px; right:16px; bottom:calc(14px + env(safe-area-inset-bottom)); z-index:20; height:66px; border-radius:33px; background:var(--ds-nav);
     grid-template-columns:repeat(5, minmax(0, 1fr)); align-items:center; padding:0 8px; box-sizing:border-box; box-shadow:0 8px 24px rgba(0,0,0,.22);}
@@ -1782,11 +1795,17 @@ try{
   .dw .dw-kopf small{display:block; color:var(--text-schwach, #777); font-size:13px; margin-top:2px;}
   .dw .dw-klein{width:auto; flex:0 0 auto; margin:0; padding:8px 12px; font-size:14px;}
   .dw-profile small{opacity:.7; font-size:11px; font-weight:400;}
-  .dw-woche{display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px;}
+  /* 8 Spalten (Mo-So, Feiertag): Handy 2 je Reihe, ab Tablet/PC 4 je Reihe (Wunsch 17.11.2026) */
+  .dw-woche{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;}
+  @media (min-width:700px){ .dw-woche{grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px;} .dw{max-width:1100px; margin-left:auto; margin-right:auto;} }
+  @media (max-width:340px){ .dw-woche{grid-template-columns:minmax(0, 1fr);} }
+  .dw-dienst b{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .dw-fuss{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;} .dw-fuss button{flex:1 1 160px; margin:0;}
   .dw-tag{border:1px solid var(--rand); border-radius:12px; background:var(--karte); padding:8px; display:flex; flex-direction:column; gap:6px; min-height:84px; box-sizing:border-box;}
   .dw-tag.we{border-color:color-mix(in srgb, var(--rand) 50%, #2b6cb0);}
   .dw-tag.fe{border-color:#d9a400;}
-  .dw-tag-kopf{display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:14px;}
+  .dw-tag-kopf{display:flex; justify-content:space-between; align-items:center; gap:4px; font-weight:700; font-size:14px;} .dw-tag-kopf > span:last-child{display:flex; flex:none;}
+  .dw-tag-kopf > span:first-child{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .dw-mini{width:30px; height:30px; margin:0 0 0 4px; padding:0; border-radius:8px; border:1px solid var(--rand); background:transparent; color:var(--text); font-size:16px; line-height:1; cursor:pointer;}
   .dw-dienst{display:flex; justify-content:space-between; align-items:baseline; gap:6px; width:100%; margin:0; padding:7px 8px; border-radius:8px; border:none; background:color-mix(in srgb, #2b6cb0 14%, var(--karte)); color:var(--text); font:inherit; font-size:13px; text-align:left; cursor:pointer; box-sizing:border-box;}
   .dw-dienst span{color:var(--text-schwach, #666); font-size:12px; white-space:nowrap;}
@@ -1919,6 +1938,11 @@ try{
   .vk-m-ebene{display:flex; align-items:flex-start; gap:8px; padding:5px 0; line-height:1.3;} .vk-m-ebene input{width:18px; height:18px; flex:none; margin-top:1px;}
   .vk-fall{display:flex; width:24px; height:24px; border-radius:50%; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:800; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4); background:var(--ls-farbe); line-height:1;}
   .vk-fall.pt{background:var(--pt-farbe);} .vk-fall.gkv{background:#7d4e9e;}
+  /* Fall aus der Liste in der Karte zeigen (Wunsch 17.11.2026) */
+  .vk-fall.puls{animation:fallPuls 1.1s ease 2; position:relative; z-index:3;}
+  @keyframes fallPuls{0%{transform:scale(1); box-shadow:0 0 0 0 rgba(255,200,0,.9);} 50%{transform:scale(1.45); box-shadow:0 0 0 10px rgba(255,200,0,0);} 100%{transform:scale(1); box-shadow:0 0 0 0 rgba(255,200,0,0);}}
+  .karte-klick.puls{stroke:#ffc800; stroke-width:4px; vector-effect:non-scaling-stroke;}
+  .sk-ort.an, .fbx-fall.an{background:var(--grau-feld); border-radius:6px;}
   .vk-punkt{display:block; width:16px; height:16px; border-radius:50%; border:2.5px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.4);} .vk-punkt.start{background:#1a55c9;} .vk-punkt.ziel{background:#e0242b;}
   .vk-ich{display:block; width:16px; height:16px; border-radius:50%; background:#2f80ed; border:3px solid #fff; box-shadow:0 0 0 8px rgba(47,128,237,.25);}
   .osm-scroll.zieht{cursor:grabbing;} .ok-karte .osm-scroll{cursor:grab; touch-action:none;}
@@ -2351,7 +2375,7 @@ try{
   .ds-live .ds-dz .ds-zahlen.fuenf b{font-size:14px;}
   /* Karten: dunkle Ladeflaeche im Nachtmodus */
   body.dunkel .mini-fenster, body.dunkel .osm-flaeche, body.dunkel .osm-scroll, body.dunkel .wf-rahmen, body.dunkel .maplibregl-map{background:#1e2228;}
-  body.dunkel .luft-linie{stroke:#eef1f5;}
+  /* Luftlinie auf OSM-Rasterkacheln (immer hell) bleibt dunkel; dunkle Vektorkarten: vk-luft */
   /* Bestatter verwalten */
   .bst-liste{display:flex; flex-direction:column; gap:6px; margin-top:10px;}
   .bst-zeile{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; margin:0; padding:10px 12px; border:1px solid var(--rand); border-radius:10px; background:var(--karte); color:var(--text); font:inherit; text-align:left; cursor:pointer;}
@@ -3605,7 +3629,7 @@ function dienstWahlParsen(k){
 function dienstFensterGleich(a, b){ const H = 3600000; return !!(a && b) && Math.abs(a.von - b.von) <= H && Math.abs(a.bis - b.bis) <= H; }
 // gehoert ein Fall (Zeitpunkt t, gewaehlter Dienst k) zum Dienst mit dem Fenster fe?
 function fallGehoertZu(t, k, fe, spiel){
-  if(!fe) return false;
+  if(!fe || k === 'kein') return false;   // bewusst keinem Dienst zugeordnet
   const w = dienstWahlParsen(k);
   if(w) return dienstFensterGleich(w.fenster, fe);
   const s = spiel || 0;
@@ -3654,7 +3678,7 @@ function dienstWahlFuellen(id, datumIso, zeit){
   const wert = sel.options.length ? sel.value : (sel.dataset.wert || '');
   const liste = dienstWahlOptionen(datumIso);
   if(wert && !liste.some(o=> o.key === wert)){ const w = dienstWahlParsen(wert); if(w) liste.unshift({ key: wert, label: dienstWahlLabel(w) }); }
-  sel.innerHTML = '<option value="">Automatisch nach Uhrzeit</option>' + liste.map(o=> '<option value="' + htmlEsc(o.key) + '">' + htmlEsc(o.label) + '</option>').join('');
+  sel.innerHTML = '<option value="">Automatisch nach Uhrzeit</option>' + liste.map(o=> '<option value="' + htmlEsc(o.key) + '">' + htmlEsc(o.label) + '</option>').join('') + '<option value="kein">Keinem Dienst</option>';
   sel.value = wert; if(sel.value !== wert) sel.value = '';
   dienstWahlHinweis(id, datumIso, zeit);
 }
@@ -3662,9 +3686,37 @@ function dienstWahlHinweis(id, datumIso, zeit){
   const sel = document.getElementById(id), h = document.getElementById(id + '_hinw'); if(!sel || !h) return;
   const t = dienstWahlZeitpunkt(datumIso, zeit), w = dienstWahlParsen(sel.value), H = 3600000;
   let txt = '', warn = false;
-  if(w){ if(t && !(t >= w.fenster.von.getTime() - H && t <= w.fenster.bis.getTime() + H)){ txt = 'Die Uhrzeit liegt außerhalb dieses Dienstes – der Fall wird trotzdem diesem Dienst zugeordnet.'; warn = true; } }
+  if(sel.value === 'kein') txt = sel.id === 'gkvDienst' ? 'Keinem Dienst – beim Eintragen ins Fahrtenbuch wird nach dem Dienst gefragt.' : 'Keinem Dienst – der Fall kommt nicht ins Fahrtenbuch.';
+  else if(w){ if(t && !(t >= w.fenster.von.getTime() - H && t <= w.fenster.bis.getTime() + H)){ txt = 'Die Uhrzeit liegt außerhalb dieses Dienstes – der Fall wird trotzdem diesem Dienst zugeordnet.'; warn = true; } }
   else if(t){ let ad = null; try{ ad = appDienstFuer(t); }catch(_){} txt = ad ? 'Nach Uhrzeit: ' + dienstWahlLabel(ad) : 'Nach Uhrzeit: passender Dienst im Fahrtenbuch, sonst Abfrage beim Eintragen.'; }
   h.textContent = txt; h.classList.toggle('warn', warn);
+}
+// Dienstzuordnung "automatisch nach Uhrzeit": eindeutig, wenn die Uhrzeit in genau einem Dienst liegt. Liegt sie in einer
+// Luecke (nur im 1-h-Spielraum) oder in zwei Diensten zugleich, fragt die App nach (Wunsch 18.11.2026).
+function dienstKandidaten(t){
+  const T = t.getTime(), H = 3600000;
+  const alle = appDiensteLaden().slice();
+  try{ const live = liveDienstLaden(); if(live && !alle.some(x=> x.datum === live.datum && x.von === live.von)) alle.push(live); }catch(_){}
+  const m = alle.map(d=> ({ d, fe: liveDienstFenster(d) })).filter(x=> x.fe);
+  const nah = m.filter(x=> T >= x.fe.von.getTime() - H && T <= x.fe.bis.getTime() + H).sort((a, b)=> a.fe.von - b.fe.von);
+  return { nah, exakt: nah.filter(x=> T >= x.fe.von.getTime() && T < x.fe.bis.getTime()) };
+}
+// -> Dienst-Key (Auswahl), 'kein', '' (weiter automatisch) oder null (abgebrochen)
+async function dienstZuordnungKlaeren(t, wert, fallText){
+  if(wert || !t) return wert || '';
+  let k; try{ k = dienstKandidaten(t); }catch(_){ return ''; }
+  if(!k.nah.length || k.exakt.length === 1) return '';
+  const uhr = zz2(t.getHours()) + ':' + zz2(t.getMinutes());
+  const kn = k.nah.map((x, i)=> ({ label: (x.d.art || 'Dienst') + (x.d.schicht ? ' ' + x.d.schicht : '') + ' ' + x.d.von.replace(/:00$/, '') + '–' + x.d.bis.replace(/:00$/, ''), akt: 'd' + i, primaer: k.nah.length === 1 }));
+  kn.push({ label: 'Keinem Dienst', akt: 'kein' });
+  const html = '<div class="fb-dialog"><div class="fb-info">' + htmlEsc(fallText || 'Fall') + ' um <b>' + uhr + ' Uhr</b> ' +
+    (k.exakt.length > 1 ? 'liegt in zwei Diensten.' : 'liegt knapp außerhalb ' + (k.nah.length > 1 ? 'deiner Dienste (zwischen zwei Diensten).' : 'deines Dienstes.')) + ' Zu welchem Dienst gehört er?</div>' +
+    k.nah.map(x=> '<div class="fb-info">• ' + htmlEsc(dienstWahlLabel(Object.assign({}, x.d, { fenster: x.fe }))) + '</div>').join('') + '</div>';
+  const a = await betaOverlay.ergebnis('Welcher Dienst?', html, kn);
+  betaOverlay.schliessen();
+  if(a === 'kein') return 'kein';
+  const i = /^d(\d+)$/.exec(a || ''); if(!i) return null;
+  const x = k.nah[+i[1]]; return x ? dienstWahlKey(x.d) : null;
 }
 function fbNameNorm(n){ return String(n || '').toLowerCase().replace(/[^a-zäöüß]+/g, ' ').trim().split(' ').filter(Boolean).sort().join(' '); }
 // Faelle auf dem Geraet (gespeichert, Entwurf, GKV in Erfassung) fuer das Fahrtenbuch
@@ -4269,6 +4321,8 @@ async function fbTagKarteZeichnen(d, di){
   const gross = (ebene, ansicht)=> osmKarteOverlay(dd, 'Einsatzorte ' + fbTagText(d.tag), { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Einsatzorte' });
   box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Einsatzorte</b><small>' + nr + ' von ' + faelle.length + ' Fällen mit Ort</small></span></div>' +
     miniKarteHtml(dd, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk: etwasDrin, fallKlick, gross }) + hinweis;
+  listeKarteVerbinden(faelle.filter(x=> x.f.geo).map(x=> document.querySelector('[data-fbfall="' + di + '-' + x.fi + '"]')).filter(Boolean),
+    (z)=> +z.dataset.fbfall.split('-')[1], ()=> box.querySelector('.mini-ebenen'));
 }
 
 let fahrdienstAuswertungCache = null;
@@ -5871,6 +5925,8 @@ function ansichtStart(){
   try{ if(LS.get('einrichtung_gesehen', false)) setTimeout(()=> alphaZugestimmt() ? (typeof AppSperre !== 'undefined' && AppSperre.pflichtPruefen()) : alphaZustimmungPruefen(), 300); }catch(_){}
   einstellungenOffen = false;
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtStart(); };
+  // Dienst ist inzwischen vorbei (ohne "Dienst beenden"): vorgemerkte Fahrtenbuch-Statistik still nachholen
+  try{ if((LS.get('fb_statistik_offen', []) || []).length && !fbStatistikSpaeter()) setTimeout(()=> fbStatistikNachholen(), 4000); }catch(_){}
   setzeTitel('Rechnungserfassung', null);
   // NACH setzeTitel() (das es zentral auf false setzt) -- markiert: wir
   // sind jetzt wirklich auf dem Hauptbildschirm. Siehe
@@ -15926,6 +15982,8 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   const kx = await fbKontext(meldung);
   const zm = /^(\d{1,2}):(\d{2})/.exec(String(fall.zeit || ''));
   const dt = new Date(fall.datum.getFullYear(), fall.datum.getMonth(), fall.datum.getDate(), zm ? +zm[1] : 12, zm ? +zm[2] : 0);
+  // bewusst keinem Dienst zugeordnet: LS/PT nicht ins Fahrtenbuch; GKV braucht einen Dienst -> Abfrage (nicht automatisch)
+  if(fall.dienst === 'kein' && fall.kat) return { uebersprungen: true, grund: 'keinem Dienst zugeordnet' };
   // in der Maske gewaehlter Dienst: gilt vor der Uhrzeit
   const wahl = dienstWahlParsen(fall.dienst);
   const dtB = wahl ? new Date(wahl.fenster.von) : dt;
@@ -15938,7 +15996,7 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   let fb = null, block = null;
   for(const n of kandidaten){
     const f = await fbLesen(meldung, kx, n);
-    const b = wahl ? fbBlockFuerFenster(f, wahl.fenster) : fbDienstFinden(f, dt);
+    const b = wahl ? fbBlockFuerFenster(f, wahl.fenster) : fall.dienst === 'kein' ? null : fbDienstFinden(f, dt);
     if(b){ fb = f; block = b; break; }
     if(!fb) fb = f;
   }
@@ -15947,7 +16005,7 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   if(!block){
     // in der App angelegter Dienst, in dessen Zeitraum der Fall faellt -> ohne Rueckfrage
     let d = null;
-    const ad = wahl || appDienstFuer(dt);
+    const ad = wahl || (fall.dienst === 'kein' ? null : appDienstFuer(dt));
     if(ad){
       const z = fbZeitParsen(ad.von + '-' + ad.bis);
       if(z){
@@ -16053,13 +16111,34 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
   let verschoben = null, verschiebFehler = '';
   if(fall.vorher){ try{ verschoben = await fbAlteZeileEntfernen(kx, fall, dt, meldung); }catch(e){ verschiebFehler = e.message || String(e); } }
   if(!verschoben && !verschiebFehler && fall.name !== GKV_PSEUDO_NAME){ try{ verschoben = await fbStreuzeileEntfernen(kx, fall, dt, fb.blatt, meldung); }catch(_){} }
-  // Statistik rechts nachziehen (verschobene Blockenden, Quartalssummen)
-  try{ await fahrdienstStatistikSchreiben(meldung, { blatt: fb.blatt }); }catch(e){}
-  if(verschoben && verschoben.blatt && verschoben.blatt !== fb.blatt) try{ await fahrdienstStatistikSchreiben(meldung, { blatt: verschoben.blatt }); }catch(e){}
+  // Statistik rechts nachziehen (verschobene Blockenden, Quartalssummen) -- waehrend eines laufenden Dienstes erst bei
+  // "Dienst beenden" (das Eintragen der Faelle bleibt sofort; Wunsch 17.11.2026: Eintragen war zu langsam)
+  const statBlaetter = [fb.blatt].concat(verschoben && verschoben.blatt && verschoben.blatt !== fb.blatt ? [verschoben.blatt] : []);
+  if(fbStatistikSpaeter()) statBlaetter.forEach(fbStatistikVormerken);
+  else for(const b of statBlaetter){ try{ await fahrdienstStatistikSchreiben(meldung, { blatt: b }); }catch(e){} }
   if(verschoben || verschiebFehler) fbBuchCache = null;
   if(verschoben && verschoben.geschoben && verschoben.blatt === fb.blatt && verschoben.zeile < ziel) ziel--;   // Zeile darueber entfernt
   return { zeile: ziel, blatt: kx.info.jahresModus ? fb.blatt : '', neuerDienst, aktualisiert, ohneSpalte, verschoben, verschiebFehler,
            dienst: block.datumText + ' ' + (fbZeitParsen(block.zeitRoh) ? fbZeitText(fbZeitParsen(block.zeitRoh)) : String(block.zeitRoh || '')) + (block.arzt ? ' · ' + block.arzt : '') };
+}
+// Statistik im Fahrtenbuch (Spalten rechts, Quartalssummen) bei laufendem Dienst vormerken statt sofort schreiben.
+// Gemerkt werden nur Blattnamen (z. B. "2026"), keine Patientendaten.
+function fbStatistikSpaeter(){
+  try{ const l = liveDienstLaden(); if(!l) return false; const fe = liveDienstFenster(l), t = Date.now(); return !!fe && t >= fe.von.getTime() - 3600000 && t <= fe.bis.getTime() + 3600000; }catch(_){ return false; }
+}
+function fbStatistikVormerken(blatt){
+  try{ const a = LS.get('fb_statistik_offen', []) || []; const k = String(blatt || ''); if(!a.includes(k)) a.push(k); LS.set('fb_statistik_offen', a); }catch(_){}
+}
+let fbStatistikLaeuft = false;
+async function fbStatistikNachholen(meldung){
+  let a = []; try{ a = LS.get('fb_statistik_offen', []) || []; }catch(_){}
+  if(!a.length || fbStatistikLaeuft || typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet' || fbStatistikSpaeter()) return false;
+  fbStatistikLaeuft = true;
+  try{
+    for(const b of a){ await fahrdienstStatistikSchreiben(meldung || null, b ? { blatt: b } : undefined); LS.set('fb_statistik_offen', (LS.get('fb_statistik_offen', []) || []).filter(x=> x !== b)); }
+    return true;
+  }catch(e){ try{ fehlerMelden('fahrtenbuch', e, ''); }catch(_){} return false; }
+  finally{ fbStatistikLaeuft = false; }
 }
 function fahrtenbuchErgebnisText(r){
   if(!r) return '';
@@ -16450,6 +16529,11 @@ function ansichtGkv(bearbeitenId, opt){
     const dt = dtVon();
     const pos = gkvPositionen(st.auswahl, dt);
     if(!pos.length){ el('gkvMeldung').innerHTML = '<div class="gkv-warn">Bitte mindestens eine Position wählen.</div>'; return; }
+    if(!sammel && !st.dienst){
+      const dk = await dienstZuordnungKlaeren(dt, '', 'GKV ' + st.name);
+      if(dk === null) return;
+      if(dk){ st.dienst = dk; const sd = el('gkvDienst'); if(sd){ sd.dataset.wert = dk; dienstWahlFuellen('gkvDienst', st.datum, st.zeit); } }
+    }
     const arr = gkvFaelleLaden();
     const eintrag = { id: st.id || ('g' + Date.now().toString(36)), name: st.name, datum: st.datum, zeit: st.zeit,
       auswahl: JSON.parse(JSON.stringify(st.auswahl)), profil: st.profil || '', positionen: pos.map(p=> ({ gop: p.gop, anz: p.anz })),
@@ -17318,6 +17402,38 @@ function miniKarteHtml(d, opt){
     '<div class="mini-gruppe oben">' + knopf + auge + '</div><div class="mini-gruppe mitte">' + aedKnopf + posKnopf + ueberKnopf + '</div><div class="mini-gruppe unten">' + grossKnopf + '</div></div>' +
     '<div class="sk-hinweis mini-attr">' + (vkAn() ? VK_ATTR_HTML : '© <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' + OSM_ATTR_HTML) + '</div>' + (opt.ohneLegende ? '' : karteLegendeHtml(d));
 }
+// Startansicht der kleinen Karte. Mit opt.bezirk (Startseite): "Übersicht des Bezirks" (um Wache/Notfallpraxis),
+// sonst bzw. im Modus 'faelle' alle Punkte. Der Übersicht-Knopf wechselt dann zwischen beiden (Wunsch 17.11.2026).
+function miniStartAnsicht(cfg, W, H){
+  const { d, opt, fit } = cfg;
+  if(opt.bezirk && (!opt.modus || opt.modus() !== 'faelle')) return { lat: opt.bezirk.lat, lon: opt.bezirk.lon, z: opt.bezirk.z + Math.log2((W || 560) / 560) };
+  return opt.mitte ? { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2((W || fit.bw) / fit.bw) } : miniFitAnsicht(d, W, H, fit);
+}
+// Übersicht-Knopf: mit Einsatzorten zwischen "alle Fälle" und "Bezirk" wechseln, sonst Bezirk
+function miniUebersichtWechseln(opt){
+  if(!opt.bezirk || !opt.modusSetzen) return;
+  const mitFaellen = (opt.faelleN || 0) > 0;
+  const neu = mitFaellen && opt.modus() !== 'faelle' ? 'faelle' : 'bezirk';
+  opt.modusSetzen(neu);
+  try{ appToastAnzeigen(neu === 'faelle' ? 'Übersicht aller Fälle' : 'Übersicht des Bezirks', 1400); }catch(_){}
+}
+// Fall in der (kleinen) Karte kurz hervorheben -- aus der Liste darunter (Vektor- und Rasterkarte)
+function karteFallMarkieren(wurzel, idx){
+  if(!wurzel) return;
+  wurzel.querySelectorAll('.vk-fall[data-fall="' + idx + '"], .karte-klick[data-fall="' + idx + '"]').forEach(m=>{
+    m.classList.remove('puls'); void m.getBoundingClientRect(); m.classList.add('puls'); setTimeout(()=> m.classList.remove('puls'), 2300);
+  });
+}
+// Liste <-> Karte: Maus ueber der Zeile (PC) bzw. Klick auf die Nummer (Handy) zeigt den Fall in der Karte
+function listeKarteVerbinden(zeilen, idxVon, karteWurzel){
+  zeilen.forEach(z=>{
+    const i = idxVon(z); if(i == null) return;
+    z.addEventListener('mouseenter', ()=>{ z.classList.add('an'); karteFallMarkieren(karteWurzel(), i); });
+    z.addEventListener('mouseleave', ()=> z.classList.remove('an'));
+    const nr = z.querySelector('.nr:not(.leer), .fbx-ortnr:not(.leer)');
+    if(nr){ nr.style.cursor = 'pointer'; nr.addEventListener('click', (ev)=>{ ev.stopPropagation(); ev.preventDefault(); karteFallMarkieren(karteWurzel(), i); }, true); }
+  });
+}
 function miniKarteAnsicht(el){
   const w = el && (el.classList && el.classList.contains('mini-ebenen') ? el : el.querySelector && el.querySelector('.mini-ebenen'));
   return w && w._mk ? w._mk.ansicht() : null;
@@ -17335,7 +17451,7 @@ function miniKarteStarten(w){
   const zeichnen = async ()=>{
     if(!aktiv) return;
     const W = f.clientWidth, H = f.clientHeight; if(!W || !H) return;
-    if(!ansicht){ const a0 = opt.mitte ? { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2(W / fit.bw) } : miniFitAnsicht(d, W, H, fit); ansicht = { lat: a0.lat, lon: a0.lon, z: zKlemm(a0.z) }; }
+    if(!ansicht){ const a0 = miniStartAnsicht(cfg, W, H); ansicht = { lat: a0.lat, lon: a0.lon, z: zKlemm(a0.z) }; }
     const nr = ++lauf;
     if(ebene === 'kvbw' && !kvbwUrl){ kvbwUrl = await nfpKarteBildUrl(); if(nr !== lauf) return; if(!kvbwUrl){ ebene = 'osm'; w.dataset.ebene = 'osm'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'osm'); } }
     const zi = Math.max(3, Math.min(18, Math.round(ansicht.z))), s = Math.pow(2, ansicht.z - zi);
@@ -17352,7 +17468,7 @@ function miniKarteStarten(w){
     if(!rest.length) weg();
     else { let n = rest.length; const eins = ()=>{ if(--n <= Math.floor(rest.length * 0.2)) weg(); }; rest.forEach(i=> i.complete ? eins() : (i.addEventListener('load', eins, { once: true }), i.addEventListener('error', eins, { once: true }))); setTimeout(weg, 1500); }
   };
-  w._mk = { ansicht: ()=> ansicht ? { ...ansicht } : null, ebene: ()=> ebene, neu: ()=> zeichnen(), uebersicht: ()=>{ ansicht = null; zeichnen(); },
+  w._mk = { ansicht: ()=> ansicht ? { ...ansicht } : null, ebene: ()=> ebene, neu: ()=> zeichnen(), uebersicht: ()=>{ miniUebersichtWechseln(opt); ansicht = null; zeichnen(); },
     ebeneSetzen: (e)=>{
       if(e !== 'kvbw' && vkAn() && !w._vkFehler){
         // zurueck zur Vektorkarte, gleicher Ausschnitt
@@ -17463,11 +17579,11 @@ function miniKarteVektor(w, cfg){
     miniKarteStarten(w);
   };
   const startAnsicht = ()=>{ const W = f.clientWidth || fit.bw, H = f.clientHeight || fit.bh;
-    return opt.mitte ? { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2(W / fit.bw) } : miniFitAnsicht(d, W, H, fit); };
+    return miniStartAnsicht(cfg, W, H); };
   const ansichtJetzt = ()=>{ if(!map) return ansicht; const c = map.getCenter(); return { lat: c.lat, lon: c.lng, z: map.getZoom() + 1 }; };
   w._mk = {
     ansicht: ()=> ansichtJetzt(), ebene: ()=> 'osm', kvbwOk: !!opt.kvbwOk,
-    uebersicht: ()=>{ if(!map) return; const a0 = startAnsicht(); map.easeTo({ center: [a0.lon, a0.lat], zoom: a0.z - 1 }); },
+    uebersicht: ()=>{ if(!map) return; miniUebersichtWechseln(opt); const a0 = startAnsicht(); map.easeTo({ center: [a0.lon, a0.lat], zoom: a0.z - 1 }); },
     neu: ()=>{ if(!map) return; vkModusAnwenden(map); try{ const q = map.getSource('vk-zonen'); if(q) q.setData(vkZonenGeo()); }catch(_){} },
     ebeneSetzen: (e)=>{ if(e === 'kvbw'){ w._ansichtStart = ansichtJetzt(); w.dataset.ebene = 'kvbw'; karteEbeneKnopfSetzen(w.querySelector('.mini-ebene-knopf'), 'kvbw'); zuRaster(false); } },
     weg: ()=>{ aktiv = false; try{ map && map.remove(); }catch(_){} },
@@ -17505,9 +17621,9 @@ function miniKarteVektor(w, cfg){
       if(q.kl === 'start' && wache && kmLuftlinieEinfach(wache, q) < 0.05) return;
       if(q.kl === 'ich'){ marke('<span class="vk-ich"></span>', q); return; }
       if(q.kl === 'start' || q.kl === 'ziel'){ marke('<span class="vk-punkt ' + q.kl + '"></span>', q); return; }
-      marke('<span class="vk-fall ' + q.kl + '">' + (q.nr || '') + '</span>', q, q.idx != null && opt.fallKlick ? ()=> opt.fallKlick(q.idx) : null);
+      marke('<span class="vk-fall ' + q.kl + '"' + (q.idx != null ? ' data-fall="' + q.idx + '"' : '') + '>' + (q.nr || '') + '</span>', q, q.idx != null && opt.fallKlick ? ()=> opt.fallKlick(q.idx) : null);
     });
-    if(!ansicht && !opt.mitte){
+    if(!ansicht && !opt.mitte && !(opt.bezirk && (!opt.modus || opt.modus() !== 'faelle'))){
       const g = osmGeoListe(d);
       if(g.length > 1){ const b = new ml.LngLatBounds([g[0].lon, g[0].lat], [g[0].lon, g[0].lat]); g.forEach(p=> b.extend([p.lon, p.lat])); map.fitBounds(b, { padding: 36, maxZoom: 14.5, duration: 0 }); }
     }
@@ -17627,14 +17743,27 @@ function miniKarteFuellen(){
   const h0 = Math.round(W / ar), hc = f.offsetHeight;
   if(!f.dataset.arStil) f.dataset.arStil = f.style.aspectRatio || '';
   const zurueck = ()=>{ if(f.style.height){ f.style.height = ''; f.style.aspectRatio = f.dataset.arStil; requestAnimationFrame(miniKurzPruefen); } };
-  if(document.body.classList.contains('quer')){ zurueck(); return; }
+  if(document.body.classList.contains('quer')){
+    // quer (z. B. PC): Karte so hoch wie das Fenster erlaubt -- lieber etwas kleiner, dafuer kein Scrollen (Wunsch 17.11.2026)
+    zurueck();
+    const box = f.closest('.sk-karte') || f, spalte = box.parentElement;
+    // nur kuerzen, wenn die Kartenspalte die Seite verlaengert (nicht, wenn links ohnehin mehr steht)
+    const andere = spalte && spalte.parentElement ? [...spalte.parentElement.children].filter(x=> x !== spalte).reduce((m, x)=> Math.max(m, x.getBoundingClientRect().bottom), 0) : 0;
+    const ueber = box.getBoundingClientRect().bottom >= andere - 2 ? Math.ceil(document.documentElement.scrollHeight - innerHeight) : 0;
+    if(ueber > 0){ f.style.aspectRatio = 'auto'; f.style.height = Math.max(220, f.offsetHeight - ueber) + 'px'; requestAnimationFrame(miniKurzPruefen); }
+    return;
+  }
   const nav = document.querySelector('.ds-nav');
   const navOben = nav && nav.getClientRects().length && getComputedStyle(nav).position === 'fixed' ? nav.getBoundingClientRect().top : innerHeight;
   const ende = app.getBoundingClientRect().bottom + scrollY - (parseFloat(getComputedStyle(app).paddingBottom) || 0);
   // nicht nur bis zur Leiste, sondern auch so, dass die Seite insgesamt nicht scrollt (Innenabstaende unten, Demo-Leiste ...)
   const frei = navOben - 4 - ende;
-  const ziel = Math.round(Math.min(hc + frei, innerHeight * 0.75));
-  if(Math.abs(ziel - h0) <= 4 || ziel < 170){ zurueck(); return; }   // auch kleiner als Standard, damit nichts scrollt (aber nicht winzig)
+  let ziel = Math.round(Math.min(hc + frei, innerHeight * 0.75));
+  if(ziel >= 170){ try{ localStorage.setItem('mini_karte_fuell_h', String(ziel)); }catch(_){} }
+  // passt die Seite ohnehin nicht (z. B. laufender Dienst): gleiche Groesse wie ohne Dienst -- gescrollt wird dann sowieso
+  // (Wunsch 17.11.2026); statt der kleineren Standardhoehe aus dem Seitenverhaeltnis
+  if(ziel < 170){ let fr = 0; try{ fr = parseInt(localStorage.getItem('mini_karte_fuell_h') || '0', 10) || 0; }catch(_){} ziel = Math.round(Math.min(Math.max(fr, h0, innerHeight * 0.36), innerHeight * 0.6)); }
+  if(Math.abs(ziel - h0) <= 4){ zurueck(); return; }
   if(Math.abs(ziel - hc) < 3) return;
   f.style.aspectRatio = 'auto'; f.style.height = ziel + 'px';
   requestAnimationFrame(miniKurzPruefen);
@@ -19909,13 +20038,13 @@ function standortKarteFaelle(info){
   };
   const weg = ()=>{ try{ vorbereiteRuecksprung(); }catch(_){} einstellungenOffen = false; };
   try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=> f && lsPt(art, f.werte, ()=>{ weg(); ansichtMaske(art, i); }))); }catch(_){}
-  try{ betaEntwuerfe().forEach(e=> e && (e.art === 'ls' || e.art === 'pt') && lsPt(e.art, e.werte, ()=>{ weg(); betaEntwurfOeffnen(e, null); }, e)); }catch(_){}
+  try{ betaEntwuerfe().forEach(e=>{ if(!e || (e.art !== 'ls' && e.art !== 'pt')) return; const n0 = out.length; lsPt(e.art, e.werte, ()=>{ weg(); betaEntwurfOeffnen(e, null); }, e); if(out.length > n0) out[out.length - 1].entwurfId = e.id; }); }catch(_){}
   out.forEach(x=>{ if(x.unfertig && !x.verwerfen && x.art !== 'gkv'){ const e = betaEntwuerfe().find(y=> y.art === x.art && ((y.werte || {}).txtName || '').trim() === (x.name === 'ohne Namen' ? '' : x.name)); if(e) x.verwerfen = ()=> betaEntwurfEntfernen(e.id); } });
   // GKV-Patient, der gerade erfasst wird (noch nicht gespeichert)
   try{
     if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()){
       const t = designFallZeit(gkvEntwurf) || new Date();
-      if(drin(t, gkvEntwurf.dienst)) out.push({ art: 'gkv', t, name: gkvEntwurf.name, dienst: gkvEntwurf.dienst || '', adr: gkvEntwurf.adresse || '', geo: null, euro: null, unfertig: true, oeffnen: ()=>{ weg(); ansichtGkv(); }, verwerfen: ()=> gkvEntwurfVerwerfen() });
+      if(drin(t, gkvEntwurf.dienst)) out.push({ art: 'gkv', t, name: gkvEntwurf.name, dienst: gkvEntwurf.dienst || '', adr: gkvEntwurf.adresse || '', geo: null, euro: null, unfertig: true, entwurfId: 'gkvEntwurf', oeffnen: ()=>{ weg(); ansichtGkv(); }, verwerfen: ()=> gkvEntwurfVerwerfen() });
     }
   }catch(_){}
   try{
@@ -19936,6 +20065,15 @@ function standortKarteFaelle(info){
   });
 }
 let standortKarteLauf = 0;
+// Startseiten-Karte: nach dem (Neu-)Start immer "Übersicht des Bezirks"; der Übersicht-Knopf wechselt zu "alle Fälle"
+// und zurück. Die Wahl gilt bis zum naechsten Start (nur im Arbeitsspeicher).
+let skAnsichtModus = 'bezirk';
+function skBezirkOpt(faelleN){
+  let m = null; try{ m = gkvStartGeo() || nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); }catch(_){}
+  if(!m) return {};
+  if(!faelleN && skAnsichtModus === 'faelle') skAnsichtModus = 'bezirk';
+  return { bezirk: { lat: m.lat, lon: m.lon, z: 11 }, faelleN, modus: ()=> skAnsichtModus, modusSetzen: (x)=>{ skAnsichtModus = x; } };
+}
 async function standortKarteZeichnen(info, mitDialog){
   const box = document.getElementById('skKarte'); if(!box || typeof NFP_KARTE === 'undefined') return;
   const lauf = ++standortKarteLauf, aktuell = ()=> lauf === standortKarteLauf && document.body.contains(box);
@@ -19960,8 +20098,12 @@ async function standortKarteZeichnen(info, mitDialog){
       const a = box.querySelector('.sk-auf'); if(a) a.onclick = ()=>{ LS.set('start_karte_auf', !auf); standortKarteZeichnen(info); };
       const p = box.querySelector('.sk-pos'); if(p) p.onclick = ()=> standortKarteZeichnen(info, true);
       box.querySelectorAll('.sk-ort[data-fall]').forEach(z=> z.onclick = ()=>{ const f = faelle[+z.dataset.fall]; if(f && f.oeffnen) f.oeffnen(); });
+      listeKarteVerbinden([...box.querySelectorAll('.sk-ort[data-fall]')], (z)=> +z.dataset.fall, ()=> box.querySelector('.mini-ebenen'));
     };
-    const fallKlick = (i)=>{ const f = faelle[i]; if(f && f.oeffnen) f.oeffnen(); };
+    // Klick auf eine Nummer in der Karte: den Fall in der Liste kurz hervorheben (wie im Fahrtenbuch; oeffnen ueber die Liste)
+    const fallKlick = (i)=>{ const z = box.querySelector('.sk-ort[data-fall="' + i + '"]'); if(!z) return;
+      try{ z.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }catch(_){}
+      z.classList.remove('fbx-blink'); void z.offsetWidth; z.classList.add('fbx-blink'); setTimeout(()=> z.classList.remove('fbx-blink'), 2400); };
     const ichPoi = pos ? [{ lat: pos.lat, lon: pos.lon, kl: 'ich' }] : [];
     if(!auf){
       if(!pos){ box.innerHTML = kopf('Standort nicht verfügbar') + '<div class="sk-leer">Ohne Standortfreigabe keine Anzeige – „📍 Standort“ klicken.</div>'; verdrahten(); return; }
@@ -19990,14 +20132,14 @@ async function standortKarteZeichnen(info, mitDialog){
       if(!mitte){ box.innerHTML = kopf(unter) + leer + listeHtml; verdrahten(); return; }
       const d0 = { pois: [], nfp: true, rahmen: true, fallKlick };
       gross = (ebene, ansicht)=> osmKarteOverlay(d0, 'Karte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Karte' });
-      box.innerHTML = kopf(unter) + miniKarteHtml(d0, { mitte: { lat: mitte.lat, lon: mitte.lon }, z: 11, start: 'kvbw', kvbwOk: true, fallKlick, gross }) + leer + listeHtml;
+      box.innerHTML = kopf(unter) + miniKarteHtml(d0, Object.assign({ mitte: { lat: mitte.lat, lon: mitte.lon }, z: 11, start: 'kvbw', kvbwOk: true, fallKlick, gross }, skBezirkOpt(0))) + leer + listeHtml;
       verdrahten(); return;
     }
     const pix = allePois.map(q=> ({ p: nfpGeoZuPixel(q.lat, q.lon), kl: q.kl, nr: q.nr, idx: q.idx }));
     const allesDrin = pix.every(q=> nfpImBild(q.p)), etwasDrin = pix.some(q=> nfpImBild(q.p));
     const d = { pois: allePois, nfp: true, rahmen: true, fallKlick };
     gross = (ebene, ansicht)=> osmKarteOverlay(d, 'Einsatzorte', { ansicht, ebene: ebene === 'kvbw' ? 'kvbw' : 'zonen', titel: 'Einsatzorte' });
-    box.innerHTML = kopf(unter) + miniKarteHtml(d, { start: allesDrin ? 'kvbw' : 'osm', kvbwOk: etwasDrin, fallKlick, gross, festeGroesse: true }) + listeHtml;   // gleiche Groesse wie ohne Einsaetze
+    box.innerHTML = kopf(unter) + miniKarteHtml(d, Object.assign({ start: allesDrin ? 'kvbw' : 'osm', kvbwOk: etwasDrin, fallKlick, gross, festeGroesse: true }, skBezirkOpt(pois.length))) + listeHtml;   // gleiche Groesse wie ohne Einsaetze
     verdrahten();
   };
   try{ await nfpHintergrund(); }catch(_){}
@@ -21264,7 +21406,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v484';
+const APP_VERSION = 'v485';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21668,7 +21810,7 @@ function ansichtDienste(zurueck){
     const a = dwProfile();
     if(!a.some(x=> x.id === dwAktiv)) dwAktiv = (a[0] || {}).id || '';
     const p = a.find(x=> x.id === dwAktiv);
-    let h = '<div class="abschnitt start-abschnitt dw">' +
+    let h = '<div class="abschnitt start-abschnitt dw quer-breit">' +
       '<div class="design-hinweis">Lege deine Dienste je Profil als Musterwoche an. Beim Dienststart stehen sie dann zur Auswahl. Ein Dienst hat einen Namen (z. B. „Früh 3“) und eine Zeit; Feiertage haben eine eigene Spalte.</div>' +
       '<div class="fb-lbl">Profile</div><div class="fb-chips dw-profile">' + a.map(x=> '<button type="button" class="fb-chip' + (x.id === dwAktiv ? ' an' : '') + '" data-dwprofil="' + htmlEsc(x.id) + '">' + htmlEsc(x.name) + (x.name !== x.dienstart ? ' <small>' + htmlEsc(x.dienstart) + '</small>' : '') + '</button>').join('') +
       '<button type="button" class="fb-chip dw-plus" id="dwProfilNeu">+ Profil</button></div>';
@@ -21685,7 +21827,9 @@ function ansichtDienste(zurueck){
           '</div>').join('') + '</div>' +
         '<div class="design-hinweis" style="margin-top:10px;">Dienst anklicken zum Ändern; dort legst du auch fest, an welchen Tagen er gilt. ⧉ überträgt einen ganzen Tag auf andere Tage.</div>';
     }
-    if(!dwLaunch()) h += '<button type="button" class="btn-sekundaer" id="dwOrtenau" style="margin-top:12px;">Vorlage Ortenau laden</button>';
+    // Vorlage Ortenau nur in der Privatversion; daneben "Fertig" (zurueck, gespeichert wird ohnehin sofort)
+    h += '<div class="dw-fuss">' + (dwLaunch() ? '' : '<button type="button" class="btn-sekundaer" id="dwOrtenau">Vorlage Ortenau laden</button>') +
+      '<button type="button" class="btn-primaer" id="dwFertig">Fertig</button></div>';
     h += '</div>';
     app.innerHTML = h;
     app.querySelectorAll('[data-dwprofil]').forEach(b=> b.onclick = ()=>{ dwAktiv = b.dataset.dwprofil; zeichnen(); });
@@ -21701,6 +21845,7 @@ function ansichtDienste(zurueck){
     app.querySelectorAll('[data-dwneu]').forEach(b=> b.onclick = async ()=>{ await dwDienstDialog(p, b.dataset.dwneu, -1); zeichnen(); });
     app.querySelectorAll('[data-dwi]').forEach(b=> b.onclick = async ()=>{ await dwDienstDialog(p, b.dataset.dwtag, +b.dataset.dwi); zeichnen(); });
     app.querySelectorAll('[data-dwkopie]').forEach(b=> b.onclick = async ()=>{ await dwTagKopieren(p, b.dataset.dwkopie); zeichnen(); });
+    const fertig = document.getElementById('dwFertig'); if(fertig) fertig.onclick = ()=> zurueck();
     const ort = document.getElementById('dwOrtenau');
     if(ort) ort.onclick = async ()=>{
       if(!await betaFrage('Die Ortenau-Dienste (Fahrdienst, Sitzdienst, Telemedizin) als Profile laden? Gleichnamige Ortenau-Profile werden dabei auf den Stand der Vorlage zurückgesetzt, eigene Profile bleiben.', 'Laden', 'Abbrechen')) return;
@@ -22073,22 +22218,23 @@ async function liveDienstDialog(opt){
   for(;;){
     const aerzte = liveAerzteHistorie();
     const vs = vorschlaege();
-    const html = '<div class="fb-dialog">' +
-      '<div class="fb-info">Der Dienst wird in der App angelegt und steuert die Live-Anzeige. Alle Fälle in seinem Zeitraum landen im Fahrtenbuch in diesem Dienst – ohne weitere Rückfrage.' +
-        (!akt && vorschlag ? ' Vorschlag: automatisch erkannt (' + (vorschlag.auto === 'fahrtenbuch' ? 'Fahrtenbuch' : 'GKV-Fälle') + ').' : '') + (akt && liveAuto() ? ' „Dienst beenden“ schaltet zurück auf automatisch.' : '') +
-        (passtJetzt && !mehrere() && schicht === passtJetzt.label && art === passtJetzt.art ? ' <b>Vorausgewählt: ' + htmlEsc(passtJetzt.art + ' · ' + passtJetzt.label) + '</b> (' + passtJetzt.von + '–' + passtJetzt.bis + ').' : '') +
-        (mehrere() && !schicht ? ' <b>Passt zur Uhrzeit: ' + htmlEsc(passtJetzt.kandidaten.map(k=> k.label).join(', ')) + '</b> – bitte deine Nummer anklicken (orange markiert).' : '') + '</div>' +
+    // kompakt, damit die Maske auf einen Handy-Bildschirm passt (Wunsch 17.11.2026): kurzer Hinweis, Tag + Zeit in einer Zeile,
+    // vertretene Aerzte als eine waagrecht wischbare Reihe
+    const hinweis = (!akt && vorschlag ? 'Vorschlag automatisch erkannt (' + (vorschlag.auto === 'fahrtenbuch' ? 'Fahrtenbuch' : 'GKV-Fälle') + '). ' : '') + (akt && liveAuto() ? '„Dienst beenden“ schaltet zurück auf automatisch. ' : '') +
+        (passtJetzt && !mehrere() && schicht === passtJetzt.label && art === passtJetzt.art ? '<b>Vorausgewählt: ' + htmlEsc(passtJetzt.art + ' · ' + passtJetzt.label) + '</b> (' + passtJetzt.von + '–' + passtJetzt.bis + '). ' : '') +
+        (mehrere() && !schicht ? '<b>Passt zur Uhrzeit</b> (orange) – bitte deine Nummer anklicken. ' : '');
+    const html = '<div class="fb-dialog ld-kompakt">' +
+      '<div class="fb-info">Fälle in seinem Zeitraum landen im Fahrtenbuch in diesem Dienst. ' + hinweis + '</div>' +
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="fb-lbl dw-lbl"><span>Dienst</span><button type="button" class="einr-link dw-link" id="dwAnlegen">' + (dwProfile().length ? 'Dienste bearbeiten' : 'Dienste anlegen') + '</button></div>' + dwChipsHtml(art, profil, 'lart') + (dwProfile().length ? '' : '<div class="fb-info">Noch keine eigenen Dienste angelegt. Über „Dienste anlegen“ trägst du sie einmal als Musterwoche ein; danach stehen sie hier zur Auswahl.</div>') +
-      '<label class="fb-lbl">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
+      '<div class="fb-zeile ld-zeit"><label class="ld-tag">Dienstbeginn (Tag)<input type="date" id="liveDatum" value="' + htmlEsc(datum) + '"></label>' +
+        '<label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
       (dienstSchichten(art, tagVon(), profil).length ? '<div class="fb-lbl">' + (art === 'Fahrdienst' ? 'Welcher Dienst (Auto)?' : 'Welcher Dienst?') + '</div>' + schichtZeilenHtml(dienstSchichten(art, tagVon(), profil), schicht, passendSet()) : '') +
       (art === 'Telemedizin' ? '<div class="fb-info"><b>docdirekt</b> (werktags 8–13 und 13–19) ist das telemedizinische Angebot der KVBW: Patienten melden sich über 116117 bzw. die docdirekt-App und werden per Telefon oder Video beraten und behandelt. docdirekt-Schichten werden <b>ohne Förderung</b> geführt. <b>Telearzt ÄBD</b> (ärztlicher Bereitschaftsdienst als Telearzt; werktags 19–23, Wochenende und Feiertag 9–16 / 16–23) wird mit 50 €/h gefördert.</div>' : '') +
-      '<div class="fb-lbl">Dienstzeit</div>' +
-      (vs.length ? '<div class="fb-chips">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis && !schicht ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace(/:00/g, '').replace('-', '–') + '</button>').join('') + '</div>' : '') +
-      '<div class="fb-zeile"><label>von<input type="time" id="liveVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="liveBis" value="' + htmlEsc(bis) + '"></label></div>' +
+      (vs.length ? '<div class="fb-lbl">' + (dienstSchichten(art, tagVon(), profil).length ? 'Andere Dienstzeit' : 'Dienstzeit') + '</div><div class="fb-chips ld-reihe">' + vs.map(v=> '<button type="button" class="fb-chip' + (v === von + '-' + bis && !schicht ? ' an' : '') + '" data-lzeit="' + v + '">' + v.replace(/:00/g, '').replace('-', '–') + '</button>').join('') + '</div>' : '') +
       ((praxenLaden().liste.length > 1) ? (()=>{ const pl = praxenLaden(); return '<div class="fb-lbl">Wache / Praxis (Ausgangspunkt Wegegeld)</div><div class="fb-chips">' + pl.liste.map((pr, k)=> '<button type="button" class="fb-chip' + (k === pl.aktiv ? ' an' : '') + '" data-lpraxis="' + k + '" title="' + htmlEsc(pr.adresse || '') + '">' + htmlEsc(pr.name || pr.adresse || ('Wache/Praxis ' + (k + 1))) + '</button>').join('') + '</div>'; })() : '') +
       '<div class="fb-lbl">Vertretener Arzt (optional)</div>' +
-      (aerzte.length ? '<div class="fb-chips">' + aerzte.slice(0, 12).map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-larzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-larztweg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>'
+      (aerzte.length ? '<div class="fb-chips ld-reihe">' + aerzte.slice(0, 12).map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-larzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-larztweg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>'
         : '<div class="fb-info">Noch keine bisherigen Ärzte bekannt' + ((typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') ? '.' : ' – mit OneDrive-Anmeldung kommen sie aus dem Fahrtenbuch.') + '</div>') +
       '<input type="text" id="liveArzt" placeholder="Name (leer = eigener Dienst)" value="' + htmlEsc(arzt) + '"></div>';
     const kn = [{ label: 'Abbrechen', akt: 'nein' }];
@@ -22115,7 +22261,7 @@ async function liveDienstDialog(opt){
     lesen();
     if(a === 'dw'){ betaOverlay.schliessen(); ansichtDienste(()=> ansichtStart()); return false; }
     if(a === 'neu'){ fehler = ''; continue; }
-    if(a === 'ende'){ betaOverlay.schliessen(); liveDienstLeeren(); syncBaldSchreiben(); return true; }
+    if(a === 'ende'){ betaOverlay.schliessen(); liveDienstLeeren(); syncBaldSchreiben(); setTimeout(()=> fbStatistikNachholen(), 500); return true; }
     if(a !== 'ok'){ betaOverlay.schliessen(); return false; }
     if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)){ fehler = 'Bitte den Tag des Dienstbeginns wählen.'; continue; }
     if(mehrere() && !schicht && (!von || !bis)){ fehler = 'Bitte deinen Dienst (Nummer) anklicken – oder eigene Uhrzeiten eintragen.'; continue; }
@@ -22154,9 +22300,9 @@ function designWeiterFaelle(){
   const out = [];
   try{
     if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim())
-      out.push({ art: 'gkv', name: gkvEntwurf.name || 'GKV-Patient', titel: (gkvEntwurf.name || 'GKV-Patient') + ' · GKV', oeffnen: ()=> ansichtGkv(), verwerfen: ()=>{ gkvEntwurfVerwerfen(); } });
+      out.push({ id: 'gkvEntwurf', art: 'gkv', name: gkvEntwurf.name || 'GKV-Patient', titel: (gkvEntwurf.name || 'GKV-Patient') + ' · GKV', oeffnen: ()=> ansichtGkv(), verwerfen: ()=>{ gkvEntwurfVerwerfen(); } });
     betaEntwuerfe().forEach(e=>{ const n = ((e.werte || {}).txtName || '').trim() || 'ohne Namen';
-      out.push({ art: e.art, name: n, titel: n + ' · ' + String(e.art).toUpperCase(), oeffnen: ()=> betaEntwurfOeffnen(e, null), verwerfen: ()=> betaEntwurfEntfernen(e.id) }); });
+      out.push({ id: e.id, art: e.art, name: n, titel: n + ' · ' + String(e.art).toUpperCase(), oeffnen: ()=> betaEntwurfOeffnen(e, null), verwerfen: ()=> betaEntwurfEntfernen(e.id) }); });
   }catch(_){}
   return out;
 }
@@ -22226,6 +22372,23 @@ function schnellStapel(navKey, eintraege, beiWahl){
   // Abstand zur Leiste = Abstand zwischen den Eintraegen (gap des Stapels);
   // Bezug ist die Oberkante von Leiste bzw. (falls hoeher, z.B. ueberstehendes Plus) Knopf
   const leiste = knopf ? knopf.closest('.ds-nav') : null;
+  const lr = leiste ? leiste.getBoundingClientRect() : null;
+  // senkrechte Leiste (quer, links/rechts): Stapel zur Bildschirmmitte hin neben der Leiste, auf Hoehe des Knopfs (Wunsch 17.11.2026)
+  if(lr && lr.height > lr.width * 1.5){
+    const luecke0 = parseFloat(getComputedStyle(st).rowGap) || 12, links = lr.left + lr.width / 2 < window.innerWidth / 2;
+    if(links){ st.classList.add('links'); st.style.left = Math.round(lr.right + luecke0) + 'px'; }
+    else st.style.right = Math.round(window.innerWidth - lr.left + luecke0) + 'px';
+    st.style.top = '0px'; st.style.visibility = 'hidden';
+    if(knopf) knopf.classList.add('ws-offen');
+    requestAnimationFrame(()=>{
+      const h = st.offsetHeight, mitte = r.top + r.height / 2;
+      st.style.top = Math.round(Math.max(8, Math.min(window.innerHeight - h - 8, mitte - h / 2))) + 'px'; st.style.visibility = '';
+      huelle.classList.add('auf');
+    });
+    huelle.querySelector('.ws-hinter').onclick = werkzeugStapelSchliessen;
+    huelle.querySelectorAll('[data-ws]').forEach(b=> b.onclick = ()=>{ const w = b.dataset.ws; werkzeugStapelSchliessen(); beiWahl(w); });
+    return;
+  }
   const oben = Math.min(r.top, leiste ? leiste.getBoundingClientRect().top : r.top);
   const luecke = parseFloat(getComputedStyle(st).rowGap) || 12;
   st.style.bottom = (window.innerHeight - oben + luecke) + 'px';
@@ -22523,8 +22686,13 @@ function designStartErgaenzen(){
   }
   if(d === 'einhand'){
     const w = designWeiterFall();
-    const ws = designWeiterFaelle();
-    if(ws.length) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand ds-weiter-block">' + ws.map((x, i)=> '<div class="ds-weiter-zeile wisch-huelle"><button type="button" class="ds-weiter" data-wf="' + i + '"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten · unfertig</span><b>' + htmlEsc(x.titel) + '</b></span>' + DS_ICON.pfeil + '</button>' +
+    let ws = designWeiterFaelle();
+    // laufender/geplanter Dienst: unfertige Faelle dieses Dienstes stehen in dessen Liste ("Fälle in diesem Dienst"),
+    // nicht ueber der Uhr; Faelle ohne Dienstzuordnung bleiben hier (Wunsch 17.11.2026)
+    if(info.fenster && (info.modus === 'laufend' || info.modus === 'geplant')){
+      try{ const imDienst = new Set(standortKarteFaelle(info).filter(f=> f.unfertig && f.entwurfId).map(f=> f.entwurfId)); ws = ws.filter(x=> !imDienst.has(x.id)); }catch(_){}
+    }
+    if(ws.length) reihe.insertAdjacentHTML('afterend', '<div class="ds-start ds-einhand ds-weiter-block">' + ws.map((x, i)=> '<div class="ds-weiter-zeile wisch-huelle"><button type="button" class="ds-weiter" data-wf="' + i + '"><span class="ds-weiter-icon">' + DS_ICON.stift + '</span><span class="ds-weiter-text"><span>Weiter bearbeiten · unfertig</span><b><i class="ds-fall-marke ' + htmlEsc(x.art) + '">' + htmlEsc(String(x.art).toUpperCase()) + '</i> ' + htmlEsc(x.name) + '</b></span>' + DS_ICON.pfeil + '</button>' +
       '</div>').join('') + '</div>');
     // Dienst starten unter den Kacheln (und unter unfertigen Faellen) -- direkt ueber der Dienstanzeige; nur wenn keiner laeuft/geplant ist
     // Laeuft/geplant ein gewaehlter Dienst: gut sichtbar "Dienst beenden" (statt nur ueber "Dienst aendern")
@@ -22551,6 +22719,9 @@ function designStartErgaenzen(){
       const d0 = liveDienstLaden(); if(!d0) return;
       if(!await betaFrage('Dienst „' + (d0.art || 'Dienst') + (d0.schicht ? ' ' + d0.schicht : '') + ', ' + d0.von + '–' + d0.bis + ' Uhr“ jetzt beenden?\n\nDie Fälle bleiben im Fahrtenbuch.', 'Beenden', 'Abbrechen')) return;
       liveDienstLeeren(); syncBaldSchreiben(); ansichtStart();
+      // vorgemerkte Statistik ins Fahrtenbuch (waehrend des Dienstes ausgelassen)
+      if((LS.get('fb_statistik_offen', []) || []).length){ appToastAnzeigen('Statistik wird ins Fahrtenbuch eingetragen …', 2500);
+        fbStatistikNachholen().then(ok=>{ if(ok) appToastAnzeigen('✓ Statistik im Fahrtenbuch eingetragen.', 2500); }); }
     };
     const dst = document.getElementById('dsDienstStart');
     // vorher kurz mit OneDrive abgleichen: laeuft auf einem anderen Geraet schon ein Dienst, wird er angezeigt statt doppelt angelegt
@@ -24182,7 +24353,9 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         }
         const reise = sollReiseGelten(kmFahrstreckeGesamt, kmLuft);
         streckenAnzeigeAktualisieren();
-        info.textContent = 'Route: '+kmFahrstreckeGesamt.toFixed(1)+' km Hin+Rück, '+kmLuft.toFixed(1)+' km Luftlinie'
+        // 0 km (Einsatzort = Ausgangspunkt): kein Wegegeld, keine "0 km" in der Maske (Wunsch 17.11.2026)
+        info.textContent = kmLuft < 0.05 ? 'Einsatzort = Ausgangspunkt (0 km) – kein Wegegeld.'
+          : 'Route: '+kmFahrstreckeGesamt.toFixed(1)+' km Hin+Rück, '+kmLuft.toFixed(1)+' km Luftlinie'
           + (reise ? ' -- Reiseentschädigung greift' : ' -- Wegegeld greift');
         positionenAutomatikNachziehen(document.getElementById('txtDatumExcel').value, document.getElementById('txtZeitLS').value, kmFahrstreckeGesamt.toFixed(1), kmLuft.toFixed(1));
         try{ automatikVorschauAktualisieren(); }catch(_){}
@@ -24455,7 +24628,18 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const kmEl = document.getElementById('txtKm');
     const eingabe = parseFloat(kmEl.value.trim().replace(',', '.'));
     feldWarnung('txtKm', '');
-    if(isNaN(eingabe) || eingabe<=0){ streckenAnzeigeAktualisieren(); return; }
+    if(isNaN(eingabe) || eingabe<0){ streckenAnzeigeAktualisieren(); return; }
+    if(eingabe===0){
+      // bewusst 0 eingetragen (keine Fahrt): kein Wegegeld; das Feld bleibt leer statt "0" (Wunsch 17.11.2026)
+      manuellerModus = '';
+      document.getElementById('txtKmLuftlinie').value = '0.0';
+      document.getElementById('txtKmFahrstrecke').value = '0.0';
+      const info = document.getElementById('streckeninfo'); if(info) info.textContent = 'Keine Fahrt (0 km) – kein Wegegeld.';
+      streckenAnzeigeAktualisieren();
+      try{ positionenAutomatikNachziehen(document.getElementById('txtDatumExcel').value, document.getElementById('txtZeitLS').value, '0.0', '0.0'); }catch(_){}
+      automatikVorschauAktualisieren();
+      return;
+    }
     if(eingabe<=25){
       manuellerModus = 'LUFTLINIE';
       document.getElementById('txtKmLuftlinie').value = eingabe.toFixed(1);
@@ -24913,6 +25097,12 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     }
     if(art==='ls' && w.txtBName){
       bestatterEintragen(w.txtBName, w.txtAdresse1, w.txtAdresse2);
+    }
+    // Dienst nicht eindeutig (Luecke/Ueberschneidung): nachfragen und die Wahl im Fall merken
+    if(!w.txtDienst){
+      const dk = await dienstZuordnungKlaeren(dienstWahlZeitpunkt(dwIso(), dwZeit()), '', (art === 'ls' ? 'Leichenschau' : 'Privatpatient') + ' ' + (w.txtName || ''));
+      if(dk === null) return;
+      if(dk){ w.txtDienst = dk; const sd = document.getElementById('txtDienst'); if(sd){ sd.dataset.wert = dk; dienstWahlFuellen('txtDienst', dwIso(), dwZeit()); } }
     }
     const faelle = ladeFaelle(art);
     const eintrag = {
