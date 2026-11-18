@@ -11,6 +11,8 @@ module.exports = async ({ browser, basis, pr })=>{
     inhaber: await p.inputValue('[data-ini="ARZTKONTOINHABER"]')
   };
   pr('Einrichtung: Arztname wird beim Tippen richtig geschrieben (auch Doppelname, auch GROSS getippt)', r.klein === 'Max Mustermann-Meier' && r.gross === 'Max Mustermann' && r.inhaber === 'Max Mustermann', r);
+  const v = await p.evaluate(()=> ['Peter MÜLler', 'SCHMidt-weber', 'anna müLLer', 'Ronald McDonald', 'Leo DiCaprio', 'Muster GmbH', 'O\'BRIEN'].map((x)=> grossKleinKorrigieren(x)));
+  pr('verrutschte Großschreibung: „Peter MÜLler“ → „Peter Müller“; McDonald/DiCaprio/GmbH bleiben', JSON.stringify(v) === JSON.stringify(['Peter Müller', 'Schmidt-Weber', 'Anna Müller', 'Ronald McDonald', 'Leo DiCaprio', 'Muster GmbH', 'O\'Brien']), v);
   pr('keine Skriptfehler', p.fehler.length === 0, p.fehler.slice(0, 3));
   await p.context().close();
 };

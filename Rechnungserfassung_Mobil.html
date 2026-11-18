@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-IowqM7ygu3MkK3zhZezcYNIiciK1HOfNSsgMcrqrb5o=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-S2i7JdVXCBOKdUFLoe3jWwyNCbMRj72ZuZTcwH+rL94=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -4906,7 +4906,10 @@ function grossKleinKorrigieren(text, imTippen){
     const b = w.replace(/[^\p{L}]/gu, '');
     if(b.length < 3) return w;
     const rest = b.slice(1);
-    if(rest !== rest.toUpperCase() || rest === rest.toLowerCase()) return w;
+    // verrutschte Grossschreibung mitten im Wort ("MÜLler", "SCHMidt", "müLLer") -> "Müller" (Wunsch 18.11.2026);
+    // ein einzelner Grossbuchstabe im Wort ("McDonald", "DiCaprio", "GmbH") bleibt
+    const verrutscht = /\p{Lu}{2,}\p{Ll}|\p{Ll}\p{Lu}{2,}/u.test(b);
+    if(!verrutscht && (rest !== rest.toUpperCase() || rest === rest.toLowerCase())) return w;
     return w[0].toUpperCase() + w.slice(1).toLowerCase().replace(/'(\p{L})/gu, (m, c)=> "'" + c.toUpperCase());
   }) + ende;
   // Entspricht GrossKleinKorrigieren (PC): Leerzeichen UND Bindestrich
@@ -21423,7 +21426,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v486';
+const APP_VERSION = 'v487';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
