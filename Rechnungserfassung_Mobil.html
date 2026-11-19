@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-W983E2RJdh+k9vSMqXEod3QOCXHBDJ8w0pIiNNa4RbI=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-b1YgGRrx0pOJsW8MJa55NScpUC7AlTf5uE95679RM/A=' 'sha256-zvJcAapGBa5U1lCqTotGLC41roHKXZcz9WR5+KaJGYA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2457,7 +2457,7 @@ try{
   <button class="zurueck" id="btnZurueck" style="visibility:hidden">&#8592;</button>
   <h1 id="titel">Rechnungserfassung</h1>
   <div style="display:flex; align-items:center;">
-    <button class="zahnrad" id="btnDunkelToggle" title="Dunkelmodus umschalten">&#9728;</button>
+    <button class="zahnrad" id="btnDunkelToggle" title="Dunkelmodus umschalten"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="var(--ds-akzent, #d9861a)"/><g stroke="var(--ds-akzent, #d9861a)" stroke-width="2.2" stroke-linecap="round"><path d="M12 1.8v2.4M12 19.8v2.4M1.8 12h2.4M19.8 12h2.4M4.8 4.8l1.7 1.7M17.5 17.5l1.7 1.7M4.8 19.2l1.7-1.7M17.5 6.5l1.7-1.7"/></g></svg></button>
     <button class="zahnrad" id="btnEinstellungen" aria-label="Einstellungen"><svg class="regler-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
   </div>
 </header>
@@ -21658,7 +21658,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v495';
+const APP_VERSION = 'v496';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -23817,7 +23817,7 @@ function themaAnwenden(){
   // Checkbox in den Einstellungen oder diesen Kurzschalter benutzt hat,
   // damit beide Wege garantiert im selben Zustand landen.
   const btnDunkelToggle = document.getElementById('btnDunkelToggle');
-  if(btnDunkelToggle) btnDunkelToggle.innerHTML = e.dunkel ? '&#127769;' : '&#9728;';
+  if(btnDunkelToggle) btnDunkelToggle.innerHTML = e.dunkel ? '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M20.5 14.8A8.6 8.6 0 0 1 9.2 3.5a8.6 8.6 0 1 0 11.3 11.3z" fill="var(--ds-akzent, #ffb547)"/></svg>' : '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="var(--ds-akzent, #d9861a)"/><g stroke="var(--ds-akzent, #d9861a)" stroke-width="2.2" stroke-linecap="round"><path d="M12 1.8v2.4M12 19.8v2.4M1.8 12h2.4M19.8 12h2.4M4.8 4.8l1.7 1.7M17.5 17.5l1.7 1.7M4.8 19.2l1.7-1.7M17.5 6.5l1.7-1.7"/></g></svg>';   // Sonne/Mond gefuellt im Akzent-Orange (Wunsch 20.11.2026)
 }
 document.getElementById('btnEinstellungen').onclick = ()=>{
   if(einstellungenOffen) schliesseEinstellungen();
@@ -26975,7 +26975,7 @@ const Speicher = (()=>{
   }
   async function demoVorbereiten(){
     const app = document.getElementById('app');
-    if(app) app.innerHTML = '<div style="padding:32px 20px; text-align:center;"><h3>Demo wird vorbereitet …</h3><p>Mit erfundenen Daten. Deine echten Daten bleiben unberührt; in der Demo wird nichts gespeichert.</p>' + '<div style="height:8px; border-radius:4px; background:rgba(127,127,127,.25); overflow:hidden; margin:18px auto 6px; max-width:320px;"><div id="demoBalken" style="height:100%; width:0; background:#7d4e9e; transition:width .2s;"></div></div><div id="demoSchritt" style="font-size:13px; opacity:.75;">Demo-Daten werden geladen …</div>' + '</div>';
+    if(app) app.innerHTML = '<div style="padding:32px 20px; text-align:center;"><h3>Demo wird vorbereitet …</h3><p>Mit erfundenen Daten. Deine echten Daten bleiben unberührt; in der Demo wird nichts gespeichert.</p>' + '<div style="height:8px; border-radius:4px; background:rgba(127,127,127,.25); overflow:hidden; margin:18px auto 6px; max-width:320px;"><div id="demoBalken" style="height:100%; width:0; background:#1f5f9e; transition:width .2s;"></div></div><div id="demoSchritt" style="font-size:13px; opacity:.75;">Demo-Daten werden geladen …</div>' + '</div>';
     const stand = (a, t)=>{ const b = document.getElementById('demoBalken'); if(b) b.style.width = Math.round(Math.max(0, Math.min(1, a)) * 100) + '%'; const s = document.getElementById('demoSchritt'); if(s && t) s.textContent = t; };
     for(const f of ['lib/pdf-lib.min.js', 'lokal/mappe.js', 'lokal/docxpdf.js', 'lokal/lokalgraph.js']) await skript(f);
     await Speicher.start();
