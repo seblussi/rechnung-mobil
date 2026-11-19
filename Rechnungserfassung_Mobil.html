@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-iBHGFbjWZ4J/ea6Mhquq069zGDjEW16PPIeP5cSKSSg=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-/ary7ybepGOu5ZjaDMx0WMx6iXZtKPJmnNF7AH6j3KQ=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -22685,12 +22685,16 @@ function designRingHtml(info){
   // geschaetzte Breite einer Zeile (10 px fett: Ziffer ~6,2 px, " · " ~8,6 px) -- fuer die Mitte ueber dem Einzelbetrag
   const breite = (b)=> b.reduce((a, x)=> a + String(Math.round(Number(x.euro))).length * 6.2, 0) + (b.length - 1) * 8.6;
   const linie = (x1, y1, x2, y2)=> '<line x1="' + f1(x1) + '" y1="' + f1(y1) + '" x2="' + f1(x2) + '" y2="' + f1(y2) + '" class="ds-ring-leit"/>';
-  // Linie vom Rand des Punkts bis an die Mitte des ganzen Betragtextes bzw. -blocks (Wunsch 19.11.2026): an den Seiten
-  // an dessen innere Kante auf halber Hoehe, oben/unten an dessen Ober- bzw. Unterkante in der Mitte.
-  const zeiger = (z, ex, ey)=>{
-    const dx = ex - z.cx, dy = ey - z.cy, d = Math.hypot(dx, dy) || 1, rp = (z.f.length > 1 ? RP : 6) + 2;
-    return linie(z.cx + dx / d * rp, z.cy + dy / d * rp, ex, ey);
+  // Linie zielt vom Punkt auf den Schwerpunkt seines Betragtextes bzw. -blocks (mx|my, halbe Breite hw, halbe Hoehe hh)
+  // und endet 2 px vor dessen Rand (Wunsch 19.11.2026): 1 Zeile -> Mitte der Zeile (bei "31 · 23" der Trennpunkt),
+  // 2 Zeilen -> zwischen den Zeilen, 3 Zeilen -> Mitte der mittleren Zeile. Ziffern: ~7 px hoch, optisch 1 px ueber y.
+  const zeiger = (z, mx, my, hw, hh)=>{
+    const dx = mx - z.cx, dy = my - z.cy, d = Math.hypot(dx, dy) || 1, rp = (z.f.length > 1 ? RP : 6) + 2;
+    const s = Math.min(1, (hw + 2) / (Math.abs(dx) || 1e-6), (hh + 2) / (Math.abs(dy) || 1e-6));
+    return linie(z.cx + dx / d * rp, z.cy + dy / d * rp, mx - dx * s, my - dy * s);
   };
+  // eine Zeile mit mehreren Punkten ("88  ·  254"): Mitte jedes Teils, Trenner "  ·  " ~13 px
+  const teilMitten = (zl, tx)=>{ const w = zl.map(z=> breite(z.f.filter(mitBetrag))), W = w.reduce((a, b)=> a + b, 0) + (zl.length - 1) * 13; let x = tx - W / 2; return zl.map((z, i)=>{ const m = x + w[i] / 2; x += w[i] + 13; return [m, w[i] / 2]; }); };
   const bloecke = [];
   gruppen.filter(z=> z.f.some(mitBetrag)).forEach(z=>{ const bl = bloecke[bloecke.length - 1]; if(bl && z.g - bl[bl.length - 1].g < 9) bl.push(z); else bloecke.push([z]); });
   const beschriftung = bloecke.map(bl=>{
@@ -22700,27 +22704,29 @@ function designRingHtml(info){
     // Uhrzeit nebeneinander direkt ueber den Punkten; Linien nur, wenn es mehrere Punkte sind
     if(Math.cos(gm * Math.PI / 180) > 0.8){
       const [tx, ty] = pkt(gm, r + 21);
-      return (bl.length > 1 ? bl.map(z=> zeiger(z, tx + (z.cx - tx) * 0.5, ty + 5)).join('') : '') +
+      const tm = teilMitten(bl, tx);
+      return (bl.length > 1 ? bl.map((z, i)=> zeiger(z, tm[i][0], ty - 1, tm[i][1], 3.5)).join('') : '') +
         '<text x="' + f1(tx) + '" y="' + f1(ty) + '" class="ds-ring-betrag" text-anchor="middle" dominant-baseline="middle">' + bl.map(zeileHtml).join('<tspan class="ds-ring-punkt">  ·  </tspan>') + '</text>';
     }
     if(Math.abs(sw) > 0.35){
       const rechts = sw > 0, [ax, ay] = pkt(gm, r + 24), zl = bl.slice().sort((a, b)=> a.cy - b.cy);
-      const zeilen = []; zl.forEach(z=>{ const zs = zeilenSeite(z); zs.forEach((e, k)=> zeilen.push(Object.assign(e, { z, erste: k === 0, w0: breite(zs[0].b), anz: zs.length }))); });
+      const zeilen = []; zl.forEach(z=>{ const zs = zeilenSeite(z); zs.forEach((e, k)=> zeilen.push(Object.assign(e, { z, erste: k === 0, w0: breite(zs[0].b), wm: Math.max(...zs.map(q=> breite(q.b))), anz: zs.length }))); });
       return zeilen.map((e, i)=>{
         const ty = ay + (i - (zeilen.length - 1) / 2) * 12;
         const mx = ax + (rechts ? 1 : -1) * e.w0 / 2;
-        // Ziffern sitzen optisch ~1 px ueber der rechnerischen Zeilenmitte
-        return (e.erste ? zeiger(e.z, ax + (rechts ? -3 : 3), ty + (e.anz - 1) * 6 - 1) : '') + '<text x="' + f1(e.allein ? mx : ax) + '" y="' + f1(ty) + '" class="ds-ring-betrag" text-anchor="' + (e.allein ? 'middle' : rechts ? 'start' : 'end') + '" dominant-baseline="middle">' + e.t + '</text>';
+        return (e.erste ? zeiger(e.z, ax + (rechts ? 1 : -1) * e.wm / 2, ty + (e.anz - 1) * 6 - 1, e.wm / 2, (e.anz - 1) * 6 + 3.5) : '') + '<text x="' + f1(e.allein ? mx : ax) + '" y="' + f1(ty) + '" class="ds-ring-betrag" text-anchor="' + (e.allein ? 'middle' : rechts ? 'start' : 'end') + '" dominant-baseline="middle">' + e.t + '</text>';
       }).join('');
     }
     if(bl.length === 1){
       // oben/unten, ein Punkt: Zeilen zu je 2 Betraegen mittig, ungerader letzter Betrag mittig darunter; Block nach aussen
       const zs = zeilenSeite(bl[0]), oben = Math.cos(gm * Math.PI / 180) > 0, [tx, ty] = pkt(gm, r + 30);
       const y0 = oben ? ty - (zs.length - 1) * 12 : ty;
-      return zeiger(bl[0], tx, oben ? y0 + (zs.length - 1) * 12 + 8 : y0 - 9) + zs.map((e, i)=> '<text x="' + f1(tx) + '" y="' + f1(y0 + i * 12) + '" class="ds-ring-betrag" text-anchor="middle" dominant-baseline="middle">' + e.t + '</text>').join('');
+      const wm = Math.max(...zs.map(q=> breite(q.b)));
+      return zeiger(bl[0], tx, y0 + (zs.length - 1) * 6 - 1, wm / 2, (zs.length - 1) * 6 + 3.5) + zs.map((e, i)=> '<text x="' + f1(tx) + '" y="' + f1(y0 + i * 12) + '" class="ds-ring-betrag" text-anchor="middle" dominant-baseline="middle">' + e.t + '</text>').join('');
     }
     const zl = bl.slice().sort((a, b)=> a.cx - b.cx), [tx, ty] = pkt(gm, r + 30);
-    return bl.map(z=>{ const [lx, ly] = pkt(z.g, r + RP + 2), [l2x, l2y] = pkt(gm, r + 22); return linie(lx, ly, l2x, l2y); }).join('') +
+    const tm = teilMitten(zl, tx);
+    return zl.map((z, i)=> zeiger(z, tm[i][0], ty - 1, tm[i][1], 3.5)).join('') +
       '<text x="' + f1(tx) + '" y="' + f1(ty) + '" class="ds-ring-betrag" text-anchor="middle" dominant-baseline="middle">' + zl.map(zeileHtml).join('<tspan class="ds-ring-punkt">  ·  </tspan>') + '</text>';
   }).join('');
   const punkte = beschriftung + punkteHtml;
