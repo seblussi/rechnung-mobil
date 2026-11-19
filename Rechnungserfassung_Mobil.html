@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-aYdQdHCy2SJWRxch2Td9zlmT377oYvReWtlbaqKLayg=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-p5Ws8wO1QbR6AC0fgkpgfHuVEDMGsNbzWEF9wrOMyTI=' 'sha256-JTlEE2+gbPeuoX04aHNJSla7UcSWz29Fsk6Z0bxu9so='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -21431,7 +21431,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v490';
+const APP_VERSION = 'v491';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -26642,6 +26642,50 @@ const Speicher = (()=>{
   // OneDrive wird durch eine lokale Nachbildung ersetzt (lokal/lokalgraph.js auf einem
   // Tresor im Arbeitsspeicher); die echten Daten (Speicher, OneDrive) bleiben unberuehrt.
   function skript(src){ return new Promise((ok, no)=>{ const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = ()=> no(new Error('Laden fehlgeschlagen: ' + src)); document.head.appendChild(e); }); }
+  // Demo: ein gerade laufender 8-Stunden-Dienst (vor gut 5 Stunden begonnen) mit erfundenen Faellen, damit die Uhr auf
+  // der Startseite gleich in voller Pracht zu sehen ist (Wunsch 19.11.2026): Einzelfaelle, 3 Faelle zur selben Zeit
+  // (LS/GKV/PT), zwei eng beieinander, zwei GKV-Faelle in einem Punkt und eine Sammelerfassung. Liefert {Schluessel: Text}.
+  function demoLaufenderDienst(kvText){
+    const json = (k, d)=>{ try{ return JSON.parse(kvText(k) || 'null') || d; }catch(_){ return d; } };
+    const z2 = (n)=> String(n).padStart(2, '0'), iso = (d)=> d.getFullYear() + '-' + z2(d.getMonth() + 1) + '-' + z2(d.getDate());
+    const de = (d)=> z2(d.getDate()) + '.' + z2(d.getMonth() + 1) + '.' + d.getFullYear(), hm = (d)=> z2(d.getHours()) + ':' + z2(d.getMinutes());
+    const jetzt = new Date(), von = new Date(jetzt); von.setMinutes(0, 0, 0); von.setHours(von.getHours() - 5);
+    const bis = new Date(von.getTime() + 8 * 3600000), um = (m)=> new Date(von.getTime() + m * 60000);
+    const dienste = json('app_dienste', []), profile = json('dienstprofile', []);
+    const ls = json('faelle_ls', []), pt = json('faelle_pt', []), gkv = json('gkv_faelle', []);
+    const out = {};
+    out.live_dienst = { datum: iso(von), von: hm(von), bis: hm(bis), art: 'Fahrdienst', schicht: '2', arzt: ((dienste[dienste.length - 1] || {}).arzt) || '',
+      profilId: ((profile[0] || {}).id) || '', am: von.toISOString() };
+    // LS/PT: Kopie eines Demo-Falls mit neuem Namen und Zeitpunkt, noch ohne Rechnung
+    const lsPt = (vorlage, art, m, name)=>{
+      if(!vorlage) return null;
+      const t = um(m), f = JSON.parse(JSON.stringify(vorlage)), w = f.werte || (f.werte = {});
+      ['rechnungsnummer', 'hochgeladen', 'bezug', 'fbEingetragen', 'ablage'].forEach(k=> delete f[k]);
+      Object.assign(w, { txtDatumExcel: de(t), txtZeitLS: hm(t), txtDatum: de(jetzt), txtName: name });
+      if(art === 'ls') Object.assign(w, { txtSterbedatum: de(t), txtTodeszeit: hm(new Date(t.getTime() - 40 * 60000)) });
+      f.zeitstempel = t.toISOString();
+      return f;
+    };
+    // GKV: Kopie eines Demo-Falls (Adresse, Ziffern, Betrag) mit neuem Namen und Zeitpunkt, noch nicht im Fahrtenbuch
+    const gk = (vorlage, m, name, sammel)=>{
+      if(!vorlage) return null;
+      const t = um(m), f = JSON.parse(JSON.stringify(vorlage));
+      ['zeile', 'blatt', 'fbAdr', 'vorher'].forEach(k=> delete f[k]);
+      Object.assign(f, { id: 'gdemo' + m + (sammel ? 's' : ''), name, datum: iso(t), zeit: hm(t), status: 'offen', alterName: null, dienst: '' });
+      if(sammel) Object.assign(f, { sammel: true, adresse: '', geo: null, dokuId: null });
+      return f;
+    };
+    const gv = gkv.filter(x=> x && x.geo && x.name !== 'Sammelerfassung').slice(-8);
+    // Sammelerfassung (Sitzdienst-Kleinkram): die beiden kleinsten Betraege der Demo als Vorlage
+    const kl = gkv.filter(x=> x && Number(x.euro) > 0).sort((a, b)=> a.euro - b.euro);
+    const neuLs = [lsPt(ls[0], 'ls', 22, 'Wimmerforth, Hugo'), lsPt(ls[1] || ls[0], 'ls', 118, 'Gänsewein, Liesel')];
+    const neuPt = [lsPt(pt[0], 'pt', 65, 'Plumpsack, Erna'), lsPt(pt[1] || pt[0], 'pt', 119, 'Kuckuck, Theo'), lsPt(pt[2] || pt[0], 'pt', 176, 'Brummer, Anton')];
+    const neuGkv = [gk(gv[0], 118, 'Herbert Haselnuss'), gk(gv[1], 168, 'Gisela Gänseblum'), gk(gv[2], 228, 'Otto Ohnesorg'), gk(gv[3], 229, 'Lina Lindwurm'),
+      gk(gv[4], 262, 'Paul Pustekuchen'), gk(kl[0], 200, 'Sammelerfassung', true), gk(kl[1], 240, 'Sammelerfassung', true)];
+    out.faelle_ls = ls.concat(neuLs.filter(Boolean)); out.faelle_pt = pt.concat(neuPt.filter(Boolean)); out.gkv_faelle = gkv.concat(neuGkv.filter(Boolean));
+    Object.keys(out).forEach(k=> out[k] = JSON.stringify(out[k]));
+    return out;
+  }
   async function demoVorbereiten(){
     const app = document.getElementById('app');
     if(app) app.innerHTML = '<div style="padding:32px 20px; text-align:center;"><h3>Demo wird vorbereitet …</h3><p>Mit erfundenen Daten. Deine echten Daten bleiben unberührt; in der Demo wird nichts gespeichert.</p>' + '<div style="height:8px; border-radius:4px; background:rgba(127,127,127,.25); overflow:hidden; margin:18px auto 6px; max-width:320px;"><div id="demoBalken" style="height:100%; width:0; background:#7d4e9e; transition:width .2s;"></div></div><div id="demoSchritt" style="font-size:13px; opacity:.75;">Demo-Daten werden geladen …</div>' + '</div>';
@@ -26675,6 +26719,7 @@ const Speicher = (()=>{
     // Einstellungen der Demo (Einrichtung erledigt, Bedingungen bestaetigt)
     Object.assign(kv, { einrichtung_gesehen: 'true', einrichtung_auto: 'false', einrichtung_schritt: 'null', einr_vollst_gefragt: 'true', dp_assistent_gezeigt: 'true',
       app_sperre_abgelehnt: 'true', alpha_zustimmung: JSON.stringify({ version: 'demo', am: new Date().toISOString(), name: 'Demo' }) });
+    try{ Object.assign(kv, demoLaufenderDienst((k)=> kv[k])); }catch(e){ console.warn('Demo: laufender Dienst', e); }
     Speicher.demoFuellen(kv);
     LokalGraph.einschalten();
     stand(1, 'Fertig');
