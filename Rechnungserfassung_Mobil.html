@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-8J16JePEQfsx7JTdDC3BzP7qVS4TBWq6yCcHC5QA8kg=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-W983E2RJdh+k9vSMqXEod3QOCXHBDJ8w0pIiNNa4RbI=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -145,6 +145,17 @@ try{
   #tourBlase .tour-zurueck{background:var(--grau-feld); color:var(--text);}
   #tourBlase .tour-weiter{background:var(--titelfarbe); color:#fff; font-weight:700;}
   @media (prefers-reduced-motion: reduce){ #tourLicht, #tourBlase{transition:none;} }
+  /* Dunkelmodus (Wunsch 19.11.2026): hellere Sprechblase mit Rand, oranger Weiter-Knopf, staerkere Abdunklung und Leuchtrand */
+  body.dunkel #tourBlase{background:#323c4b; color:#eef1f5; box-shadow:0 14px 36px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.10);}
+  body.dunkel #tourBlase::before{background:#323c4b;}
+  body.dunkel #tourBlase .tour-zahl{color:#aeb8c4;}
+  body.dunkel #tourBlase .tour-punkte i{background:#5b6677;}
+  body.dunkel #tourBlase .tour-punkte i.an{background:#ffb43c;}
+  body.dunkel #tourBlase .tour-aus{color:#b9c2cd;}
+  body.dunkel #tourBlase .tour-zurueck{background:#465264; color:#eef1f5;}
+  body.dunkel #tourBlase .tour-weiter{background:#ffb43c; color:#1a1f28;}
+  body.dunkel #tourLicht{box-shadow:0 0 0 9999px rgba(0,0,0,.74), 0 0 0 2.5px #ffb43c, 0 0 24px 6px rgba(255,180,60,.6);}
+  body.dunkel #tourDecke.dunkel{background:rgba(0,0,0,.74);}
   .beta-overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:10000; padding:16px; box-sizing:border-box;}
   .beta-overlay.aktiv{display:flex;}
   .beta-overlay-karte{position:relative;}
@@ -21647,7 +21658,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v494';
+const APP_VERSION = 'v495';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
