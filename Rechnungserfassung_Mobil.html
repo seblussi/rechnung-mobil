@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-p5Ws8wO1QbR6AC0fgkpgfHuVEDMGsNbzWEF9wrOMyTI=' 'sha256-JTlEE2+gbPeuoX04aHNJSla7UcSWz29Fsk6Z0bxu9so='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-p5Ws8wO1QbR6AC0fgkpgfHuVEDMGsNbzWEF9wrOMyTI=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -26672,16 +26672,17 @@ const Speicher = (()=>{
       const t = um(m), f = JSON.parse(JSON.stringify(vorlage));
       ['zeile', 'blatt', 'fbAdr', 'vorher'].forEach(k=> delete f[k]);
       Object.assign(f, { id: 'gdemo' + m + (sammel ? 's' : ''), name, datum: iso(t), zeit: hm(t), status: 'offen', alterName: null, dienst: '' });
-      if(sammel) Object.assign(f, { sammel: true, adresse: '', geo: null, dokuId: null });
+      // Sammelerfassung: eine Zeile je Dienst, mehrfach gezaehlt (hier je Ziffer 6x)
+      if(sammel) Object.assign(f, { sammel: true, adresse: '', geo: null, dokuId: null, positionen: (f.positionen || []).map(p=> ({ gop: p.gop, anz: 6 * (Number(p.anz) || 1) })), euro: Math.round(6 * (Number(f.euro) || 0) * 100) / 100 });
       return f;
     };
     const gv = gkv.filter(x=> x && x.geo && x.name !== 'Sammelerfassung').slice(-8);
-    // Sammelerfassung (Sitzdienst-Kleinkram): die beiden kleinsten Betraege der Demo als Vorlage
+    // Sammelerfassung (Sitzdienst-Kleinkram): der kleinste Betrag der Demo als Vorlage
     const kl = gkv.filter(x=> x && Number(x.euro) > 0).sort((a, b)=> a.euro - b.euro);
     const neuLs = [lsPt(ls[0], 'ls', 22, 'Wimmerforth, Hugo'), lsPt(ls[1] || ls[0], 'ls', 118, 'Gänsewein, Liesel')];
     const neuPt = [lsPt(pt[0], 'pt', 65, 'Plumpsack, Erna'), lsPt(pt[1] || pt[0], 'pt', 119, 'Kuckuck, Theo'), lsPt(pt[2] || pt[0], 'pt', 176, 'Brummer, Anton')];
     const neuGkv = [gk(gv[0], 118, 'Herbert Haselnuss'), gk(gv[1], 168, 'Gisela Gänseblum'), gk(gv[2], 228, 'Otto Ohnesorg'), gk(gv[3], 229, 'Lina Lindwurm'),
-      gk(gv[4], 262, 'Paul Pustekuchen'), gk(kl[0], 200, 'Sammelerfassung', true), gk(kl[1], 240, 'Sammelerfassung', true)];
+      gk(gv[4], 262, 'Paul Pustekuchen'), gk(kl[0], 200, 'Sammelerfassung', true)];
     out.faelle_ls = ls.concat(neuLs.filter(Boolean)); out.faelle_pt = pt.concat(neuPt.filter(Boolean)); out.gkv_faelle = gkv.concat(neuGkv.filter(Boolean));
     Object.keys(out).forEach(k=> out[k] = JSON.stringify(out[k]));
     return out;
