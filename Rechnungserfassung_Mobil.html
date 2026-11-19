@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-cumkTob1d/FTLxZXHkqqJ11fBmRYlkp+9g5xmiipM1U=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-+VeYxqvsUWLlSMTMTl5Dl9uI0CbJ1SebUR7aUbtY568=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2375,6 +2375,10 @@ try{
   .ds-ring-fall.ls{fill:var(--ls-farbe);} .ds-ring-fall.pt{fill:var(--pt-farbe);} .ds-ring-fall.gkv{fill:var(--ds-gkv);}
   .ds-ring-betrag{font-size:10px; font-weight:700; fill:var(--text-schwach);}
   .ds-ring-betrag.ls{fill:var(--ls-farbe);} .ds-ring-betrag.pt{fill:var(--pt-farbe);} .ds-ring-betrag.gkv{fill:var(--ds-gkv);}
+  .ds-ring-betrag tspan.ls{fill:var(--ls-farbe);} .ds-ring-betrag tspan.pt{fill:var(--pt-farbe);} .ds-ring-betrag tspan.gkv{fill:var(--ds-gkv);} .ds-ring-betrag tspan.ds-ring-punkt{fill:var(--text-schwach); font-weight:400;}
+  body.dunkel .ds-ring-betrag tspan.ls{fill:#9cc4ee;} body.dunkel .ds-ring-betrag tspan.pt{fill:#8fd9a8;} body.dunkel .ds-ring-betrag tspan.gkv{fill:#cfb2ea;}
+  .ds-ring-teil{stroke:var(--bg); stroke-width:1.2;} .ds-ring-teil.ls{fill:var(--ls-farbe);} .ds-ring-teil.pt{fill:var(--pt-farbe);} .ds-ring-teil.gkv{fill:var(--ds-gkv);}
+  .ds-ring-rand{fill:var(--bg);} .ds-ring-anzahl{font-size:8.5px; font-weight:800; fill:#fff; pointer-events:none;} .ds-ring-leit{stroke:var(--text-schwach); stroke-width:.8; opacity:.8;}
   body.dunkel .ds-ring-betrag.ls{fill:#9cc4ee;} body.dunkel .ds-ring-betrag.pt{fill:#8fd9a8;} body.dunkel .ds-ring-betrag.gkv{fill:#cfb2ea;}
   .ds-ring-bogen{fill:none; stroke:var(--text-schwach); stroke-width:1.1; stroke-linecap:round; opacity:.85;}
   .ds-ring-pfeilkopf{fill:var(--text-schwach); opacity:.85;}
@@ -20072,7 +20076,7 @@ function standortKarteFaelle(info){
     gkvFaelleLaden().forEach(f=>{
       if(!f || f.name === GKV_PSEUDO_NAME) return;
       const t = designFallZeit(f); if(!drin(t, f.dienst)) return;
-      out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', dienst: f.dienst || '', adr: f.adresse || '', geo: f.geo || null, euro: f.euro, gkvId: f.id, oeffnen: ()=>{ weg(); ansichtGkv(f.id); } });
+      out.push({ art: 'gkv', t, name: f.name || 'ohne Namen', dienst: f.dienst || '', adr: f.adresse || '', geo: f.geo || null, euro: f.euro, gkvId: f.id, sammel: !!f.sammel, oeffnen: ()=>{ weg(); ansichtGkv(f.id); } });
     });
   }catch(_){}
   // gleiche Person/Zeit doppelt (Entwurf + gespeicherter Fall) nur einmal -- der gespeicherte gewinnt
@@ -21427,7 +21431,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v489';
+const APP_VERSION = 'v490';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22631,19 +22635,46 @@ function designRingHtml(info){
   const f1 = (v)=> v.toFixed(1);
   let faelle = [];
   if(fe){ try{ faelle = standortKarteFaelle(info).filter(x=> x.t); }catch(_){ faelle = info.faelle.map(x=> ({ art: 'gkv', t: x.t, euro: x.f.euro })); } }
-  // Einsaetze als Punkte in ihrer Farbe; optional der Betrag klein daneben in der Farbe der Fallart.
-  // Ausweichen (19.11.2026): nahe 12 Uhr stehen aussen Beginn/Ende -> Betrag innen; eng sitzende Punkte (< 8 Grad)
-  // wechseln zwischen aussen und innen (nahe 12 Uhr zwischen zwei Abstaenden innen), damit nichts uebereinander liegt.
+  // Einsaetze als Punkte in ihrer Farbe (Wunsch 19.11.2026): Faelle zur (fast) gleichen Uhrzeit -- z. B. Hausbesuch mit
+  // 2 Patienten -- werden EIN Punkt mit der Anzahl darin, geteilt in die Farben der Fallarten (halb, gedrittelt ...).
+  // Die Betraege stehen dann aussen in einer Zeile in ihrer Farbe ("23 · 31 · 88"), mit kurzer Linie zum Punkt.
+  // Kein Ausweichen nach innen; liegen Gruppen eng nebeneinander, rueckt die naechste Zeile weiter nach aussen.
   const qVon = (x)=> Math.max(0, Math.min(1, (x.t - fe.von) / (fe.bis - fe.von)));
-  let vorQ = -1, gruppe = 0;
-  const punkte = !fe ? '' : faelle.slice().sort((a, b)=> a.t - b.t).map(x=>{
-    const q = qVon(x), [cx, cy] = pkt(q * 360, r);
-    let s = '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="6" class="ds-ring-fall ' + x.art + '"/>';
-    if(l.ringBetrag && !x.unfertig && x.euro != null && x.euro !== '' && isFinite(Number(x.euro))){
-      gruppe = vorQ >= 0 && (q - vorQ) * 360 < 8 ? gruppe + 1 : 0; vorQ = q;
-      const g = q * 360, oben = g < 45 || g > 315;
-      const [tx, ty] = pkt(g, oben ? (gruppe % 2 ? r - 34 : r - 21) : (gruppe % 2 ? r - 21 : r + 21));
-      s += '<text x="' + f1(tx) + '" y="' + f1(ty) + '" class="ds-ring-betrag ' + x.art + '" text-anchor="middle" dominant-baseline="middle">' + Math.round(Number(x.euro)) + '</text>';
+  const mitBetrag = (x)=> l.ringBetrag && !x.unfertig && x.euro != null && x.euro !== '' && isFinite(Number(x.euro));
+  const gruppen = [];
+  if(fe) faelle.slice().sort((a, b)=> a.t - b.t).forEach(x=>{
+    const g = qVon(x) * 360, z = gruppen[gruppen.length - 1];
+    // < 3,5 Grad: Punkte laegen aufeinander; die Sammelerfassung bleibt immer ein eigener Punkt
+    if(z && !x.sammel && !z.f[0].sammel && g - z.g1 < 3.5) z.f.push(x), z.g1 = g; else gruppen.push({ g0: g, g1: g, f: [x] });
+  });
+  const ARTEN = ['ls', 'pt', 'gkv'], artRang = (a)=>{ const i = ARTEN.indexOf(a); return i < 0 ? 9 : i; };
+  let vorG = -99, stufe = 0;
+  const punkte = gruppen.map(z=>{
+    const g = (z.g0 + z.g1) / 2, n = z.f.length, [cx, cy] = pkt(g, r);
+    const f = z.f.slice().sort((a, b)=> artRang(a.art) - artRang(b.art));
+    let s = '';
+    if(n === 1 || f.every(x=> x.art === f[0].art)) s += '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="' + (n > 1 ? 7.5 : 6) + '" class="ds-ring-fall ' + f[0].art + '"/>';
+    else {
+      // Kreis in n gleiche Stuecke (beginnend oben), gleiche Fallarten nebeneinander
+      const rr = 7.5; s += '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="' + rr + '" class="ds-ring-fall ds-ring-rand"/>';
+      f.forEach((x, k)=>{
+        const w1 = (k / n) * 2 * Math.PI - Math.PI / 2, w2 = ((k + 1) / n) * 2 * Math.PI - Math.PI / 2;
+        s += '<path d="M' + f1(cx) + ' ' + f1(cy) + ' L' + f1(cx + rr * Math.cos(w1)) + ' ' + f1(cy + rr * Math.sin(w1)) + ' A' + rr + ' ' + rr + ' 0 0 1 ' + f1(cx + rr * Math.cos(w2)) + ' ' + f1(cy + rr * Math.sin(w2)) + ' Z" class="ds-ring-teil ' + x.art + '"/>';
+      });
+    }
+    // Sammelerfassung (GKV ohne Namen, eine je Dienst): Punkt mit Σ, Betrag "Σ 412"
+    const sm = n === 1 && f[0].sammel;
+    if(sm) s = '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="7.5" class="ds-ring-fall gkv"/>';
+    if(n > 1 || sm) s += '<text x="' + f1(cx) + '" y="' + f1(cy) + '" class="ds-ring-anzahl" text-anchor="middle" dominant-baseline="central">' + (sm ? 'Σ' : n) + '</text>';
+    const b = f.filter(mitBetrag);
+    if(b.length){
+      stufe = g - vorG < 9 ? (stufe + 1) % 2 : 0; vorG = g;
+      const ab = 21 + stufe * 12, sw = Math.sin(g * Math.PI / 180), anker = sw > 0.35 ? 'start' : sw < -0.35 ? 'end' : 'middle';
+      const [tx, ty] = pkt(g, r + ab + (anker === 'middle' ? 0 : -6));
+      if(n > 1){ const [l1x, l1y] = pkt(g, r + 9), [l2x, l2y] = pkt(g, r + ab - 7); s += '<line x1="' + f1(l1x) + '" y1="' + f1(l1y) + '" x2="' + f1(l2x) + '" y2="' + f1(l2y) + '" class="ds-ring-leit"/>'; }
+      // Reihenfolge der Zeile = Reihenfolge der Farben im Punkt
+      s += '<text x="' + f1(tx) + '" y="' + f1(ty) + '" class="ds-ring-betrag" text-anchor="' + anker + '" dominant-baseline="middle">' +
+        b.map(x=> '<tspan class="' + x.art + '">' + (x.sammel ? 'Σ ' : '') + Math.round(Number(x.euro)) + '</tspan>').join('<tspan class="ds-ring-punkt"> · </tspan>') + '</text>';
     }
     return s;
   }).join('');
@@ -22652,13 +22683,13 @@ function designRingHtml(info){
   const bogen = (a1, a2, rr)=>{ const [x1, y1] = pkt(a1, rr), [x2, y2] = pkt(a2, rr); return 'M' + f1(x1) + ' ' + f1(y1) + ' A' + rr + ' ' + rr + ' 0 0 1 ' + f1(x2) + ' ' + f1(y2); };
   let grenzen = '';
   if(fe){
-    const [t1x, t1y] = pkt(0, 133), [t2x, t2y] = pkt(0, 149);   // doppelter Trennstrich (Entwurf D, 19.11.2026)
+    const [t1x, t1y] = pkt(0, 145), [t2x, t2y] = pkt(0, 161);   // doppelter Trennstrich (Entwurf D, 19.11.2026)
     grenzen = '<defs><marker id="dsPfeilKopf" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="ds-ring-pfeilkopf"/></marker>' +
-        '<path id="dsRingTpVon" d="' + bogen(3.5, 70, 138) + '" fill="none"/><path id="dsRingTpBis" d="' + bogen(-70, -3.5, 138) + '" fill="none"/></defs>' +
+        '<path id="dsRingTpVon" d="' + bogen(3.2, 70, 150) + '" fill="none"/><path id="dsRingTpBis" d="' + bogen(-70, -3.2, 150) + '" fill="none"/></defs>' +
       [-2.2, 2.2].map(d=> '<line x1="' + f1(t1x + d) + '" y1="' + f1(t1y) + '" x2="' + f1(t2x + d) + '" y2="' + f1(t2y) + '" class="ds-ring-trenner"/>').join('') +
       '<text class="ds-ring-grenze"><textPath href="#dsRingTpVon" startOffset="0">' + designUhr(fe.von) + '</textPath></text>' +
-      '<path d="' + bogen(23, 37, 142) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
-      '<path d="' + bogen(-37, -23, 142) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
+      '<path d="' + bogen(21.5, 34.5, 154) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
+      '<path d="' + bogen(-34.5, -21.5, 154) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
       '<text class="ds-ring-grenze"><textPath href="#dsRingTpBis" startOffset="100%" text-anchor="end">' + designUhr(fe.bis) + '</textPath></text>';
   }
   const gross = designUhr(info.jetzt);
@@ -22667,7 +22698,7 @@ function designRingHtml(info){
   const kopf = info.modus === 'leer' || !fe ? '<span class="ds-ring-dienst">Live-Dienst</span>'
     : '<span class="ds-ring-datum">' + htmlEsc(DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '.') + '</span>' +
       '<span class="ds-ring-dienst">' + htmlEsc(info.art + (info.schicht ? ' ' + info.schicht : '')) + '</span>';
-  return '<div class="ds-ring mit-rand" id="dsRing"><svg viewBox="-20 -20 320 320" role="img" aria-label="Dienstzeit ' + Math.round(p * 100) + ' Prozent vorbei">' + grenzen +
+  return '<div class="ds-ring mit-rand" id="dsRing"><svg viewBox="-28 -28 336 336" role="img" aria-label="Dienstzeit ' + Math.round(p * 100) + ' Prozent vorbei">' + grenzen +
     '<circle cx="140" cy="140" r="126" class="ds-ring-aussen"/><circle cx="140" cy="140" r="' + r + '" class="ds-ring-spur"/>' +
     '<circle cx="140" cy="140" r="' + r + '" class="ds-ring-fort" stroke-dasharray="' + (u * p).toFixed(1) + ' ' + u.toFixed(1) + '" transform="rotate(-90 140 140)"/>' +
     '<circle cx="140" cy="140" r="94" class="ds-ring-innen"/>' + punkte + '</svg>' +
