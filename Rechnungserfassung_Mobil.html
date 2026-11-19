@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-7TUhBgVEfTezU8nX96QURpDslrvB3YKJivZg4VQePgE=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-cumkTob1d/FTLxZXHkqqJ11fBmRYlkp+9g5xmiipM1U=' 'sha256-gTTJAqQNHGSdiP/3OyHRygdU1IqPOW6Y9eQlAZrAW1I='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -21427,7 +21427,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v488';
+const APP_VERSION = 'v489';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22631,12 +22631,18 @@ function designRingHtml(info){
   const f1 = (v)=> v.toFixed(1);
   let faelle = [];
   if(fe){ try{ faelle = standortKarteFaelle(info).filter(x=> x.t); }catch(_){ faelle = info.faelle.map(x=> ({ art: 'gkv', t: x.t, euro: x.f.euro })); } }
-  // Einsaetze als Punkte in ihrer Farbe; optional der Betrag klein daneben (aussen)
-  const punkte = !fe ? '' : faelle.map(x=>{
-    const q = Math.max(0, Math.min(1, (x.t - fe.von) / (fe.bis - fe.von))), [cx, cy] = pkt(q * 360, r);
+  // Einsaetze als Punkte in ihrer Farbe; optional der Betrag klein daneben in der Farbe der Fallart.
+  // Ausweichen (19.11.2026): nahe 12 Uhr stehen aussen Beginn/Ende -> Betrag innen; eng sitzende Punkte (< 8 Grad)
+  // wechseln zwischen aussen und innen (nahe 12 Uhr zwischen zwei Abstaenden innen), damit nichts uebereinander liegt.
+  const qVon = (x)=> Math.max(0, Math.min(1, (x.t - fe.von) / (fe.bis - fe.von)));
+  let vorQ = -1, gruppe = 0;
+  const punkte = !fe ? '' : faelle.slice().sort((a, b)=> a.t - b.t).map(x=>{
+    const q = qVon(x), [cx, cy] = pkt(q * 360, r);
     let s = '<circle cx="' + f1(cx) + '" cy="' + f1(cy) + '" r="6" class="ds-ring-fall ' + x.art + '"/>';
     if(l.ringBetrag && !x.unfertig && x.euro != null && x.euro !== '' && isFinite(Number(x.euro))){
-      const [tx, ty] = pkt(q * 360, r + 21);
+      gruppe = vorQ >= 0 && (q - vorQ) * 360 < 8 ? gruppe + 1 : 0; vorQ = q;
+      const g = q * 360, oben = g < 45 || g > 315;
+      const [tx, ty] = pkt(g, oben ? (gruppe % 2 ? r - 34 : r - 21) : (gruppe % 2 ? r - 21 : r + 21));
       s += '<text x="' + f1(tx) + '" y="' + f1(ty) + '" class="ds-ring-betrag ' + x.art + '" text-anchor="middle" dominant-baseline="middle">' + Math.round(Number(x.euro)) + '</text>';
     }
     return s;
@@ -22646,10 +22652,10 @@ function designRingHtml(info){
   const bogen = (a1, a2, rr)=>{ const [x1, y1] = pkt(a1, rr), [x2, y2] = pkt(a2, rr); return 'M' + f1(x1) + ' ' + f1(y1) + ' A' + rr + ' ' + rr + ' 0 0 1 ' + f1(x2) + ' ' + f1(y2); };
   let grenzen = '';
   if(fe){
-    const [t1x, t1y] = pkt(0, 133), [t2x, t2y] = pkt(0, 149);
+    const [t1x, t1y] = pkt(0, 133), [t2x, t2y] = pkt(0, 149);   // doppelter Trennstrich (Entwurf D, 19.11.2026)
     grenzen = '<defs><marker id="dsPfeilKopf" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 z" class="ds-ring-pfeilkopf"/></marker>' +
         '<path id="dsRingTpVon" d="' + bogen(3.5, 70, 138) + '" fill="none"/><path id="dsRingTpBis" d="' + bogen(-70, -3.5, 138) + '" fill="none"/></defs>' +
-      '<line x1="' + f1(t1x) + '" y1="' + f1(t1y) + '" x2="' + f1(t2x) + '" y2="' + f1(t2y) + '" class="ds-ring-trenner"/>' +
+      [-2.2, 2.2].map(d=> '<line x1="' + f1(t1x + d) + '" y1="' + f1(t1y) + '" x2="' + f1(t2x + d) + '" y2="' + f1(t2y) + '" class="ds-ring-trenner"/>').join('') +
       '<text class="ds-ring-grenze"><textPath href="#dsRingTpVon" startOffset="0">' + designUhr(fe.von) + '</textPath></text>' +
       '<path d="' + bogen(23, 37, 142) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
       '<path d="' + bogen(-37, -23, 142) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
