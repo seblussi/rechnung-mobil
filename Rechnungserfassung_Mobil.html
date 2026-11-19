@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-iniajiLfvLFHHEOuCHG210t6oST9kmGgtrhREE5+rLI=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-wKVAJBSxfNE9OuN3nwrFMeS6l6l72uMwNEslQrEw77M=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -21641,7 +21641,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v492';
+const APP_VERSION = 'v493';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -23655,7 +23655,7 @@ async function msGraphInitialisieren(){
 function msGraphNachAnmeldung(frisch){
       setTimeout(()=>{ try{ appOrdnerHinweisPruefen(); }catch(_){} }, 2000);
       try{ window.dispatchEvent(new Event('msgraph-angemeldet')); }catch(_){}
-      setTimeout(()=>{ odsAutomatisch().catch(e=> console.warn('Sicherung', e)); }, 30000);
+      setTimeout(()=>{ odsAutomatisch().catch(e=> console.warn('Sicherung', e)).then(()=> odsProbeAutomatisch()).catch(e=> console.warn('Sicherung probeweise öffnen', e)); }, 30000);
       setTimeout(()=>{ gkvAdressenNachtragen().then(n=>{ if(n && typeof appToastAnzeigen === 'function') appToastAnzeigen('Fahrtenbuch: Adressen von ' + n + ' GKV-Fällen nachgetragen.', 3500); }).catch(e=> console.warn('Adressen nachtragen', e)); }, 15000);
       setTimeout(()=>{ try{ nfpZonenEigeneLaden().then(r=>{ if(r && r.status === 'hochgeladen' && typeof appToastAnzeigen === 'function') appToastAnzeigen('Eigene Wegegeld-Zonen von diesem Gerät in OneDrive gesichert.', 4000); }); }catch(_){} }, 1500);
       // Nur direkt nach einem FRISCHEN Login (Rueckkehr vom Redirect) sofort
@@ -26255,6 +26255,56 @@ async function odsAutomatisch(){
   const e = await odsAnlegen('automatisch');
   if(typeof appToastAnzeigen === 'function') appToastAnzeigen('Wöchentliche Sicherung in OneDrive angelegt (' + e.kopiert + ' Dateien).', 3500);
 }
+// Sicherungen probeweise oeffnen (Sicherheitsbericht, weitere Ebenen; wie in der Launch-Version): einmal im Monat die
+// juengste Sicherung herunterladen und jede Datei so oeffnen, wie es ein Wiederherstellen taete -- Excel lesen, ini und
+// JSON auswerten, die verschluesselte Abgleichsdatei mit dem Tresorschluessel entschluesseln. Nichts wird geschrieben.
+// Ergebnis in LS 'ods_probe' = { am, ok, sicherung, dateien, fehler[] }.
+const ODS_PROBE_TAGE = 30;
+async function odsProbe(){
+  const token = await msGraphTokenHolen(); if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+  const liste = await odsListe(token);
+  if(!liste.length){ const e = { am: new Date().toISOString(), ok: false, sicherung: '', dateien: 0, fehler: ['Noch keine Sicherung vorhanden.'] }; LS.set('ods_probe', e); return e; }
+  const x = liste[0], dateien = await odsInhalt(token, x.id), fehler = [];
+  let geprueft = 0;
+  for(const f of dateien){
+    try{
+      const r = await odsAbruf(token, 'https://graph.microsoft.com/v1.0/me/drive/items/' + f.id + '/content');
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      const buf = await r.arrayBuffer();
+      if(!buf.byteLength) throw new Error('leer');
+      if(/\.xlsx?$/i.test(f.name)){
+        // .xlsx ist ein ZIP-Archiv ("PK\3\4") -- SheetJS liest sonst auch Datenmuell klaglos als Text-Tabelle
+        const k = new Uint8Array(buf, 0, 4); if(/\.xlsx$/i.test(f.name) && !(k[0] === 0x50 && k[1] === 0x4b && k[2] === 3 && k[3] === 4)) throw new Error('keine Excel-Datei (beschädigt)');
+        await xlsxLibLaden(); const wb = XLSX.read(new Uint8Array(buf), { type: 'array' }); if(!wb.SheetNames.length) throw new Error('keine Tabellenblätter'); }
+      else if(/\.ini$/i.test(f.name)){ if(!/=/.test(iniDekodieren(buf))) throw new Error('keine Einträge'); }
+      else if(/\.json$/i.test(f.name)) JSON.parse(new TextDecoder().decode(buf));
+      else if(/\.rsync$/i.test(f.name)){
+        if(!window.TRESOR_MODUS) continue;
+        try{ JSON.parse(new TextDecoder().decode(await Tresor.ent(new Uint8Array(buf)))); }
+        catch(_){ throw new Error('nicht entschlüsselbar (anderer Schlüssel oder beschädigt)'); }
+      } else continue;
+      geprueft++;
+    }catch(e){ fehler.push(f.name + ': ' + (e.message || e)); }
+  }
+  const erg = { am: new Date().toISOString(), ok: !fehler.length && geprueft > 0, sicherung: x.name, dateien: geprueft, fehler };
+  LS.set('ods_probe', erg);
+  return erg;
+}
+// beim Start (nach der Wochensicherung), hoechstens einmal im Monat, still im Hintergrund; nur ein Fehler meldet sich
+async function odsProbeAutomatisch(){
+  if(window.DEMO_MODUS || typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return;
+  const alt = LS.get('ods_probe', null);
+  if(alt && Date.now() - Date.parse(alt.am) < ODS_PROBE_TAGE * 86400000) return;
+  const e = await odsProbe();
+  if(!e.ok && e.dateien + e.fehler.length > 0 && typeof appToastAnzeigen === 'function') appToastAnzeigen('⚠ Die jüngste Sicherung ließ sich nicht vollständig öffnen – Einstellungen › Datensicherung.', 6000);
+}
+function odsProbeText(){
+  const e = LS.get('ods_probe', null);
+  if(!e) return 'Die jüngste Sicherung wird einmal im Monat probeweise geöffnet.';
+  const wann = new Date(e.am).toLocaleDateString('de-DE');
+  return e.ok ? '✓ Jüngste Sicherung „' + htmlEsc(e.sicherung) + '“ am ' + wann + ' probeweise geöffnet: in Ordnung (' + e.dateien + ' Dateien).'
+    : '⚠ Probe am ' + wann + (e.sicherung ? ' („' + htmlEsc(e.sicherung) + '“)' : '') + ': ' + e.fehler.map(htmlEsc).join('; ');
+}
 // Vorschau: Excel per OneDrive-Vorschau im Fenster, Text/JSON als Kurzansicht
 async function odsVorschau(datei){
   const token = await msGraphTokenHolen();
@@ -26468,11 +26518,19 @@ function odsAbschnittZeichnen(){
   const box = document.getElementById('odsAbschnitt'); if(!box) return;
   const zul = LS.get('ods_zuletzt', 0);
   box.innerHTML = '<div class="design-hinweis">Einmal pro Woche legt die App beim Start in OneDrive unter <i>' + ODS_ORDNER + '</i> Kopien von Fahrtenbuch, Rechnungsübersicht, Abgleich-Datei, einstellungen.ini, eigenen Positionen und Zonen an. Die letzten ' + ODS_BEHALTEN + ' Sicherungen bleiben.</div>' +
-    '<button type="button" class="btn-sekundaer" id="odsJetzt" style="margin-top:8px;">Jetzt sichern</button><div class="design-hinweis" id="odsInfo">' + (zul ? 'Letzte Sicherung von diesem Gerät: ' + new Date(zul).toLocaleString('de-DE') : '') + '</div><div id="odsListe" class="ods-liste"></div>';
+    '<button type="button" class="btn-sekundaer" id="odsJetzt" style="margin-top:8px;">Jetzt sichern</button>' +
+    '<div class="design-hinweis" id="odsInfo">' + (zul ? 'Letzte Sicherung von diesem Gerät: ' + new Date(zul).toLocaleString('de-DE') : '') + '</div>' +
+    '<button type="button" class="btn-sekundaer" id="odsProbe" style="margin-top:8px;">Jüngste Sicherung probeweise öffnen</button><div class="design-hinweis" id="odsProbeInfo">' + odsProbeText() + '</div><div id="odsListe" class="ods-liste"></div>';
   document.getElementById('odsJetzt').onclick = async (ev)=>{
     const b = ev.currentTarget, info = document.getElementById('odsInfo'); b.disabled = true; info.textContent = 'Sicherung wird angelegt …';
     try{ const e = await odsAnlegen(''); info.innerHTML = '✓ Sicherung „' + htmlEsc(e.name) + '“ angelegt (' + e.kopiert + ' Dateien' + (e.fehlt.length ? '; nicht vorhanden: ' + htmlEsc(e.fehlt.join(', ')) : '') + '). OneDrive kopiert im Hintergrund, die Dateien erscheinen nach wenigen Sekunden.'; setTimeout(odsListeZeichnen, 2500); }
     catch(e){ info.textContent = 'Nicht gesichert: ' + (e.message || e); }
+    b.disabled = false;
+  };
+  document.getElementById('odsProbe').onclick = async (ev)=>{
+    const b = ev.currentTarget, info = document.getElementById('odsProbeInfo'); b.disabled = true; info.textContent = 'Die jüngste Sicherung wird geöffnet …';
+    try{ await odsProbe(); info.innerHTML = odsProbeText(); }
+    catch(e){ info.textContent = 'Nicht geprüft: ' + (e.message || e); }
     b.disabled = false;
   };
   odsListeZeichnen();
