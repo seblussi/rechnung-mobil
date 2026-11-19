@@ -5,7 +5,7 @@ module.exports = async ({ browser, basis, pr })=>{
   await oeffnen(p, basis);
   await p.evaluate(()=>{ const h = new Date(), vor = new Date(h.getTime() - 3600000), bis = new Date(h.getTime() + 5 * 3600000); const z = (d)=> String(d.getHours()).padStart(2, '0') + ':00';
     // die Demo bringt einen laufenden Dienst samt Sammelerfassung mit -- hier ohne, damit der Test seine eigene anlegt
-    LS.set('gkv_faelle', gkvFaelleLaden().filter((x)=> !x.sammel));
+    gkvFaelleSpeichern(gkvFaelleLaden().filter((x)=> !x.sammel));
     LS.set('live_dienst', { datum: liveIso(vor), von: z(vor), bis: z(bis), art: 'Sitzdienst', schicht: '' }); ansichtGkv(); });
   await p.waitForSelector('#gkvSammel');
   const einzel = await p.evaluate(()=> ({ name: getComputedStyle(document.getElementById('gkvName').closest('label')).display !== 'none', sammelKnopf: !!document.getElementById('gkvSammel') }));
