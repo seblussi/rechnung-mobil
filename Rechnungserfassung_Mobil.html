@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-wKVAJBSxfNE9OuN3nwrFMeS6l6l72uMwNEslQrEw77M=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-8J16JePEQfsx7JTdDC3BzP7qVS4TBWq6yCcHC5QA8kg=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -126,7 +126,9 @@ try{
   /* BETA: eigenes Fenster (statt Browser-Popups) mit Ladeanimation */
   /* Gefuehrte Einfuehrung: Decke faengt Klicks, das Licht spart das Element aus (riesiger Schatten), die Sprechblase zeigt darauf */
   #tourDecke{position:fixed; inset:0; z-index:10500; background:transparent;}
-  #tourDecke.dunkel{background:rgba(12,17,27,.62);}
+  #tourDecke.dunkel{background:rgba(12,17,27,.62); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);}
+  #tourDecke .tour-weich{position:fixed; display:block; -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); transition:left .28s ease, top .28s ease, width .28s ease, height .28s ease;}
+  #tourDecke.dunkel .tour-weich{display:none;}
   #tourLicht{position:fixed; z-index:10501; pointer-events:none; box-shadow:0 0 0 9999px rgba(12,17,27,.62), 0 0 0 2px #f2a531, 0 0 18px 4px rgba(242,165,49,.55); transition:left .28s ease, top .28s ease, width .28s ease, height .28s ease, border-radius .28s ease;}
   #tourBlase{position:fixed; z-index:10502; box-sizing:border-box; width:max-content; min-width:240px; background:var(--karte); color:var(--text); border-radius:14px; padding:14px 16px 12px; box-shadow:0 12px 32px rgba(0,0,0,.35); transition:left .28s ease, top .28s ease; font-size:14.5px; line-height:1.45;}
   #tourBlase::before{content:''; position:absolute; left:calc(var(--pfeil, 50%) - 8px); width:16px; height:16px; background:var(--karte); transform:rotate(45deg); display:none;}
@@ -7013,6 +7015,8 @@ function tourStarten(schritte, opt){
   const liste = (schritte || []).filter(s=> !s.el || tourElement(s) || s.immer);
   if(!liste.length) return;
   const decke = document.createElement('div'); decke.id = 'tourDecke';
+  // leichte Unschaerfe ausserhalb des Lichts (Wunsch 19.11.2026): vier Flaechen um das Loch herum
+  decke.innerHTML = '<i class="tour-weich" data-s="o"></i><i class="tour-weich" data-s="u"></i><i class="tour-weich" data-s="l"></i><i class="tour-weich" data-s="r"></i>';
   const licht = document.createElement('div'); licht.id = 'tourLicht';
   const blase = document.createElement('div'); blase.id = 'tourBlase'; blase.setAttribute('role', 'dialog'); blase.setAttribute('aria-live', 'polite');
   document.body.append(decke, licht, blase);
@@ -7041,6 +7045,8 @@ function tourStarten(schritte, opt){
       decke.classList.remove('dunkel'); licht.style.display = 'block';
       const r = tourRahmen(sch) || e.getBoundingClientRect(), p = sch.rand != null ? sch.rand : 6;
       const L = Math.max(4, r.left - p), T = Math.max(4, r.top - p), R = Math.min(vw - 4, r.right + p), B = Math.min(vh - 4, r.bottom + p);
+      const fl = { o: [0, 0, vw, T], u: [0, B, vw, vh - B], l: [0, T, L, B - T], r: [R, T, vw - R, B - T] };
+      decke.querySelectorAll('.tour-weich').forEach(w=>{ const [x, y, bw0, bh0] = fl[w.dataset.s]; Object.assign(w.style, { left: x + 'px', top: y + 'px', width: Math.max(0, bw0) + 'px', height: Math.max(0, bh0) + 'px' }); });
       Object.assign(licht.style, { left: L + 'px', top: T + 'px', width: Math.max(0, R - L) + 'px', height: Math.max(0, B - T) + 'px',
         borderRadius: (sch.rund ? Math.max(R - L, B - T) / 2 : Math.min(16, (B - T) / 2)) + 'px' });
       // Sprechblase unter das Element, sonst darueber, sonst (sehr grosses Element) unten in dessen Inneres
@@ -21641,7 +21647,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v493';
+const APP_VERSION = 'v494';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
