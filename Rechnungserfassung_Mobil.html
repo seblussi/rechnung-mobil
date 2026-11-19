@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-p5Ws8wO1QbR6AC0fgkpgfHuVEDMGsNbzWEF9wrOMyTI=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-iniajiLfvLFHHEOuCHG210t6oST9kmGgtrhREE5+rLI=' 'sha256-UXTa2h9OtLaVAUlDKZ5+rWZVuiBfBghJush1sx7CE64='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -124,6 +124,25 @@ try{
   html{scrollbar-width:none;} html::-webkit-scrollbar{display:none;}
   html.frueh-dunkel body:not(.dunkel){background:#000;}
   /* BETA: eigenes Fenster (statt Browser-Popups) mit Ladeanimation */
+  /* Gefuehrte Einfuehrung: Decke faengt Klicks, das Licht spart das Element aus (riesiger Schatten), die Sprechblase zeigt darauf */
+  #tourDecke{position:fixed; inset:0; z-index:10500; background:transparent;}
+  #tourDecke.dunkel{background:rgba(12,17,27,.62);}
+  #tourLicht{position:fixed; z-index:10501; pointer-events:none; box-shadow:0 0 0 9999px rgba(12,17,27,.62), 0 0 0 2px #f2a531, 0 0 18px 4px rgba(242,165,49,.55); transition:left .28s ease, top .28s ease, width .28s ease, height .28s ease, border-radius .28s ease;}
+  #tourBlase{position:fixed; z-index:10502; box-sizing:border-box; width:max-content; min-width:240px; background:var(--karte); color:var(--text); border-radius:14px; padding:14px 16px 12px; box-shadow:0 12px 32px rgba(0,0,0,.35); transition:left .28s ease, top .28s ease; font-size:14.5px; line-height:1.45;}
+  #tourBlase::before{content:''; position:absolute; left:calc(var(--pfeil, 50%) - 8px); width:16px; height:16px; background:var(--karte); transform:rotate(45deg); display:none;}
+  #tourBlase.unten::before{display:block; top:-7px;} #tourBlase.oben::before{display:block; bottom:-7px;}
+  #tourBlase .tour-kopf{display:flex; align-items:baseline; gap:10px; margin-bottom:4px;}
+  #tourBlase .tour-titel{font-weight:800; font-size:15.5px; flex:1;}
+  #tourBlase .tour-zahl{font-size:12px; color:var(--text-schwach); font-variant-numeric:tabular-nums;}
+  #tourBlase .tour-punkte{display:flex; gap:5px; justify-content:center; margin:10px 0 8px;}
+  #tourBlase .tour-punkte i{width:6px; height:6px; border-radius:3px; background:var(--rand); transition:width .2s;}
+  #tourBlase .tour-punkte i.an{width:16px; background:#f2a531;}
+  #tourBlase .tour-knoepfe{display:flex; align-items:center; gap:8px;} #tourBlase .tour-knoepfe span{flex:1;}
+  #tourBlase button{font:inherit; border:0; border-radius:10px; padding:8px 14px; cursor:pointer;}
+  #tourBlase .tour-aus{background:none; color:var(--text-schwach); font-size:12.5px; padding:8px 2px; text-decoration:underline;}
+  #tourBlase .tour-zurueck{background:var(--grau-feld); color:var(--text);}
+  #tourBlase .tour-weiter{background:var(--titelfarbe); color:#fff; font-weight:700;}
+  @media (prefers-reduced-motion: reduce){ #tourLicht, #tourBlase{transition:none;} }
   .beta-overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:10000; padding:16px; box-sizing:border-box;}
   .beta-overlay.aktiv{display:flex;}
   .beta-overlay-karte{position:relative;}
@@ -6961,6 +6980,195 @@ const SEITENHILFE = {
   fahrtenbuch: ['Fahrtenbuch', 'Oben Zeitraum und Suche, darunter die Ansichten <b>Karten</b>, <b>Tabelle</b> und <b>Woche</b>. Einen Fall anklicken öffnet ihn, lange drücken löscht ihn. Die Karte zeigt die Einsatzorte des Dienstes nummeriert – eine Nummer anklicken hebt den Fall in der Liste hervor.'],
   einstellungen: ['Einstellungen', 'Register anklicken zum Aufklappen: Arztdaten, Bankverbindung, Briefversand, Design, Offline-Karte und mehr. Ganz unten die <b>Demo</b> mit erfundenen Daten und das Wiedereinschalten dieser Hilfen.']
 };
+// ---------- Gefuehrte Einfuehrung (Wunsch 19.11.2026): Schritt fuer Schritt, das Beschriebene wird hervorgehoben ----------
+// Je Seite eine Liste von Schritten { el: CSS-Selektor (erstes sichtbares Element) oder Funktion -> Element, titel, text }.
+// Ohne el (oder wenn das Element gerade nicht da ist) erscheint die Sprechblase mittig. Die Seite bleibt darunter
+// unveraendert; Klicks gehen waehrend der Einfuehrung nur an die Sprechblase.
+let tourAktiv = null;
+function tourSichtbar(e){ if(!e || !e.isConnected) return false; const r = e.getBoundingClientRect(), cs = getComputedStyle(e); return r.width > 4 && r.height > 4 && cs.visibility !== 'hidden' && cs.display !== 'none' && Number(cs.opacity) > 0.05; }
+// Ziel eines Schritts: erstes sichtbares Element -- oder mit gruppe:true alle sichtbaren zusammen (ein Rahmen um alle)
+function tourElemente(sch){
+  try{
+    const kand = (typeof sch.el === 'function' ? [].concat(sch.el() || []) : sch.el ? Array.from(document.querySelectorAll(sch.el)) : []).filter(tourSichtbar);
+    return sch.gruppe ? kand : kand.slice(0, 1);
+  }catch(_){ return []; }
+}
+function tourElement(sch){ return tourElemente(sch)[0] || null; }
+function tourRahmen(sch){
+  const es = tourElemente(sch); if(!es.length) return null;
+  return es.map(e=> e.getBoundingClientRect()).reduce((a, r)=> ({ left: Math.min(a.left, r.left), top: Math.min(a.top, r.top), right: Math.max(a.right, r.right), bottom: Math.max(a.bottom, r.bottom) }));
+}
+// Register in den Einstellungen bzw. Knopf nach seiner Beschriftung finden
+function tourNachText(sel, text){ const t = text.toLowerCase(); return Array.from(document.querySelectorAll(sel)).filter(e=> (e.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase().startsWith(t)); }
+function tourBeenden(aus){
+  const t = tourAktiv; tourAktiv = null;
+  ['tourDecke', 'tourLicht', 'tourBlase'].forEach(id=>{ const e = document.getElementById(id); if(e) e.remove(); });
+  if(t){ window.removeEventListener('resize', t.neu); window.removeEventListener('scroll', t.neu, true); document.removeEventListener('keydown', t.taste, true); }
+  if(aus) LS.set('seitenhilfe', false);
+  if(t && t.fertig) try{ t.fertig(); }catch(_){}
+}
+// schritte: Liste wie oben; opt.fertig: Rueckruf am Ende
+function tourStarten(schritte, opt){
+  tourBeenden();
+  const liste = (schritte || []).filter(s=> !s.el || tourElement(s) || s.immer);
+  if(!liste.length) return;
+  const decke = document.createElement('div'); decke.id = 'tourDecke';
+  const licht = document.createElement('div'); licht.id = 'tourLicht';
+  const blase = document.createElement('div'); blase.id = 'tourBlase'; blase.setAttribute('role', 'dialog'); blase.setAttribute('aria-live', 'polite');
+  document.body.append(decke, licht, blase);
+  const t = tourAktiv = { i: 0, liste, fertig: opt && opt.fertig };
+  const zeichnen = (scrollen)=>{
+    if(tourAktiv !== t) return;
+    const sch = t.liste[t.i], e = tourElement(sch), n = t.liste.length, letzter = t.i === n - 1;
+    blase.innerHTML = '<div class="tour-kopf"><span class="tour-titel">' + sch.titel + '</span><span class="tour-zahl">' + (t.i + 1) + ' / ' + n + '</span></div>' +
+      '<div class="tour-text">' + sch.text + '</div>' +
+      '<div class="tour-punkte">' + t.liste.map((_, k)=> '<i' + (k === t.i ? ' class="an"' : '') + '></i>').join('') + '</div>' +
+      '<div class="tour-knoepfe"><button type="button" class="tour-aus">Keine Hilfen mehr</button><span></span>' +
+      (t.i > 0 ? '<button type="button" class="tour-zurueck">Zurück</button>' : '') +
+      '<button type="button" class="tour-weiter">' + (letzter ? 'Fertig' : 'Weiter') + '</button></div>';
+    blase.querySelector('.tour-weiter').onclick = ()=>{ if(letzter) tourBeenden(); else { t.i++; zeichnen(true); } };
+    const zb = blase.querySelector('.tour-zurueck'); if(zb) zb.onclick = ()=>{ t.i--; zeichnen(true); };
+    blase.querySelector('.tour-aus').onclick = ()=> tourBeenden(true);
+    const setzen = ()=>{
+      if(tourAktiv !== t) return;
+      const vw = window.innerWidth, vh = window.innerHeight, rand = 12;
+      blase.style.maxWidth = Math.min(360, vw - 2 * rand) + 'px';
+      const bw = blase.offsetWidth, bh = blase.offsetHeight;
+      if(!e){
+        licht.style.display = 'none'; decke.classList.add('dunkel'); blase.classList.remove('oben', 'unten');
+        blase.style.left = Math.round((vw - bw) / 2) + 'px'; blase.style.top = Math.round((vh - bh) / 2) + 'px'; return;
+      }
+      decke.classList.remove('dunkel'); licht.style.display = 'block';
+      const r = tourRahmen(sch) || e.getBoundingClientRect(), p = sch.rand != null ? sch.rand : 6;
+      const L = Math.max(4, r.left - p), T = Math.max(4, r.top - p), R = Math.min(vw - 4, r.right + p), B = Math.min(vh - 4, r.bottom + p);
+      Object.assign(licht.style, { left: L + 'px', top: T + 'px', width: Math.max(0, R - L) + 'px', height: Math.max(0, B - T) + 'px',
+        borderRadius: (sch.rund ? Math.max(R - L, B - T) / 2 : Math.min(16, (B - T) / 2)) + 'px' });
+      // Sprechblase unter das Element, sonst darueber, sonst (sehr grosses Element) unten in dessen Inneres
+      let top, unten = true;
+      if(B + 12 + bh <= vh - rand) top = B + 12;
+      else if(T - 12 - bh >= rand){ top = T - 12 - bh; unten = false; }
+      else { top = Math.max(rand, Math.min(vh - bh - rand, B - bh - 12)); unten = false; }
+      const mx = (L + R) / 2, left = Math.max(rand, Math.min(vw - bw - rand, mx - bw / 2));
+      blase.style.left = Math.round(left) + 'px'; blase.style.top = Math.round(top) + 'px';
+      blase.classList.toggle('unten', unten); blase.classList.toggle('oben', !unten);
+      blase.style.setProperty('--pfeil', Math.round(Math.max(18, Math.min(bw - 18, mx - left))) + 'px');
+    };
+    t.setzen = setzen;
+    if(e && scrollen){
+      // ins Bild holen: Mitte des Rahmens in die Bildschirmmitte (bei sehr hohen Elementen deren Anfang)
+      const r = tourRahmen(sch) || e.getBoundingClientRect(), vh = window.innerHeight;
+      if(r.top < 70 || r.bottom > vh - 170){
+        const sc = (function f(x){ for(; x && x !== document.body; x = x.parentElement){ const o = getComputedStyle(x).overflowY; if((o === 'auto' || o === 'scroll') && x.scrollHeight > x.clientHeight + 4) return x; } return null; })(e);
+        const ziel = (r.bottom - r.top) > vh - 260 ? r.top - 90 : (r.top + r.bottom) / 2 - (vh - 120) / 2;
+        if(sc) sc.scrollBy({ top: ziel, behavior: 'smooth' }); else window.scrollBy({ top: ziel, behavior: 'smooth' });
+      }
+      setTimeout(setzen, 0); setTimeout(setzen, 380);
+    } else setzen();
+    try{ blase.querySelector('.tour-weiter').focus({ preventScroll: true }); }catch(_){}
+  };
+  t.neu = ()=>{ if(t.setzen) t.setzen(); };
+  t.taste = (ev)=>{
+    if(tourAktiv !== t) return;
+    if(ev.key === 'Escape'){ ev.preventDefault(); tourBeenden(); }
+    else if(ev.key === 'ArrowRight'){ ev.preventDefault(); if(t.i < t.liste.length - 1){ t.i++; zeichnen(true); } }
+    else if(ev.key === 'ArrowLeft'){ ev.preventDefault(); if(t.i > 0){ t.i--; zeichnen(true); } }
+  };
+  window.addEventListener('resize', t.neu); window.addEventListener('scroll', t.neu, true); document.addEventListener('keydown', t.taste, true);
+  decke.onclick = (ev)=>{ ev.preventDefault(); ev.stopPropagation(); };
+  zeichnen(true);
+}
+// Schritte je Seite (Wunsch 19.11.2026: weniger Text, dafuer das Beschriebene hervorheben). Fehlt ein Element gerade
+// (z. B. kein laufender Dienst), entfaellt der Schritt. "du" fuer Aerzte, "klicken" statt "tippen".
+const tourEinst = (t)=> ()=> tourNachText('.abschnitt > .trennlinie', t);
+// das erste Selektor-Ergebnis, das etwas Sichtbares findet (Kind vor Eltern, z. B. erste Zeile statt ganzer Liste)
+const tourErstes = (...sels)=> ()=>{ for(const q of sels){ const e = Array.from(document.querySelectorAll(q)).find(tourSichtbar); if(e) return e; } return null; };
+const SEITENTOUR = {
+  start: [
+    { titel: 'Willkommen!', text: 'In ein paar Schritten siehst du, wo was ist. <b>Weiter</b> führt durch die Seite, <b>Keine Hilfen mehr</b> schaltet die Einführung ab.' },
+    { el: '#kLS, #kPT, #kGKV', gruppe: true, titel: 'Neuer Fall', text: '<b>LS</b> Leichenschau, <b>PT</b> Privatrechnung, <b>GKV</b> Kassenpatient. Ein Klick öffnet die leere Maske.' },
+    { el: '#dsDienstStart, #dsDienstEnde', titel: 'Dein Dienst', text: 'Hier startest du den Dienst (Art, Zeiten, Arzt). Läuft er, steht hier <b>Dienst beenden</b> – danach kommt die Auswertung.' },
+    { el: '#dsRing', rund: true, rand: 2, titel: 'Die Uhr', text: 'Der orange Bogen ist die vergangene Dienstzeit. Jeder Punkt ist ein Fall – <b style="color:var(--ls-farbe)">LS</b>, <b style="color:var(--pt-farbe)">PT</b>, <b style="color:#7d4e9e">GKV</b> – mit Betrag. Mehrere Fälle zur selben Zeit: Zahl im Punkt, Farben nach Fallart.' },
+    { el: '.ds-zeile-live', titel: 'Dienstübersicht', text: 'Fälle und Beträge je Art, dazu dein Verdienst pro Stunde.' },
+    { el: '.ds-dz-auf', titel: 'Fälle in diesem Dienst', text: 'Aufklappen zeigt alle Fälle des Dienstes – ein Klick öffnet den Fall.' },
+    { el: '.ds-offen', titel: 'Offene Fälle', text: 'Angefangene Fälle, die noch nicht gespeichert sind. Anklicken und fertig ausfüllen.' },
+    { el: tourErstes('#skKarte .mini-fenster', '#skKarte'), titel: 'Karte', text: 'Die Einsatzorte. Unten die Knöpfe: Übersicht, eigene Position, nächster Defibrillator (AED) und Vollbild.' },
+    { el: '.ds-nav-btn.gross', rund: true, titel: 'Das große +', text: 'Neuer Fall – von jeder Seite aus.' },
+    { el: '#dsGlobalNav', titel: 'Die Leiste', text: '<b>Start</b>, <b>Rechnungen</b> (Übersicht, offene Zahlungen), <b>Fahrtenbuch</b> und <b>Werkzeuge</b>.' },
+    { el: '#btnEinstellungen', rund: true, titel: 'Einstellungen', text: 'Arztdaten, Bank, Briefversand, Design und mehr. Dort lässt sich diese Einführung auch wieder einschalten.' }
+  ],
+  maske_ls: [
+    { el: '#txtDatumExcel, #txtZeitLS', gruppe: true, titel: 'Wann?', text: 'Datum und Uhrzeit der Leichenschau. Daraus setzt die App die Zeitzuschläge selbst.' },
+    { el: '#txtDienst', titel: 'Dienst', text: 'Zu welchem Dienst der Fall gehört – normalerweise automatisch nach der Uhrzeit.' },
+    { el: '#btnZwischenablage', titel: 'Einsatzmeldung einlesen', text: 'Meldung kopiert? Ein Klick füllt Name, Adresse und Geburtsdatum aus.' },
+    { el: '#txtName, #txtPAdresse1, #txtPAdresse2, #txtGeda', gruppe: true, titel: 'Verstorbene Person', text: 'Name, Anschrift und Geburtsdatum. Pflichtfelder sind markiert.' },
+    { el: '#btnSterbeAbw', titel: 'Anderer Sterbeort?', text: 'Starb die Person nicht an ihrer Anschrift, hier den Sterbeort eintragen.' },
+    { el: '#txtKm, #btnGoogleMapsRoute', gruppe: true, titel: 'Entfernung', text: 'Hin- und Rückfahrt. Wegegeld oder Reiseentschädigung setzt die App danach selbst.' },
+    { el: '#txtBName, #btnBestatterMaps, #btnBestatterAdresseEinlesen, #txtAdresse1, #txtAdresse2', gruppe: true, titel: 'Rechnungsempfänger', text: 'Meist das Bestattungshaus – aus der Liste wählen oder die Adresse einlesen.' },
+    { el: '#lsAssi', titel: 'Abrechnungsassistent', text: 'Fragt nur, was wechselt: Nr. 100 oder 101, Dauer, Zuschlag 102 und Formularkosten.' },
+    { el: '#btnPunkte', titel: 'Alle Positionen', text: 'Zeigt die komplette Rechnung – hier lässt sich jede Position anpassen.' },
+    { el: '#btnDoku', titel: 'Dokumentation', text: 'Optional: Befunde und Fotos zum Fall.' },
+    { el: '#btnSpeichern', titel: 'Speichern', text: 'Erstellt die Rechnung, trägt sie in die Übersicht ein und zeigt die PDF – zum Teilen oder als Brief.' }
+  ],
+  maske_pt: [
+    { el: '#txtDatumExcel, #txtZeitLS', gruppe: true, titel: 'Wann?', text: 'Datum und Uhrzeit des Besuchs. Daraus setzt die App die Zeitzuschläge selbst.' },
+    { el: '#txtDienst', titel: 'Dienst', text: 'Zu welchem Dienst der Fall gehört – normalerweise automatisch nach der Uhrzeit.' },
+    { el: '#btnZwischenablage', titel: 'Einsatzmeldung einlesen', text: 'Meldung kopiert? Ein Klick füllt Name, Adresse und Geburtsdatum aus.' },
+    { el: '#txtName, #txtPAdresse1, #txtPAdresse2, #txtGeda', gruppe: true, titel: 'Patient', text: 'Name, Anschrift und Geburtsdatum. Pflichtfelder sind markiert.' },
+    { el: '#txtDiag', titel: 'Diagnose', text: 'Erscheint auf der Rechnung.' },
+    { el: '#txtKm, #btnGoogleMapsRoute', gruppe: true, titel: 'Entfernung', text: 'Hin- und Rückfahrt. Wegegeld oder Reiseentschädigung setzt die App danach selbst.' },
+    { el: '#btnPunkte', titel: 'Rechnungspositionen', text: 'Ziffern auswählen. Über dem Schwellenwert braucht der Faktor eine Begründung.' },
+    { el: '#btnDoku', titel: 'Dokumentation', text: 'Optional: Befunde und Fotos zum Fall.' },
+    { el: '#btnSpeichern', titel: 'Speichern', text: 'Erstellt die Rechnung, trägt sie in die Übersicht ein und zeigt die PDF – zum Teilen oder als Brief.' }
+  ],
+  gkv: [
+    { el: '#gkvDatum, #gkvZeit', gruppe: true, titel: 'Wann?', text: 'Datum und Uhrzeit bestimmen die Tag- oder Nacht-Ziffern.' },
+    { el: '#gkvDienst', titel: 'Dienst', text: 'Zu welchem Dienst der Fall gehört – normalerweise automatisch nach der Uhrzeit.' },
+    { el: '#gkvZwischenablage', titel: 'Einsatzmeldung einlesen', text: 'Meldung kopiert? Ein Klick füllt Name und Adresse aus.' },
+    { el: '#gkvName', titel: 'Name', text: 'Name des Patienten – für dein Fahrtenbuch.' },
+    { el: '#gkvAdresse, #gkvPlzOrt, #gkvKmBtn, #gkvKarteBtn', gruppe: true, titel: 'Einsatzort', text: 'Optional. Mit <b>Wegegeld ermitteln</b> oder <b>Karte</b> setzt die App die Wegepauschale.' },
+    { el: '#gkvProfile', titel: 'Profile', text: 'Wählen die passenden Ziffern vor: Hausbesuch, Telefon, Sitzdienst. <b>Sammelerfassung</b> zählt viele kleine Fälle ohne Namen – eine Zeile je Dienst.' },
+    { el: tourErstes('#gkvListe .gkv-pos', '#gkvListe'), titel: 'Ziffern', text: 'Anklicken wählt an oder ab. Lange drücken und ziehen ändert die Reihenfolge.' },
+    { el: '#gkvSumme, #gkvSpeichern', gruppe: true, titel: 'Ins Fahrtenbuch', text: 'Links die Summe. <b>Ins Fahrtenbuch</b> trägt den Fall in den Dienst ein.' }
+  ],
+  positionen: [
+    { el: '.profil-leiste', titel: 'Profile', text: 'Ein Klick wählt einen ganzen Satz Ziffern vor.' },
+    { el: '.pos-item', titel: 'Positionen', text: 'Haken setzen, was abgerechnet wird. Graue Zeilen setzt die App selbst (Zeitzuschläge, Wegegeld).' },
+    { el: '.faktor-chip', titel: 'Faktor', text: 'Anklicken zum Ändern. Über dem Schwellenwert fragt die App nach der Begründung.' },
+    { el: '#btnEigenePosNeu', titel: 'Eigene Position', text: 'Fehlt eine Ziffer? Hier anlegen – sie bleibt für später gespeichert.' },
+    { el: '#posSumme', titel: 'Summe', text: 'Der Rechnungsbetrag mit allen gewählten Positionen.' },
+    { el: '#btnPositionenFertig', titel: 'Übernehmen', text: 'Zurück zur Rechnung.' }
+  ],
+  verwaltung: [
+    { el: 'button.lspt, button.gkv', gruppe: true, titel: 'Zwei Listen', text: 'Umschalten zwischen den <b>Rechnungen</b> (LS/PT) und den <b>Kassenpatienten</b>.' },
+    { el: '#txtGesamtSuche', titel: 'Suche', text: 'Nach Name, Rechnungsnummer oder Betrag.' },
+    { el: '#btnGesamtHochladen', titel: 'Hochladen', text: 'Rechnungen, die noch nicht im OneDrive liegen, auf einmal hochladen.' },
+    { el: '#btnGesamtExcel, #btnGesamtBackups, #btnGesamtBank', gruppe: true, titel: 'Werkzeuge', text: 'Übersicht in Excel öffnen, Sicherungen, und den <b>Kontoauszug</b> einlesen – Zahlungen werden den Rechnungen zugeordnet.' },
+    { el: tourErstes('details.offen-dash > summary', 'details.offen-dash'), titel: 'Offene Rechnungen', text: 'Was noch nicht bezahlt ist. <b>Bezahlt?</b> trägt den Eingang ein, bei Verzug geht eine Erinnerung.' },
+    { el: tourErstes('#gesamtListe .wisch-huelle', '#gesamtListe'), titel: 'Alle Rechnungen', text: 'Haken für Senden, Termin, Erinnerung, Bezahlt; 📄 öffnet die PDF; nach links wischen löscht.' }
+  ],
+  gkvVerwaltung: [
+    { el: 'button.lspt, button.gkv', gruppe: true, titel: 'Zwei Listen', text: 'Umschalten zwischen den <b>Rechnungen</b> (LS/PT) und den <b>Kassenpatienten</b>.' },
+    { el: '#gvSuche', titel: 'Suche', text: 'Nach Name, Ziffer oder Datum.' },
+    { el: 'button.gv-fall', titel: 'Ein Fall', text: 'Anklicken bearbeitet ihn. Nach links wischen löscht ihn aus der Liste – im Fahrtenbuch bleibt die Zeile.' },
+    { el: '#gvWeitere', titel: 'Ältere Fälle', text: 'Holt weitere Fälle aus dem Fahrtenbuch.' }
+  ],
+  fahrtenbuch: [
+    { el: ()=> tourNachText('#app button', 'Dienste').concat(tourNachText('#app button', 'Quartale')).slice(0, 2), gruppe: true, titel: 'Ansicht', text: 'Nach <b>Diensten</b> oder nach <b>Quartalen</b> (für die Abrechnung mit der KV).' },
+    { el: '#fbxZeitraum, #fbxJahr, #fbxSuche', gruppe: true, titel: 'Zeitraum und Suche', text: 'Jahr, Quartal oder eigener Zeitraum – und die Suche nach Name oder Ort.' },
+    { el: 'button.fbx-kopf', titel: 'Ein Dienst', text: 'Anklicken klappt ihn auf: Fälle, Karte mit nummerierten Einsatzorten und der Stand im Fahrtenbuch. Einen Fall anklicken öffnet ihn.' }
+  ],
+  einstellungen: [
+    { el: tourEinst('Arzt'), titel: 'Arzt', text: 'Name und Anschrift für die Rechnungen.' },
+    { el: tourEinst('Bankverbindung'), titel: 'Bankverbindung', text: 'Konto auf den Rechnungen.' },
+    { el: tourEinst('Briefversand'), titel: 'Briefversand', text: 'Rechnungen als Brief verschicken lassen.' },
+    { el: tourEinst('Daten, Sicherheit'), titel: 'Daten und Sicherheit', text: 'Passwort, Fingerabdruck, Sicherungen und der Abgleich zwischen deinen Geräten.' },
+    { el: tourEinst('Datensicherung'), titel: 'Datensicherung', text: 'Sicherungen anlegen und zurückspielen.' },
+    { el: ()=> tourEinst('Sicherheit')().concat(tourEinst('App-Sperre')()), titel: 'Sicherheit', text: 'Passwort, Fingerabdruck und automatisches Sperren.' },
+    { el: tourEinst('Allgemein'), titel: 'Allgemein', text: 'Wie die Rechnungspositionen aussehen und welche Profile es gibt.' },
+    { el: tourEinst('Einrichtung'), titel: 'Einrichtung', text: 'Den Einrichtungsassistenten erneut durchlaufen.' },
+    { el: tourEinst('Demo'), titel: 'Demo', text: 'Die App mit erfundenen Daten ausprobieren – und diese Einführung wieder einschalten.' }
+  ]
+};
 let seitenhilfeTimer = null;
 function seitenhilfeZeigen(key){
   try{
@@ -6970,9 +7178,11 @@ function seitenhilfeZeigen(key){
     clearTimeout(seitenhilfeTimer);
     const versuch = (n)=>{
       // erst, wenn kein anderes Fenster offen ist (Dialog, PDF, App-Sperre, Zustimmung)
-      if(document.querySelector('.beta-overlay.aktiv, #betaPdfAnsicht.aktiv, .as-dialog, #alphaPflicht, .nfp-overlay')){ if(n < 120) seitenhilfeTimer = setTimeout(()=> versuch(n + 1), 1000); return; }
-      const [titel, text] = SEITENHILFE[key];
+      if(tourAktiv || document.querySelector('.beta-overlay.aktiv, #betaPdfAnsicht.aktiv, .as-dialog, #alphaPflicht, .nfp-overlay')){ if(n < 120) seitenhilfeTimer = setTimeout(()=> versuch(n + 1), 1000); return; }
       const g = LS.get('seitenhilfe_gesehen', []) || []; if(g.includes(key)) return;
+      // gefuehrte Einfuehrung, sobald die Seite steht; nur wenn sie mindestens ein Element findet, sonst der Text
+      if(SEITENTOUR[key] && SEITENTOUR[key].some(x=> x.el && tourElement(x))){ LS.set('seitenhilfe_gesehen', g.concat(key)); tourStarten(SEITENTOUR[key]); return; }
+      const [titel, text] = SEITENHILFE[key];
       LS.set('seitenhilfe_gesehen', g.concat(key));
       betaOverlay.ergebnis(titel, '<div class="intro-text">' + text + '</div>', [{ label: 'Keine Hilfen mehr', akt: 'aus' }, { label: 'Verstanden', akt: 'ok', primaer: true }])
         .then(akt=>{ betaOverlay.schliessen(); if(akt === 'aus') LS.set('seitenhilfe', false); });
@@ -6987,7 +7197,7 @@ function seitenhilfeFragen(){
     const versuch = (n)=>{
       if(LS.get('seitenhilfe', null) !== null) return;
       if(!aktuelleAnsichtIstHauptbildschirm || document.querySelector('.beta-overlay.aktiv, #betaPdfAnsicht.aktiv, .as-dialog, #alphaPflicht, .nfp-overlay')){ if(n < 300) setTimeout(()=> versuch(n + 1), 1000); return; }
-      betaOverlay.ergebnis('Kurze Anleitungen?', '<div class="intro-text">Möchtest du beim ersten Öffnen jeder Seite eine kurze Erklärung, was du dort machen kannst? Abschalten geht jederzeit – in der Erklärung selbst oder in den Einstellungen.</div>',
+      betaOverlay.ergebnis('Kurze Einführung?', '<div class="intro-text">Möchtest du beim ersten Öffnen jeder Seite Schritt für Schritt sehen, was wo ist? Das Beschriebene wird dabei hervorgehoben. Abschalten geht jederzeit – in der Einführung selbst oder in den Einstellungen.</div>',
         [{ label: 'Nein, danke', akt: 'nein' }, { label: 'Ja, gerne', akt: 'ja', primaer: true }]).then(akt=>{
           betaOverlay.schliessen();
           LS.set('seitenhilfe', akt === 'ja'); LS.set('seitenhilfe_gesehen', []);
@@ -21431,7 +21641,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v491';
+const APP_VERSION = 'v492';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22975,11 +23185,11 @@ function ansichtEinstellungen(){
       <div class="trennlinie">Demo</div>
       <div class="design-hinweis">${window.DEMO_MODUS ? 'Die Demo läuft: alle Daten sind erfunden, nichts wird gespeichert.' : 'Die App mit erfundenen Beispieldaten ausprobieren oder vorführen (zwei Jahre Dienste, Patienten, Rechnungen). Deine echten Daten und dein OneDrive bleiben dabei unberührt – die Demo läuft nur im Arbeitsspeicher.'}</div>
       <button type="button" class="btn-sekundaer" id="btnDemo">${window.DEMO_MODUS ? 'Demo beenden' : 'Demo starten'}</button>
-      <button type="button" class="btn-sekundaer" id="btnEinfuehrung" style="margin-top:8px;">Seitenhilfen wieder einschalten</button>
+      <button type="button" class="btn-sekundaer" id="btnEinfuehrung" style="margin-top:8px;">Einführung wieder einschalten</button>
     </div>
     <div class="einst-copyright">© 2026 Dr. med. Sebastian Fried · Alle Rechte vorbehalten<br><a href="#" id="lnkLizenzen" style="color:inherit;">Open-Source-Lizenzen und Datenquellen</a></div>
   `;
-  { const ef = document.getElementById('btnEinfuehrung'); if(ef) ef.onclick = ()=>{ LS.set('seitenhilfe', true); LS.set('seitenhilfe_gesehen', []); appToastAnzeigen('Seitenhilfen sind wieder an – jede Seite erklärt sich beim nächsten Öffnen.', 3200); }; }
+  { const ef = document.getElementById('btnEinfuehrung'); if(ef) ef.onclick = ()=>{ LS.set('seitenhilfe', true); LS.set('seitenhilfe_gesehen', []); appToastAnzeigen('Die Einführung ist wieder an – jede Seite zeigt sich beim nächsten Öffnen Schritt für Schritt.', 3600); }; }
   document.getElementById('btnDemo').onclick = ()=> window.DEMO_MODUS ? demoBeenden() : demoFragen();
   document.getElementById('btnEinstOeffneUebersicht').onclick = ()=> excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
     '');
@@ -25421,6 +25631,7 @@ function navZurueckAusfuehren(f){ f(); }
     if(oben && oben.name === name) NAV_STAPEL.pop();   // gleiche Ansicht neu gezeichnet
     NAV_STAPEL.push({ name, args });
     if(NAV_STAPEL.length > 30) NAV_STAPEL.shift();
+    try{ if(tourAktiv) tourBeenden(); }catch(_){}   // Seitenwechsel beendet eine laufende Einfuehrung
     const erg = basis.apply(this, args);
     try{
       const key = { ansichtStart: 'start', ansichtFahrtenbuch: 'fahrtenbuch', ansichtGkvVerwaltung: 'gkvVerwaltung', ansichtRechnungenGesamt: 'verwaltung',
