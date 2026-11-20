@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-wWAGevJmrFQPBZyVFZhPZ60ed3j33uXqxHfrc35JhiA=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-qWnZkxsodRtJAg0umw+UVANCoJ5f40fslJ83PlZyl88=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -105,8 +105,10 @@ try{
   document.addEventListener('gesturestart', function(ev){ ev.preventDefault(); });
   window.addEventListener('wheel', function(ev){ if(ev.ctrlKey && !(ev.target.closest && ev.target.closest('.mini-fenster, .nfp-scroll, .osm-scroll, .vk-karte'))) ev.preventDefault(); }, { passive: false });
   var e0 = JSON.parse(localStorage.getItem('ui_vorlieben') || localStorage.getItem('einstellungen') || '{}') || {};
-  // wie spaeter in der App: ohne manuelle Wahl folgt sie dem System-Dunkelmodus
-  var dk0 = e0.design === 'nacht' || (e0.dunkelManuell ? !!e0.dunkel : (window.matchMedia ? matchMedia('(prefers-color-scheme: dark)').matches : !!e0.dunkel));
+  // wie spaeter in der App: beim Start folgt sie dem Handy (hell/dunkel); eine Wahl von Hand (Sonne/Mond,
+  // Einstellungen) gilt nur bis zum naechsten Start (sessionStorage 'dunkel_hand', Wunsch 21.11.2026)
+  var hand0 = null; try{ hand0 = sessionStorage.getItem('dunkel_hand'); }catch(_){}
+  var dk0 = e0.design === 'nacht' || (hand0 !== null ? hand0 === '1' : (window.matchMedia ? matchMedia('(prefers-color-scheme: dark)').matches : !!e0.dunkel));
   // "only": verbietet Browsern (Opera-/Chrome-Nachtmodus, Samsung Internet) das Umfaerben --
   // hell/dunkel bestimmt allein die App (Sonne/Mond)
   try{ document.documentElement.style.colorScheme = dk0 ? 'only dark' : 'only light'; var cs0 = document.querySelector('meta[name="color-scheme"]'); if(cs0) cs0.setAttribute('content', dk0 ? 'only dark' : 'only light'); }catch(_){}
@@ -7092,7 +7094,7 @@ function tourNachText(sel, text){ const t = text.toLowerCase(); return Array.fro
 function tourBeenden(aus){
   const t = tourAktiv; tourAktiv = null;
   ['tourDecke', 'tourLicht', 'tourBlase'].forEach(id=>{ const e = document.getElementById(id); if(e) e.remove(); });
-  if(t){ window.removeEventListener('resize', t.neu); window.removeEventListener('scroll', t.neu, true); document.removeEventListener('keydown', t.taste, true); }
+  if(t){ clearInterval(t.wacht); window.removeEventListener('resize', t.neu); window.removeEventListener('scroll', t.neu, true); document.removeEventListener('keydown', t.taste, true); }
   if(aus) LS.set('seitenhilfe', false);
   if(t && t.fertig) try{ t.fertig(); }catch(_){}
 }
@@ -7130,7 +7132,10 @@ function tourStarten(schritte, opt){
         blase.style.left = Math.round((vw - bw) / 2) + 'px'; blase.style.top = Math.round((vh - bh) / 2) + 'px'; return;
       }
       decke.classList.remove('dunkel'); licht.style.display = 'block';
-      const r = tourRahmen(sch) || e.getBoundingClientRect(), p = sch.rand != null ? sch.rand : 6;
+      // waehrend des Scrollens gleich die ENDposition (Versatz = noch ausstehender Scrollweg): der Rahmen gleitet einmal
+      // ans Ziel statt dem Scrollen hinterherzulaufen und ueber das Ziel hinauszuschiessen (Wunsch 21.11.2026)
+      const r0 = tourRahmen(sch) || e.getBoundingClientRect(), v = t.versatz || 0;
+      const r = { left: r0.left, right: r0.right, top: r0.top - v, bottom: r0.bottom - v }, p = sch.rand != null ? sch.rand : 6;
       const L = Math.max(4, r.left - p), T = Math.max(4, r.top - p), R = Math.min(vw - 4, r.right + p), B = Math.min(vh - 4, r.bottom + p);
       const fl = { o: [0, 0, vw, T], u: [0, B, vw, vh - B], l: [0, T, L, B - T], r: [R, T, vw - R, B - T] };
       decke.querySelectorAll('.tour-weich').forEach(w=>{ const [x, y, bw0, bh0] = fl[w.dataset.s]; Object.assign(w.style, { left: x + 'px', top: y + 'px', width: Math.max(0, bw0) + 'px', height: Math.max(0, bh0) + 'px' }); });
@@ -7152,14 +7157,22 @@ function tourStarten(schritte, opt){
       const r = tourRahmen(sch) || e.getBoundingClientRect(), vh = window.innerHeight;
       if(r.top < 70 || r.bottom > vh - 170){
         const sc = (function f(x){ for(; x && x !== document.body; x = x.parentElement){ const o = getComputedStyle(x).overflowY; if((o === 'auto' || o === 'scroll') && x.scrollHeight > x.clientHeight + 4) return x; } return null; })(e);
-        const ziel = (r.bottom - r.top) > vh - 260 ? r.top - 90 : (r.top + r.bottom) / 2 - (vh - 120) / 2;
+        let ziel = (r.bottom - r.top) > vh - 260 ? r.top - 90 : (r.top + r.bottom) / 2 - (vh - 120) / 2;
+        // tatsaechlich moeglicher Scrollweg (am Anfang/Ende der Seite weniger)
+        const se = document.scrollingElement || document.documentElement;
+        const pos = sc ? sc.scrollTop : (window.scrollY || se.scrollTop), max = sc ? sc.scrollHeight - sc.clientHeight : se.scrollHeight - window.innerHeight;
+        ziel = Math.max(-pos, Math.min(Math.max(0, max - pos), ziel));
+        t.versatz = Math.round(ziel); t.ruhigBis = Date.now() + 700;
+        const fertig = ()=>{ if(tourAktiv !== t || !t.versatz && !t.ruhigBis) return; t.versatz = 0; t.ruhigBis = 0; setzen(); };
+        clearTimeout(t.scrollUhr); t.scrollUhr = setTimeout(fertig, 650);
+        try{ (sc || window).addEventListener('scrollend', function f(){ (sc || window).removeEventListener('scrollend', f); clearTimeout(t.scrollUhr); setTimeout(fertig, 30); }); }catch(_){}
         if(sc) sc.scrollBy({ top: ziel, behavior: 'smooth' }); else window.scrollBy({ top: ziel, behavior: 'smooth' });
-      }
-      setTimeout(setzen, 0); setTimeout(setzen, 380);
+      } else { t.versatz = 0; t.ruhigBis = 0; }
+      setzen();
     } else setzen();
     try{ blase.querySelector('.tour-weiter').focus({ preventScroll: true }); }catch(_){}
   };
-  t.neu = ()=>{ if(t.setzen) t.setzen(); };
+  t.neu = ()=>{ if(t.ruhigBis && Date.now() < t.ruhigBis) return; if(t.setzen) t.setzen(); };   // waehrend des Scrollens steht das Ziel schon fest
   t.taste = (ev)=>{
     if(tourAktiv !== t) return;
     if(ev.key === 'Escape'){ ev.preventDefault(); tourBeenden(); }
@@ -7167,6 +7180,8 @@ function tourStarten(schritte, opt){
     else if(ev.key === 'ArrowLeft'){ ev.preventDefault(); if(t.i > 0){ t.i--; zeichnen(true); } }
   };
   window.addEventListener('resize', t.neu); window.addEventListener('scroll', t.neu, true); document.addEventListener('keydown', t.taste, true);
+  // Seite baut sich noch auf (Karte laedt, Liste klappt auf): Rahmen nachfuehren, auch ohne Scrollen
+  t.wacht = setInterval(()=>{ if(tourAktiv !== t){ clearInterval(t.wacht); return; } t.neu(); }, 300);
   decke.onclick = (ev)=>{ ev.preventDefault(); ev.stopPropagation(); };
   zeichnen(true);
 }
@@ -20542,13 +20557,17 @@ async function standortKarteZeichnen(info, mitDialog){
     const verdrahten = ()=>{
       const a = box.querySelector('.sk-auf'); if(a) a.onclick = ()=>{ LS.set('start_karte_auf', !auf); standortKarteZeichnen(info); };
       const p = box.querySelector('.sk-pos'); if(p) p.onclick = ()=> standortKarteZeichnen(info, true);
-      box.querySelectorAll('.sk-ort[data-fall]').forEach(z=> z.onclick = ()=>{ const f = faelle[+z.dataset.fall]; if(f && f.oeffnen) f.oeffnen(); });
+      // Klick auf einen Fall unter der Karte: seinen Punkt in der Karte hervorheben, dazu denselben Fall in
+      // „Fälle in diesem Dienst“ (Wunsch 21.11.2026, wie im Fahrtenbuch „Woche“) -- geoeffnet wird ueber „Fälle in diesem Dienst“
+      box.querySelectorAll('.sk-ort[data-fall]').forEach(z=> z.onclick = ()=>{ const i = +z.dataset.fall;
+        karteFallMarkieren(box.querySelector('.mini-ebenen'), i); skBlinken(z); dzFallMarkieren(faelle[i]); });
       listeKarteVerbinden([...box.querySelectorAll('.sk-ort[data-fall]')], (z)=> +z.dataset.fall, ()=> box.querySelector('.mini-ebenen'));
     };
-    // Klick auf eine Nummer in der Karte: den Fall in der Liste kurz hervorheben (wie im Fahrtenbuch; oeffnen ueber die Liste)
-    const fallKlick = (i)=>{ const z = box.querySelector('.sk-ort[data-fall="' + i + '"]'); if(!z) return;
+    const skBlinken = (z)=>{ if(!z) return; z.classList.remove('fbx-blink'); void z.offsetWidth; z.classList.add('fbx-blink'); setTimeout(()=> z.classList.remove('fbx-blink'), 2400); };
+    // Klick auf eine Nummer in der Karte: den Fall in der Liste darunter und in „Fälle in diesem Dienst“ hervorheben
+    const fallKlick = (i)=>{ const z = box.querySelector('.sk-ort[data-fall="' + i + '"]'); dzFallMarkieren(faelle[i]); if(!z) return;
       try{ z.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }catch(_){}
-      z.classList.remove('fbx-blink'); void z.offsetWidth; z.classList.add('fbx-blink'); setTimeout(()=> z.classList.remove('fbx-blink'), 2400); };
+      skBlinken(z); };
     const ichPoi = pos ? [{ lat: pos.lat, lon: pos.lon, kl: 'ich' }] : [];
     if(!auf){
       if(!pos){ box.innerHTML = kopf('Standort nicht verfügbar') + '<div class="sk-leer">Ohne Standortfreigabe keine Anzeige – „📍 Standort“ klicken.</div>'; verdrahten(); return; }
@@ -20960,7 +20979,8 @@ const AERZTE_QR_PLATZ_DIENSTE = 6;   // bis zu so vielen Diensten passt der QR-C
 async function aerzteDocxErzeugen(vorlage, daten){
   const zip = await JSZip.loadAsync(vorlage);
   const a = daten.arzt || {};
-  const ph = [['Privatrechnung', 'Rechnung'], ['X.QUART', daten.quartalText], ['VNAME', daten.vname], ['PADRESSE1', daten.adr1 || ''],
+  // Firmenname (meist die Praxis, z. B. "MVZ Ullingen") als eigene Zeile UEBER dem Namen (Wunsch 21.11.2026)
+  const ph = [['Privatrechnung', 'Rechnung'], ['X.QUART', daten.quartalText], ['VNAME', (String(daten.firma || '').trim() ? String(daten.firma).trim() + '\n' : '') + daten.vname], ['PADRESSE1', daten.adr1 || ''],
     ['PADRESSE2', daten.adr2 || ''], ['DATE', daten.datum], ['RENU', daten.renu], ['GELDSUMME', aerzteZahlText(daten.summe)],
     ['ATITEL', a.titel || ''], ['ANAME', a.name || ''], ['AFUNKTION', a.funktion || ''], ['AADRESSE1', a.adresse1 || ''],
     ['AADRESSE2', a.adresse2 || ''], ['AEMAIL', a.email || '']];
@@ -21045,6 +21065,7 @@ async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
   const heute = new Date();
   const berechnet = betaRund2(bloecke.reduce((s, b)=> s + aerzteBetragVorschlag(b), 0));
   let st = {
+    firma: alt ? (alt.firma || '') : (adr.firma || ''),
     vname: (alt && alt.vname) || adr.vname || arzt, adr1: (alt && alt.adr1) || adr.adr1 || '', adr2: (alt && alt.adr2) || adr.adr2 || '',
     kuerzel: adr.kuerzel || (alt && /^([A-ZÄÖÜ]+)-/.test(alt.renu || '') ? alt.renu.split('-')[0] : aerzteKuerzel(arzt)), renu: (alt && alt.renu) || '',
     datum: (alt && alt.datum) || (zz2(heute.getDate()) + '.' + zz2(heute.getMonth() + 1) + '.' + heute.getFullYear()),
@@ -21056,6 +21077,7 @@ async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
     const html = '<div class="fb-dialog">' +
       '<div class="fb-info">' + htmlEsc(aerzteQuartalText(quartalKey)) + (alt ? ' · bisherige Rechnung ' + htmlEsc(alt.renu) + ' wird ersetzt' : '') + '</div>' +
       (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<label class="fb-lbl">Firma / Praxis <small>(optional, Zeile über dem Namen)</small><input type="text" id="arFirma" placeholder="z. B. MVZ Ullingen oder OrthoDocs GmbH" value="' + htmlEsc(st.firma) + '"></label>' +
       '<label class="fb-lbl">Empfänger (Name)<input type="text" id="arVname" value="' + htmlEsc(st.vname) + '"></label>' +
       '<label class="fb-lbl">Straße<input type="text" id="arAdr1" value="' + htmlEsc(st.adr1) + '"></label>' +
       '<label class="fb-lbl">PLZ Ort<input type="text" id="arAdr2" value="' + htmlEsc(st.adr2) + '"></label>' +
@@ -21071,7 +21093,7 @@ async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
     if(ein) ein.oninput = ()=>{ const n = aerzteZahl(ein.value); const a = document.getElementById('arAbw'); if(a) a.textContent = isNaN(n) ? '' : aerzteAbweichungText(n, st.berechnet); };
     const akt = await p;
     const wert = (id)=> String((document.getElementById(id) || {}).value || '').trim();
-    st.vname = wert('arVname'); st.adr1 = wert('arAdr1'); st.adr2 = wert('arAdr2');
+    st.firma = wert('arFirma'); st.vname = wert('arVname'); st.adr1 = wert('arAdr1'); st.adr2 = wert('arAdr2');
     st.kuerzel = wert('arKuerzel').toUpperCase(); st.renu = wert('arRenu'); st.datum = wert('arDatum');
     const n = aerzteZahl(wert('arSummeEin'));
     if(akt !== 'ok'){ betaOverlay.schliessen(); return null; }
@@ -21106,7 +21128,7 @@ async function aerzteRechnungErstellen(arzt, quartalKey, bloecke){
     const renu = st.renu || await aerzteNaechsteRenu(token, st.kuerzel);
     const datei = aerzteDateiName(renu);
     betaOverlay.schritt('Word-Datei wird erstellt …');
-    const blob = await aerzteDocxErzeugen(vorlage, { arzt: eigene, vname: st.vname, adr1: st.adr1, adr2: st.adr2, datum: st.datum, renu,
+    const blob = await aerzteDocxErzeugen(vorlage, { arzt: eigene, firma: st.firma, vname: st.vname, adr1: st.adr1, adr2: st.adr2, datum: st.datum, renu,
       quartalText: aerzteQuartalText(quartalKey), dienste: st.dienste, summe: st.summe });
     const { pdfItem } = await docxHochladenMitPdf(token, AERZTE_ORDNER, datei, blob, t=> betaOverlay.schritt(t));
     if(st.alt && st.alt.datei && st.alt.datei !== datei){
@@ -21116,9 +21138,9 @@ async function aerzteRechnungErstellen(arzt, quartalKey, bloecke){
     await aerzteDatenSichern((d)=>{
       const k = arzt.trim().toLowerCase();
       d.aerzteAdressen = (d.aerzteAdressen || []).filter(x=> String(x.arzt || '').trim().toLowerCase() !== k)
-        .concat([{ arzt, vname: st.vname, adr1: st.adr1, adr2: st.adr2, kuerzel: st.kuerzel, am: jetzt }]);
+        .concat([{ arzt, firma: st.firma, vname: st.vname, adr1: st.adr1, adr2: st.adr2, kuerzel: st.kuerzel, am: jetzt }]);
       d.aerzteRechnungen = (d.aerzteRechnungen || []).filter(x=> x.renu !== renu && !(st.alt && x.renu === st.alt.renu))
-        .concat([{ renu, arzt, quartal: quartalKey, datum: st.datum, vname: st.vname, adr1: st.adr1, adr2: st.adr2,
+        .concat([{ renu, arzt, quartal: quartalKey, datum: st.datum, firma: st.firma, vname: st.vname, adr1: st.adr1, adr2: st.adr2,
                    dienste: st.dienste.map(x=> ({ text: x.text })), summe: st.summe, summeBerechnet: st.berechnet, datei,
                    bezahlt: (st.alt && st.alt.bezahlt) || '', pdfUrl: (pdfItem && pdfItem.webUrl) || '', am: jetzt }]);
     }).catch(()=>{});
@@ -21857,7 +21879,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v504';
+const APP_VERSION = 'v505';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22894,6 +22916,9 @@ function neuStapelUmschalten(){
   ]), async (a)=>{
     if(a === 'dienst'){ if(await liveDienstDialog() && aktuelleAnsichtIstHauptbildschirm) ansichtStart(); return; }
     vorbereiteRuecksprung(); einstellungenOffen = false;
+    // neuer Fall von einer anderen Seite aus (z. B. „Dienste bearbeiten“, Fahrtenbuch): Zurueck fuehrt wieder dorthin,
+    // nicht auf die Startseite (Wunsch 21.11.2026)
+    const vorher = navAktuelleAnsicht(); if(vorher) fallHerkunft = vorher;
     if(a === 'gkv') ansichtGkv(); else betaNeueRechnung(a);
   });
 }
@@ -23036,6 +23061,15 @@ function designDienstHtml(info){
         '<span class="ds-dz-betrag">' + (f.unfertig ? '<span class="ds-unfertig">unfertig</span>' : (f.euro != null && f.euro !== '' ? betaEuro(f.euro).replace(' €', '') : '')) + '</span></button>' + ((f.gkvId || f.verwerfen) ? '</div>' : '')).join('')
         : '<div class="ds-leer">Noch keine Fälle in diesem Dienst.</div>') +
     '</div></div>';
+}
+// denselben Fall in „Fälle in diesem Dienst“ kurz hervorheben, wenn die Liste aufgeklappt ist (Startkarte, Wunsch 21.11.2026)
+function dzFallMarkieren(f){
+  if(!f) return;
+  const schl = (x)=> [x.art, x.name, x.t instanceof Date ? x.t.getTime() : String(x.t)].join('|');
+  const k = schl(f), liste = document.querySelector('.ds-dz-liste:not([hidden])'); if(!liste) return;
+  const i = (designDienstHtml.faelle || []).findIndex(x=> x === f || schl(x) === k); if(i < 0) return;
+  const b = liste.querySelector('[data-dzfall="' + i + '"]'); if(!b) return;
+  b.classList.remove('fbx-blink'); void b.offsetWidth; b.classList.add('fbx-blink'); setTimeout(()=> b.classList.remove('fbx-blink'), 2400);
 }
 function designDienstWiring(wurzel){
   const box = wurzel.querySelector('.ds-dz'); if(!box) return;
@@ -23458,7 +23492,7 @@ function ansichtEinstellungen(){
     // manuell gesetzt wurde, folgt die App nicht mehr automatisch dem
     // System-/Browser-Farbschema (siehe dunkelModusAutoSyncEinrichten) --
     // sonst wuerde ein spaeterer OS-Wechsel die bewusste Wahl ueberschreiben.
-    if(document.getElementById('chkDunkel')) e.dunkelManuell = true;
+    e.dunkelManuell = false;   // Wahl von Hand gilt nur bis zum naechsten Start (dunkelHandMerken)
     // Checkbox-Beschriftung/-Haken wie am PC ("Im Grenzbereich
     // Reiseentschaedigung priorisieren", angehakt = Standard) -- invertiert
     // zum intern gespeicherten Flag reiseBasisLuftlinie (True = Luftlinie
@@ -23468,7 +23502,7 @@ function ansichtEinstellungen(){
     { const fr = ladeEinstellungen(); e.praxen = fr.praxen; e.praxisAktiv = fr.praxisAktiv; }   // Liste der Wachen/Praxen nicht mit altem Stand ueberschreiben
     speichereEinstellungen(e); themaAnwenden();
   };
-  if(document.getElementById('chkDunkel')) document.getElementById('chkDunkel').onchange = anwenden;
+  if(document.getElementById('chkDunkel')) document.getElementById('chkDunkel').onchange = ()=>{ dunkelHandMerken(document.getElementById('chkDunkel').checked); anwenden(); };
   document.getElementById('txtPraxisadresse').addEventListener('blur', anwenden);
   praxenListeZeichnen();
 
@@ -24129,7 +24163,8 @@ document.getElementById('btnEinstellungen').onclick = ()=>{
 document.getElementById('btnDunkelToggle').onclick = ()=>{
   const e = ladeEinstellungen();
   e.dunkel = !e.dunkel;
-  e.dunkelManuell = true; // siehe dunkelModusAutoSyncEinrichten
+  e.dunkelManuell = false;
+  dunkelHandMerken(e.dunkel); // gilt bis zum naechsten Start, siehe dunkelModusAutoSyncEinrichten
   speichereEinstellungen(e);
   themaAnwenden();
   if(einstellungenOffen) ansichtEinstellungen();
@@ -24150,12 +24185,17 @@ document.getElementById('btnDunkelToggle').onclick = ()=>{
 // Dunkeldesign der App zu sehen, statt der ggf. fehlerhaften Nachfaerbung
 // des Browsers. Sobald einmal manuell umgeschaltet wurde, hat diese Wahl
 // Vorrang und wird nicht mehr automatisch ueberschrieben.
+// Wunsch 21.11.2026: Beim Start folgt die App IMMER dem Handy (iPhone: Darstellung "Automatisch" = hell am Tag,
+// dunkel nach Sonnenuntergang). Eine Wahl von Hand (Sonne/Mond, Einstellungen) gilt nur bis zum naechsten Start
+// -- gemerkt in sessionStorage, das beim Beenden der App verfaellt (Neuladen durch die App-Sperre behaelt sie).
+function dunkelHandMerken(an){ try{ sessionStorage.setItem('dunkel_hand', an ? '1' : '0'); }catch(_){} }
+function dunkelHandGewaehlt(){ try{ return sessionStorage.getItem('dunkel_hand') !== null; }catch(_){ return false; } }
 function dunkelModusAutoSyncEinrichten(){
   try{
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const abgleichen = ()=>{
       const e = ladeEinstellungen();
-      if(e.dunkelManuell) return; // bewusste Nutzerwahl hat Vorrang
+      if(dunkelHandGewaehlt()) return; // Wahl von Hand in dieser Sitzung hat Vorrang
       if(!!e.dunkel === mq.matches) return; // schon passend, nichts zu tun
       e.dunkel = mq.matches;
       speichereEinstellungen(e);
@@ -25928,8 +25968,14 @@ const NAV_STAPEL = []; let navZurueck = false;
 // Zurueck geht jetzt immer eine EBENE nach oben (wie der Pfeil oben links der
 // jeweiligen Ansicht), nicht mehr Schritt fuer Schritt durch den Verlauf.
 function navZurueckAusfuehren(f){ f(); }
+// Seite, auf der man gerade ist, zum Zurueckkehren (null auf der Startseite und in einer Fallmaske)
+function navAktuelleAnsicht(){
+  const o = NAV_STAPEL[NAV_STAPEL.length - 1];
+  if(!o || aktuelleAnsichtIstHauptbildschirm || /^(ansichtStart|ansichtMaske|ansichtGkv)$/.test(o.name)) return null;
+  return ()=> window[o.name].apply(null, o.args);
+}
 ['ansichtStart', 'ansichtFahrtenbuch', 'ansichtFahrdienstAuswertung', 'ansichtLuftlinienTool', 'ansichtGkvVerwaltung', 'ansichtKorrigieren',
- 'ansichtSyncBackups', 'ansichtAlleRechnungen', 'ansichtRechnungenGesamt', 'ansichtGkv', 'ansichtMaske', 'ansichtEinstellungen'].forEach(name=>{
+ 'ansichtSyncBackups', 'ansichtAlleRechnungen', 'ansichtRechnungenGesamt', 'ansichtGkv', 'ansichtMaske', 'ansichtEinstellungen', 'ansichtDienste'].forEach(name=>{
   const basis = window[name]; if(typeof basis !== 'function') return;
   window[name] = function(){
     const args = Array.from(arguments);
