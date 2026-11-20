@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-VkG+RycpPqSGfHZR9d8OQTpssrpsptqsp5MltcSkO6Y=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-yQDjF9tnMz8RQO654wGlvVmoMm11v+BAwgsA43YP5P0=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -3502,7 +3502,14 @@ function fahrdienstZeilenAuswerten(zeilen){
     if(leer(r[COL_A])){ zeile++; continue; }
 
     const blockStart = zeile;
-    const quartal = r[COL_A];
+    // Quartal aus Spalte A (wie bisher; nur wenn dort keine Zahl 1-4 steht, aus dem Datum). Passen Spalte A und Datum
+    // nicht zusammen (z. B. Datum vertippt), zeigt die Uebersicht einen Hinweis zum Pruefen (Fehler 20.11.2026).
+    const quartalA = r[COL_A];
+    const datumObj = fahrdienstDatumAusWert(r[COL_B]);
+    const quartalDatum = datumObj ? Math.floor(datumObj.getMonth() / 3) + 1 : null;
+    const aGueltig = /^[1-4]$/.test(String(quartalA).trim());
+    const quartal = aGueltig ? +String(quartalA).trim() : (quartalDatum || quartalA);
+    const quartalAbweichung = aGueltig && quartalDatum != null && quartal !== quartalDatum;
     const datumInfo = fahrdienstDatumInfo(r[COL_B]);
     const datumText = datumInfo.text;
     // Spalte A enthaelt NUR die Quartalszahl (1-4), ohne Jahr -- ueber
@@ -3558,7 +3565,7 @@ function fahrdienstZeilenAuswerten(zeilen){
     const zeitLabel = zeitInfo.label;
 
     bloecke.push({
-      quartal, quartalKey, datumText, zeitLabel,
+      quartal, quartalKey, quartalA, quartalAbweichung, datumText, zeitLabel,
       arzt, gesamt, stundenlohn, gkv, ls, pt, nGkv, nLs, nPt,
       gkvRoh, pauschale, satz, satzFormel, zusatz, pseudo, dienstart, satzGrund: fr.grund, foerderKey: foerderSchluessel(fahrdienstDatumAusWert(r[COL_B]), fctx.von), dienststunden,
       zeileStart: blockStart + 1, zeileEnde: blockEnde + 1, zeitRoh: r[COL_C]
@@ -4519,6 +4526,12 @@ function fahrdienstAuswertungRendernBasis(daten){
     </tr>`).join('') + '</table></div></div>';
 
   html += '<div class="abschnitt"><div class="trennlinie">Quartale je vertretenem Arzt</div>';
+  { // Spalte A im Fahrtenbuch passt nicht zum Datum: Hinweis (die App ordnet nach dem Datum)
+    const abw = daten.bloecke.filter(b=> b.quartalAbweichung);
+    if(abw.length) html += '<div class="design-hinweis fd-quartal-abw">⚠ Bei ' + (abw.length === 1 ? 'einem Dienst passen' : abw.length + ' Diensten passen') +
+      ' Datum und Quartal (Spalte A im Fahrtenbuch) nicht zusammen: ' + abw.slice(0, 5).map(b=> htmlEsc(b.datumText) + ' steht im ' + htmlEsc(String(b.quartalA).trim()) + '. Quartal').join(', ') + (abw.length > 5 ? ' …' : '') +
+      '. Bitte im Fahrtenbuch prüfen, ob das Datum oder das Quartal falsch ist.</div>';
+  }
   daten.quartale.forEach(q=>{
     html += `<div class="fahrdienst-quartal-titel">${htmlEsc(q.quartal)}</div>`;
     q.aerzte.forEach(a=>{
@@ -21844,7 +21857,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v502';
+const APP_VERSION = 'v503';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
