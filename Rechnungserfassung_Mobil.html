@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-dVfJQ37rA2o9avHghNDmsis76KJOzbeyppNtcHZNnno=' 'sha256-vs42HKFkPKfkyfOwPnu8zbRZ1nhNkmLsMApeyHbgH90='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-1ETc+R7GUqTX0W0KtmOchOYTcwQPRY4CdgP8YjwmvwA=' 'sha256-vs42HKFkPKfkyfOwPnu8zbRZ1nhNkmLsMApeyHbgH90='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1595,8 +1595,12 @@ try{
   .ds-ring-fort{fill:none; stroke:var(--ds-akzent); stroke-width:10; stroke-linecap:round;}
   .ds-ring-innen{fill:none; stroke:var(--rand); stroke-width:1; stroke-dasharray:1 7;}
   .ds-ring-fall{fill:var(--ds-gkv); stroke:var(--bg); stroke-width:2;}
-  .ds-ring-mitte{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;}
-  .ds-ring-zeit{font-family:var(--ds-display); font-weight:300; font-size:clamp(48px, 18vw, 74px); line-height:1; letter-spacing:-.02em; font-variant-numeric:lining-nums tabular-nums;}
+  /* Uhrzeit fest auf der waagrechten Mittellinie des Kreises (Wunsch 20.11.2026): Raster 1fr|auto|1fr, darueber und darunter
+     im selben Abstand wie bisher (4 px) */
+  .ds-ring-mitte{position:absolute; inset:0; display:grid; grid-template-rows:1fr auto 1fr; justify-items:center; row-gap:4px;}
+  .ds-ring-mitte > .ds-ring-kopf{align-self:end;}
+  .ds-ring-unten{align-self:start; display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .ds-ring-zeit{font-family:var(--ds-display); font-weight:300; font-size:clamp(43px, 16.2vw, 67px); line-height:1; letter-spacing:-.02em; font-variant-numeric:lining-nums tabular-nums;}
   .ds-ring-rest{font-size:14px; color:var(--text-schwach);}
   .ds-ring-grenzen{display:flex; justify-content:space-between; width:min(280px, 74vw); margin:2px auto 0; font-size:12px; color:var(--text-schwach); letter-spacing:.04em;}
   .ds-foerd{margin:20px 0 0; padding:14px 18px; border:1px solid var(--rand); border-radius:20px; display:flex; align-items:center; gap:14px; justify-content:space-between;}
@@ -22988,8 +22992,8 @@ function designRingHtml(info){
     '<circle cx="140" cy="140" r="126" class="ds-ring-aussen"/><circle cx="140" cy="140" r="' + r + '" class="ds-ring-spur"/>' +
     '<circle cx="140" cy="140" r="' + r + '" class="ds-ring-fort" stroke-dasharray="' + (u * p).toFixed(1) + ' ' + u.toFixed(1) + '" transform="rotate(-90 140 140)"/>' +
     '<circle cx="140" cy="140" r="94" class="ds-ring-innen"/>' + punkte + '</svg>' +
-    '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + kopf + '</span><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-rest">' + unter + '</span>' +
-      (sammelDa ? '<span class="ds-ring-sammel">Σ Sammel' + (l.ringBetrag && sammelSumme ? ' ' + Math.round(sammelSumme) + ' €' : '') + '</span>' : '') + '</div></div>';
+    '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + kopf + '</span><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-unten"><span class="ds-ring-rest">' + unter + '</span>' +
+      (sammelDa ? '<span class="ds-ring-sammel">Σ Sammel' + (l.ringBetrag && sammelSumme ? ' ' + Math.round(sammelSumme) + ' €' : '') + '</span>' : '') + '</span></div></div>';
 }
 
 function designStartErgaenzen(){
