@@ -25,7 +25,7 @@ module.exports = async ({ browser, basis, pr })=>{
     catch(e){ return { gl2, ok: false, fehler: String(e && e.message || e) }; }
   });
   if(!r1.gl2){ pr('WebGL2 im Testbrowser vorhanden (sonst Kartentest nicht möglich)', false, r1); await c.close(); return; }
-  pr('MapLibre 6.4.1 lädt als ES-Modul, steht als maplibregl bereit, CSS eingebunden', r1.ok && r1.version === '6.4.1' && r1.global && r1.protokoll === 'function' && r1.css, r1);
+  pr('MapLibre 6.19.0 lädt als ES-Modul, steht als maplibregl bereit, CSS eingebunden', r1.ok && r1.version === '6.19.0' && r1.global && r1.protokoll === 'function' && r1.css, r1);
 
   // Karte mit Stil über vkofm:// und eigener GeoJSON-Ebene (Worker-Modul muss laufen)
   const r2 = await p.evaluate(()=> new Promise((ok)=>{

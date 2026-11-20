@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-yQDjF9tnMz8RQO654wGlvVmoMm11v+BAwgsA43YP5P0=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-wWAGevJmrFQPBZyVFZhPZ60ed3j33uXqxHfrc35JhiA=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -483,7 +483,7 @@ try{
 <!-- BETA: JSZip zum Erzeugen der Word-Datei (.docx) -->
 <script>window.DEMO_MODUS = (function(){ try{ return sessionStorage.getItem('demo_modus') || ''; }catch(_){ return ''; } })(); window.TRESOR_DB_NAME = 'rechnung_privat_tresor';</script>
 <!-- Datentresor wie in der Launch-Version (Sicherheitsbericht P1): Passwort / Fingerabdruck oeffnet den Schluessel -->
-<script src="lib/argon2.umd.min.js"></script>  <!-- hash-wasm 4.12.0 (MIT): Argon2id -->
+<script src="lib/argon2.umd.min.js"></script>  <!-- hash-wasm 4.13.0 (MIT): Argon2id -->
 <script src="lokal/krypto.js"></script>
 <script src="lokal/sperrliste.js"></script>
 <script src="lokal/tresor.js"></script>
@@ -11767,7 +11767,7 @@ function betaWischen(el, beimLoeschen){
 // Statt OneDrive im Browser (dort klappte es beim allerersten Oeffnen oft
 // nicht, weil die Microsoft-Anmeldung im Browser erst aufgebaut wird) laedt
 // die App die PDF selbst und zeigt sie mit pdf.js an.
-// pdf.js liegt in der App selbst (lib/pdfjs, Version 6.2.108), kein fremdes CDN
+// pdf.js liegt in der App selbst (lib/pdfjs, Version 6.5.438, Ausgabe "legacy" fuer aeltere Browser), kein fremdes CDN
 const PDFJS_URL = new URL('lib/pdfjs/pdf.min.mjs', location.href).href;
 const PDFJS_WORKER = new URL('lib/pdfjs/pdf.worker.min.mjs', location.href).href;
 let pdfjsPromise = null;
@@ -18810,7 +18810,7 @@ async function rdGirocodeEinsetzen(zip, png, imText, textEinruecken, abstandVor)
 // MapLibre 6.x gibt es nur noch als ES-Modul (maplibre-gl.mjs + maplibre-gl-shared.mjs); den Hintergrund-Worker
 // (maplibre-gl-worker.mjs) laedt die Bibliothek selbst aus demselben Ordner. Ab Version 6 ist WebGL2 Pflicht --
 // ohne WebGL2 (sehr alte Geraete) wird abgelehnt, die Aufrufer zeigen dann die normale Karte.
-const VK_VERSION = '6.4.1';
+const VK_VERSION = '6.19.0';
 let vkLaden = null;
 function vkWebgl2(){ try{ const c = document.createElement('canvas'); return !!(window.WebGL2RenderingContext && c.getContext('webgl2')); }catch(_){ return false; } }
 function vkMaplibreHolen(){
@@ -21857,7 +21857,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v503';
+const APP_VERSION = 'v504';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{

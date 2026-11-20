@@ -12,21 +12,21 @@
 //
 // Bei JEDER Veröffentlichung: CACHE_NAME erhöhen und danach „node werkzeuge/sw_dateien.js“ ausführen (trägt die
 // Prüfsummen ein; tests/statisch.js prüft das). Neue Dateien der App hier in DATEIEN aufnehmen.
-const CACHE_NAME = 'rechnungserfassung-v503';
+const CACHE_NAME = 'rechnungserfassung-v504';
 const CACHE_PRAEFIX = CACHE_NAME.replace(/\d+$/, '');   // alle Versionen dieser App: gleicher Anfang, andere Nummer
 const DATEIEN = {
 // >>> DATEIEN (Prüfsummen erzeugt von werkzeuge/sw_dateien.js – nicht von Hand ändern)
-  './Rechnungserfassung_Mobil.html': 'TyJlQ0K0hdaYJfSU08HrwPfEtf9v46QVA/LLxDB6+Lw=',
+  './Rechnungserfassung_Mobil.html': 'N9zYyUaG4XiZqL4JTuBmYwTPtoGyG5UwxcLQYFd6+j0=',
   './manifest.json': 'oGmycJijIIy67JQt2/9DPvS7LFo04ldRKRTIcpUcfxY=',
   './': 'HAHncj5UelMdOHtP3EGp0CI7BT/TzLQ7grnGteDXT60=',
   './lib/msal/msal-browser.min.js': 'ERWwgEmLebC0tiHdPfR4sKmxA19dB21XQdGIjwaSO4Q=',
-  './lib/jszip.min.js': 'rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=',
-  './lib/pdfjs/pdf.min.mjs': 'n6sMkQvxSEg1xcKuto9+s9/Of560NaAEUmxa+G1wiQw=',
-  './lib/pdfjs/pdf.worker.min.mjs': 'vA0biOoLZhlrHTalisJDxtkq3+clYk4qn904G9+O9DQ=',
-  './lib/maplibre/maplibre-gl.mjs': 'l+i5o5q4uCPWoMr5wxIjcmK8kTimFi2eKWBvX40kEn0=',
-  './lib/maplibre/maplibre-gl-shared.mjs': '/PTYFFDfI12grqdIl8wjkmd0tSKNOK4d5qfXAcWQV4U=',
-  './lib/maplibre/maplibre-gl-worker.mjs': 'zklXAX/nBawvnr7yBsypZtCNhiF1bDkyanjPCXV+fXU=',
-  './lib/maplibre/maplibre-gl.css': 'ji27qzEtxXZW+7dun6UwjHXJ18e6WAin1VvNtkzIE/o=',
+  './lib/jszip.min.js': 'f4ObLUaIuEXBBev10vmAMHX5HqD+cr2qwXbDoE3T0sE=',
+  './lib/pdfjs/pdf.min.mjs': 'UirSyDvIoAEOfwzGDQiSt3yNK/LJcC3BIogxHZQnD0I=',
+  './lib/pdfjs/pdf.worker.min.mjs': 'tMg1Pe0NiNLiAJV0op604MP/fpQuzfUe9fcVZqlmfzE=',
+  './lib/maplibre/maplibre-gl.mjs': 'AVkMmHXqW7DozcU0R59gf30Wlcpd67zK9zDt9fpfOeU=',
+  './lib/maplibre/maplibre-gl-shared.mjs': '47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=',
+  './lib/maplibre/maplibre-gl-worker.mjs': 'yFZMSkFHMmpYfJzEwqhxxLAqbDfD8epR2lW+MiDUsRI=',
+  './lib/maplibre/maplibre-gl.css': 'qQeYoZUwF3kOWQ9+G9Nf8QOopCY5cstHKQt4rfhvjCA=',
   './lib/qrcode/qrcode.js': 'eeyG+ChWAFsciHkFz8z8++w4Icphx/1alS+qX3ePeRw=',
   './lib/banken.js': 'aelbdgzHW95ninFz0qckXpUyKKierKworLTb6UMXQLU=',
   './icd_katalog.js': 'FsOUaVmlU67By2PwKv8inbjI169q0piRZEjdjfvqTxU=',
@@ -43,7 +43,7 @@ const DATEIEN = {
   './lokal/mappe.js': 'egrkS5t7q7gobcjPyN6WvgCtYtvIcAAtLyF+FenRYHk=',
   './lokal/tresor_start.js': 'DjDX1uUoukI5FX2b2sg/5ICFgqZ6rBO7+ED5YLW1xeA=',
   './lokal/sperrliste.js': '4Ml51NOEu8uk1tqq9/FM0B4a8bBO1z3hLr7FgtWHFFY=',
-  './lib/argon2.umd.min.js': 'sPJ7Mmh0Fi/T+GVaGZT4WIHEMq/YfF23Flyb93WmykE=',
+  './lib/argon2.umd.min.js': 'rP4RsBWFL1k6rdxREW9x3HhQ5FUeazTULB+IzzljXwM=',
   './lokal/tresor.js': 'sg4uMcJjdB1DO7t3c04z05dqt+uD8vJAZerPWiqZwWw=',
 // <<< DATEIEN
 };

@@ -45,19 +45,19 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.'''
 teile = []  # (Titel, Lizenz, Copyright, Volltext oder None fuer Apache)
-teile.append(('MapLibre GL JS 6.4.1 (lib/maplibre/)', 'BSD-3-Clause', 'Copyright (c) 2023, MapLibre contributors\nCopyright (c) 2014-2020, Mapbox', BSD3))
-teile.append(('pdf.js / pdfjs-dist 6.2.108 (lib/pdfjs/)', 'Apache-2.0', 'Copyright (c) Mozilla Foundation and pdf.js contributors', None))
+teile.append(('MapLibre GL JS 6.19.0 (lib/maplibre/)', 'BSD-3-Clause', 'Copyright (c) 2023, MapLibre contributors\nCopyright (c) 2014-2020, Mapbox', BSD3))
+teile.append(('pdf.js / pdfjs-dist 6.5.438 (lib/pdfjs/)', 'Apache-2.0', 'Copyright (c) Mozilla Foundation and pdf.js contributors', None))
 teile.append(('pdf-lib 1.17.1 (lib/pdf-lib.min.js)', 'MIT', 'Copyright (c) 2019 Andrew Dillon', MIT))
 teile.append(('SheetJS Community Edition xlsx 0.18.5 (lib/xlsx/)', 'Apache-2.0', '(C) 2013-present SheetJS LLC', None))
-teile.append(('JSZip 3.10.1 (lib/jszip.min.js), genutzt unter der MIT-Lizenz (JSZip ist MIT oder GPLv3)', 'MIT', 'Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso', MIT))
+teile.append(('JSZip 3.10.2 (lib/jszip.min.js), genutzt unter der MIT-Lizenz (JSZip ist MIT oder GPLv3)', 'MIT', 'Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso', MIT))
 teile.append(('QR Code Generator for JavaScript (lib/qrcode/)', 'MIT', '', lesen('qrcode/LICENSE')))
 if launch:
-    teile.append(('hash-wasm 4.12.0 (lib/argon2.umd.min.js)', 'MIT', 'Copyright (c) Dani Biro', MIT))
+    teile.append(('hash-wasm 4.13.0 (lib/argon2.umd.min.js)', 'MIT', 'Copyright (c) Dani Biro', MIT))
 else:
     teile.append(('Microsoft Authentication Library for JavaScript, msal-browser 5.30.0 (lib/msal/)', 'MIT', 'Copyright (c) Microsoft Corporation. All rights reserved.', MIT))
 teile.append(('Bankleitzahlen-Daten (lib/banken.js), aufbereitet aus dem Projekt "schwifty"', 'MIT', 'Copyright (c) 2021 Martin Domke\nDaten: Deutsche Bundesbank, Oesterreichische Nationalbank, SIX Group', MIT))
 teile.append(('Schriften Foxit (lib/pdfjs/standard_fonts/Foxit*)', 'BSD-3-Clause (PDFium Authors)', '', lesen('pdfjs/standard_fonts/LICENSE_FOXIT')))
-teile.append(('Schriften Liberation (lib/pdfjs/standard_fonts/Liberation*)', 'SIL Open Font License 1.1', '', lesen('pdfjs/standard_fonts/LICENSE_LIBERATION')))
+teile.append(('Schriften Liberation 1.07.4 (lib/pdfjs/standard_fonts/Liberation*)', 'Liberation-Schriftenlizenz (GNU GPL v2 mit Ausnahme für eingebettete Schriften), Red Hat', '', lesen('pdfjs/standard_fonts/LICENSE_LIBERATION')))
 
 out = []
 out.append('OPEN-SOURCE-LIZENZEN UND DATENQUELLEN')
