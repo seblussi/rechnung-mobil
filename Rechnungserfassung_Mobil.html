@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-C1BCqLFukKTns4lzp4FabiXIrQc1ZgFR2zxejUg/YrM=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-VkG+RycpPqSGfHZR9d8OQTpssrpsptqsp5MltcSkO6Y=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -18794,18 +18794,25 @@ async function rdGirocodeEinsetzen(zip, png, imText, textEinruecken, abstandVor)
 // Inhalte wie die normale grosse Karte (Zonen, Route, Varianten, Luftlinie, Einsatzorte,
 // NFP/Wache); fuer die KVBW-Ansicht und die Auswahl einer Einsatzstelle (GKV) wird
 // die normale Karte verwendet.
-const VK_VERSION = '4.7.1';
+// MapLibre 6.x gibt es nur noch als ES-Modul (maplibre-gl.mjs + maplibre-gl-shared.mjs); den Hintergrund-Worker
+// (maplibre-gl-worker.mjs) laedt die Bibliothek selbst aus demselben Ordner. Ab Version 6 ist WebGL2 Pflicht --
+// ohne WebGL2 (sehr alte Geraete) wird abgelehnt, die Aufrufer zeigen dann die normale Karte.
+const VK_VERSION = '6.4.1';
 let vkLaden = null;
+function vkWebgl2(){ try{ const c = document.createElement('canvas'); return !!(window.WebGL2RenderingContext && c.getContext('webgl2')); }catch(_){ return false; } }
 function vkMaplibreHolen(){
   if(window.maplibregl) return Promise.resolve(window.maplibregl);
   if(vkLaden) return vkLaden;
-  vkLaden = new Promise((ok, fehler)=>{
+  if(!vkWebgl2()) return Promise.reject(new Error('WebGL2 fehlt – Vektorkarte nicht möglich'));
+  if(!document.querySelector('link[href="lib/maplibre/maplibre-gl.css"]')){
     const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'lib/maplibre/maplibre-gl.css'; document.head.appendChild(css);
-    const s = document.createElement('script'); s.src = 'lib/maplibre/maplibre-gl.js';
-    s.onload = ()=>{ if(!window.maplibregl) return fehler(new Error('MapLibre fehlt')); try{ maplibregl.addProtocol('vkofm', vkProtokoll); }catch(_){} ok(window.maplibregl); };
-    s.onerror = ()=>{ vkLaden = null; fehler(new Error('MapLibre konnte nicht geladen werden')); };
-    document.head.appendChild(s);
-  });
+  }
+  vkLaden = import(new URL('lib/maplibre/maplibre-gl.mjs', location.href).href).then((ml)=>{
+    if(!ml || typeof ml.Map !== 'function') throw new Error('MapLibre fehlt');
+    try{ ml.addProtocol('vkofm', vkProtokoll); }catch(_){}
+    window.maplibregl = ml;
+    return ml;
+  }).catch((e)=>{ vkLaden = null; console.warn('MapLibre', e); throw new Error('MapLibre konnte nicht geladen werden'); });
   return vkLaden;
 }
 function vkAn(){ return (ladeEinstellungen() || {}).karteVektor !== false; }   // Vorauswahl: an
@@ -19143,7 +19150,7 @@ function vkKachelnNachladen(map){
   const online = ()=>{ if(!map.getContainer().isConnected){ window.removeEventListener('online', online); return; } n = 0; if(!t) t = setTimeout(nach, 800); };
   window.addEventListener('online', online);
 }
-// MapLibre 4.7 ueberspringt die erste Groessenmeldung seines ResizeObservers. Waechst das Kartenfeld
+// MapLibre (seit 4.7) ueberspringt die erste Groessenmeldung seines ResizeObservers. Waechst das Kartenfeld
 // genau in diesem Moment (die kleine Karte fuellt nach dem Start den freien Platz), bleibt die Zeichenflaeche
 // zu klein und unten/rechts erscheint ein leerer Balken. Deshalb selbst nachmessen und nachziehen.
 function vkGroesseNachziehen(map){
@@ -21837,7 +21844,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v501';
+const APP_VERSION = 'v502';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{

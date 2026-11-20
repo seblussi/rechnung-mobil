@@ -12,19 +12,21 @@
 //
 // Bei JEDER Veröffentlichung: CACHE_NAME erhöhen und danach „node werkzeuge/sw_dateien.js“ ausführen (trägt die
 // Prüfsummen ein; tests/statisch.js prüft das). Neue Dateien der App hier in DATEIEN aufnehmen.
-const CACHE_NAME = 'rechnungserfassung-v501';
+const CACHE_NAME = 'rechnungserfassung-v502';
 const CACHE_PRAEFIX = CACHE_NAME.replace(/\d+$/, '');   // alle Versionen dieser App: gleicher Anfang, andere Nummer
 const DATEIEN = {
 // >>> DATEIEN (Prüfsummen erzeugt von werkzeuge/sw_dateien.js – nicht von Hand ändern)
-  './Rechnungserfassung_Mobil.html': 'hGWRxm6DJ3V5gjhJ/UqJd9oJxmr06G90fp2Svcmz310=',
+  './Rechnungserfassung_Mobil.html': 'aR77A92srdzGDC6YEsMm2ZQ82yASEy+UE1FG3GOd6FY=',
   './manifest.json': 'oGmycJijIIy67JQt2/9DPvS7LFo04ldRKRTIcpUcfxY=',
   './': 'HAHncj5UelMdOHtP3EGp0CI7BT/TzLQ7grnGteDXT60=',
   './lib/msal/msal-browser.min.js': 'ERWwgEmLebC0tiHdPfR4sKmxA19dB21XQdGIjwaSO4Q=',
   './lib/jszip.min.js': 'rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=',
   './lib/pdfjs/pdf.min.mjs': 'n6sMkQvxSEg1xcKuto9+s9/Of560NaAEUmxa+G1wiQw=',
   './lib/pdfjs/pdf.worker.min.mjs': 'vA0biOoLZhlrHTalisJDxtkq3+clYk4qn904G9+O9DQ=',
-  './lib/maplibre/maplibre-gl.js': '6Hf+Iv36xknN9MrCfWbky0hyxZYK3Nkimp65k8Itr7g=',
-  './lib/maplibre/maplibre-gl.css': 'V2sIX92Uh6ZaGSFTKMHghsB85b9toJtmazgG09AI2uk=',
+  './lib/maplibre/maplibre-gl.mjs': 'l+i5o5q4uCPWoMr5wxIjcmK8kTimFi2eKWBvX40kEn0=',
+  './lib/maplibre/maplibre-gl-shared.mjs': '/PTYFFDfI12grqdIl8wjkmd0tSKNOK4d5qfXAcWQV4U=',
+  './lib/maplibre/maplibre-gl-worker.mjs': 'zklXAX/nBawvnr7yBsypZtCNhiF1bDkyanjPCXV+fXU=',
+  './lib/maplibre/maplibre-gl.css': 'ji27qzEtxXZW+7dun6UwjHXJ18e6WAin1VvNtkzIE/o=',
   './lib/qrcode/qrcode.js': 'eeyG+ChWAFsciHkFz8z8++w4Icphx/1alS+qX3ePeRw=',
   './lib/banken.js': 'aelbdgzHW95ninFz0qckXpUyKKierKworLTb6UMXQLU=',
   './icd_katalog.js': 'FsOUaVmlU67By2PwKv8inbjI169q0piRZEjdjfvqTxU=',

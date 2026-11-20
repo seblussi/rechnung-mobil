@@ -30,8 +30,14 @@ Write-Host '== 2. Gegen die Originalpakete ==' -ForegroundColor Cyan
 $pakete = @(
   @{ lib = 'lib/argon2.umd.min.js';          url = 'https://registry.npmjs.org/hash-wasm/-/hash-wasm-4.12.0.tgz';                  im = 'dist/argon2.umd.min.js' },
   @{ lib = 'lib/jszip.min.js';               url = 'https://registry.npmjs.org/jszip/-/jszip-3.10.1.tgz';                          im = 'dist/jszip.min.js' },
-  @{ lib = 'lib/maplibre/maplibre-gl.js';    url = 'https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-4.7.1.tgz';               im = 'dist/maplibre-gl.js' },
-  @{ lib = 'lib/maplibre/maplibre-gl.css';   url = 'https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-4.7.1.tgz';               im = 'dist/maplibre-gl.css' },
+  @{ lib = 'lib/maplibre/maplibre-gl.mjs';     url = 'https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-6.4.1.tgz';               im = 'dist/maplibre-gl.mjs';
+     sri = 'sha512-KzxQKtfBu/pSz1C+yW1hNS9eyj2h2lC7ufdAi6/SEt177n3oAfDfmUmslRfJdXY7ReAFBcnvwsqmiyoDhtA9GQ==' },
+  @{ lib = 'lib/maplibre/maplibre-gl-shared.mjs'; url = 'https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-6.4.1.tgz';               im = 'dist/maplibre-gl-shared.mjs';
+     sri = 'sha512-KzxQKtfBu/pSz1C+yW1hNS9eyj2h2lC7ufdAi6/SEt177n3oAfDfmUmslRfJdXY7ReAFBcnvwsqmiyoDhtA9GQ==' },
+  @{ lib = 'lib/maplibre/maplibre-gl-worker.mjs'; url = 'https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-6.4.1.tgz';               im = 'dist/maplibre-gl-worker.mjs';
+     sri = 'sha512-KzxQKtfBu/pSz1C+yW1hNS9eyj2h2lC7ufdAi6/SEt177n3oAfDfmUmslRfJdXY7ReAFBcnvwsqmiyoDhtA9GQ==' },
+  @{ lib = 'lib/maplibre/maplibre-gl.css';     url = 'https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-6.4.1.tgz';               im = 'dist/maplibre-gl.css';
+     sri = 'sha512-KzxQKtfBu/pSz1C+yW1hNS9eyj2h2lC7ufdAi6/SEt177n3oAfDfmUmslRfJdXY7ReAFBcnvwsqmiyoDhtA9GQ==' },
   @{ lib = 'lib/msal/msal-browser.min.js';   url = 'https://registry.npmjs.org/@azure/msal-browser/-/msal-browser-5.30.0.tgz';     im = 'lib/msal-browser.min.js';
      sri = 'sha512-o/ADxWxEFcVrE65a7ssOGuxnivq8lcy+2hSGlOOwtn0gGd6iiwl3q8/BMVRorYE81UB/r4B+8WGEUxWnqP7ryA==' },
   @{ lib = 'lib/pdf-lib.min.js';             url = 'https://registry.npmjs.org/pdf-lib/-/pdf-lib-1.17.1.tgz';                      im = 'dist/pdf-lib.min.js' },

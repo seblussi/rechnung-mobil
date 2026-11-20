@@ -45,7 +45,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.'''
 teile = []  # (Titel, Lizenz, Copyright, Volltext oder None fuer Apache)
-teile.append(('MapLibre GL JS 4.7.1 (lib/maplibre/)', 'BSD-3-Clause', 'Copyright (c) 2023, MapLibre contributors\nCopyright (c) 2014-2020, Mapbox', BSD3))
+teile.append(('MapLibre GL JS 6.4.1 (lib/maplibre/)', 'BSD-3-Clause', 'Copyright (c) 2023, MapLibre contributors\nCopyright (c) 2014-2020, Mapbox', BSD3))
 teile.append(('pdf.js / pdfjs-dist 6.2.108 (lib/pdfjs/)', 'Apache-2.0', 'Copyright (c) Mozilla Foundation and pdf.js contributors', None))
 teile.append(('pdf-lib 1.17.1 (lib/pdf-lib.min.js)', 'MIT', 'Copyright (c) 2019 Andrew Dillon', MIT))
 teile.append(('SheetJS Community Edition xlsx 0.18.5 (lib/xlsx/)', 'Apache-2.0', '(C) 2013-present SheetJS LLC', None))

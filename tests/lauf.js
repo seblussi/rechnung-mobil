@@ -7,7 +7,7 @@
 //              AUSFUEHRLICH=1 node tests/lauf.js   auch bei bestandenen Prüfungen die Einzelheiten zeigen
 const http = require('http'), fs = require('fs'), path = require('path');
 const WURZEL = path.resolve(__dirname, '..');
-const TYP = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.css': 'text/css',
+const TYP = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.json': 'application/json', '.css': 'text/css',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.txt': 'text/plain; charset=utf-8', '.ini': 'text/plain' };
 function server(){
   return new Promise((ok)=>{

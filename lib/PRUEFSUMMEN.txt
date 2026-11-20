@@ -1,9 +1,11 @@
 # SHA-512 aller Bibliotheksdateien in lib/ (Stand 2026-11-14). Abgleich: sha512sum -c lib/PRUEFSUMMEN.txt
-# Echtheit am 2026-11-14 gegen die offizielle Veroeffentlichung geprueft (identisch): JSZip, qrcode, MapLibre 4.7.1 (dort nur der Kommentar zur Quellkarte am Dateiende entfernt). Noch offen: pdf.js, pdf-lib.
+# Echtheit am 2026-11-14 gegen die offizielle Veroeffentlichung geprueft (identisch): JSZip, qrcode. Noch offen: pdf.js, pdf-lib.
 9863c6a47d7b015bf6737d0b37b53391e6e37e3eae1cfa06b75b3039b66a77c603898d482a4a8dd2a95788dc916a4a5fd81bd1ff357bea00ec20d551a38700ef  lib/banken.js
 5cc55ddbc175a07fceef57f3c019d5ec7b9c2f1570b717f6e9757c3f8c0f936e840f1b8667dd4df1bb0eb6d9a7a267020f7092e593112f9d07d0680e1ef7a0b6  lib/jszip.min.js
-e8062434f73c12f03d5b00b40af6d14075a92b5cd5d7e41e5be95505f62a376cd37c6f487d63113325033b0e86745e544b4a6823f0bfa73f2d9222fe9df9981e  lib/maplibre/maplibre-gl.css
-18cd29384abf7ba5237ba04aa31c2e99ff36357aa3be2cbf7dff71556a0a8563923f9a962b304d654d864bc4f209ef7da637742a89bdc01466b850befa2161be  lib/maplibre/maplibre-gl.js
+51b50c32d3b3ba42964f6a03632bef7df0f1a9951cee902f0f69a76bae1ed82852cc1af777486fbdb7cfbee7df9da3dc311a17179acbe9d47e5ee8b820ed953e  lib/maplibre/maplibre-gl.css
+6893061df2ffd743d8d772e1d733397395e934d287dcc9ca82ffa533ebf68ba1fc24e27760739c5785a4842962eab2e82dff6943aab63affb4224ad76e8c1e7e  lib/maplibre/maplibre-gl.mjs
+c854ace8813c76254d8942062c1327fc52731aa8ea78ebaec6173ebcd4fb779c1e92843da54ce2dfca0fbea92a365d3fe57820b1ba61bbaf42c6fd00fb434b16  lib/maplibre/maplibre-gl-shared.mjs
+3fcf28993406ea5e481aaa58bf80d0ee60ccf5d77982af36b8d68d787fa6394dc6c5338e6fbdfc84dfc9112db775d6128a0ca66510178715c870c4cae5cc86b8  lib/maplibre/maplibre-gl-worker.mjs
 3431bb386b0a1fbd5363dd80c38884eafe42baa6bd6092ae9f414d49a62c6916662e73c87dc52ae0a0bf8698988cf75bdc12ff3bc17fa02f1c98451f774c8dc6  lib/msal/msal-browser.min.js
 cfc2182c73bc6d3805aa3fb2acfc88267cc10dfec30e15b0884b24e2c63e39ee89d8cf9641eaae7864bbaa2a08e6f4faad781545be0ad545500b9111ecc2b329  lib/pdf-lib.min.js
 450da3115b6108b8228e70fd28fa784831b9bb14bc97b86fab2e3a31be3e641b1fbca0fec45381da125a15a18d1d1d0d9ce94d41d90f790da1da3fbc926ca7cc  lib/pdfjs/pdf.min.mjs
@@ -33,3 +35,5 @@ b60cb44311fdb1229ee7d0a209680f272967f7d528222b9e74481d1a9df95fbea7d7d74417fb9839
 # keine Netz-/Speicherzugriffe, liest alle Vorlagen in starter/ zellgenau wie 0.18.5. Gegen eine offizielle Pruefsumme nicht abgeglichen (cdn.sheetjs.com von hier nicht erreichbar).
 # MSAL (@azure/msal-browser) 5.30.0 am 2026-11-20 eingesetzt: Paket von registry.npmjs.org geladen, gegen die npm-Pruefsumme (integrity)
 # sha512-o/ADxWxEFcVrE65a7ssOGuxnivq8lcy+2hSGlOOwtn0gGd6iiwl3q8/BMVRorYE81UB/r4B+8WGEUxWnqP7ryA== abgeglichen (identisch); lib/msal/msal-browser.min.js ist unveraendert lib/msal-browser.min.js aus dem Paket.
+# MapLibre GL JS 6.4.1 am 2026-11-20 eingesetzt: Paket von registry.npmjs.org geladen, gegen die npm-Pruefsumme (integrity)
+# sha512-KzxQKtfBu/pSz1C+yW1hNS9eyj2h2lC7ufdAi6/SEt177n3oAfDfmUmslRfJdXY7ReAFBcnvwsqmiyoDhtA9GQ== abgeglichen (identisch); lib/maplibre/*.mjs und maplibre-gl.css sind unveraendert aus dist/ des Pakets (Kommentar zur Quellkarte belassen, die .map-Dateien werden nicht mitgeliefert).
