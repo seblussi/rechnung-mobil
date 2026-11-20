@@ -42,7 +42,8 @@ $pakete = @(
      sri = 'sha512-3bOrnfddggUYudLGJFsYFvqulUyvSxy4iQzd/uURI7ZhgYEZifdSrECujRSghaCpc+v/ZsFI0Y6ZsGSilEtE+w==' },
   @{ lib = 'lib/msal/msal-browser.min.js';   url = 'https://registry.npmjs.org/@azure/msal-browser/-/msal-browser-5.30.0.tgz';     im = 'lib/msal-browser.min.js';
      sri = 'sha512-o/ADxWxEFcVrE65a7ssOGuxnivq8lcy+2hSGlOOwtn0gGd6iiwl3q8/BMVRorYE81UB/r4B+8WGEUxWnqP7ryA==' },
-  @{ lib = 'lib/pdf-lib.min.js';             url = 'https://registry.npmjs.org/pdf-lib/-/pdf-lib-1.17.1.tgz';                      im = 'dist/pdf-lib.min.js' },
+  @{ lib = 'lib/pdf-lib.min.js';             url = 'https://registry.npmjs.org/pdf-lib/-/pdf-lib-1.17.1.tgz';                      im = 'dist/pdf-lib.min.js';
+     sri = 'sha512-V/mpyJAoTsN4cnP31vc0wfNA1+p20evqqnap0KLoRUN0Yk/p3wN52DOEsL4oBFcLdb76hlpKPtzJIgo67j/XLw==' },
   @{ lib = 'lib/pdfjs/pdf.min.mjs';          url = 'https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.5.438.tgz';               im = 'legacy/build/pdf.min.mjs';
      sri = 'sha512-vg8Pw1x+AFKy4AMDvhuWl5cOYV8d698UoEANoFFhc79hqXDnZQqnOXoxw3HG907WHOg1JYOvLhP756boddFxpA==' },
   @{ lib = 'lib/pdfjs/pdf.worker.min.mjs';   url = 'https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.5.438.tgz';               im = 'legacy/build/pdf.worker.min.mjs';
@@ -50,7 +51,8 @@ $pakete = @(
   @{ lib = 'lib/pdfjs/standard_fonts/*';     url = 'https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.5.438.tgz';               im = 'standard_fonts';
      sri = 'sha512-vg8Pw1x+AFKy4AMDvhuWl5cOYV8d698UoEANoFFhc79hqXDnZQqnOXoxw3HG907WHOg1JYOvLhP756boddFxpA==' },
   @{ lib = 'lib/qrcode/qrcode.js';           url = 'https://registry.npmjs.org/qrcode-generator/-/qrcode-generator-2.0.4.tgz';     im = 'qrcode.js' },
-  @{ lib = 'lib/xlsx/xlsx.full.min.js';      url = 'https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz';                          im = 'dist/xlsx.full.min.js' }
+  @{ lib = 'lib/xlsx/xlsx.full.min.js';      url = 'https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz';                          im = 'dist/xlsx.full.min.js';
+     sri = 'sha512-oLDq3jw7AcLqKWH2AhCpVTZl8mf6X2YReP+Neh0SJUzV/BdZYjth94tG5toiMB1PPrYtxOCfaoUCkvtuH+3AJA==' }   # Stand 2026-11-20 (keine offizielle Pruefsumme von SheetJS)
 )
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ('lib_pruefen_' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory $tmp | Out-Null
