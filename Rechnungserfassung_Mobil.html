@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-yfsYizy5EoqQFuDozHuO3G6vHUxj+0KoiB0sbVIiHYU=' 'sha256-vs42HKFkPKfkyfOwPnu8zbRZ1nhNkmLsMApeyHbgH90='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-3bMJdKIpWvD1Adu/Sk2kx4KhZ8bqXR3paQfM6bTRg6Y=' 'sha256-vs42HKFkPKfkyfOwPnu8zbRZ1nhNkmLsMApeyHbgH90='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -479,7 +479,7 @@ try{
 <!-- MSAL Browser (Microsoft Authentication Library) -- fuer die Microsoft-
      Anmeldung (OneDrive-Zugriff via Graph API), siehe Abschnitt
      "OneDrive-Anmeldung" weiter unten. -->
-<script src="lib/msal/msal-browser.min.js"></script>  <!-- @azure/msal-browser 3.30.0 (MIT), lokal statt CDN -->
+<script src="lib/msal/msal-browser.min.js"></script>  <!-- @azure/msal-browser 5.30.0 (MIT), lokal statt CDN -->
 <!-- BETA: JSZip zum Erzeugen der Word-Datei (.docx) -->
 <script>window.DEMO_MODUS = (function(){ try{ return sessionStorage.getItem('demo_modus') || ''; }catch(_){ return ''; } })(); window.TRESOR_DB_NAME = 'rechnung_privat_tresor';</script>
 <!-- Datentresor wie in der Launch-Version (Sicherheitsbericht P1): Passwort / Fingerabdruck oeffnet den Schluessel -->
@@ -3124,17 +3124,22 @@ async function msGraphTokenHolen(){
   if(window.DEMO_MODUS) return 'demo';
   if(msAnmeldeArt() === 'eigen'){ if(msGraphStatus !== 'angemeldet') return null; try{ return await MsEigen.token(); }catch(_){ return null; } }
   if(msGraphStatus !== 'angemeldet' || !msGraphMsal) return null;
-  const konto = msGraphMsal.getActiveAccount();
+  const konto = msGraphMsal.getActiveAccount() || msGraphMsal.getAllAccounts()[0] || null;
   if(!konto) return null;
   try{
-    const ergebnis = await msGraphMsal.acquireTokenSilent({ scopes: MSGRAPH_SCOPES, account: konto });
+    // MSAL 5: nur Zwischenspeicher und Langzeitschluessel, KEINE stille Erneuerung im versteckten Fenster (iframe).
+    // Die braeuchte ab MSAL 5 eine eigene Bruecken-Seite als Redirect-URI; mit der App-Seite als Redirect-URI liefe
+    // sie nur 10 s ins Leere (und scheiterte auf dem iPhone ohnehin an gesperrten Microsoft-Cookies fremder Seiten).
+    const ergebnis = await msGraphMsal.acquireTokenSilent({ scopes: MSGRAPH_SCOPES, account: konto,
+      cacheLookupPolicy: msal.CacheLookupPolicy.AccessTokenAndRefreshToken });
     window.__msTokenFehler = '';
     return ergebnis.accessToken;
   }catch(e){
-    // Typisch: Langzeitschluessel abgelaufen (bei Browser-Apps max. 24 h) und die stille Erneuerung im
-    // Hintergrund scheitert, weil Safari/iPhone die Microsoft-Cookies fremder Seiten blockiert.
+    // Typisch: Langzeitschluessel abgelaufen (bei Browser-Apps max. 24 h) -> einmal neu anmelden.
     window.__msTokenFehler = (e && (e.errorCode || e.name || e.message)) || 'unbekannt';
-    if(msGraphNeuAnmeldenNoetig(e)){ msGraphAlsAbgemeldet(); msGraphAbgelaufenHinweis(); }
+    const neu = msGraphNeuAnmeldenNoetig(e) || (typeof msal !== 'undefined' && msal.InteractionRequiredAuthError && e instanceof msal.InteractionRequiredAuthError)
+      || /refresh_token_expired|bad_token|timed_out/i.test(String((e && e.errorCode) || '') + ' ' + String((e && e.subError) || ''));
+    if(neu){ msGraphAlsAbgemeldet(); msGraphAbgelaufenHinweis(); }
     return null;
   }
 }
@@ -21802,7 +21807,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v497';
+const APP_VERSION = 'v498';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -23759,19 +23764,32 @@ function msGraphVerfuegbar(){
 // Legt (einmalig) die MSAL-Instanz an. Getrennt von msGraphInitialisieren,
 // damit sowohl der normale Start als auch die Rueckkehr vom Microsoft-
 // Login-Redirect dieselbe, garantiert bereits initialisierte Instanz nutzen.
+// MSAL 5.x: Im localStorage verschluesselt die Bibliothek ihre Daten selbst (Schluessel in einem Sitzungs-Cookie
+// "msal.cache.encryption"); alte Daten von MSAL 3 werden beim ersten initialize() uebernommen. Gleichzeitige Aufrufe
+// warten auf dieselbe Initialisierung; scheitert sie, wird beim naechsten Aufruf neu versucht.
+let msGraphMsalStart = null;
 async function msGraphInstanzSicherstellen(){
   if(msGraphMsal) return msGraphMsal;
   if(!msGraphVerfuegbar()) return null;
-  msGraphMsal = new msal.PublicClientApplication({
-    auth: {
-      clientId: MSGRAPH_CLIENT_ID,
-      authority: MSGRAPH_AUTHORITY,
-      redirectUri: MSGRAPH_REDIRECT_URI
-    },
-    cache: { cacheLocation: msGraphAngemeldetBleiben() ? 'localStorage' : 'sessionStorage' }
-  });
-  await msGraphMsal.initialize();
-  return msGraphMsal;
+  if(!msGraphMsalStart){
+    msGraphMsalStart = (async ()=>{
+      const inst = new msal.PublicClientApplication({
+        auth: {
+          clientId: MSGRAPH_CLIENT_ID,
+          authority: MSGRAPH_AUTHORITY,
+          redirectUri: MSGRAPH_REDIRECT_URI,
+          postLogoutRedirectUri: MSGRAPH_REDIRECT_URI
+        },
+        cache: { cacheLocation: msGraphAngemeldetBleiben() ? msal.BrowserCacheLocation.LocalStorage : msal.BrowserCacheLocation.SessionStorage },
+        system: { allowPlatformBroker: false }
+      });
+      await inst.initialize();
+      msGraphMsal = inst;
+      return inst;
+    })();
+    msGraphMsalStart.catch(()=>{ msGraphMsalStart = null; });
+  }
+  return msGraphMsalStart;
 }
 
 // Beim Start (bzw. direkt nach Rueckkehr vom Microsoft-Login) pruefen, ob
@@ -23803,22 +23821,35 @@ async function msGraphInitialisieren(){
   }
   if(!msGraphVerfuegbar()){ msGraphStatus = 'nicht_verfuegbar'; return; }
   try{
-    const inst = await msGraphInstanzSicherstellen();
+    let inst = null;
+    try{ inst = await msGraphInstanzSicherstellen(); }
+    catch(e){ console.warn('Microsoft-Anmeldung (MSAL) startet nicht', e); msGraphStatus = 'nicht_verfuegbar'; return; }
     if(!inst){ msGraphStatus = 'nicht_verfuegbar'; return; }
     // Verarbeitet ggf. die Rueckkehr von loginRedirect() -- MUSS bei jedem
     // Seitenaufruf aufgerufen werden, auch wenn gerade kein Redirect im
     // Gange ist (liefert dann einfach null zurueck).
-    const ergebnis = await inst.handleRedirectPromise();
+    let ergebnis = null;
+    try{ ergebnis = await inst.handleRedirectPromise(); }
+    catch(e){
+      // z.B. Anmeldung abgebrochen oder abgelaufen: vorhandene Konten trotzdem pruefen, Grund kurz melden
+      console.warn('Microsoft-Anmeldung', e);
+      const t = String((e && (e.errorMessage || e.message)) || e || '').split(/\r?\n/)[0];
+      if(!/user_cancelled|access_denied/i.test(String((e && e.errorCode) || '') + ' ' + t)) setTimeout(()=>{ try{ appToastAnzeigen('Microsoft-Anmeldung: ' + t, 6000); }catch(_){} }, 1500);
+    }
     const geradeFrischAngemeldet = !!(ergebnis && ergebnis.account);
     if(geradeFrischAngemeldet){
       inst.setActiveAccount(ergebnis.account);
+      LS.set('ms_abgemeldet', false);
     }
-    if(geradeFrischAngemeldet) LS.set('ms_abgemeldet', false);
-    else if(warAbgemeldet && inst.getAllAccounts().length){ try{ await inst.clearCache(); }catch(_){} MsEigen.msalReste(); }
+    else if(warAbgemeldet){   // auch Reste alter MSAL-Versionen (z.B. "active-account" von MSAL 3) entfernen
+      if(inst.getAllAccounts().length){ try{ await inst.clearCache(); }catch(_){} }
+      MsEigen.msalReste();
+    }
     const konten = inst.getAllAccounts();
     if(konten.length > 0){
-      inst.setActiveAccount(konten[0]);
-      msGraphKonto = { name: konten[0].name || '', username: konten[0].username || '' };
+      const aktiv = (geradeFrischAngemeldet && ergebnis.account) || inst.getActiveAccount() || konten[0];
+      inst.setActiveAccount(aktiv);
+      msGraphKonto = { name: aktiv.name || '', username: aktiv.username || '' };
       msGraphStatus = 'angemeldet';
       msGraphNachAnmeldung(geradeFrischAngemeldet);
     } else {
@@ -23826,6 +23857,7 @@ async function msGraphInitialisieren(){
       msGraphStatus = 'abgemeldet';
     }
   }catch(e){
+    console.warn('Microsoft-Anmeldung', e);
     msGraphStatus = 'abgemeldet';
   }
 }
@@ -23853,9 +23885,21 @@ function msGraphNachAnmeldung(frisch){
 async function msGraphAnmelden(){
   if(window.DEMO_MODUS){ appToastAnzeigen('In der Demo nicht nötig.', 2000); return; }
   if(msAnmeldeArt() === 'eigen') return MsEigen.anmelden();
-  const inst = await msGraphInstanzSicherstellen();
-  if(!inst) return;
-  await inst.loginRedirect({ scopes: MSGRAPH_SCOPES });
+  let inst = null;
+  try{ inst = await msGraphInstanzSicherstellen(); }catch(e){ console.warn('Microsoft-Anmeldung', e); }
+  if(!inst){ try{ appToastAnzeigen('Die Microsoft-Anmeldung konnte nicht geladen werden. Bitte später erneut versuchen.', 5000); }catch(_){} return; }
+  try{
+    await inst.loginRedirect({ scopes: MSGRAPH_SCOPES });
+  }catch(e){
+    console.warn('Microsoft-Anmeldung', e);
+    // haengengebliebene Anmeldung (z.B. Zurueck-Taste auf der Microsoft-Seite): Zwischenstand verwerfen, neu versuchen
+    if(/interaction_in_progress/i.test(String((e && e.errorCode) || ''))){
+      try{ for(const s of [sessionStorage, localStorage]){ const weg = []; for(let i = 0; i < s.length; i++){ const k = s.key(i); if(k && /^msal\./.test(k) && /interaction|request/i.test(k)) weg.push(k); } weg.forEach(k=> s.removeItem(k)); } }catch(_){}
+      try{ appToastAnzeigen('Eine frühere Anmeldung war nicht abgeschlossen. Bitte noch einmal auf „Mit Microsoft anmelden“ tippen.', 5000); }catch(_){}
+      return;
+    }
+    try{ appToastAnzeigen('Microsoft-Anmeldung: ' + ((e && (e.errorMessage || e.message)) || e), 6000); }catch(_){}
+  }
 }
 
 // "Angemeldet bleiben" (Standard: an): Die Microsoft-Anmeldung der App liegt im Browser
@@ -23897,10 +23941,19 @@ function msGraphAbmelden(){
     ZwSpeicher.leeren().finally(()=> Speicher.warten().finally(()=> location.assign(MSE_AUTH + '/logout?post_logout_redirect_uri=' + encodeURIComponent(MSGRAPH_REDIRECT_URI))));
     return;
   }
-  if(!msGraphMsal){ Speicher.warten().finally(()=> location.reload()); return; }
-  const konto = msGraphMsal.getActiveAccount();
+  if(!msGraphMsal){ MsEigen.msalReste(); Speicher.warten().finally(()=> location.reload()); return; }
+  const inst = msGraphMsal, konto = inst.getActiveAccount() || inst.getAllAccounts()[0] || undefined;
   fbBuchCache = null; fahrdienstAuswertungCache = null; betaGesamtCache = null;
-  ZwSpeicher.leeren().finally(()=> msGraphMsal.logoutRedirect({ account: konto, postLogoutRedirectUri: MSGRAPH_REDIRECT_URI }));
+  ZwSpeicher.leeren().finally(()=> Speicher.warten().finally(async ()=>{
+    try{ await inst.logoutRedirect({ account: konto, postLogoutRedirectUri: MSGRAPH_REDIRECT_URI }); }
+    catch(e){
+      // Abmelden bei Microsoft nicht moeglich (z.B. offline): wenigstens auf diesem Geraet alles loeschen
+      console.warn('Abmelden', e);
+      try{ await inst.clearCache(); }catch(_){}
+      MsEigen.msalReste();
+      location.reload();
+    }
+  }));
 }
 
 // Baut den Inhalt des "OneDrive-Anmeldung"-Abschnitts passend zum

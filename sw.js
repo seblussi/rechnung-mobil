@@ -12,14 +12,14 @@
 //
 // Bei JEDER Veröffentlichung: CACHE_NAME erhöhen und danach „node werkzeuge/sw_dateien.js“ ausführen (trägt die
 // Prüfsummen ein; tests/statisch.js prüft das). Neue Dateien der App hier in DATEIEN aufnehmen.
-const CACHE_NAME = 'rechnungserfassung-v497';
+const CACHE_NAME = 'rechnungserfassung-v498';
 const CACHE_PRAEFIX = CACHE_NAME.replace(/\d+$/, '');   // alle Versionen dieser App: gleicher Anfang, andere Nummer
 const DATEIEN = {
 // >>> DATEIEN (Prüfsummen erzeugt von werkzeuge/sw_dateien.js – nicht von Hand ändern)
-  './Rechnungserfassung_Mobil.html': 'V4d3AfY4V11/x1eQaN0TWg7Nkftz3vCG2AWjJfgSTcU=',
+  './Rechnungserfassung_Mobil.html': '/sAbWCl73iYc/fpdQiH8u6wuqzDoZ5r+OV9X5FMoA/c=',
   './manifest.json': 'oGmycJijIIy67JQt2/9DPvS7LFo04ldRKRTIcpUcfxY=',
   './': 'HAHncj5UelMdOHtP3EGp0CI7BT/TzLQ7grnGteDXT60=',
-  './lib/msal/msal-browser.min.js': 'oW1XExMUwEJRJjFmLVpFT6UqcZoxojm+4rsSOZfth4E=',
+  './lib/msal/msal-browser.min.js': 'ERWwgEmLebC0tiHdPfR4sKmxA19dB21XQdGIjwaSO4Q=',
   './lib/jszip.min.js': 'rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=',
   './lib/pdfjs/pdf.min.mjs': 'n6sMkQvxSEg1xcKuto9+s9/Of560NaAEUmxa+G1wiQw=',
   './lib/pdfjs/pdf.worker.min.mjs': 'vA0biOoLZhlrHTalisJDxtkq3+clYk4qn904G9+O9DQ=',

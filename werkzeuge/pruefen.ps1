@@ -25,13 +25,15 @@ Get-ChildItem -Recurse -File lib | ForEach-Object {
 }
 
 Write-Host '== 2. Gegen die Originalpakete ==' -ForegroundColor Cyan
-# Datei in lib/ -> Paket (Version wie in package.json) und Pfad im Paket (Fallback: Suche nach dem Dateinamen)
+# Datei in lib/ -> Paket (Version wie in package.json) und Pfad im Paket (Fallback: Suche nach dem Dateinamen);
+# sri (falls angegeben): npm-Pruefsumme (integrity) des Pakets, wird vor dem Vergleich geprueft
 $pakete = @(
   @{ lib = 'lib/argon2.umd.min.js';          url = 'https://registry.npmjs.org/hash-wasm/-/hash-wasm-4.12.0.tgz';                  im = 'dist/argon2.umd.min.js' },
   @{ lib = 'lib/jszip.min.js';               url = 'https://registry.npmjs.org/jszip/-/jszip-3.10.1.tgz';                          im = 'dist/jszip.min.js' },
   @{ lib = 'lib/maplibre/maplibre-gl.js';    url = 'https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-4.7.1.tgz';               im = 'dist/maplibre-gl.js' },
   @{ lib = 'lib/maplibre/maplibre-gl.css';   url = 'https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-4.7.1.tgz';               im = 'dist/maplibre-gl.css' },
-  @{ lib = 'lib/msal/msal-browser.min.js';   url = 'https://registry.npmjs.org/@azure/msal-browser/-/msal-browser-3.30.0.tgz';     im = 'lib/msal-browser.min.js' },
+  @{ lib = 'lib/msal/msal-browser.min.js';   url = 'https://registry.npmjs.org/@azure/msal-browser/-/msal-browser-5.30.0.tgz';     im = 'lib/msal-browser.min.js';
+     sri = 'sha512-o/ADxWxEFcVrE65a7ssOGuxnivq8lcy+2hSGlOOwtn0gGd6iiwl3q8/BMVRorYE81UB/r4B+8WGEUxWnqP7ryA==' },
   @{ lib = 'lib/pdf-lib.min.js';             url = 'https://registry.npmjs.org/pdf-lib/-/pdf-lib-1.17.1.tgz';                      im = 'dist/pdf-lib.min.js' },
   @{ lib = 'lib/pdfjs/pdf.min.mjs';          url = 'https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.2.108.tgz';               im = 'build/pdf.min.mjs' },
   @{ lib = 'lib/pdfjs/pdf.worker.min.mjs';   url = 'https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.2.108.tgz';               im = 'build/pdf.worker.min.mjs' },
@@ -51,6 +53,10 @@ try{
       $ziel = Join-Path $tmp ('p' + $geladen.Count); New-Item -ItemType Directory $ziel | Out-Null
       $tgz = Join-Path $ziel 'paket.tgz'
       try{ Invoke-WebRequest -UseBasicParsing -Uri $p.url -OutFile $tgz }catch{ Write-Host "NICHT LADBAR $($p.url): $($_.Exception.Message)" -ForegroundColor Red; $fehler++; $geladen[$p.url] = $null; continue }
+      if($p.sri){   # Paket selbst gegen die npm-Pruefsumme (integrity) abgleichen
+        $ist = 'sha512-' + [Convert]::ToBase64String([Security.Cryptography.SHA512]::Create().ComputeHash([IO.File]::ReadAllBytes($tgz)))
+        if($ist -cne $p.sri){ Write-Host "PAKET-PRUEFSUMME FALSCH $($p.url)" -ForegroundColor Red; $fehler++; $geladen[$p.url] = $null; continue } else { Write-Host "OK (npm-Pruefsumme) $($p.url)" }
+      }
       tar -xzf $tgz -C $ziel
       $geladen[$p.url] = Join-Path $ziel 'package'
     }

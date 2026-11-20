@@ -54,7 +54,7 @@ teile.append(('QR Code Generator for JavaScript (lib/qrcode/)', 'MIT', '', lesen
 if launch:
     teile.append(('hash-wasm 4.12.0 (lib/argon2.umd.min.js)', 'MIT', 'Copyright (c) Dani Biro', MIT))
 else:
-    teile.append(('Microsoft Authentication Library for JavaScript, msal-browser 3.30.0 (lib/msal/)', 'MIT', 'Copyright (c) Microsoft Corporation. All rights reserved.', MIT))
+    teile.append(('Microsoft Authentication Library for JavaScript, msal-browser 5.30.0 (lib/msal/)', 'MIT', 'Copyright (c) Microsoft Corporation. All rights reserved.', MIT))
 teile.append(('Bankleitzahlen-Daten (lib/banken.js), aufbereitet aus dem Projekt "schwifty"', 'MIT', 'Copyright (c) 2021 Martin Domke\nDaten: Deutsche Bundesbank, Oesterreichische Nationalbank, SIX Group', MIT))
 teile.append(('Schriften Foxit (lib/pdfjs/standard_fonts/Foxit*)', 'BSD-3-Clause (PDFium Authors)', '', lesen('pdfjs/standard_fonts/LICENSE_FOXIT')))
 teile.append(('Schriften Liberation (lib/pdfjs/standard_fonts/Liberation*)', 'SIL Open Font License 1.1', '', lesen('pdfjs/standard_fonts/LICENSE_LIBERATION')))
