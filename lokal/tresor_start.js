@@ -492,6 +492,66 @@
     appStarten();
   }
 
+  // ---------- Automatische Erneuerung der Microsoft-Anmeldung (Wunsch 20.11.2026) ----------
+  // Microsoft gibt Browser-Apps nur Langzeitschluessel, die 24 h nach der Anmeldung ablaufen. Liegt die letzte
+  // Anmeldung 12 h oder mehr zurueck, holt die App beim Start (vor der Sperrseite, damit nur einmal entsperrt
+  // wird) ohne Zutun eine neue: kurzer Umweg ueber Microsoft mit prompt=none -- keine Eingabe, keine Kontoauswahl.
+  // Geht das nicht (keine Microsoft-Sitzung im Browser), kommt Microsoft mit einem Fehler zurueck; die App laeuft
+  // dann wie bisher und meldet die Anmeldung erst, wenn sie wirklich abgelaufen ist.
+  // Merker unverschluesselt im localStorage 'ms_erneuerung': nur Zeitpunkte (keine Konto- oder Patientendaten).
+  //   am: letzte Anmeldung mit Code (von Hand oder still), art: 'eigen' | 'msal' (Bibliothek, ohne Datentresor),
+  //   versuch: letzter stiller Versuch, fehl: letzter Fehlschlag
+  const MsErneuerung = (function(){
+    const KEY = 'ms_erneuerung', STD = 3600000;
+    const NACH = 12 * STD, SPERRE_VERSUCH = 10 * 60000, SPERRE_FEHL = 20 * STD;
+    const lesen = ()=>{ try{ return JSON.parse(localStorage.getItem(KEY) || 'null') || {}; }catch(_){ return {}; } };
+    const schreiben = (o)=>{ try{ localStorage.setItem(KEY, JSON.stringify(o)); }catch(_){} };
+    const aendern = (f)=>{ const o = lesen(); f(o); schreiben(o); };
+    function rueckkehrInAdresse(){ try{ const q = new URLSearchParams(location.search); return q.has('code') || q.has('error') || q.has('state'); }catch(_){ return false; } }
+    function demo(){ try{ return !!sessionStorage.getItem('demo_modus'); }catch(_){ return false; } }
+    // Ist eine stille Erneuerung jetzt dran? (nur wenn die App angemeldet war, online, keine Schleife)
+    function faellig(art){
+      const o = lesen(), jetzt = Date.now();
+      if(!o.am || o.art !== art || demo() || rueckkehrInAdresse() || navigator.onLine === false) return false;
+      if(jetzt - o.am < NACH) return false;
+      if(o.versuch && jetzt - o.versuch < SPERRE_VERSUCH) return false;
+      if(o.fehl && jetzt - o.fehl < SPERRE_FEHL) return false;
+      return true;
+    }
+    // Microsoft in 3 s erreichbar? Sonst nicht umleiten (eine fehlgeschlagene Seite liesse die App haengen).
+    async function erreichbar(){
+      const ab = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const t = setTimeout(()=>{ try{ ab && ab.abort(); }catch(_){} }, 3000);
+      try{ const r = await fetch('https://login.microsoftonline.com/consumers/v2.0/.well-known/openid-configuration', { cache: 'no-store', signal: ab ? ab.signal : undefined }); return r.ok; }
+      catch(_){ return false; }
+      finally{ clearTimeout(t); }
+    }
+    return {
+      faellig, erreichbar, lesen,
+      angemeldet: (art)=> schreiben({ am: Date.now(), art }),
+      unbekannt: (art)=>{ const o = lesen(); if(!o.am || o.art !== art) schreiben({ am: 1, art }); },   // angemeldet, Zeitpunkt unbekannt: beim naechsten Start erneuern
+      versuchMerken: ()=> aendern((o)=>{ o.versuch = Date.now(); }),
+      versuchLief: ()=>{ const v = lesen().versuch; return !!v && Date.now() - v < SPERRE_VERSUCH; },
+      fehlMerken: ()=> aendern((o)=>{ o.fehl = Date.now(); delete o.versuch; }),
+      vergessen: ()=>{ try{ localStorage.removeItem(KEY); }catch(_){} },
+      NACH
+    };
+  })();
+  global.MsErneuerung = MsErneuerung;
+  // Vor der Sperrseite: still erneuern (eigene Anmeldung der App). true = Seite wird gerade umgeleitet.
+  async function stillErneuern(){
+    try{ if(sessionStorage.getItem('msal_notfall')) return false; }catch(_){}
+    if(!MsErneuerung.faellig('eigen') || !await MsErneuerung.erreichbar()) return false;
+    const verifier = b64url(crypto.getRandomValues(new Uint8Array(48))), state = b64url(crypto.getRandomValues(new Uint8Array(18)));
+    const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
+    try{ sessionStorage.setItem('ms_eigen_pkce', JSON.stringify({ verifier, state, t: Date.now(), still: true })); }catch(_){ return false; }
+    MsErneuerung.versuchMerken();
+    seite('<h1>Einen Moment …</h1><p>Die Microsoft-Anmeldung wird erneuert.</p>');
+    location.replace(MS.auth + '/authorize?' + new URLSearchParams({ client_id: MS.client, response_type: 'code', redirect_uri: MS.zurueck, response_mode: 'query',
+      scope: MS.scope, state, code_challenge: challenge, code_challenge_method: 'S256', prompt: 'none' }).toString());
+    return true;
+  }
+
   // ---------- Start ----------
   async function start(c){
     cfg = c;
@@ -506,7 +566,8 @@
       if(!alt) return neuEinrichten();
       let jetzt = UMZUG_PFLICHT; try{ if(sessionStorage.getItem('umzug_jetzt')) jetzt = true; }catch(_){}
       if(jetzt) return umzugSeite();
-      // bisheriger Speicher, bis umgestellt wird
+      // bisheriger Speicher, bis umgestellt wird (eigene Anmeldung: vorher still erneuern)
+      if(await stillErneuern()) return;
       await cfg.altStart(); cfg.appLos(); return;
     }
     // Tresor vorhanden
@@ -516,6 +577,7 @@
       lsSet(UMZUG_KEY, null);
       await cfg.altStart(); cfg.appLos(); return;
     }
+    if(await stillErneuern()) return;
     return sperre();
   }
 

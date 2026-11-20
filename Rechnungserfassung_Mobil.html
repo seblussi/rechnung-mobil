@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-mlMU36/07MVn73jcZ+3BfP8CD6aqCP1at8cAfvlrXwM=' 'sha256-vs42HKFkPKfkyfOwPnu8zbRZ1nhNkmLsMApeyHbgH90='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-C1BCqLFukKTns4lzp4FabiXIrQc1ZgFR2zxejUg/YrM=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -21837,7 +21837,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v500';
+const APP_VERSION = 'v501';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -23703,17 +23703,24 @@ const MsEigen = (function(){
       scope: msScope(), state, code_challenge: challenge, code_challenge_method: 'S256', prompt: 'select_account' });
     location.assign(MSE_AUTH + '/authorize?' + q.toString());
   }
-  // Rueckkehr von der Microsoft-Anmeldeseite verarbeiten (Code -> Schluessel); true = frisch angemeldet
+  // Rueckkehr von der Microsoft-Anmeldeseite verarbeiten (Code -> Schluessel)
+  // true = von Hand frisch angemeldet, 'still' = automatisch erneuert (lokal/tresor_start.js), false = nichts/still gescheitert
   async function rueckkehr(){
     const q = new URLSearchParams(location.search);
     if(!q.has('code') && !q.has('error')) return false;
     let p = null; try{ p = JSON.parse(sessionStorage.getItem('ms_eigen_pkce') || 'null'); }catch(_){}
     sessionStorage.removeItem('ms_eigen_pkce');
     history.replaceState(null, '', location.pathname);   // Code sofort aus der Adresszeile entfernen
-    if(q.has('error')){ throw new Error(q.get('error_description') || q.get('error')); }
-    if(!p || p.state !== q.get('state') || Date.now() - p.t > 15 * 60000) throw new Error('Anmeldung abgelaufen oder nicht von dieser App gestartet. Bitte erneut anmelden.');
-    await tokenAnfrage({ grant_type: 'authorization_code', code: q.get('code'), redirect_uri: MSGRAPH_REDIRECT_URI, code_verifier: p.verifier });
-    return true;
+    // still: von der stillen Erneuerung gestartet (Merker in sessionStorage; ging der verloren, zaehlt der Zeitstempel des Versuchs)
+    const still = p ? !!p.still : (()=>{ try{ return MsErneuerung.versuchLief(); }catch(_){ return false; } })();
+    // Stille Erneuerung gescheitert (z. B. keine Microsoft-Sitzung im Browser): leise, der bisherige Schluessel gilt weiter
+    const stillFehl = (grund)=>{ try{ MsErneuerung.fehlMerken(); }catch(_){} console.warn('Stille Erneuerung der Microsoft-Anmeldung', grund); return false; };
+    if(q.has('error')){ if(still) return stillFehl(q.get('error')); throw new Error(q.get('error_description') || q.get('error')); }
+    if(!p || p.state !== q.get('state') || Date.now() - p.t > 15 * 60000){ if(still) return stillFehl('state'); throw new Error('Anmeldung abgelaufen oder nicht von dieser App gestartet. Bitte erneut anmelden.'); }
+    try{ await tokenAnfrage({ grant_type: 'authorization_code', code: q.get('code'), redirect_uri: MSGRAPH_REDIRECT_URI, code_verifier: p.verifier }); }
+    catch(e){ if(still) return stillFehl(e.code || e.message); throw e; }
+    try{ MsErneuerung.angemeldet('eigen'); }catch(_){}
+    return still ? 'still' : true;
   }
   async function token(){
     if(zugriff && Date.now() < zugriffBis) return zugriff;
@@ -23744,7 +23751,7 @@ const MsEigen = (function(){
     }catch(e){ console.warn('Übernahme', e); return false; }
   }
   function msalReste(){ try{ for(const s of [localStorage, sessionStorage]){ const weg = []; for(let i = 0; i < s.length; i++){ const k = s.key(i); if(k && MSAL_SCHLUESSEL_RE.test(k)) weg.push(k); } weg.forEach(k=> s.removeItem(k)); } }catch(_){} }
-  function abmelden(){ zugriff = null; zugriffBis = 0; rtSchreiben(''); LS.set('ms_eigen_konto', null); }
+  function abmelden(){ zugriff = null; zugriffBis = 0; rtSchreiben(''); LS.set('ms_eigen_konto', null); try{ MsErneuerung.vergessen(); }catch(_){} }
   return { anmelden, rueckkehr, token, zugriffVergessen: ()=>{ zugriff = null; zugriffBis = 0; }, angemeldet: ()=> !!rtLesen(), konto: ()=> LS.get('ms_eigen_konto', null), ausMsalUebernehmen, msalReste, abmelden, rtLesen, rtSchreiben };
 })();
 function msAnmeldeArtSetzen(art){
@@ -23838,9 +23845,12 @@ async function msGraphInitialisieren(){
       if(!msGraphAngemeldetBleiben()){ LS.set('ms_angemeldet_bleiben', true); try{ const rt = sessionStorage.getItem('ms_eigen_rt'); if(rt){ LS.set('ms_eigen_rt', rt); sessionStorage.removeItem('ms_eigen_rt'); } }catch(_){} }
       MsEigen.msalReste();
     }
-    try{ frisch = await MsEigen.rueckkehr(); }catch(e){ console.warn('Anmeldung', e); setTimeout(()=>{ try{ appToastAnzeigen('Microsoft-Anmeldung: ' + e.message, 6000); }catch(_){} }, 1500); }
+    let still = false;
+    try{ const r = await MsEigen.rueckkehr(); frisch = r === true; still = r === 'still'; }catch(e){ console.warn('Anmeldung', e); setTimeout(()=>{ try{ appToastAnzeigen('Microsoft-Anmeldung: ' + e.message, 6000); }catch(_){} }, 1500); }
     if(warAbgemeldet && !frisch){ MsEigen.abmelden(); MsEigen.msalReste(); }
     if(frisch) LS.set('ms_abgemeldet', false);
+    if(still){ try{ if(window.TRESOR_MODUS && window.Tresor && Tresor.protokoll) Tresor.protokoll('anmeldung', 'Microsoft-Anmeldung automatisch erneuert'); }catch(_){} }
+    if(MsEigen.angemeldet() && !warAbgemeldet){ try{ MsErneuerung.unbekannt('eigen'); }catch(_){} }
     if(MsEigen.angemeldet()){
       const k = MsEigen.konto() || {};
       msGraphKonto = { name: k.name || '', username: k.username || '' };
@@ -23859,17 +23869,22 @@ async function msGraphInitialisieren(){
     // Seitenaufruf aufgerufen werden, auch wenn gerade kein Redirect im
     // Gange ist (liefert dann einfach null zurueck).
     let ergebnis = null;
+    const stillLief = !window.TRESOR_MODUS && MsErneuerung.versuchLief();   // Rueckkehr von der stillen Erneuerung (msalStillErneuern)?
     try{ ergebnis = await inst.handleRedirectPromise(); }
     catch(e){
+      if(stillLief){ MsErneuerung.fehlMerken(); console.warn('Stille Erneuerung der Microsoft-Anmeldung', e); }
+      else {
       // z.B. Anmeldung abgebrochen oder abgelaufen: vorhandene Konten trotzdem pruefen, Grund kurz melden
       console.warn('Microsoft-Anmeldung', e);
       const t = String((e && (e.errorMessage || e.message)) || e || '').split(/\r?\n/)[0];
       if(!/user_cancelled|access_denied/i.test(String((e && e.errorCode) || '') + ' ' + t)) setTimeout(()=>{ try{ appToastAnzeigen('Microsoft-Anmeldung: ' + t, 6000); }catch(_){} }, 1500);
+      }
     }
     const geradeFrischAngemeldet = !!(ergebnis && ergebnis.account);
     if(geradeFrischAngemeldet){
       inst.setActiveAccount(ergebnis.account);
       LS.set('ms_abgemeldet', false);
+      if(!window.TRESOR_MODUS) MsErneuerung.angemeldet('msal');
     }
     else if(warAbgemeldet){   // auch Reste alter MSAL-Versionen (z.B. "active-account" von MSAL 3) entfernen
       if(inst.getAllAccounts().length){ try{ await inst.clearCache(); }catch(_){} }
@@ -23881,7 +23896,8 @@ async function msGraphInitialisieren(){
       inst.setActiveAccount(aktiv);
       msGraphKonto = { name: aktiv.name || '', username: aktiv.username || '' };
       msGraphStatus = 'angemeldet';
-      msGraphNachAnmeldung(geradeFrischAngemeldet);
+      msGraphNachAnmeldung(geradeFrischAngemeldet && !stillLief);
+      if(!window.TRESOR_MODUS){ MsErneuerung.unbekannt('msal'); setTimeout(()=>{ msalStillErneuern(inst, aktiv).catch(e=> console.warn('Stille Erneuerung', e)); }, 1200); }
     } else {
       msGraphKonto = null;
       msGraphStatus = 'abgemeldet';
@@ -23890,6 +23906,22 @@ async function msGraphInitialisieren(){
     console.warn('Microsoft-Anmeldung', e);
     msGraphStatus = 'abgemeldet';
   }
+}
+
+// Automatische Erneuerung (Wunsch 20.11.2026), Microsoft-Bibliothek ohne Datentresor: wie lokal/tresor_start.js
+// (MsErneuerung) -- ist die letzte Anmeldung 12 h oder mehr her, beim Start einmal still ueber Microsoft (prompt=none)
+// eine neue holen. Nur direkt nach dem Start und nur, solange nichts eingegeben wird bzw. kein Fenster offen ist.
+async function msalStillErneuern(inst, konto){
+  if(window.TRESOR_MODUS || window.DEMO_MODUS || !inst || !konto) return;   // im Datentresor: eigene Anmeldung, vor der Sperrseite
+  if(!MsErneuerung.faellig('msal')) return;
+  // App-Sperre (PIN) beim Start zaehlt nicht als Eingabe: dort geht beim Umweg nichts verloren
+  const ruhig = ()=>{ const a = document.activeElement; return (!a || a === document.body || !!(a.closest && a.closest('#appSperre'))) && !document.querySelector('.beta-overlay'); };
+  if(!ruhig() || !await MsErneuerung.erreichbar() || !ruhig()) return;
+  MsErneuerung.versuchMerken();
+  try{ appToastAnzeigen('Microsoft-Anmeldung wird erneuert …', 3000); }catch(_){}
+  try{ await Speicher.warten(); }catch(_){}
+  try{ await inst.acquireTokenRedirect({ scopes: MSGRAPH_SCOPES, account: konto, prompt: 'none' }); }
+  catch(e){ MsErneuerung.fehlMerken(); console.warn('Stille Erneuerung der Microsoft-Anmeldung', e); }
 }
 
 // Folgearbeiten nach erfolgreicher Anmeldung (beide Anmeldearten)
@@ -23955,13 +23987,14 @@ function msGraphAngemeldetBleibenSetzen(an){
   Speicher.warten().finally(()=> location.reload());
 }
 function msGraphBleibenHtml(){
-  if(window.TRESOR_MODUS) return '<div class="hinweis" style="font-size:13px; margin:8px 0;">✓ Die Microsoft-Anmeldung liegt verschlüsselt im Datentresor.</div>';
+  if(window.TRESOR_MODUS) return '<div class="hinweis" style="font-size:13px; margin:8px 0;">✓ Die Microsoft-Anmeldung liegt verschlüsselt im Datentresor. Sie wird beim Start automatisch erneuert, solange du im Browser bei Microsoft angemeldet bist.</div>';
   return `<div class="einstellung-zeile" style="margin:10px 0 6px;"><input type="checkbox" id="chkMsEigen"${msAnmeldeArt() === 'eigen' ? ' checked' : ''}><div class="txt">Neue Anmeldung (verschlüsselt, Test)<span class="hinweis">An: schlanke eigene Anmeldung, der Zugangsschlüssel liegt verschlüsselt im App-Speicher. Aus: bisherige Microsoft-Bibliothek. Notausgang, falls nichts mehr geht: die App-Adresse mit ?msal=alt am Ende öffnen.</span></div></div>` + `<div class="einstellung-zeile" style="margin:10px 0 6px;"><input type="checkbox" id="chkMsBleiben"${msGraphAngemeldetBleiben() ? ' checked' : ''}><div class="txt">Angemeldet bleiben<span class="hinweis">Aus: Nach dem Schließen der App bzw. des Browsers ist die Microsoft-Anmeldung vom Gerät gelöscht, beim nächsten Öffnen einmal „Mit Microsoft anmelden“ klicken.</span></div></div>`;
 }
 
 function msGraphAbmelden(){
   // bewusst abgemeldet: beim naechsten Start keine Reste einer Anmeldung (Token im Speicher, MSAL-Cache) mehr gelten lassen
   LS.set('ms_abgemeldet', true);
+  try{ MsErneuerung.vergessen(); }catch(_){}   // und nicht mehr automatisch erneuern
   msGraphStatus = 'abgemeldet'; msGraphKonto = null;
   try{ dsSyncAuffrischen(); }catch(_){}
   try{ if(msAnmeldeArt() !== 'eigen') MsEigen.abmelden(); }catch(_){}   // MSAL-Cache leert logoutRedirect selbst; Reste faengt der naechste Start ab
@@ -27066,7 +27099,7 @@ const AppSperre = (()=>{
 // App-Sperre und der oeffentliche GOAE-Katalog-Cache.
 const Speicher = (()=>{
   const DB = 'rechnung-daten', V = 1;
-  const BLEIBT = /^(msal\.|server-telemetry|app_sperre$|ui_vorlieben$|hauptversion_v1$|beta___init$|positionsKatalogCache_v2$|einst_offen$|tresor_|privat_umzug$)|login\.microsoftonline|login\.windows\.net|login\.live\.com/;
+  const BLEIBT = /^(msal\.|server-telemetry|app_sperre$|ms_erneuerung$|ui_vorlieben$|hauptversion_v1$|beta___init$|positionsKatalogCache_v2$|einst_offen$|tresor_|privat_umzug$)|login\.microsoftonline|login\.windows\.net|login\.live\.com/;
   const mem = new Map(), schreibt = new Map();
   let db = null, key = null, bereit = false, fehler = null;
   const enc = new TextEncoder(), dec = new TextDecoder();
