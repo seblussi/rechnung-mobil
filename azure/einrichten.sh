@@ -270,7 +270,7 @@ if [ -n "$OK" ]; then
 else
   echo " Eingerichtet, aber der Selbsttest hat noch nicht geantwortet."
   echo " (Manchmal braucht Azure ein paar Minuten - in der App einfach"
-  echo "  spaeter nochmal auf 'Pruefen' tippen.)"
+  echo "  spaeter nochmal auf 'Pruefen' klicken.)"
 fi
 echo
 echo " Diese Adresse in der App eintragen:"

@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-3bMJdKIpWvD1Adu/Sk2kx4KhZ8bqXR3paQfM6bTRg6Y=' 'sha256-vs42HKFkPKfkyfOwPnu8zbRZ1nhNkmLsMApeyHbgH90='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-3TnfMVQoXq2LKF+gyKMzWLCrNo3oeY3g47gWTAXga3s=' 'sha256-vs42HKFkPKfkyfOwPnu8zbRZ1nhNkmLsMApeyHbgH90='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -4967,7 +4967,29 @@ function strasseAusschreiben(text){
 // SelStart + (neue Länge - alte Länge) -- unabhängig davon, WO im Text
 // sich etwas geändert hat.
 let gGrossSchreibLaeuft = false;
-function grossKleinKorrigieren(text, imTippen){
+// Ausnahmen (Wunsch 20.11.2026): Wird ein automatisch korrigiertes Wort im selben Feld wieder in die alte Schreibweise
+// gebracht (z. B. "Mvz" zurueck zu "MVZ"), gilt diese Schreibweise ab dann als gewollt und wird nirgends mehr korrigiert.
+function gkAusnahmen(){ const a = LS.get('gk_ausnahmen', []); return new Set(Array.isArray(a) ? a : []); }
+function gkAusnahmeMerken(w){ const a = gkAusnahmen(); if(!w || a.has(w)) return; a.add(w); LS.set('gk_ausnahmen', Array.from(a).slice(-300)); }
+const gkKern = (t)=> String(t || '').replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+// Korrektur fuer ein Eingabefeld: merkt sich, welche Woerter es geaendert hat, und erkennt, wenn du eines davon
+// wieder in der alten Schreibweise eintippst (-> Ausnahme) bzw. gerade bearbeitest (-> bis zum Verlassen in Ruhe lassen)
+function gkFeld(el, text, imTippen, endgueltig){
+  const korr = el._gkKorr || (el._gkKorr = new Map()), skip = new Set();
+  String(text || '').split(/[\s\-\/,.()&]+/).map(gkKern).filter(Boolean).forEach((t)=>{
+    const k = korr.get(t.toLowerCase()); if(!k || t === k.neu) return;
+    if(t === k.alt || endgueltig){ gkAusnahmeMerken(t); korr.delete(t.toLowerCase()); } else skip.add(t);
+  });
+  const neu = grossKleinKorrigieren(text, imTippen, skip);
+  if(neu !== text){
+    const a = String(text).split(/([\s\-\/,.()&]+)/), b = neu.split(/([\s\-\/,.()&]+)/);
+    if(a.length === b.length) a.forEach((w, i)=>{ const x = gkKern(w), y = gkKern(b[i]); if(x && y && x !== y) korr.set(x.toLowerCase(), { alt: x, neu: y }); });
+  }
+  return neu;
+}
+function grossKleinKorrigieren(text, imTippen, skip){
+  const aus = gkAusnahmen(); if(skip) skip.forEach((w)=> aus.add(w));
+  const frei = (w)=> aus.size && aus.has(gkKern(w));
   // Zuerst falsch geschriebene Woerter richten: komplett GROSS (ab 3 Buchstaben,
   // kurze Kuerzel wie "KG" bleiben) oder verdreht wie "mÜLLER" -> "Müller".
   // Gemischte Schreibung wie "McDonald" oder "GmbH" bleibt unangetastet.
@@ -4977,7 +4999,7 @@ function grossKleinKorrigieren(text, imTippen){
   let ende = '';
   if(imTippen){ const m = /[^\s\-\/,.()&]+$/.exec(text); if(m){ ende = m[0]; text = text.slice(0, m.index); } }
   text = text.replace(/[^\s\-\/,.()&]+/g, (w)=>{
-    if(!/^\p{L}/u.test(w)) return w;
+    if(!/^\p{L}/u.test(w) || frei(w)) return w;
     const b = w.replace(/[^\p{L}]/gu, '');
     if(b.length < 3) return w;
     const rest = b.slice(1);
@@ -4991,10 +5013,13 @@ function grossKleinKorrigieren(text, imTippen){
   // sind Wortgrenzen, nur der erste Buchstabe je Wort wird grossgeschrieben,
   // der Rest bleibt unangetastet (korrigiert also gezielt vergessene
   // Grossschreibung, ohne z.B. "O'Brien" kaputtzumachen).
-  let ergebnis = '', vorherigesTrennz = true;
+  let ergebnis = '', vorherigesTrennz = true, i = 0;
   for(const c of text){
-    ergebnis += (vorherigesTrennz && c!==' ' && c!=='-') ? c.toUpperCase() : c;
+    // Ausnahme-Woerter (z. B. "van", "MVZ") behalten auch den ersten Buchstaben
+    const wort = vorherigesTrennz ? (/^[^ \-]*/.exec(text.slice(i)) || [''])[0] : '';
+    ergebnis += (vorherigesTrennz && c!==' ' && c!=='-' && !frei(wort)) ? c.toUpperCase() : c;
     vorherigesTrennz = (c===' '||c==='-');
+    i += c.length;
   }
   return ergebnis;
 }
@@ -5005,13 +5030,13 @@ function grossKleinKorrigieren(text, imTippen){
 function feldLiveGrossschreibungAnhaengen(id, istStrassenfeld){
   const el = document.getElementById(id);
   if(!el) return;
-  el.addEventListener('blur', ()=>{ const v = grossKleinKorrigieren(el.value); if(v !== el.value){ el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } });
+  el.addEventListener('blur', ()=>{ const v = gkFeld(el, el.value, false, true); if(v !== el.value){ el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } });
   el.addEventListener('input', ()=>{
     if(gGrossSchreibLaeuft) return; // Wiedereintritt verhindern (das el.value=... unten loest selbst wieder 'input' aus)
     const textVorher = el.value;
     let textNachher = textVorher;
     if(istStrassenfeld) textNachher = strasseAusschreiben(textNachher);
-    textNachher = grossKleinKorrigieren(textNachher, el.selectionStart === textVorher.length);
+    textNachher = gkFeld(el, textNachher, el.selectionStart === textVorher.length);
     if(textNachher === textVorher) return;
     let posCursor = el.selectionStart + (textNachher.length - textVorher.length);
     if(posCursor < 0) posCursor = 0;
@@ -5037,7 +5062,7 @@ const GROSS_FELDER = {
 document.addEventListener('focusout', (ev)=>{
   const el = ev.target, art = el && (GROSS_FELDER[el.id] || (el.dataset && el.dataset.ini ? GROSS_FELDER['ini_' + el.dataset.ini] : null));
   if(!art || typeof el.value !== 'string') return;
-  const v = grossKleinKorrigieren(el.value);
+  const v = gkFeld(el, el.value, false, true);
   if(v !== el.value){ el.value = v; try{ el.dispatchEvent(new Event('input', { bubbles: true })); }catch(_){} }
 });
 document.addEventListener('input', (ev)=>{
@@ -5045,7 +5070,7 @@ document.addEventListener('input', (ev)=>{
   if(!art || gGrossSchreibLaeuft || typeof el.selectionStart !== 'number') return;
   const vorher = el.value;
   let nachher = art === 's' ? strasseAusschreiben(vorher) : vorher;
-  nachher = grossKleinKorrigieren(nachher, el.selectionStart === vorher.length);
+  nachher = gkFeld(el, nachher, el.selectionStart === vorher.length);
   if(nachher === vorher) return;
   let pos = el.selectionStart + (nachher.length - vorher.length); if(pos < 0) pos = 0;
   gGrossSchreibLaeuft = true; el.value = nachher; gGrossSchreibLaeuft = false;
@@ -5055,7 +5080,7 @@ document.addEventListener('input', (ev)=>{
 document.addEventListener('blur', (ev)=>{
   const el = ev.target;
   if(!el || GROSS_FELDER[el.id] !== 's' || !el.value) return;
-  const neu = grossKleinKorrigieren(strasseAusschreiben(el.value).replace(/str$/i, 'straße'));
+  const neu = gkFeld(el, strasseAusschreiben(el.value).replace(/str$/i, 'straße'), false, true);
   if(neu !== el.value){ el.value = neu; el.dispatchEvent(new Event('input', { bubbles: true })); }
 }, true);
 // Zerlegt eine als EINE Zeile kopierte Adresse (z.B. aus Google Maps: "Musterstraße 12, 77656 Offenburg"
@@ -7453,7 +7478,7 @@ function ansichtEinrichtung(schritt){
 // ---------- Einrichtung: eigene LetterXpress-Weiterleitung in Azure ----------
 // Sicherheitsbericht W3: kein "curl | bash" auf den jeweils aktuellen Stand, sondern genau diese Version (Pruefsumme,
 // eingetragen von werkzeuge/skript_pruefsumme.js); passt die Datei nicht, bricht sha256sum ab und nichts wird ausgefuehrt.
-const EINR_AZURE_SHA256 = 'e52f7730f9c22a31c49319bfd2006c7443823365b61b7dcc573c50181d4b1585';
+const EINR_AZURE_SHA256 = '472110b8c67f9ee31a90dd079e35965ce3730fc02d735bd4b6b09270f84047d7';
 const EINR_AZURE_BEFEHL = 'curl -fsSL https://seblussi.github.io/rechnung-mobil/azure/einrichten.sh -o einrichten.sh && echo "' + EINR_AZURE_SHA256 + '  einrichten.sh" | sha256sum -c - && bash einrichten.sh';
 async function einrFetchZeit(url, opt, ms){
   const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -21807,7 +21832,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v498';
+const APP_VERSION = 'v499';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
