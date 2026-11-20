@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-1ETc+R7GUqTX0W0KtmOchOYTcwQPRY4CdgP8YjwmvwA=' 'sha256-vs42HKFkPKfkyfOwPnu8zbRZ1nhNkmLsMApeyHbgH90='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-7660SHEM2zUgpMdILATxjZTWkaFB/BskMkBw4aumljE=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-yfsYizy5EoqQFuDozHuO3G6vHUxj+0KoiB0sbVIiHYU=' 'sha256-vs42HKFkPKfkyfOwPnu8zbRZ1nhNkmLsMApeyHbgH90='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1599,6 +1599,18 @@ try{
      im selben Abstand wie bisher (4 px) */
   .ds-ring-mitte{position:absolute; inset:0; display:grid; grid-template-rows:1fr auto 1fr; justify-items:center; row-gap:4px;}
   .ds-ring-mitte > .ds-ring-kopf{align-self:end;}
+  /* Sonne/Mond mittig auf Hoehe der mittleren Linie des Einstellungen-Symbols (Wunsch 20.11.2026) */
+  #btnDunkelToggle{display:inline-flex; align-items:center; justify-content:center;} #btnDunkelToggle svg{display:block;}
+  .fw-unter{display:block; font-size:10.5px; font-weight:600; opacity:.75;}
+  .fw-eigen{display:flex; align-items:center; gap:8px; margin:6px 0 2px;} .fw-eigen[hidden]{display:none;}
+  .fw-eigen input{width:110px; font-size:16px; padding:9px 10px; border:1px solid var(--rand); border-radius:10px; background:var(--bg); color:var(--text);}
+  .fp-feld{display:flex; align-items:center; gap:8px; margin:6px 0;} .fp-feld > span{flex:1; font-weight:600;} .fp-feld small{display:block; font-weight:400; font-size:12px; color:var(--text-schwach);}
+  .fp-feld input{width:88px; text-align:right; font-size:16px; padding:8px 10px; border:1px solid var(--rand); border-radius:10px; background:var(--bg); color:var(--text);} .fp-feld i{font-style:normal; width:30px; font-size:13px;}
+  .fp-felder[hidden]{display:none;}
+  .dw-foerder{display:flex; align-items:center; gap:8px; width:100%; margin:8px 0 2px; padding:10px 12px; border:1px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text); font:inherit; text-align:left; cursor:pointer;}
+  .dw-foerder span{flex:1;} .dw-foerder b{font-weight:700;} .dw-foerder small{display:block; color:var(--text-schwach); font-size:12px;}
+  .dw-dienst .dw-f{display:block; font-style:normal; font-size:10.5px; font-weight:700; color:var(--ds-akzent, #d9861a);}
+  .fbx-foerder{border:0; background:none; padding:0; margin:0; font:inherit; color:var(--ds-akzent, #d9861a); text-decoration:underline; cursor:pointer;}
   .ds-ring-unten{align-self:start; display:flex; flex-direction:column; align-items:center; gap:4px;}
   .ds-ring-zeit{font-family:var(--ds-display); font-weight:300; font-size:clamp(43px, 16.2vw, 67px); line-height:1; letter-spacing:-.02em; font-variant-numeric:lining-nums tabular-nums;}
   .ds-ring-rest{font-size:14px; color:var(--text-schwach);}
@@ -3530,7 +3542,8 @@ function fahrdienstZeilenAuswerten(zeilen){
     // 24.12., 31.12.) -- nach dem Tag des Dienstbeginns; am 24.12./31.12.
     // zusaetzlich 500 € je 24 h
     const dienstart = String(arztZeile[COL_B] == null ? '' : arztZeile[COL_B]).trim() || 'Fahrdienst';
-    const satz = fahrdienstPauschaleSatz(r[COL_B], dienstart), satzFormel = fahrdienstSatzFormel(r[COL_B], dienstart), zusatz = fahrdienstZusatzSatz(r[COL_B], dienstart);
+    const fctx = { von: String(r[COL_C] == null ? '' : r[COL_C]).split('-')[0] }, fr = foerderRegel(r[COL_B], dienstart, fctx);   // Profil, Dienst im Plan, einzelner Dienst
+    const satz = fr.satz, satzFormel = foerderFormel(fr.satz), zusatz = fr.zusatz;
     const gkvRoh = gkv;
     const pauschale = dienststunden > 0 && dienststunden * satz > gkvRoh + 0.005;
     if(pauschale){ gkv = dienststunden * satz; }
@@ -3542,7 +3555,7 @@ function fahrdienstZeilenAuswerten(zeilen){
     bloecke.push({
       quartal, quartalKey, datumText, zeitLabel,
       arzt, gesamt, stundenlohn, gkv, ls, pt, nGkv, nLs, nPt,
-      gkvRoh, pauschale, satz, satzFormel, zusatz, pseudo, dienstart, satzGrund: fahrdienstSatzGrund(r[COL_B], dienstart), dienststunden,
+      gkvRoh, pauschale, satz, satzFormel, zusatz, pseudo, dienstart, satzGrund: fr.grund, foerderKey: foerderSchluessel(fahrdienstDatumAusWert(r[COL_B]), fctx.von), dienststunden,
       zeileStart: blockStart + 1, zeileEnde: blockEnde + 1, zeitRoh: r[COL_C]
     });
 
@@ -3937,8 +3950,16 @@ function fbDienstKopf(d){
     (d.lokal ? '<span class="fbx-unter fbx-lokal">noch nicht in der Excel – erscheint dort mit dem ersten eingetragenen Fall</span>' : '') +
     '<span class="fbx-unter">' + (d.arzt ? 'für ' + htmlEsc(d.arzt) + ' · ' : '') + d.faelle.filter(f=> !f.pseudo).length + ' Fälle' + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span>';
 }
+function fbFoerderInfo(d){
+  const von = d.foerderKey ? d.foerderKey.split('|')[1] : (d.fenster ? zz2(new Date(d.fenster.von).getHours()) + ':' + zz2(new Date(d.fenster.von).getMinutes()) : String(d.zeitRoh || '').split('-')[0]);
+  const tag = d.fenster ? new Date(d.fenster.von) : (d.tag ? new Date(d.tag) : null); if(!tag) return null;
+  const datum = new Date(tag.getFullYear(), tag.getMonth(), tag.getDate());
+  return { key: d.foerderKey || foerderSchluessel(datum, von), datum, von, regel: foerderRegel(datum, d.dienstart || 'Fahrdienst', { von }) };
+}
 function fbSummenHtml(d){
-  return '<div class="fbx-summen"><span>GKV <b>' + betaEuro(d.gkv) + '</b>' + (d.pauschale ? ' <i class="fd-gp">GP</i>' : '') + '</span><span>LS <b>' + betaEuro(d.ls) + '</b></span><span>PT <b>' + betaEuro(d.pt) + '</b></span></div>';
+  const fi = fbFoerderInfo(d);
+  return '<div class="fbx-summen"><span>GKV <b>' + betaEuro(d.gkv) + '</b>' + (d.pauschale ? ' <i class="fd-gp">GP</i>' : '') + '</span><span>LS <b>' + betaEuro(d.ls) + '</b></span><span>PT <b>' + betaEuro(d.pt) + '</b></span>' +
+    (fi ? '<span>Pauschale <button type="button" class="fbx-foerder" data-fbfoerd="' + htmlEsc(fi.key) + '" data-fbart="' + htmlEsc(d.dienstart || 'Fahrdienst') + '">' + (fi.regel.satz ? foerderZahlText(fi.regel.satz) + ' €/h' : 'keine') + ' ✎</button></span>' : '') + '</div>';
 }
 function fbLaufend(d){
   try{ const i = designDienstInfo(); return i.fenster && Math.abs(i.fenster.tag - d.tag) < 43200000 && i.modus !== 'vorbei'; }catch(_){ return false; }
@@ -4037,6 +4058,14 @@ async function ansichtFahrtenbuch(blatt){
     if(ansicht === 'c'){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
     inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=>{ if(k._lang){ k._lang = false; return; } k.closest('.fbx-karte').classList.toggle('zu'); });
     inhalt.querySelectorAll('[data-fbtag]').forEach(k=> k.onclick = ()=>{ LS.set('fb_tag', k.dataset.fbtag); zeichnen(); });
+    inhalt.querySelectorAll('[data-fbfoerd]').forEach(k=> k.onclick = async (ev)=>{
+      ev.stopPropagation();
+      const [iso, von] = k.dataset.fbfoerd.split('|'), m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); if(!m) return;
+      const datum = new Date(+m[1], +m[2] - 1, +m[3]);
+      if(await foerderEinzelDialog(k.dataset.fbfoerd, 'Förderpauschale nur für den Dienst am ' + datum.toLocaleDateString('de-DE') + (von ? ' ab ' + von : '') + ' (' + k.dataset.fbart + ').', datum, k.dataset.fbart, von)){
+        fbBuchCache = null; ansichtFahrtenbuch(); setTimeout(()=>{ try{ fbStatistikNachholen(); }catch(_){} }, 800);
+      }
+    });
     // Loeschen nur durch langes Druecken (Handy) bzw. Rechtsklick (PC), jeweils mit Nachfrage
     const nurApp = ()=> appToastAnzeigen('Steht noch nicht im Fahrtenbuch – öffnen und dort bearbeiten bzw. löschen.', 3000);
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]){ if(dd.faelle[fi].offen || dd.lokal) return nurApp(); fbLoeschen(dd._orig || dd, dd.faelle[fi]); } }));
@@ -7645,7 +7674,8 @@ function gkvPseudoFoerderung(f){
   const std = (d.bis - d.von) / 3600000, tag = new Date(d.von), art = String(d.art || '');
   const dt = designDatumDe(new Date(tag.getFullYear(), tag.getMonth(), tag.getDate()));
   const gkv = gkvFaelleLaden().filter(x=> x && x.name !== GKV_PSEUDO_NAME).reduce((s, x)=>{ const tx = designFallZeit(x); return s + (tx && tx.getTime() >= d.von && tx.getTime() < d.bis ? (Number(x.euro) || 0) : 0); }, 0);
-  return Math.max(0, std * fahrdienstPauschaleSatz(dt, art) - gkv) + std * fahrdienstZusatzSatz(dt, art);
+  const fr = foerderRegel(dt, art, { von: zz2(tag.getHours()) + ':' + zz2(tag.getMinutes()) });
+  return Math.max(0, std * fr.satz - gkv) + std * fr.zusatz;
 }
 function gkvPseudoFoerderungHtml(f){
   const v = gkvPseudoFoerderung(f);
@@ -14621,30 +14651,134 @@ function fahrdienstWochenendSatz(d){ return !!d && (d.getDay() === 0 || d.getDay
 function fahrdienstIstSitz(art){ return /sitz|tele/i.test(String(art || '')); }
 // docdirekt: keine Foerderung (keine Grundpauschale, kein Zuschlag 24.12./31.12., kein Pseudo-Fall noetig)
 function fahrdienstOhneFoerderung(art){ return /docdirekt/i.test(String(art || '')); }
-function fahrdienstPauschaleSatz(datumWert, art){
-  if(fahrdienstOhneFoerderung(art)) return 0;
-  if(fahrdienstIstSitz(art)) return FAHRDIENST_PAUSCHALE_WOCHENENDE;
-  const d = fahrdienstDatumAusWert(datumWert);
-  return fahrdienstWochenendSatz(d) ? FAHRDIENST_PAUSCHALE_WOCHENENDE : FAHRDIENST_PAUSCHALE_WERKTAG;
-}
+function fahrdienstPauschaleSatz(datumWert, art, ctx){ return foerderRegel(datumWert, art, ctx).satz; }
 // dieselbe Zahl als Excel-Ausdruck (300/14 exakt statt gerundet)
-function fahrdienstSatzFormel(datumWert, art){
-  if(fahrdienstOhneFoerderung(art)) return '0';
-  if(fahrdienstIstSitz(art)) return String(FAHRDIENST_PAUSCHALE_WOCHENENDE);
-  return fahrdienstWochenendSatz(fahrdienstDatumAusWert(datumWert)) ? String(FAHRDIENST_PAUSCHALE_WOCHENENDE) : FAHRDIENST_PAUSCHALE_WERKTAG_FORMEL;
-}
+function fahrdienstSatzFormel(datumWert, art, ctx){ return foerderFormel(foerderRegel(datumWert, art, ctx).satz); }
 // Zusatzfoerderung 24.12./31.12. je Stunde (sonst 0)
-function fahrdienstZusatzSatz(datumWert, art){ if(fahrdienstOhneFoerderung(art)) return 0; return fahrdienstSilvesterHeiligabend(fahrdienstDatumAusWert(datumWert)) ? FAHRDIENST_ZUSATZ_2412_3112 : 0; }
+function fahrdienstZusatzSatz(datumWert, art, ctx){ return foerderRegel(datumWert, art, ctx).zusatz; }
 function fahrdienstSatzText(satz){ return String(Math.round(satz * 100) / 100).replace('.', ','); }
-function fahrdienstSatzGrund(datumWert, art){
-  const d = fahrdienstDatumAusWert(datumWert);
-  if(!d) return '';
-  if(fahrdienstOhneFoerderung(art)) return 'docdirekt (ohne Förderung)';
-  if(fahrdienstIstSitz(art)) return String(art).trim();
-  if(fahrdienstSilvesterHeiligabend(d)) return d.getDate() === 24 ? 'Heiligabend' : 'Silvester';
-  const f = istFeiertagBW(d);
-  return f ? f : d.getDay() === 0 ? 'Sonntag' : d.getDay() === 6 ? 'Samstag' : 'Fahrdienst Mo–Fr';
+function fahrdienstSatzGrund(datumWert, art, ctx){ return fahrdienstDatumAusWert(datumWert) ? foerderRegel(datumWert, art, ctx).grund : ''; }
+// ---------- Foerderpauschale je Profil, je Dienst im Plan und je einzelnem Dienst (Wunsch 20.11.2026) ----------
+// Profil (Dienste-Editor):  p.foerder = { an, werktag, wochenende, feiertag, heilig, zuschlag }  (EUR je Stunde)
+// Dienst im Plan:           woche[tag][i].foerder = { modus: 'eigen'|'keine', satz }  (fehlt = wie Profil)
+// einzelner Dienst:         LS 'foerder_einzeln' = [{ id: 'JJJJ-MM-TT|HH:MM', modus: 'eigen'|'keine', satz, am }]
+// Fehlt am Profil die Angabe: Privatversion wie bisher (Mo-Fr 300 EUR je 14 h, sonst und im Sitzdienst/
+// Telemedizin 50 EUR/h, 24.12./31.12. zusaetzlich 500 EUR je 24 h, docdirekt ohne); Launch (bundesweit) aus.
+function foerderStandard(art){
+  if(typeof dwLaunch === 'function' && dwLaunch()) return { an: false, werktag: 0, wochenende: 0, feiertag: 0, heilig: 0, zuschlag: 0 };
+  const sitz = /sitz|tele/i.test(String(art || ''));
+  return { an: true, werktag: sitz ? FAHRDIENST_PAUSCHALE_WOCHENENDE : FAHRDIENST_PAUSCHALE_WERKTAG, wochenende: FAHRDIENST_PAUSCHALE_WOCHENENDE,
+    feiertag: FAHRDIENST_PAUSCHALE_WOCHENENDE, heilig: FAHRDIENST_PAUSCHALE_WOCHENENDE, zuschlag: FAHRDIENST_ZUSATZ_2412_3112 };
 }
+function foerderProfilWerte(p){
+  const s = foerderStandard(p && p.dienstart), f = (p && p.foerder) || null;
+  if(!f) return s;
+  const z = (v, d)=> (isFinite(Number(v)) && Number(v) >= 0 ? Number(v) : d);
+  return { an: f.an !== false, werktag: z(f.werktag, 0), wochenende: z(f.wochenende, 0), feiertag: z(f.feiertag, 0), heilig: z(f.heilig, 0), zuschlag: z(f.zuschlag, 0) };
+}
+function foerderEinzelnListe(){ const a = LS.get('foerder_einzeln', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; }
+function foerderSchluessel(d, von){ if(!d) return ''; const m = /^(\d{1,2})(?::(\d{2}))?/.exec(String(von || '').trim()); return d.getFullYear() + '-' + zz2(d.getMonth() + 1) + '-' + zz2(d.getDate()) + '|' + (m ? zz2(+m[1]) + ':' + (m[2] || '00') : ''); }
+// 'auto' bleibt als Eintrag stehen (zaehlt nicht), damit das Zuruecksetzen beim Abgleich auf die anderen Geraete kommt
+function foerderEinzeln(key){ const e = key ? foerderEinzelnListe().find(x=> x.id === key) : null; return e && (e.modus === 'eigen' || e.modus === 'keine') ? e : null; }
+function foerderEinzelnSetzen(key, wert){
+  const a = foerderEinzelnListe().filter(x=> x.id !== key), m = wert && (wert.modus === 'eigen' || wert.modus === 'keine') ? wert.modus : 'auto';
+  a.push({ id: key, modus: m, satz: m === 'eigen' ? Number(wert.satz) || 0 : 0, am: new Date().toISOString() });
+  LS.set('foerder_einzeln', a);
+}
+function foerderGrundArt(text){ const t = String(text || ''); return FB_DIENSTARTEN.find(a=> t.toLowerCase().startsWith(a.toLowerCase())) || (/tele|docdirekt/i.test(t) ? 'Telemedizin' : /sitz/i.test(t) ? 'Sitzdienst' : 'Fahrdienst'); }
+// -> { satz, zusatz, grund, quelle: 'einzeln'|'dienst'|'profil'|'aus' }
+// ctx (optional): { von: 'HH:MM' oder '18-23', schicht, profilId }
+function foerderRegel(datumWert, artText, ctx){
+  ctx = ctx || {};
+  const d = datumWert instanceof Date ? datumWert : fahrdienstDatumAusWert(datumWert);
+  const art = foerderGrundArt(artText), rest = String(artText || '').slice(art.length).trim();
+  const schicht = String(ctx.schicht || rest || '').trim();
+  const heilig = fahrdienstSilvesterHeiligabend(d), fei = d && !heilig && istFeiertagBW(d), we = d && (d.getDay() === 0 || d.getDay() === 6);
+  const tagGrund = !d ? '' : heilig ? (d.getDate() === 24 ? 'Heiligabend' : 'Silvester') : fei ? fei : d.getDay() === 0 ? 'Sonntag' : d.getDay() === 6 ? 'Samstag' : 'Werktag';
+  // 1. einzelner Dienst
+  const e = foerderEinzeln(ctx.key || foerderSchluessel(d, ctx.von));
+  if(e && e.modus === 'keine') return { satz: 0, zusatz: 0, grund: 'für diesen Dienst keine', quelle: 'einzeln' };
+  // 2. Profil und Dienst im Plan
+  let profile = []; try{ profile = typeof dwProfile === 'function' ? dwProfile() : []; }catch(_){}
+  const p = (ctx.profilId && profile.find(x=> x.id === ctx.profilId && x.dienstart === art)) || profile.find(x=> x.dienstart === art) || null;
+  const w = foerderProfilWerte(p || { dienstart: art });
+  let plan = null;
+  if(p && d){
+    const l = (p.woche && p.woche[dwTag(d)]) || [], vonN = (/^(\d{1,2})(?::(\d{2}))?/.exec(String(ctx.von || '')) || []);
+    plan = (schicht && l.find(x=> x.name === schicht)) || (vonN[1] != null && l.find(x=> x.von === zz2(+vonN[1]) + ':' + (vonN[2] || '00'))) || null;
+  }
+  const pf = plan && plan.foerder;
+  const zusatz = w.an && heilig && !(pf && pf.modus === 'keine') ? w.zuschlag : 0;
+  if(e && e.modus === 'eigen') return { satz: Number(e.satz) || 0, zusatz, grund: 'eigener Satz für diesen Dienst', quelle: 'einzeln' };
+  if(pf && pf.modus === 'keine') return { satz: 0, zusatz: 0, grund: (plan.name || 'Dienst') + ': keine Förderung', quelle: 'dienst' };
+  if(pf && pf.modus === 'eigen') return { satz: Number(pf.satz) || 0, zusatz, grund: (plan.name || 'Dienst') + ': eigener Satz', quelle: 'dienst' };
+  // Privatversion ohne Angabe am Dienst: docdirekt wie bisher ohne Foerderung
+  if(!pf && !(p && p.foerder) && /docdirekt/i.test(String(artText || '') + ' ' + schicht) && !(typeof dwLaunch === 'function' && dwLaunch())) return { satz: 0, zusatz: 0, grund: 'docdirekt (ohne Förderung)', quelle: 'profil' };
+  if(!w.an) return { satz: 0, zusatz: 0, grund: 'Förderpauschale aus', quelle: 'aus' };
+  const satz = heilig ? w.heilig : fei ? w.feiertag : we ? w.wochenende : w.werktag;
+  return { satz, zusatz, grund: (/sitz|tele/i.test(art) ? art + ' · ' : '') + tagGrund, quelle: 'profil' };
+}
+// Zahl als Excel-Ausdruck (300/14 und 500/24 exakt)
+function foerderFormel(v){ if(Math.abs(v - 300 / 14) < 1e-9) return '300/14'; if(Math.abs(v - 500 / 24) < 1e-9) return '500/24'; return String(Math.round(v * 10000) / 10000); }
+function foerderZahlText(v){ return (Math.round((Number(v) || 0) * 100) / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+// Auswahl "Automatisch/Wie Profil | Eigener Satz | Keine" fuer Dialoge (Dienst im Plan, einzelner Dienst)
+function foerderWahlHtml(st, autoTitel, autoText, titel){
+  return '<div class="fb-lbl">' + (titel || 'Förderpauschale für diesen Dienst') + '</div><div class="fb-chips">' +
+    [['auto', autoTitel, autoText], ['eigen', 'Eigener Satz', ''], ['keine', 'Keine', '']].map(([k, t, u])=> '<button type="button" class="fb-chip' + (st.modus === k ? ' an' : '') + '" data-fw="' + k + '">' + htmlEsc(t) + (u ? '<small class="fw-unter">' + htmlEsc(u) + '</small>' : '') + '</button>').join('') + '</div>' +
+    '<div class="fw-eigen"' + (st.modus === 'eigen' ? '' : ' hidden') + '><input type="text" id="fwSatz" inputmode="decimal" placeholder="0,00" value="' + (st.modus === 'eigen' && isFinite(st.satz) ? foerderZahlText(st.satz) : '') + '"><span>€ je Stunde</span></div>';
+}
+function foerderWahlBinden(st){
+  document.querySelectorAll('.beta-overlay [data-fw]').forEach(b=> b.onclick = ()=>{
+    st.modus = b.dataset.fw; document.querySelectorAll('.beta-overlay [data-fw]').forEach(x=> x.classList.toggle('an', x === b));
+    const e = document.querySelector('.beta-overlay .fw-eigen'); if(e){ e.hidden = st.modus !== 'eigen'; if(!e.hidden) try{ document.getElementById('fwSatz').focus(); }catch(_){} }
+  });
+}
+function foerderWahlLesen(st){ const e = document.getElementById('fwSatz'); if(e && st.modus === 'eigen') st.satz = foerderZahlLesen(e.value); }
+function foerderKurzText(w){ if(!w || !w.an) return 'aus'; const z = foerderZahlText; return w.werktag === w.wochenende ? z(w.werktag) + ' €/h' : z(w.werktag) + ' / ' + z(w.wochenende) + ' €/h'; }
+// Profil: Foerderpauschale an/aus und Saetze (Dienste-Editor)
+async function dwFoerderDialog(p0){
+  const p = JSON.parse(JSON.stringify(p0)), w = foerderProfilWerte(p);
+  let an = w.an, fehler = '';
+  const felder = [['werktag', 'Werktag Mo–Fr'], ['wochenende', 'Samstag, Sonntag'], ['feiertag', 'Feiertag'], ['heilig', 'Heiligabend, Silvester'], ['zuschlag', 'Zuschlag Heiligabend, Silvester', 'zusätzlich zur Pauschale']];
+  const text = {}; felder.forEach(([k])=> text[k] = w[k] ? foerderZahlText(w[k]) : '');
+  for(;;){
+    const html = '<div class="fb-dialog">' + (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
+      '<div class="fb-info">Mindestvergütung je Dienststunde für <b>' + htmlEsc(p.name) + '</b>. Liegen die GKV-Einnahmen eines Dienstes darunter, zählt die Pauschale – auf der Uhr, beim Stundenlohn, im Fahrtenbuch und in der Auswertung.</div>' +
+      '<div class="fb-chips"><button type="button" class="fb-chip' + (an ? ' an' : '') + '" data-fpan="1">An</button><button type="button" class="fb-chip' + (an ? '' : ' an') + '" data-fpan="0">Aus</button></div>' +
+      '<div class="fp-felder"' + (an ? '' : ' hidden') + '>' + felder.map(([k, t, h])=> '<label class="fp-feld"><span>' + t + (h ? '<small>' + h + '</small>' : '') + '</span><input type="text" inputmode="decimal" id="fp_' + k + '" value="' + htmlEsc(text[k]) + '" placeholder="0,00"><i>€/h</i></label>').join('') + '</div>' +
+      '<div class="fb-info">Für einzelne Dienste im Plan abweichend: den Dienst anklicken. Für einen einzelnen Tag: „Dienst ändern“ auf der Startseite bzw. im Fahrtenbuch.</div></div>';
+    const warte = betaOverlay.ergebnis('Förderpauschale', html, [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Speichern', akt: 'ok', primaer: true }]);
+    document.querySelectorAll('.beta-overlay [data-fpan]').forEach(b=> b.onclick = ()=>{ an = b.dataset.fpan === '1'; document.querySelectorAll('.beta-overlay [data-fpan]').forEach(x=> x.classList.toggle('an', x === b)); const f = document.querySelector('.beta-overlay .fp-felder'); if(f) f.hidden = !an; });
+    const akt = await warte;
+    felder.forEach(([k])=>{ const e = document.getElementById('fp_' + k); if(e) text[k] = e.value; });
+    betaOverlay.schliessen();
+    if(akt !== 'ok') return false;
+    const neu = { an };
+    let schlecht = '';
+    felder.forEach(([k, t])=>{ const v = foerderZahlLesen(text[k]); if(!isFinite(v)) schlecht = t; else neu[k] = (text[k] === (w[k] ? foerderZahlText(w[k]) : '')) ? w[k] : v; });   // unveraendert: exakter Wert (z. B. 300/14)
+    if(schlecht){ fehler = 'Bitte bei „' + schlecht + '“ einen Betrag eintragen (z. B. 21,43).'; continue; }
+    p.foerder = neu; dwProfilSpeichern(p);
+    return true;
+  }
+}
+// einzelner Dienst (Fahrtenbuch, nachtraeglich): Automatisch | Eigener Satz | Keine
+async function foerderEinzelDialog(key, titel, datumWert, artText, von){
+  const e = foerderEinzeln(key), st = { modus: e ? e.modus : 'auto', satz: e ? e.satz : NaN };
+  const auto = foerderRegel(datumWert, artText, { key: '-', von });
+  let fehler = '';
+  for(;;){
+    const html = '<div class="fb-dialog">' + (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') + '<div class="fb-info">' + htmlEsc(titel) + '</div>' +
+      foerderWahlHtml(st, 'Automatisch', auto.satz ? foerderZahlText(auto.satz) + ' €/h · ' + auto.grund : auto.grund) + '</div>';
+    const warte = betaOverlay.ergebnis('Förderpauschale', html, [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Speichern', akt: 'ok', primaer: true }]);
+    foerderWahlBinden(st);
+    const akt = await warte; foerderWahlLesen(st); betaOverlay.schliessen();
+    if(akt !== 'ok') return false;
+    if(st.modus === 'eigen' && !isFinite(st.satz)){ fehler = 'Bitte einen Betrag je Stunde eintragen (z. B. 35,00).'; continue; }
+    foerderEinzelnSetzen(key, st); if(typeof syncBaldSchreiben === 'function') syncBaldSchreiben();
+    return true;
+  }
+}
+function foerderZahlLesen(s){ const t = String(s == null ? '' : s).trim().replace(/\s|€/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'); if(t === '') return 0; const n = Number(t); return isFinite(n) && n >= 0 ? n : NaN; }
 
 // Excel-Ausdruck fuer die Dienststunden aus Spalte C der Blockstart-Zeile
 // ("18-23" als Text; ueber Mitternacht, z.B. "18-8", werden 24 h addiert)
@@ -14669,7 +14803,7 @@ function fahrdienstBlockFormeln(b){
     '=AJ' + R + '+AL' + R + '+AM' + R,                                                     // AH
     '=IFERROR(AH' + R + '/' + std + ',0)',                                                 // AI
     '=MAX(SUMIFS(' + AG + ',' + D + ',"<>")-AL' + R + '-AM' + R + ',IFERROR(' + std + ',0)*' + (b.satzFormel || b.satz) + ')' +
-      (b.zusatz ? '+IFERROR(' + std + ',0)*500/24' : ''), // AJ
+      (b.zusatz ? '+IFERROR(' + std + ',0)*' + foerderFormel(b.zusatz) : ''), // AJ
     '=AL' + R + '+AM' + R,                                                                 // AK
     '=SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"L")+SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"LS")', // AL
     '=SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"P")+SUMIFS(' + AG + ',' + D + ',"<>",' + E + ',"PT")'  // AM
@@ -15582,7 +15716,7 @@ async function pseudoOffeneDienste(neu){
       fahrdienstZeilenAuswerten(werte).bloecke.forEach(b=>{
         const z = fbBlockZeitraum({ datumText: b.datumText, zeitRoh: b.zeitRoh });
         if(!z || z.bis.getTime() > Date.now() || z.von.getTime() < grenze) return;
-        if(b.gkvRoh > 0 || b.pseudo || fahrdienstOhneFoerderung(b.dienstart)) return;
+        if(b.gkvRoh > 0 || b.pseudo || (!b.satz && !b.zusatz)) return;   // ohne Foerderung kein Pseudo-Fall noetig
         const key = b.datumText + ' ' + String(b.zeitRoh || '');
         if(weg.has(key)) return;
         offen.push({ key, datumText: b.datumText, zeit: String(b.zeitRoh || ''), arzt: b.arzt || '', von: z.von.getTime() });
@@ -21297,6 +21431,12 @@ const SYNC_SAETZE = {
     zeit: (x)=> Date.parse(x.am || '') || 0,
     wegZeit: ()=> Date.parse(LS.get('gkv_entwurf_weg_am', '') || '') || 0
   },
+  // Foerderpauschale fuer einzelne Dienste (siehe foerderRegel)
+  foerder_einzeln: {
+    laden: ()=> foerderEinzelnListe(),
+    setzen: (a)=> LS.set('foerder_einzeln', a),
+    zeit: (x)=> Date.parse(x.am || '') || 0
+  },
   // Dienst-Profile mit Musterwoche (Vorlage zaehlt als alt, siehe dwRoh)
   dienst_wochen: {
     laden: ()=>{ const a = LS.get('dienst_wochen', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
@@ -21662,7 +21802,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v496';
+const APP_VERSION = 'v497';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -21994,7 +22134,7 @@ function dwKurz(t){ return String(t || '').replace(/^0(\d)/, '$1').replace(/:00$
 function dwSortiert(l){ return l.slice().sort((a, b)=> dwMin(a.von) - dwMin(b.von) || String(a.name).localeCompare(String(b.name), 'de', { numeric: true })); }
 function dwNorm(p){
   const w = {}, q = (p && p.woche) || {};
-  DW_TAGE.forEach(([k])=>{ w[k] = dwSortiert((Array.isArray(q[k]) ? q[k] : []).map(x=> ({ name: String((x && x.name) || '').trim(), von: dwZeit(x && x.von), bis: dwZeit(x && x.bis) })).filter(x=> x.name && x.von && x.bis)); });
+  DW_TAGE.forEach(([k])=>{ w[k] = dwSortiert((Array.isArray(q[k]) ? q[k] : []).map(x=> Object.assign({ name: String((x && x.name) || '').trim(), von: dwZeit(x && x.von), bis: dwZeit(x && x.bis) }, x && x.foerder && (x.foerder.modus === 'eigen' || x.foerder.modus === 'keine') ? { foerder: { modus: x.foerder.modus, satz: Number(x.foerder.satz) || 0 } } : {})).filter(x=> x.name && x.von && x.bis)); });
   return Object.assign({}, p, { name: String((p && p.name) || '').trim() || 'Dienste', dienstart: FB_DIENSTARTEN.includes(p && p.dienstart) ? p.dienstart : 'Fahrdienst', woche: w });
 }
 // Ortenau-Vorlage aus den bisher fest eingebauten Plaenen (nur Privatversion)
@@ -22018,7 +22158,7 @@ function dwProfilSpeichern(p){
   p = dwNorm(p);
   if(dwLaunch()){
     const a = dienstprofile(), i = a.findIndex(x=> x.id === p.id);
-    const neu = Object.assign({}, i >= 0 ? a[i] : { id: p.id, art: 'servicestandort', adresse: '', geo: null, standard: !a.length }, { name: p.name, dienstart: p.dienstart, woche: p.woche });
+    const neu = Object.assign({}, i >= 0 ? a[i] : { id: p.id, art: 'servicestandort', adresse: '', geo: null, standard: !a.length }, { name: p.name, dienstart: p.dienstart, woche: p.woche }, p.foerder ? { foerder: p.foerder } : {});
     if(i >= 0) a[i] = neu; else a.push(neu);
     dienstprofileSpeichern(a);
   } else {
@@ -22076,10 +22216,12 @@ function ansichtDienste(zurueck){
       const zahl = DW_TAGE.reduce((s, [k])=> s + p.woche[k].length, 0);
       h += '<div class="dw-kopf"><div><b>' + htmlEsc(p.name) + '</b><small>' + htmlEsc(p.dienstart) + (dwLaunch() && p.adresse ? ' · ' + htmlEsc(p.adresse) : '') + ' · ' + zahl + (zahl === 1 ? ' Dienst' : ' Dienste') + ' pro Woche</small></div>' +
         '<button type="button" class="btn-sekundaer dw-klein" id="dwProfilBearb">Profil bearbeiten</button></div>' +
+        (()=>{ const w = foerderProfilWerte(p); return '<button type="button" class="dw-foerder" id="dwFoerder"><span>Förderpauschale: <b>' + (w.an ? foerderKurzText(w) : 'aus') + '</b>' +
+          (w.an ? '<small>Werktag ' + foerderZahlText(w.werktag) + ' · Sa/So ' + foerderZahlText(w.wochenende) + ' · Feiertag ' + foerderZahlText(w.feiertag) + ' · 24./31.12. ' + foerderZahlText(w.heilig) + (w.zuschlag ? ' + ' + foerderZahlText(w.zuschlag) : '') + ' €/h</small>' : '<small>Für Bezirke ohne Mindestvergütung</small>') + '</span>›</button>'; })() +
         '<div class="dw-woche">' + DW_TAGE.map(([k, t])=> '<div class="dw-tag' + (k === 'fe' ? ' fe' : (k === 'sa' || k === 'so') ? ' we' : '') + '">' +
           '<div class="dw-tag-kopf"><span>' + t + '</span><span>' + (p.woche[k].length ? '<button type="button" class="dw-mini" data-dwkopie="' + k + '" title="Tag auf andere Tage übertragen" aria-label="' + t + ' kopieren">⧉</button>' : '') +
           '<button type="button" class="dw-mini" data-dwneu="' + k + '" title="Dienst hinzufügen" aria-label="Dienst am ' + t + ' hinzufügen">+</button></span></div>' +
-          (p.woche[k].length ? p.woche[k].map((x, i)=> '<button type="button" class="dw-dienst" data-dwtag="' + k + '" data-dwi="' + i + '"><b>' + htmlEsc(x.name) + '</b><span>' + dwKurz(x.von) + '–' + dwKurz(x.bis) + '</span></button>').join('') : '<div class="dw-leer">frei</div>') +
+          (p.woche[k].length ? p.woche[k].map((x, i)=> '<button type="button" class="dw-dienst" data-dwtag="' + k + '" data-dwi="' + i + '"><b>' + htmlEsc(x.name) + '</b><span>' + dwKurz(x.von) + '–' + dwKurz(x.bis) + '</span>' + (x.foerder ? '<i class="dw-f">' + (x.foerder.modus === 'keine' ? 'ohne Pauschale' : foerderZahlText(x.foerder.satz) + ' €/h') + '</i>' : '') + '</button>').join('') : '<div class="dw-leer">frei</div>') +
           '</div>').join('') + '</div>' +
         '<div class="design-hinweis" style="margin-top:10px;">Dienst anklicken zum Ändern; dort legst du auch fest, an welchen Tagen er gilt. ⧉ überträgt einen ganzen Tag auf andere Tage.</div>';
     }
@@ -22096,6 +22238,7 @@ function ansichtDienste(zurueck){
       const dazu = dwProfile().find(x=> !vorher.has(x.id)); if(dazu) dwAktiv = dazu.id;
       zeichnen();
     };
+    const fpb = document.getElementById('dwFoerder'); if(fpb) fpb.onclick = async ()=>{ await dwFoerderDialog(p); zeichnen(); };
     const bearb = document.getElementById('dwProfilBearb');
     if(bearb) bearb.onclick = async ()=>{ if(dwLaunch()) await dienstprofilBearbeiten(p.id); else await dwProfilDialog(p); zeichnen(); };
     app.querySelectorAll('[data-dwneu]').forEach(b=> b.onclick = async ()=>{ await dwDienstDialog(p, b.dataset.dwneu, -1); zeichnen(); });
@@ -22145,18 +22288,22 @@ async function dwDienstDialog(p0, tagK, i){
   let name = alt ? alt.name : '', von = alt ? alt.von : '', bis = alt ? alt.bis : '', fehler = '';
   const tage = new Set(alt ? DW_TAGE.map(([k])=> k).filter(k=> p.woche[k].some(gleich)) : [tagK]);
   const vorher = new Set(tage);
+  const fw = { modus: alt && alt.foerder ? alt.foerder.modus : 'auto', satz: alt && alt.foerder ? alt.foerder.satz : NaN }, pw = foerderProfilWerte(p);
   for(;;){
     const html = '<div class="fb-dialog">' + (fehler ? '<div class="fb-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<label class="fb-lbl">Name<input type="text" id="dwName" value="' + htmlEsc(name) + '" placeholder="z. B. Früh 3, Spät, Nacht 1"></label>' +
       '<div class="fb-zeile"><label>von<input type="time" id="dwVon" value="' + htmlEsc(von) + '"></label><label>bis<input type="time" id="dwBis" value="' + htmlEsc(bis) + '"></label></div>' +
       '<div class="fb-lbl">Gilt an</div><div class="fb-chips">' + DW_TAGE.map(([k, t])=> '<button type="button" class="fb-chip' + (tage.has(k) ? ' an' : '') + '" data-dwt="' + k + '">' + t + '</button>').join('') + '</div>' +
+      foerderWahlHtml(fw, 'Wie Profil', foerderKurzText(pw)) +
       '<div class="fb-info">Ein Dienst über Mitternacht (z. B. 23–08) gehört zum Tag, an dem er beginnt. Gibt es am Tag schon einen Dienst mit diesem Namen, wird er ersetzt.</div></div>';
     const kn = [{ label: 'Abbrechen', akt: 'nein' }];
     if(alt) kn.push({ label: 'Löschen', akt: 'weg' });
     kn.push({ label: 'Speichern', akt: 'ok', primaer: true });
     const warte = betaOverlay.ergebnis(alt ? 'Dienst ändern' : 'Neuer Dienst', html, kn);
     document.querySelectorAll('.beta-overlay [data-dwt]').forEach(b=> b.onclick = ()=>{ const k = b.dataset.dwt; if(tage.has(k)) tage.delete(k); else tage.add(k); b.classList.toggle('an', tage.has(k)); });
+    foerderWahlBinden(fw);
     const akt = await warte;
+    foerderWahlLesen(fw);
     const el = (id)=> document.getElementById(id);
     if(el('dwName')){ name = el('dwName').value.trim(); von = el('dwVon').value; bis = el('dwBis').value; }
     betaOverlay.schliessen();
@@ -22169,8 +22316,10 @@ async function dwDienstDialog(p0, tagK, i){
     if(!name){ fehler = 'Bitte einen Namen eingeben.'; continue; }
     if(!dwZeit(von) || !dwZeit(bis)){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen.'; continue; }
     if(!tage.size){ fehler = 'Bitte mindestens einen Tag wählen.'; continue; }
+    if(fw.modus === 'eigen' && !isFinite(fw.satz)){ fehler = 'Bitte bei „Eigener Satz“ einen Betrag je Stunde eintragen (z. B. 40,00).'; continue; }
+    const foerder = fw.modus === 'auto' ? null : { modus: fw.modus, satz: fw.modus === 'eigen' ? fw.satz : 0 };
     if(alt) vorher.forEach(k=>{ p.woche[k] = p.woche[k].filter(x=> !gleich(x)); });
-    tage.forEach(k=>{ p.woche[k] = p.woche[k].filter(x=> x.name !== name).concat([{ name, von: dwZeit(von), bis: dwZeit(bis) }]); });
+    tage.forEach(k=>{ p.woche[k] = p.woche[k].filter(x=> x.name !== name).concat([Object.assign({ name, von: dwZeit(von), bis: dwZeit(bis) }, foerder ? { foerder } : {})]); });
     dwProfilSpeichern(p);
     return true;
   }
@@ -22373,8 +22522,9 @@ function designDienstInfo(){
   const dt = designDatumDe(fe.tag);
   // Foerderung (Statut NFD-O zu § 10): Pauschale je Stunde minus GKV-Einnahmen, 24.12./31.12. zusaetzlich
   const artVoll = fbDienstartText(d.art, d.schicht);   // Schicht zaehlt mit (docdirekt: ohne Foerderung)
-  const pauschale = betaRund2(fe.stunden * fahrdienstPauschaleSatz(dt, artVoll));
-  const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fahrdienstZusatzSatz(dt, artVoll) * fe.stunden);
+  const fr = foerderRegel(fe.tag, artVoll, { von: d.von, schicht: d.schicht, profilId: d.profilId });
+  const pauschale = betaRund2(fe.stunden * fr.satz);
+  const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fr.zusatz * fe.stunden);
   return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, schicht: d.schicht || '', arzt: d.arzt || '', jetzt, auto: d.auto || '' };
 }
 function designDienstTitel(info){ return info.art + (info.schicht ? ' ' + info.schicht : '') + ' · ' + designUhr(info.fenster.von) + ' – ' + designUhr(info.fenster.bis); }
@@ -22450,6 +22600,9 @@ async function liveDienstDialog(opt){
   let profil = dwProfilPassend(art, vorschlag ? (vorschlag.profil || vorschlag.profilId) : LS.get('fb_dienstprofil', ''));
   let von = vorschlag ? vorschlag.von : '', bis = vorschlag ? vorschlag.bis : '', arzt = vorschlag ? (vorschlag.arzt || '') : '', schicht = vorschlag ? (vorschlag.schicht || '') : '';
   let fehler = '';
+  // Foerderpauschale nur fuer diesen einen Dienst (Wunsch 20.11.2026)
+  const fwAlt = akt ? foerderEinzeln(foerderSchluessel(liveDienstFenster(akt).tag, akt.von)) : null;
+  const fw = { modus: fwAlt ? fwAlt.modus : 'auto', satz: fwAlt ? fwAlt.satz : NaN };
   const vorschlaege = ()=>{
     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datum), tag = m ? new Date(+m[1], +m[2] - 1, +m[3]) : datumD;
     const we = fahrdienstWochenendSatz(tag), std = (LIVE_DIENSTZEITEN[art] || {})[we ? 'wochenende' : 'werktag'] || [];
@@ -22492,7 +22645,8 @@ async function liveDienstDialog(opt){
       '<div class="fb-lbl">Vertretener Arzt (optional)</div>' +
       (aerzte.length ? '<div class="fb-chips ld-reihe">' + aerzte.slice(0, 12).map(a=> '<span class="fb-chip arzt' + (a === arzt ? ' an' : '') + '"><button type="button" class="w" data-larzt="' + htmlEsc(a) + '">' + htmlEsc(a) + '</button><button type="button" class="x" data-larztweg="' + htmlEsc(a) + '" aria-label="entfernen">×</button></span>').join('') + '</div>'
         : '<div class="fb-info">Noch keine bisherigen Ärzte bekannt' + ((typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet') ? '.' : ' – mit OneDrive-Anmeldung kommen sie aus dem Fahrtenbuch.') + '</div>') +
-      '<input type="text" id="liveArzt" placeholder="Name (leer = eigener Dienst)" value="' + htmlEsc(arzt) + '"></div>';
+      '<input type="text" id="liveArzt" placeholder="Name (leer = eigener Dienst)" value="' + htmlEsc(arzt) + '">' +
+      (()=>{ const a0 = foerderRegel(tagVon(), fbDienstartText(art, schicht), { key: '-', von, schicht, profilId: profil }); return foerderWahlHtml(fw, 'Automatisch', a0.satz ? foerderZahlText(a0.satz) + ' €/h · ' + a0.grund : a0.grund); })() + '</div>';
     const kn = [{ label: 'Abbrechen', akt: 'nein' }];
     if(akt) kn.push({ label: 'Dienst beenden', akt: 'ende' });
     kn.push({ label: akt ? 'Übernehmen' : 'Dienst starten', akt: 'ok', primaer: true });
@@ -22512,9 +22666,10 @@ async function liveDienstDialog(opt){
       if(document.getElementById('liveArzt').value === b.dataset.larztweg) document.getElementById('liveArzt').value = '';
     });
     { const dw = document.getElementById('dwAnlegen'); if(dw) dw.onclick = ()=>{ if(betaOverlay.loesen) betaOverlay.loesen('dw'); }; }
+    foerderWahlBinden(fw);
     const dEl = document.getElementById('liveDatum'); if(dEl) dEl.onchange = ()=>{ lesen(); schicht = ''; betaOverlay.loesen && betaOverlay.loesen('neu'); };
     const a = await warte;
-    lesen();
+    lesen(); foerderWahlLesen(fw);
     if(a === 'dw'){ betaOverlay.schliessen(); ansichtDienste(()=> ansichtStart()); return false; }
     if(a === 'neu'){ fehler = ''; continue; }
     if(a === 'ende'){ betaOverlay.schliessen(); liveDienstLeeren(); syncBaldSchreiben(); setTimeout(()=> fbStatistikNachholen(), 500); return true; }
@@ -22522,7 +22677,9 @@ async function liveDienstDialog(opt){
     if(!/^\d{4}-\d{2}-\d{2}$/.test(datum)){ fehler = 'Bitte den Tag des Dienstbeginns wählen.'; continue; }
     if(mehrere() && !schicht && (!von || !bis)){ fehler = 'Bitte deinen Dienst (Nummer) anklicken – oder eigene Uhrzeiten eintragen.'; continue; }
     if(!/^\d{1,2}:\d{2}$/.test(von) || !/^\d{1,2}:\d{2}$/.test(bis)){ fehler = 'Bitte Beginn und Ende als Uhrzeit eintragen.'; continue; }
+    if(fw.modus === 'eigen' && !isFinite(fw.satz)){ fehler = 'Bitte bei „Eigener Satz“ einen Betrag je Stunde eintragen (z. B. 35,00).'; continue; }
     betaOverlay.schliessen();
+    try{ const fk = foerderSchluessel(tagVon(), von); if(fw.modus !== 'auto' || foerderEinzeln(fk)) foerderEinzelnSetzen(fk, fw); }catch(_){}
     if(!dienstSchichten(art, tagVon(), profil).length) schicht = '';
     LS.set('live_dienst', { datum, von, bis, art, arzt, schicht, profilId: profil, am: new Date().toISOString() }); syncBaldSchreiben();
     // ersetzt einen geaenderten Dienst (gleicher Tag, ueberlappend) bzw. legt ihn neu an
