@@ -56,6 +56,17 @@ module.exports = async ({ browser, basis, pr })=>{
   d = await doku('DT3');
   const n = await p.evaluate(()=> __up.fotos);
   pr('Weiterbearbeitet während des Hochladens: Text bleibt, beide Fotos hochgeladen, keines doppelt', d.anamnese === 'Nachgetragen' && d.fotos.length === 2 && d.fotos.every((x)=> x.oben) && n === 2, { anamnese: d.anamnese, fotos: d.fotos, n });
+  // 4) Nachlauf: App wurde beim Hochladen geschlossen -> beim Start/bei Netz im Hintergrund nachholen
+  await p.evaluate(()=>{ __up.ms = 300; __up.fehler = true; });
+  await oeffneDoku('DT4'); await fotosDazu(2); await p.click('#dokuFertig'); await p.waitForSelector('.doku-up.fehl', { timeout: 10000 });
+  await p.evaluate(()=>{ __up.fehler = false; document.getElementById('dokuUpAnzeige').hidden = true; });
+  const nn = await p.evaluate(()=> dokuNachholen());
+  await p.waitForSelector('.doku-up.ok', { timeout: 10000 }); await p.evaluate(()=> DokuUpload.warten());
+  d = await doku('DT4');
+  pr('Nachlauf: offene Fotos ohne Öffnen der Dokumentation hochgeladen', nn === 1 && d.fotos.length === 2 && d.fotos.every((x)=> x.oben), { nn, fotos: d.fotos });
+  pr('Nachlauf: nichts mehr offen -> nichts zu tun', await p.evaluate(()=> dokuNachholen()) === 0);
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'Rechnungserfassung_Mobil.html'), 'utf8');
+  pr('Nachlauf wird beim Start und bei wiederkehrendem Netz ausgelöst', /setTimeout\(dokuNachholen, 4000\)/.test(src) && /addEventListener\('online', \(\)=> setTimeout\(dokuNachholen/.test(src));
   pr('keine Skriptfehler', !p.fehler.length, p.fehler.slice(0, 3));
   await p.context().close();
 };
