@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-g/JO7y2u1hrcmHmIAuS0BwcFcTKbzPSUGiydgiEvtYY=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-l/iCWJ/7jgD2Upc4k1GN9MIrjsg6Tcosj/5tNDIqOkc=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -22707,7 +22707,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v514';
+const APP_VERSION = 'v515';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -23409,7 +23409,8 @@ function liveDienstLaden(){
 }
 // „Dienst beenden“ (Wunsch 21.11.2026): der Dienst bleibt wie ein regulaer vorbeigegangener noch 12 h sichtbar (Uhr,
 // Einsatzkarte), gilt aber nicht mehr als laufend; ein neuer Dienst ersetzt ihn.
-function liveDienstEnde(d, fe){ fe = fe || liveDienstFenster(d); const b = d && d.beendet ? Date.parse(d.beendet) : NaN; return isFinite(b) ? Math.min(b, fe.bis.getTime()) : fe.bis.getTime(); }
+// frueh === false: vor dem geplanten Ende beendet, aber der Dienst ging (laut Rueckfrage) bis zum geplanten Ende -> gerechnet wird bis dahin
+function liveDienstEnde(d, fe){ fe = fe || liveDienstFenster(d); const b = d && d.beendet && d.frueh !== false ? Date.parse(d.beendet) : NaN; return isFinite(b) ? Math.min(b, fe.bis.getTime()) : fe.bis.getTime(); }
 function liveDienstAktiv(){ const d = liveDienstLaden(); return d && !d.beendet ? d : null; }
 // beendeter Dienst -> ein spaeterer Dienst aus dem Dienstplan (automatisch) geht vor
 function liveDienstAnzeige(){
@@ -24164,9 +24165,20 @@ function designStartErgaenzen(){
     const dende = document.getElementById('dsDienstEnde');
     if(dende) dende.onclick = async ()=>{
       const d0 = liveDienstLaden(); if(!d0) return;
-      if(!await betaFrage('Dienst „' + (d0.art || 'Dienst') + (d0.schicht ? ' ' + d0.schicht : '') + ', ' + d0.von + '–' + d0.bis + ' Uhr“ jetzt beenden?\n\nDie Fälle bleiben im Fahrtenbuch.', 'Beenden', 'Abbrechen')) return;
+      const name = (d0.art || 'Dienst') + (d0.schicht ? ' ' + d0.schicht : '') + ', ' + d0.von + '–' + d0.bis + ' Uhr', fe0 = liveDienstFenster(d0), jetzt = new Date();
+      let frueh = true;
+      if(fe0 && jetzt.getTime() < fe0.bis.getTime() - 5 * 60000){
+        // vor dem geplanten Ende (Wunsch 22.11.2026): nachfragen, ob der Dienst wirklich jetzt endete -- davon haengen €/h und die Auswertung ab
+        const uhr = zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes());
+        const a = await betaOverlay.ergebnis('Dienst beenden', '<div class="fb-dialog"><div class="fb-info">„' + htmlEsc(name) + '“ ist bis <b>' + htmlEsc(d0.bis) + ' Uhr</b> geplant. Hast du früher aufgehört?</div>' +
+          '<div class="fb-info">Danach rechnen €/h und die Auswertung. Die Fälle bleiben im Fahrtenbuch; Uhr und Karte bleiben noch 12 Stunden sichtbar.</div></div>',
+          [{ label: 'Ja, Dienst endete jetzt (' + uhr + ')', akt: 'frueh', primaer: true }, { label: 'Nein, Dienst ging bis ' + d0.bis, akt: 'plan' }, { label: 'Abbrechen', akt: 'ab' }]);
+        betaOverlay.schliessen();
+        if(a !== 'frueh' && a !== 'plan') return;
+        frueh = a === 'frueh';
+      } else if(!await betaFrage('Dienst „' + name + '“ jetzt beenden?\n\nDie Fälle bleiben im Fahrtenbuch.', 'Beenden', 'Abbrechen')) return;
       // nicht loeschen: noch 12 h als beendeter Dienst sichtbar (Uhr, Karte), bis ein neuer Dienst beginnt
-      LS.set('live_dienst', Object.assign({}, d0, { beendet: new Date().toISOString() })); syncBaldSchreiben(); ansichtStart();
+      LS.set('live_dienst', Object.assign({}, d0, { beendet: jetzt.toISOString(), frueh })); syncBaldSchreiben(); ansichtStart();
       // vorgemerkte Statistik ins Fahrtenbuch (waehrend des Dienstes ausgelassen)
       if((LS.get('fb_statistik_offen', []) || []).length){ appToastAnzeigen('Statistik wird ins Fahrtenbuch eingetragen …', 2500);
         fbStatistikNachholen().then(ok=>{ if(ok) appToastAnzeigen('✓ Statistik im Fahrtenbuch eingetragen.', 2500); }); }

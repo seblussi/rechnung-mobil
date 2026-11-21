@@ -12,13 +12,23 @@ module.exports = async ({ browser, basis, pr })=>{
   await start();
   pr('Ausgangslage: Dienst läuft, „Dienst beenden“ da', await p.evaluate(()=> !!document.getElementById('dsDienstEnde') && designDienstInfo().modus === 'laufend'));
   await p.evaluate(()=> document.getElementById('dsDienstEnde').click());
-  await p.waitForFunction(()=> [...document.querySelectorAll('.beta-overlay.aktiv button')].some((b)=> b.textContent === 'Beenden'));
-  await p.evaluate(()=> [...document.querySelectorAll('.beta-overlay.aktiv button')].find((b)=> b.textContent === 'Beenden').click());
+  await p.waitForFunction(()=> [...document.querySelectorAll('.beta-overlay.aktiv button')].some((b)=> /^Ja, Dienst endete jetzt/.test(b.textContent)));
+  const frage = await p.evaluate(()=> document.querySelector('.beta-overlay.aktiv').textContent);
+  pr('Vor dem geplanten Ende: Rückfrage „früher aufgehört?“ mit Ja/Nein/Abbrechen', /früher aufgehört/.test(frage) && /Nein, Dienst ging bis/.test(frage) && /Abbrechen/.test(frage), frage.slice(0, 200));
+  await p.evaluate(()=> [...document.querySelectorAll('.beta-overlay.aktiv button')].find((b)=> /^Ja, Dienst endete jetzt/.test(b.textContent)).click());
   await p.waitForTimeout(1500);
   const n = await p.evaluate(()=> ({ uhr: !!document.getElementById('dsRing'), modus: designDienstInfo().modus, ende: !!document.getElementById('dsDienstEnde'), neu: !!document.getElementById('dsDienstStart'), aktiv: !!liveDienstAktiv(), fuer: !!liveDienstFuer(new Date(Date.now() + 2 * 3600000)), status: (document.querySelector('.ds-status') || {}).textContent || '' }));
   pr('Nach „Dienst beenden“: Uhr bleibt, „Dienst beendet“, Knopf „Dienst starten“', n.uhr && n.modus === 'vorbei' && !n.ende && n.neu && /beendet/.test(n.status), n);
   pr('Beendeter Dienst läuft nicht mehr: neue Fälle danach gehören nicht dazu', !n.aktiv && !n.fuer, n);
-  await p.evaluate(()=>{ const d = LS.get('live_dienst', null); d.beendet = new Date(Date.now() - 13 * 3600000).toISOString(); LS.set('live_dienst', d); });
+  pr('„Ja, endete jetzt“: gerechnet wird bis jetzt', await p.evaluate(()=> Math.abs(designDienstInfo().beendetAm - Date.now()) < 60000));
+  // „Nein, ging bis zum geplanten Ende“: gerechnet bis zum geplanten Ende, Fälle bis dahin gehören dazu
+  await p.evaluate(()=>{ const d = LS.get('live_dienst', null); delete d.beendet; delete d.frueh; LS.set('live_dienst', d); }); await start();
+  await p.evaluate(()=> document.getElementById('dsDienstEnde').click());
+  await p.waitForFunction(()=> [...document.querySelectorAll('.beta-overlay.aktiv button')].some((b)=> /^Nein, Dienst ging bis/.test(b.textContent)));
+  await p.evaluate(()=> [...document.querySelectorAll('.beta-overlay.aktiv button')].find((b)=> /^Nein, Dienst ging bis/.test(b.textContent)).click()); await p.waitForTimeout(1200);
+  const pl = await p.evaluate(()=>{ const i = designDienstInfo(); return { modus: i.modus, bisPlan: i.beendetAm === i.fenster.bis.getTime(), fuer: !!liveDienstFuer(new Date(Date.now() + 2 * 3600000)), uhr: !!document.getElementById('dsRing') }; });
+  pr('„Nein, ging bis …“: beendet angezeigt, gerechnet bis zum geplanten Ende, Fälle bis dahin gehören dazu', pl.modus === 'vorbei' && pl.bisPlan && pl.fuer && pl.uhr, pl);
+  await p.evaluate(()=>{ const d = LS.get('live_dienst', null); d.beendet = new Date(Date.now() - 13 * 3600000).toISOString(); d.frueh = true; LS.set('live_dienst', d); });
   await start();
   pr('13 h nach dem Beenden: Dienst weg', await p.evaluate(()=> !LS.get('live_dienst', null) && designDienstInfo().modus !== 'vorbei'));
   // neuer Dienst ersetzt den beendeten
