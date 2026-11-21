@@ -41,7 +41,9 @@ module.exports = async ({ browser, basis, pr })=>{
     const lies = async (blob)=> (await JSZip.loadAsync(blob)).file('word/document.xml').async('string');
     const mit = await lies(await aerzteDocxErzeugen(vorlage, Object.assign({ firma: 'MVZ Ullingen' }, daten)));
     const ohne = await lies(await aerzteDocxErzeugen(vorlage, Object.assign({ firma: '' }, daten)));
-    const text = (x)=> x.replace(/<w:br\/>/g, '\n').replace(/<\/w:p>/g, '\n').replace(/<[^>]+>/g, '');
+    // sichtbarer Text je Absatz (w:t), Zeilenumbruch bei w:br -- ueber den XML-Parser
+    const text = (x)=>{ const d = new DOMParser().parseFromString(x, 'application/xml'); let t = '';
+      d.querySelectorAll('p').forEach((par)=>{ par.querySelectorAll('t, br').forEach((n)=>{ t += n.localName === 'br' ? '\n' : n.textContent; }); t += '\n'; }); return t; };
     // Dialog: Feld vorhanden und aus der gespeicherten Adresse vorbelegt
     const c = LS.get(EIGENE_POS_CACHE, null) || {}; c.aerzteAdressen = [{ arzt: 'Dr. Max Muster', firma: 'OrthoDocs GmbH', vname: 'Dr. Max Muster', adr1: 'Hauptstr. 1', adr2: '79100 Freiburg', kuerzel: 'MM' }]; LS.set(EIGENE_POS_CACHE, c);
     const dlg = aerzteRechnungDialog('Dr. Max Muster', 'Quartal 4 / 2026', []);

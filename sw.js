@@ -12,11 +12,11 @@
 //
 // Bei JEDER Veröffentlichung: CACHE_NAME erhöhen und danach „node werkzeuge/sw_dateien.js“ ausführen (trägt die
 // Prüfsummen ein; tests/statisch.js prüft das). Neue Dateien der App hier in DATEIEN aufnehmen.
-const CACHE_NAME = 'rechnungserfassung-v506';
+const CACHE_NAME = 'rechnungserfassung-v507';
 const CACHE_PRAEFIX = CACHE_NAME.replace(/\d+$/, '');   // alle Versionen dieser App: gleicher Anfang, andere Nummer
 const DATEIEN = {
 // >>> DATEIEN (Prüfsummen erzeugt von werkzeuge/sw_dateien.js – nicht von Hand ändern)
-  './Rechnungserfassung_Mobil.html': '71/14O+fyrIXREFSiM+0fGQQGUMVUto4LLhW0j+tznw=',
+  './Rechnungserfassung_Mobil.html': '+x1s2Ia94FOsZ4XFaPnwOtFTA/TI1JiCAauNaqMzBaE=',
   './manifest.json': 'oGmycJijIIy67JQt2/9DPvS7LFo04ldRKRTIcpUcfxY=',
   './': 'HAHncj5UelMdOHtP3EGp0CI7BT/TzLQ7grnGteDXT60=',
   './lib/msal/msal-browser.min.js': 'ERWwgEmLebC0tiHdPfR4sKmxA19dB21XQdGIjwaSO4Q=',
@@ -41,7 +41,7 @@ const DATEIEN = {
   './lokal/krypto.js': 'j9HHt3IQYGDy7ei52Ax9+RJzaHtKmki2jraAHWnS1XA=',
   './lokal/lokalgraph.js': 'm1JWexsTvx9bUnWGRvROSUvoS+C9Z7WHZFHLlu3vJTA=',
   './lokal/mappe.js': 'egrkS5t7q7gobcjPyN6WvgCtYtvIcAAtLyF+FenRYHk=',
-  './lokal/tresor_start.js': 'DjDX1uUoukI5FX2b2sg/5ICFgqZ6rBO7+ED5YLW1xeA=',
+  './lokal/tresor_start.js': 'WV6cBJysYm33L4NL67q5w5kHzIAYF3keCFYc3EJCoHQ=',
   './lokal/sperrliste.js': '4Ml51NOEu8uk1tqq9/FM0B4a8bBO1z3hLr7FgtWHFFY=',
   './lib/argon2.umd.min.js': 'rP4RsBWFL1k6rdxREW9x3HhQ5FUeazTULB+IzzljXwM=',
   './lokal/tresor.js': 'sg4uMcJjdB1DO7t3c04z05dqt+uD8vJAZerPWiqZwWw=',

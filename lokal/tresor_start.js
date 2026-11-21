@@ -492,6 +492,43 @@
     appStarten();
   }
 
+  // ---------- Passwortfelder: Auge zum Anzeigen (Wunsch 21.11.2026) ----------
+  // Jedes Passwortfeld der App (Sperrseite, Einrichtung, Einstellungen) bekommt rechts ein Auge; anklicken zeigt das
+  // Passwort im Klartext, nochmal anklicken verbirgt es wieder. Gilt auch fuer spaeter eingeblendete Felder.
+  (function(){
+    if(global.__pwAuge || typeof document === 'undefined') return; global.__pwAuge = true;
+    const AUF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+    const ZU = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>';
+    const st = document.createElement('style');
+    st.textContent = '.pw-huelle{position:relative; display:block; width:100%;} .pw-huelle:not(.schmal) > input{width:100%;} .pw-huelle > input{box-sizing:border-box; padding-right:48px !important;}' +
+      '.pw-huelle.schmal{display:inline-block; width:auto; vertical-align:middle;}' +
+      '.pw-auge{position:absolute; right:4px; top:50%; transform:translateY(-50%); width:40px !important; height:40px; min-height:0 !important; margin:0 !important; padding:8px !important; border:none !important; background:none !important; box-shadow:none !important; color:inherit; opacity:.6; cursor:pointer; display:flex; align-items:center; justify-content:center;}' +
+      '.pw-auge:hover, .pw-auge.an{opacity:1;} .pw-auge svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}';
+    function auge(i){
+      if(!i || i.dataset.pwAuge || !i.parentNode) return; i.dataset.pwAuge = '1';
+      const h = document.createElement('span'); h.className = 'pw-huelle';
+      // Feld mit eigener (schmaler) Breite behaelt sie; sonst volle Breite wie bisher
+      const eltern = i.parentNode.clientWidth || 0, breit = i.offsetWidth || 0;
+      if(breit && eltern && breit < eltern - 4) h.classList.add('schmal');
+      if(i.style.margin) { h.style.margin = i.style.margin; }
+      i.parentNode.insertBefore(h, i); h.appendChild(i);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pw-auge'; b.tabIndex = -1;
+      b.setAttribute('aria-label', 'Passwort anzeigen'); b.innerHTML = AUF;
+      b.addEventListener('mousedown', (e)=> e.preventDefault());   // Fokus bleibt im Feld (Tastatur am Handy bleibt offen)
+      b.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation();
+        const zeigen = i.type === 'password'; i.type = zeigen ? 'text' : 'password';
+        b.innerHTML = zeigen ? ZU : AUF; b.classList.toggle('an', zeigen); b.setAttribute('aria-label', zeigen ? 'Passwort verbergen' : 'Passwort anzeigen'); });
+      h.appendChild(b);
+    }
+    const alle = (w)=>{ if(w && w.querySelectorAll) w.querySelectorAll('input[type=password]').forEach(auge); };
+    const los = ()=>{
+      document.head.appendChild(st); alle(document);
+      new MutationObserver((ms)=> ms.forEach((m)=> m.addedNodes.forEach((n)=>{ if(n.nodeType !== 1) return; if(n.matches('input[type=password]')) auge(n); else alle(n); })))
+        .observe(document.body, { childList: true, subtree: true });
+    };
+    if(document.body) los(); else document.addEventListener('DOMContentLoaded', los);
+  })();
+
   // ---------- Automatische Erneuerung der Microsoft-Anmeldung (Wunsch 20.11.2026) ----------
   // Microsoft gibt Browser-Apps nur Langzeitschluessel, die 24 h nach der Anmeldung ablaufen. Liegt die letzte
   // Anmeldung 12 h oder mehr zurueck, holt die App beim Start (vor der Sperrseite, damit nur einmal entsperrt

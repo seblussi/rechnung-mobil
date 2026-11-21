@@ -14,8 +14,10 @@ function server(){
     const s = http.createServer((anfrage, antwort)=>{
       let p; try{ p = decodeURIComponent(anfrage.url.split('?')[0]); }catch(_){ antwort.writeHead(400); return antwort.end(); }
       if(p.endsWith('/')) p += 'index.html';
-      const datei = path.join(WURZEL, path.normalize(p));
-      if(datei !== WURZEL && !datei.startsWith(WURZEL + path.sep)){ antwort.writeHead(403); return antwort.end(); }
+      // Pfad im Testserver aufloesen und nur Dateien unterhalb der Wurzel ausliefern (kein ../)
+      const datei = path.resolve(WURZEL, '.' + path.posix.normalize('/' + p));
+      const rel = path.relative(WURZEL, datei);
+      if(rel.startsWith('..') || path.isAbsolute(rel)){ antwort.writeHead(403); return antwort.end(); }
       fs.readFile(datei, (fehler, daten)=>{
         if(fehler){ antwort.writeHead(404); return antwort.end('nicht gefunden'); }
         antwort.writeHead(200, { 'Content-Type': TYP[path.extname(datei).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });

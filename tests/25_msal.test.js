@@ -5,13 +5,15 @@
 const fs = require('fs');
 const { geraet, SEITE } = require('./hilfe');
 const MS = 'https://login.microsoftonline.com';
+// Adresse von Microsoft? (ueber den Hostnamen, nicht ueber den Textanfang)
+const istMs = (u)=>{ try{ return new URL(String(u)).hostname === 'login.microsoftonline.com'; }catch(_){ return false; } };
 const TID = '9188040d-6c67-4c5b-b112-36a304b66dad', UID = '00000000-0000-0000-1234-56789abcdef0';
 const b64u = (o)=> Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 
 // Nachgebildeter Microsoft-Anmeldedienst; merkt sich die Anfragen
 async function microsoft(c, clientId){
   const log = { authorize: [], token: [], logout: [] }; let nonce = '', n = 0;
-  await c.route((u)=> String(u).startsWith(MS), async (r)=>{
+  await c.route((u)=> istMs(u), async (r)=>{
     const url = new URL(r.request().url()), pfad = url.pathname;
     const json = (o)=> r.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(o) });
     if(/openid-configuration$/.test(pfad)) return json({ issuer: MS + '/{tenantid}/v2.0', authorization_endpoint: MS + '/consumers/oauth2/v2.0/authorize',
@@ -55,7 +57,7 @@ module.exports = async ({ browser, basis, pr })=>{
   // Anmelden: Redirect zu Microsoft mit PKCE
   const anmelden = async ()=>{
     const vorher = log.authorize.length;
-    await Promise.all([ p.waitForURL((u)=> String(u).startsWith(MS), { timeout: 30000 }), p.evaluate(()=>{ msGraphAnmelden(); }) ]);
+    await Promise.all([ p.waitForURL((u)=> istMs(u), { timeout: 30000 }), p.evaluate(()=>{ msGraphAnmelden(); }) ]);
     const a = log.authorize[vorher];
     return a;
   };
@@ -103,7 +105,7 @@ module.exports = async ({ browser, basis, pr })=>{
   pr('Erneuerung über den Langzeitschlüssel (refresh_token)', !!rt && rt.get('grant_type') === 'refresh_token' && /^RT-\d$/.test(rt.get('refresh_token') || '') && /^AT-\d$/.test(erneuert), { erneuert, grant: rt && rt.get('grant_type') });
 
   // Abmelden: Redirect zur Microsoft-Abmeldung, danach keine Anmeldedaten mehr im Speicher
-  await Promise.all([ p.waitForURL((u)=> String(u).startsWith(MS), { timeout: 30000 }), p.evaluate(()=>{ msGraphAbmelden(); }) ]);
+  await Promise.all([ p.waitForURL((u)=> istMs(u), { timeout: 30000 }), p.evaluate(()=>{ msGraphAbmelden(); }) ]);
   const lo = log.logout[0];
   await p.goto(basis + SEITE);
   try{ if(await p.waitForSelector('#tsPw', { timeout: 8000 }).catch(()=> null)) await require('./hilfe').entsperren(p); }catch(_){}

@@ -5,13 +5,15 @@ const fs = require('fs'), path = require('path');
 const { geraet, SEITE } = require('./hilfe');
 const { altAnlegen } = require('./altspeicher');
 const MS = 'https://login.microsoftonline.com';
+// Adresse von Microsoft? (ueber den Hostnamen, nicht ueber den Textanfang)
+const istMs = (u)=>{ try{ return new URL(String(u)).hostname === 'login.microsoftonline.com'; }catch(_){ return false; } };
 const TID = '9188040d-6c67-4c5b-b112-36a304b66dad', UID = '00000000-0000-0000-1234-56789abcdef0';
 const b64u = (o)=> Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 const STD = 3600000;
 
 async function microsoft(c, clientId){
   const log = { authorize: [], token: [] }; let nonce = '', n = 0;
-  await c.route((u)=> String(u).startsWith(MS), async (r)=>{
+  await c.route((u)=> istMs(u), async (r)=>{
     const url = new URL(r.request().url()), pfad = url.pathname;
     const json = (o)=> r.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify(o) });
     if(/openid-configuration$/.test(pfad)) return json({ issuer: MS + '/{tenantid}/v2.0', authorization_endpoint: MS + '/consumers/oauth2/v2.0/authorize',
@@ -44,14 +46,14 @@ module.exports = async ({ browser, basis, pr })=>{
   const merker = ()=> p.evaluate(()=> JSON.parse(localStorage.getItem('ms_erneuerung') || 'null'));
   const setzeMerker = (o)=> p.evaluate((o)=> localStorage.setItem('ms_erneuerung', JSON.stringify(o)), o);
   const zurueck = async (hash)=>{ await p.goto(basis + SEITE + '#' + hash); await bereit(); await p.waitForTimeout(2500); };
-  const umleitung = async ()=>{ const vorher = log.authorize.length; await p.goto(basis + SEITE).catch(()=>{}); await p.waitForURL((u)=> String(u).startsWith(MS), { timeout: 20000 }).catch(()=>{}); return log.authorize.length > vorher ? log.authorize[log.authorize.length - 1] : null; };
+  const umleitung = async ()=>{ const vorher = log.authorize.length; await p.goto(basis + SEITE).catch(()=>{}); await p.waitForURL((u)=> istMs(u), { timeout: 20000 }).catch(()=>{}); return log.authorize.length > vorher ? log.authorize[log.authorize.length - 1] : null; };
 
   await p.goto(basis + SEITE); await bereit();
   const start = await p.evaluate(()=> ({ tresor: !!window.TRESOR_MODUS, art: msAnmeldeArt(), status: msGraphStatus }));
   pr('Ausgangslage: bisheriger Speicher, Microsoft-Bibliothek, abgemeldet', !start.tresor && start.art === 'msal' && start.status === 'abgemeldet', start);
 
   // von Hand anmelden
-  await Promise.all([ p.waitForURL((u)=> String(u).startsWith(MS), { timeout: 30000 }), p.evaluate(()=>{ msGraphAnmelden(); }) ]);
+  await Promise.all([ p.waitForURL((u)=> istMs(u), { timeout: 30000 }), p.evaluate(()=>{ msGraphAnmelden(); }) ]);
   const a0 = log.authorize[0];
   await zurueck('code=CODE-1&state=' + encodeURIComponent(a0.searchParams.get('state')) + '&client_info=' + b64u({ uid: UID, utid: TID }));
   let m = await merker();
@@ -86,7 +88,7 @@ module.exports = async ({ browser, basis, pr })=>{
   const vorher = log.authorize.length;
   await p.addInitScript(()=>{ if(sessionStorage.getItem('test_fokus')) return; sessionStorage.setItem('test_fokus', '1'); document.addEventListener('DOMContentLoaded', ()=>{ const i = document.createElement('input'); i.id = 'testFeld'; document.body.appendChild(i); setInterval(()=>{ if(document.activeElement !== i && !document.querySelector('#appSperre:not([hidden])')) i.focus(); }, 50); setTimeout(()=> i.focus(), 0); }); });
   await p.goto(basis + SEITE); await bereit(); await p.waitForTimeout(4000);
-  pr('Während einer Eingabe: keine Umleitung', log.authorize.length === vorher && !p.url().startsWith(MS), log.authorize.length - vorher);
+  pr('Während einer Eingabe: keine Umleitung', log.authorize.length === vorher && !istMs(p.url()), log.authorize.length - vorher);
   pr('keine Skriptfehler', !p.fehler.length, p.fehler.slice(0, 3));
   await c.close();
 };

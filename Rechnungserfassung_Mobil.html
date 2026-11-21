@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-308iBKPDfJHVloTlp2s0UO7MTkOsIWazOAu4TEJxl+c=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-A0W0KigkcruQLS1wfhMX0f/vKWvZyAx7x16q8c1Zx0g=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1597,7 +1597,7 @@ try{
   body.design-nacht #app .kachelreihe.drei{display:none;}
   /* Start */
   .ds-live .ds-kopfzeile{font-size:12.5px; font-weight:500; letter-spacing:.08em; color:var(--text-schwach); text-align:center; margin:30px 0 0;}
-  .ds-live .ds-ring-block .ds-ring{margin-top:-2px;}
+  .ds-live .ds-ring-block .ds-ring{margin-top:8px; margin-bottom:-18px;}   /* 21.11.2026: ueber der Uhr etwas mehr Luft, darunter weniger (unten hat das Bild eigenen Rand) */
   .ds-ring{position:relative; width:min(280px, 74vw); aspect-ratio:1/1; margin:6px auto 0;}
   .ds-ring svg{display:block; width:100%; height:100%; overflow:visible;}   /* Betragszeilen an den Seiten duerfen ueber den Ring hinaus */
   .ds-ring-aussen{fill:none; stroke:var(--rand); stroke-width:1;}
@@ -2172,6 +2172,9 @@ try{
   .fbx-dk{background:var(--grau-feld); font-weight:700; grid-template-columns:minmax(0,1fr) 60px;}
   .fbx-dk.laeuft{background:color-mix(in srgb, var(--ls-farbe) 18%, var(--karte));}
   .fbx-sum{grid-template-columns:1fr; color:var(--text-schwach); font-size:11.5px;}
+  .fbx-tr-offen{grid-row:2; grid-column:2 / -1; margin-top:-3px; font-size:10.5px; font-weight:600; color:#b06a00;}
+  .fbx-tr-offen::before{content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; margin-right:5px; vertical-align:1px;}
+  .fbx-tr-offen.unfertig{color:#8e44ad;} body.dunkel .fbx-tr-offen{color:#ffb547;} body.dunkel .fbx-tr-offen.unfertig{color:#c79bff;}
   .fbx-sum > span:last-child{text-align:left;}
   .fbx-nm, .fbx-zt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .fbx-zt{color:var(--text-schwach);}
@@ -4090,7 +4093,14 @@ async function ansichtFahrtenbuch(blatt){
     });
     // Loeschen nur durch langes Druecken (Handy) bzw. Rechtsklick (PC), jeweils mit Nachfrage
     const nurApp = ()=> appToastAnzeigen('Steht noch nicht im Fahrtenbuch – öffnen und dort bearbeiten bzw. löschen.', 3000);
-    inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]){ if(dd.faelle[fi].offen || dd.lokal) return nurApp(); fbLoeschen(dd._orig || dd, dd.faelle[fi]); } }));
+    // Fall oeffnen wie beim normalen Klick (auch aus dem Langdruck-Fenster heraus)
+    const fallOeffnen = (di, fi)=>{
+      const f = buch.dienste[di] && buch.dienste[di].faelle[fi];
+      if(f && f.oeffnen){ vorbereiteRuecksprung(); fallHerkunft = ()=> ansichtFahrtenbuch(blatt); f.oeffnen(); return; }
+      if(f && f.art === 'gkv'){ vorbereiteRuecksprung(); fallHerkunft = ()=> ansichtFahrtenbuch(blatt); fbGkvAusExcelOeffnen(buch.dienste[di], f); return; }
+      appToastAnzeigen('LS/PT-Rechnungen bitte über „Rechnungen“ bearbeiten – das Fahrtenbuch übernimmt die Änderung.', 3500);
+    };
+    inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]){ if(dd.faelle[fi].offen || dd.lokal) return nurApp(); fbLoeschen(dd._orig || dd, dd.faelle[fi], ()=> fallOeffnen(di, fi)); } }));
     inhalt.querySelectorAll('[data-fbdienst]').forEach(z=> langDruecken(z, async ()=>{
       const dd = buch.dienste[+z.dataset.fbdienst]; if(!dd) return;
       if(dd.lokal){
@@ -4102,10 +4112,7 @@ async function ansichtFahrtenbuch(blatt){
     }));
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> z.onclick = ()=>{
       if(z._lang){ z._lang = false; return; }
-      const [di, fi] = z.dataset.fbfall.split('-').map(Number), f = buch.dienste[di] && buch.dienste[di].faelle[fi];
-      if(f && f.oeffnen){ vorbereiteRuecksprung(); fallHerkunft = ()=> ansichtFahrtenbuch(blatt); f.oeffnen(); return; }
-      if(f && f.art === 'gkv'){ vorbereiteRuecksprung(); fallHerkunft = ()=> ansichtFahrtenbuch(blatt); fbGkvAusExcelOeffnen(buch.dienste[di], f); return; }
-      appToastAnzeigen('LS/PT-Rechnungen bitte über „Rechnungen“ bearbeiten – das Fahrtenbuch übernimmt die Änderung.', 3500);
+      const [di, fi] = z.dataset.fbfall.split('-').map(Number); fallOeffnen(di, fi);
     });
     if(kopf) inhalt.insertAdjacentHTML('afterbegin', kopf);
     }
@@ -4261,11 +4268,19 @@ async function fbFaelleUmziehen(liste, meldung){
 // und wird danach neu geschrieben). In den beiden Kopfzeilen eines Diensts
 // (Quartal/Datum/Zeit, Dienstart/Arzt) wird beim Loeschen eines Falls nur
 // der Fall (D:AG, AS) geleert.
-async function fbLoeschen(d, f){
+async function fbLoeschen(d, f, bearbeiten){
   const ganz = !f;
   const text = ganz ? 'Den ganzen Dienst ' + fbTagText(d.tag) + ' (' + d.faelle.length + ' Einträge) aus dem Fahrtenbuch löschen?'
                     : '„' + f.name + '“ aus dem Dienst ' + fbTagText(d.tag) + ' im Fahrtenbuch löschen?';
-  if(!await betaFrage(text + '\n\nRückgängig nur über den Versionsverlauf der Excel in OneDrive.', 'Löschen', 'Abbrechen')) return;
+  // Fall lange gedrueckt: neben Loeschen auch Bearbeiten anbieten (Wunsch 21.11.2026)
+  if(!ganz && bearbeiten){
+    const w = await betaOverlay.ergebnis(String(f.name || 'Fall'), htmlEsc('Fall im Dienst ' + fbTagText(d.tag) + '.') + '<br><span class="beta-erg-klein">Löschen ist nur über den Versionsverlauf der Excel in OneDrive rückgängig zu machen.</span>',
+      [{ label: 'Bearbeiten', akt: 'bearbeiten', primaer: true }, { label: 'Löschen', akt: 'loeschen' }, { label: 'Abbrechen', akt: 'nein' }]);
+    if(w === 'bearbeiten'){ betaOverlay.schliessen(); bearbeiten(); return; }
+    if(w !== 'loeschen') return;
+    if(!await betaFrage(text + '\n\nRückgängig nur über den Versionsverlauf der Excel in OneDrive.', 'Löschen', 'Abbrechen')) return;
+  }
+  else if(!await betaFrage(text + '\n\nRückgängig nur über den Versionsverlauf der Excel in OneDrive.', 'Löschen', 'Abbrechen')) return;
   const blatt = fbBuchCache ? fbBuchCache.blatt : undefined;
   betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
   try{
@@ -4341,8 +4356,11 @@ function fbAnsichtAQuer(buch){
 function fbAnsichtB(buch){
   return '<div class="fbx-tab"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div>' +
     buch.dienste.map((d, di)=> '<div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
-      d.faelle.map((f, fi)=> '<div class="fbx-tr" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art, f) + '</span><span class="fbx-zt">' +
-        f.ziffern.map(x=> htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '')).join(' ') + '</span><span>' + fbFallEuro(d, f) + '</span></div>').join('') +
+      d.faelle.map((f, fi)=> '<div class="fbx-tr" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art) + '</span><span class="fbx-zt">' +
+        f.ziffern.map(x=> htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '')).join(' ') + '</span>' +
+        // „noch nicht im Fahrtenbuch“ / „unfertig“ als schmale zweite Zeile unter dem Fall statt in der engen Kat-Spalte (Wunsch 21.11.2026)
+        (f.offen ? '<span class="fbx-tr-offen ' + f.offen + '">' + (f.offen === 'unfertig' ? 'unfertig' : 'noch nicht im Fahrtenbuch') + '</span>' : '') +
+        '<span>' + fbFallEuro(d, f) + '</span></div>').join('') +
       '<div class="fbx-tr fbx-sum"><span>GKV ' + betaEuro(d.gkv).replace(' €', '') + (d.pauschale ? ' (GP)' : '') + ' · LS ' + betaEuro(d.ls).replace(' €', '') + ' · PT ' + betaEuro(d.pt).replace(' €', '') + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span></div>').join('') + '</div>';
 }
 // C: Diensttage als Kacheln, darunter der gewaehlte Tag
@@ -5142,6 +5160,297 @@ async function zwischenablageLeerenAnbieten(elId){
   b.onclick = async ()=>{ try{ await navigator.clipboard.writeText(''); b.textContent = 'Zwischenablage geleert'; b.disabled = true; }catch(_){ b.textContent = 'Leeren nicht möglich – bitte selbst etwas anderes kopieren'; } };
   el.appendChild(b);
 }
+// Patientendaten aus beliebigem Text (SMS der Leitstelle, E-Mail, Einsatzprotokoll, Arztbrief ...):
+// zuerst beschriftete Felder (viele Schreibweisen, Wert in derselben oder der naechsten Zeile),
+// dann Muster (Geburtsdatum, Strasse mit Hausnummer, PLZ + Ort, "Nachname, Vorname", "Herr/Frau ...").
+// -> { name: 'Nachname, Vorname', geb: 'TT.MM.JJJJ', strasse, ort: 'PLZ Ort', erkannt: [...] }
+// Einzeilige Meldungen (SMS der Leitstellen, Alarmierungs-Apps, Pager-Texte) in Zeilen zerlegen: an Trennern
+// (| ; / //) und vor Beschriftungen mitten in der Zeile ("... Pat. Wagner ... Adr. Ringstr. 3 ... geb.12.12.1950")
+const PATIENT_LABEL_RE = '(?:pat(?:ient(?:in)?)?(?:en)?(?:-?(?:name|anschrift|adresse))?|name(?:\\s*,\\s*vorname)?|nachname|vorname|geb(?:urts)?(?:datum|tag|\\.?-?dat)?|geboren|adr(?:esse)?|anschrift|einsatz(?:ort|adresse|stelle)|stra(?:ss|ß)e|hausnr|hausnummer|plz(?:\\s*\\/\\s*ort)?|wohnort|ort|verstorbene[rn]?|stichwort|alter)';
+function patientTextZeilen(roh){
+  let t = String(roh || '').replace(/\s+(?:\||¦|\/\/?)\s+/g, '\n').replace(/\s*;\s*/g, '\n');
+  t = t.replace(new RegExp('([^\\n,])[ \\t]+(?=' + PATIENT_LABEL_RE + '(?:\\.\\s*|\\s*[:=]|\\s+(?=\\d)))', 'giu'), '$1\n');
+  t = t.replace(/([^\n])\.\s+(?=(?:pat|patient(?:in)?)\b)/gi, '$1.\n');   // "... Erfurt. Pat. Wagner"
+  return t.split('\n').map(z=> z.trim().replace(/[.,]$/, '').slice(0, 300)).filter(Boolean);
+}
+// haeufige Vornamen: nur, um "Nachname Vorname" von "Vorname Nachname" zu unterscheiden
+const PATIENT_VORNAMEN = new Set(('anna maria ursula monika petra elisabeth sabine renate helga karin brigitte ingrid erika andrea gisela susanne christa gabriele claudia ' +
+  'ute heike marianne gerda hildegard ruth elke birgit inge christine nicole stefanie julia katharina lisa laura sarah lena anja martina silke ' +
+  'emma mia sophie lea hannah marie greta erna frieda hedwig irmgard margarete waltraud ilse lieselotte rosemarie charlotte johanna paula ' +
+  'peter michael thomas andreas wolfgang klaus jürgen juergen günter guenter hans werner manfred stefan uwe christian frank bernd horst ' +
+  'dieter helmut gerhard karl walter heinz rolf joachim martin jörg joerg ralf matthias alexander markus sven tim jan lukas felix paul ' +
+  'max leon jonas ben noah elias finn luis tobias daniel florian sebastian tom kurt otto ernst fritz friedrich wilhelm heinrich hermann ' +
+  'erich rudolf josef franz georg ludwig johann johannes jakob gustav mehmet ali ayse fatma ahmet mustafa emine hatice ivan olga natalia').split(' '));
+function patientAusText(text){
+  // Steuerzeichen, Richtungsumkehr (z. B. U+202E) und unsichtbare Zeichen entfernen; Laenge begrenzen,
+  // damit ein riesiger Text die Maske nicht lahmlegt (echte Patientendaten sind kurz)
+  const roh = String(text || '').slice(0, 20000).replace(/ /g, ' ').replace(/\r/g, '')
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, '');
+  const zeilen = patientTextZeilen(roh);
+  const out = { name: '', geb: '', strasse: '', ort: '' };
+  const LBL = [
+    ['nachname', /^(?:nachname|familienname|zuname)\b\.?/i],
+    ['vorname', /^vorname\b\.?/i],
+    ['geb', /^(?:geb(?:urts)?(?:\.|datum|tag)?|geb\.?\s*(?:am|datum)|geboren(?:\s+am)?|dob|\*)(?=\s|:|\d|$)/i],
+    ['name', /^(?:patient(?:in)?(?:en)?(?:name)?|pat\.?(?:-?name)?|name(?:\s*,\s*vorname)?|versicherte[rn]?|betroffene[rn]?|verstorbene[rn]?)\b\.?/i],
+    ['adresse', /^(?:adresse|anschrift|einsatzort|einsatzadresse|einsatzstelle|wohnanschrift|wohnadresse|patientenadresse|ort des (?:einsatzes|geschehens)|e-?ort)\b\.?/i],
+    ['strasse', /^(?:stra(?:ss|ß)e(?:\s*\+?\s*(?:hausnummer|nr\.?))?|str\.)(?=\s|:|$)/i],
+    ['hausnr', /^(?:hausnr\.?|hausnummer|haus-?nr\.?|nr\.)(?=\s|:|\d|$)/i],
+    ['plz', /^(?:postleitzahl|plz)(?=\s*[:=]|\s+\d{5}\s*$)/i],
+    ['ort', /^(?:plz(?:\s*(?:\/|\+|und)?\s*ort)?|ort(?:schaft)?|wohnort|stadt|gemeinde)\b\.?/i],
+  ];
+  const wert = (z, re)=>{ const m = re.exec(z); if(!m) return null; return z.slice(m[0].length).replace(/^\s*[:=\-–]\s*/, '').trim(); };
+  let nach = '', vor = '', adresse = '', hausnr = '', plz = '';
+  zeilen.forEach((z, i)=>{
+    for(const [k, re] of LBL){
+      let v = wert(z, re); if(v === null) continue;
+      if(!v && zeilen[i + 1] && !LBL.some(([, r2])=> r2.test(zeilen[i + 1]))) v = zeilen[i + 1];
+      if(!v) break;
+      if(k === 'nachname' && !nach) nach = v; else if(k === 'vorname' && !vor) vor = v;
+      else if(k === 'geb' && !out.geb) out.geb = v; else if(k === 'name' && !out.name) out.name = v;
+      else if(k === 'adresse' && !adresse) adresse = v; else if(k === 'strasse' && !out.strasse) out.strasse = v;
+      else if(k === 'ort' && !out.ort) out.ort = v; else if(k === 'hausnr' && !hausnr) hausnr = v; else if(k === 'plz' && !plz) plz = v;
+      break;
+    }
+  });
+  if(!out.name && nach) out.name = nach + (vor ? ', ' + vor : '');
+  else if(out.name && vor && !out.name.includes(',') && !/\s/.test(out.name.trim())) out.name = out.name.trim() + ', ' + vor;   // "Name: Becker" + "Vorname: Klaus"
+  // getrennte Felder: Hausnummer und PLZ an Strasse bzw. Ort anfuegen
+  if(hausnr && out.strasse && !/\d/.test(out.strasse) && /^\d+\s*[a-z]?\b/i.test(hausnr)) out.strasse = out.strasse.trim() + ' ' + hausnr.trim();
+  if(plz && /^\d{5}$/.test(plz.trim())){ if(!out.ort) out.ort = plz.trim(); else if(!/\d{5}/.test(out.ort)) out.ort = plz.trim() + ' ' + out.ort.trim(); }
+  // Geburtsdatum normalisieren bzw. im Text suchen (bevorzugt nach "geb"/"*"; sonst ein Datum, das nicht juengst ist)
+  const jetzt = new Date(), jj = jetzt.getFullYear() % 100;
+  const datum = (s)=>{ let m = /(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4}|\d{2})(?!\d)/.exec(s || '');
+    if(!m){ const iso = /\b(\d{4})-(\d{2})-(\d{2})\b/.exec(s || ''); if(iso) m = Object.assign([iso[0], iso[3], iso[2], iso[1]], { index: iso.index }); }
+    if(!m) return null;
+    let y = +m[3]; if(m[3].length === 2) y += y > jj ? 1900 : 2000;
+    const d = new Date(y, +m[2] - 1, +m[1]); if(d.getMonth() !== +m[2] - 1 || d > jetzt || y < jetzt.getFullYear() - 125) return null;
+    return { text: zz2(+m[1]) + '.' + zz2(+m[2]) + '.' + y, d, idx: m.index }; };
+  if(out.geb){ const d = datum(out.geb); out.geb = d ? d.text : ''; }
+  if(!out.geb){
+    const m = /(?:geb\.?|geboren|\*)\s*(?:am\s*)?(\d{1,2}\.\s?\d{1,2}\.\s?\d{2,4})/i.exec(roh);
+    const d = m && datum(m[1]);
+    if(d) out.geb = d.text;
+    else {
+      const alle = [...roh.matchAll(/\b\d{1,2}\.\s?\d{1,2}\.\s?(?:\d{4}|\d{2})(?!\d)/g)].map(x=> datum(x[0])).filter(Boolean)
+        .filter(x=> jetzt - x.d > 2 * 365 * 86400000);   // Einsatz-/Sterbedatum (juengst) ist kein Geburtsdatum
+      if(alle.length === 1) out.geb = alle[0].text;
+    }
+  }
+  // Adresse in einer Zeile: "Musterstr. 5, 77654 Offenburg" bzw. "Musterstr. 5 77654 Offenburg"
+  const plzOrtRe = /\b(\d{5})\s+([A-ZÄÖÜ][\p{L}'\-]{0,40}(?:[ \-][\p{L}'\-]{1,40}){0,3}?)(?=\s*(?:$|,|;|\(|\/|\.(?:\s|$)|\bOT\b|\bTel|\d))/u;
+  const strRe = /([A-ZÄÖÜ][\p{L}.'\-]{0,40}(?:[ \-][\p{L}.'\-]{1,40}){0,3}?\s*(?:stra(?:ss|ß)e|str\.?|weg|gasse|platz|allee|ring|damm|ufer|steig|pfad|hof|berg|feld|markt|graben|chaussee|promenade|wall|winkel|zeile|steige|halde|anlage|hang|blick|siedlung)\s*\d+\s*[a-zA-Z]?(?:\s*[-\/]\s*\d+\s*[a-zA-Z]?)?)\b/iu;
+  const ortPlzRe = /^\s*([A-ZÄÖÜ][\p{L}'\-]{1,40}(?:[ \-][\p{L}'\-]{1,40}){0,2}?)\s+(\d{5})\b\s*[,;]?\s*/u;
+  const zerlegen = (s)=>{
+    if(!s) return;
+    const op = !plzOrtRe.test(s) && ortPlzRe.exec(s);
+    if(op){ if(!out.ort) out.ort = op[2] + ' ' + op[1].trim(); const rest = s.slice(op[0].length); if(!out.strasse){ const st = strRe.exec(rest); if(st) out.strasse = st[1].trim(); } return; }
+    const po = plzOrtRe.exec(s); if(po && !out.ort) out.ort = po[1] + ' ' + po[2].trim();
+    const vorPlz = po ? s.slice(0, po.index).replace(/[,;\s]+$/, '').trim() : s;
+    if(!out.strasse){ const st = strRe.exec(vorPlz); if(st) out.strasse = st[1].trim(); else if(/\d/.test(vorPlz) && vorPlz.length < 60 && po) out.strasse = vorPlz; }
+  };
+  if(adresse) zerlegen(adresse);
+  if(out.strasse && plzOrtRe.test(out.strasse)){ const s = out.strasse; out.strasse = ''; zerlegen(s); }
+  if(out.ort){ const po = plzOrtRe.exec(out.ort); if(po) out.ort = po[1] + ' ' + po[2].trim(); else if(ortPlzRe.test(out.ort)){ const o = out.ort; out.ort = ''; zerlegen(o); } }
+  if(!out.ort || !out.strasse){
+    for(let i = 0; i < zeilen.length && (!out.ort || !out.strasse); i++){
+      const z = zeilen[i];
+      if(/^(?:tel|telefon|fax|mobil|handy|e-?mail|iban|bic|kv|krankenkasse|kasse|vers\.?-?nr)\b/i.test(z)) continue;
+      if(!out.ort && plzOrtRe.test(z)){ zerlegen(z); if(!out.strasse && i > 0 && strRe.test(zeilen[i - 1])) out.strasse = strRe.exec(zeilen[i - 1])[1].trim(); }
+      else if(!out.strasse && strRe.test(z) && !/\b(?:geb|\*)/i.test(z)) out.strasse = strRe.exec(z)[1].trim();
+    }
+  }
+  // Name ohne Beschriftung
+  const W = "[\\p{Lu}][\\p{L}'\\-]{1,40}";   // begrenzt: kein quadratischer Aufwand bei langen Zeilen
+  if(!out.name){
+    const anrede = '(?:[Hh]errn?|[Ff]rau|[Hh]r\\.|[Ff]r\\.)\\s+(?:(?:[Dd]r|[Pp]rof)\\.\\s+)*';
+    for(const z of zeilen){
+      const m = new RegExp('(?:^|[\\s(])' + anrede + '(' + W + '(?:\\s+' + W + '){0,3})', 'u').exec(z);
+      if(m){ const w = m[1].split(/\s+/); out.name = w.length > 1 ? w[w.length - 1] + ', ' + w.slice(0, -1).join(' ') : w[0]; break; }
+    }
+    if(!out.name) for(const z of zeilen){
+      if(/\d|stra(?:ss|ß)e|str\.|tel|@|http/i.test(z)) continue;
+      const m = new RegExp('^(' + W + '(?:\\s' + W + ')?)\\s*,\\s*(' + W + '(?:[ \\-]' + W + ')*)$', 'u').exec(z);
+      if(m){ out.name = m[1] + ', ' + m[2]; break; }
+    }
+  }
+  if(!out.name && out.geb){
+    // Zeile mit dem Geburtsdatum: davor steht oft der Name ("Erika Mustermann, *12.03.1941")
+    const z = zeilen.find(x=> datum(x) && datum(x).text === out.geb);
+    if(z){ const t = z.slice(0, datum(z).idx).replace(/(?:geb\.?|geboren(?:\s+am)?|\*|am)\s*$/i, '').replace(/[,;:(\s]+$/, '').trim();
+      const nameRe = new RegExp('^' + W + '(?:\\s*,?\\s+' + W + '){1,3}$', 'u');
+      const zi = zeilen.indexOf(z), davor = zi > 0 ? zeilen[zi - 1] : '';
+      const kand = nameRe.test(t) ? t : (!t && nameRe.test(davor) && !/stra(?:ss|ß)e|str\./i.test(davor) ? davor : '');
+      if(kand) out.name = kand; }
+  }
+  // Name aufraeumen: Anrede/Titel weg, "Nachname Vorname" in GROSS -> "Nachname, Vorname"
+  if(out.name){
+    let n = out.name.replace(/^(?:herr|frau|hr\.|fr\.)\s+/i, '').replace(/\b(?:dr|prof|dipl\.?-?\w*)\.\s*/gi, '')
+      .replace(/\s*\([^)]*\)/g, '').replace(/\s*\(.*$/, '').replace(/\s*[,;]?\s*(?:geb\.?|geboren|\*).*$/i, '');
+    // "Krause, Erna, 89 J., Pflegeheim ..." / "Erna Krause, 89 J." -> nur die Namensteile vor dem ersten Teil mit Ziffern
+    // je Teil nur die Namenswoerter: Schluss beim ersten klein geschriebenen Wort (ausser von/van/de ...) oder einer Zahl
+    const nurName = (x)=>{ const w = x.split(/\s+/), r = []; for(const t of w){ if(/\d/.test(t) || (/^\p{Ll}/u.test(t) && !/^(?:von|van|de|der|den|zu|vom|ten|ter|la|le|di|da|del)$/.test(t))) break; r.push(t); } return r.join(' '); };
+    const teile = n.split(',').map(x=> x.trim()).map((x, i, a)=> /\d|\b(?:jahre?|j\.)(?:\s|$)/i.test(x) && nurName(x) && i === 0 ? nurName(x) : x);
+    const bis = teile.findIndex(x=> /\d|\b(?:jahre?|j\.)(?:\s|$)/i.test(x));
+    n = (bis < 0 ? teile : teile.slice(0, bis)).slice(0, 2).join(', ').replace(/\s+\d.*$/, '').trim();
+    const titel = (x)=> x.replace(/[\p{L}]+/gu, (w)=> w.charAt(0) + w.slice(1).toLowerCase());
+    if(n === n.toUpperCase() && /\p{Lu}{2}/u.test(n)) n = titel(n);   // GROSS geschrieben -> Mueller, Hans
+    if(!n.includes(',')){
+      const w = n.split(/\s+/).filter(Boolean);
+      const vorn = (x)=> x.split('-').some(t=> PATIENT_VORNAMEN.has(t.toLowerCase()));
+      if(w.length === 2 && out.name === out.name.toUpperCase() && w[0].length > 1 && !vorn(w[0])) n = w[0] + ', ' + w[1];
+      else if(w.length >= 2 && vorn(w[w.length - 1]) && !vorn(w[0])) n = w[0] + ', ' + w.slice(1).join(' ');   // "Schulz Hans-Peter"
+      else if(w.length >= 2){ let i = w.length - 1; while(i > 1 && /^(?:von|van|de|der|zu|vom|ten|ter)$/i.test(w[i - 1])) i--; n = w.slice(i).join(' ') + ', ' + w.slice(0, i).join(' '); }
+    }
+    out.name = n;
+  }
+  if(out.strasse){
+    let st = out.strasse.replace(/^(?:adr(?:esse)?|anschrift)\.?\s*:?\s*/i, '').replace(/^(?:\p{Ll}[\p{L}]*\s+)+(?=\p{Lu})/u, '').replace(/(\p{L})str(?:\.\s*|\s+)(?=\d)/u, '$1str. ').replace(/\s+in$/i, '').trim();
+    if(st === st.toUpperCase() && /\p{Lu}{3}/u.test(st)) st = st.toLowerCase().replace(/strasse\b/, 'straße').replace(/(^|[\s\-])(\p{L})/gu, (m, a, b)=> a + b.toUpperCase());
+    out.strasse = st;
+  }
+  if(out.ort && out.ort === out.ort.toUpperCase() && /\p{Lu}{3}/u.test(out.ort)) out.ort = out.ort.toLowerCase().replace(/(^|[\s\-])(\p{L})/gu, (m, a, b)=> a + b.toUpperCase());
+  out.erkannt = [out.name && 'Name', out.geb && 'Geburtsdatum', out.strasse && 'Straße', out.ort && 'PLZ/Ort'].filter(Boolean);
+  return out;
+}
+function zwischenablageHinweisAnzeigen(text){
+  const el = document.getElementById('zwischenablageHinweis');
+  if(!el) return;
+  if(!text){ el.classList.remove('aktiv'); el.innerHTML=''; return; }
+  el.innerHTML = text;
+  el.classList.add('aktiv');
+}
+// Sicherheitsbericht (weitere Ebenen): Nach dem Einlesen einer Einsatzmeldung stehen die Patientendaten sonst weiter in
+// der Zwischenablage (andere Apps koennen sie lesen). Deshalb sofort leeren; geht das nicht (Browser verweigert das
+// Schreiben), einen Knopf anbieten.
+async function zwischenablageLeerenAnbieten(elId){
+  const el = document.getElementById(elId); if(!el || el.querySelector('.zw-leeren, .zw-geleert')) return;
+  let ok = false; try{ await navigator.clipboard.writeText(''); ok = true; }catch(_){}
+  if(ok){ const s = document.createElement('span'); s.className = 'zw-geleert'; s.textContent = ' · Zwischenablage geleert'; el.appendChild(s); return; }
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'zw-leeren'; b.textContent = 'Zwischenablage leeren';
+  b.onclick = async ()=>{ try{ await navigator.clipboard.writeText(''); b.textContent = 'Zwischenablage geleert'; b.disabled = true; }catch(_){ b.textContent = 'Leeren nicht möglich – bitte selbst etwas anderes kopieren'; } };
+  el.appendChild(b);
+}
+// ---------- Patientendaten aus beliebigem Text erkennen (Wunsch 21.11.2026: bundesweit uneinheitliche Alarm-SMS) ----------
+// Reihenfolge: 1. Felder mit Bezeichnung (Patient:/Name:/Geb.:/Straße:/PLZ Ort: … in vielen Schreibweisen, auch
+// mehrere in einer Zeile), 2. ohne Bezeichnung: Geburtsdatum (Datum nach "geb."/"*" oder das aelteste plausible
+// Datum), Adresse (Strasse + Hausnummer und 5-stellige PLZ + Ort, auch in einer Zeile) und Name (Zeile aus 2–4
+// Woertern ohne Ziffern, bevorzugt vor dem Geburtsdatum). Ergebnis immer nur als Vorschlag – die Maske zeigt, was erkannt wurde.
+const PD_LABEL = [
+  ['name', /^(?:patient(?:in)?|pat\.?|name|nachname|pat(?:ienten)?name|betroffene[rn]?|verstorbene[rn]?|person)$/i],
+  ['vorname', /^vorname$/i],
+  ['geb', /^(?:geb(?:\.|oren)?(?:\s*am)?|geburtsdatum|geburtstag|gebdat|geb\.?\s*dat(?:um|\.)?|dob|\*)$/i],
+  ['strasse', /^(?:stra(?:ss|ß)e|str\.?|adresse|anschrift|wohnadresse|wohnanschrift|hausnummer|strasse\s*\/\s*nr\.?|stra(?:ss|ß)e\s*(?:u(?:nd|\.)?|\+|&)?\s*(?:hausnummer|nr\.?))$/i],
+  ['ort', /^(?:ort|wohnort|plz(?:\s*(?:\/|u(?:nd|\.)?|\+|&)?\s*ort)?|stadt|gemeinde)$/i],
+  ['einsatzort', /^(?:einsatzort|eo|einsatzadresse|ereignisort|fundort|sterbeort|auffindeort|ort des geschehens)$/i]
+];
+function pdDatum(s){
+  const m = /(\d{1,2})\s*[.\/-]\s*(\d{1,2})\s*[.\/-]\s*(\d{2,4})/.exec(String(s || '')); if(!m) return '';
+  let t = +m[1], mo = +m[2], j = +m[3];
+  if(m[3].length === 2){ const jetzt = new Date().getFullYear() % 100; j += j > jetzt ? 1900 : 2000; }
+  if(t < 1 || t > 31 || mo < 1 || mo > 12 || j < 1890 || j > new Date().getFullYear()) return '';
+  return String(t).padStart(2, '0') + '.' + String(mo).padStart(2, '0') + '.' + j;
+}
+const PD_STRASSE_RE = /([\p{L}][\p{L}ß .'\-]*?(?:stra(?:ss|ß)e|str\.?|weg|gasse|platz|allee|ring|damm|ufer|steig|pfad|chaussee|markt|hof|berg|feld|garten|anger|wall|graben|tor|zeile|winkel|kamp|redder|twiete|siedlung|[\p{L}]+)\s+\d+\s*[a-z]?(?:\s*[-\/]\s*\d+\s*[a-z]?)?)\b/iu;
+const PD_PLZORT_RE = /\b(\d{5})\s+([\p{L}][\p{L}ß .'\-\/()]*[\p{L})])/u;
+// Woerter, die in Alarm-SMS stehen, aber kein Name sind
+const PD_KEIN_NAME = /\b(einsatz|alarm|alarmierung|notfall|notarzt|rtw|nef|ktw|leitstelle|rettungsdienst|stichwort|meldebild|meldung|leichenschau|todesfeststellung|bemerkung|hinweis|info|uhr|datum|zeit|auftrag|leitstellen|bereitschaftsdienst|hausbesuch|fahrdienst|mfg|gruß|grüße|bitte|tel|telefon|handy|mobil|fax|mail|kasse|versichert|privat|gkv|pkv|anrufer|melder|rückruf|ruckruf)\b/i;
+function pdNameNormal(n){
+  n = String(n || '').replace(/\s+/g, ' ').replace(/^[,;:\-–\s]+|[,;:\-–\s]+$/g, '').trim();
+  if(!n) return '';
+  if(n.includes(',')) return n.split(',').map((t)=> t.trim()).filter(Boolean).slice(0, 2).join(', ');
+  const w = n.split(' ').filter(Boolean);
+  // "Herr/Frau" vorne weg; "Vorname Nachname" -> "Nachname, Vorname"
+  while(w.length > 1 && /^(herr|frau|hr\.?|fr\.?|dr\.?|prof\.?)$/i.test(w[0])) w.shift();
+  if(w.length < 2) return w.join(' ');
+  return w[w.length - 1] + ', ' + w.slice(0, -1).join(' ');
+}
+function patientDatenErkennen(text){
+  const roh = String(text || '').replace(/\r/g, '');
+  const erg = { name: '', geb: '', strasse: '', ort: '', erkannt: [] };
+  const zeilen = roh.split('\n').map((z)=> z.trim()).filter(Boolean);
+  // 1. Bezeichnungen -- auch mehrere in einer Zeile ("Name: X, geb. 01.02.1940, Musterweg 3")
+  const felder = {};
+  const labelTeil = /(?:^|[\s,;|])([\p{L}*][\p{L}.\s\/+&]{0,28}?)\s*[:=]\s*/gu;
+  zeilen.forEach((z)=>{
+    const treffer = []; let m; labelTeil.lastIndex = 0;
+    while((m = labelTeil.exec(z))){ const lb = m[1].trim(); const art = (PD_LABEL.find(([, re])=> re.test(lb)) || [])[0]; if(art) treffer.push({ art, start: m.index, ende: labelTeil.lastIndex }); }
+    // "geb. 01.02.1940" / "* 01.02.1940" ohne Doppelpunkt
+    const gm = /(?:\bgeb(?:\.|oren)?(?:\s*am)?|\*)\s*(\d{1,2}\s*[.\/-]\s*\d{1,2}\s*[.\/-]\s*\d{2,4})/i.exec(z);
+    if(gm && !felder.geb) felder.geb = gm[1];
+    treffer.forEach((t, i)=>{ const wert = z.slice(t.ende, i + 1 < treffer.length ? treffer[i + 1].start : z.length).replace(/[,;|]\s*$/, '').trim(); if(wert && !felder[t.art]) felder[t.art] = wert; });
+  });
+  if(felder.name){
+    let n = felder.name.replace(/(?:\bgeb(?:\.|oren)?(?:\s*am)?|\*)\s*\d.*$/i, '').replace(/\(\s*\d+\s*(?:j\.?|jahre)?\s*\)/i, '');
+    n = n.replace(/\b\d{1,2}\s*[.\/-]\s*\d{1,2}\s*[.\/-]\s*\d{2,4}\b.*$/, '');
+    n = n.replace(/[,;\s]+$/, '');
+    erg.name = felder.vorname && !n.includes(',') && !/\s/.test(n.trim()) ? n.trim() + ', ' + felder.vorname.trim() : pdNameNormal(n);
+  }
+  if(felder.geb) erg.geb = pdDatum(felder.geb);
+  const adr = felder.strasse || felder.einsatzort || '';
+  if(adr){
+    const pz = PD_PLZORT_RE.exec(adr);
+    if(pz){ erg.ort = pz[1] + ' ' + pz[2].trim(); erg.strasse = adr.slice(0, pz.index).replace(/[,;\s]+$/, '').trim(); }
+    else erg.strasse = adr.replace(/[,;\s]+$/, '');
+  }
+  if(felder.ort && !erg.ort) erg.ort = felder.ort.replace(/[,;\s]+$/, '');
+  // 2. ohne Bezeichnungen ergaenzen
+  if(!erg.geb){
+    const alle = [...roh.matchAll(/\b\d{1,2}\s*[.\/-]\s*\d{1,2}\s*[.\/-]\s*\d{2,4}\b/g)].map((m)=> pdDatum(m[0])).filter(Boolean);
+    // aeltestes Datum mindestens 1 Jahr zurueck (Einsatzdatum/heute faellt so heraus)
+    const grenze = Date.now() - 365 * 86400000;
+    const alt = alle.map((d)=>{ const [t, mo, j] = d.split('.').map(Number); return { d, ms: new Date(j, mo - 1, t).getTime() }; }).filter((x)=> x.ms < grenze).sort((a, b)=> a.ms - b.ms);
+    if(alt.length) erg.geb = alt[0].d;
+  }
+  if(!erg.ort || !erg.strasse){
+    for(const z of zeilen){
+      const pz = PD_PLZORT_RE.exec(z); if(!pz) continue;
+      if(!erg.ort) erg.ort = pz[1] + ' ' + pz[2].replace(/\s*(?:,.*)?$/, '').trim();
+      if(!erg.strasse){
+        const vor = z.slice(0, pz.index).replace(/[,;\s]+$/, '').replace(/^.*[:]\s*/, '');
+        const sm = PD_STRASSE_RE.exec(vor);
+        if(sm) erg.strasse = sm[1].trim();
+        else { const i = zeilen.indexOf(z); const v = i > 0 ? zeilen[i - 1].replace(/^.*[:]\s*/, '') : ''; const sv = PD_STRASSE_RE.exec(v); if(sv && /\d/.test(v) && !pdDatum(v)) erg.strasse = sv[1].trim(); }
+      }
+      break;
+    }
+  }
+  if(!erg.name){
+    // Zeile aus 2–4 Woertern ohne Ziffern; bevorzugt direkt vor/mit dem Geburtsdatum
+    // Kandidaten: ganze Zeilen und deren durch Komma/Semikolon getrennte Teile
+    const stuecke = []; zeilen.forEach((z, i)=>{ stuecke.push({ z, i }); if(/[,;]/.test(z)) z.split(/[;,]/).forEach((t)=> stuecke.push({ z: t.trim(), i, teil: true })); });
+    const kand = stuecke.map(({ z, i, teil })=>{
+      let t = z.replace(/^.*?:\s*/, '').replace(/^(?:(?:einsatz|alarm|leichenschau|todesfeststellung|hausbesuch|notfall|fahrdienst|bereitschaftsdienst|äbd|abd|kv-dienst)\b[\s:\-–]*)+/i, '').replace(/(?:\bgeb(?:\.|oren)?(?:\s*am)?|\*)\s*\d.*$/i, '').replace(/\b\d{1,2}\s*[.\/-]\s*\d{1,2}\s*[.\/-]\s*\d{2,4}.*$/, '').replace(/[,;]\s*$/, '').trim();
+      const w = t.replace(/,/g, ' ').split(/\s+/).filter(Boolean);
+      if(w.length < 2 || w.length > 4 || /\d/.test(t) || PD_KEIN_NAME.test(t) || !w.every((x)=> /^[\p{L}][\p{L}'\-.]*$/u.test(x))) return null;
+      if(PD_STRASSE_RE.test(t + ' 1') && /(stra(ss|ß)e|str\.|weg|gasse|platz|allee)$/i.test(t)) return null;
+      const punkte = (erg.geb && z.includes(erg.geb.slice(0, 2)) ? 2 : 0) + (zeilen[i + 1] && pdDatum(zeilen[i + 1]) ? 1 : 0) + (t.includes(',') ? 1 : 0);
+      return { t, i, punkte: punkte - (teil ? 0.5 : 0) };
+    }).filter(Boolean).sort((a, b)=> b.punkte - a.punkte || a.i - b.i);
+    if(kand.length) erg.name = pdNameNormal(kand[0].t);
+  }
+  erg.strasse = erg.strasse.replace(/\s+/g, ' ').trim(); erg.ort = erg.ort.replace(/\s+/g, ' ').trim();
+  if(erg.name) erg.erkannt.push('Name'); if(erg.geb) erg.erkannt.push('Geburtsdatum'); if(erg.strasse || erg.ort) erg.erkannt.push('Adresse');
+  return erg;
+}
+// Beide Erkenner kombinieren (21.11.2026): je Feld das plausible Ergebnis -- zuerst patientAusText (Beschriftungen auch in
+// der naechsten Zeile, einzeilige Pager-Texte, Vornamenliste), fehlt dort etwas oder ist es unplausibel, patientDatenErkennen.
+function patientDatenKombiniert(text){
+  let a = {}, b = {};
+  try{ a = patientAusText(text) || {}; }catch(_){ a = {}; }
+  try{ b = patientDatenErkennen(text) || {}; }catch(_){ b = {}; }
+  const gut = {
+    name: (v)=> /\p{L}{2,}/u.test(v || '') && !/\d/.test(v),
+    geb: (v)=> /^\d{2}\.\d{2}\.\d{4}$/.test(v || ''),
+    strasse: (v)=> /\p{L}{2,}.*\d/u.test(v || ''),
+    ort: (v)=> /\p{L}{2,}/u.test(v || '')
+  };
+  const e = { erkannt: [] };
+  Object.keys(gut).forEach((k)=>{ e[k] = gut[k](a[k]) ? a[k] : gut[k](b[k]) ? b[k] : (a[k] || b[k] || ''); });
+  // Strasse ohne Hausnummer aus der einen Quelle, mit Hausnummer aus der anderen: die vollstaendige nehmen
+  if(e.name) e.erkannt.push('Name'); if(e.geb) e.erkannt.push('Geburtsdatum'); if(e.strasse || e.ort) e.erkannt.push('Adresse');
+  return e;
+}
 async function ausZwischenablageEinlesen(art, ctx){
   zwischenablageHinweisAnzeigen('');
   let text = '';
@@ -5149,11 +5458,10 @@ async function ausZwischenablageEinlesen(art, ctx){
   catch(e){ zwischenablageHinweisAnzeigen('Zwischenablage konnte nicht gelesen werden. Bitte Berechtigung erteilen oder Text manuell einfügen.'); return; }
   if(!text || !text.trim()){ zwischenablageHinweisAnzeigen('Die Zwischenablage ist leer.'); return; }
 
-  const zeilen = text.split(/\r?\n/);
-  const patient = feldAusNachrichtLesen(zeilen, 'Patient:');
-  const geb = feldAusNachrichtLesen(zeilen, 'Geb:');
-  const ort = feldAusNachrichtLesen(zeilen, 'Ort:');
-  const strasse = feldAusNachrichtLesen(zeilen, 'Strasse:') || feldAusNachrichtLesen(zeilen, 'Straße:');
+  // allgemeine Erkennung (bisheriges SMS-Format „Patient:/Geb:/Strasse:/Ort:“ eingeschlossen), siehe patientDatenErkennen
+  const pd = patientDatenKombiniert(text);
+  const patient = pd.name, geb = pd.geb, ort = pd.ort, strasse = pd.strasse;
+  const erkanntText = pd.erkannt.length ? 'Erkannt: ' + pd.erkannt.join(', ') + ' – bitte prüfen.' : 'Im Text wurden keine Patientendaten (Name, Geburtsdatum, Adresse) erkannt.';
 
   if(patient) ctx.setValue('txtName', grossKleinNormalisieren(patient));
   if(geb) ctx.setValue('txtGeda', geb);
@@ -5164,11 +5472,11 @@ async function ausZwischenablageEinlesen(art, ctx){
     const erg = sterbezeitAusFreitextErmitteln(text);
     if(erg.zeit){
       ctx.setValue('txtTodeszeit', erg.zeit);
-      zwischenablageHinweisAnzeigen('Sterbezeitpunkt '+erg.zeit+' automatisch erkannt (Quelle: '+erg.quelle+'). Bitte prüfen.');
+      zwischenablageHinweisAnzeigen(erkanntText + ' Sterbezeitpunkt '+erg.zeit+' automatisch erkannt (Quelle: '+erg.quelle+').');
     } else {
-      zwischenablageHinweisAnzeigen('Kein Sterbezeitpunkt im Text erkannt -- bitte manuell eintragen.');
+      zwischenablageHinweisAnzeigen(erkanntText + ' Kein Sterbezeitpunkt im Text erkannt – bitte manuell eintragen.');
     }
-  }
+  } else zwischenablageHinweisAnzeigen(erkanntText);
   // Wichtig: nach dem Einlesen läuft die VOLLSTÄNDIGE Plausibilitätsprüfung,
   // nicht nur die feldweise -- Werte wurden ja programmatisch gesetzt und
   // haben daher kein einzelnes "Feld verlassen"-Ereignis ausgelöst.
@@ -7076,7 +7384,7 @@ const SEITENHILFE = {
   positionen: ['Rechnungspositionen', 'Haken setzen, was abgerechnet wird. <b>Faktor</b> anklicken zum Ändern (über dem Schwellenwert mit Begründung). Graue Zeilen setzt die App automatisch (Zeitzuschläge, Wegegeld).<br><br><b>Übernehmen</b> führt zurück zur Rechnung.'],
   verwaltung: ['Rechnungen', 'Oben die <b>offenen Rechnungen</b> – mit „Bezahlt?“ den Zahlungseingang eintragen. Darunter alle Rechnungen: Haken setzen für <b>Senden, Termin, Erinnerung, Bezahlt</b>; 📄 öffnet die PDF; nach links wischen löscht.'],
   gkvVerwaltung: ['Kassenpatienten', 'Die zuletzt erfassten GKV-Fälle. Anklicken = bearbeiten, nach links wischen = aus der Liste löschen (im Fahrtenbuch bleibt die Zeile). „Weitere laden“ holt ältere aus dem Fahrtenbuch.'],
-  fahrtenbuch: ['Fahrtenbuch', 'Oben Zeitraum und Suche, darunter die Ansichten <b>Karten</b>, <b>Tabelle</b> und <b>Woche</b>. Einen Fall anklicken öffnet ihn, lange drücken löscht ihn. Die Karte zeigt die Einsatzorte des Dienstes nummeriert – eine Nummer anklicken hebt den Fall in der Liste hervor.'],
+  fahrtenbuch: ['Fahrtenbuch', 'Oben Zeitraum und Suche, darunter die Ansichten <b>Karten</b>, <b>Tabelle</b> und <b>Woche</b>. Einen Fall anklicken öffnet ihn, lange drücken bietet Bearbeiten und Löschen an. Die Karte zeigt die Einsatzorte des Dienstes nummeriert – eine Nummer anklicken hebt den Fall in der Liste hervor.'],
   einstellungen: ['Einstellungen', 'Register anklicken zum Aufklappen: Arztdaten, Bankverbindung, Briefversand, Design, Offline-Karte und mehr. Ganz unten die <b>Demo</b> mit erfundenen Daten und das Wiedereinschalten dieser Hilfen.']
 };
 // ---------- Gefuehrte Einfuehrung (Wunsch 19.11.2026): Schritt fuer Schritt, das Beschriebene wird hervorgehoben ----------
@@ -16952,16 +17260,14 @@ function ansichtGkv(bearbeitenId, opt){
     let text = '';
     try{ text = await navigator.clipboard.readText(); }catch(_){ h.textContent = 'Zwischenablage konnte nicht gelesen werden – bitte Berechtigung erteilen.'; return; }
     if(!text || !text.trim()){ h.textContent = 'Die Zwischenablage ist leer.'; return; }
-    const zeilen = text.split(/\r?\n/);
-    const patient = feldAusNachrichtLesen(zeilen, 'Patient:');
-    const ort = feldAusNachrichtLesen(zeilen, 'Ort:');
-    const strasse = feldAusNachrichtLesen(zeilen, 'Strasse:') || feldAusNachrichtLesen(zeilen, 'Straße:');
-    if(!patient && !ort && !strasse){ h.textContent = 'Kein Patient und keine Adresse im Text erkannt (erwartet z. B. „Patient:“, „Strasse:“, „Ort:“).'; return; }
+    const pa = patientDatenKombiniert(text);   // allgemeine Erkennung wie bei LS/PT (21.11.2026)
+    const patient = pa.name, ort = pa.ort, strasse = pa.strasse;
+    if(!patient && !ort && !strasse){ h.textContent = 'Kein Patient und keine Adresse im Text erkannt.'; return; }
     if(patient){ el('gkvName').value = grossKleinNormalisieren(patient); el('gkvName').oninput(); }
     if(strasse) el('gkvAdresse').value = grossKleinNormalisieren(strasseAusschreiben(strasse));
     if(ort) el('gkvPlzOrt').value = grossKleinNormalisieren(ort);
     if(strasse || ort){ el('gkvAdresse').oninput(); el('gkvKmBtn').click(); }
-    h.textContent = 'Eingelesen' + (patient ? ': ' + grossKleinNormalisieren(patient) : '') + '. Bitte prüfen.';
+    h.textContent = 'Erkannt: ' + pa.erkannt.filter(x=> x !== 'Geburtsdatum').join(', ') + (patient ? ' (' + grossKleinNormalisieren(patient) + ')' : '') + '. Bitte prüfen.';
     zwischenablageLeerenAnbieten('gkvZwHinweis');
   };
   el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); werteZeichnen(); dienstWahlFuellen('gkvDienst', st.datum, st.zeit); };
@@ -17861,7 +18167,8 @@ function miniKarteHtml(d, opt){
   const ueberKnopf = '<button type="button" class="mini-ueber" aria-label="Übersicht" title="Übersicht"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="2.5"/></svg></button>';
   return '<div class="mini-ebenen" data-mk="' + id + '" data-ebene="' + e + '"><div class="mini-fenster" data-ar="' + (fit.bw / fit.bh).toFixed(4) + '" style="aspect-ratio:' + (opt.festeGroesse ? '560 / 330' : fit.bw.toFixed(0) + ' / ' + fit.bh.toFixed(0)) + ';"></div>' +
     '<div class="mini-gruppe oben">' + knopf + auge + '</div><div class="mini-gruppe mitte">' + aedKnopf + posKnopf + ueberKnopf + '</div><div class="mini-gruppe unten">' + grossKnopf + '</div></div>' +
-    '<div class="sk-hinweis mini-attr">' + (vkAn() ? VK_ATTR_HTML : '© <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' + OSM_ATTR_HTML) + '</div>' + (opt.ohneLegende ? '' : karteLegendeHtml(d));
+    // Quellenangabe wie in der grossen Karte UNTER der Legende (Wunsch 21.11.2026)
+    (opt.ohneLegende ? '' : karteLegendeHtml(d)) + '<div class="sk-hinweis mini-attr">' + (vkAn() ? VK_ATTR_HTML : '© <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' + OSM_ATTR_HTML) + '</div>';
 }
 // Startansicht der kleinen Karte. Mit opt.bezirk (Startseite): "Übersicht des Bezirks" (um Wache/Notfallpraxis),
 // sonst bzw. im Modus 'faelle' alle Punkte. Der Übersicht-Knopf wechselt dann zwischen beiden (Wunsch 17.11.2026).
@@ -21895,7 +22202,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v506';
+const APP_VERSION = 'v507';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
