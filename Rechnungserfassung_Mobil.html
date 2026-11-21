@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-QbGvmwdO3W4iG6pcOTIy0WB/vEWcrrGz1DhsliJPEgo=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-jejxX5pPgKa7vp4v8fPfc5ckeABZGfL5ESaAXRCrvsE=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -592,6 +592,7 @@ try{
   .dienst-wahl-hinw{display:block; font-size:12px; color:var(--text-schwach); margin-top:4px;}
   .dienst-wahl-hinw.warn{color:#c76a00;}
   .gkv-feld input.pflichtfeld-fehlt{border:2px solid var(--fehler, #c0392b);}
+  .begr-vorschau{margin:-2px 0 10px;} .begr-v-box{max-width:100%; overflow-x:auto; box-sizing:border-box; border:1px solid var(--rand); border-radius:6px; background:#fff; color:#000; padding:3px 4px; font:13.33px/1.35 Arial, Helvetica, sans-serif; white-space:pre; margin-top:3px;}
   .gkv-optional{font-size:11.5px;}
   .gkv-v-geb{font-weight:400; font-size:12.5px; color:var(--text-schwach);}
   .gkv-adr-knoepfe{display:flex; gap:8px; margin:0 0 6px;}
@@ -6980,7 +6981,9 @@ function dokuLaden(id){ return id ? LS.get('doku_' + id, null) : null; }
 function dokuSpeichernLokal(d){
   // Fotos laden im Hintergrund hoch (Wunsch 21.11.2026): ein aelterer Stand (offene Maske) setzt „schon in OneDrive“ nie zurueck
   const alt = LS.get('doku_' + d.id, null);
-  if(alt && Array.isArray(alt.fotos) && Array.isArray(d.fotos)) d.fotos.forEach(f=>{ if(!f.oben && alt.fotos.some(a=> a.oben && a.name === f.name && a.am === f.am && (a.bearbeitet || '') === (f.bearbeitet || ''))) f.oben = true; });
+  if(alt && Array.isArray(alt.fotos) && Array.isArray(d.fotos)) d.fotos.forEach(f=>{ const gleich = (a)=> a.name === f.name && a.am === f.am && (a.bearbeitet || '') === (f.bearbeitet || '') && (a.zurueck || '') === (f.zurueck || '');
+    if(!f.oben && alt.fotos.some(a=> a.oben && gleich(a))) f.oben = true;
+    if(f.original && !f.originalOben && alt.fotos.some(a=> a.originalOben && a.original === f.original)) f.originalOben = true; });
   d.geaendert = new Date().toISOString(); LS.set('doku_' + d.id, d);
 }
 // --- Fotos lokal (IndexedDB) ---
@@ -7065,13 +7068,13 @@ setTimeout(()=>{ dokuDb.aufraeumen().catch(e=> console.warn('Doku-Fotos aufräum
 // Foto verkleinern (laengste Seite 1600 px, JPEG ~0,8) -> Blob
 // Foto gross ansehen und bearbeiten (Wunsch 21.11.2026): Zoomen (zwei Finger, Doppeltippen, Mausrad), verschieben,
 // um 90° drehen, zuschneiden. Liefert den geaenderten Blob (JPEG) oder null, wenn nichts geaendert wurde.
-function dokuBildBearbeiten(blob, titel){
+function dokuBildBearbeiten(blob, titel, hatOriginal){
   return new Promise((fertig)=>{
     let aktuell = blob, geaendert = false, url = URL.createObjectURL(blob);
     const w = document.createElement('div'); w.className = 'doku-gross'; w.setAttribute('role', 'dialog');
     w.innerHTML = '<div class="dg-leiste"><button type="button" class="dg-k" data-dg="zu" aria-label="schließen">✕</button><span class="dg-titel">' + htmlEsc(titel || 'Foto') + '</span>' +
       '<button type="button" class="dg-k" data-dg="links" aria-label="nach links drehen" title="nach links drehen">⟲</button><button type="button" class="dg-k" data-dg="rechts" aria-label="nach rechts drehen" title="nach rechts drehen">⟳</button>' +
-      '<button type="button" class="dg-k" data-dg="schnitt">✂ Zuschneiden</button><button type="button" class="dg-k" data-dg="abbruch" hidden>Abbrechen</button><button type="button" class="dg-k dg-gruen" data-dg="ok" hidden>Übernehmen</button></div>' +
+      (hatOriginal ? '<button type="button" class="dg-k" data-dg="original" title="auf das Original zurücksetzen">↺ Original</button>' : '') + '<button type="button" class="dg-k" data-dg="schnitt">✂ Zuschneiden</button><button type="button" class="dg-k" data-dg="abbruch" hidden>Abbrechen</button><button type="button" class="dg-k dg-gruen" data-dg="ok" hidden>Übernehmen</button></div>' +
       '<div class="dg-buehne"><img alt=""></div><div class="dg-fuss">Zum Vergrößern zwei Finger spreizen oder doppelt tippen</div>';
     document.body.appendChild(w);
     const img = w.querySelector('img'), buehne = w.querySelector('.dg-buehne'), fuss = w.querySelector('.dg-fuss');
@@ -7102,7 +7105,7 @@ function dokuBildBearbeiten(blob, titel){
     k('links').onclick = ()=> drehen(false).catch((e)=> appToastAnzeigen(e.message || String(e), 3000));
     k('rechts').onclick = ()=> drehen(true).catch((e)=> appToastAnzeigen(e.message || String(e), 3000));
     // Zuschneiden: Rahmen mit vier Ecken, ziehen zum Verschieben
-    const modus = (an)=>{ ['links', 'rechts', 'schnitt', 'zu'].forEach((n)=> k(n).hidden = an); ['abbruch', 'ok'].forEach((n)=> k(n).hidden = !an); fuss.textContent = an ? 'Ecken ziehen, Rahmen verschieben' : 'Zum Vergrößern zwei Finger spreizen oder doppelt tippen'; };
+    const modus = (an)=>{ ['links', 'rechts', 'schnitt', 'zu', 'original'].forEach((n)=>{ if(k(n)) k(n).hidden = an; }); ['abbruch', 'ok'].forEach((n)=> k(n).hidden = !an); fuss.textContent = an ? 'Ecken ziehen, Rahmen verschieben' : 'Zum Vergrößern zwei Finger spreizen oder doppelt tippen'; };
     k('schnitt').onclick = ()=>{
       s = 1; tx = 0; ty = 0; anwenden();
       const ir = img.getBoundingClientRect(), br = buehne.getBoundingClientRect();
@@ -7136,6 +7139,9 @@ function dokuBildBearbeiten(blob, titel){
     const taste = (e)=>{ if(e.key === 'Escape'){ e.stopPropagation(); if(schnitt) schnittEnde(); else zu(); } };
     document.addEventListener('keydown', taste, true);
     k('zu').onclick = zu;
+    // Original wiederherstellen (Wunsch 21.11.2026): Rueckgabe 'original', der Aufrufer setzt das gesicherte Original wieder ein
+    if(k('original')) k('original').onclick = async ()=>{ if(!await betaFrage('Foto auf das Original zurücksetzen?\n\nDrehen und Zuschneiden werden verworfen.', 'Zurücksetzen', 'Abbrechen')) return;
+      URL.revokeObjectURL(url); w.remove(); document.removeEventListener('keydown', taste, true); fertig('original'); };
   });
 }
 function dokuFotoVerkleinern(datei){
@@ -7217,11 +7223,19 @@ async function dokuHochladen(d, meldung){
     await msGraphDateiHochladen(token, ordner + '/' + f.name, blob, 'image/jpeg');
     f.oben = true;
     // immer den neuesten Stand fortschreiben (die Maske kann inzwischen weiter bearbeitet worden sein)
-    const akt = dokuLaden(id), af = akt && (akt.fotos || []).find(x=> x.name === f.name && x.am === f.am && (x.bearbeitet || '') === (f.bearbeitet || ''));
+    const akt = dokuLaden(id), af = akt && (akt.fotos || []).find(x=> x.name === f.name && x.am === f.am && (x.bearbeitet || '') === (f.bearbeitet || '') && (x.zurueck || '') === (f.zurueck || ''));
     if(af){ af.oben = true; dokuSpeichernLokal(akt); await dokuDb.obenMerken(id + '/' + f.name).catch(()=>{}); }   // lokale Kopie wird nach DOKU_FOTO_TAGE Tagen geloescht
     else if(akt){ try{ await fetch(msGraphPfadUrl(ordner + '/' + f.name), { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } }); }catch(_){} }   // waehrenddessen geloescht
   }
   if(meldung && offen.length) meldung('', offen.length, offen.length);
+  // gesicherte Originale bearbeiteter Fotos (Wunsch 21.11.2026) ebenfalls nach OneDrive
+  for(const f of (dokuLaden(id) || d).fotos || []){
+    if(!f.original || f.originalOben) continue;
+    const blob = await dokuDb.holen(id + '/' + f.original); if(!blob) continue;
+    await msGraphDateiHochladen(token, ordner + '/' + f.original, blob, 'image/jpeg');
+    const akt = dokuLaden(id), af = akt && (akt.fotos || []).find(x=> x.original === f.original);
+    if(af){ af.originalOben = true; dokuSpeichernLokal(akt); await dokuDb.obenMerken(id + '/' + f.original).catch(()=>{}); }
+  }
   const akt = dokuLaden(id) || d;
   await msGraphDateiHochladen(token, ordner + '/doku.json', JSON.stringify(akt, null, 1), 'application/json');
   akt.obenAm = new Date().toISOString(); dokuSpeichernLokal(akt); d.obenAm = akt.obenAm;
@@ -7302,6 +7316,13 @@ async function dokuFotoBlob(d, f){
     if(!r.ok) return null;
     b = await r.blob(); await dokuDb.setzen(d.id + '/' + f.name, b, true).catch(()=>{}); return b;
   }catch(_){ return null; }
+}
+// gesichertes Original eines bearbeiteten Fotos loeschen (im Geraet und in OneDrive)
+function dokuOriginalWeg(d, f){
+  const n = f.original; if(!n) return;
+  dokuDb.weg(d.id + '/' + n).catch(()=>{});
+  if(f.originalOben) (async ()=>{ try{ const token = await msGraphTokenHolen(); if(token) await fetch(msGraphPfadUrl(DOKU_ORDNER + '/' + d.id + '/' + n), { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } }); }catch(_){} })();
+  delete f.original; delete f.originalOben;
 }
 // Kurzinfo fuer den Knopf in den Masken
 function dokuKurz(id){
@@ -7412,16 +7433,26 @@ async function dokuOeffnen(fall){
       if(ev.target.closest('[data-fotoweg]') || !el.dataset.url) return;
       const f = d.fotos[+el.dataset.foto]; if(!f) return;
       const b = await dokuFotoBlob(d, f); if(!b) return;
-      const neu = await dokuBildBearbeiten(b, 'Foto ' + (+el.dataset.foto + 1) + ' von ' + d.fotos.length);
+      const neu = await dokuBildBearbeiten(b, 'Foto ' + (+el.dataset.foto + 1) + ' von ' + d.fotos.length, !!f.original);
       if(!neu) return;
-      // geaendertes Foto ersetzt das bisherige (gleicher Name) und wird neu hochgeladen
-      try{ await dokuDb.setzen(d.id + '/' + f.name, neu); }catch(e){ appToastAnzeigen(e.message || String(e), 3000); return; }
-      f.bearbeitet = new Date().toISOString(); f.oben = false; dokuSpeichernLokal(d); fotosZeichnen();
+      try{
+        if(neu === 'original'){
+          // gesichertes Original zurueck an seinen Platz, Sicherung entfernen
+          const o = await dokuFotoBlob(d, { name: f.original, oben: !!f.originalOben }); if(!o) throw new Error('Das Original ist gerade nicht erreichbar (OneDrive – Internet nötig).');
+          await dokuDb.setzen(d.id + '/' + f.name, o); dokuOriginalWeg(d, f); delete f.bearbeitet;
+        } else {
+          // beim ersten Bearbeiten das Original sichern (eigene Datei), danach ersetzt das geaenderte Foto das bisherige (gleicher Name)
+          if(!f.original){ const on = f.name.replace(/\.jpg$/i, '') + '_original.jpg'; await dokuDb.setzen(d.id + '/' + on, b); f.original = on; f.originalOben = false; }
+          await dokuDb.setzen(d.id + '/' + f.name, neu); f.bearbeitet = new Date().toISOString();
+        }
+      }catch(e){ appToastAnzeigen(e.message || String(e), 3000); return; }
+      if(neu === 'original') f.zurueck = new Date().toISOString();
+      f.oben = false; dokuSpeichernLokal(d); fotosZeichnen();
     });
     box.querySelectorAll('[data-fotoweg]').forEach(b=> b.onclick = async ()=>{
       if(!await betaFrage('Foto löschen?', 'Löschen', 'Abbrechen')) return;
       const f = d.fotos.splice(+b.dataset.fotoweg, 1)[0];
-      dokuDb.weg(d.id + '/' + f.name).catch(()=>{});
+      dokuDb.weg(d.id + '/' + f.name).catch(()=>{}); if(f.original) dokuOriginalWeg(d, f);
       if(f.oben){ try{ const token = await msGraphTokenHolen(); if(token) await fetch(msGraphPfadUrl(DOKU_ORDNER + '/' + d.id + '/' + f.name), { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } }); }catch(_){} }
       dokuSpeichernLokal(d); fotosZeichnen();
     });
@@ -10163,6 +10194,14 @@ async function docxHochladenMitPdf(token, ordner, name, docxBlob, meldung){
   if(!docxItem || !docxItem.id) throw new Error('Das Word-Dokument wurde nicht korrekt gespeichert.');
   if(meldung) meldung('PDF wird erzeugt …');
   let pdfBlob = null, pdfFehler = '';
+  // PDF in der App erzeugen (Wunsch 21.11.2026, wie in der Launch): genau wie die Vorschau, schneller, ohne Microsoft-Umwandlung.
+  // Nur wenn das scheitert, wandelt wie bisher Microsoft um.
+  try{
+    if(typeof libSkriptLaden === 'function'){ await libSkriptLaden('lib/pdf-lib.min.js', ()=> !!window.PDFLib); await libSkriptLaden('lokal/docxpdf.js', ()=> !!window.DocxPdf); }
+    const daten = docxBlob instanceof Blob ? await docxBlob.arrayBuffer() : docxBlob;
+    const pdf = await DocxPdf.umwandeln(daten);
+    if(pdf && pdf.byteLength > 100) pdfBlob = new Blob([pdf], { type: 'application/pdf' });
+  }catch(e){ console.warn('PDF in der App nicht möglich – Microsoft wandelt um', e); }
   for(let versuch = 1; versuch <= 3 && !pdfBlob; versuch++){
     try{
       const r = await fetch('https://graph.microsoft.com/v1.0/me/drive/items/' + docxItem.id + '/content?format=pdf', { headers:{ Authorization:'Bearer ' + token } });
@@ -14111,7 +14150,7 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
         '<button type="button" id="fdFaktorNeu" class="neu">+ eigener</button></div>' +
       '<div class="faktor-eigen" id="fdEigenZeile" hidden><input id="fdEigenWert" inputmode="decimal" placeholder="z.B. 2,8" autocomplete="off"><button type="button" id="fdEigenOk">Übernehmen</button></div>' +
       '<div class="faktor-betrag" id="fdBetrag"></div>' +
-      '<label id="fdBegLabel">Begründung<textarea id="fdBeg" rows="' + (zeitModus ? 1 : 3) + '"' + (zeitModus ? ' readonly class="nur-lesen" tabindex="-1"' : '') + '>' + htmlEsc(w.beg) + '</textarea></label>' +
+      '<label id="fdBegLabel">Begründung<textarea id="fdBeg" rows="' + (zeitModus ? 1 : 3) + '"' + (zeitModus ? ' readonly class="nur-lesen" tabindex="-1"' : '') + '>' + htmlEsc(w.beg) + '</textarea></label>' + '<div class="begr-vorschau" id="fdBegVorschau" hidden></div>' +
       (zeitModus ? '' : '<div class="begr-katalog"><div class="beta-erg-klein">Frühere Begründungen zu Ziffer ' + htmlEsc(nr) + ' – anklicken zum Einsetzen:</div>' +
         (katalog.length ? katalog.map((x, i)=> '<div class="begr-eintrag"><button type="button" class="begr-text' + (x.text === w.beg ? ' aktiv' : '') + '" data-i="' + i + '">' + htmlEsc(x.text) +
             (x.standard ? ' <span class="begr-std">Standard</span>' : '') + '</button>' +
@@ -14152,6 +14191,11 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       $('fdBegLabel').firstChild.textContent = zeitModus ? 'Begründung (wird aus der Uhrzeit gebildet)' :
         (grund === 'mehrfach' || grund === 'fall') ? 'Begründung (' + betaBegrPflichtText(grund, p, { pflichtGrund: { [schl]: opt.pflichtGrund } }) + ')' : pflicht ? 'Begründung (Pflicht über ' + betaFaktorText(r.schwelle) + ')' : 'Begründung (wird erst über ' + betaFaktorText(r.schwelle) + ' gedruckt – bleibt als Vorlage gespeichert)';
       bEl.classList.toggle('pflichtfeld-fehlt', pflicht && !zeitModus && !bEl.value.trim());
+      // Vorschau (Wunsch 21.11.2026): Zeilen genau so umbrochen wie in der Rechnung, Kasten so breit wie die Spalte „Bezeichnung“
+      const vz = $('fdBegVorschau');
+      if(vz){ let z = []; try{ z = RECHNUNG_LAYOUT[art] ? rdBegruendungZeilen(bEl.value, art) : []; }catch(_){}
+        vz.hidden = !z.length;
+        vz.innerHTML = z.length ? '<div class="beta-erg-klein">So steht es in der Rechnung (' + z.length + (z.length === 1 ? ' Zeile' : ' Zeilen') + '):</div><div class="begr-v-box" style="width:' + Math.round(rdBezBreite(art) * 4 / 3 + 8) + 'px">' + z.map((t)=> '<div>' + htmlEsc(t) + '</div>').join('') + '</div>' : ''; }
       document.querySelectorAll('.faktor-stufen button[data-f]').forEach(b=> b.classList.toggle('aktiv', ok && Math.abs(Number(b.dataset.f) - f) < 1e-9));
     };
     bEl.addEventListener('input', ()=>{ aktual(); document.querySelectorAll('.begr-text').forEach(b=> b.classList.toggle('aktiv', katalog[+b.dataset.i] && katalog[+b.dataset.i].text === bEl.value.trim())); });
@@ -22486,7 +22530,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v513';
+const APP_VERSION = 'v514';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
