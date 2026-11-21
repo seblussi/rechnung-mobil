@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-l/iCWJ/7jgD2Upc4k1GN9MIrjsg6Tcosj/5tNDIqOkc=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-IOvoW5eiels097fCzkNrST99uh8ZXuC9NT0P4yzL3uk=' 'sha256-uMobhkknYyaThCCeiSuUVC9aBvSWjRZdab/56xRE1Pk=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -592,7 +592,10 @@ try{
   .dienst-wahl-hinw{display:block; font-size:12px; color:var(--text-schwach); margin-top:4px;}
   .dienst-wahl-hinw.warn{color:#c76a00;}
   .gkv-feld input.pflichtfeld-fehlt{border:2px solid var(--fehler, #c0392b);}
-  .begr-vorschau{margin:-2px 0 10px;} .begr-v-box{max-width:100%; overflow-x:auto; box-sizing:border-box; border:1px solid var(--rand); border-radius:6px; background:#fff; color:#000; padding:3px 4px; font:13.33px/1.35 Arial, Helvetica, sans-serif; white-space:pre; margin-top:3px;}
+  /* Begruendung wie in der Rechnung (Wunsch 22.11.2026): Arimo = Arial-Zeichenbreiten, 10 pt, Breite der Spalte „Bezeichnung“ */
+  @font-face{font-family:'Arimo Rechnung'; src:url('lib/fonts/arimo.woff') format('woff'); font-weight:400; font-style:normal; font-display:swap;}
+  textarea.beg-wie-rechnung{font-family:'Arimo Rechnung', Arial, sans-serif !important; font-size:13.333px; line-height:1.35 !important; padding:5px !important; border-width:1px !important; box-sizing:border-box; overflow-y:hidden; resize:none; letter-spacing:0; word-spacing:0; hyphens:manual; -webkit-hyphens:manual; overflow-wrap:normal; word-break:normal;}
+  .begr-vorschau{margin:-2px 0 10px; font-size:12px; color:var(--text-schwach);}
   .gkv-optional{font-size:11.5px;}
   .gkv-v-geb{font-weight:400; font-size:12.5px; color:var(--text-schwach);}
   .gkv-adr-knoepfe{display:flex; gap:8px; margin:0 0 6px;}
@@ -2445,8 +2448,8 @@ try{
     body.quer .quer-uhr .ds-ring-zeit{font-size:21cqw !important;}
     body.quer .quer-uhr .ds-ring-mitte, body.quer .quer-uhr .ds-ring-mitte *:not(.ds-ring-zeit){font-size:4.6cqw !important;}
     body.quer .quer-uhr .ds-ring-rest{font-size:5.4cqw !important;}
-    body.quer .quer-sp2 .ds-zahlen.fuenf, body.quer .quer-sp2 .ds-zahlen.sechs, body.quer .quer-sp2 .ds-zahlen.fuenf-o{display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:6px !important;}
-    body.quer .quer-sp2 .ds-zahlen.fuenf > *, body.quer .quer-sp2 .ds-zahlen.sechs > *, body.quer .quer-sp2 .ds-zahlen.fuenf-o > *{min-width:0;}
+    body.quer .quer-sp2 .ds-zahlen.fuenf, body.quer .quer-sp2 .ds-zahlen.fuenf-k, body.quer .quer-sp2 .ds-zahlen.vier-k{display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:6px !important;}
+    body.quer .quer-sp2 .ds-zahlen.fuenf > *, body.quer .quer-sp2 .ds-zahlen.fuenf-k > *, body.quer .quer-sp2 .ds-zahlen.vier-k > *{min-width:0;}
   }
   /* Erfassen: Formular links, Rechnungsvorschau rechts */
   .quer-vorschau{display:none;}
@@ -2537,12 +2540,13 @@ try{
   .ds-ring-trenner{stroke:var(--text-schwach); stroke-width:1.4; stroke-linecap:round; opacity:.7;}
   .ds-ring-grenze{font-size:12.5px; font-weight:600; fill:var(--text-schwach); letter-spacing:.02em;}
   .ds-live .ds-dz .ds-zahlen.fuenf{grid-template-columns:repeat(5, minmax(0, 1fr)); gap:5px;}
-  .ds-live .ds-dz .ds-zahlen.sechs{grid-template-columns:minmax(0, .55fr) repeat(5, minmax(0, 1fr)); gap:4px;}
-  .ds-live .ds-dz .ds-zahlen.fuenf-o{grid-template-columns:minmax(0, .55fr) repeat(4, minmax(0, 1fr)); gap:4px;}
-  .ds-live .ds-dz .ds-zahlen.sechs > span, .ds-live .ds-dz .ds-zahlen.fuenf-o > span{padding:5px 5px; border-radius:8px;}
-  .ds-live .ds-dz .ds-zahlen.sechs span, .ds-live .ds-dz .ds-zahlen.fuenf-o span{font-size:10px;}
-  .ds-live .ds-dz .ds-zahlen.sechs b, .ds-live .ds-dz .ds-zahlen.fuenf-o b{font-size:clamp(11px, 3.05vw, 12.5px); letter-spacing:-.3px;}
-  .ds-live .ds-dz .ds-zahlen.sechs > span, .ds-live .ds-dz .ds-zahlen.fuenf-o > span{padding-left:4px; padding-right:3px;}
+  .ds-live .ds-dz .ds-zahlen.fuenf-k{grid-template-columns:repeat(5, minmax(0, 1fr)); gap:4px;}
+  .ds-live .ds-dz .ds-zahlen.vier-k{grid-template-columns:repeat(4, minmax(0, 1fr)); gap:4px;}
+  .ds-live .ds-dz .ds-zahlen.fuenf-k > span, .ds-live .ds-dz .ds-zahlen.vier-k > span{padding:5px 3px 5px 5px; border-radius:8px;}
+  .ds-live .ds-dz .ds-zahlen.fuenf-k span, .ds-live .ds-dz .ds-zahlen.vier-k span{font-size:10.5px;}
+  .ds-live .ds-dz .ds-zahlen.fuenf-k > span, .ds-live .ds-dz .ds-zahlen.vier-k > span{container-type:inline-size;}
+  .ds-live .ds-dz .ds-zahlen.fuenf-k b, .ds-live .ds-dz .ds-zahlen.vier-k b{font-size:min(13.5px, 23cqw); letter-spacing:-.2px;}   /* Betrag passt immer in den Kasten (auch 1899,45 auf schmalen Handys) */
+  .ds-zahlen .z-anz{font-style:normal; font-weight:800; margin-left:2px;}
   .ds-zahlen .z-gkv{background:color-mix(in srgb, #7d4e9e 11%, var(--bg)) !important;} .ds-zahlen .z-gkv > span{color:#7d4e9e !important;}
   .ds-zahlen .z-pt{background:color-mix(in srgb, var(--pt-farbe) 11%, var(--bg)) !important;} .ds-zahlen .z-pt > span{color:var(--pt-farbe) !important;}
   .ds-zahlen .z-ls{background:color-mix(in srgb, var(--ls-farbe) 11%, var(--bg)) !important;} .ds-zahlen .z-ls > span{color:var(--ls-farbe) !important;}
@@ -2617,11 +2621,18 @@ try{
     x.addEventListener('click', function(){ d.remove(); }); d.appendChild(x);
     (document.body || document.documentElement).appendChild(d);
   }
-  function uebernehmen(reg){ if(!reg.waiting) return; angefordert = true; reg.waiting.postMessage('update-uebernehmen'); }
+  function uebernehmen(reg){ if(!reg.waiting) return false; angefordert = true; reg.waiting.postMessage('update-uebernehmen'); return true; }
+  // Wunsch 22.11.2026: ein Update sperrt die App nicht mehr extra. Ist sie entsperrt, wartet es bis zum naechsten Sperren
+  // (automatisch oder von Hand) -- dort wird ohnehin neu geladen. Auf der Sperrseite wird es gleich uebernommen.
+  function entsperrt(){ try{ return !!(window.Tresor && Tresor.offen && Tresor.offen()); }catch(_){ return false; } }
+  var regJetzt = null;
+  window.appUpdateBeimSperren = function(){ return !!(regJetzt && regJetzt.waiting && navigator.serviceWorker.controller && uebernehmen(regJetzt)); };
   function wartet(reg){
     if(!reg.waiting || !navigator.serviceWorker.controller) return;
-    // direkt nach dem Start und noch nichts bedient: gleich umschalten; sonst fragen
-    if(!bedient && Date.now() - start < 4000) uebernehmen(reg);
+    regJetzt = reg;
+    // direkt nach dem Start, noch gesperrt und nichts bedient: gleich umschalten
+    if(!bedient && !entsperrt() && Date.now() - start < 4000) uebernehmen(reg);
+    else if(entsperrt()) hinweis('Update bereit – wird beim nächsten Sperren übernommen.', 'Jetzt neu laden', function(){ uebernehmen(reg); });
     else hinweis('Update verfügbar.', 'Jetzt neu laden', function(){ uebernehmen(reg); });
   }
   navigator.serviceWorker.addEventListener('controllerchange', function(){
@@ -14365,11 +14376,20 @@ async function betaFaktorDialog(art, p, faktor, begruendung, anzahl, variante, o
       $('fdBegLabel').firstChild.textContent = zeitModus ? 'Begründung (wird aus der Uhrzeit gebildet)' :
         (grund === 'mehrfach' || grund === 'fall') ? 'Begründung (' + betaBegrPflichtText(grund, p, { pflichtGrund: { [schl]: opt.pflichtGrund } }) + ')' : pflicht ? 'Begründung (Pflicht über ' + betaFaktorText(r.schwelle) + ')' : 'Begründung (wird erst über ' + betaFaktorText(r.schwelle) + ' gedruckt – bleibt als Vorlage gespeichert)';
       bEl.classList.toggle('pflichtfeld-fehlt', pflicht && !zeitModus && !bEl.value.trim());
-      // Vorschau (Wunsch 21.11.2026): Zeilen genau so umbrochen wie in der Rechnung, Kasten so breit wie die Spalte „Bezeichnung“
+      // Wunsch 22.11.2026: das Feld selbst bricht um wie die Rechnung -- so breit wie die Spalte „Bezeichnung“ und in Arimo
+      // (gleiche Zeichenbreiten wie Arial); darunter nur die Zeilenzahl
       const vz = $('fdBegVorschau');
       if(vz){ let z = []; try{ z = RECHNUNG_LAYOUT[art] ? rdBegruendungZeilen(bEl.value, art) : []; }catch(_){}
+        if(RECHNUNG_LAYOUT[art] && !bEl.classList.contains('beg-wie-rechnung')){
+          // schmaler Bildschirm: alles maßstabsgetreu verkleinern (Schrift, Breite, Rand) -- der Umbruch bleibt derselbe
+          const soll = rdBezBreite(art) * 4 / 3 + 12, platz = (bEl.parentElement && bEl.parentElement.clientWidth) || soll, k = Math.min(1, platz / soll);
+          bEl.classList.add('beg-wie-rechnung'); bEl.style.width = (soll * k).toFixed(2) + 'px';
+          bEl.style.setProperty('font-size', (13.333 * k).toFixed(3) + 'px', 'important');
+          if(k < 1){ bEl.style.setProperty('padding', (5 * k).toFixed(2) + 'px', 'important'); bEl.style.setProperty('border-width', k.toFixed(3) + 'px', 'important'); }
+        }
+        if(bEl.classList.contains('beg-wie-rechnung')){ bEl.style.height = 'auto'; bEl.style.height = Math.max(bEl.scrollHeight + 2, 48) + 'px'; }
         vz.hidden = !z.length;
-        vz.innerHTML = z.length ? '<div class="beta-erg-klein">So steht es in der Rechnung (' + z.length + (z.length === 1 ? ' Zeile' : ' Zeilen') + '):</div><div class="begr-v-box" style="width:' + Math.round(rdBezBreite(art) * 4 / 3 + 8) + 'px">' + z.map((t)=> '<div>' + htmlEsc(t) + '</div>').join('') + '</div>' : ''; }
+        vz.textContent = z.length ? z.length + (z.length === 1 ? ' Zeile' : ' Zeilen') + ' in der Rechnung' : ''; }
       document.querySelectorAll('.faktor-stufen button[data-f]').forEach(b=> b.classList.toggle('aktiv', ok && Math.abs(Number(b.dataset.f) - f) < 1e-9));
     };
     bEl.addEventListener('input', ()=>{ aktual(); document.querySelectorAll('.begr-text').forEach(b=> b.classList.toggle('aktiv', katalog[+b.dataset.i] && katalog[+b.dataset.i].text === bEl.value.trim())); });
@@ -23883,6 +23903,7 @@ function designDienstHtml(info){
   let auf = true; try{ auf = sessionStorage.getItem('dienst_liste_zu') !== '1'; }catch(_){}
   const summe = (art)=> faelle.filter(f=> f.art === art).reduce((a, f)=> a + (Number(f.euro) || 0), 0);
   const kurzEuro = (v)=> betaEuro(v).replace(' €', '');
+  const anzahl = (art)=>{ const n = faelle.filter(f=> f.art === art && !f.sammel).length, sm = art === 'gkv' && faelle.some(f=> f.sammel); return ' <i class="z-anz">' + n + (sm ? '+Σ' : '') + '</i>'; };
   // Balken nur, solange die Foerderung noch greift (GKV unter der Pauschale)
   const balken = info.pauschale > 0 && info.gkv < info.pauschale;
   const lohn = designStundenlohn(info, faelle);
@@ -23891,8 +23912,9 @@ function designDienstHtml(info){
       '<span class="ds-schicht">' + (info.schicht ? '<b>' + htmlEsc(info.schicht) + '</b>' : '') + '<small>' + designUhr(fe.von) + '–' + designUhr(fe.bis) + '</small></span></span>' +
       '<span class="ds-status-unter">' + htmlEsc(unter) + '</span>' +
       // Wunsch 21.11.2026: kleinere Kaesten, Gesamtsumme zwischen LS und €/h, GKV/PT/LS dezent in ihren Farben
-      '<span class="ds-zahlen ' + (lohn != null ? 'sechs' : 'fuenf-o') + '"><span class="z-n"><span>Fälle</span><b>' + faelle.length + '</b></span><span class="z-gkv"><span>GKV</span><b>' + kurzEuro(info.gkv) + '</b></span>' +
-      '<span class="z-pt"><span>PT</span><b>' + kurzEuro(summe('pt')) + '</b></span><span class="z-ls"><span>LS</span><b>' + kurzEuro(summe('ls')) + '</b></span>' +
+      // Wunsch 22.11.2026: statt „Fälle“ gesamt die Anzahl je Art im jeweiligen Kasten (GKV ohne Sammelerfassung)
+      '<span class="ds-zahlen ' + (lohn != null ? 'fuenf-k' : 'vier-k') + '"><span class="z-gkv"><span>GKV' + anzahl('gkv') + '</span><b>' + kurzEuro(info.gkv) + '</b></span>' +
+      '<span class="z-pt"><span>PT' + anzahl('pt') + '</span><b>' + kurzEuro(summe('pt')) + '</b></span><span class="z-ls"><span>LS' + anzahl('ls') + '</span><b>' + kurzEuro(summe('ls')) + '</b></span>' +
       '<span class="z-sum" title="GKV + PT + LS"><span>Gesamt</span><b>' + kurzEuro((Number(info.gkv) || 0) + summe('pt') + summe('ls')) + '</b></span>' +
       (lohn != null ? '<span title="Einnahmen seit Dienstbeginn je Stunde (GKV mindestens anteilige Förderpauschale, dazu LS/PT)"><span>€/h</span><b id="dsLohn">' + kurzEuro(lohn) + '</b></span>' : '') + '</span>' +
       (balken ? '<span class="ds-fort"><span class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + kurzEuro(info.gkv) + ' / ' + betaEuro(info.pauschale) + '</b></span>' +

@@ -133,6 +133,8 @@
     try{ for(let i = 0; i < 20; i++){ await Tresor.kvWarten(); await new Promise(r=> setTimeout(r, 0)); if(!Tresor.schreibtNoch()) break; } }
     catch(e){ console.warn('Sperren: Schreiben abwarten', e); }
     Tresor.sperren();
+    // wartendes Update jetzt uebernehmen (laedt dann selbst neu, Wunsch 22.11.2026); sonst wie bisher neu laden
+    try{ if(global.appUpdateBeimSperren && global.appUpdateBeimSperren()){ setTimeout(()=> location.reload(), 3000); return; } }catch(_){}
     location.reload();
   }
 
