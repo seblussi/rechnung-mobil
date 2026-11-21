@@ -36,12 +36,16 @@ module.exports = async ({ browser, basis, pr })=>{
   d = await doku('DT2');
   pr('Fehler: rote Anzeige „Hochladen fehlgeschlagen“ mit „Erneut“, Foto bleibt im Gerät (nicht hochgeladen)', /fehlgeschlagen/.test(f.text) && f.neu && d.fotos.length === 1 && !d.fotos[0].oben, { f, fotos: d.fotos });
   if(process.env.BILDER) await p.screenshot({ path: process.env.BILDER + '/37_fehler.png' });
+  // DT1 war schon hochgeladen: neues Foto, Fehler -> Kurzinfo am Knopf nennt das offene Foto
+  await oeffneDoku('DT1'); await fotosDazu(1); await p.click('#dokuFertig'); await p.waitForSelector('.doku-overlay', { state: 'detached' }); await p.evaluate(()=> DokuUpload.warten());
+  const kurz = await p.evaluate(()=> [dokuKurz('DT1'), dokuKurz('DT2')]);
+  pr('Kurzinfo am Dokumentations-Knopf: „1 Foto noch nicht in OneDrive“ (auch nach früherem Hochladen)', kurz.every((k)=> /1 Foto noch nicht in OneDrive/.test(k)), kurz);
   await p.waitForTimeout(3000);
   pr('Fehlermeldung bleibt stehen', await p.evaluate(()=> !document.getElementById('dokuUpAnzeige').hidden));
   await p.evaluate(()=>{ __up.fehler = false; }); await p.click('[data-upneu]');
   await p.waitForSelector('.doku-up.ok', { timeout: 10000 });
   d = await doku('DT2');
-  pr('„Erneut“: Foto hochgeladen', d.fotos[0].oben && !!d.obenAm, d.fotos);
+  pr('„Erneut“: Fotos hochgeladen, Hinweis am Knopf weg', d.fotos[0].oben && !!d.obenAm && (await doku('DT1')).fotos.every((f)=> f.oben) && !/noch nicht/.test(await p.evaluate(()=> dokuKurz('DT1') + dokuKurz('DT2'))), d.fotos);
 
   // 3) während des Hochladens weiter bearbeiten: nichts geht verloren, nichts doppelt
   await p.evaluate(()=>{ __up.ms = 1500; __up.fotos = 0; });
