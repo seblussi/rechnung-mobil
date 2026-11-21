@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-P3Ity4ttxlmM6x77/rGKPOnI3DaVSnbC6vIWk6xViKM=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-jUydo+zvnrCi8ZrkwRk5bnX7tGIbnOQFl5v3irS5ou0=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -8847,11 +8847,12 @@ const RECHNUNG_LAYOUT = {
   // "zeilenGesamt" = Hoehe des bisherigen Excel-Bildes in Zeilen -- die
   // Tabelle wird mit unsichtbaren Leerzeilen auf diese Hoehe aufgefuellt,
   // damit der Text darunter an derselben Stelle steht wie bisher.
-  pt: { cols: [57.2, 57.2, 60.3, 253.9, 58.7], einzug: 0, zeilenGesamt: 23,
+  // Wunsch 21.11.2026: Tabellenraender buendig mit dem Text (Absaetze der Vorlage: links 142, rechts 107 Twips eingerueckt)
+  pt: { cols: [57.2, 57.2, 60.3, 241.45, 58.7], einzug: 7.1, zeilenGesamt: 23,
         sp: {datum:0, ziffer:1, faktor:2, bez:3, betrag:4}, ersteSpalte: 0,
         ausr: ['center','center','center','left','right'],
         betragFormat: '0.00', gesamtFormat: '0.00' },
-  ls: { cols: [78.5, 72.0, 60.8, 195.6, 61.2], einzug: 7.2, zeilenGesamt: 15,
+  ls: { cols: [78.5, 72.0, 60.8, 202.25, 61.2], einzug: 7.1, zeilenGesamt: 15,
         sp: {datum:0, ziffer:1, faktor:2, bez:3, betrag:4}, ersteSpalte: 1,
         ausr: ['center','center','center','left','right'],
         betragFormat: '0.00', gesamtFormat: '#,##0.00 €' }   // Betraege immer mit 2 Nachkommastellen (3,50 statt 3,5)
@@ -9347,7 +9348,7 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
   if(fussMitKonto.length && typeof document !== 'undefined' && typeof girocodePng === 'function' && (typeof ladeEinstellungen !== 'function' || (ladeEinstellungen() || {}).rechnungQr !== false)){
     try{
       const txt = girocodeText(a, rdRunden2(tab.summe), daten.renu);
-      if(txt) await rdGirocodeEinsetzen(zip, await girocodePng(txt, qrModus === 'fliessend'), qrModus === 'fliessend', qrModus === 'daneben', 240);
+      if(txt) await rdGirocodeEinsetzen(zip, await girocodePng(txt, qrModus === 'fliessend'), qrModus === 'fliessend', qrModus !== 'fliessend', 240);   // Text immer neben dem QR-Code enden lassen (sonst ueberdeckt er ihn je nach Tabellenlaenge)
     }catch(e){ console.warn('GiroCode', e); }
   }
   let ct = await zip.file('[Content_Types].xml').async('string');
