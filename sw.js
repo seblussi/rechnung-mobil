@@ -16,7 +16,7 @@ const CACHE_NAME = 'rechnungserfassung-v512';
 const CACHE_PRAEFIX = CACHE_NAME.replace(/\d+$/, '');   // alle Versionen dieser App: gleicher Anfang, andere Nummer
 const DATEIEN = {
 // >>> DATEIEN (Prüfsummen erzeugt von werkzeuge/sw_dateien.js – nicht von Hand ändern)
-  './Rechnungserfassung_Mobil.html': '0BQP5W3nijMGBcLFA9Rs9B5A3mAlRPneG7VdF93uJaM=',
+  './Rechnungserfassung_Mobil.html': '2N2N9GwVGeZxZjrDPztKN3rXG1QejKycbilhlZnYTss=',
   './manifest.json': 'oGmycJijIIy67JQt2/9DPvS7LFo04ldRKRTIcpUcfxY=',
   './': 'HAHncj5UelMdOHtP3EGp0CI7BT/TzLQ7grnGteDXT60=',
   './lib/msal/msal-browser.min.js': 'ERWwgEmLebC0tiHdPfR4sKmxA19dB21XQdGIjwaSO4Q=',

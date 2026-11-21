@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-Ix9EBgolre+Ln6vsXbnIkXnHBkMuuQLcKDaOkL1jIwk=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-NxgZovE2xH1evSnO4uF7m6iFFWBiai8Cc+kYUmKqaA8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -4032,7 +4032,7 @@ function langDruecken(el, aktion){
   el.addEventListener('contextmenu', (ev)=>{ ev.preventDefault(); ab(); el._lang = true; aktion(); });
 }
 function fbTagText(d){ return DESIGN_WT[d.getDay()] + ' ' + zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' + d.getFullYear(); }
-function fbZiffernHtml(z){ return z.map(x=> '<span class="fbx-z">' + htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '') + '</span>').join(''); }
+function fbZiffernHtml(z){ return z.map(x=> '<span class="fbx-z">' + (x.anz > 1 ? x.anz + '×' : '') + htmlEsc(x.gop) + '</span>').join(''); }
 // Betrag einer Zeile; beim Pseudo-Fall 99999 die Foerderung des Diensts (GKV-Pauschale minus echte GKV-Faelle)
 function fbFallEuro(d, f){
   if(f && f.pseudo){ const fo = Math.max(0, (Number(d.gkv) || 0) - (Number(d.gkvRoh) || 0)); return '<span class="fbx-foerd">Förderung</span> ' + betaEuro(fo).replace(' €', ''); }
@@ -4427,7 +4427,7 @@ function fbAnsichtB(buch){
   return '<div class="fbx-tab"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div>' +
     buch.dienste.map((d, di)=> '<div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
       d.faelle.map((f, fi)=> '<div class="fbx-tr" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art) + '</span><span class="fbx-zt">' +
-        f.ziffern.map(x=> htmlEsc(x.gop) + (x.anz > 1 ? '×' + x.anz : '')).join(' ') + '</span>' +
+        f.ziffern.map(x=> (x.anz > 1 ? x.anz + '×' : '') + htmlEsc(x.gop)).join(' ') + '</span>' +
         // „noch nicht im Fahrtenbuch“ / „unfertig“ als schmale zweite Zeile unter dem Fall statt in der engen Kat-Spalte (Wunsch 21.11.2026)
         (f.offen ? '<span class="fbx-tr-offen ' + f.offen + '">' + (f.offen === 'unfertig' ? 'unfertig' : 'noch nicht im Fahrtenbuch') + '</span>' : '') +
         '<span>' + fbFallEuro(d, f) + '</span></div>').join('') +
@@ -8375,14 +8375,14 @@ function ansichtGkvVerwaltung(){
             const f = x.f, i = excel.indexOf(x);
             return '<button type="button" class="gv-fall gv-excel' + (f.pseudo ? ' pseudo' : '') + '" data-gvexcel="' + i + '">' +
               '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="ds-fall-marke gkv">GKV</span>' +
-              '<span class="gv-mitte"><b>' + htmlEsc(f.pseudo ? 'Pseudo-Fall 99999' : f.name) + '</b><small>' + htmlEsc((f.ziffern || []).map(z=> z.gop + (z.anz > 1 ? '×' + z.anz : '')).join(' ')) + '</small></span>' +
+              '<span class="gv-mitte"><b>' + htmlEsc(f.pseudo ? 'Pseudo-Fall 99999' : f.name) + '</b><small>' + htmlEsc((f.ziffern || []).map(z=> (z.anz > 1 ? z.anz + '×' : '') + z.gop).join(' ')) + '</small></span>' +
               '<span class="gv-rechts"><b>' + fbFallEuro(x.d, f) + '</b><small class="gv-nurfb">nur im Fahrtenbuch</small></span></button>';
           }
           const f = x.f, pseudo = f.name === GKV_PSEUDO_NAME;
           return '<div class="wisch-huelle" data-gvid="' + htmlEsc(f.id) + '"><div class="wisch-hinter">&#128465; Löschen</div>' +
             '<button type="button" class="gv-fall' + (pseudo ? ' pseudo' : '') + '" data-gvoeffnen="' + htmlEsc(f.id) + '">' +
             '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="ds-fall-marke gkv">GKV</span>' +
-            '<span class="gv-mitte"><b>' + htmlEsc(pseudo ? 'Pseudo-Fall 99999' : (f.name || 'ohne Namen')) + '</b><small>' + htmlEsc((f.positionen || []).map(p=> p.gop + (p.anz > 1 ? '×' + p.anz : '')).join(' ')) + '</small></span>' +
+            '<span class="gv-mitte"><b>' + htmlEsc(pseudo ? 'Pseudo-Fall 99999' : (f.name || 'ohne Namen')) + '</b><small>' + htmlEsc((f.positionen || []).map(p=> (p.anz > 1 ? p.anz + '×' : '') + p.gop).join(' ')) + '</small></span>' +
             '<span class="gv-rechts"><b>' + (pseudo ? gkvPseudoFoerderungHtml(f) : betaEuro(f.euro).replace(' €', '')) + '</b><small class="' + (f.status === 'eingetragen' ? 'gv-ok' : 'gv-offen') + '">' + (f.status === 'eingetragen' ? '✓ Fahrtenbuch' : 'offen') + '</small></span>' +
             '</button></div>';
         }).join('');
@@ -17414,7 +17414,7 @@ function ansichtGkv(bearbeitenId, opt){
     el('gkvVerlauf').innerHTML = a.length ? a.map(x=>
       '<div class="fall-zeile gkv-verlauf' + (x.status === 'eingetragen' ? '' : ' offen') + '" data-id="' + htmlEsc(x.id) + '">' +
       '<div class="name">' + htmlEsc(x.name) + (x.geb ? ' <span class="gkv-v-geb">* ' + htmlEsc(x.geb) + '</span>' : '') + '</div>' +
-      '<div class="gkv-v-unter">' + htmlEsc(isoDe(x.datum)) + ', ' + htmlEsc(x.zeit || '') + ' · ' + (Array.isArray(x.positionen) ? x.positionen : []).map(p=> htmlEsc(p && p.gop != null ? p.gop : '') + (p && p.anz > 1 ? '×' + htmlEsc(p.anz) : '')).join(' ') + ' · ' + betaEuro(x.euro) + '</div>' +
+      '<div class="gkv-v-unter">' + htmlEsc(isoDe(x.datum)) + ', ' + htmlEsc(x.zeit || '') + ' · ' + (Array.isArray(x.positionen) ? x.positionen : []).map(p=> (p && p.anz > 1 ? htmlEsc(p.anz) + '×' : '') + htmlEsc(p && p.gop != null ? p.gop : '')).join(' ') + ' · ' + betaEuro(x.euro) + '</div>' +
       '<div class="gkv-v-status">' + (x.status === 'eingetragen' ? '✓ Fahrtenbuch ' + (x.blatt ? htmlEsc(x.blatt) + ', ' : '') + 'Zeile ' + htmlEsc(x.zeile) : '<span class="offen-text">noch nicht im Fahrtenbuch' + (x.fehler ? ': ' + htmlEsc(x.fehler) : '') + '</span>') + '</div>' +
       '<div class="aktionen">' + (x.status === 'eingetragen' ? '' : '<button type="button" data-nochmal="' + htmlEsc(x.id) + '">Jetzt eintragen</button>') +
       '<button type="button" data-bearb="' + htmlEsc(x.id) + '">Bearbeiten</button><button type="button" data-loesch="' + htmlEsc(x.id) + '">Aus Liste löschen</button></div></div>').join('')
