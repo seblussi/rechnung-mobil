@@ -19,7 +19,8 @@ module.exports = async ({ browser, basis, pr })=>{
       const daten = fallRechnungsdaten(f, Object.assign({}, ladeEinstellungen(), { name: 'Dr. Test', bank: 'Testbank', bic: 'COBADEFFXXX', iban: 'DE89370400440532013000', kontoinhaber: 'Dr. Test' }));
       const erg = await rechnungDocxErzeugen(docm, excel.zeilen, daten, 'blob');
       const buf = await erg.inhalt.arrayBuffer();
-      const x = await (await JSZip.loadAsync(buf)).file('word/document.xml').async('string');
+      const zz = await JSZip.loadAsync(buf), x = await zz.file('word/document.xml').async('string');
+      let fussInd = null; for(const n of Object.keys(zz.files)) if(/^word\/footer\d+\.xml$/.test(n)){ const fx = await zz.file(n).async('string'); if(/Bankname/.test(fx)) fussInd = +((/<w:tblInd w:w="(-?\d+)"/.exec(fx) || [])[1]); }
       const tbl = (x.match(/<w:tbl>[\s\S]*?<\/w:tbl>/g) || []).find((t)=> /Bezeichnung/.test(t)) || '';
       const ind = +((/<w:tblInd w:w="(-?\d+)"/.exec(tbl) || [])[1]);
       const breite = (tbl.match(/<w:gridCol w:w="(\d+)"/g) || []).reduce((a, g)=> a + +/(\d+)/.exec(g)[1], 0);
@@ -34,11 +35,12 @@ module.exports = async ({ browser, basis, pr })=>{
       const pg = await doc.getPage(1), vp = pg.getViewport({ scale: 1.6 });
       const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
       await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
-      return { ind, breite, textL: textInd ? +textInd[1] : null, textR: textInd ? +textInd[2] : null, qr: !!bitte, qrRechts, png: c.toDataURL('image/png').split(',')[1] };
+      return { fussInd, ind, breite, textL: textInd ? +textInd[1] : null, textR: textInd ? +textInd[2] : null, qr: !!bitte, qrRechts, png: c.toDataURL('image/png').split(',')[1] };
     }, ART);
     if(process.env.BILDER) fs.writeFileSync(process.env.BILDER + '/38_' + ART + '.png', Buffer.from(r.png, 'base64'));
     const textBreite = 11906 - 1080 - 1080 - r.textL - r.textR;
     pr(ART.toUpperCase() + ': Tabelle bündig mit dem Text (links ' + r.ind + ' = ' + r.textL + ' Twips, Breite ' + r.breite + ' = ' + textBreite + ')', r.ind === r.textL && Math.abs(r.breite - textBreite) <= 2, { ind: r.ind, breite: r.breite, textL: r.textL, textR: r.textR });
+    pr(ART.toUpperCase() + ': Bankverbindung in der Fußzeile bündig mit dem Text', r.fussInd === 0, r.fussInd);
     pr(ART.toUpperCase() + ': QR-Code eingefügt, Absatz daneben rechts eingerückt (Text läuft nicht unter den Code)', r.qr && r.qrRechts > 1500, { qr: r.qr, rechts: r.qrRechts });
   }
   pr('keine Skriptfehler', !p.fehler.length, p.fehler.slice(0, 3));
