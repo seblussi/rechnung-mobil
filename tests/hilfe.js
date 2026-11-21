@@ -14,6 +14,11 @@ async function geraet(browser, basis, opt){
     try{ localStorage.setItem('seitenhilfe', 'false'); localStorage.setItem('app_zugangscode', '"abc"'); localStorage.setItem('app_code_ok', 'true'); localStorage.setItem('app_code_geprueft', String(Date.now())); localStorage.setItem('einrichtung_fertig', 'true'); }catch(_){}
     if(demo){ try{ sessionStorage.setItem('demo_modus', '1'); sessionStorage.setItem('demo_frei', '1'); }catch(_){} }
   }, !!opt.demo);
+  if(opt.passkey){   // nachgebildeter Fingerabdruck-Sensor
+    const cdp = await c.newCDPSession(p); await cdp.send('WebAuthn.enable');
+    const r = await cdp.send('WebAuthn.addVirtualAuthenticator', { options: { protocol: 'ctap2', ctap2Version: 'ctap2_1', transport: 'internal', hasResidentKey: true, hasUserVerification: true, hasPrf: true, isUserVerified: true, automaticPresenceSimulation: true } });
+    p.sensor = { cdp, id: r.authenticatorId };
+  }
   return p;
 }
 // App laden und warten, bis das Hauptskript läuft

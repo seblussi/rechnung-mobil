@@ -383,6 +383,18 @@
   function warteRest(){ return Math.max(0, (Number(fehlLesen().warteBis) || 0) - Date.now()); }
   function fehlZaehlen(){ const e = fehlLesen(); e.fehl = (Number(e.fehl) || 0) + 1; e.zuletzt = Date.now(); if(e.fehl >= 5) e.warteBis = Date.now() + Math.min(15 * 60000, 30000 * Math.pow(2, e.fehl - 5)); fehlSetzen(e); return e; }
   function wartezeitText(ms){ const s = Math.ceil(ms / 1000); return s >= 60 ? Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + ' min' : s + ' s'; }
+  // Fingerabdruck / Face ID beim Anzeigen der Sperrseite gleich selbst starten (Wunsch 21.11.2026): einmal je Sperre;
+  // nach Abbruch oder Fehler nicht erneut (sonst Schleife), dann bleibt der Knopf. Erst wenn die Seite sichtbar ist und den Fokus hat.
+  let pkAutoAus = false;
+  function pkAutoStarten(kn, los){
+    if(pkAutoAus || !kn) return;
+    pkAutoAus = true;
+    const versuch = ()=>{ if(!kn.isConnected || kn.disabled) return; los(true); };
+    const bereit = ()=> document.visibilityState === 'visible' && document.hasFocus();
+    if(bereit()) return setTimeout(versuch, 250);
+    const warten = ()=>{ if(!bereit()) return; document.removeEventListener('visibilitychange', warten); window.removeEventListener('focus', warten); setTimeout(versuch, 250); };
+    document.addEventListener('visibilitychange', warten); window.addEventListener('focus', warten);
+  }
   async function sperre(fehler){
     let pk = [], pkGeht = false;
     try{ pkGeht = await Tresor.passkeyUnterstuetzt(); if(pkGeht) pk = await Tresor.passkeys(); }catch(_){}
@@ -431,13 +443,15 @@
     $('tsCodeWeg').onclick = ()=> mitCode();
     const pkKn = $('tsPasskey');
     if(pkKn){
-      pkKn.onclick = async ()=>{
+      const pkLos = async (auto)=>{
         pkKn.disabled = true;
         const r = await Tresor.passkeyEntsperren();
-        if(r === true) return nachEntsperren(null);
+        if(r === true){ pkAutoAus = false; return nachEntsperren(null); }
         pkKn.disabled = false;
-        $('tsFehler').textContent = r === 'abbruch' ? '' : String(r);
+        const f = $('tsFehler'); if(f) f.textContent = r === 'abbruch' || auto ? '' : String(r);
       };
+      pkKn.onclick = ()=> pkLos(false);
+      if(!fehler) pkAutoStarten(pkKn, pkLos);
     } else setTimeout(()=>{ const p = $('tsPw'); if(p) p.focus(); }, 50);
   }
   function neuesPasswortSeite(altGeheim, mitCode, hinweis, pkWunsch){
@@ -483,6 +497,7 @@
     };
   }
   async function nachEntsperren(pkPw){
+    pkAutoAus = false;
     fehlSetzen(null);
     if(lsGet(UMZUG_KEY) === 'kopiert'){
       seite('<h1>Umstellung wird abgeschlossen …</h1>');

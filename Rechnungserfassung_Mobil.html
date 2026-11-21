@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-LTAcSN7dZ9xTOI9f9+yq7RLggTBl/U3hv9pA67bUkZc=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-97waOZ9KZwq1abXBzVhOjUToDOeQ98KC+0Y23C2/Z8c=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2365,7 +2365,12 @@ try{
   @media (max-height: 520px){
     body.quer .ds-start:has(> .ds-zeile-neu){height:0; min-height:0; margin:0 !important; padding:0 !important; position:relative; overflow:visible;}
     body.quer .ds-zeile-neu .ds-neu-titel, body.quer .ds-zeile-neu .ds-uhrzeit{display:none !important;}
-    body.quer .ds-zeile-neu{position:fixed; left:max(8px, env(safe-area-inset-left)); bottom:max(6px, env(safe-area-inset-bottom)); top:auto; right:auto; margin:0 !important; z-index:60; padding:2px 8px; border-radius:999px; width:auto !important; min-width:0 !important; gap:0 !important; display:flex !important; grid-template-columns:none !important; background:var(--bg, #eef1f5); box-shadow:0 1px 4px rgba(0,0,0,.12);}
+    /* OneDrive-Anzeige in der Ecke unter der Leiste, so breit wie sie und zweizeilig („kein / Netz“, „One / Drive“); Leiste rechts -> rechts */
+    body.quer .ds-zeile-neu{position:fixed; left:calc(10px + env(safe-area-inset-left)); bottom:max(6px, env(safe-area-inset-bottom)); top:auto; right:auto; width:62px !important; min-width:0 !important; margin:0 !important; z-index:60; padding:4px 2px; border-radius:14px; gap:0 !important; display:flex !important; justify-content:center; grid-template-columns:none !important; background:var(--bg, #eef1f5); box-shadow:0 1px 4px rgba(0,0,0,.12);}
+    body.quer.nav-rechts .ds-zeile-neu{left:auto; right:calc(10px + env(safe-area-inset-right));}
+    body.quer:not(.nav-links):not(.nav-rechts) .ds-zeile-neu{bottom:calc(62px + env(safe-area-inset-bottom));}
+    body.quer .ds-zeile-neu .ds-sync{flex-direction:column; align-items:center; gap:2px; text-align:center; line-height:1.1; font-size:11px; white-space:normal;}
+    body.quer .ds-zeile-neu .ds-sync-t{display:block; max-width:44px; overflow-wrap:normal;}
     /* wenig Hoehe: Kopf und Abstand zu den Spalten knapp */
     body.quer:has(.quer-start) header{padding-top:5px !important; padding-bottom:5px !important;}
     body.quer main:has(.quer-start){padding-top:4px !important;}
@@ -2377,14 +2382,14 @@ try{
     body.quer .quer-sp1{display:flex; flex-direction:column; gap:10px;}
     body.quer .quer-sp1 > .quer-uhr{order:1; margin:0 !important;}
     body.quer .quer-sp1 > .kachelreihe{order:2;}
-    body.quer .quer-sp1 > #dsDienstEnde, body.quer .quer-sp1 > #dsDienstStart{order:3; margin:0 !important;}
+    body.quer .quer-sp1 > #dsDienstEnde, body.quer .quer-sp1 > #dsDienstStart{order:3; margin:-4px 0 0 !important;}
     body.quer .quer-sp1 > *{order:4;}
     body.quer .quer-sp1 .kachelreihe{gap:6px !important;}
     body.quer.design-einhand #app .quer-sp1 .kachelreihe.drei.kompakt .karte, body.quer #app .quer-sp1 .kachelreihe.drei > .karte{min-width:0; white-space:nowrap; container-type:inline-size; overflow:hidden; padding-left:4px !important; padding-right:4px !important; justify-content:center; column-gap:3px;}
     body.quer .quer-sp1 .kachelreihe .ds-code{font-size:min(19px, 29cqw) !important; letter-spacing:-.02em;}   /* waechst/schrumpft mit der Kachel: passt auch bei breiterer Schrift */
     body.quer .quer-sp1 .kachelreihe .ds-plus{width:min(16px, 22cqw) !important; height:min(16px, 22cqw) !important; flex:0 0 auto; transform:none;}
     body.quer .quer-sp1 .kachelreihe .ds-plus svg{width:100%; height:100%;}
-    body.quer .quer-uhr .ds-ring{width:min(100%, calc(100vh - 150px)) !important; margin:0 auto !important; container-type:inline-size;}
+    body.quer .quer-uhr .ds-ring{width:min(100%, calc(100vh - 150px)) !important; margin:-10px auto 0 !important; container-type:inline-size;}
     body.quer .quer-uhr .ds-ring-zeit{font-size:21cqw !important;}
     body.quer .quer-uhr .ds-ring-mitte, body.quer .quer-uhr .ds-ring-mitte *:not(.ds-ring-zeit){font-size:4.6cqw !important;}
     body.quer .quer-uhr .ds-ring-rest{font-size:5.4cqw !important;}
@@ -22236,7 +22241,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v510';
+const APP_VERSION = 'v511';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22378,7 +22383,7 @@ function dsSyncAuffrischenBald(){ if(dsSyncPlan) return; dsSyncPlan = setTimeout
 function dsSyncHtml(anmeldung){
   const [k, t] = dsSyncZustand(anmeldung);
   return '<span class="ds-sync ' + k + '" data-angemeldet="' + (anmeldung ? 1 : 0) + '" title="' +
-    ({ offline: 'Keine Verbindung (WLAN/Daten aus oder kein Empfang)', 'kein Netz': 'Verbindung gemeldet, aber es kommt nichts durch', 'OneDrive ⚠': 'Störung bei Microsoft: OneDrive antwortet gerade fehlerhaft', OneDrive: anmeldung ? 'OneDrive verbunden' : 'OneDrive nicht verbunden' })[t] + '"><i></i>' + t + '</span>';
+    ({ offline: 'Keine Verbindung (WLAN/Daten aus oder kein Empfang)', 'kein Netz': 'Verbindung gemeldet, aber es kommt nichts durch', 'OneDrive ⚠': 'Störung bei Microsoft: OneDrive antwortet gerade fehlerhaft', OneDrive: anmeldung ? 'OneDrive verbunden' : 'OneDrive nicht verbunden' })[t] + '"><i></i><span class="ds-sync-t">' + htmlEsc(t).replace('OneDrive', 'One<wbr>Drive') + '</span></span>';
 }
 function dsSyncAuffrischen(){
   document.querySelectorAll('.ds-sync[data-angemeldet]').forEach(el=>{
