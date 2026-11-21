@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-KXo66A3lH7l9ASH18RzkWFHAa7OqQkYrfGNmuG5qYOM=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-g/JO7y2u1hrcmHmIAuS0BwcFcTKbzPSUGiydgiEvtYY=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -17332,7 +17332,7 @@ async function fahrtenbuchEintragen(fall, meldung, opt){
 // Statistik im Fahrtenbuch (Spalten rechts, Quartalssummen) bei laufendem Dienst vormerken statt sofort schreiben.
 // Gemerkt werden nur Blattnamen (z. B. "2026"), keine Patientendaten.
 function fbStatistikSpaeter(){
-  try{ const l = liveDienstLaden(); if(!l) return false; const fe = liveDienstFenster(l), t = Date.now(); return !!fe && t >= fe.von.getTime() - 3600000 && t <= fe.bis.getTime() + 3600000; }catch(_){ return false; }
+  try{ const l = liveDienstAktiv(); if(!l) return false; const fe = liveDienstFenster(l), t = Date.now(); return !!fe && t >= fe.von.getTime() - 3600000 && t <= fe.bis.getTime() + 3600000; }catch(_){ return false; }
 }
 function fbStatistikVormerken(blatt){
   try{ const a = LS.get('fb_statistik_offen', []) || []; const k = String(blatt || ''); if(!a.includes(k)) a.push(k); LS.set('fb_statistik_offen', a); }catch(_){}
@@ -18318,8 +18318,11 @@ function osmGeoListe(d){ const a = (d.pois || []).slice(); (d.weg || []).forEach
 // Uebersicht der kleinen Karte passend zur echten Fenstergroesse: alle Punkte sichtbar, rechts Platz fuer die Knoepfe,
 // hoechstens Ortsebene (in Grossstaedten etwa ein Stadtteil). Ergebnis im Raster-Zoom (MapLibre = z - 1).
 const MINI_FIT_ZMAX = 14;
+// Uebersicht (Wunsch 21.11.2026): der eigene Standort zaehlt nicht mit, sobald es andere Punkte gibt -- sonst zoomt die
+// Karte der Einsatzorte weit heraus, wenn man gerade woanders ist
+function osmGeoListeUebersicht(d){ const o = Object.assign({}, d, { pois: (d.pois || []).filter(q=> q.kl !== 'ich') }); const g = osmGeoListe(o); return g.length ? g : osmGeoListe(d); }
 function miniFitAnsicht(d, W, H, fit){
-  const g = osmGeoListe(d);
+  const g = osmGeoListeUebersicht(d);
   if(!g.length || !W || !H) return { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2((W || fit.bw) / fit.bw) };
   const ps = g.map(q=> osmWelt(q.lat, q.lon, 0));
   const x0 = Math.min.apply(null, ps.map(q=> q.x)), x1 = Math.max.apply(null, ps.map(q=> q.x));
@@ -18851,7 +18854,7 @@ function miniKarteVektor(w, cfg){
       marke('<span class="vk-fall ' + q.kl + '"' + (q.idx != null ? ' data-fall="' + q.idx + '"' : '') + '>' + (q.nr || '') + '</span>', q, q.idx != null && opt.fallKlick ? ()=> opt.fallKlick(q.idx) : null);
     });
     if(!ansicht && !opt.mitte && !(opt.bezirk && (!opt.modus || opt.modus() !== 'faelle'))){
-      const g = osmGeoListe(d);
+      const g = osmGeoListeUebersicht(d);
       if(g.length > 1){ const b = new ml.LngLatBounds([g[0].lon, g[0].lat], [g[0].lon, g[0].lat]); g.forEach(p=> b.extend([p.lon, p.lat])); map.fitBounds(b, { padding: 36, maxZoom: 14.5, duration: 0 }); }
     }
     map.on('movestart', (ev)=>{ if(ev.originalEvent) gezogen = true; });
@@ -20984,7 +20987,7 @@ function vektorKarteOverlay(d, text, opt){
     };
     const uebersicht = ()=>{
       if(letzteAnsicht){ ueberblick(letzteAnsicht); return; }
-      const g = osmGeoListe(d);
+      const g = osmGeoListeUebersicht(d);
       if(!g.length){ map.easeTo({ center: [n.lon, n.lat], zoom: 9.5 }); return; }
       // nur der eigene Standort: so weit heraus, dass oben bis unten etwa 50 km zu sehen sind
       if(g.length === 1 && (d.pois || []).some(q=> q.kl === 'ich')){
@@ -23400,22 +23403,34 @@ function liveErsetztZeigen(){
 function liveDienstLaden(){
   const d = LS.get('live_dienst', null); if(!d) return null;
   const fe = liveDienstFenster(d); if(!fe){ liveDienstLeeren(); return null; }
-  if(Date.now() > fe.bis.getTime() + 12 * 3600000){ liveDienstLeeren(fe.bis.getTime() + 12 * 3600000); return null; }
+  const ende = liveDienstEnde(d, fe);
+  if(Date.now() > ende + 12 * 3600000){ liveDienstLeeren(ende + 12 * 3600000); return null; }
   return d;
+}
+// „Dienst beenden“ (Wunsch 21.11.2026): der Dienst bleibt wie ein regulaer vorbeigegangener noch 12 h sichtbar (Uhr,
+// Einsatzkarte), gilt aber nicht mehr als laufend; ein neuer Dienst ersetzt ihn.
+function liveDienstEnde(d, fe){ fe = fe || liveDienstFenster(d); const b = d && d.beendet ? Date.parse(d.beendet) : NaN; return isFinite(b) ? Math.min(b, fe.bis.getTime()) : fe.bis.getTime(); }
+function liveDienstAktiv(){ const d = liveDienstLaden(); return d && !d.beendet ? d : null; }
+// beendeter Dienst -> ein spaeterer Dienst aus dem Dienstplan (automatisch) geht vor
+function liveDienstAnzeige(){
+  const d = liveDienstLaden();
+  if(d && d.beendet && liveAuto()){ try{ const a = liveDienstAuto(), fa = a && liveDienstFenster(a); if(fa && fa.von.getTime() >= liveDienstEnde(d)) return a; }catch(_){} }
+  return d || (liveAuto() ? liveDienstAuto() : null);
 }
 // fuer die Abfrage "Neuer Dienst": gewaehlter Dienst, wenn der Fall hineinfaellt (1 h Spielraum)
 function liveDienstFuer(dt){
-  const d = liveDienstLaden() || (liveAuto() ? liveDienstAuto() : null); if(!d) return null;
+  const d = liveDienstAnzeige(); if(!d) return null;
   const fe = liveDienstFenster(d);
+  if(d.beendet && dt.getTime() > liveDienstEnde(d, fe) + 3600000) return null;
   if(dt.getTime() < fe.von.getTime() - 3600000 || dt.getTime() > fe.bis.getTime() + 3600000) return null;
   return { ...d, fenster: fe };
 }
 // -> { modus: 'leer'|'geplant'|'laufend'|'vorbei', fenster, faelle:[{f,t}], gkv, pauschale, foerderung, art, arzt }
 function designDienstInfo(){
-  const jetzt = new Date(), d = liveDienstLaden() || (liveAuto() ? liveDienstAuto() : null);
+  const jetzt = new Date(), d = liveDienstAnzeige();
   if(!d) return { modus: 'leer', fenster: null, faelle: [], gkv: 0, pauschale: null, foerderung: null, art: '', arzt: '', jetzt, auto: liveAuto() ? 'suche' : '' };
   const fe = liveDienstFenster(d);
-  const modus = jetzt < fe.von ? 'geplant' : jetzt < fe.bis ? 'laufend' : 'vorbei';
+  const modus = d.beendet ? 'vorbei' : jetzt < fe.von ? 'geplant' : jetzt < fe.bis ? 'laufend' : 'vorbei';
   const drin = (typeof gkvFaelleLaden === 'function' ? gkvFaelleLaden() : [])
     .filter(f=> f && f.name !== (typeof GKV_PSEUDO_NAME !== 'undefined' ? GKV_PSEUDO_NAME : ''))
     .map(f=> ({ f, t: designFallZeit(f) })).filter(x=> x.t && fallGehoertZu(x.t, x.f.dienst, fe))
@@ -23427,7 +23442,7 @@ function designDienstInfo(){
   const fr = foerderRegel(fe.tag, artVoll, { von: d.von, schicht: d.schicht, profilId: d.profilId });
   const pauschale = betaRund2(fe.stunden * fr.satz);
   const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fr.zusatz * fe.stunden);
-  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, schicht: d.schicht || '', arzt: d.arzt || '', jetzt, auto: d.auto || '' };
+  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, schicht: d.schicht || '', arzt: d.arzt || '', jetzt, auto: d.auto || '', beendetAm: d.beendet ? liveDienstEnde(d, fe) : null };
 }
 function designDienstTitel(info){ return info.art + (info.schicht ? ' ' + info.schicht : '') + ' · ' + designUhr(info.fenster.von) + ' – ' + designUhr(info.fenster.bis); }
 function designDienstUnter(info){
@@ -23481,7 +23496,7 @@ async function liveAerzteAusFahrtenbuch(){
 }
 let liveFbLaeuft = false;
 function liveAutoAuffrischen(){
-  if(liveFbLaeuft || !liveAuto() || liveDienstLaden()) return;
+  if(liveFbLaeuft || !liveAuto() || liveDienstAktiv()) return;
   if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return;
   if(Date.now() - ((LS.get('fb_dienste_cache', null) || {}).am || 0) < 15 * 60000) return;
   liveFbLaeuft = true;
@@ -23494,7 +23509,7 @@ function liveAutoAuffrischen(){
 
 // Auswahl des Dienstes (Anklicken der Live-Anzeige)
 async function liveDienstDialog(opt){
-  const akt = (opt && opt.neu) ? null : liveDienstLaden(), jetzt = new Date();
+  const akt = (opt && opt.neu) ? null : liveDienstAktiv(), jetzt = new Date();
   const vorschlag = akt || (liveAuto() ? liveDienstAuto() : null);
   let datumD = new Date(jetzt.getFullYear(), jetzt.getMonth(), jetzt.getDate()); if(jetzt.getHours() < 8) datumD.setDate(datumD.getDate() - 1);
   let datum = vorschlag ? vorschlag.datum : liveIso(datumD);
@@ -23847,7 +23862,7 @@ function designRingBlockHtml(info){
 // laufender Stundenlohn: Einnahmen vom Dienstbeginn bis jetzt (GKV mindestens anteilige Foerderpauschale, dazu LS/PT) je Stunde
 function designStundenlohn(info, faelle){
   const fe = info.fenster; if(!fe || info.modus === 'geplant' || !fe.stunden) return null;
-  const h = (Math.min(fe.bis.getTime(), info.jetzt.getTime()) - fe.von.getTime()) / 3600000; if(h < 0.25) return null;
+  const h = (Math.min(info.beendetAm || fe.bis.getTime(), info.jetzt.getTime()) - fe.von.getTime()) / 3600000; if(h < 0.25) return null;
   const satzH = (info.pauschale || 0) / fe.stunden;
   const zusH = Math.max(0, (info.foerderung || 0) - Math.max(0, (info.pauschale || 0) - (info.gkv || 0))) / fe.stunden;
   const ptls = (faelle || []).filter(f=> (f.art === 'pt' || f.art === 'ls') && !f.unfertig).reduce((a, f)=> a + (Number(f.euro) || 0), 0);
@@ -24150,7 +24165,8 @@ function designStartErgaenzen(){
     if(dende) dende.onclick = async ()=>{
       const d0 = liveDienstLaden(); if(!d0) return;
       if(!await betaFrage('Dienst „' + (d0.art || 'Dienst') + (d0.schicht ? ' ' + d0.schicht : '') + ', ' + d0.von + '–' + d0.bis + ' Uhr“ jetzt beenden?\n\nDie Fälle bleiben im Fahrtenbuch.', 'Beenden', 'Abbrechen')) return;
-      liveDienstLeeren(); syncBaldSchreiben(); ansichtStart();
+      // nicht loeschen: noch 12 h als beendeter Dienst sichtbar (Uhr, Karte), bis ein neuer Dienst beginnt
+      LS.set('live_dienst', Object.assign({}, d0, { beendet: new Date().toISOString() })); syncBaldSchreiben(); ansichtStart();
       // vorgemerkte Statistik ins Fahrtenbuch (waehrend des Dienstes ausgelassen)
       if((LS.get('fb_statistik_offen', []) || []).length){ appToastAnzeigen('Statistik wird ins Fahrtenbuch eingetragen …', 2500);
         fbStatistikNachholen().then(ok=>{ if(ok) appToastAnzeigen('✓ Statistik im Fahrtenbuch eingetragen.', 2500); }); }
@@ -24158,9 +24174,9 @@ function designStartErgaenzen(){
     const dst = document.getElementById('dsDienstStart');
     // vorher kurz mit OneDrive abgleichen: laeuft auf einem anderen Geraet schon ein Dienst, wird er angezeigt statt doppelt angelegt
     if(dst) dst.onclick = async ()=>{
-      if(!liveDienstLaden()){ try{ await Promise.race([(typeof Sync !== 'undefined' && Sync.status && Sync.status().an) ? Sync.jetzt() : faelleAbgleichen(false), new Promise(r=> setTimeout(r, 4000))]); }catch(_){} }
+      if(!liveDienstAktiv()){ try{ await Promise.race([(typeof Sync !== 'undefined' && Sync.status && Sync.status().an) ? Sync.jetzt() : faelleAbgleichen(false), new Promise(r=> setTimeout(r, 4000))]); }catch(_){} }
       // nur ein noch laufender/geplanter Dienst (z. B. vom anderen Geraet) blockiert -- ein beendeter nicht
-      const offen = ()=>{ const d0 = liveDienstLaden(); if(!d0) return false; const fe0 = liveDienstFenster(d0); return !!fe0 && Date.now() < fe0.bis.getTime(); };
+      const offen = ()=>{ const d0 = liveDienstAktiv(); if(!d0) return false; const fe0 = liveDienstFenster(d0); return !!fe0 && Date.now() < fe0.bis.getTime(); };
       if(offen()){ if(typeof appToastAnzeigen === 'function') appToastAnzeigen('Auf einem anderen Gerät läuft schon ein Dienst.', 3200); ansichtStart(); return; }
       if(await liveDienstDialog({ neu: true })) ansichtStart();
     };
