@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-Rc97EZk6CmyR2NPkckj4RRC5W7SsVvL+nRtMsPagxt4=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-8Iw3387wENSzlY/vAeDl3jManRGNIdbhapVT6n2vpfk=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2360,6 +2360,33 @@ try{
   body.quer .quer-sp3 .mini-fenster{aspect-ratio:auto !important; height:min(66vh, 620px);}
   @media (max-width: 1050px){ body.quer .quer-start{grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);} body.quer .quer-sp3{grid-column:2;} body.quer .quer-sp3 .mini-fenster{height:min(70vh, 460px);} }
   body.quer .quer-sp1 .kachelreihe.drei .karte{min-height:0;}
+  /* Handy quer (geringe Hoehe), Wunsch 21.11.2026: links Uhr, darunter Kacheln und „Dienst beenden“; Mitte Dienst;
+     rechts Karte in voller Hoehe. Datum/Uhrzeit-Zeile entfaellt (steht in der Uhr), OneDrive-Anzeige rechts oben unter den Einstellungen. */
+  @media (max-height: 520px){
+    body.quer .ds-start:has(> .ds-zeile-neu){height:0; min-height:0; margin:0 !important; padding:0 !important; position:relative; overflow:visible;}
+    body.quer .ds-zeile-neu .ds-neu-titel, body.quer .ds-zeile-neu .ds-uhrzeit{display:none !important;}
+    body.quer .ds-zeile-neu{position:fixed; top:var(--qs-oben, 90px); right:var(--qs-rechts, 14px); margin:0 !important; z-index:60; padding:2px 8px; border-radius:999px; width:auto !important; min-width:0 !important; gap:0 !important; display:flex !important; grid-template-columns:none !important; background:var(--bg, #eef1f5); box-shadow:0 1px 4px rgba(0,0,0,.12);}
+    body.quer .quer-start{grid-template-columns:minmax(0, .9fr) minmax(0, 1.1fr) minmax(0, 1fr) !important; gap:14px; margin-top:10px;}
+    body.quer .quer-start.zwei{grid-template-columns:minmax(0, .9fr) minmax(0, 1.4fr) !important;}
+    body.quer .quer-sp3, body.quer .quer-start.zwei .quer-sp3{grid-column:auto !important; position:sticky; top:104px;}
+    body.quer .quer-sp3 .sk-karte{padding:8px;}
+    body.quer .quer-sp3 .mini-fenster{height:calc(100vh - 190px) !important; min-height:180px;}
+    body.quer .quer-sp1{display:flex; flex-direction:column; gap:10px;}
+    body.quer .quer-sp1 > .quer-uhr{order:1; margin:0 !important;}
+    body.quer .quer-sp1 > .kachelreihe{order:2;}
+    body.quer .quer-sp1 > #dsDienstEnde, body.quer .quer-sp1 > #dsDienstStart{order:3; margin:0 !important;}
+    body.quer .quer-sp1 > *{order:4;}
+    body.quer .quer-sp1 .kachelreihe{gap:6px !important;}
+    body.quer .quer-sp1 .kachelreihe > .karte{min-width:0; white-space:nowrap;}
+    body.quer .quer-sp1 .kachelreihe .ds-code{font-size:19px !important; letter-spacing:-.02em;}
+    body.quer .quer-sp1 .kachelreihe .ds-plus{transform:scale(.7); transform-origin:right center;}
+    body.quer .quer-uhr .ds-ring{width:min(100%, calc(100vh - 150px)) !important; margin:0 auto !important; container-type:inline-size;}
+    body.quer .quer-uhr .ds-ring-zeit{font-size:21cqw !important;}
+    body.quer .quer-uhr .ds-ring-mitte, body.quer .quer-uhr .ds-ring-mitte *:not(.ds-ring-zeit){font-size:4.6cqw !important;}
+    body.quer .quer-uhr .ds-ring-rest{font-size:5.4cqw !important;}
+    body.quer .quer-sp2 .ds-zahlen.fuenf{display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:6px !important;}
+    body.quer .quer-sp2 .ds-zahlen.fuenf > *{min-width:0;}
+  }
   /* Erfassen: Formular links, Rechnungsvorschau rechts */
   .quer-vorschau{display:none;}
   body.quer .quer-maske{display:grid; grid-template-columns:minmax(0, 1fr) minmax(320px, 0.85fr); gap:22px; align-items:start;}
@@ -22205,7 +22232,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v508';
+const APP_VERSION = 'v509';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -22352,7 +22379,7 @@ function dsSyncHtml(anmeldung){
 function dsSyncAuffrischen(){
   document.querySelectorAll('.ds-sync[data-angemeldet]').forEach(el=>{
     const an = (typeof msGraphStatus !== 'undefined' && msGraphStatus === 'angemeldet');
-    const t = document.createElement('div'); t.innerHTML = dsSyncHtml(an); el.replaceWith(t.firstChild);
+    const t = document.createElement('div'); t.innerHTML = dsSyncHtml(an); el.replaceWith(t.firstChild); try{ if(document.querySelector('.quer-start')) querSyncPlatzieren(); }catch(_){}
   });
 }
 ['online', 'offline'].forEach(n=> window.addEventListener(n, ()=>{ dsSyncAuffrischen(); dsNetzPruefen().then(dsSyncAuffrischen); }));
@@ -22394,7 +22421,19 @@ function querStartAnordnen(){
   // erst jetzt (im Dokument) messen: zwei oder drei Spalten -- sonst sieht man kurz das Dreier-Raster
   mitte(); setTimeout(mitte, 600); setTimeout(mitte, 2000);
   try{ if(typeof miniKurzPruefen === 'function') requestAnimationFrame(miniKurzPruefen); }catch(_){}
+  querSyncPlatzieren();
 }
+// Handy quer: OneDrive-Anzeige mittig unter dem Zahnrad (Einstellungen) -- Lage aus dem Kopf messen (Wunsch 21.11.2026)
+function querSyncPlatzieren(){
+  try{
+    const z = document.getElementById('btnEinstellungen'), k = document.querySelector('header'); if(!z || !k) return;
+    const r = z.getBoundingClientRect(), kr = k.getBoundingClientRect();
+    document.documentElement.style.setProperty('--qs-oben', Math.round(Math.max(r.bottom - 6, kr.bottom - 14)) + 'px');
+    const zeile = document.querySelector('.ds-zeile-neu'), b = zeile ? zeile.offsetWidth : 0;
+    document.documentElement.style.setProperty('--qs-rechts', Math.round(Math.max(4, window.innerWidth - (r.left + r.right) / 2 - b / 2)) + 'px');
+  }catch(_){}
+}
+window.addEventListener('resize', ()=>{ if(document.querySelector('.quer-start')) querSyncPlatzieren(); });
 // Rechnungsverwaltung: Details rechts (Querformat), "Bearbeiten" oeffnet wie bisher
 function querDetailZeigen(zeileEl, titel, zeilen, knoepfe){
   const box = document.getElementById('gesamtDetail'); if(!box || !querAn()) return false;
