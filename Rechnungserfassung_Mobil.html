@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-jejxX5pPgKa7vp4v8fPfc5ckeABZGfL5ESaAXRCrvsE=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-sqH3ckjxLhd9ZIvwdi7VbpIBuUvvjVAR2EKnyp9ntg8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1073,6 +1073,26 @@ try{
      bewusst deutlich groesser/auffaelliger als eine normale .warnhinweis:
      das Ergebnis IST der Zweck dieses Werkzeugs, und auf dem sonst recht
      leeren Bildschirm ist genug Platz dafuer. */
+  /* Mehrere Ziele (Wunsch 21.11.2026) */
+  .tour-knopf{width:100%; margin-bottom:14px !important;}
+  .tour-pos{width:100%; margin-top:6px !important;}
+  .tour-reihe{display:flex; align-items:center; gap:12px; margin-top:6px; flex-wrap:wrap;}
+  .tour-rueck{display:flex !important; flex-direction:row !important; align-items:center; gap:8px; font-size:14px; margin:0 !important;} .tour-rueck input{width:22px !important; height:22px; margin:0 !important; flex:none;}
+  #tourZiele{font-family:inherit; font-size:15px; line-height:1.4;}
+  .tour-erg{text-align:left;}
+  .tour-kopf{display:flex; flex-direction:column; gap:2px; margin-bottom:8px; font-size:14px;}
+  .tour-liste{list-style:none; margin:0 0 8px; padding:0;}
+  .tour-liste li{display:flex; align-items:center; gap:10px; padding:6px 0; border-top:1px solid var(--rand); font-size:14px;}
+  .tour-liste li:first-child{border-top:0;}
+  .tour-liste li > span:nth-child(2){flex:1; min-width:0; display:flex; flex-direction:column;}
+  .tour-liste small{font-size:11.5px; color:var(--text-schwach); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .tour-nr{flex:none; width:24px; height:24px; border-radius:50%; background:#d84315; color:#fff; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center;}
+  .tour-nr.s{background:var(--text);}
+  .tour-km{flex:none; text-align:right; display:flex; flex-direction:column; font-weight:600;}
+  .tour-fehlt{color:var(--fehler); font-size:13px; margin:4px 0 8px;}
+  .tour-karte{margin:6px 0 10px;}
+  .tour-maps{width:100%;}
+  .karte-fall.tour{fill:#d84315;} .vk-fall.tour{background:#d84315;}
   .luft-ergebnis{
     display:none; margin-top:18px; margin-bottom:20px; padding:16px 18px; border-radius:12px;
     background:var(--karte); border:2px solid var(--ls-farbe);
@@ -6616,6 +6636,147 @@ async function notapothekenSucheOeffnen(){
 // aus der Zwischenablage eingelesenen Adresse ermitteln -- z.B. um vorab
 // grob abzuschätzen, ob ein Fall überhaupt lohnt/wie weit er ist, ohne
 // dafür extra eine Rechnung anzulegen.
+// =====================================================================
+// Mehrere Ziele: beste Reihenfolge (Wunsch 21.11.2026). Orte oder Adressen, eine Zeile je Ziel. Reihenfolge nach Luftlinie
+// (sofort, auch ohne Netz) bzw. nach Fahrzeit (Routendienst). Nichts wird gespeichert.
+// =====================================================================
+// Ziele aus dem Text: je Zeile (oder Semikolon) ein Ziel; eine einzelne Zeile ohne Hausnummern darf auch mit Kommas trennen
+function tourZieleLesen(text){
+  let z = String(text || '').split(/\r?\n|;/).map(x=> x.trim()).filter(Boolean);
+  if(z.length === 1 && z[0].indexOf(',') >= 0 && !/\d/.test(z[0])) z = z[0].split(',').map(x=> x.trim()).filter(Boolean);
+  return z;
+}
+// Reihenfolge mit kuerzester Summe; m[i][j] = Kosten i -> j, 0 = Start (fest). rueck: zurueck zum Start.
+function tourReihenfolge(m, rueck){
+  const n = m.length; if(n <= 2) return [...Array(n).keys()];
+  const kosten = (r)=>{ let k = 0; for(let i = 1; i < r.length; i++) k += m[r[i - 1]][r[i]]; return rueck ? k + m[r[r.length - 1]][0] : k; };
+  const rest = [...Array(n).keys()].slice(1);
+  if(rest.length <= 8){   // exakt: alle Reihenfolgen (8! = 40320)
+    let best = null, bk = Infinity;
+    const perm = (a, l)=>{ if(l === a.length){ const r = [0].concat(a), k = kosten(r); if(k < bk){ bk = k; best = r; } return; }
+      for(let i = l; i < a.length; i++){ [a[l], a[i]] = [a[i], a[l]]; perm(a, l + 1); [a[l], a[i]] = [a[i], a[l]]; } };
+    perm(rest.slice(), 0); return best;
+  }
+  // viele Ziele: naechster Nachbar, dann 2-opt
+  const r = [0], frei = new Set(rest);
+  while(frei.size){ const a = r[r.length - 1]; let b = null; frei.forEach(j=>{ if(b === null || m[a][j] < m[a][b]) b = j; }); r.push(b); frei.delete(b); }
+  let besser = true;
+  while(besser){ besser = false;
+    for(let i = 1; i < r.length - 1; i++) for(let j = i + 1; j < r.length; j++){ const t = r.slice(0, i).concat(r.slice(i, j + 1).reverse(), r.slice(j + 1)); if(kosten(t) < kosten(r) - 1e-9){ r.splice(0, r.length, ...t); besser = true; } } }
+  return r;
+}
+// Ort/Adresse suchen; bevorzugt in der Naehe des Starts. -> { lat, lon, name } | null
+async function tourSuchen(text, nahe){
+  if(typeof navigator !== 'undefined' && navigator.onLine === false){ const g = await geocodeOffline(text); return g ? { lat: g.lat, lon: g.lon, name: g.ort || text, offline: true } : null; }
+  const vb = nahe ? '&viewbox=' + [nahe.lon - 1.2, nahe.lat + 0.8, nahe.lon + 1.2, nahe.lat - 0.8].map(x=> x.toFixed(3)).join(',') + '&bounded=0' : '';
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=de,fr,ch,at&q=' + encodeURIComponent(text) + vb;
+  await geocodeTakt();
+  let res;
+  try{ res = await fetch(url, { headers: { 'Accept': 'application/json' } }); }
+  catch(e){ const g = await geocodeOffline(text); return g ? { lat: g.lat, lon: g.lon, name: g.ort || text, offline: true } : null; }
+  if(res.status === 429 || res.status === 503){ await new Promise(r=> setTimeout(r, 2500)); await geocodeTakt(); res = await fetch(url, { headers: { 'Accept': 'application/json' } }); }
+  if(!res.ok) throw new Error('Ortssuche HTTP ' + res.status);
+  const d = await res.json(); if(!d || !d.length) return null;
+  const teile = String(d[0].display_name || text).split(',').map(x=> x.trim());
+  return { lat: +d[0].lat, lon: +d[0].lon, name: teile.slice(0, /\d/.test(teile[0]) ? 3 : 2).join(', ') };
+}
+// Fahrzeiten/-strecken aller Paare (ein Aufruf) -> { min: [][], km: [][] } | null
+async function tourMatrix(punkte){
+  const url = 'https://router.project-osrm.org/table/v1/driving/' + punkte.map(q=> q.lon.toFixed(6) + ',' + q.lat.toFixed(6)).join(';') + '?annotations=duration,distance';
+  const r = await fetch(url); if(!r.ok) return null;
+  const d = await r.json(); if(!d || d.code !== 'Ok' || !d.durations) return null;
+  return { min: d.durations.map(z=> z.map(x=> x == null ? 1e9 : x / 60)), km: (d.distances || d.durations).map(z=> z.map(x=> x == null ? 1e9 : x / 1000)) };
+}
+async function tourRoute(punkte){
+  const url = 'https://router.project-osrm.org/route/v1/driving/' + punkte.map(q=> q.lon.toFixed(6) + ',' + q.lat.toFixed(6)).join(';') + '?overview=full&geometries=geojson';
+  const r = await fetch(url); if(!r.ok) return null;
+  const d = await r.json(); return d && d.routes && d.routes[0] ? { coords: d.routes[0].geometry.coordinates, km: d.routes[0].distance / 1000, min: d.routes[0].duration / 60 } : null;
+}
+function tourMapsUrl(punkte){
+  const k = (q)=> q.lat.toFixed(6) + ',' + q.lon.toFixed(6);
+  const zw = punkte.slice(1, -1);
+  return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&origin=' + k(punkte[0]) + '&destination=' + k(punkte[punkte.length - 1]) + (zw.length ? '&waypoints=' + encodeURIComponent(zw.map(k).join('|')) : '');
+}
+function ansichtTourPlanen(){
+  vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=> ansichtTourPlanen(); };
+  setzeTitel('Mehrere Ziele planen', ansichtLuftlinienTool);
+  const e = ladeEinstellungen(), st = gkvAdrTeile(e.praxisadresse || '');
+  app.innerHTML = `<div class="abschnitt quer-breit tour">
+      <div class="feld"><label for="tourVonStr">Start</label>
+        <input type="text" id="tourVonStr" autocomplete="off" placeholder="Straße Nr." value="${htmlEsc(st.strasse)}">
+        <input type="text" id="tourVonOrt" autocomplete="off" placeholder="PLZ Ort (PLZ oder Ort genügt)" style="margin-top:6px;" value="${htmlEsc(st.plzOrt)}">
+        <button type="button" class="btn-sekundaer tour-pos" id="tourPos">📍 Mein Standort als Start</button></div>
+      <div class="feld"><label for="tourZiele">Ziele – ein Ort oder eine Adresse pro Zeile</label>
+        <textarea id="tourZiele" rows="5" autocomplete="off" placeholder="Kehl&#10;Willstätt&#10;Hauptstraße 5, Appenweier&#10;Oberkirch"></textarea>
+        <div class="tour-reihe"><button type="button" class="btn-sekundaer" id="tourZwischenablage">Aus Zwischenablage</button>
+          <label class="tour-rueck"><input type="checkbox" id="tourRueck"> zurück zum Start</label></div></div>
+      <button class="btn-primaer" id="tourLos" style="margin-bottom:14px;">Beste Reihenfolge berechnen</button>
+      <div id="tourErgebnis"></div>
+    </div>`;
+  const el = (id)=> document.getElementById(id), aus = el('tourErgebnis');
+  let posStart = null;
+  el('tourPos').onclick = async ()=>{ const g = await standortHolen({}); if(!g) return; posStart = g; el('tourVonStr').value = ''; el('tourVonOrt').value = 'Mein Standort'; };
+  ['tourVonStr', 'tourVonOrt'].forEach((i)=> el(i).addEventListener('input', ()=>{ posStart = null; }));
+  el('tourZwischenablage').onclick = async ()=>{ try{ const t = await navigator.clipboard.readText(); if(t && t.trim()) el('tourZiele').value = (el('tourZiele').value.trim() ? el('tourZiele').value.trim() + '\n' : '') + t.trim(); }catch(_){ appToastAnzeigen('Zwischenablage nicht lesbar – bitte einfügen (lange drücken).', 3500); } };
+  let lauf = 0;
+  el('tourLos').onclick = async ()=>{
+    const nr = ++lauf, ziele = tourZieleLesen(el('tourZiele').value);
+    if(!ziele.length){ aus.innerHTML = '<div class="luft-ergebnis aktiv fehler">Bitte mindestens ein Ziel eintragen.</div>'; return; }
+    if(ziele.length > 20){ aus.innerHTML = '<div class="luft-ergebnis aktiv fehler">Höchstens 20 Ziele.</div>'; return; }
+    const startText = gkvAdrZusammen(el('tourVonStr').value, el('tourVonOrt').value);
+    aus.innerHTML = '<div class="luft-ergebnis aktiv"><span id="tourStand">Orte werden gesucht …</span></div>';
+    const stand = (t)=>{ const x = el('tourStand'); if(x && nr === lauf) x.textContent = t; };
+    let start = posStart ? { lat: posStart.lat, lon: posStart.lon, name: 'Mein Standort' } : null;
+    try{ if(!start){ if(!startText.trim()) throw new Error('Bitte einen Start eintragen oder „Mein Standort“ wählen.'); start = await tourSuchen(startText, null); if(!start) throw new Error('Start „' + startText + '“ nicht gefunden.'); start.name = startText; } }
+    catch(e2){ if(nr === lauf) aus.innerHTML = '<div class="luft-ergebnis aktiv fehler">' + htmlEsc(e2.message || String(e2)) + '</div>'; return; }
+    const gefunden = [], fehlt = [];
+    for(let i = 0; i < ziele.length; i++){
+      stand('Orte werden gesucht … ' + (i + 1) + '/' + ziele.length);
+      let g = null; try{ g = await tourSuchen(ziele[i], start); }catch(_){}
+      if(nr !== lauf) return;
+      if(g){ g.eingabe = ziele[i]; gefunden.push(g); } else fehlt.push(ziele[i]);
+    }
+    if(!gefunden.length){ aus.innerHTML = '<div class="luft-ergebnis aktiv fehler">Kein Ziel gefunden: ' + htmlEsc(fehlt.join(', ')) + '</div>'; return; }
+    const punkte = [start].concat(gefunden), rueck = el('tourRueck').checked;
+    // Luftlinie sofort, Fahrzeit sobald der Routendienst antwortet
+    const luft = punkte.map((a)=> punkte.map((b)=> kmLuftlinieEinfach(a, b)));
+    const zeigen = (reihe, art, mat, route)=>{
+      if(nr !== lauf) return;
+      const folge = reihe.map((i)=> punkte[i]).concat(rueck ? [punkte[0]] : []);
+      const idx = reihe.concat(rueck ? [0] : []);
+      let summeKm = 0, summeMin = 0;
+      const zeilen = folge.map((q, k)=>{
+        if(k === 0) return '<li class="tour-start"><span class="tour-nr s">S</span><span><b>' + htmlEsc(q.name) + '</b></span></li>';
+        const a = idx[k - 1], b = idx[k], km = mat ? mat.km[a][b] : luft[a][b], mi = mat ? mat.min[a][b] : null;
+        summeKm += km; if(mi != null) summeMin += mi;
+        const ziel = rueck && k === folge.length - 1;
+        return '<li><span class="tour-nr' + (ziel ? ' s' : '') + '">' + (ziel ? 'S' : k) + '</span><span><b>' + htmlEsc(ziel ? 'zurück zum Start' : q.eingabe) + '</b>' + (!ziel && q.name && q.name !== q.eingabe ? '<small>' + htmlEsc(q.name) + (q.offline ? ' (ohne Internet geschätzt)' : '') + '</small>' : '') + '</span>' +
+          '<span class="tour-km">' + nfpKmText(km) + ' km' + (mi != null ? '<small>' + Math.round(mi) + ' min</small>' : '') + '</span></li>';
+      });
+      const d = { pois: folge.map((q, k)=> k === 0 ? { lat: q.lat, lon: q.lon, kl: 'start' } : (rueck && k === folge.length - 1) ? null : { lat: q.lat, lon: q.lon, kl: 'tour', nr: k }).filter(Boolean),
+        weg: route && route.coords ? route.coords : folge.map((q)=> [q.lon, q.lat]), nfp: true, rahmen: true };
+      const gross = (ebene, ansicht)=> osmKarteOverlay(d, 'Reihenfolge ' + (art === 'fahrzeit' ? 'nach Fahrzeit' : 'nach Luftlinie'), { ansicht, ebene: 'zonen', titel: 'Mehrere Ziele' });
+      const zuViele = folge.length - 2 > 9;
+      aus.innerHTML = '<div class="luft-ergebnis aktiv tour-erg"><div class="tour-kopf"><b>' + (art === 'fahrzeit' ? 'Beste Reihenfolge nach Fahrzeit' : 'Beste Reihenfolge nach Luftlinie') + '</b>' +
+          '<span>' + (art === 'fahrzeit' ? 'gesamt <b>' + nfpKmText(route ? route.km : summeKm) + ' km</b> · ca. ' + Math.round(route ? route.min : summeMin) + ' min' : 'gesamt <b>' + nfpKmText(summeKm) + ' km</b> Luftlinie' + (art === 'warte' ? ' · Fahrzeiten werden berechnet …' : ' · Fahrzeiten nicht verfügbar (Internet?)')) + '</span></div>' +
+        '<ol class="tour-liste">' + zeilen.join('') + '</ol>' +
+        (fehlt.length ? '<div class="tour-fehlt">Nicht gefunden: ' + htmlEsc(fehlt.join(', ')) + '</div>' : '') +
+        '<div class="tour-karte"></div>' +
+        '<button type="button" class="btn-sekundaer tour-maps"' + (zuViele ? ' disabled' : '') + '>In Google Maps öffnen' + (zuViele ? ' (höchstens 9 Zwischenziele)' : '') + '</button></div>';
+      aus.querySelector('.tour-karte').innerHTML = miniKarteHtml(d, { gross });
+      aus.querySelector('.tour-maps').onclick = ()=> window.open(tourMapsUrl(folge), '_blank');
+    };
+    const reiheLuft = tourReihenfolge(luft, rueck);
+    zeigen(reiheLuft, 'warte', null, null);
+    let mat = null; try{ mat = await tourMatrix(punkte); }catch(_){}
+    if(nr !== lauf) return;
+    if(!mat){ zeigen(reiheLuft, 'luft', null, null); return; }
+    const reihe = tourReihenfolge(mat.min, rueck);
+    let route = null; try{ route = await tourRoute(reihe.concat(rueck ? [0] : []).map((i)=> punkte[i])); }catch(_){}
+    zeigen(reihe, 'fahrzeit', mat, route);
+  };
+  el('tourZiele').focus();
+}
 function ansichtLuftlinienTool(){
   // Wie bei der Maske (siehe vorbereiteRuecksprung oben): ohne diese Zeile
   // bliebe vorbereiteRuecksprung auf dem zuletzt gesetzten Wert stehen (im
@@ -6657,6 +6818,7 @@ function ansichtLuftlinienTool(){
         <div class="gkv-plz-info" id="luftZielPlzInfo"></div>
       </div>
       <button class="btn-primaer" id="btnLuftBerechnen" style="margin-bottom:14px;">Luftlinie &amp; Fahrstrecke berechnen</button>
+      <button class="btn-sekundaer tour-knopf" id="btnTourPlanen">🗺 Mehrere Ziele: beste Reihenfolge planen</button>
       <div id="luftErgebnis" class="luft-ergebnis"></div>
     </div>`;
   app.innerHTML = html;
@@ -6668,6 +6830,7 @@ function ansichtLuftlinienTool(){
   // setzen (garantiert quadratisch, unabhaengig vom Textumbruch im Button).
 
   const ergebnisEl = document.getElementById('luftErgebnis');
+  document.getElementById('btnTourPlanen').onclick = ()=> ansichtTourPlanen();
   // Adressen zweizeilig (Strasse / PLZ Ort) wie in der GKV-Maske, inkl. PLZ-Automatik
   const elL = (id)=> document.getElementById(id);
   const luftVonLesen = ()=> gkvAdrZusammen(elL('txtLuftVonStr').value, elL('txtLuftVonOrt').value);
