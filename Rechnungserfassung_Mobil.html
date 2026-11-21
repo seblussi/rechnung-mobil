@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-sqH3ckjxLhd9ZIvwdi7VbpIBuUvvjVAR2EKnyp9ntg8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-KXo66A3lH7l9ASH18RzkWFHAa7OqQkYrfGNmuG5qYOM=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2445,8 +2445,8 @@ try{
     body.quer .quer-uhr .ds-ring-zeit{font-size:21cqw !important;}
     body.quer .quer-uhr .ds-ring-mitte, body.quer .quer-uhr .ds-ring-mitte *:not(.ds-ring-zeit){font-size:4.6cqw !important;}
     body.quer .quer-uhr .ds-ring-rest{font-size:5.4cqw !important;}
-    body.quer .quer-sp2 .ds-zahlen.fuenf{display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:6px !important;}
-    body.quer .quer-sp2 .ds-zahlen.fuenf > *{min-width:0;}
+    body.quer .quer-sp2 .ds-zahlen.fuenf, body.quer .quer-sp2 .ds-zahlen.sechs, body.quer .quer-sp2 .ds-zahlen.fuenf-o{display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:6px !important;}
+    body.quer .quer-sp2 .ds-zahlen.fuenf > *, body.quer .quer-sp2 .ds-zahlen.sechs > *, body.quer .quer-sp2 .ds-zahlen.fuenf-o > *{min-width:0;}
   }
   /* Erfassen: Formular links, Rechnungsvorschau rechts */
   .quer-vorschau{display:none;}
@@ -2530,13 +2530,24 @@ try{
   .ds-ring-betrag tspan.ls{fill:var(--ls-farbe);} .ds-ring-betrag tspan.pt{fill:var(--pt-farbe);} .ds-ring-betrag tspan.gkv{fill:var(--ds-gkv);} .ds-ring-betrag tspan.ds-ring-punkt{fill:var(--text-schwach); font-weight:400;}
   body.dunkel .ds-ring-betrag tspan.ls{fill:#9cc4ee;} body.dunkel .ds-ring-betrag tspan.pt{fill:#8fd9a8;} body.dunkel .ds-ring-betrag tspan.gkv{fill:#cfb2ea;}
   .ds-ring-teil{stroke:var(--bg); stroke-width:1.2;} .ds-ring-teil.ls{fill:var(--ls-farbe);} .ds-ring-teil.pt{fill:var(--pt-farbe);} .ds-ring-teil.gkv{fill:var(--ds-gkv);}
-  .ds-ring-rand{fill:var(--bg);} .ds-ring-sammel{font-size:12px; font-weight:700; color:var(--ds-gkv); margin-top:2px;} body.dunkel .ds-ring-sammel{color:#cfb2ea;} .ds-ring-anzahl{font-size:9px; font-weight:800; fill:#fff; pointer-events:none; paint-order:stroke; stroke:rgba(0,0,0,.45); stroke-width:1.6px;} .ds-ring-leit{stroke:var(--text-schwach); stroke-width:.8; opacity:.8;}
+  .ds-ring-rand{fill:var(--bg);} .ds-ring-sammel{font-size:12px; font-weight:700; color:var(--ds-gkv);} .ds-ring-summen{display:flex; align-items:baseline; justify-content:center; flex-wrap:wrap; margin-top:2px; font-size:12px;} .ds-ring-summe{font-size:12px; font-weight:700; color:var(--text);} .ds-ring-punkt{color:var(--text-schwach);} body.dunkel .ds-ring-sammel{color:#cfb2ea;} .ds-ring-anzahl{font-size:9px; font-weight:800; fill:#fff; pointer-events:none; paint-order:stroke; stroke:rgba(0,0,0,.45); stroke-width:1.6px;} .ds-ring-leit{stroke:var(--text-schwach); stroke-width:.8; opacity:.8;}
   body.dunkel .ds-ring-betrag.ls{fill:#9cc4ee;} body.dunkel .ds-ring-betrag.pt{fill:#8fd9a8;} body.dunkel .ds-ring-betrag.gkv{fill:#cfb2ea;}
   .ds-ring-bogen{fill:none; stroke:var(--text-schwach); stroke-width:1.1; stroke-linecap:round; opacity:.85;}
   .ds-ring-pfeilkopf{fill:var(--text-schwach); opacity:.85;}
   .ds-ring-trenner{stroke:var(--text-schwach); stroke-width:1.4; stroke-linecap:round; opacity:.7;}
   .ds-ring-grenze{font-size:12.5px; font-weight:600; fill:var(--text-schwach); letter-spacing:.02em;}
   .ds-live .ds-dz .ds-zahlen.fuenf{grid-template-columns:repeat(5, minmax(0, 1fr)); gap:5px;}
+  .ds-live .ds-dz .ds-zahlen.sechs{grid-template-columns:minmax(0, .55fr) repeat(5, minmax(0, 1fr)); gap:4px;}
+  .ds-live .ds-dz .ds-zahlen.fuenf-o{grid-template-columns:minmax(0, .55fr) repeat(4, minmax(0, 1fr)); gap:4px;}
+  .ds-live .ds-dz .ds-zahlen.sechs > span, .ds-live .ds-dz .ds-zahlen.fuenf-o > span{padding:5px 5px; border-radius:8px;}
+  .ds-live .ds-dz .ds-zahlen.sechs span, .ds-live .ds-dz .ds-zahlen.fuenf-o span{font-size:10px;}
+  .ds-live .ds-dz .ds-zahlen.sechs b, .ds-live .ds-dz .ds-zahlen.fuenf-o b{font-size:clamp(11px, 3.05vw, 12.5px); letter-spacing:-.3px;}
+  .ds-live .ds-dz .ds-zahlen.sechs > span, .ds-live .ds-dz .ds-zahlen.fuenf-o > span{padding-left:4px; padding-right:3px;}
+  .ds-zahlen .z-gkv{background:color-mix(in srgb, #7d4e9e 11%, var(--bg)) !important;} .ds-zahlen .z-gkv > span{color:#7d4e9e !important;}
+  .ds-zahlen .z-pt{background:color-mix(in srgb, var(--pt-farbe) 11%, var(--bg)) !important;} .ds-zahlen .z-pt > span{color:var(--pt-farbe) !important;}
+  .ds-zahlen .z-ls{background:color-mix(in srgb, var(--ls-farbe) 11%, var(--bg)) !important;} .ds-zahlen .z-ls > span{color:var(--ls-farbe) !important;}
+  .ds-zahlen .z-sum{box-shadow:inset 0 0 0 1px var(--rand);}
+  body.dunkel .ds-zahlen .z-gkv > span{color:#b58bd3 !important;}
   .ds-live .ds-dz .ds-zahlen.fuenf > span{padding:7px 6px;}
   .ds-live .ds-dz .ds-zahlen.fuenf b{font-size:14px;}
   /* Karten: dunkle Ladeflaeche im Nachtmodus */
@@ -23863,8 +23874,10 @@ function designDienstHtml(info){
     '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status-zeile"><span class="ds-status">' + htmlEsc(status) + '</span>' +
       '<span class="ds-schicht">' + (info.schicht ? '<b>' + htmlEsc(info.schicht) + '</b>' : '') + '<small>' + designUhr(fe.von) + '–' + designUhr(fe.bis) + '</small></span></span>' +
       '<span class="ds-status-unter">' + htmlEsc(unter) + '</span>' +
-      '<span class="ds-zahlen ' + (lohn != null ? 'fuenf' : 'vier') + '"><span><span>Fälle</span><b>' + faelle.length + '</b></span><span><span>GKV</span><b>' + kurzEuro(info.gkv) + '</b></span>' +
-      '<span><span>PT</span><b>' + kurzEuro(summe('pt')) + '</b></span><span><span>LS</span><b>' + kurzEuro(summe('ls')) + '</b></span>' +
+      // Wunsch 21.11.2026: kleinere Kaesten, Gesamtsumme zwischen LS und €/h, GKV/PT/LS dezent in ihren Farben
+      '<span class="ds-zahlen ' + (lohn != null ? 'sechs' : 'fuenf-o') + '"><span class="z-n"><span>Fälle</span><b>' + faelle.length + '</b></span><span class="z-gkv"><span>GKV</span><b>' + kurzEuro(info.gkv) + '</b></span>' +
+      '<span class="z-pt"><span>PT</span><b>' + kurzEuro(summe('pt')) + '</b></span><span class="z-ls"><span>LS</span><b>' + kurzEuro(summe('ls')) + '</b></span>' +
+      '<span class="z-sum" title="GKV + PT + LS"><span>Gesamt</span><b>' + kurzEuro((Number(info.gkv) || 0) + summe('pt') + summe('ls')) + '</b></span>' +
       (lohn != null ? '<span title="Einnahmen seit Dienstbeginn je Stunde (GKV mindestens anteilige Förderpauschale, dazu LS/PT)"><span>€/h</span><b id="dsLohn">' + kurzEuro(lohn) + '</b></span>' : '') + '</span>' +
       (balken ? '<span class="ds-fort"><span class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + kurzEuro(info.gkv) + ' / ' + betaEuro(info.pauschale) + '</b></span>' +
         '<span class="ds-balken"><i style="width:' + p + '%"></i></span></span>' : '') + '</button>' +
@@ -24044,6 +24057,14 @@ function designRingHtml(info){
   }
   const gross = designUhr(info.jetzt);
   const unter = info.modus === 'leer' ? 'Dienst wählen' : designRestText(info);
+  // Gesamtsumme aller Faelle (GKV + PT + LS), laufend mit jeder Aktualisierung (Wunsch 21.11.2026); die Sammelerfassung daneben
+  let gesamt = 0;
+  if(fe && info.modus !== 'leer' && info.modus !== 'geplant'){ let alle = []; try{ alle = standortKarteFaelle(info); }catch(_){}
+    gesamt = (Number(info.gkv) || 0) + alle.filter(x=> (x.art === 'pt' || x.art === 'ls') && x.euro != null && isFinite(Number(x.euro))).reduce((a, x)=> a + Number(x.euro), 0); }
+  const teile = [];
+  if(l.ringBetrag && gesamt > 0) teile.push('<span class="ds-ring-summe">Σ ' + Math.round(gesamt).toLocaleString('de-DE') + ' €</span>');
+  if(sammelDa) teile.push('<span class="ds-ring-sammel">Sammel' + (l.ringBetrag && sammelSumme ? ' ' + Math.round(sammelSumme) + ' €' : '') + '</span>');
+  const ringSummeHtml = teile.length ? '<span class="ds-ring-summen">' + teile.join('<span class="ds-ring-punkt"> · </span>') + '</span>' : '';
   // Datum ueber der Dienstbezeichnung, beides schmal genug, dass nichts in den Ring ragt (Wunsch 17.11.2026)
   const kopf = info.modus === 'leer' || !fe ? '<span class="ds-ring-dienst">Live-Dienst</span>'
     : '<span class="ds-ring-datum">' + htmlEsc(DESIGN_WT[fe.tag.getDay()] + ' ' + zz2(fe.tag.getDate()) + '.' + zz2(fe.tag.getMonth() + 1) + '.') + '</span>' +
@@ -24053,7 +24074,7 @@ function designRingHtml(info){
     '<circle cx="140" cy="140" r="' + r + '" class="ds-ring-fort" stroke-dasharray="' + (u * p).toFixed(1) + ' ' + u.toFixed(1) + '" transform="rotate(-90 140 140)"/>' +
     '<circle cx="140" cy="140" r="94" class="ds-ring-innen"/>' + punkte + '</svg>' +
     '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + kopf + '</span><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-unten"><span class="ds-ring-rest">' + unter + '</span>' +
-      (sammelDa ? '<span class="ds-ring-sammel">Σ Sammel' + (l.ringBetrag && sammelSumme ? ' ' + Math.round(sammelSumme) + ' €' : '') + '</span>' : '') + '</span></div></div>';
+      ringSummeHtml + '</span></div></div>';
 }
 
 function designStartErgaenzen(){
