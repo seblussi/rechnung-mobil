@@ -2377,9 +2377,10 @@ try{
     body.quer .quer-sp1 > #dsDienstEnde, body.quer .quer-sp1 > #dsDienstStart{order:3; margin:0 !important;}
     body.quer .quer-sp1 > *{order:4;}
     body.quer .quer-sp1 .kachelreihe{gap:6px !important;}
-    body.quer .quer-sp1 .kachelreihe > .karte{min-width:0; white-space:nowrap;}
-    body.quer .quer-sp1 .kachelreihe .ds-code{font-size:19px !important; letter-spacing:-.02em;}
-    body.quer .quer-sp1 .kachelreihe .ds-plus{transform:scale(.7); transform-origin:right center;}
+    body.quer.design-einhand #app .quer-sp1 .kachelreihe.drei.kompakt .karte, body.quer #app .quer-sp1 .kachelreihe.drei > .karte{min-width:0; white-space:nowrap; container-type:inline-size; overflow:hidden; padding-left:4px !important; padding-right:4px !important; justify-content:center; column-gap:3px;}
+    body.quer .quer-sp1 .kachelreihe .ds-code{font-size:min(19px, 29cqw) !important; letter-spacing:-.02em;}   /* waechst/schrumpft mit der Kachel: passt auch bei breiterer Schrift */
+    body.quer .quer-sp1 .kachelreihe .ds-plus{width:min(16px, 22cqw) !important; height:min(16px, 22cqw) !important; flex:0 0 auto; transform:none;}
+    body.quer .quer-sp1 .kachelreihe .ds-plus svg{width:100%; height:100%;}
     body.quer .quer-uhr .ds-ring{width:min(100%, calc(100vh - 150px)) !important; margin:0 auto !important; container-type:inline-size;}
     body.quer .quer-uhr .ds-ring-zeit{font-size:21cqw !important;}
     body.quer .quer-uhr .ds-ring-mitte, body.quer .quer-uhr .ds-ring-mitte *:not(.ds-ring-zeit){font-size:4.6cqw !important;}
