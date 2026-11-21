@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-97waOZ9KZwq1abXBzVhOjUToDOeQ98KC+0Y23C2/Z8c=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-uREqCmNPvKH+DQ7a9rAxlT70dd6LVFX/m25WxcJmOEw=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -593,6 +593,7 @@ try{
   .dienst-wahl-hinw.warn{color:#c76a00;}
   .gkv-feld input.pflichtfeld-fehlt{border:2px solid var(--fehler, #c0392b);}
   .gkv-optional{font-size:11.5px;}
+  .gkv-v-geb{font-weight:400; font-size:12.5px; color:var(--text-schwach);}
   .gkv-adr-knoepfe{display:flex; gap:8px; margin:0 0 6px;}
   .gkv-adr-knoepfe button{flex:1; width:auto; margin:0; padding:9px 10px; white-space:nowrap;}
   .gkv-km-fehler{color:#b9770e;}
@@ -8158,7 +8159,7 @@ function ansichtGkvVerwaltung(){
   const zeichnen = ()=>{
     const q = suchEl.value.trim().toLowerCase();
     const lokalAlle = gkvFaelleLaden().map(f=> ({ f, t: designFallZeit(f) || new Date(0) }))
-      .filter(x=> !q || [x.f.name, isoDe(x.f.datum), (x.f.positionen || []).map(p=> p.gop).join(' ')].join(' ').toLowerCase().includes(q))
+      .filter(x=> !q || [x.f.name, x.f.geb || '', isoDe(x.f.datum), (x.f.positionen || []).map(p=> p.gop).join(' ')].join(' ').toLowerCase().includes(q))
       .sort((a, b)=> b.t - a.t);
     const exSicht = excel.filter(x=> !q || [x.f.name, designDatumDe(x.d.tag), (x.f.ziffern || []).map(z=> z.gop).join(' ')].join(' ').toLowerCase().includes(q));
     const alle = (q ? lokalAlle : lokalAlle.slice(0, anzahl)).concat(exSicht).sort((a, b)=> b.t - a.t);
@@ -17030,7 +17031,7 @@ function ansichtGkv(bearbeitenId, opt){
     if(ex) return ansichtGkv(ex.id);
   }
   if(f && (!f.auswahl || !Object.keys(f.auswahl).length) && f.positionen && f.positionen.length) f = Object.assign({}, f, { auswahl: gkvAuswahlAusPositionen(f.positionen) });
-  const st = f ? { id: f.id, name: f.name, datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null, dokuId: f.dokuId || null, dienst: f.dienst || '' }
+  const st = f ? { id: f.id, name: f.name, geb: f.geb || '', datum: f.datum, zeit: f.zeit, auswahl: JSON.parse(JSON.stringify(f.auswahl || {})), profil: f.profil || '', adresse: f.adresse || '', kmGeo: f.geo || null, dokuId: f.dokuId || null, dienst: f.dienst || '' }
     : ((sammel ? null : gkvEntwurf) || Object.assign({ id: '', name: sammel ? GKV_SAMMEL_NAME : '', datum: jetzt.getFullYear() + '-' + zz2(jetzt.getMonth() + 1) + '-' + zz2(jetzt.getDate()), zeit: zz2(jetzt.getHours()) + ':' + zz2(jetzt.getMinutes()), dienst: dienstWahlVorschlag() }, gkvStartAuswahl()));
   gkvEntwurf = (st.id || sammel) ? null : st;
   if(sammel){
@@ -17054,6 +17055,7 @@ function ansichtGkv(bearbeitenId, opt){
       <button type="button" class="btn-primaer blass gkv-zwischenablage" id="gkvZwischenablage"${sammel ? ' style="display:none"' : ''}>Aus Zwischenablage einlesen</button>
       <div class="gkv-zeitinfo" id="gkvZwHinweis"></div>
       <label class="gkv-feld"${sammel ? ' style="display:none"' : ''}>Name<input type="text" id="gkvName" autocomplete="off" placeholder="Nachname, Vorname" value="${htmlEsc(st.name)}"></label>
+      <label class="gkv-feld"${sammel ? ' style="display:none"' : ''}>Geburtsdatum <span class="gkv-optional">(optional)</span><input type="text" id="gkvGeb" autocomplete="off" inputmode="numeric" placeholder="TT.MM.JJJJ" maxlength="10" value="${htmlEsc(st.geb || '')}"></label>
       <div id="gkvAdrBlock"><div class="gkv-feld">Adresse <span class="gkv-optional">(optional – für die Wegepauschale)</span>
         <input type="text" id="gkvAdresse" autocomplete="off" placeholder="Straße Nr." value="${htmlEsc(gkvAdrTeile(st.adresse).strasse)}" aria-label="Straße und Hausnummer">
         <input type="text" id="gkvPlzOrt" autocomplete="off" enterkeyhint="search" placeholder="PLZ Ort (PLZ oder Ort genügt)" value="${htmlEsc(gkvAdrTeile(st.adresse).plzOrt)}" aria-label="PLZ und Ort" style="margin-top:6px;">
@@ -17222,7 +17224,7 @@ function ansichtGkv(bearbeitenId, opt){
     const a = gkvFaelleLaden().slice().reverse().slice(0, 25);
     el('gkvVerlauf').innerHTML = a.length ? a.map(x=>
       '<div class="fall-zeile gkv-verlauf' + (x.status === 'eingetragen' ? '' : ' offen') + '" data-id="' + htmlEsc(x.id) + '">' +
-      '<div class="name">' + htmlEsc(x.name) + '</div>' +
+      '<div class="name">' + htmlEsc(x.name) + (x.geb ? ' <span class="gkv-v-geb">* ' + htmlEsc(x.geb) + '</span>' : '') + '</div>' +
       '<div class="gkv-v-unter">' + htmlEsc(isoDe(x.datum)) + ', ' + htmlEsc(x.zeit || '') + ' · ' + (Array.isArray(x.positionen) ? x.positionen : []).map(p=> htmlEsc(p && p.gop != null ? p.gop : '') + (p && p.anz > 1 ? '×' + htmlEsc(p.anz) : '')).join(' ') + ' · ' + betaEuro(x.euro) + '</div>' +
       '<div class="gkv-v-status">' + (x.status === 'eingetragen' ? '✓ Fahrtenbuch ' + (x.blatt ? htmlEsc(x.blatt) + ', ' : '') + 'Zeile ' + htmlEsc(x.zeile) : '<span class="offen-text">noch nicht im Fahrtenbuch' + (x.fehler ? ': ' + htmlEsc(x.fehler) : '') + '</span>') + '</div>' +
       '<div class="aktionen">' + (x.status === 'eingetragen' ? '' : '<button type="button" data-nochmal="' + htmlEsc(x.id) + '">Jetzt eintragen</button>') +
@@ -17283,6 +17285,12 @@ function ansichtGkv(bearbeitenId, opt){
     kmUebernehmen(erg.stufe, (erg.woher ? htmlEsc(erg.woher) + ' · ' : '') + 'Karte NFP: <b>' + htmlEsc(erg.text) + '</b> → Wegepauschale <b>' + htmlEsc(nfpStufeLabel(erg.stufe)) + '</b> · ' + htmlEsc(erg.kmText || ''));
   };
   el('gkvName').oninput = ()=>{ st.name = el('gkvName').value; el('gkvName').classList.remove('pflichtfeld-fehlt'); };
+  // Geburtsdatum (optional, Wunsch 21.11.2026): Kurzeingabe wie bei LS/PT ("1.2.50" -> 01.02.1950); Unsinn wird markiert, nicht gespeichert
+  const gebLesen = ()=>{ const g = el('gkvGeb'), roh = g.value.trim(); if(!roh){ g.classList.remove('pflichtfeld-fehlt'); return ''; }
+    const n = normalisiereDatum(datumKurzeingabeErgaenzen(roh, roh) || roh), ok = n && alsDatum(n) <= new Date();
+    g.classList.toggle('pflichtfeld-fehlt', !ok); if(ok) g.value = n; return ok ? n : null; };
+  el('gkvGeb').oninput = ()=>{ st.geb = el('gkvGeb').value; el('gkvGeb').classList.remove('pflichtfeld-fehlt'); };
+  el('gkvGeb').onblur = ()=>{ const n = gebLesen(); st.geb = n === null ? el('gkvGeb').value : n; };
   // Dokumentation (optional) zum Fall
   el('btnDoku').onclick = async ()=>{
     if(!st.dokuId){
@@ -17301,12 +17309,13 @@ function ansichtGkv(bearbeitenId, opt){
     if(!text || !text.trim()){ h.textContent = 'Die Zwischenablage ist leer.'; return; }
     const pa = patientDatenKombiniert(text);   // allgemeine Erkennung wie bei LS/PT (21.11.2026)
     const patient = pa.name, ort = pa.ort, strasse = pa.strasse;
-    if(!patient && !ort && !strasse){ h.textContent = 'Kein Patient und keine Adresse im Text erkannt.'; return; }
+    if(!patient && !ort && !strasse && !pa.geb){ h.textContent = 'Kein Patient und keine Adresse im Text erkannt.'; return; }
     if(patient){ el('gkvName').value = grossKleinNormalisieren(patient); el('gkvName').oninput(); }
+    if(pa.geb){ el('gkvGeb').value = pa.geb; el('gkvGeb').oninput(); }
     if(strasse) el('gkvAdresse').value = grossKleinNormalisieren(strasseAusschreiben(strasse));
     if(ort) el('gkvPlzOrt').value = grossKleinNormalisieren(ort);
     if(strasse || ort){ el('gkvAdresse').oninput(); el('gkvKmBtn').click(); }
-    h.textContent = 'Erkannt: ' + pa.erkannt.filter(x=> x !== 'Geburtsdatum').join(', ') + (patient ? ' (' + grossKleinNormalisieren(patient) + ')' : '') + '. Bitte prüfen.';
+    h.textContent = 'Erkannt: ' + pa.erkannt.join(', ') + (patient ? ' (' + grossKleinNormalisieren(patient) + ')' : '') + '. Bitte prüfen.';
     zwischenablageLeerenAnbieten('gkvZwHinweis');
   };
   el('gkvDatum').onchange = ()=>{ st.datum = el('gkvDatum').value; zeichnen(); werteZeichnen(); dienstWahlFuellen('gkvDienst', st.datum, st.zeit); };
@@ -17331,6 +17340,9 @@ function ansichtGkv(bearbeitenId, opt){
     if(gkvSpeichertGerade) return;
     st.name = sammel ? GKV_SAMMEL_NAME : el('gkvName').value.trim();
     if(!st.name){ el('gkvName').classList.add('pflichtfeld-fehlt'); el('gkvName').focus(); return; }
+    const geb = sammel ? '' : gebLesen();
+    if(geb === null){ el('gkvGeb').focus(); el('gkvMeldung').innerHTML = '<div class="gkv-warn">Das Geburtsdatum ist ungültig – bitte als TT.MM.JJJJ eintragen oder leer lassen.</div>'; return; }
+    st.geb = geb;
     st.zeit = el('gkvZeit').value;
     if(!st.zeit){ el('gkvZeit').classList.add('pflichtfeld-fehlt'); el('gkvZeit').focus(); el('gkvMeldung').innerHTML = '<div class="gkv-warn">Bitte die Uhrzeit eintragen – sie bestimmt die Tag-/Nacht-Ziffern.</div>'; return; }
     el('gkvZeit').classList.remove('pflichtfeld-fehlt');
@@ -17348,6 +17360,7 @@ function ansichtGkv(bearbeitenId, opt){
       euro: betaRund2(pos.reduce((s, p)=> s + p.euro, 0)), status: 'offen', alterName: null,
       adresse: sammel ? '' : (st.adresse || ''), geo: !sammel && st.kmGeo && st.kmGeo.lat ? { lat: +(+st.kmGeo.lat).toFixed(5), lon: +(+st.kmGeo.lon).toFixed(5) } : null, dokuId: sammel ? null : (st.dokuId || null), dienst: st.dienst || '' };
     if(sammel) eintrag.sammel = true;
+    if(geb) eintrag.geb = geb;
     const i = arr.findIndex(x=> x.id === eintrag.id);
     if(i >= 0){
       eintrag.alterName = arr[i].name !== eintrag.name ? arr[i].name : (arr[i].alterName || null); eintrag.zeile = arr[i].zeile;
