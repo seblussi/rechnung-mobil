@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-qWnZkxsodRtJAg0umw+UVANCoJ5f40fslJ83PlZyl88=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-992w2qWwAzGQPvsap27CEFW057TWXDhlxKK9ikOu3kQ=' 'sha256-308iBKPDfJHVloTlp2s0UO7MTkOsIWazOAu4TEJxl+c=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -758,6 +758,14 @@ try{
   .ar-renu small.ar-offen{color:var(--text-schwach);}
   .ar-knoepfe button[data-ar-erh].an{background:#1f8a4c; border-color:#1f8a4c; color:#fff;}
   .ar-knoepfe button.ar-weg{background:#c0392b; border-color:#c0392b; color:#fff; padding:6px 10px;}
+  /* Rechnung vorhanden: Leiste unter der Karte (Entwurf B, 21.11.2026) */
+  .ar-knoepfe.ar-leiste{display:grid; grid-template-columns:1fr auto; gap:8px 10px; align-items:center; margin-top:10px; padding-top:10px;}
+  .ar-leiste .ar-renu{margin:0; font-size:13px; min-width:0;}
+  .ar-leiste .ar-renu b{white-space:nowrap;}
+  .ar-leiste button.ar-status{border-radius:999px; padding:5px 11px; font-size:12px; font-weight:600; white-space:nowrap; color:var(--text-schwach);}
+  .ar-leiste button.ar-status.an{background:#1f8a4c; border-color:#1f8a4c; color:#fff;}
+  .ar-leiste .ar-reihe{grid-column:1 / -1; display:grid; grid-template-columns:1fr 1.6fr 46px; gap:8px;}
+  .ar-leiste .ar-reihe button{padding:9px 0; font-size:14px; text-align:center;}
   .ar-liste{margin:2px 0 8px; padding-left:18px; font-size:13.5px;}
   .einr-fehlt{margin:6px 0 8px; padding-left:20px;} .einr-fehlt li{margin:2px 0;}
   .einr-shell-symbol{display:inline-flex; align-items:center; justify-content:center; width:26px; height:22px; vertical-align:-5px; margin:0 2px; border:1px solid var(--rand); border-radius:5px; background:var(--karte); color:var(--text);}
@@ -21302,14 +21310,22 @@ function aerzteKnoepfeEinfuegen(zielEl, bloecke, quartale){
     const box = document.createElement('div'); box.className = 'ar-knoepfe';
     const soll = r ? (r.summeBerechnet != null ? r.summeBerechnet : betaRund2(bl.reduce((s, b)=> s + aerzteBetragVorschlag(b), 0))) : 0;
     const abw = r && r.summe != null ? betaRund2(r.summe - soll) : 0;
-    box.innerHTML = (r ? '<span class="ar-renu">Rechnung ' + htmlEsc(r.renu) + (r.summe != null ? ' · ' + aerzteZahlText(r.summe) + ' €' : '') +
-        (r.summe != null ? '<small class="' + (Math.abs(abw) >= 0.005 ? 'ar-abw' : '') + '">berechnet ' + aerzteZahlText(soll) + ' € · ' + htmlEsc(aerzteAbweichungText(r.summe, soll)) + '</small>' : '') +
-        (r.bezahlt ? '<small class="ar-bezahlt">✓ erhalten am ' + htmlEsc(isoDe(r.bezahlt)) + '</small>' : '<small class="ar-offen">Zahlung offen</small>') + '</span>' : '') +
-      (r && (r.datei || r.pdfUrl) ? '<button type="button" data-ar-pdf>PDF</button>' : '') +
-      (r ? '<button type="button" data-ar-erh class="' + (r.bezahlt ? 'an' : '') + '">' + (r.bezahlt ? '✓ Erhalten' : 'Erhalten') + '</button>' : '') +
-      '<button type="button" data-ar-neu>' + (r ? 'Bearbeiten' : 'Rechnung erstellen') + '</button>' +
-      (r ? '<button type="button" data-ar-weg class="ar-weg" title="Rechnung löschen" aria-label="Rechnung löschen">🗑</button>' : '');
-    (karte.querySelector('.fd-arzt-zeile') || karte).appendChild(box);
+    // Ohne Rechnung: ein Knopf rechts neben den Diensten. Mit Rechnung (Wunsch 21.11.2026, Entwurf B): Leiste unter der
+    // Karte -- Rechnung, Betrag und Zahlungsstatus (zum Umschalten anklicken), darunter PDF, Bearbeiten und Loeschen
+    if(r){
+      box.classList.add('ar-leiste');
+      box.innerHTML = '<span class="ar-renu">Rechnung ' + htmlEsc(r.renu) + (r.summe != null ? ' · <b>' + aerzteZahlText(r.summe) + ' €</b>' : '') +
+          (r.summe != null ? '<small class="' + (Math.abs(abw) >= 0.005 ? 'ar-abw' : '') + '">berechnet ' + aerzteZahlText(soll) + ' € · ' + htmlEsc(aerzteAbweichungText(r.summe, soll)) + '</small>' : '') + '</span>' +
+        '<button type="button" data-ar-erh class="ar-status' + (r.bezahlt ? ' an' : '') + '" title="' + (r.bezahlt ? 'Als offen markieren' : 'Als erhalten markieren') + '">' +
+          (r.bezahlt ? '✓ erhalten ' + htmlEsc(isoDe(r.bezahlt).replace(/\d{4}$/, '')) : 'Zahlung offen') + '</button>' +
+        '<div class="ar-reihe">' + (r.datei || r.pdfUrl ? '<button type="button" data-ar-pdf>PDF</button>' : '<span></span>') +
+          '<button type="button" data-ar-neu>Bearbeiten</button>' +
+          '<button type="button" data-ar-weg class="ar-weg" title="Rechnung löschen" aria-label="Rechnung löschen">🗑</button></div>';
+      karte.appendChild(box);
+    } else {
+      box.innerHTML = '<button type="button" data-ar-neu>Rechnung erstellen</button>';
+      (karte.querySelector('.fd-arzt-zeile') || karte).appendChild(box);
+    }
     box.querySelector('[data-ar-neu]').onclick = async ()=>{ await aerzteRechnungErstellen(a.arzt, q.quartal, bl); neuZeichnen(); };
     const erh = box.querySelector('[data-ar-erh]'); if(erh) erh.onclick = async ()=>{ if(await aerzteErhaltenUmschalten(r)) neuZeichnen(); };
     const weg = box.querySelector('[data-ar-weg]'); if(weg) weg.onclick = async ()=>{ if(await aerzteRechnungLoeschen(r)) neuZeichnen(); };
@@ -21879,7 +21895,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v505';
+const APP_VERSION = 'v506';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
