@@ -70,6 +70,9 @@ module.exports = async ({ browser, basis, pr })=>{
   const leer = await p.evaluate(()=> patientDatenKombiniert('Bitte Rückruf an die Leitstelle').erkannt.length);
   pr('Zwischenablage: Text ohne Patientendaten -> nichts erkannt', leer === 0, leer);
 
+  // besuchte Links (z. B. Kartenquellen) bleiben in der normalen Linkfarbe statt lila
+  const besucht = await p.evaluate(()=>{ for(const sh of document.styleSheets){ let r; try{ r = sh.cssRules; }catch(_){ continue; } for(const x of r){ if(x.selectorText === 'a:visited' && /linktext/i.test(x.style.color)) return true; } } return false; });
+  pr('Besuchte Links: normale Linkfarbe (nicht lila)', besucht);
   pr('keine Skriptfehler', !p.fehler.length, p.fehler);
   await p.context().close();
 };
