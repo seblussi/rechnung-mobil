@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-IOvoW5eiels097fCzkNrST99uh8ZXuC9NT0P4yzL3uk=' 'sha256-uMobhkknYyaThCCeiSuUVC9aBvSWjRZdab/56xRE1Pk=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-IOvoW5eiels097fCzkNrST99uh8ZXuC9NT0P4yzL3uk=' 'sha256-WTH7l5PPdygX0PndgOINVm6ALTd89+vmoWSmV8f6fZ8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1797,6 +1797,13 @@ try{
   body.design-einhand .ds-ds-icon{display:flex; width:34px; height:34px; align-items:center; justify-content:center; border-radius:10px; background:rgba(255,255,255,.2);}
   body.design-einhand .ds-ds-icon svg{width:22px; height:22px;}
   body.design-einhand .ds-ds-text{flex:1;}
+  /* Letzten Dienst anzeigen: kleine Ecke rechts neben „Neuen Dienst starten“ (Wunsch 22.11.2026) */
+  body.design-einhand .ds-dienst-reihe{display:flex; gap:8px; align-items:stretch; margin:10px 0;}
+  body.design-einhand .ds-dienst-reihe .ds-dienst-start{margin:0; flex:1; min-width:0;}
+  .ds-letzter{display:none;}
+  body.design-einhand .ds-letzter{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; flex:none; width:74px; border-radius:16px; border:2px solid #d9861a; background:transparent; color:#b8690c; font:inherit; cursor:pointer; padding:4px;}
+  body.design-einhand .ds-letzter b{font-size:17px; line-height:1;} body.design-einhand .ds-letzter small{font-size:10.5px; font-weight:700; line-height:1.1; text-align:center;}
+  body.design-einhand .ds-letzter[aria-pressed="true"]{background:rgba(217,134,26,.12);}
   body.design-einhand .ds-ds-plus svg{width:22px; height:22px; display:block;}
   body.design-einhand .ds-nav-btn.gross{justify-self:center; width:72px; height:72px; margin-top:-26px; border-radius:22px; background:#fff; color:#101317;
     box-shadow:0 6px 18px rgba(0,0,0,.35);}
@@ -23397,6 +23404,7 @@ function liveDienstFenster(d){
 // Dienst entfernen und den Zeitpunkt merken (Abgleich zwischen Geraeten: ein spaeter auf einem anderen Geraet
 // gestarteter Dienst darf nicht von einem frueheren Beenden/Verfallen ueberschrieben werden)
 function liveDienstLeeren(wann){
+  try{ const d = LS.get('live_dienst', null); if(d && liveDienstFenster(d)) LS.set('live_dienst_letzt', Object.assign({}, d, { beendet: d.beendet || new Date(Math.min(wann || Date.now(), Date.now()) - 12 * 3600000).toISOString() })); }catch(_){}
   LS.set('live_dienst', null);
   LS.set('live_dienst_weg_am', new Date(Math.min(wann || Date.now(), Date.now())).toISOString());
 }
@@ -23433,6 +23441,17 @@ function liveDienstLaden(){
 function liveDienstEnde(d, fe){ fe = fe || liveDienstFenster(d); const b = d && d.beendet && d.frueh !== false ? Date.parse(d.beendet) : NaN; return isFinite(b) ? Math.min(b, fe.bis.getTime()) : fe.bis.getTime(); }
 function liveDienstAktiv(){ const d = liveDienstLaden(); return d && !d.beendet ? d : null; }
 // beendeter Dienst -> ein spaeterer Dienst aus dem Dienstplan (automatisch) geht vor
+// Letzter Dienst (Wunsch 22.11.2026): der zuletzt gewaehlte/beendete oder der juengste vergangene aus dem Fahrtenbuch
+let dsLetzterAn = false;
+function liveDienstLetzter(){
+  const kand = [];
+  const l = LS.get('live_dienst_letzt', null); if(l && liveDienstFenster(l)) kand.push(l);
+  try{ const c = LS.get('fb_dienste_cache', null), jetzt = Date.now();
+    const x = ((c && c.dienste) || []).filter(d=> d.bis <= jetzt).sort((a, b)=> b.bis - a.bis)[0];
+    if(x){ const v = new Date(x.von), b = new Date(x.bis), za = fbDienstartZerlegen(x.art); kand.push({ datum: liveIso(v), von: designUhr(v), bis: designUhr(b), art: za.art, schicht: za.schicht, arzt: x.arzt || '', auto: 'fahrtenbuch', beendet: b.toISOString() }); } }catch(_){}
+  kand.sort((a, b)=> liveDienstFenster(b).bis - liveDienstFenster(a).bis);
+  return kand[0] ? Object.assign({}, kand[0], { beendet: kand[0].beendet || liveDienstFenster(kand[0]).bis.toISOString(), letzter: true }) : null;
+}
 function liveDienstAnzeige(){
   const d = liveDienstLaden();
   if(d && d.beendet && liveAuto()){ try{ const a = liveDienstAuto(), fa = a && liveDienstFenster(a); if(fa && fa.von.getTime() >= liveDienstEnde(d)) return a; }catch(_){} }
@@ -23448,7 +23467,8 @@ function liveDienstFuer(dt){
 }
 // -> { modus: 'leer'|'geplant'|'laufend'|'vorbei', fenster, faelle:[{f,t}], gkv, pauschale, foerderung, art, arzt }
 function designDienstInfo(){
-  const jetzt = new Date(), d = liveDienstAnzeige();
+  const jetzt = new Date(); let d = liveDienstAnzeige();
+  if(!d && dsLetzterAn) d = liveDienstLetzter();
   if(!d) return { modus: 'leer', fenster: null, faelle: [], gkv: 0, pauschale: null, foerderung: null, art: '', arzt: '', jetzt, auto: liveAuto() ? 'suche' : '' };
   const fe = liveDienstFenster(d);
   const modus = d.beendet ? 'vorbei' : jetzt < fe.von ? 'geplant' : jetzt < fe.bis ? 'laufend' : 'vorbei';
@@ -23463,7 +23483,7 @@ function designDienstInfo(){
   const fr = foerderRegel(fe.tag, artVoll, { von: d.von, schicht: d.schicht, profilId: d.profilId });
   const pauschale = betaRund2(fe.stunden * fr.satz);
   const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fr.zusatz * fe.stunden);
-  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, schicht: d.schicht || '', arzt: d.arzt || '', jetzt, auto: d.auto || '', beendetAm: d.beendet ? liveDienstEnde(d, fe) : null };
+  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, schicht: d.schicht || '', arzt: d.arzt || '', jetzt, auto: d.auto || '', beendetAm: d.beendet ? liveDienstEnde(d, fe) : null, letzter: !!d.letzter };
 }
 function designDienstTitel(info){ return info.art + (info.schicht ? ' ' + info.schicht : '') + ' · ' + designUhr(info.fenster.von) + ' – ' + designUhr(info.fenster.bis); }
 function designDienstUnter(info){
@@ -24172,7 +24192,10 @@ function designStartErgaenzen(){
     }
     if(info.modus !== 'laufend' && info.modus !== 'geplant'){
       const nach = app.querySelector('.ds-weiter-block') || reihe;
-      nach.insertAdjacentHTML('afterend', '<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>');
+      const letzter = info.modus === 'leer' || (info.letzter && dsLetzterAn) ? liveDienstLetzter() : null;
+      nach.insertAdjacentHTML('afterend', (letzter ? '<div class="ds-dienst-reihe">' : '') + '<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>' +
+        (letzter ? '<button type="button" class="ds-letzter" id="dsLetzter" aria-pressed="' + dsLetzterAn + '">' + (dsLetzterAn ? '<b>✕</b><small>ausblenden</small>' : '<b>↺</b><small>letzter Dienst</small>') + '</button></div>' : ''));
+      const lk = document.getElementById('dsLetzter'); if(lk) lk.onclick = ()=>{ dsLetzterAn = !dsLetzterAn; ansichtStart(); };
     }
     // Leiste unten kommt global (designGlobalNav), damit sie auf allen Seiten steht
     app.querySelectorAll('[data-wf]').forEach(b=>{
