@@ -93,7 +93,7 @@ module.exports = async ({ browser, pr })=>{
       if(z.knopf) await p.evaluate(()=> document.getElementById('updateJetzt').click()).catch(()=>{});   // langsamer Rechner: Hinweis statt stillem Umschalten
     }
     await p.waitForLoadState('load').catch(()=>{}); await p.waitForTimeout(800); s = await stand();
-    pr('direkt nach dem Start: neue Version wird übernommen', s.seite === 'v9003' && s.caches.join() === 'update-test-9003', s);
+    pr('nach dem Start: neue Version wird übernommen (mit „Neu laden“)', s.seite === 'v9003' && s.caches.join() === 'update-test-9003', s);
     // ---- 4. beschädigte Veröffentlichung: eine Datei passt nicht zur Prüfsumme ----
     ueber = version(9004, 'veraendert');
     await laden(); await p.waitForTimeout(7000); s = await stand();
@@ -110,24 +110,16 @@ module.exports = async ({ browser, pr })=>{
     await bedient(true); await laden(); await p.waitForSelector('#updateHinweis', { timeout: 60000 });
     await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.evaluate(()=> document.getElementById('updateJetzt').click())]); await p.waitForLoadState('load'); await p.waitForTimeout(800); s = await stand();
     pr('nächste heile Version wird wieder übernommen', s.seite === 'v9006' && s.caches.join() === 'update-test-9006', s);
-    // ---- 6b. App entsperrt (Wunsch 22.11.2026): Update sofort, ausser es wird gerade etwas eingegeben ----
+    // ---- 6b. Wunsch 22.11.2026: Update nur einblenden (auch entsperrt, nichts in Arbeit), laden mit „Neu laden“ oder beim Sperren ----
     await p.evaluate(()=> sessionStorage.setItem('test_entsperrt', '1')); await bedient(false);
     await laden(); await p.waitForTimeout(500);
-    // Eingabe laeuft: Feld mit Text hat den Fokus
-    await p.evaluate(()=>{ const i = document.createElement('input'); i.id = 'testEingabe'; i.value = 'halb getippt'; document.body.appendChild(i); i.focus(); });
     ueber = version(9007);
     await p.evaluate(async ()=> (await navigator.serviceWorker.getRegistration()).update());
-    await p.waitForSelector('#updateHinweis', { timeout: 60000 }); await p.waitForTimeout(4000); s = await stand();
-    pr('entsperrt, Eingabe läuft: kein Neuladen, Hinweis', s.seite === 'v9006' && s.wartet === true && /Eingabe fertig/.test(s.hinweis || ''), s);
-    // Eingabe fertig (Feld verlassen) -> laedt von selbst
-    await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.evaluate(()=> document.getElementById('testEingabe').blur())]); await p.waitForLoadState('load'); await p.waitForTimeout(800);
-    s = await stand();
-    pr('Eingabe fertig: Update wird sofort übernommen', s.seite === 'v9007' && s.caches.join() === 'update-test-9007', s);
-    // entsperrt, nichts in Arbeit: sofort
-    ueber = version(9008);
-    await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.evaluate(async ()=> (await navigator.serviceWorker.getRegistration()).update())]); await p.waitForLoadState('load'); await p.waitForTimeout(800);
+    await p.waitForSelector('#updateHinweis', { timeout: 60000 }); await p.waitForTimeout(4500); s = await stand();
+    pr('entsperrt: kein Neuladen von selbst, oben „Update verfügbar“ mit „Neu laden“', s.seite === 'v9006' && s.wartet === true && /Update verfügbar/.test(s.hinweis || '') && /Neu laden/.test(s.hinweis || ''), s);
+    await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.evaluate(()=> window.appUpdateBeimSperren())]); await p.waitForLoadState('load'); await p.waitForTimeout(800);
     await p.evaluate(()=> sessionStorage.removeItem('test_entsperrt')); s = await stand();
-    pr('entsperrt, nichts in Arbeit: Update sofort (auch wenn schon bedient)', s.seite === 'v9008' && s.caches.join() === 'update-test-9008', s);
+    pr('beim Sperren: wartendes Update wird übernommen', s.seite === 'v9007' && s.caches.join() === 'update-test-9007', s);
     pr('keine Skriptfehler', fehler.length === 0, fehler.slice(0, 3));
     // ---- 7. Umstieg vom bisherigen Service Worker (bis v470 / v432: lud die Seite immer zuerst aus dem Netz) ----
     await c.close();
