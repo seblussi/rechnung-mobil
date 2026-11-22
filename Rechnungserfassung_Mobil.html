@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-IOvoW5eiels097fCzkNrST99uh8ZXuC9NT0P4yzL3uk=' 'sha256-5Fv67bS1q0awvpKp5K54pLIV7hd7sHYQjVxMRllor1s=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-sVquzXzXS6Cq/wgR5ByRPy1cHG0m6agw5tRSQe4bQG4=' 'sha256-4Pvp/NqbEa60emKZQD1ePbVwzghJMpU/Of/kNiF0IRc=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -2638,18 +2638,26 @@ try{
     (document.body || document.documentElement).appendChild(d);
   }
   function uebernehmen(reg){ if(!reg.waiting) return false; angefordert = true; reg.waiting.postMessage('update-uebernehmen'); return true; }
-  // Wunsch 22.11.2026: ein Update sperrt die App nicht mehr extra. Ist sie entsperrt, wartet es bis zum naechsten Sperren
-  // (automatisch oder von Hand) -- dort wird ohnehin neu geladen. Auf der Sperrseite wird es gleich uebernommen.
+  // Wunsch 22.11.2026: Updates sofort -- erneutes Entsperren wird in Kauf genommen. Nur wenn gerade etwas eingegeben wird
+  // (Feld mit Fokus, offenes Fenster, nicht auf der Startseite), wartet es, bis das vorbei ist (spaetestens beim naechsten Sperren).
   function entsperrt(){ try{ return !!(window.Tresor && Tresor.offen && Tresor.offen()); }catch(_){ return false; } }
-  var regJetzt = null;
+  function ruhig(){
+    try{
+      var a = document.activeElement;
+      if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && (a.value || '') !== '') return false;
+      if(document.querySelector('.beta-overlay.aktiv, .doku-overlay, .doku-gross')) return false;
+      if(entsperrt() && typeof aktuelleAnsichtIstHauptbildschirm !== 'undefined' && !aktuelleAnsichtIstHauptbildschirm) return false;
+      return true;
+    }catch(_){ return true; }
+  }
+  var regJetzt = null, warteTimer = null;
   window.appUpdateBeimSperren = function(){ return !!(regJetzt && regJetzt.waiting && navigator.serviceWorker.controller && uebernehmen(regJetzt)); };
   function wartet(reg){
     if(!reg.waiting || !navigator.serviceWorker.controller) return;
     regJetzt = reg;
-    // direkt nach dem Start, noch gesperrt und nichts bedient: gleich umschalten
-    if(!bedient && !entsperrt() && Date.now() - start < 4000) uebernehmen(reg);
-    else if(entsperrt()) hinweis('Update bereit – wird beim nächsten Sperren übernommen.', 'Jetzt neu laden', function(){ uebernehmen(reg); });
-    else hinweis('Update verfügbar.', 'Jetzt neu laden', function(){ uebernehmen(reg); });
+    if(ruhig()){ uebernehmen(reg); return; }
+    hinweis('Update verfügbar – wird geladen, sobald die Eingabe fertig ist.', 'Jetzt neu laden', function(){ uebernehmen(reg); });
+    if(!warteTimer) warteTimer = setInterval(function(){ if(angefordert || !reg.waiting){ clearInterval(warteTimer); warteTimer = null; return; } if(ruhig()) uebernehmen(reg); }, 3000);
   }
   navigator.serviceWorker.addEventListener('controllerchange', function(){
     if(!hatte){ hatte = true; return; }   // allererste Installation: nichts neu laden
@@ -22743,7 +22751,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v516';
+const APP_VERSION = 'v517';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -23519,7 +23527,9 @@ function designDienstInfo(){
   const fr = foerderRegel(fe.tag, artVoll, { von: d.von, schicht: d.schicht, profilId: d.profilId });
   const pauschale = betaRund2(fe.stunden * fr.satz);
   const foerderung = betaRund2(Math.max(0, pauschale - gkv) + fr.zusatz * fe.stunden);
-  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, schicht: d.schicht || '', arzt: d.arzt || '', jetzt, auto: d.auto || '', beendetAm: d.beendet ? liveDienstEnde(d, fe) : null, letzter: !!d.letzter };
+  return { modus, fenster: fe, faelle: drin, gkv, pauschale, foerderung, art: d.art, schicht: d.schicht || '', arzt: d.arzt || '', jetzt, auto: d.auto || '', beendetAm: d.beendet ? liveDienstEnde(d, fe) : null, letzter: !!d.letzter,
+    // aelter: weiter zurueck als der neueste Dienst (laufend oder zuletzt beendet) -> unscharfe Umgebung, Dienstzeit gross (Wunsch 22.11.2026)
+    aelter: !!d.letzter && (()=>{ try{ const l = dsDienstListe(); return !!l.length && dsDienstSchluessel(l[l.length - 1]) !== dsDienstSchluessel(d); }catch(_){ return false; } })() };
 }
 function designDienstTitel(info){ return info.art + (info.schicht ? ' ' + info.schicht : '') + ' · ' + designUhr(info.fenster.von) + ' – ' + designUhr(info.fenster.bis); }
 function designDienstUnter(info){
@@ -24173,7 +24183,7 @@ function designRingHtml(info){
       '<text class="ds-ring-grenze"><textPath href="#dsRingTpBis" startOffset="100%" text-anchor="end">' + designUhr(fe.bis) + '</textPath></text>';
   }
   // vergangener Dienst (letzter/geblaettert, Wunsch 22.11.2026): gross die Dienstzeit statt der aktuellen Uhrzeit
-  const gross = info.letzter && fe ? designUhr(fe.von) + '–' + designUhr(fe.bis) : designUhr(info.jetzt);
+  const gross = info.aelter && fe ? designUhr(fe.von) + '–' + designUhr(fe.bis) : designUhr(info.jetzt);
   const unter = info.modus === 'leer' ? 'Dienst wählen' : designRestText(info);
   // Gesamtsumme aller Faelle (GKV + PT + LS), laufend mit jeder Aktualisierung (Wunsch 21.11.2026); die Sammelerfassung daneben
   let gesamt = 0;
@@ -24191,7 +24201,7 @@ function designRingHtml(info){
     '<circle cx="140" cy="140" r="126" class="ds-ring-aussen"/><circle cx="140" cy="140" r="' + r + '" class="ds-ring-spur"/>' +
     '<circle cx="140" cy="140" r="' + r + '" class="ds-ring-fort" stroke-dasharray="' + (u * p).toFixed(1) + ' ' + u.toFixed(1) + '" transform="rotate(-90 140 140)"/>' +
     '<circle cx="140" cy="140" r="94" class="ds-ring-innen"/>' + punkte + '</svg>' +
-    '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + kopf + '</span>' + (info.letzter ? '<span class="ds-ring-zeit dienstzeit">' : '<span class="ds-ring-zeit" id="dsUhr">') + gross + '</span><span class="ds-ring-unten"><span class="ds-ring-rest">' + unter + '</span>' +
+    '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + kopf + '</span>' + (info.aelter ? '<span class="ds-ring-zeit dienstzeit">' : '<span class="ds-ring-zeit" id="dsUhr">') + gross + '</span><span class="ds-ring-unten"><span class="ds-ring-rest">' + unter + '</span>' +
       ringSummeHtml + '</span></div></div>';
 }
 
@@ -24259,8 +24269,8 @@ function designStartErgaenzen(){
     }
     // vergangener Dienst (Wunsch 22.11.2026): alles drumherum unscharf, damit er nicht wie der aktuelle wirkt -- scharf bleiben Uhr,
     // Dienstuebersicht, Karte mit den Faellen und „ausblenden“; ein Tipp ins Unscharfe fuehrt zurueck
-    app.classList.toggle('ds-vergangen', !!info.letzter);
-    if(info.letzter && !app.dataset.vergangenKlick){
+    app.classList.toggle('ds-vergangen', !!info.aelter);
+    if(info.aelter && !app.dataset.vergangenKlick){
       app.dataset.vergangenKlick = '1';
       app.addEventListener('click', (e)=>{ if(!app.classList.contains('ds-vergangen')) return;
         const t = e.target; if(t.closest('.ds-live') || t.closest('#dsLetzter')) return;

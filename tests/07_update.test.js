@@ -50,7 +50,8 @@ module.exports = async ({ browser, pr })=>{
   // "bedient" verlässlich nachstellen: Tastendruck gleich beim Laden, wenn der Test es verlangt (sonst Wettlauf mit dem Update)
   // "entsperrt" nachstellen (Tresor offen), ohne Passwort: Tresor.offen() meldet true, wenn der Test es verlangt
   await c.addInitScript(()=>{ try{ if(sessionStorage.getItem('test_entsperrt')){ let T; Object.defineProperty(window, 'Tresor', { configurable: true, get(){ return T; }, set(v){ T = v; try{ v.offen = ()=> true; }catch(_){ } } }); } }catch(_){} });
-  await c.addInitScript(()=>{ try{ if(sessionStorage.getItem('test_bedient')){ const iv = setInterval(()=> window.dispatchEvent(new Event('keydown')), 25); setTimeout(()=> clearInterval(iv), 3500); } }catch(_){} });
+  // „in Arbeit“: ein Feld mit Text hat den Fokus (seit 22.11.2026 entscheidet das, nicht mehr ob schon getippt wurde)
+  await c.addInitScript(()=>{ try{ if(sessionStorage.getItem('test_bedient')){ document.addEventListener('DOMContentLoaded', ()=>{ const i = document.createElement('input'); i.id = 'testBedient'; i.value = 'in Arbeit'; document.body.appendChild(i); i.focus(); const iv = setInterval(()=>{ if(document.activeElement !== i && !document.getElementById('updateHinweis')) i.focus(); }, 50); setTimeout(()=> clearInterval(iv), 3500); }); } }catch(_){} });
   const p = await c.newPage(); const fehler = [];
   const bedient = (an)=> p.evaluate((an)=>{ if(an) sessionStorage.setItem('test_bedient', '1'); else sessionStorage.removeItem('test_bedient'); }, an); p.on('pageerror', (e)=> fehler.push(String(e.message).slice(0, 160)));
   const stand = ()=> p.evaluate(async ()=>({
@@ -109,16 +110,24 @@ module.exports = async ({ browser, pr })=>{
     await bedient(true); await laden(); await p.waitForSelector('#updateHinweis', { timeout: 60000 });
     await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.evaluate(()=> document.getElementById('updateJetzt').click())]); await p.waitForLoadState('load'); await p.waitForTimeout(800); s = await stand();
     pr('nächste heile Version wird wieder übernommen', s.seite === 'v9006' && s.caches.join() === 'update-test-9006', s);
-    // ---- 6b. App entsperrt (Wunsch 22.11.2026): kein Neuladen/Sperren durch das Update, es wartet bis zum nächsten Sperren ----
+    // ---- 6b. App entsperrt (Wunsch 22.11.2026): Update sofort, ausser es wird gerade etwas eingegeben ----
     await p.evaluate(()=> sessionStorage.setItem('test_entsperrt', '1')); await bedient(false);
     await laden(); await p.waitForTimeout(500);
+    // Eingabe laeuft: Feld mit Text hat den Fokus
+    await p.evaluate(()=>{ const i = document.createElement('input'); i.id = 'testEingabe'; i.value = 'halb getippt'; document.body.appendChild(i); i.focus(); });
     ueber = version(9007);
     await p.evaluate(async ()=> (await navigator.serviceWorker.getRegistration()).update());
-    await p.waitForSelector('#updateHinweis', { timeout: 60000 }); await p.waitForTimeout(4500); s = await stand();
-    pr('entsperrt: Update lädt nicht von selbst neu, Hinweis „beim nächsten Sperren“', s.seite === 'v9006' && s.wartet === true && /nächsten Sperren/.test(s.hinweis || ''), s);
-    await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.evaluate(()=> window.appUpdateBeimSperren())]); await p.waitForLoadState('load'); await p.waitForTimeout(800);
+    await p.waitForSelector('#updateHinweis', { timeout: 60000 }); await p.waitForTimeout(4000); s = await stand();
+    pr('entsperrt, Eingabe läuft: kein Neuladen, Hinweis', s.seite === 'v9006' && s.wartet === true && /Eingabe fertig/.test(s.hinweis || ''), s);
+    // Eingabe fertig (Feld verlassen) -> laedt von selbst
+    await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.evaluate(()=> document.getElementById('testEingabe').blur())]); await p.waitForLoadState('load'); await p.waitForTimeout(800);
+    s = await stand();
+    pr('Eingabe fertig: Update wird sofort übernommen', s.seite === 'v9007' && s.caches.join() === 'update-test-9007', s);
+    // entsperrt, nichts in Arbeit: sofort
+    ueber = version(9008);
+    await Promise.all([p.waitForNavigation({ timeout: 60000 }), p.evaluate(async ()=> (await navigator.serviceWorker.getRegistration()).update())]); await p.waitForLoadState('load'); await p.waitForTimeout(800);
     await p.evaluate(()=> sessionStorage.removeItem('test_entsperrt')); s = await stand();
-    pr('beim Sperren: Update wird übernommen', s.seite === 'v9007' && s.caches.join() === 'update-test-9007', s);
+    pr('entsperrt, nichts in Arbeit: Update sofort (auch wenn schon bedient)', s.seite === 'v9008' && s.caches.join() === 'update-test-9008', s);
     pr('keine Skriptfehler', fehler.length === 0, fehler.slice(0, 3));
     // ---- 7. Umstieg vom bisherigen Service Worker (bis v470 / v432: lud die Seite immer zuerst aus dem Netz) ----
     await c.close();
