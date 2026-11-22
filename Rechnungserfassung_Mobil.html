@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-IOvoW5eiels097fCzkNrST99uh8ZXuC9NT0P4yzL3uk=' 'sha256-1cDo3Bb/IeqvSjcMSZMdE49RR3G2lzQzSAbSdsG9I24=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-IOvoW5eiels097fCzkNrST99uh8ZXuC9NT0P4yzL3uk=' 'sha256-V8UPw1sQzSOw/QCwZx7JTuvjYGEsHFd5ASEBQB3jjKU=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1647,6 +1647,8 @@ try{
   .ds-pfeil.links{left:2px;} .ds-pfeil.rechts{right:2px;}
   .ds-pfeil:disabled{opacity:.3; cursor:default;}
   .ds-ring-block.pfeile .ds-pfeil{display:block;}
+  #app.ds-vergangen > :not(.ds-live):not(.ds-dienst-reihe), #app.ds-vergangen > .ds-dienst-reihe > .ds-dienst-start{filter:blur(3px) saturate(.6); opacity:.55; transition:filter .2s, opacity .2s; cursor:pointer;}
+  #app.ds-vergangen > :not(.ds-live) *{pointer-events:none;} #app.ds-vergangen #dsLetzter{pointer-events:auto;}
   .ds-ring svg{display:block; width:100%; height:100%; overflow:visible;}   /* Betragszeilen an den Seiten duerfen ueber den Ring hinaus */
   .ds-ring-aussen{fill:none; stroke:var(--rand); stroke-width:1;}
   .ds-ring-spur{fill:none; stroke:var(--grau-feld); stroke-width:10;}
@@ -6190,7 +6192,7 @@ let aktuelleAnsichtIstHauptbildschirm = false;
 
 function setzeTitel(t, zurueckZiel){
   titel.textContent = t;
-  { const a0 = document.getElementById('app'); if(a0 && a0.dataset.startPad){ a0.style.paddingBottom = ''; a0.dataset.startPad = ''; } }   // Startseiten-Anpassung zuruecknehmen
+  { const a0 = document.getElementById('app'); if(a0 && a0.dataset.startPad){ a0.style.paddingBottom = ''; a0.dataset.startPad = ''; } if(a0) a0.classList.remove('ds-vergangen'); }   // Startseiten-Anpassung zuruecknehmen
   aktuelleAnsichtIstHauptbildschirm = false;
   aktuellerZurueckHandler = zurueckZiel || null;
   document.body.classList.remove('einr-pflicht');
@@ -23995,16 +23997,21 @@ function dsUhrBlaetternWiring(wurzel){
   block.dataset.blaettern = '1';
   const liste = dsDienstListe(), akt = dsDienstWahl || dsDienstSchluessel(liveDienstAnzeige());
   const i = liste.findIndex(x=> dsDienstSchluessel(x) === akt);
-  block.insertAdjacentHTML('beforeend', '<button type="button" class="ds-pfeil links" aria-label="früherer Dienst"' + (i === 0 || !liste.length ? ' disabled' : '') + '>‹</button>' +
-    '<button type="button" class="ds-pfeil rechts" aria-label="späterer Dienst"' + (i < 0 || i >= liste.length - 1 ? ' disabled' : '') + '>›</button>');
+  // nur Pfeile in Richtungen, in denen es einen Dienst gibt (Wunsch 22.11.2026: nicht ausgrauen, ganz weglassen)
+  const frueher = liste.length && i !== 0, spaeter = i >= 0 && i < liste.length - 1;
+  block.insertAdjacentHTML('beforeend', (frueher ? '<button type="button" class="ds-pfeil links" aria-label="früherer Dienst">‹</button>' : '') +
+    (spaeter ? '<button type="button" class="ds-pfeil rechts" aria-label="späterer Dienst">›</button>' : ''));
   block.classList.toggle('pfeile', dsPfeileAn);
-  block.querySelector('.ds-pfeil.links').onclick = (e)=>{ e.stopPropagation(); dsDienstBlaettern(-1); };
-  block.querySelector('.ds-pfeil.rechts').onclick = (e)=>{ e.stopPropagation(); dsDienstBlaettern(1); };
-  // waagerecht wischen: Pfeile einblenden und gleich einen Dienst weiter (nach rechts wischen = frueher, wie zurueckblaettern)
+  const pl = block.querySelector('.ds-pfeil.links'), pr = block.querySelector('.ds-pfeil.rechts');
+  if(pl) pl.onclick = (e)=>{ e.stopPropagation(); dsDienstBlaettern(-1); };
+  if(pr) pr.onclick = (e)=>{ e.stopPropagation(); dsDienstBlaettern(1); };
+  // waagerecht wischen: beim ersten Mal nur die Pfeile zeigen, danach einen Dienst weiter (nach rechts wischen = frueher)
   let x0 = null, y0 = 0, gewischt = false;
   block.addEventListener('pointerdown', (e)=>{ x0 = e.clientX; y0 = e.clientY; gewischt = false; });
   block.addEventListener('pointerup', (e)=>{ if(x0 == null) return; const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
-    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5){ gewischt = true; dsPfeileAn = true; block.classList.add('pfeile'); dsDienstBlaettern(dx > 0 ? -1 : 1); } });
+    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5){ gewischt = true;
+      if(!dsPfeileAn){ dsPfeileAn = true; block.classList.add('pfeile'); return; }
+      if(dx > 0 ? frueher : spaeter) dsDienstBlaettern(dx > 0 ? -1 : 1); } });
   block.addEventListener('click', (e)=>{ if(gewischt){ e.stopPropagation(); e.preventDefault(); gewischt = false; } }, true);
 }
 function designDienstWiring(wurzel){
@@ -24249,6 +24256,15 @@ function designStartErgaenzen(){
       nach.insertAdjacentHTML('afterend', (letzter ? '<div class="ds-dienst-reihe">' : '') + '<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>' +
         (letzter ? '<button type="button" class="ds-letzter" id="dsLetzter" aria-pressed="' + !!info.letzter + '">' + (info.letzter ? '<b>✕</b><small>ausblenden</small>' : '<b>↺</b><small>letzter Dienst</small>') + '</button></div>' : ''));
       const lk = document.getElementById('dsLetzter'); if(lk) lk.onclick = ()=>{ if(info.letzter){ dsDienstWahl = null; dsPfeileAn = false; } else dsDienstWahl = dsDienstSchluessel(letzter); ansichtStart(); };
+    }
+    // vergangener Dienst (Wunsch 22.11.2026): alles drumherum unscharf, damit er nicht wie der aktuelle wirkt -- scharf bleiben Uhr,
+    // Dienstuebersicht, Karte mit den Faellen und „ausblenden“; ein Tipp ins Unscharfe fuehrt zurueck
+    app.classList.toggle('ds-vergangen', !!info.letzter);
+    if(info.letzter && !app.dataset.vergangenKlick){
+      app.dataset.vergangenKlick = '1';
+      app.addEventListener('click', (e)=>{ if(!app.classList.contains('ds-vergangen')) return;
+        const t = e.target; if(t.closest('.ds-live') || t.closest('#dsLetzter')) return;
+        e.preventDefault(); e.stopPropagation(); dsDienstWahl = null; dsPfeileAn = false; ansichtStart(); }, true);
     }
     // Leiste unten kommt global (designGlobalNav), damit sie auf allen Seiten steht
     app.querySelectorAll('[data-wf]').forEach(b=>{

@@ -16,6 +16,8 @@ module.exports = async ({ browser, basis, pr })=>{
   const b = await p.evaluate(()=> ({ ring: !!document.getElementById('dsRing'), modus: designDienstInfo().modus, titel: (document.querySelector('.ds-dz') || {}).textContent || '', knopf: (document.getElementById('dsLetzter') || {}).textContent, fuer: !!liveDienstFuer(new Date()) }));
   pr('Klick: Uhr und Übersicht des letzten Dienstes (beendet)', b.ring && b.modus === 'vorbei' && /Dienst beendet/.test(b.titel) && /08:00–18:00/.test(b.titel) && /ausblenden/.test(b.knopf), b);
   pr('Neue Fälle hängen sich nicht an den letzten Dienst', !b.fuer);
+  const unscharf = await p.evaluate(()=>{ const f = (sel)=> getComputedStyle(document.querySelector(sel)).filter; return { kacheln: f('.kachelreihe'), start: f('#dsDienstStart'), aus: f('#dsLetzter'), uhr: f('.ds-ring-block'), dz: f('.ds-dz'), karte: document.querySelector('.ds-live .sk-karte') ? f('.ds-live .sk-karte') : 'none' }; });
+  pr('Vergangener Dienst: drumherum unscharf; Uhr, Übersicht, Karte, „ausblenden“ scharf', /blur/.test(unscharf.kacheln) && /blur/.test(unscharf.start) && !/blur/.test(unscharf.aus) && !/blur/.test(unscharf.uhr) && !/blur/.test(unscharf.dz) && !/blur/.test(unscharf.karte), unscharf);
   if(process.env.BILDER) await p.screenshot({ path: process.env.BILDER + '/46_letzter.png' });
   pr('Uhr zeigt groß die Dienstzeit „08:00–18:00“ statt der Uhrzeit', await p.evaluate(()=> /08:00–18:00/.test(document.querySelector('.ds-ring-zeit').textContent) && !document.getElementById('dsUhr')));
   // Blättern: drei frühere Dienste aus dem Fahrtenbuch
@@ -26,17 +28,25 @@ module.exports = async ({ browser, basis, pr })=>{
   const wisch = async (dx)=>{ await p.mouse.move(kn.x + kn.width / 2 - dx / 2, kn.y + kn.height / 2); await p.mouse.down(); await p.mouse.move(kn.x + kn.width / 2 + dx / 2, kn.y + kn.height / 2, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(900); };
   const zeit = ()=> p.evaluate(()=> (document.querySelector('.ds-ring-zeit') || {}).textContent);
   const vorWisch = await p.evaluate(()=> !document.querySelector('.ds-ring-block.pfeile'));
+  const z0 = await zeit();
   await wisch(140);
-  const nach = await p.evaluate(()=> ({ pfeile: !!document.querySelector('.ds-ring-block.pfeile'), sicht: getComputedStyle(document.querySelector('.ds-pfeil.links')).display !== 'none', zeit: document.querySelector('.ds-ring-zeit').textContent, dialog: !!document.querySelector('.beta-overlay.aktiv') }));
-  pr('Wischen über die Uhr: Pfeile erscheinen, früherer Dienst (18:00–08:00), kein Dienst-Dialog', vorWisch && nach.pfeile && nach.sicht && nach.zeit === '18:00–08:00' && !nach.dialog, nach);
+  const erst = await p.evaluate(()=> ({ pfeile: !!document.querySelector('.ds-ring-block.pfeile'), links: !!document.querySelector('.ds-pfeil.links'), rechts: !!document.querySelector('.ds-pfeil.rechts'), sicht: getComputedStyle(document.querySelector('.ds-pfeil.links')).display !== 'none', zeit: document.querySelector('.ds-ring-zeit').textContent, dialog: !!document.querySelector('.beta-overlay.aktiv') }));
+  pr('Erstes Wischen: nur die Pfeile, kein Sprung; neuester Dienst -> kein Pfeil nach rechts', vorWisch && erst.pfeile && erst.sicht && erst.links && !erst.rechts && erst.zeit === z0 && !erst.dialog, erst);
+  await wisch(140);
+  const nach = await p.evaluate(()=> ({ zeit: document.querySelector('.ds-ring-zeit').textContent, rechts: !!document.querySelector('.ds-pfeil.rechts') }));
+  pr('Zweites Wischen: früherer Dienst (18:00–08:00), jetzt auch Pfeil nach rechts', nach.zeit === '18:00–08:00' && nach.rechts, nach);
   if(process.env.BILDER) await p.screenshot({ path: process.env.BILDER + '/46_blaettern.png' });
   await p.evaluate(()=> document.querySelector('.ds-pfeil.links').click()); await p.waitForTimeout(800);
-  const z1 = await zeit(), linksAus = await p.evaluate(()=> document.querySelector('.ds-pfeil.links').disabled);
-  pr('‹: noch früher (08:00–18:00), ältester -> ‹ gesperrt', z1 === '08:00–18:00' && linksAus, { z1, linksAus });
+  const z1 = await zeit(), linksAus = await p.evaluate(()=> !document.querySelector('.ds-pfeil.links'));
+  pr('‹: noch früher (08:00–18:00), ältester -> kein Pfeil ‹', z1 === '08:00–18:00' && linksAus, { z1, linksAus });
   await p.evaluate(()=> document.querySelector('.ds-pfeil.rechts').click()); await p.waitForTimeout(800);
   await p.evaluate(()=> document.querySelector('.ds-pfeil.rechts').click()); await p.waitForTimeout(800);
-  const z3 = await p.evaluate(()=> ({ zeit: document.querySelector('.ds-ring-zeit').textContent, rechtsAus: document.querySelector('.ds-pfeil.rechts').disabled, kopf: document.querySelector('.ds-ring-kopf').textContent }));
-  pr('› zweimal: zurück zum letzten Dienst, › gesperrt', z3.zeit === '08:00–18:00' && z3.rechtsAus, z3);
+  const z3 = await p.evaluate(()=> ({ zeit: document.querySelector('.ds-ring-zeit').textContent, rechtsAus: !document.querySelector('.ds-pfeil.rechts'), kopf: document.querySelector('.ds-ring-kopf').textContent }));
+  pr('› zweimal: zurück zum letzten Dienst, kein Pfeil ›', z3.zeit === '08:00–18:00' && z3.rechtsAus, z3);
+  // Tipp ins Unscharfe: zurück zur normalen Ansicht
+  await p.mouse.click(200, (await p.locator('.kachelreihe').boundingBox()).y + 20); await p.waitForTimeout(900);
+  pr('Tipp auf die unscharfen Kacheln: zurück, nichts geöffnet', await p.evaluate(()=> !document.getElementById('app').classList.contains('ds-vergangen') && !document.getElementById('dsRing') && !!document.querySelector('.kachelreihe')));
+  await p.evaluate(()=> document.getElementById('dsLetzter').click()); await p.waitForTimeout(800);
   await p.evaluate(()=> document.getElementById('dsLetzter').click()); await p.waitForTimeout(800);
   pr('Nochmal: wieder ausgeblendet', await p.evaluate(()=> !document.getElementById('dsRing') && /letzter Dienst/.test(document.getElementById('dsLetzter').textContent)));
   pr('keine Skriptfehler', !p.fehler.length, p.fehler.slice(0, 3));
