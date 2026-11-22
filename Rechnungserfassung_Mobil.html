@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-IOvoW5eiels097fCzkNrST99uh8ZXuC9NT0P4yzL3uk=' 'sha256-WTH7l5PPdygX0PndgOINVm6ALTd89+vmoWSmV8f6fZ8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-IOvoW5eiels097fCzkNrST99uh8ZXuC9NT0P4yzL3uk=' 'sha256-1cDo3Bb/IeqvSjcMSZMdE49RR3G2lzQzSAbSdsG9I24=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1642,6 +1642,11 @@ try{
   .ds-live .ds-kopfzeile{font-size:12.5px; font-weight:500; letter-spacing:.08em; color:var(--text-schwach); text-align:center; margin:30px 0 0;}
   .ds-live .ds-ring-block .ds-ring{margin-top:8px; margin-bottom:-18px;}   /* 21.11.2026: ueber der Uhr etwas mehr Luft, darunter weniger (unten hat das Bild eigenen Rand) */
   .ds-ring{position:relative; width:min(280px, 74vw); aspect-ratio:1/1; margin:6px auto 0;}
+  .ds-ring-block{position:relative; touch-action:pan-y;}
+  .ds-pfeil{display:none; position:absolute; top:50%; transform:translateY(-50%); z-index:3; width:40px; height:64px; border:0; border-radius:14px; background:var(--karte); color:var(--text); box-shadow:0 1px 6px rgba(0,0,0,.18); font:inherit; font-size:34px; font-weight:700; line-height:1; cursor:pointer; padding:0 0 4px;}
+  .ds-pfeil.links{left:2px;} .ds-pfeil.rechts{right:2px;}
+  .ds-pfeil:disabled{opacity:.3; cursor:default;}
+  .ds-ring-block.pfeile .ds-pfeil{display:block;}
   .ds-ring svg{display:block; width:100%; height:100%; overflow:visible;}   /* Betragszeilen an den Seiten duerfen ueber den Ring hinaus */
   .ds-ring-aussen{fill:none; stroke:var(--rand); stroke-width:1;}
   .ds-ring-spur{fill:none; stroke:var(--grau-feld); stroke-width:10;}
@@ -1666,6 +1671,7 @@ try{
   .fbx-foerder{border:0; background:none; padding:0; margin:0; font:inherit; color:var(--ds-akzent, #d9861a); text-decoration:underline; cursor:pointer;}
   .ds-ring-unten{align-self:start; display:flex; flex-direction:column; align-items:center; gap:4px;}
   .ds-ring-zeit{font-family:var(--ds-display); font-weight:300; font-size:clamp(43px, 16.2vw, 67px); line-height:1; letter-spacing:-.02em; font-variant-numeric:lining-nums tabular-nums;}
+  .ds-ring-zeit.dienstzeit{font-size:clamp(26px, 9.2vw, 38px); font-weight:400; margin:6px 0 4px;}
   .ds-ring-rest{font-size:14px; color:var(--text-schwach);}
   .ds-ring-grenzen{display:flex; justify-content:space-between; width:min(280px, 74vw); margin:2px auto 0; font-size:12px; color:var(--text-schwach); letter-spacing:.04em;}
   .ds-foerd{margin:20px 0 0; padding:14px 18px; border:1px solid var(--rand); border-radius:20px; display:flex; align-items:center; gap:14px; justify-content:space-between;}
@@ -2453,6 +2459,7 @@ try{
     body.quer .quer-sp1 .kachelreihe .ds-plus svg{width:100%; height:100%;}
     body.quer .quer-uhr .ds-ring{width:min(100%, calc(100vh - 150px)) !important; margin:-10px auto 0 !important; container-type:inline-size;}
     body.quer .quer-uhr .ds-ring-zeit{font-size:21cqw !important;}
+    body.quer .quer-uhr .ds-ring-zeit.dienstzeit{font-size:12cqw !important;}
     body.quer .quer-uhr .ds-ring-mitte, body.quer .quer-uhr .ds-ring-mitte *:not(.ds-ring-zeit){font-size:4.6cqw !important;}
     body.quer .quer-uhr .ds-ring-rest{font-size:5.4cqw !important;}
     body.quer .quer-sp2 .ds-zahlen.fuenf, body.quer .quer-sp2 .ds-zahlen.fuenf-k, body.quer .quer-sp2 .ds-zahlen.vier-k{display:grid !important; grid-template-columns:repeat(3, minmax(0, 1fr)) !important; gap:6px !important;}
@@ -23441,9 +23448,37 @@ function liveDienstLaden(){
 function liveDienstEnde(d, fe){ fe = fe || liveDienstFenster(d); const b = d && d.beendet && d.frueh !== false ? Date.parse(d.beendet) : NaN; return isFinite(b) ? Math.min(b, fe.bis.getTime()) : fe.bis.getTime(); }
 function liveDienstAktiv(){ const d = liveDienstLaden(); return d && !d.beendet ? d : null; }
 // beendeter Dienst -> ein spaeterer Dienst aus dem Dienstplan (automatisch) geht vor
-// Letzter Dienst (Wunsch 22.11.2026): der zuletzt gewaehlte/beendete oder der juengste vergangene aus dem Fahrtenbuch
-let dsLetzterAn = false;
+// Letzter Dienst (Wunsch 22.11.2026): der zuletzt gewaehlte/beendete oder der juengste vergangene aus dem Fahrtenbuch.
+// Blaettern (Wunsch 22.11.2026): Wischen ueber die Uhr zeigt Pfeile; damit zwischen den Dienstuebersichten wechseln.
+let dsDienstWahl = null, dsPfeileAn = false;
+const dsDienstSchluessel = (d)=> d ? (d.datum + ' ' + d.von + '-' + d.bis) : '';
+function dsDienstListe(){
+  const jetzt = Date.now(), m = new Map();
+  const dazu = (d)=>{ const fe = d && liveDienstFenster(d); if(!fe) return; m.set(dsDienstSchluessel(d), d); };
+  try{ const c = LS.get('fb_dienste_cache', null);
+    ((c && c.dienste) || []).filter(x=> x.bis <= jetzt).forEach(x=>{ const v = new Date(x.von), b = new Date(x.bis), za = fbDienstartZerlegen(x.art);
+      dazu({ datum: liveIso(v), von: designUhr(v), bis: designUhr(b), art: za.art, schicht: za.schicht, arzt: x.arzt || '', auto: 'fahrtenbuch', beendet: b.toISOString() }); }); }catch(_){}
+  const l = LS.get('live_dienst_letzt', null); if(l) dazu(l);
+  const a = liveDienstAnzeige(); if(a) dazu(Object.assign({}, a, { aktuell: true }));
+  return [...m.values()].sort((x, y)=> liveDienstFenster(x).von - liveDienstFenster(y).von);
+}
+function dsDienstGewaehlt(){
+  if(!dsDienstWahl) return null;
+  const w = dsDienstListe().find(x=> dsDienstSchluessel(x) === dsDienstWahl); if(!w || w.aktuell) return null;
+  return Object.assign({}, w, { beendet: w.beendet || liveDienstFenster(w).bis.toISOString(), letzter: true });
+}
+// Schritt -1 (frueher) / +1 (spaeter) ab dem angezeigten Dienst
+function dsDienstBlaettern(schritt){
+  const liste = dsDienstListe(); if(!liste.length) return;
+  const akt = dsDienstWahl || dsDienstSchluessel(liveDienstAnzeige()) || null;
+  let i = liste.findIndex(x=> dsDienstSchluessel(x) === akt);
+  if(i < 0) i = schritt < 0 ? liste.length : -1;
+  const j = Math.max(0, Math.min(liste.length - 1, i + schritt)), z = liste[j];
+  dsDienstWahl = z.aktuell ? null : dsDienstSchluessel(z);
+  ansichtStart();
+}
 function liveDienstLetzter(){
+  // juengster vergangener Dienst aus der Liste (Fahrtenbuch + zuletzt in der App gelaufener)
   const kand = [];
   const l = LS.get('live_dienst_letzt', null); if(l && liveDienstFenster(l)) kand.push(l);
   try{ const c = LS.get('fb_dienste_cache', null), jetzt = Date.now();
@@ -23467,8 +23502,7 @@ function liveDienstFuer(dt){
 }
 // -> { modus: 'leer'|'geplant'|'laufend'|'vorbei', fenster, faelle:[{f,t}], gkv, pauschale, foerderung, art, arzt }
 function designDienstInfo(){
-  const jetzt = new Date(); let d = liveDienstAnzeige();
-  if(!d && dsLetzterAn) d = liveDienstLetzter();
+  const jetzt = new Date(); let d = dsDienstGewaehlt() || liveDienstAnzeige();
   if(!d) return { modus: 'leer', fenster: null, faelle: [], gkv: 0, pauschale: null, foerderung: null, art: '', arzt: '', jetzt, auto: liveAuto() ? 'suche' : '' };
   const fe = liveDienstFenster(d);
   const modus = d.beendet ? 'vorbei' : jetzt < fe.von ? 'geplant' : jetzt < fe.bis ? 'laufend' : 'vorbei';
@@ -23956,7 +23990,25 @@ function dzFallMarkieren(f){
   const b = liste.querySelector('[data-dzfall="' + i + '"]'); if(!b) return;
   b.classList.remove('fbx-blink'); void b.offsetWidth; b.classList.add('fbx-blink'); setTimeout(()=> b.classList.remove('fbx-blink'), 2400);
 }
+function dsUhrBlaetternWiring(wurzel){
+  const block = wurzel.querySelector('.ds-ring-block'); if(!block || block.dataset.blaettern) return;
+  block.dataset.blaettern = '1';
+  const liste = dsDienstListe(), akt = dsDienstWahl || dsDienstSchluessel(liveDienstAnzeige());
+  const i = liste.findIndex(x=> dsDienstSchluessel(x) === akt);
+  block.insertAdjacentHTML('beforeend', '<button type="button" class="ds-pfeil links" aria-label="früherer Dienst"' + (i === 0 || !liste.length ? ' disabled' : '') + '>‹</button>' +
+    '<button type="button" class="ds-pfeil rechts" aria-label="späterer Dienst"' + (i < 0 || i >= liste.length - 1 ? ' disabled' : '') + '>›</button>');
+  block.classList.toggle('pfeile', dsPfeileAn);
+  block.querySelector('.ds-pfeil.links').onclick = (e)=>{ e.stopPropagation(); dsDienstBlaettern(-1); };
+  block.querySelector('.ds-pfeil.rechts').onclick = (e)=>{ e.stopPropagation(); dsDienstBlaettern(1); };
+  // waagerecht wischen: Pfeile einblenden und gleich einen Dienst weiter (nach rechts wischen = frueher, wie zurueckblaettern)
+  let x0 = null, y0 = 0, gewischt = false;
+  block.addEventListener('pointerdown', (e)=>{ x0 = e.clientX; y0 = e.clientY; gewischt = false; });
+  block.addEventListener('pointerup', (e)=>{ if(x0 == null) return; const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
+    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5){ gewischt = true; dsPfeileAn = true; block.classList.add('pfeile'); dsDienstBlaettern(dx > 0 ? -1 : 1); } });
+  block.addEventListener('click', (e)=>{ if(gewischt){ e.stopPropagation(); e.preventDefault(); gewischt = false; } }, true);
+}
 function designDienstWiring(wurzel){
+  try{ dsUhrBlaetternWiring(wurzel); }catch(_){}
   const box = wurzel.querySelector('.ds-dz'); if(!box) return;
   const knopf = box.querySelector('.ds-dz-auf'), liste = box.querySelector('.ds-dz-liste');
   knopf.onclick = ()=>{ const auf = liste.hidden; liste.hidden = !auf; knopf.setAttribute('aria-expanded', String(auf)); try{ if(auf) sessionStorage.removeItem('dienst_liste_zu'); else sessionStorage.setItem('dienst_liste_zu', '1'); }catch(_){}
@@ -24113,7 +24165,8 @@ function designRingHtml(info){
       '<path d="' + bogen(-34.5, -21.5, 154) + '" class="ds-ring-bogen" marker-end="url(#dsPfeilKopf)"/>' +
       '<text class="ds-ring-grenze"><textPath href="#dsRingTpBis" startOffset="100%" text-anchor="end">' + designUhr(fe.bis) + '</textPath></text>';
   }
-  const gross = designUhr(info.jetzt);
+  // vergangener Dienst (letzter/geblaettert, Wunsch 22.11.2026): gross die Dienstzeit statt der aktuellen Uhrzeit
+  const gross = info.letzter && fe ? designUhr(fe.von) + '–' + designUhr(fe.bis) : designUhr(info.jetzt);
   const unter = info.modus === 'leer' ? 'Dienst wählen' : designRestText(info);
   // Gesamtsumme aller Faelle (GKV + PT + LS), laufend mit jeder Aktualisierung (Wunsch 21.11.2026); die Sammelerfassung daneben
   let gesamt = 0;
@@ -24131,7 +24184,7 @@ function designRingHtml(info){
     '<circle cx="140" cy="140" r="126" class="ds-ring-aussen"/><circle cx="140" cy="140" r="' + r + '" class="ds-ring-spur"/>' +
     '<circle cx="140" cy="140" r="' + r + '" class="ds-ring-fort" stroke-dasharray="' + (u * p).toFixed(1) + ' ' + u.toFixed(1) + '" transform="rotate(-90 140 140)"/>' +
     '<circle cx="140" cy="140" r="94" class="ds-ring-innen"/>' + punkte + '</svg>' +
-    '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + kopf + '</span><span class="ds-ring-zeit" id="dsUhr">' + gross + '</span><span class="ds-ring-unten"><span class="ds-ring-rest">' + unter + '</span>' +
+    '<div class="ds-ring-mitte"><span class="ds-ring-kopf">' + kopf + '</span>' + (info.letzter ? '<span class="ds-ring-zeit dienstzeit">' : '<span class="ds-ring-zeit" id="dsUhr">') + gross + '</span><span class="ds-ring-unten"><span class="ds-ring-rest">' + unter + '</span>' +
       ringSummeHtml + '</span></div></div>';
 }
 
@@ -24192,10 +24245,10 @@ function designStartErgaenzen(){
     }
     if(info.modus !== 'laufend' && info.modus !== 'geplant'){
       const nach = app.querySelector('.ds-weiter-block') || reihe;
-      const letzter = info.modus === 'leer' || (info.letzter && dsLetzterAn) ? liveDienstLetzter() : null;
+      const letzter = info.modus === 'leer' || info.letzter ? liveDienstLetzter() : null;
       nach.insertAdjacentHTML('afterend', (letzter ? '<div class="ds-dienst-reihe">' : '') + '<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>' +
-        (letzter ? '<button type="button" class="ds-letzter" id="dsLetzter" aria-pressed="' + dsLetzterAn + '">' + (dsLetzterAn ? '<b>✕</b><small>ausblenden</small>' : '<b>↺</b><small>letzter Dienst</small>') + '</button></div>' : ''));
-      const lk = document.getElementById('dsLetzter'); if(lk) lk.onclick = ()=>{ dsLetzterAn = !dsLetzterAn; ansichtStart(); };
+        (letzter ? '<button type="button" class="ds-letzter" id="dsLetzter" aria-pressed="' + !!info.letzter + '">' + (info.letzter ? '<b>✕</b><small>ausblenden</small>' : '<b>↺</b><small>letzter Dienst</small>') + '</button></div>' : ''));
+      const lk = document.getElementById('dsLetzter'); if(lk) lk.onclick = ()=>{ if(info.letzter){ dsDienstWahl = null; dsPfeileAn = false; } else dsDienstWahl = dsDienstSchluessel(letzter); ansichtStart(); };
     }
     // Leiste unten kommt global (designGlobalNav), damit sie auf allen Seiten steht
     app.querySelectorAll('[data-wf]').forEach(b=>{
