@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-9Z77aK/gwMG6+WD3heGAbRCb5P8CvO9aBZ0kDhfgB/w=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-CKFSYguV/ag0l7kOX7cJ5LLFdA3D5UHOYn+Khg9PQaU=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -439,12 +439,11 @@ try{
   body.dunkel .ds-pseudo-text b{color:#ff8a80;}
   .ds-pseudo-knoepfe{display:flex; gap:8px;} .ds-pseudo-knoepfe .btn-primaer, .ds-pseudo-knoepfe .btn-sekundaer{flex:1; margin:0; min-height:40px; padding:6px 10px; font-size:14px;}
   .ds-pseudo-zu{position:absolute; top:4px; right:6px; border:0; background:transparent; color:var(--text-schwach); font-size:18px; cursor:pointer;}
-  .ns-schema{display:block; width:100%; height:auto; margin:8px auto 4px; border-radius:4px; cursor:zoom-in;}
-  .ns-schema .ns-blatt{fill:#fbe9e4;} .ns-schema .ns-feld{fill:#fff; stroke:#d0021b; stroke-width:1.6;} .ns-schema .ns-grau{fill:#fbe9e4; stroke-dasharray:6 5;} .ns-schema .ns-dick{stroke-width:4;}
-  .ns-schema .ns-linie{stroke:#d0021b; stroke-width:1.6;}
-  .ns-schema text{font-family:Arial, Helvetica, sans-serif;} .ns-schema .ns-lab{font-size:15px; fill:#d0021b;} .ns-schema .ns-lab2{font-size:17px; fill:#d0021b;} .ns-schema .ns-fett{font-weight:700;}
-  .ns-schema .ns-titel{font-size:30px; font-weight:700; fill:#d0021b;} .ns-schema .ns-wert{font-size:24px; font-weight:700; fill:#1d4e89;} .ns-schema .ns-klein{font-size:19px;}
-  .ns-schema .ns-ziffer{font-size:23px; font-weight:700; fill:#1d4e89;} .ns-schema .ns-haken{fill:none; stroke:#1d4e89; stroke-width:4; stroke-linecap:round;}
+  .ns-schema{display:block; width:100%; max-width:440px; height:auto; margin:8px auto 4px; cursor:zoom-in;}
+  .ns-schema .ns-blatt{fill:#fbe9e4; stroke:#d0021b; stroke-width:1;} .ns-schema .ns-feld{fill:#fff; stroke:#d0021b; stroke-width:.7;} .ns-schema .ns-linie{stroke:#d0021b; stroke-width:.7;}
+  .ns-schema text{font-family:Arial, Helvetica, sans-serif;} .ns-schema .ns-lab{font-size:5px; fill:#d0021b;} .ns-schema .ns-titel{font-size:10px; font-weight:700; fill:#d0021b;}
+  .ns-schema .ns-wert{font-size:8.5px; font-weight:700; fill:#1d4e89;} .ns-schema .ns-k{font-size:7px;} .ns-schema .ns-gross{font-size:11px;} .ns-schema .ns-klein{font-size:6px; fill:#444;}
+  .ns-schema .ns-haken{fill:none; stroke:#1d4e89; stroke-width:1.4;}
   .ns-gross{position:fixed; inset:0; z-index:10010; background:rgba(0,0,0,.78); display:flex; align-items:center; justify-content:center; padding:10px; overflow:auto;}
   .ns-gross svg{width:100%; height:100%; max-width:1200px; cursor:zoom-out;}
   .pseudo-anl ol{padding-left:20px; margin:8px 0;} .pseudo-anl li{margin:3px 0;}
@@ -2867,7 +2866,7 @@ function ansichtBestatter(zurueck){
   setzeTitel('Bestatter', zurueck);
   let such = '';
   app.innerHTML = '<div class="abschnitt start-abschnitt bst"><div class="design-hinweis">Die Liste, aus der die Leichenschau-Maske Bestatter vorschlägt. Neue Bestatter kommen beim Speichern einer LS-Rechnung automatisch dazu. Anklicken zum Ändern oder Löschen.</div>' +
-    '<input type="search" class="bst-suche" id="bstSuche" placeholder="Suchen (Name, Straße, Ort)" autocomplete="off">' +
+    '<input type="search" class="bst-suche" id="bstSuche" placeholder="Suche" autocomplete="off">' +
     '<button type="button" class="btn-primaer" id="bstNeu" style="margin-top:10px;">+ Bestatter anlegen</button><div class="bst-liste" id="bstListe"></div></div>';
   const listeEl = document.getElementById('bstListe');
   const zeichnen = ()=>{
@@ -4233,7 +4232,7 @@ async function ansichtFahrtenbuch(blatt){
       // Suche nur bei Bedarf (Wunsch 25.11.2026): Lupe in der Reihe, Feld klappt darunter auf
       '<button type="button" class="fd-such-knopf" id="fbxSuchKnopf" title="Suchen" aria-label="Suchen" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button></div>' +
     '<div class="fbx-filter" id="fbxSuchZeile" hidden>' +
-      '<input type="search" id="fbxSuche" autocomplete="off" placeholder="Name, Ziffer, Datum"></div>' +
+      '<input type="search" id="fbxSuche" autocomplete="off" placeholder="Suche"></div>' +
     '<div class="fbx-eigen" id="fbxEigen" hidden><label>von<input type="date" id="fbxVon"></label><label>bis<input type="date" id="fbxBis"></label></div>' +
     '<div class="fbx-leiste"><div class="fbx-varianten">' + [['a', 'Liste'], ['b', 'Tabelle'], ['c', 'Tage']].map(([k, t])=> '<button type="button" data-fbv="' + k + '">' + t + '</button>').join('') + '</div>' +
     '</div>' +
@@ -4832,7 +4831,7 @@ function fahrdienstAuswertungRendern(daten){
       '<option value="alle"' + (wahl === 'alle' ? ' selected' : '') + '>Alle Jahre</option><option value="eigen"' + (zw.art === 'eigen' ? ' selected' : '') + '>Zeitraum …</option></select>' +
       (wahl === 'alle' || zw.art === 'eigen' ? '' : '<div class="fd-q">' + ['q1', 'q2', 'q3', 'q4'].map(q=> '<button type="button" class="fb-chip' + (qAn === q ? ' an' : '') + '" data-fdzeit="' + q + '" aria-pressed="' + (qAn === q) + '">' + q.toUpperCase() + '</button>').join('') + '</div>') +
       '<button type="button" class="fd-such-knopf" id="fdSuchKnopf" title="Suchen" aria-label="Suchen" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button></div>' +
-    '<div class="fbx-filter" id="fdSuchZeile" hidden><input type="search" id="fdSuche" autocomplete="off" placeholder="Arzt, Datum" value="' + htmlEsc(fahrdienstSuche) + '"></div>' +
+    '<div class="fbx-filter" id="fdSuchZeile" hidden><input type="search" id="fdSuche" autocomplete="off" placeholder="Suche" value="' + htmlEsc(fahrdienstSuche) + '"></div>' +
     (zw.art === 'eigen' ? '<div class="fbx-eigen fd-eigen"><label>von<input type="date" id="fdVon" value="' + htmlEsc(zw.von || (wahl + '-01-01')) + '"></label><label>bis<input type="date" id="fdBis" value="' + htmlEsc(zw.bis || (wahl + '-12-31')) + '"></label></div>' : '') +
     '<div class="fd-jahr-summe"><b>' + (zw.art === 'eigen' ? (zw.von ? isoDe(zw.von) : '…') + '–' + (zw.bis ? isoDe(zw.bis) : '…') : wahl === 'alle' ? 'Alle Jahre' : wahl + (/^q/.test(zw.art) ? ' · ' + zw.art.toUpperCase() : '')) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
     ' (<i class="fbx-n gkv">GKV</i> ' + euro(s.k) + (s.f > 0.005 ? ', davon Förderung ' + euro(s.f) : '') + ' · <i class="fbx-n pt">PT</i> ' + euro(s.p) + ' · <i class="fbx-n ls">LS</i> ' + euro(s.l) + ')' +
@@ -8756,7 +8755,7 @@ function ansichtGkvVerwaltung(){
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=> ansichtGkvVerwaltung(); };
   setzeTitel('Rechnungsverwaltung', ()=>{ betaMaskeHerkunft = null; ansichtStart(); });
   app.innerHTML = vwTabsHtml('gkv') +
-    '<div class="gesamt-kopf"><div class="feld" style="margin-bottom:0;"><input type="text" id="gvSuche" autocomplete="off" placeholder="Suche: Name, Ziffer oder Datum"></div></div>' +
+    '<div class="gesamt-kopf"><div class="feld" style="margin-bottom:0;"><input type="text" id="gvSuche" autocomplete="off" placeholder="Suche"></div></div>' +
     '<div id="gvInfo" class="gv-info"></div><div id="gvListe"></div>';
   const suchEl = document.getElementById('gvSuche');
 
@@ -9223,7 +9222,7 @@ async function ansichtAlleRechnungen(){
   setzeTitel('Rechnungsverwaltung', ansichtStart);
   app.innerHTML = `
     <div class="feld" style="margin-bottom:6px;">
-      <input type="text" id="txtAlleSuche" autocomplete="off" placeholder="Suche: Name, Rechnungsnummer oder Datum">
+      <input type="text" id="txtAlleSuche" autocomplete="off" placeholder="Suche">
     </div>
     <button class="btn-sekundaer" id="btnAlleNeuLaden" style="margin-bottom:12px;">Neu laden</button>
     <div id="alleRechnungenListe"><div class="leer-hinweis">Lade Rechnungsübersicht...</div></div>`;
@@ -12413,7 +12412,7 @@ async function ansichtRechnungenGesamt(neuLaden){
   const ziel = betaZiel(), zk = betaZielKey(ziel);
   app.innerHTML = vwTabsHtml('lspt') + `
     <div class="gesamt-kopf">
-      <div class="feld" style="margin-bottom:0;"><input type="text" id="txtGesamtSuche" autocomplete="off" placeholder="Suche: Name, Rechnungsnummer oder Datum"></div>
+      <div class="feld" style="margin-bottom:0;"><input type="text" id="txtGesamtSuche" autocomplete="off" placeholder="Suche"></div>
       <div class="gesamt-knoepfe">
         <button type="button" id="btnGesamtHochladen" class="betont" style="display:none;"></button>
         <button type="button" id="btnGesamtNeu">Neu laden</button>
@@ -12634,7 +12633,7 @@ async function betaEigenePositionDialog(art){
   for(;;){
     const html = (fehler ? '<div class="beta-form-fehler">' + htmlEsc(fehler) + '</div>' : '') +
       '<div class="beta-form">' +
-      (goaeVerfuegbar() ? '<label>Im GOÄ-Katalog suchen (Nummer oder Stichwort)<input id="eigSuche" value="' + htmlEsc(suche) + '" autocomplete="off" placeholder="z.B. 800 oder Injektion"></label><div class="goae-treffer" id="eigTreffer"></div>' : '') +
+      (goaeVerfuegbar() ? '<label>Im GOÄ-Katalog suchen (Nummer oder Stichwort)<input id="eigSuche" value="' + htmlEsc(suche) + '" autocomplete="off" placeholder="Suche"></label><div class="goae-treffer" id="eigTreffer"></div>' : '') +
       '<label>Ziffer (z.B. GOÄ-Nummer)<input id="eigZiffer" value="' + htmlEsc(w.ziffer) + '" autocomplete="off"></label>' +
       '<label>Faktor (optional)<input id="eigFaktor" value="' + htmlEsc(w.faktor) + '" inputmode="decimal" autocomplete="off"></label>' +
       '<label>Bezeichnung<textarea id="eigBez" rows="3">' + htmlEsc(w.bez) + '</textarea></label>' +
@@ -16658,7 +16657,7 @@ function gkvProfilKurz(p){
 // EBM-Ziffer suchen (fuer "+ EBM-Position hinzufuegen") -> Schluessel oder null
 async function gkvZifferSuchenDialog(){
   const warte = betaOverlay.ergebnis('EBM-Position hinzufügen',
-    '<div class="beta-form"><input type="search" id="gkvPeSuche" placeholder="Ziffer oder Text" autocomplete="off"></div><div id="gkvPeTreffer" class="gkv-pe-treffer"></div>',
+    '<div class="beta-form"><input type="search" id="gkvPeSuche" placeholder="Suche" autocomplete="off"></div><div id="gkvPeTreffer" class="gkv-pe-treffer"></div>',
     [{ label: 'Abbrechen', akt: 'nein' }]);
   const inp = document.getElementById('gkvPeSuche'), ziel = document.getElementById('gkvPeTreffer');
   if(inp){
@@ -23288,7 +23287,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v518';
+const APP_VERSION = 'v519';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -24644,53 +24643,35 @@ function dsPseudoHinweisHtml(info){
     '<div class="ds-pseudo-knoepfe"><button type="button" class="btn-primaer" data-pseudo="anlegen">Pseudo-Fall anlegen</button><button type="button" class="btn-sekundaer" data-pseudo="anleitung">So geht’s</button>' +
     '<button type="button" class="ds-pseudo-zu" data-pseudo="spaeter" title="In 30 Minuten wieder erinnern" aria-label="Später erinnern">×</button></div></div>';
 }
-// Schema des Notfall-/Vertretungsscheins (Muster 19) mit den Angaben fuer den Pseudo-Fall -- nachgezeichnet nach dem
-// Vordruck (Lage der Felder wie im Original), kein Originalvordruck. Koordinaten in Pixeln des Vordrucks (1430 x 985).
+// Schema des Notfall-/Vertretungsscheins (Muster 19) mit den Angaben fuer den Pseudo-Fall -- vereinfacht nachgezeichnet,
+// das Personalienfeld oben links in der Aufteilung des Vordrucks (kein Originalvordruck)
 function dsNotfallscheinSvg(von){
-  const X = (x)=> x - 35, Y = (y)=> y - 243;
-  const t = (x, y, s, k)=> '<text x="' + X(x) + '" y="' + Y(y) + '" class="' + (k || 'ns-lab') + '">' + htmlEsc(s) + '</text>';
-  const r = (x1, y1, x2, y2, k)=> '<rect x="' + X(x1) + '" y="' + Y(y1) + '" width="' + (x2 - x1) + '" height="' + (y2 - y1) + '" class="' + (k || 'ns-feld') + '"/>';
-  const l = (x1, y1, x2, y2)=> '<path d="M' + X(x1) + ' ' + Y(y1) + 'L' + X(x2) + ' ' + Y(y2) + '" class="ns-linie"/>';
-  const kaest = (x, y, n, w, h)=>{ let o = ''; for(let i = 0; i < n; i++) o += r(x + i * w, y, x + (i + 1) * w, y + h); return o; };
-  const inKaest = (x, y, w, h, txt)=> String(txt).split('').map((c, i)=> '<text x="' + X(x + i * w + w / 2) + '" y="' + Y(y + h - 9) + '" class="ns-ziffer" text-anchor="middle">' + htmlEsc(c) + '</text>').join('');
+  const t = (x, y, s, k)=> '<text x="' + x + '" y="' + y + '" class="' + (k || 'ns-lab') + '">' + htmlEsc(s) + '</text>';
+  const r = (x, y, w, h, k)=> '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" class="' + (k || 'ns-feld') + '"/>';
+  const l = (x1, y1, x2, y2)=> '<path d="M' + x1 + ' ' + y1 + 'L' + x2 + ' ' + y2 + '" class="ns-linie"/>';
   const d = von instanceof Date ? von : null, uhr = d ? zz2(d.getHours()) + ':' + zz2(d.getMinutes()) : 'Dienstbeginn';
-  const tag = d ? zz2(d.getDate()) : '', mon = d ? zz2(d.getMonth() + 1) : '', quartal = d ? String(Math.floor(d.getMonth() / 3) + 1) : '', jahr = d ? String(d.getFullYear()).slice(-2) : '';
-  let o = '<svg class="ns-schema" viewBox="0 0 1430 985" role="img" aria-label="Schema Notfallschein (Muster 19) mit den Angaben für den Pseudo-Fall">';
-  o += '<rect x="0" y="0" width="1430" height="985" class="ns-blatt"/>';
-  // Personalienfeld
-  o += r(76, 259, 637, 588) + l(76, 328, 637, 328) + l(76, 468, 637, 468) + l(76, 528, 637, 528);
-  o += l(272, 508, 272, 528) + l(504, 508, 504, 528) + l(272, 568, 272, 588) + l(468, 568, 468, 588);
-  o += t(82, 276, 'Krankenkasse bzw. Kostenträger') + t(82, 343, 'Name, Vorname des Versicherten') + t(528, 382, 'geb. am');
-  o += t(82, 483, 'Kostenträgerkennung') + t(278, 483, 'Versicherten-Nr.') + t(510, 483, 'Status') + t(82, 543, 'Betriebsstätten-Nr.') + t(278, 543, 'Arzt-Nr.') + t(476, 543, 'Datum');
-  o += t(92, 314, 'AOK Baden-Württemberg', 'ns-wert');
-  o += t(92, 376, 'Bereitschaftsdienst Arzt 1', 'ns-wert') + t(92, 404, 'Ärztlicher', 'ns-wert') + t(528, 404, '01.01.2020', 'ns-wert');
-  o += t(92, 432, 'Notfallstr. 1', 'ns-wert') + t(92, 458, '12345 Notfallstadt', 'ns-wert');
-  o += t(476, 578, '[heutiges Datum]', 'ns-wert ns-klein');
-  // Kopf rechts
-  o += t(664, 280, 'Notfall-/Vertretungsschein', 'ns-titel') + t(1385, 278, '19', 'ns-titel');
-  o += r(664, 292, 698, 326) + '<path d="M' + X(670) + ' ' + Y(310) + 'l9 9 15-20" class="ns-haken"/>' + t(710, 305, 'ärztlicher', 'ns-lab2') + t(710, 326, 'Notfalldienst', 'ns-lab2');
-  o += r(842, 292, 876, 326) + t(888, 305, 'Urlaubs- bzw.', 'ns-lab2') + t(888, 326, 'Krankheitsvertretung', 'ns-lab2');
-  o += r(1092, 292, 1126, 326) + t(1138, 326, 'Notfall', 'ns-lab2') + t(1238, 326, 'Quartal', 'ns-lab2');
-  o += r(1310, 292, 1338, 326) + r(1366, 292, 1394, 326) + r(1394, 292, 1422, 326) + inKaest(1310, 292, 28, 34, quartal) + inKaest(1366, 292, 28, 34, jahr);
-  o += r(664, 344, 698, 378) + t(710, 357, 'Unfall', 'ns-lab2') + t(710, 378, 'Unfallfolgen', 'ns-lab2') + t(1238, 378, 'Geschlecht', 'ns-lab2') + r(1338, 346, 1366, 378) + r(1394, 346, 1422, 378);
-  // Diagnosen
-  o += t(664, 417, 'Diagnosen / ggf. Abrechnungsbegründungen', 'ns-lab2 ns-fett');
-  [434, 494, 553].forEach(y=>{ o += kaest(664, y, 27, 28.1, 34); });
-  o += inKaest(664, 434, 28.1, 34, 'Z02');
-  // Befunde, AU, Teil b
-  o += t(58, 661, 'Befunde/Therapie', 'ns-lab2 ns-fett') + r(58, 672, 1042, 828, 'ns-feld ns-grau') + t(708, 624, 'Arbeitsunfähigkeit', 'ns-lab2') + t(708, 644, 'bescheinigt bis', 'ns-lab2');
-  o += r(1084, 613, 1422, 825) + t(1090, 629, 'Teil b erhält weiterbehandelnder Arzt:');
-  // Leistungszeilen
-  o += t(72, 845, 'Tag') + t(138, 845, 'Mon.') + t(572, 845, 'Tag') + t(638, 845, 'Mon.');
-  [850, 910, 970, 1030, 1088].map(y=> Math.min(y, 1088)).forEach(y=>{ if(y + 35 > 1124) return;
-    o += kaest(58, y, 2, 27.5, 35) + kaest(129, y, 2, 28, 35) + kaest(200, y, 6, 28, 35) + kaest(379, y, 6, 28, 35) +
-      kaest(557, y, 2, 28, 35) + kaest(629, y, 2, 28, 35) + kaest(700, y, 6, 28, 35) + kaest(879, y, 6, 28, 35); });
-  o += inKaest(58, 850, 27.5, 35, tag) + inKaest(129, 850, 28, 35, mon) + inKaest(200, 850, 28, 35, '99999');
-  o += r(379, 850, 547, 885) + t(386, 876, 'Uhrzeit ' + uhr, 'ns-wert ns-klein');
-  o += t(58, 965, 'nur bei Privat-/BG-Patienten im Dienst:', 'ns-lab2') + inKaest(200, 970, 28, 35, '99909') + r(379, 970, 547, 1005) + t(386, 996, '× Anzahl', 'ns-wert ns-klein');
-  // unten
-  o += r(58, 1130, 613, 1220) + t(68, 1146, 'Ich bin bei der oben genannten Krankenkasse versichert.') + t(68, 1214, 'Datum') + t(258, 1214, 'Unterschrift des Versicherten');
-  o += r(879, 1130, 1047, 1220, 'ns-feld ns-dick') + r(1084, 969, 1422, 1205) + t(1186, 1199, 'Vertragsarztstempel') + t(1281, 1222, 'Muster 19a (Schema)');
+  const quartal = d ? (Math.floor(d.getMonth() / 3) + 1) + '/' + String(d.getFullYear()).slice(-2) : '';
+  let o = '<svg class="ns-schema" viewBox="0 0 340 214" role="img" aria-label="Schema Notfallschein mit den Angaben für den Pseudo-Fall">' + r(1, 1, 338, 212, 'ns-blatt');
+  // Personalienfeld (wie im Vordruck: Kasse | Name mit „geb. am“ rechts, darunter Anschrift | Kennung/Vers.-Nr./Status | BSNR/Arzt-Nr./Datum)
+  const X = 8, W = 172;
+  o += r(X, 8, W, 132) + l(X, 26, X + W, 26) + l(X, 86, X + W, 86) + l(X, 113, X + W, 113);
+  o += l(X + 58, 104, X + 58, 113) + l(X + 128, 104, X + 128, 113) + l(X + 58, 131, X + 58, 140) + l(X + 112, 131, X + 112, 140);
+  o += t(X + 3, 14, 'Krankenkasse bzw. Kostenträger') + t(X + 6, 23, 'AOK Baden-Württemberg', 'ns-wert');
+  o += t(X + 3, 32, 'Name, Vorname des Versicherten') + t(X + 132, 44, 'geb. am');
+  o += t(X + 6, 44, 'Bereitschaftsdienst Arzt 1', 'ns-wert') + t(X + 6, 55, 'Ärztlicher', 'ns-wert') + t(X + 126, 55, '01.01.2020', 'ns-wert');
+  o += t(X + 6, 69, 'Notfallstr. 1', 'ns-wert') + t(X + 6, 80, '12345 Notfallstadt', 'ns-wert');
+  o += t(X + 3, 92, 'Kostenträgerkennung') + t(X + 61, 92, 'Versicherten-Nr.') + t(X + 131, 92, 'Status');
+  o += t(X + 3, 119, 'Betriebsstätten-Nr.') + t(X + 61, 119, 'Arzt-Nr.') + t(X + 115, 119, 'Datum') + t(X + 115, 135, '[heutiges Datum]', 'ns-wert ns-k');
+  // rechts: Titel, Ankreuzfeld, Quartal, Diagnose
+  o += t(192, 16, 'Notfall-/Vertretungsschein', 'ns-titel') + t(322, 16, '19', 'ns-titel');
+  o += r(192, 24, 8, 8) + '<path d="M193.5 28l2 2 3.5-4" class="ns-haken"/>' + t(204, 31, 'ärztlicher Notfalldienst', 'ns-klein');
+  o += t(286, 31, 'Quartal', 'ns-klein') + t(311, 31, quartal, 'ns-wert ns-k');
+  o += r(192, 42, 140, 36) + t(195, 49, 'Diagnosen') + t(198, 66, 'Z02', 'ns-wert ns-gross');
+  // Leistungen
+  o += r(X, 148, 324, 58) + t(X + 3, 155, 'Leistungen (Tag/Monat · GOP)');
+  o += t(X + 6, 172, d ? zz2(d.getDate()) + '.' + zz2(d.getMonth() + 1) + '.' : 'TT.MM.', 'ns-wert') + t(X + 46, 172, '99999', 'ns-wert ns-gross') + t(X + 100, 172, 'Uhrzeit: ' + uhr, 'ns-wert');
+  o += t(X + 46, 190, '99909 × Anzahl', 'ns-wert ns-k') + t(X + 118, 190, 'nur bei Privat-/BG-Patienten im Dienst', 'ns-klein');
+  o += t(X + 6, 202, 'Pseudo-Fall: kein echter Patient – nur für die Förderung', 'ns-klein');
   return o + '</svg>';
 }
 async function dsPseudoAnleitung(info){
@@ -26178,7 +26159,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       `<div id="diagChips"></div>` +
       `<div class="feld" style="position:relative;">
         <label for="txtDiag">Diagnose suchen</label>
-        <input type="text" id="txtDiag" autocomplete="off" placeholder="ab 2 Zeichen eingeben...">
+        <input type="text" id="txtDiag" autocomplete="off" placeholder="Suche">
         <div class="autocomplete-liste" id="diagVorschlaege"></div>
       </div>`);
   }
