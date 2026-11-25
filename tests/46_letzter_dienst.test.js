@@ -73,11 +73,11 @@ module.exports = async ({ browser, basis, pr })=>{
   const reiter = await p.evaluate(()=> [...document.querySelectorAll('.fbx-tabs button')].map((b)=> b.textContent));
   await p.evaluate(()=> document.querySelector('[data-fbtab="letzte"]').click()); await p.waitForTimeout(1200);
   const fb = await p.evaluate(()=> ({ ring: !!document.querySelector('.fb-letzte .ds-ring-block'), pfeile: !!document.querySelector('.fb-letzte .ds-ring-block.pfeile .ds-pfeil.links'), karte: !!document.getElementById('skKarte'), an: (document.querySelector('.fbx-tabs .an') || {}).textContent }));
-  pr('Fahrtenbuch: Reiter „Letzte Dienste“ vor „Dienste/Quartale“, Uhr mit Pfeilen und Karte', reiter[0] === 'Letzte Dienste' && reiter[1] === 'Alle Dienste' && fb.ring && fb.pfeile && fb.karte && fb.an === 'Letzte Dienste', { reiter, fb });
+  pr('Fahrtenbuch: Reiter „Zuletzt“ vor „Dienste/Abrechnung“, Uhr mit Pfeilen und Karte', reiter[0] === 'Zuletzt' && reiter[1] === 'Dienste' && reiter[2] === 'Abrechnung' && fb.ring && fb.pfeile && fb.karte && fb.an === 'Zuletzt', { reiter, fb });
   const zf0 = await p.evaluate(()=> document.querySelector('.ds-schicht small').textContent);
   await p.evaluate(()=> document.querySelector('.ds-pfeil.links').click()); await p.waitForTimeout(1000);
   const zf1 = await p.evaluate(()=> ({ zeit: (document.querySelector('.ds-schicht small') || {}).textContent, imFb: !!document.querySelector('.fb-letzte'), titel: document.querySelector('.fbx-tabs .an') && document.querySelector('.fbx-tabs .an').textContent }));
-  pr('Pfeil im Reiter: früherer Dienst, bleibt im Fahrtenbuch', zf1.imFb && zf1.zeit !== zf0 && zf1.titel === 'Letzte Dienste', { zf0, zf1 });
+  pr('Pfeil im Reiter: früherer Dienst, bleibt im Fahrtenbuch', zf1.imFb && zf1.zeit !== zf0 && zf1.titel === 'Zuletzt', { zf0, zf1 });
   await p.evaluate(()=> ansichtStart()); await p.waitForTimeout(800);
   pr('Zurück zur Startseite: wieder der aktuelle Stand (nichts unscharf)', await p.evaluate(()=> !document.getElementById('app').classList.contains('ds-vergangen') && dsDienstWahl === null));
   pr('keine Skriptfehler', !p.fehler.length, p.fehler.slice(0, 3));

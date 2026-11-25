@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-a8p94bFI4kYc1R1Qq5GhaJqotgiEEpL9hRSEvhOhaJk=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-XEFl1X0XrVg3fPNqlEK/K+cprG0XrE6ymoediOgOu98=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -439,6 +439,11 @@ try{
   body.dunkel .ds-pseudo-text b{color:#ff8a80;}
   .ds-pseudo-knoepfe{display:flex; gap:8px;} .ds-pseudo-knoepfe .btn-primaer, .ds-pseudo-knoepfe .btn-sekundaer{flex:1; margin:0; min-height:40px; padding:6px 10px; font-size:14px;}
   .ds-pseudo-zu{position:absolute; top:4px; right:6px; border:0; background:transparent; color:var(--text-schwach); font-size:18px; cursor:pointer;}
+  .ns-schema{display:block; width:100%; max-width:420px; height:auto; margin:8px auto 4px;}
+  .ns-schema .ns-blatt{fill:#fdf3f5; stroke:#c8102e; stroke-width:1.2;} .ns-schema .ns-feld{fill:#fff; stroke:#c8102e; stroke-width:.6;}
+  .ns-schema text{font-family:Arial, sans-serif; fill:#1a1a1a;} .ns-schema .ns-lab{font-size:5px; fill:#c8102e;} .ns-schema .ns-titel{font-size:9px; font-weight:700; fill:#c8102e;}
+  .ns-schema .ns-wert{font-size:8.5px; font-weight:700; fill:#1d4e89;} .ns-schema .ns-k{font-size:6.5px;} .ns-schema .ns-gross{font-size:12px;} .ns-schema .ns-klein{font-size:6px; fill:#444;}
+  .ns-schema .ns-haken{fill:none; stroke:#1d4e89; stroke-width:1.4;}
   .pseudo-anl ol{padding-left:20px; margin:8px 0;} .pseudo-anl li{margin:3px 0;}
   .fahrdienst-tabelle td.fd-k{white-space:nowrap;}
   .fahrdienst-tabelle th.fd-k.gkv{color:#7d4e9e;} .fahrdienst-tabelle th.fd-k.pt{color:#1f7a45;} .fahrdienst-tabelle th.fd-k.ls{color:#1d4e89;}
@@ -3820,8 +3825,8 @@ function fahrdienstZeilenAuswerten(zeilen){
 // zum Ausprobieren: Karten (A), Tabelle wie die Excel (B), Wochenleiste (C).
 // =====================================================================
 function fbTabsHtml(akt){
-  return '<div class="fbx-tabs"><button type="button" data-fbtab="letzte" class="' + (akt === 'letzte' ? 'an' : '') + '">Letzte Dienste</button><button type="button" data-fbtab="dienste" class="' + (akt === 'dienste' ? 'an' : '') + '">Alle Dienste</button>' +
-    '<button type="button" data-fbtab="quartale" class="' + (akt === 'quartale' ? 'an' : '') + '">Quartale</button></div>';
+  return '<div class="fbx-tabs"><button type="button" data-fbtab="letzte" class="' + (akt === 'letzte' ? 'an' : '') + '">Zuletzt</button><button type="button" data-fbtab="dienste" class="' + (akt === 'dienste' ? 'an' : '') + '">Dienste</button>' +
+    '<button type="button" data-fbtab="quartale" class="' + (akt === 'quartale' ? 'an' : '') + '">Abrechnung</button></div>';
 }
 function fbTabsWiring(){
   document.querySelectorAll('[data-fbtab]').forEach(b=> b.onclick = ()=>{ if(b.dataset.fbtab === 'letzte'){ dsDienstWahl = null; ansichtLetzteDienste(); } else if(b.dataset.fbtab === 'dienste') ansichtFahrtenbuch(); else ansichtFahrdienstAuswertung(); });
@@ -24608,12 +24613,32 @@ function dsPseudoHinweisHtml(info){
     '<div class="ds-pseudo-knoepfe"><button type="button" class="btn-primaer" data-pseudo="anlegen">Pseudo-Fall anlegen</button><button type="button" class="btn-sekundaer" data-pseudo="anleitung">So geht’s</button>' +
     '<button type="button" class="ds-pseudo-zu" data-pseudo="spaeter" title="In 30 Minuten wieder erinnern" aria-label="Später erinnern">×</button></div></div>';
 }
+// Schema des Notfall-/Vertretungsscheins (Muster 19) mit den Angaben fuer den Pseudo-Fall -- nachgezeichnet, kein Originalvordruck
+function dsNotfallscheinSvg(von){
+  const t = (x, y, s, o)=> '<text x="' + x + '" y="' + y + '"' + (o || '') + '>' + htmlEsc(s) + '</text>';
+  const feld = (x, y, w, h, lab, wert)=> '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" class="ns-feld"/>' + t(x + 3, y + 7, lab, ' class="ns-lab"') + (wert ? t(x + 4, y + h - 5, wert, ' class="ns-wert"') : '');
+  return '<svg class="ns-schema" viewBox="0 0 340 214" role="img" aria-label="Schema Notfallschein mit den Angaben für den Pseudo-Fall">' +
+    '<rect x="1" y="1" width="338" height="212" rx="4" class="ns-blatt"/>' +
+    t(196, 16, 'Notfall-/Vertretungsschein', ' class="ns-titel"') + t(196, 27, 'Muster 19 (Schema)', ' class="ns-lab"') +
+    '<rect x="196" y="34" width="8" height="8" class="ns-feld"/><path d="M197.5 38l2 2 3.5-4" class="ns-haken"/>' + t(208, 41, 'Ärztlicher Bereitschaftsdienst', ' class="ns-klein"') +
+    feld(8, 8, 180, 22, 'Krankenkasse bzw. Kostenträger', 'AOK Baden-Württemberg') +
+    feld(8, 30, 180, 40, 'Name, Vorname des Versicherten', '') + t(12, 51, 'Bereitschaftsdienst Arzt 1', ' class="ns-wert"') + t(12, 63, 'Ärztlicher', ' class="ns-wert"') +
+    feld(8, 70, 130, 22, 'Straße, Ort', '') + t(12, 82, 'Notfallstr. 1', ' class="ns-wert ns-k"') + t(12, 90, '12345 Notfallstadt', ' class="ns-wert ns-k"') +
+    feld(138, 70, 50, 22, 'geb. am', '01.01.2020') +
+    feld(8, 92, 60, 18, 'Kostenträgerkennung', '') + feld(68, 92, 70, 18, 'Versicherten-Nr.', '') + feld(138, 92, 50, 18, 'Status', '') +
+    feld(8, 110, 60, 18, 'Betriebsstätten-Nr.', '') + feld(68, 110, 70, 18, 'Arzt-Nr.', '') + feld(138, 110, 50, 18, 'Datum', 'Diensttag') +
+    feld(196, 52, 136, 40, 'Diagnose', 'Z02') +
+    feld(8, 136, 324, 70, 'Leistungen (GOP) mit Uhrzeit', '') +
+    t(14, 160, '99999', ' class="ns-wert ns-gross"') + t(70, 160, 'Uhrzeit: ' + (von || 'Dienstbeginn'), ' class="ns-wert"') +
+    t(14, 180, '99909 × Anzahl', ' class="ns-wert ns-k"') + t(98, 180, 'nur bei Privat-/BG-Patienten im Dienst', ' class="ns-klein"') +
+    t(14, 198, 'Pseudo-Fall: kein echter Patient – nur für die Förderung', ' class="ns-klein"') + '</svg>';
+}
 async function dsPseudoAnleitung(info){
   const von = info && info.fenster ? designUhr(info.fenster.von) : 'Dienstbeginn';
   await betaOverlay.ergebnis('Pseudo-Fall 99999', '<div class="pseudo-anl">' +
     (window.APP_KONFIG ? '<p class="beta-erg-klein">Gilt nur in KV-Bezirken mit diesem Verfahren (z. B. KV Baden-Württemberg) – bitte die Vorgaben deiner KV beachten.</p>' : '') +
-    '<p>Wenn im Dienst kein gesetzlich versicherter Patient behandelt wurde, einen <b>Notfallschein</b> bzw. Abrechnungsfall so anlegen:</p><ol>' +
-    '<li><b>Kasse:</b> AOK Baden-Württemberg</li><li><b>Name:</b> Ärztlicher Bereitschaftsdienst, <b>Vorname:</b> Arzt 1</li>' +
+    '<p>Wenn im Dienst kein gesetzlich versicherter Patient behandelt wurde, einen <b>Notfallschein</b> bzw. Abrechnungsfall so anlegen:</p>' + dsNotfallscheinSvg(von) + '<ol>' +
+    '<li><b>Kasse:</b> AOK Baden-Württemberg</li><li><b>Name:</b> Bereitschaftsdienst Arzt 1 (weitere Ärzte: Arzt 2, 3 …), <b>Vorname:</b> Ärztlicher</li>' +
     '<li><b>Anschrift:</b> Notfallstr. 1, 12345 Notfallstadt</li><li><b>Geburtsdatum:</b> 01.01.2020</li>' +
     '<li><b>GOP:</b> 99999 · <b>Diagnose:</b> Z02 · <b>Uhrzeit:</b> Dienstbeginn (' + htmlEsc(von) + ')</li>' +
     '<li>Privat- oder BG-Patienten im Dienst: zusätzlich <b>99909</b> je Patient</li></ol>' +
