@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-CKFSYguV/ag0l7kOX7cJ5LLFdA3D5UHOYn+Khg9PQaU=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-OLJ64GdHSvYoDcksMMEldEpV3YVQxBmb+gBFN/933LY=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -228,7 +228,8 @@ try{
   .offen-zeile{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--rand); cursor:pointer;}
   .offen-zeile:last-child{padding-bottom:12px;}
   .offen-knoepfe{flex:none; display:flex; gap:6px; align-items:center;} .offen-knoepfe .offen-bezahlt{white-space:nowrap;}
-  .offen-zeile{position:relative;} .offen-weg{flex:none; width:auto; margin:0; padding:4px 8px; border:0; background:transparent; color:var(--text-schwach); font-size:16px; line-height:1; cursor:pointer;}
+  .offen-zeile{position:relative;}
+  .offen-bank{display:flex; align-items:center; gap:10px; padding:8px 0 10px; border-top:1px solid var(--rand);} .offen-bank small{color:var(--text-schwach); font-size:12px; line-height:1.3;} .offen-weg{flex:none; width:auto; margin:0; padding:4px 8px; border:0; background:transparent; color:var(--text-schwach); font-size:16px; line-height:1; cursor:pointer;}
   @media (max-width:420px){ .offen-weg{position:absolute; top:4px; right:-6px;} .offen-zeile .offen-knoepfe{margin-right:22px;} }
   @media (max-width:420px){ .offen-knoepfe{flex-direction:column; align-items:stretch;} .offen-knoepfe .offen-bezahlt{min-height:32px; padding:4px 10px; font-size:12.5px;} }
   .offen-inhalt{flex:1; min-width:0;} .offen-inhalt b{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -588,6 +589,9 @@ try{
     position:sticky; top:0; z-index:10;
   }
   header h1{font-size:17px; margin:0; font-weight:600;}
+  /* Ueberschrift immer genau mittig (Wunsch 25.11.2026) -- unabhaengig von den Knoepfen links/rechts */
+  header{position:sticky;} header > #titel{position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); max-width:calc(100% - 190px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; pointer-events:none;}
+  header > #titel.frei{position:static; transform:none; flex:1; min-width:0; max-width:none;}
   header .zahnrad .regler-icon{width:26px; height:26px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; display:block; margin:auto;}
   body.design-einhand header .zahnrad .regler-icon{width:30px; height:30px;}
   header .zurueck, header .zahnrad{
@@ -6398,8 +6402,24 @@ let aktuellerZurueckHandler = null;
 // zuerst auf false gesetzt.
 let aktuelleAnsichtIstHauptbildschirm = false;
 
+// mittige Ueberschrift: verfuegbare Breite bis zu den Knoepfen links/rechts, lange Titel etwas kleiner statt abgeschnitten
+function titelEinpassen(){
+  try{
+    const h = document.querySelector('header'), el = document.getElementById('titel'); if(!h || !el) return;
+    const hb = h.getBoundingClientRect(), mitte = (hb.left + hb.right) / 2;
+    const links = btnZurueck ? btnZurueck.getBoundingClientRect().right : hb.left;
+    const rechtsEl = el.nextElementSibling, rechts = rechtsEl ? rechtsEl.getBoundingClientRect().left : hb.right;
+    const frei = Math.max(80, 2 * Math.min(mitte - links, rechts - mitte) - 12);
+    el.classList.remove('frei'); el.style.maxWidth = frei + 'px'; el.style.fontSize = '';
+    let fs = parseFloat(getComputedStyle(el).fontSize) || 17;
+    while(el.scrollWidth > el.clientWidth + 1 && fs > 14.5){ fs -= 0.5; el.style.fontSize = fs + 'px'; }
+    // sehr schmales Handy: lieber leicht aus der Mitte als abgeschnitten
+    if(el.scrollWidth > el.clientWidth + 1){ el.classList.add('frei'); el.style.maxWidth = ''; }
+  }catch(_){}
+}
+window.addEventListener('resize', ()=> requestAnimationFrame(titelEinpassen));
 function setzeTitel(t, zurueckZiel){
-  titel.textContent = t;
+  titel.textContent = t; requestAnimationFrame(titelEinpassen);
   { const a0 = document.getElementById('app'); if(a0 && a0.dataset.startPad){ a0.style.paddingBottom = ''; a0.dataset.startPad = ''; } if(a0) a0.classList.remove('ds-vergangen'); }   // Startseiten-Anpassung zuruecknehmen
   aktuelleAnsichtIstHauptbildschirm = false;
   aktuellerZurueckHandler = zurueckZiel || null;
@@ -8235,7 +8255,7 @@ const SEITENTOUR = {
     { el: 'button.lspt, button.gkv', gruppe: true, titel: 'Zwei Listen', text: 'Umschalten zwischen den <b>Rechnungen</b> (LS/PT) und den <b>Kassenpatienten</b>.' },
     { el: '#txtGesamtSuche', titel: 'Suche', text: 'Nach Name, Rechnungsnummer oder Betrag.' },
     { el: '#btnGesamtHochladen', titel: 'Hochladen', text: 'Rechnungen, die noch nicht im OneDrive liegen, auf einmal hochladen.' },
-    { el: '#btnGesamtExcel, #btnGesamtBank', gruppe: true, titel: 'Werkzeuge', text: 'Übersicht in Excel öffnen und den <b>Kontoauszug</b> einlesen – Zahlungen werden den Rechnungen zugeordnet.' },
+    { el: '#btnOffenBank', titel: 'Kontoauszug', text: 'Bei den offenen Rechnungen den <b>Kontoauszug</b> (CSV) einlesen – Zahlungen werden den Rechnungen zugeordnet.' },
     { el: tourErstes('details.offen-dash > summary', 'details.offen-dash'), titel: 'Offene Rechnungen', text: 'Was noch nicht bezahlt ist. <b>Bezahlt?</b> trägt den Eingang ein, bei Verzug geht eine Erinnerung.' },
     { el: tourErstes('#gesamtListe .wisch-huelle', '#gesamtListe'), titel: 'Alle Rechnungen', text: 'Haken für Senden, Termin, Erinnerung, Bezahlt; 📄 öffnet die PDF; nach links wischen löscht.' }
   ],
@@ -8759,8 +8779,10 @@ function ansichtGkvVerwaltung(){
     '<div id="gvInfo" class="gv-info"></div><div id="gvListe"></div>';
   const suchEl = document.getElementById('gvSuche');
 
-  // zuerst die letzten 25 auf dem Geraet; "Weitere laden" holt alle weiteren aus dem Fahrtenbuch (je Jahresblatt)
-  let anzahl = 25, excel = [], blaetterGeladen = [], blaetterAlle = null, laedt = false;
+  // Wunsch 25.11.2026: wie bei PT/LS -- bis zu 200 Faelle gleich zeigen (Geraet + Fahrtenbuch des aktuellen Jahres, bei Bedarf das
+  // Vorjahr automatisch dazu); darueber „weitere – bitte Suche eingrenzen“, aeltere Jahresblaetter ueber den Knopf
+  const GV_MAX = 200;
+  let anzahl = Infinity, excel = [], blaetterGeladen = [], blaetterAlle = null, laedt = false;
   const lokalSchl = new Set();
   const weitereLaden = async ()=>{
     if(laedt) return;
@@ -8791,12 +8813,14 @@ function ansichtGkvVerwaltung(){
       .filter(x=> !q || [x.f.name, x.f.geb || '', isoDe(x.f.datum), (x.f.positionen || []).map(p=> p.gop).join(' ')].join(' ').toLowerCase().includes(q))
       .sort((a, b)=> b.t - a.t);
     const exSicht = excel.filter(x=> !q || [x.f.name, designDatumDe(x.d.tag), (x.f.ziffern || []).map(z=> z.gop).join(' ')].join(' ').toLowerCase().includes(q));
-    const alle = (q ? lokalAlle : lokalAlle.slice(0, anzahl)).concat(exSicht).sort((a, b)=> b.t - a.t);
+    const alleVoll = (q ? lokalAlle : lokalAlle.slice(0, anzahl)).concat(exSicht).sort((a, b)=> b.t - a.t);
+    const alle = alleVoll.slice(0, GV_MAX), mehrAlsMax = alleVoll.length - alle.length;
     const mehrLokal = !q && lokalAlle.length > anzahl;
     const offen = lokalAlle.filter(x=> x.f.status !== 'eingetragen' && x.f.name !== GKV_PSEUDO_NAME).length;
     document.getElementById('gvInfo').innerHTML = (lokalAlle.length ? lokalAlle.length + ' Fälle auf diesem Gerät' + (offen ? ' · <b class="gv-offen">' + offen + ' noch nicht im Fahrtenbuch</b>' : ' · alle im Fahrtenbuch') : '') +
       (exSicht.length ? ' · ' + exSicht.length + ' nur im Fahrtenbuch' : '');
     const weiterKnopf = laedt ? '<div class="leer-hinweis">Fahrtenbuch wird gelesen …</div>'
+      : mehrAlsMax > 0 ? '<div class="leer-hinweis">' + mehrAlsMax + ' weitere – bitte Suche eingrenzen.</div>'
       : (mehrLokal || !blaetterAlle || blaetterAlle.some(b=> !blaetterGeladen.includes(b)))
         ? '<button type="button" class="btn-sekundaer gv-weitere" id="gvWeitere">' + (mehrLokal ? 'Weitere laden' : blaetterGeladen.length ? 'Ältere laden (Fahrtenbuch ' + htmlEsc(blaetterAlle.slice().reverse().find(b=> !blaetterGeladen.includes(b)) || '') + ')' : 'Weitere aus dem Fahrtenbuch laden') + '</button>' : '';
     const weiterVerdrahten = ()=>{ const b = document.getElementById('gvWeitere'); if(b) b.onclick = ()=>{ if(mehrLokal){ anzahl = Infinity; zeichnen(); } else weitereLaden(); }; };
@@ -8847,6 +8871,12 @@ function ansichtGkvVerwaltung(){
   };
   suchEl.oninput = zeichnen;
   zeichnen();
+  // gleich so viele wie bei PT/LS: Fahrtenbuch des aktuellen Jahres im Hintergrund dazu, bei wenigen Faellen auch das Vorjahr
+  (async ()=>{
+    if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return;
+    await weitereLaden();
+    if(document.getElementById('gvListe') && gkvFaelleLaden().length + excel.length < GV_MAX && blaetterAlle && blaetterAlle.some(b=> !blaetterGeladen.includes(b))) await weitereLaden();
+  })();
 }
 function ansichtKorrigieren(){
   einstellungenOffen = false;
@@ -12415,20 +12445,13 @@ async function ansichtRechnungenGesamt(neuLaden){
       <div class="feld" style="margin-bottom:0;"><input type="text" id="txtGesamtSuche" autocomplete="off" placeholder="Suche"></div>
       <div class="gesamt-knoepfe">
         <button type="button" id="btnGesamtHochladen" class="betont" style="display:none;"></button>
-        <button type="button" id="btnGesamtNeu">Neu laden</button>
-        <button type="button" id="btnGesamtExcel">In Excel öffnen</button>
-        <button type="button" id="btnGesamtBank" title="Zahlungseingänge aus einer CSV des Online-Bankings übernehmen">Kontoauszug</button>
       </div>
       ${ziel.echt ? '' : '<div class="gesamt-ziel">Testablage (Beta-Test)</div>'}
     </div>
     <div class="quer-verw quer-breit"><div id="gesamtListe"></div><aside class="quer-detail" id="gesamtDetail"><div class="qd-karte"><span class="qv-leer">Rechnung anklicken – Details erscheinen hier.</span></div></aside></div>`;
   const suchEl = document.getElementById('txtGesamtSuche');
-  document.getElementById('btnGesamtNeu').onclick = ()=> ansichtRechnungenGesamt(true);
-  document.getElementById('btnGesamtBank').onclick = async ()=>{ if(await bankCsvImport()) ansichtRechnungenGesamt(true); };
-  document.getElementById('btnGesamtExcel').onclick = ()=>{
-    if(ziel.echt) excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT, '');
-    else excelDateiUeberGraphOeffnen(BETA_TEST_UEBERSICHT, '');
-  };
+  // Wunsch 25.11.2026: Leiste „Neu laden / Excel / Kontoauszug“ entfaellt -- die Liste prueft selbst auf Aenderungen,
+  // der Kontoauszug sitzt bei „Offene Rechnungen“, Excel unter Einstellungen
 
   // Zuerst sofort die lokalen Faelle zeigen, Uebersicht laedt im Hintergrund
   const zeichnen = ()=> betaGesamtZeichnen(suchEl.value, ziel);
@@ -13928,7 +13951,7 @@ function betaGesamtZeichnen(suchtext, ziel){
       '<div style="font-size:12px;opacity:.75;margin-top:4px;">' + htmlEsc(c.schritt || '') + ' <span id="gesamtLadeSek">' +
       (c.seit ? Math.round((Date.now() - c.seit) / 1000) + ' s' : '') + '</span></div></div>';
   } else if(c.fehler){
-    html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '<br>„Neu laden“ versuchen.</div>' + msAnmeldeKnopfHtml(c.fehler);
+    html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '<br><button type="button" class="btn-sekundaer" id="btnGesamtNochmal" style="width:auto; margin-top:8px; padding:8px 14px;">Erneut versuchen</button></div>' + msAnmeldeKnopfHtml(c.fehler);
   } else if(ana){
     // Treffer der Suche: Rechnung samt Unterpositionen
     const sichtbarZeilen = new Set(eintraege.filter(e=> e.typ === 'ORIG' && passt(e.name, e.renu, e.datum)).map(e=> e.z.nr));
@@ -13944,6 +13967,7 @@ function betaGesamtZeichnen(suchtext, ziel){
         let auf = true; try{ auf = LS.get('offen_dash_auf', true) !== false; }catch(_){}
         html += '<details class="offen-dash"' + (auf ? ' open' : '') + '><summary><span><b>Offene Rechnungen: ' + offenR.length + '</b> · ' + betaEuro(summe) + '</span>' +
           (verzug ? '<span class="offen-verzug">' + verzug + ' im Verzug</span>' : '') + '</summary>' +
+          '<div class="offen-bank"><button type="button" class="offen-bezahlt" id="btnOffenBank" title="Zahlungseingänge aus einer CSV des Online-Bankings übernehmen">Kontoauszug einlesen</button><small>CSV aus dem Online-Banking – Zahlungen werden den Rechnungen zugeordnet</small></div>' +
           offenR.slice(0, 50).map(x=> '<div class="offen-zeile' + (x.t > 30 ? ' verzug' : '') + '" data-okey="' + htmlEsc(x.e.key) + '" data-orenu="' + htmlEsc(x.e.renu || x.e.name || '') + '" role="button" tabindex="0"><div class="offen-inhalt"><b>' + htmlEsc(x.e.name) + '</b><small>' +
             [x.e.renu ? 'Nr. ' + htmlEsc(x.e.renu) : '', x.e.betrag ? htmlEsc(x.e.betrag) + ' €' : ''].filter(Boolean).join(' · ') +
             // „seit … Tagen“ in eigener Zeile, darunter die Erinnerungen mit Datum (Wunsch 25.11.2026)
@@ -13977,6 +14001,7 @@ function betaGesamtZeichnen(suchtext, ziel){
     if(sichtbar.length > MAX) html += '<div class="leer-hinweis">' + (sichtbar.length - MAX) + ' weitere – bitte Suche eingrenzen.</div>';
   }
   listeEl.innerHTML = html + '<div class="gesamt-platzhalter"></div>';
+  { const nb = listeEl.querySelector('#btnGesamtNochmal'); if(nb) nb.onclick = ()=> ansichtRechnungenGesamt(true); }
   { const od = listeEl.querySelector('.offen-dash'); if(od) od.addEventListener('toggle', ()=>{ try{ LS.set('offen_dash_auf', od.open); }catch(_){} });
     // Zeile anklicken: zur Rechnung in der Liste springen und sie kurz hervorheben (z. B. fuer Erinnerung oder Pruefung)
     listeEl.querySelectorAll('.offen-zeile[data-okey]').forEach(z=> z.onclick = (ev)=>{
@@ -13993,6 +14018,7 @@ function betaGesamtZeichnen(suchtext, ziel){
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
       // erstellt die naechste Erinnerung (Word + PDF) und zeigt sie gleich in der PDF-Ansicht -- dort Teilen oder als Brief senden
       if(await betaMahnungErstellen(e)) await ansichtRechnungenGesamt(true); });
+    { const kb = listeEl.querySelector('#btnOffenBank'); if(kb) kb.onclick = async (ev)=>{ ev.stopPropagation(); if(await bankCsvImport()) await ansichtRechnungenGesamt(true); }; }
     // nicht beglichene Rechnung aus „Offene Rechnungen“ nehmen (Wunsch 25.11.2026) -- zurueck ueber „Bezahlt“ an der Rechnung
     listeEl.querySelectorAll('.offen-weg').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;

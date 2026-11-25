@@ -31,7 +31,7 @@ module.exports = async ({ browser, basis, pr })=>{
   // 3. Karten-Zwischenspeicher: zweiter Abruf ohne Netz
   const mem = await p.evaluate(async ()=>{
     const f0 = window.fetch; let n = 0;
-    window.fetch = async (u)=>{ n++; return new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 }); };
+    window.fetch = async function(u){ if(String(u).includes('/fonts/x/0-255.pbf')) n++; else return f0.apply(window, arguments); return new Response(new Uint8Array([1, 2, 3, 4]).buffer, { status: 200 }); };
     try{
       const url = 'vkofm://tiles.openfreemap.org/fonts/x/0-255.pbf';
       const a = await vkProtokoll({ url, type: 'arrayBuffer' }); const b = await vkProtokoll({ url, type: 'arrayBuffer' });
