@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-nRbSrNcy5rFkM9sTcwYQwJ0TZ3FX1BB1Y38W5HngUI8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-euWX0G71G/TgoM6LDoMYWL+q9QpPQCUSxxL93KWF0sc=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -213,6 +213,17 @@ try{
   .offen-verzug{margin-left:auto; font-size:12.5px; font-weight:700; color:#b3261e; background:rgba(179,38,30,.1); padding:3px 8px; border-radius:999px;}
   .adr-wahl .adr-option{display:flex !important; gap:10px; align-items:flex-start; margin:0 !important; padding:9px 0; border-bottom:1px solid var(--rand); text-align:left; font-size:14px; color:var(--text);}
   .adr-wahl .adr-option input[type=radio]{width:20px !important; height:20px; flex:none; margin:1px 0 0 !important; padding:0;} .adr-wahl .adr-option span{flex:1; min-width:0; line-height:1.35;}
+  .wa-knopf{display:flex; align-items:center; gap:8px; width:100%; margin:6px 0 4px; padding:10px 12px; border:1.5px dashed var(--rand); border-radius:10px; background:transparent; color:var(--ls-farbe); font:inherit; font-weight:600; font-size:14px; cursor:pointer; text-align:left;}
+  .wa-knopf b{font-size:20px; line-height:1;}
+  .wa-karte{border:1px solid var(--rand); border-radius:12px; padding:10px 12px 12px; margin:8px 0; background:var(--karte);}
+  .wa-kopf{display:flex; align-items:center; justify-content:space-between; font-weight:700; font-size:14px; margin-bottom:6px;}
+  .wa-kopf button{border:0; background:transparent; color:var(--text-schwach); font-size:18px; cursor:pointer; padding:2px 6px;}
+  .wa-chips{display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 8px;}
+  .wa-chips button{padding:5px 10px; border-radius:999px; border:1px solid var(--rand); background:transparent; color:var(--text); font:inherit; font-size:13px; cursor:pointer;}
+  .wa-chips button.an{background:var(--ls-farbe); border-color:var(--ls-farbe); color:#fff;}
+  .wa-emp{display:flex !important; align-items:center; gap:8px; margin-top:10px; font-size:14px; font-weight:600; color:var(--text);}
+  .wa-emp input{width:20px; height:20px; flex:none; margin:0;}
+  .wa-hinweis{font-size:12px; color:var(--text-schwach); margin-top:4px;}
   .offen-seit, .offen-erin{display:block;} .offen-erin{opacity:.85;}
   .offen-zeile{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--rand); cursor:pointer;}
   .offen-zeile:last-child{padding-bottom:12px;}
@@ -9677,6 +9688,17 @@ async function rechnungDocxErzeugen(vorlageDocm, excelZeilen, daten, ausgabeTyp)
   if(!objPara) throw new Error('In der Word-Vorlage wurde die verknüpfte Excel-Tabelle nicht gefunden.');
   const relIds = (objPara[0].match(/r:id="(rId\d+)"/g) || []).map(s=> s.slice(6, -1));
   doc = doc.replace(objPara[0], tabelleXml);
+  // Empfaenger „z. Hd.“ (weitere Adresse): LS statt der c/o-Zeile, PT als eigene Zeile ueber der Anschrift
+  if(String(daten.zhd || '').trim()){
+    const zhd = 'z. Hd. ' + String(daten.zhd).trim(); let fertig = false;
+    doc = doc.replace(RD_ABSATZ_RE, (p)=>{
+      if(fertig || !/<\/w:p>$/.test(p)) return p;
+      const t = rdAbsatzText(p).trim();
+      if(daten.art === 'ls' && t.indexOf('c/o Bestattungsinstitut') >= 0){ fertig = true; return docxAbsatzMitText(p, zhd); }
+      if(daten.art !== 'ls' && t === 'PADRESSE1'){ fertig = true; return docxAbsatzMitText(p, zhd) + p; }
+      return p;
+    });
+  }
   doc = rdPlatzhalterInXml(doc, platzhalterKoerper);
   if(daten.art === 'ls' && !String(daten.bname || '').trim()) doc = rdAbsatzEntfernen(doc, 'c/o Bestattungsinstitut');
   zip.file('word/document.xml', doc);
@@ -9847,14 +9869,26 @@ async function arztdatenLaden(){
 }
 
 // Moegliche Rechnungsempfaenger einer Leichenschau (nur wenn ein Bestatter eingetragen ist, gibt es eine Wahl)
+// Weitere Adressen eines Falls (Wunsch 25.11.2026): [{ art, name, str, ort, empf }]
+const WA_ARTEN = [['angehoerige', 'Angehörige'], ['erben', 'Erben'], ['betreuer', 'Betreuer'], ['sonstige', 'Sonstige']];
+function waArtText(k){ const a = WA_ARTEN.find(x=> x[0] === k); return a ? a[1] : 'Weitere Adresse'; }
+function waBereinigen(l){
+  const t = (x)=> String(x == null ? '' : x).trim();
+  return (Array.isArray(l) ? l : []).map(a=> ({ art: WA_ARTEN.some(x=> x[0] === a.art) ? a.art : 'sonstige', name: t(a.name), str: t(a.str), ort: t(a.ort), empf: !!a.empf }))
+    .filter(a=> a.name || a.str || a.ort);
+}
+// Empfaenger unter den weiteren Adressen (nur mit Anschrift)
+function waEmpfaenger(w){ return waBereinigen((w || {}).weitereAdressen).find(a=> a.empf && (a.str || a.ort)) || null; }
 function lsEmpfaengerOptionen(w){
   const t = (x)=> String(x || '').trim(), adr = (a, b)=> [t(a), t(b)].filter(Boolean).join(', ');
   const o = [];
   if(t(w.txtBName) && adr(w.txtAdresse1, w.txtAdresse2)) o.push({ key: 'bestatter', label: 'Bestatter: ' + t(w.txtBName) + ', ' + adr(w.txtAdresse1, w.txtAdresse2) });
-  if(!o.length) return o;
+  const wa = waBereinigen(w.weitereAdressen).map((a, i)=> ({ a, i })).filter(x=> x.a.str || x.a.ort);
+  if(!o.length && !wa.length) return o;
   if(adr(w.txtPAdresse1, w.txtPAdresse2)) o.push({ key: 'patient', label: 'Patientenadresse (Angehörige): ' + adr(w.txtPAdresse1, w.txtPAdresse2) });
   const s = adr(w.txtSterbeAdr1, w.txtSterbeAdr2);
   if(s && s !== adr(w.txtPAdresse1, w.txtPAdresse2)) o.push({ key: 'sterbe', label: 'Abweichender Sterbeort: ' + s });
+  wa.forEach(x=> o.push({ key: 'wa' + x.i, label: waArtText(x.a.art) + ': ' + [x.a.name ? 'z. Hd. ' + x.a.name : '', adr(x.a.str, x.a.ort)].filter(Boolean).join(', ') }));
   return o;
 }
 // Auswahl des Rechnungsempfaengers: Klick markiert nur, „Übernehmen“ bestaetigt (Wunsch 17.11.2026). -> key oder null
@@ -9884,8 +9918,13 @@ function fallRechnungsdaten(f, arzt){
     geda: normalisiereDatum(w.txtGeda || '') || (w.txtGeda || ''),
     betrag: w.txtBetrag || '', renu: f.rechnungsnummer, arzt
   };
+  const waE = waEmpfaenger(w);
   if(f.art === 'pt'){
     daten.diag = diagnosenVolltext(w.diagnosen);
+    // weitere Adresse als Empfaenger: Patient bleibt, darunter „z. Hd. …“ und die Anschrift
+    if(waE){ daten.padresse1 = waE.str; daten.padresse2 = waE.ort; daten.zhd = waE.name; }
+  } else if((w.txtEmpfaenger === 'wa' || !w.txtEmpfaenger) && waE){
+    daten.bname = ''; daten.badresse1 = waE.str; daten.badresse2 = waE.ort; daten.zhd = waE.name;
   } else {
     // Bestatter nur als Empfaenger, wenn auch seine Anschrift eingetragen ist
     const bestatter = (String(w.txtAdresse1 || '').trim() || String(w.txtAdresse2 || '').trim()) ? String(w.txtBName || '').trim() : '';
@@ -12013,8 +12052,9 @@ function uebersichtZeileAlsFall(z, ziel){
   } else {
     w.diagnosen = diagnosen;
   }
-  // Faktoren/Begruendungen/eigene Positionen aus Spalte U (FAK/BEG/EIG)
+  // Faktoren/Begruendungen/eigene Positionen aus Spalte U (FAK/BEG/EIG), weitere Adressen (ADR)
   const zus = betaUSegmenteLesen(u);
+  if(zus.adressen && zus.adressen.length){ w.weitereAdressen = zus.adressen; if(art === 'ls' && zus.adressen.some(a=> a.empf)) w.txtEmpfaenger = 'wa'; }
   // BEG ist vollstaendig: fehlt eine Ziffer der Rechnung dort, hatte sie keine Begruendung
   if(zus.details && zus.details.begruendungen) positionen.forEach(z=>{ const k = goaeNorm(z); if(zus.details.begruendungen[k] === undefined) zus.details.begruendungen[k] = ''; });
   const eigenePositionen = { ...betaEigeneSnapshot(art, positionen), ...zus.eigene };
@@ -12893,6 +12933,8 @@ async function betaZweiteAdresseErstellen(e){
     dazu('melde', 'Patient', melde);
     if(istLs) dazu('sterbe', 'Sterbeort', sterbe);
     if(istLs) dazu('bestatter', 'Bestatter', bestatter);
+    const weitere = betaUSegmenteLesen(t(v[20])).adressen || [];
+    weitere.forEach((a, i)=> dazu('wa' + i, waArtText(a.art) + (a.name ? ' – ' + a.name : ''), [a.str, a.ort]));
     betaOverlay.schritt('Rechnung wird geladen …');
     const basis = renuDateiname(e.renu);
     const dateien = await betaDateienAlle(token, ziel);
@@ -12911,7 +12953,7 @@ async function betaZweiteAdresseErstellen(e){
       for(const w of wahlen){
         const z = w.zeilen.slice(-2); if(z.length < 2) continue;
         const k = absaetze.findIndex((a, i)=> gleich(txt(i), z[0]) && gleich(txt(i + 1), z[1]));
-        if(k >= 0){ block = { ab: k, zeilen: [k, k + 1], co: false, jetzt: w.key }; break; }
+        if(k >= 0){ block = { ab: k, zeilen: [k, k + 1], co: false, jetzt: w.key, zhdIdx: /^z\. ?Hd\./i.test(txt(k - 1)) ? k - 1 : -1 }; break; }
       }
     }
     if(!block) throw new Error('Die Empfängeradresse wurde in der Rechnung nicht gefunden – bitte am PC ändern.');
@@ -12928,15 +12970,18 @@ async function betaZweiteAdresseErstellen(e){
     const akt = await warte;
     const gew = (document.querySelector('.beta-overlay input[name="adrWahl"]:checked') || {}).value;
     const frei = [t((document.getElementById('adrFrei1') || {}).value), t((document.getElementById('adrFrei2') || {}).value)];
-    const zhd = t((document.getElementById('adrZhd') || {}).value).replace(/^z\.?\s*hd\.?\s*/i, '');
+    const zhd0 = t((document.getElementById('adrZhd') || {}).value).replace(/^z\.?\s*hd\.?\s*/i, '');
     if(akt !== 'ja'){ betaOverlay.schliessen(); return false; }
     const w = gew === 'frei' ? { label: 'Andere Adresse', zeilen: frei } : angebot.find(x=> x.key === gew);
+    // weitere Adresse aus der Maske: Name als „z. Hd.“, wenn nichts eingetragen
+    const waGew = w && /^wa(\d+)$/.exec(w.key || ''); const zhd = zhd0 || (waGew && weitere[+waGew[1]] ? weitere[+waGew[1]].name : '');
     if(!w || !w.zeilen.filter(Boolean).length){ await betaOverlay.meldung('Bitte eine Adresse wählen bzw. eingeben.', TITEL); return false; }
     betaOverlay.zeigen(TITEL); betaOverlay.fortschritt(0.3); betaOverlay.schritt('Rechnung wird umadressiert …');
     // zweizeilig (Bestatter: Name in die erste Zeile, Strasse/Ort zusammen in die zweite)
     const adr = w.zeilen.length > 2 ? [w.zeilen[0], w.zeilen.slice(1).join(', ')] : [w.zeilen[0] || '', w.zeilen[1] || ''];
     const ersatz = new Map([[block.zeilen[0], docxAbsatzMitText(absaetze[block.zeilen[0]].p, adr[0])], [block.zeilen[1], docxAbsatzMitText(absaetze[block.zeilen[1]].p, adr[1])]]);
     if(block.co) ersatz.set(block.ab, zhd ? docxAbsatzMitText(absaetze[block.ab].p, 'z. Hd. ' + zhd) : '');
+    else if(block.zhdIdx >= 0) ersatz.set(block.zhdIdx, zhd ? docxAbsatzMitText(absaetze[block.zhdIdx].p, 'z. Hd. ' + zhd) : '');
     else if(zhd) ersatz.set(block.zeilen[0], docxAbsatzMitText(absaetze[block.zeilen[0]].p, 'z. Hd. ' + zhd) + ersatz.get(block.zeilen[0]));
     let neu = '', ende = 0;
     absaetze.forEach((a, k)=>{ neu += xml.slice(ende, a.pos) + (ersatz.has(k) ? ersatz.get(k) : a.p); ende = a.pos + a.p.length; });
@@ -14376,6 +14421,9 @@ function betaUSegmente(f){
       (String(p.faktor == null ? '' : p.faktor).trim() === '' ? '' : String(p.faktor).replace(',', '.')) + '/' +
       (Math.round(Number(p.betrag) * 100) / 100).toFixed(2) + '/' + betaUKodieren(rdBezUmbrechen(p.bez, rdBezBreite(f.art)).join('\n'))).join(';'));
   }
+  // weitere Adressen: ADR:<Art>/<Name>/<Strasse>/<Ort>/<E = Empfaenger>;...
+  const wa = waBereinigen((f.werte || {}).weitereAdressen);
+  if(wa.length) teile.push('ADR:' + wa.map(a=> [a.art, a.name, a.str, a.ort, a.empf ? 'E' : ''].map(betaUKodieren).join('/')).join(';'));
   return teile.length ? ' | ' + teile.join(' | ') : '';
 }
 // Gegenstueck beim Einlesen einer Uebersichtszeile
@@ -14383,7 +14431,9 @@ function betaUSegmenteLesen(u){
   const teil = (key)=>{ const m = new RegExp('(?:^|\\|)\\s*' + key + ':([^|]*)', 'i').exec(u); return m ? m[1].trim() : null; };
   const eintraege = (s)=> (s || '').split(';').map(x=> x.trim()).filter(Boolean).map(x=>{ const i = x.indexOf('='); return i < 0 ? [x, ''] : [x.slice(0, i), x.slice(i + 1)]; });
   const fak = teil('FAK'), beg = teil('BEG'), eig = teil('EIG'), anz = teil('ANZ'), abw = teil('ABW'), vari = teil('VAR');
-  const out = { details: null, eigene: {} };
+  const out = { details: null, eigene: {}, adressen: [] };
+  const adrT = teil('ADR');
+  if(adrT) out.adressen = waBereinigen(adrT.split(';').filter(Boolean).map(x=>{ const s = x.split('/').map(betaUDekodieren); return { art: s[0], name: s[1], str: s[2], ort: s[3], empf: s[4] === 'E' }; }));
   if(fak !== null || beg !== null || anz !== null || abw !== null || vari !== null){
     out.details = { faktoren: {}, begruendungen: beg !== null ? {} : undefined };
     eintraege(anz).forEach(([k, v])=>{ const n = Math.floor(Number(v)); if(n > 1) (out.details.anzahl = out.details.anzahl || {})[goaeNorm(betaUDekodieren(k))] = n; });
@@ -22917,7 +22967,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v517';
+const APP_VERSION = 'v518';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -25664,7 +25714,9 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
         ${feldHtml('Straße + Hausnummer (Sterbeort, abw.)', 'txtSterbeAdr1')}
         ${feldHtml('PLZ + Stadt (Sterbeort, abw.)', 'txtSterbeAdr2')}
       </div>` : feldHtml('PLZ + Stadt', 'txtPAdresse2')) +
-    feldHtml('Geburtsdatum (TT.MM.JJJJ)', 'txtGeda'));
+    feldHtml('Geburtsdatum (TT.MM.JJJJ)', 'txtGeda') +
+    // weitere Adressen (Wunsch 25.11.2026, Alpha-Tester): Angehoerige, Erben, Betreuer ... -- eine davon kann Rechnungsempfaenger sein
+    '<div id="waListe"></div><button type="button" class="wa-knopf" id="btnWaNeu"><b>+</b> Weitere Adresse (Angehörige, Erben, Betreuer …)</button>');
 
   if(art==='ls'){
     html += abschnitt('Sterbedaten',
@@ -25766,6 +25818,25 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
       '<div class="qv-hinweis">' + (vorschlag ? 'Vorschlag der Automatik – „Rechnungspositionen auswählen“ prüft und übernimmt ihn. ' : '') + 'Vorschau; die Rechnung selbst entsteht wie bisher aus deiner Word-Vorlage.</div></div>';
   }
 
+  // ---- weitere Adressen ----
+  let waDaten = (Array.isArray(werte.weitereAdressen) ? werte.weitereAdressen : []).map(x=> ({ ...x }));
+  const waGeaendert = ()=>{ maskeGeaendertFlag = true; const a = document.getElementById('app'); if(a) a.dispatchEvent(new Event('input', { bubbles: true })); };
+  function waZeichnen(){
+    const l = document.getElementById('waListe'); if(!l) return;
+    const fh = (i, k, lab)=> '<div class="feld"><label>' + lab + '</label><input type="text" data-wa="' + i + '" data-wak="' + k + '" value="' + htmlEsc((waDaten[i] || {})[k] || '') + '" autocomplete="off"></div>';
+    l.innerHTML = waDaten.map((a, i)=> '<div class="wa-karte" data-wakarte="' + i + '"><div class="wa-kopf"><span>Weitere Adresse</span><button type="button" data-waweg="' + i + '" aria-label="Adresse entfernen">✕</button></div>' +
+      '<div class="wa-chips">' + WA_ARTEN.map(([k, l2])=> '<button type="button" class="' + (a.art === k ? 'an' : '') + '" data-wa="' + i + '" data-waart="' + k + '">' + l2 + '</button>').join('') + '</div>' +
+      fh(i, 'name', 'Name') + fh(i, 'str', 'Straße + Hausnummer') + fh(i, 'ort', 'PLZ + Stadt') +
+      '<label class="wa-emp"><input type="checkbox" data-waemp="' + i + '"' + (a.empf ? ' checked' : '') + '> Rechnung an diese Adresse</label>' +
+      '<div class="wa-hinweis">' + (a.empf ? (art === 'ls' ? 'Wird beim Speichern als Empfänger vorgeschlagen; ' : '') + 'Patient bleibt in der Rechnung stehen, darunter „z. Hd. ' + htmlEsc(a.name || 'Name') + '“ und diese Adresse.' : 'Steht später auch bei „Adressieren an andere Adresse“ zur Auswahl.') + '</div></div>').join('');
+    l.querySelectorAll('input[data-wak]').forEach(el=> el.oninput = ()=>{ waDaten[+el.dataset.wa][el.dataset.wak] = el.value; });
+    l.querySelectorAll('[data-waart]').forEach(b=> b.onclick = ()=>{ waDaten[+b.dataset.wa].art = b.dataset.waart; waGeaendert(); waZeichnen(); });
+    l.querySelectorAll('[data-waweg]').forEach(b=> b.onclick = ()=>{ waDaten.splice(+b.dataset.waweg, 1); waGeaendert(); waZeichnen(); });
+    l.querySelectorAll('[data-waemp]').forEach(c=> c.onchange = ()=>{ const i = +c.dataset.waemp; waDaten.forEach((a, j)=> a.empf = j === i ? c.checked : false); waGeaendert(); waZeichnen(); });
+  }
+  { const b = document.getElementById('btnWaNeu'); if(b) b.onclick = ()=>{ waDaten.push({ art: 'angehoerige', name: '', str: '', ort: '', empf: false }); waGeaendert(); waZeichnen();
+      const k = document.querySelector('[data-wakarte="' + (waDaten.length - 1) + '"] input[data-wak="name"]'); if(k){ k.focus({ preventScroll: true }); try{ k.scrollIntoView({ block: 'center' }); }catch(_){} } }; }
+  waZeichnen();
   const feldIds = art==='ls'
     ? ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtSterbeAdr1','txtSterbeAdr2','txtGeda','txtSterbedatum','txtTodeszeit','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtBName','txtAdresse1','txtAdresse2','txtDokuId','txtDienst']
     : ['txtDatumExcel','txtZeitLS','txtDatum','txtName','txtPAdresse1','txtPAdresse2','txtGeda','txtKm','txtKmFahrstrecke','txtKmLuftlinie','txtDokuId','txtDienst'];
@@ -26868,6 +26939,7 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     const betragEl = document.getElementById('txtBetrag');
     w.txtBetrag = betragEl ? betragEl.value.trim() : (werte.txtBetrag||'');
     if(art==='pt') w.diagnosen = diagnosen.map(d=>({...d}));
+    const wa = waBereinigen(waDaten); if(wa.length) w.weitereAdressen = wa;
     return w;
   }
 
@@ -27012,10 +27084,14 @@ function ansichtMaske(art, korrekturIdx, vorbelegt){
     if(art === 'ls'){
       const opts = lsEmpfaengerOptionen(w);
       if(opts.length > 1){
-        const vorher = w.txtEmpfaenger || (korrekturIdx!==undefined && faelle[korrekturIdx] && faelle[korrekturIdx].werte && faelle[korrekturIdx].werte.txtEmpfaenger) || 'bestatter';
+        const waE = waBereinigen(w.weitereAdressen).findIndex(a=> a.empf && (a.str || a.ort));
+        const vorher = waE >= 0 ? 'wa' + waE : (w.txtEmpfaenger && w.txtEmpfaenger !== 'wa' ? w.txtEmpfaenger : null) || (korrekturIdx!==undefined && faelle[korrekturIdx] && faelle[korrekturIdx].werte && faelle[korrekturIdx].werte.txtEmpfaenger) || 'bestatter';
         const gewaehlt = await lsEmpfaengerWaehlen(opts, vorher);
         if(!gewaehlt) return;
-        w.txtEmpfaenger = gewaehlt;
+        // weitere Adresse gewaehlt: diese als Empfaenger merken (Haken in der Maske), sonst keinen
+        const wi = /^wa(\d+)$/.exec(gewaehlt);
+        if(w.weitereAdressen) w.weitereAdressen = waBereinigen(w.weitereAdressen).map((a, j)=> ({ ...a, empf: !!wi && j === +wi[1] }));
+        w.txtEmpfaenger = wi ? 'wa' : gewaehlt;
       } else delete w.txtEmpfaenger;
     }
     if(korrekturIdx!==undefined) faelle[korrekturIdx]=eintrag; else { faelle.push(eintrag); neuGespeichert = true; }
