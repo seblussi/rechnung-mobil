@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-1w7vaV65kRAolWcszkFxokOlSEpJMM6l+os/JLwEPfE=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-g9h9GwDZ/3kXbAghimneQIf0xo/vjTUNJoDQLM4ryQU=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -433,6 +433,18 @@ try{
   .fassung-link{color:#2f6fed; text-decoration:underline; cursor:pointer;}
   .luft-maps-icon.luft-karten-icon{background:var(--karte);}
   .fd-gp{display:inline-block; margin-left:4px; font-size:10px; font-weight:700; color:#fff; background:#b9770e; border-radius:4px; padding:0 4px; vertical-align:1px;}
+  .fd-gp.fd-gp-rot{background:#c0392b;}
+  .ds-pseudo{display:flex; flex-direction:column; gap:8px; margin:0 0 10px; padding:10px 12px; border-radius:12px; border:1.5px solid #c0392b; background:color-mix(in srgb, #c0392b 9%, var(--karte)); position:relative;}
+  .ds-pseudo-text{display:flex; flex-direction:column; gap:2px; padding-right:22px;} .ds-pseudo-text b{color:#b3261e;} .ds-pseudo-text span{font-size:13px; color:var(--text);}
+  body.dunkel .ds-pseudo-text b{color:#ff8a80;}
+  .ds-pseudo-knoepfe{display:flex; gap:8px;} .ds-pseudo-knoepfe .btn-primaer, .ds-pseudo-knoepfe .btn-sekundaer{flex:1; margin:0; min-height:40px; padding:6px 10px; font-size:14px;}
+  .ds-pseudo-zu{position:absolute; top:4px; right:6px; border:0; background:transparent; color:var(--text-schwach); font-size:18px; cursor:pointer;}
+  .pseudo-anl ol{padding-left:20px; margin:8px 0;} .pseudo-anl li{margin:3px 0;}
+  .fahrdienst-tabelle td.fd-k{white-space:nowrap;}
+  .fahrdienst-tabelle th.fd-k.gkv{color:#7d4e9e;} .fahrdienst-tabelle th.fd-k.pt{color:#1f7a45;} .fahrdienst-tabelle th.fd-k.ls{color:#1d4e89;}
+  .fahrdienst-tabelle td.fd-k.gkv{background:rgba(125,78,158,.07);} .fahrdienst-tabelle td.fd-k.pt{background:rgba(31,122,69,.07);} .fahrdienst-tabelle td.fd-k.ls{background:rgba(29,78,137,.07);}
+  body.dunkel .fahrdienst-tabelle th.fd-k.gkv{color:#c79bff;} body.dunkel .fahrdienst-tabelle th.fd-k.pt{color:#6fd19a;} body.dunkel .fahrdienst-tabelle th.fd-k.ls{color:#8cb8ff;}
+  body.dunkel .fahrdienst-tabelle td.fd-k.gkv{background:rgba(199,155,255,.08);} body.dunkel .fahrdienst-tabelle td.fd-k.pt{background:rgba(111,209,154,.08);} body.dunkel .fahrdienst-tabelle td.fd-k.ls{background:rgba(140,184,255,.08);}
   .luft-start-liste{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
   .luft-start-liste:empty{display:none;}
   .luft-start-titel{font-size:12px; color:var(--text-schwach); align-self:center; margin-right:2px;}
@@ -4184,7 +4196,7 @@ function fbFoerderInfo(d){
 }
 function fbSummenHtml(d){
   const fi = fbFoerderInfo(d);
-  return '<div class="fbx-summen"><span>GKV <b>' + betaEuro(d.gkv) + '</b>' + (d.pauschale ? ' <i class="fd-gp">GP</i>' : '') + '</span><span>LS <b>' + betaEuro(d.ls) + '</b></span><span>PT <b>' + betaEuro(d.pt) + '</b></span>' +
+  return '<div class="fbx-summen"><span><i class="fbx-n gkv">GKV</i> <b>' + betaEuro(d.gkv) + '</b>' + (d.pauschale ? ' <i class="fd-gp">GP</i>' : '') + '</span><span><i class="fbx-n ls">LS</i> <b>' + betaEuro(d.ls) + '</b></span><span><i class="fbx-n pt">PT</i> <b>' + betaEuro(d.pt) + '</b></span>' +
     (fi ? '<span>Pauschale <button type="button" class="fbx-foerder" data-fbfoerd="' + htmlEsc(fi.key) + '" data-fbart="' + htmlEsc(d.dienstart || 'Fahrdienst') + '">' + (fi.regel.satz ? foerderZahlText(fi.regel.satz) + ' €/h' : 'keine') + ' ✎</button></span>' : '') + '</div>';
 }
 function fbLaufend(d){
@@ -4597,7 +4609,7 @@ function fbAnsichtB(buch){
         // „noch nicht im Fahrtenbuch“ / „unfertig“ als schmale zweite Zeile unter dem Fall statt in der engen Kat-Spalte (Wunsch 21.11.2026)
         (f.offen ? '<span class="fbx-tr-offen ' + f.offen + '">' + (f.offen === 'unfertig' ? 'unfertig' : 'noch nicht im Fahrtenbuch') + '</span>' : '') +
         '<span>' + fbFallEuro(d, f) + '</span></div>').join('') +
-      '<div class="fbx-tr fbx-sum"><span>GKV ' + betaEuro(d.gkv).replace(' €', '') + (d.pauschale ? ' (GP)' : '') + ' · LS ' + betaEuro(d.ls).replace(' €', '') + ' · PT ' + betaEuro(d.pt).replace(' €', '') + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span></div></div>' +
+      '<div class="fbx-tr fbx-sum"><span><i class="fbx-n gkv">GKV</i> ' + betaEuro(d.gkv).replace(' €', '') + (d.pauschale ? ' (GP)' : '') + ' · <i class="fbx-n ls">LS</i> ' + betaEuro(d.ls).replace(' €', '') + ' · <i class="fbx-n pt">PT</i> ' + betaEuro(d.pt).replace(' €', '') + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span></div></div>' +
       (breit ? '<div class="fbx-tb-karte" data-tbkarte="' + di + '"></div>' : '') + '</div>').join('') + '</div>';
 }
 // Karten der Tabelle erst zeichnen, wenn der Dienst ins Bild kommt; weit weg wieder abbauen (WebGL-Grenze des Browsers)
@@ -4787,8 +4799,8 @@ function fahrdienstAuswertungRendern(daten){
       (wahl === 'alle' || zw.art === 'eigen' ? '' : '<div class="fd-q">' + ['q1', 'q2', 'q3', 'q4'].map(q=> '<button type="button" class="fb-chip' + (qAn === q ? ' an' : '') + '" data-fdzeit="' + q + '" aria-pressed="' + (qAn === q) + '">' + q.toUpperCase() + '</button>').join('') + '</div>') + '</div>' +
     (zw.art === 'eigen' ? '<div class="fbx-eigen fd-eigen"><label>von<input type="date" id="fdVon" value="' + htmlEsc(zw.von || (wahl + '-01-01')) + '"></label><label>bis<input type="date" id="fdBis" value="' + htmlEsc(zw.bis || (wahl + '-12-31')) + '"></label></div>' : '') +
     '<div class="fd-jahr-summe"><b>' + (zw.art === 'eigen' ? (zw.von ? isoDe(zw.von) : '…') + '–' + (zw.bis ? isoDe(zw.bis) : '…') : wahl === 'alle' ? 'Alle Jahre' : wahl + (/^q/.test(zw.art) ? ' · ' + zw.art.toUpperCase() : '')) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
-    ' (GKV ' + euro(s.k) + (s.f > 0.005 ? ', davon Förderung ' + euro(s.f) : '') + ' · PT ' + euro(s.p) + ' · LS ' + euro(s.l) + ')' +
-    (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>Fälle: ' + s.nk + ' GKV · ' + s.np + ' PT · ' + s.nl + ' LS' +
+    ' (<i class="fbx-n gkv">GKV</i> ' + euro(s.k) + (s.f > 0.005 ? ', davon Förderung ' + euro(s.f) : '') + ' · <i class="fbx-n pt">PT</i> ' + euro(s.p) + ' · <i class="fbx-n ls">LS</i> ' + euro(s.l) + ')' +
+    (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>Fälle: <i class="fbx-n gkv">' + s.nk + ' GKV</i> · <i class="fbx-n pt">' + s.np + ' PT</i> · <i class="fbx-n ls">' + s.nl + ' LS</i>' +
     (()=>{ // Dienste je Dienstart (ohne Schicht)
       const n = {}; bl.forEach(b=>{ const a = fbDienstartZerlegen(b.dienstart || 'Fahrdienst').art; n[a] = (n[a] || 0) + 1; });
       return Object.keys(n).length > 1 ? '<br>' + Object.entries(n).sort((x, y)=> y[1] - x[1]).map(([a, z])=> z + '× ' + htmlEsc(a)).join(' · ') : '';
@@ -4801,6 +4813,13 @@ function fahrdienstAuswertungRendern(daten){
       fahrdienstAuswertungRendern(daten); }; }
   kopf.querySelectorAll('[data-fdzeit]').forEach(b=> b.onclick = ()=>{ const q = b.dataset.fdzeit; fahrdienstZeitWahl = { art: fahrdienstZeitWahl && fahrdienstZeitWahl.art === q ? 'jahr' : q }; fahrdienstAuswertungRendern(daten); });
   ['fdVon', 'fdBis'].forEach(id=>{ const e = kopf.querySelector('#' + id); if(e) e.onchange = ()=>{ fahrdienstZeitWahl = Object.assign({}, fahrdienstZeitWahl, id === 'fdVon' ? { von: e.value } : { bis: e.value }); fahrdienstAuswertungRendern(daten); }; });
+}
+// GP-Kennzeichen (Wunsch 25.11.2026): ohne echten GKV-Fall braucht die Foerderung den Pseudo-Fall 99999 -- fehlt er, GP rot
+function fdGpHtml(b){
+  const ohneGkv = !(b.gkvRoh > 0), foerd = !fahrdienstOhneFoerderung(b.dienstart);
+  if(ohneGkv && !b.pseudo && foerd) return '<span class="fd-gp fd-gp-rot" title="Kein GKV-Fall und kein Pseudo-Fall 99999 in diesem Dienst – ohne ihn gibt es die Förderpauschale ggf. nicht. Pseudo-Fall anlegen: GOP 99999, ICD Z02, Uhrzeit Dienstbeginn.">GP!</span>';
+  if(!b.pauschale) return '';
+  return '<span class="fd-gp" title="Förderung ' + fahrdienstSatzText(b.satz) + ' €/h (' + b.satzGrund + ') statt ' + (Number(b.gkvRoh) || 0).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €' + (b.pseudo ? ' · mit Pseudo-Fall 99999' : '') + '">GP*</span>';
 }
 function fahrdienstAuswertungRendernBasis(daten){
   const zielEl = document.getElementById('fahrdienstInhalt');
@@ -4819,11 +4838,11 @@ function fahrdienstAuswertungRendernBasis(daten){
 
   let html = '<div class="abschnitt"><div class="trennlinie">Diensttage-Übersicht</div>';
   html += '<div style="overflow-x:auto;"><table class="fahrdienst-tabelle"><tr>' +
-    '<th>Datum</th><th>Arzt</th><th>Zeit</th><th>Gesamt</th><th>Std.-Lohn</th><th>gesetzl.</th><th>LS+PT</th><th>LS</th><th>PT</th></tr>' +
+    '<th>Datum</th><th>Arzt</th><th>Zeit</th><th>Gesamt</th><th>Std.-Lohn</th><th class="fd-k gkv">GKV</th><th class="fd-k ls">LS</th><th class="fd-k pt">PT</th><th>LS+PT</th></tr>' +
     daten.bloecke.map(b=>`<tr>
       <td>${htmlEsc(b.datumText)}</td><td>${htmlEsc(b.arzt)}</td><td>${htmlEsc(b.zeitLabel)}</td>
-      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td>${euro(b.gkv)}${b.pauschale ? '<span class="fd-gp" title="Förderung ' + fahrdienstSatzText(b.satz) + ' €/h (' + b.satzGrund + ') statt ' + euro(b.gkvRoh) + '">GP*</span>' : ''}${b.zusatz ? '<span class="fd-gp" title="Zusatzförderung 24.12./31.12.: 500 € je 24 h">+500</span>' : ''} ${b.pseudo ? '<span class="fd-gp" title="Dienst ohne GKV-Patient – Pseudo-Fall 99999 eingetragen (auch in der KV-Abrechnung anlegen)">Pseudo</span>' : ''}${!(b.gkvRoh > 0) && !b.pseudo && !fahrdienstOhneFoerderung(b.dienstart) ? '<span class="fd-gp fd-pseudo" title="Kein GKV-Fall in diesem Dienst: Für die Förderung muss ein Pseudo-Abrechnungsfall (GOP 99999, ICD Z02, Uhrzeit Dienstbeginn) angelegt werden.">99999?</span>' : ''}</td>
-      <td>${euro(b.ls+b.pt)}</td><td>${euro(b.ls)}</td><td>${euro(b.pt)}</td>
+      <td>${euro(b.gesamt)}</td><td>${euro(b.stundenlohn)}</td><td class="fd-k gkv">${euro(b.gkv)}${fdGpHtml(b)}${b.zusatz ? '<span class="fd-gp" title="Zusatzförderung 24.12./31.12.: 500 € je 24 h">+500</span>' : ''}</td>
+      <td class="fd-k ls">${euro(b.ls)}</td><td class="fd-k pt">${euro(b.pt)}</td><td>${euro(b.ls+b.pt)}</td>
     </tr>`).join('') + '</table></div></div>';
 
   html += '<div class="abschnitt"><div class="trennlinie">Quartale je vertretenem Arzt</div>';
@@ -22159,13 +22178,31 @@ function aerzteDaten(){ return LS.get(EIGENE_POS_CACHE, null) || {}; }
 // Adressbuch der Vertretungsaerzte (eigene_positionen.json, auch von der HTA am PC genutzt) -- Name ohne Titel/Reihenfolge verglichen;
 // sonst die Anschrift der letzten Rechnung an diesen Arzt (Wunsch 25.11.2026)
 function aerzteNameNorm(n){ return fbNameNorm(String(n || '').replace(/\b(Dr|med|Prof|Priv|Doz|dent|rer|nat|vet|habil|univ)\b\.?/gi, ' ')); }
-function aerzteAdresse(arzt){
+// Schutz (Wunsch 25.11.2026, Screenshot): eine gespeicherte „Anschrift“, die in Wahrheit deine eigenen Kopfdaten enthaelt
+// (Name, Funktion, eigene Adresse -- z. B. aus einer alten Rechnung falsch herausgelesen), wird nicht verwendet
+function aerzteEigeneZeilen(){
+  let w = {}; try{ w = ((iniCacheLaden() || {}).werte) || {}; }catch(_){}
+  const n = (x)=> String(x || '').toLowerCase().replace(/[-–—]/g, ' ').replace(/\s+/g, ' ').trim();
+  return [w.ARZTNAME, w.ARZTADRESSE1, w.ARZTADRESSE2].concat(String(w.ARZTFUNKTION || '').split(/\r?\n|\\n|~NL~/)).map(n).filter(x=> x.length >= 4);
+}
+function aerzteAdresseEigen(a){
+  if(!a) return false;
+  const eigen = aerzteEigeneZeilen(), n = (x)=> String(x || '').toLowerCase().replace(/[-–—]/g, ' ').replace(/\s+/g, ' ').trim();
+  const en = aerzteNameNorm(eigenerArztName());
+  return [a.vname, a.adr1, a.adr2].some(z=>{ const t = n(z); if(!t) return false;
+    if(en && aerzteNameNorm(z) === en) return true;
+    return eigen.some(e=> t === e || (e.length >= 8 && (t.includes(e) || e.includes(t) && t.length >= 8))); });
+}
+function aerzteAdresse(arzt){ const a = aerzteAdresseRoh(arzt); return a && !aerzteAdresseEigen(a) ? a : null; }
+// steht unter diesem Arzt eine Anschrift mit deinen eigenen Daten? (Hinweis im Dialog)
+function aerzteAdresseEigenGespeichert(arzt){ const kn = aerzteNameNorm(arzt), k = String(arzt || '').trim().toLowerCase(); return (aerzteDaten().aerzteAdressen || []).some(x=> (String(x.arzt || '').trim().toLowerCase() === k || (kn && aerzteNameNorm(x.arzt) === kn)) && aerzteAdresseEigen(x)); }
+function aerzteAdresseRoh(arzt){
   const k = String(arzt || '').trim().toLowerCase(), kn = aerzteNameNorm(arzt), d = aerzteDaten();
-  const liste = d.aerzteAdressen || [];
+  const liste = (d.aerzteAdressen || []).filter(x=> !aerzteAdresseEigen(x));
   const genau = liste.find(x=> String(x.arzt || '').trim().toLowerCase() === k); if(genau) return genau;
   const aehnlich = liste.filter(x=> kn && (aerzteNameNorm(x.arzt) === kn || aerzteNameNorm(x.vname) === kn)).sort((a, b)=> String(b.am || '').localeCompare(String(a.am || '')))[0];
   if(aehnlich) return aehnlich;
-  const r = (d.aerzteRechnungen || []).filter(x=> !x.geloescht && (x.adr1 || x.adr2) && kn && (aerzteNameNorm(x.arzt) === kn || aerzteNameNorm(x.vname) === kn))
+  const r = (d.aerzteRechnungen || []).filter(x=> !x.geloescht && (x.adr1 || x.adr2) && !aerzteAdresseEigen(x) && kn && (aerzteNameNorm(x.arzt) === kn || aerzteNameNorm(x.vname) === kn))
     .sort((a, b)=> String(b.am || '').localeCompare(String(a.am || '')))[0];
   return r ? { arzt, firma: r.firma || '', vname: r.vname || '', adr1: r.adr1 || '', adr2: r.adr2 || '', kuerzel: /^([A-ZÄÖÜ]+)-/.test(r.renu || '') ? r.renu.split('-')[0] : '' } : null;
 }
@@ -22187,9 +22224,11 @@ async function aerzteAdresseAusDateien(token, arzt){
       }
       const i = zeilen.findIndex(x=> x.toLowerCase().includes(nachname) && (!eigen || !x.toLowerCase().includes(eigen)));
       if(i < 0) continue;
-      const nach = []; for(let j = i + 1; j < zeilen.length && nach.length < 2; j++){ const z = zeilen[j]; if(/^(datum|rechnungsnummer|email|e-mail)/i.test(z) || (eigen && z.toLowerCase().includes(eigen))) break; nach.push(z); }
+      const eigenZ = aerzteEigeneZeilen();
+      const nach = []; for(let j = i + 1; j < zeilen.length && nach.length < 2; j++){ const z = zeilen[j]; if(/^(datum|rechnungsnummer|email|e-mail)/i.test(z) || (eigen && z.toLowerCase().includes(eigen)) || aerzteAdresseEigen({ adr1: z })) break; nach.push(z); }
       const vor = i > 0 && !/^(privat)?rechnung$/i.test(zeilen[i - 1]) ? zeilen[i - 1] : '';
-      if(nach.length) return { arzt, firma: vor, vname: zeilen[i], adr1: nach[0] || '', adr2: nach[1] || '', kuerzel: kz, ausDatei: it.name };
+      const erg = { arzt, firma: vor && !aerzteAdresseEigen({ adr1: vor }) ? vor : '', vname: zeilen[i], adr1: nach[0] || '', adr2: nach[1] || '', kuerzel: kz, ausDatei: it.name };
+      if(nach.length && !aerzteAdresseEigen(erg)) return erg;
     }catch(_){}
   }
   return null;
@@ -22356,7 +22395,10 @@ async function aerzteDocxErzeugen(vorlage, daten){
 // der Gesamtbetrag (= tatsaechliche Auszahlung der KVBW). Die Abweichung zum
 // berechneten Betrag zeigt, ob sich eine Reklamation lohnt.
 async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
-  const alt = aerzteRechnungFinden(arzt, quartalKey);
+  const alt0 = aerzteRechnungFinden(arzt, quartalKey);
+  // bisherige Rechnung mit deinen eigenen Daten als Anschrift: Nummer/Betrag uebernehmen, die Anschrift nicht
+  const altEigen = aerzteAdresseEigen(alt0);
+  const alt = alt0 && altEigen ? Object.assign({}, alt0, { firma: '', vname: '', adr1: '', adr2: '' }) : alt0;
   const adr = aerzteAdresse(arzt) || {};
   const heute = new Date();
   const berechnet = betaRund2(bloecke.reduce((s, b)=> s + aerzteBetragVorschlag(b), 0));
@@ -22389,11 +22431,12 @@ async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
     { const rn = document.getElementById('arRenu'), kz = document.getElementById('arKuerzel'), lauf = { n: 0 };
       const vorschau = async ()=>{ if(!rn || rn.value.trim()) return; const n = ++lauf.n, k = (kz && kz.value || '').trim().toUpperCase(); if(!/^[A-ZÄÖÜ]{1,4}$/.test(k)) return;
         rn.placeholder = 'wird ermittelt …';
-        try{ const token = await msGraphTokenHolen(); if(!token) throw 0; const r = await aerzteNaechsteRenu(token, k); if(n === lauf.n && document.body.contains(rn)) rn.placeholder = r + ' (automatisch)'; }
+        try{ const token = await msGraphTokenHolen(); if(!token) throw 0; const r = await aerzteNaechsteRenu(token, k); if(n === lauf.n && document.body.contains(rn)) rn.placeholder = r; rn.title = 'Wird automatisch vergeben: ' + r; }
         catch(_){ if(n === lauf.n && document.body.contains(rn)) rn.placeholder = 'automatisch'; } };
       vorschau(); if(kz) kz.addEventListener('input', ()=>{ clearTimeout(lauf.t); lauf.t = setTimeout(vorschau, 500); });
       const eigen = aerzteNameNorm(eigenerArztName());
       if(eigen && aerzteNameNorm(arzt) === eigen){ const h = document.createElement('div'); h.className = 'fb-fehler'; h.textContent = 'Im Fahrtenbuch steht bei diesen Diensten dein eigener Name als Arzt – bitte dort den vertretenen Arzt eintragen bzw. den Empfänger hier ändern.'; const d0 = document.querySelector('.beta-overlay.aktiv .fb-dialog'); if(d0) d0.insertBefore(h, d0.children[1] || null); }
+      if(altEigen || aerzteAdresseEigenGespeichert(arzt)){ const h = document.createElement('div'); h.className = 'fb-fehler'; h.textContent = 'Die gespeicherte Anschrift enthielt deine eigenen Daten (Name/Funktion) und wird nicht verwendet – bitte die Anschrift von ' + arzt + ' prüfen bzw. eintragen.'; const d0 = document.querySelector('.beta-overlay.aktiv .fb-dialog'); if(d0) d0.insertBefore(h, d0.children[1] || null); }
       if(!st.adr1 && !st.adr2 && !aerzteAdresse(arzt)){
         (async ()=>{ try{ const token = await msGraphTokenHolen(); if(!token) return; const a = await aerzteAdresseAusDateien(token, arzt); if(!a) return;
           const f = (id, v)=>{ const e = document.getElementById(id); if(e && !e.value.trim() && v) e.value = v; };
@@ -24466,7 +24509,7 @@ function designDienstHtml(info){
   // Balken nur, solange die Foerderung noch greift (GKV unter der Pauschale)
   const balken = info.pauschale > 0 && info.gkv < info.pauschale;
   const lohn = designStundenlohn(info, faelle);
-  return '<div class="ds-dz">' +
+  return '<div class="ds-dz">' + dsPseudoHinweisHtml(info) +
     '<button type="button" class="ds-zeile-live" data-live="1"><span class="ds-status-zeile"><span class="ds-status">' + htmlEsc(status) + '</span>' +
       '<span class="ds-schicht">' + (info.schicht ? '<b>' + htmlEsc(info.schicht) + '</b>' : '') + '<small>' + designUhr(fe.von) + '–' + designUhr(fe.bis) + '</small></span></span>' +
       '<span class="ds-status-unter">' + htmlEsc(unter) + '</span>' +
@@ -24534,7 +24577,54 @@ function dsUhrBlaetternWiring(wurzel){
       if(dx > 0 ? frueher : spaeter) dsDienstBlaettern(dx > 0 ? -1 : 1); } }, { passive: true });
   block.addEventListener('click', (e)=>{ if(gewischt){ e.stopPropagation(); e.preventDefault(); gewischt = false; } }, true);
 }
+// Erinnerung Pseudo-Fall (Wunsch 25.11.2026): laufender Dienst mit Foerderung, 2 h vor Ende noch kein GKV-Patient
+function dsPseudoSchluessel(info){ return info && info.fenster ? info.fenster.von.getTime() + '-' + info.fenster.bis.getTime() : ''; }
+function dsPseudoFaellig(info){
+  try{
+    if(!info || info.modus !== 'laufend' || !(info.pauschale > 0) || (info.faelle || []).length) return false;
+    const rest = info.fenster.bis.getTime() - Date.now(); if(rest > 2 * 3600000 || rest < 0) return false;
+    const fe = info.fenster;
+    if((typeof gkvFaelleLaden === 'function' ? gkvFaelleLaden() : []).some(f=> f && f.name === GKV_PSEUDO_NAME && fallGehoertZu(designFallZeit(f), f.dienst, fe, 3600000))) return false;
+    const w = LS.get('pseudo_live_weg', {}) || {}, k = dsPseudoSchluessel(info);
+    return !(w[k] && (w[k] === 'ganz' || Date.now() < w[k]));
+  }catch(_){ return false; }
+}
+function dsPseudoHinweisHtml(info){
+  if(!dsPseudoFaellig(info)) return '';
+  const min = Math.max(0, Math.round((info.fenster.bis.getTime() - Date.now()) / 60000));
+  return '<div class="ds-pseudo" role="alert"><div class="ds-pseudo-text"><b>Noch kein GKV-Patient in diesem Dienst</b>' +
+    '<span>Dienstende in ' + (min >= 60 ? Math.floor(min / 60) + ' h ' + (min % 60 ? (min % 60) + ' min' : '') : min + ' min') + '. Für die Förderpauschale ist dann der Pseudo-Fall 99999 nötig.' +
+    (window.APP_KONFIG ? ' Diesen Vorgang gibt es nur in manchen KV-Bezirken – bitte bei deiner KV prüfen.' : '') + '</span></div>' +
+    '<div class="ds-pseudo-knoepfe"><button type="button" class="btn-primaer" data-pseudo="anlegen">Pseudo-Fall anlegen</button><button type="button" class="btn-sekundaer" data-pseudo="anleitung">So geht’s</button>' +
+    '<button type="button" class="ds-pseudo-zu" data-pseudo="spaeter" title="In 30 Minuten wieder erinnern" aria-label="Später erinnern">×</button></div></div>';
+}
+async function dsPseudoAnleitung(info){
+  const von = info && info.fenster ? designUhr(info.fenster.von) : 'Dienstbeginn';
+  await betaOverlay.ergebnis('Pseudo-Fall 99999', '<div class="pseudo-anl">' +
+    (window.APP_KONFIG ? '<p class="beta-erg-klein">Gilt nur in KV-Bezirken mit diesem Verfahren (z. B. KV Baden-Württemberg) – bitte die Vorgaben deiner KV beachten.</p>' : '') +
+    '<p>Wenn im Dienst kein gesetzlich versicherter Patient behandelt wurde, einen <b>Notfallschein</b> bzw. Abrechnungsfall so anlegen:</p><ol>' +
+    '<li><b>Kasse:</b> AOK Baden-Württemberg</li><li><b>Name:</b> Ärztlicher Bereitschaftsdienst, <b>Vorname:</b> Arzt 1</li>' +
+    '<li><b>Anschrift:</b> Notfallstr. 1, 12345 Notfallstadt</li><li><b>Geburtsdatum:</b> 01.01.2020</li>' +
+    '<li><b>GOP:</b> 99999 · <b>Diagnose:</b> Z02 · <b>Uhrzeit:</b> Dienstbeginn (' + htmlEsc(von) + ')</li>' +
+    '<li>Privat- oder BG-Patienten im Dienst: zusätzlich <b>99909</b> je Patient</li></ol>' +
+    '<p class="beta-erg-klein">„Pseudo-Fall anlegen“ trägt den Fall als Merkzeile (0 €) ins Fahrtenbuch ein – damit rechnet die App die Förderung. In der KV-Abrechnung musst du ihn trotzdem selbst anlegen.</p></div>',
+    [{ label: 'Schließen', akt: 'zu', primaer: true }]);
+  betaOverlay.schliessen();
+}
+function dsPseudoWiring(wurzel, info){
+  wurzel.querySelectorAll('[data-pseudo]').forEach(b=> b.onclick = async ()=>{
+    const a = b.dataset.pseudo, k = dsPseudoSchluessel(info), w = LS.get('pseudo_live_weg', {}) || {};
+    if(a === 'spaeter'){ w[k] = Date.now() + 30 * 60000; LS.set('pseudo_live_weg', w); const e = b.closest('.ds-pseudo'); if(e) e.remove(); return; }
+    if(a === 'anleitung'){ await dsPseudoAnleitung(info); return; }
+    const d = info.fenster.von;
+    const r = await gkvPseudoEintragen(new Date(d.getFullYear(), d.getMonth(), d.getDate()), zz2(d.getHours()) + ':' + zz2(d.getMinutes()), { titel: 'Pseudo-Fall 99999 für diesen Dienst eintragen?' });
+    if(!r) return;
+    if(r.ok){ w[k] = 'ganz'; LS.set('pseudo_live_weg', w); const e = b.closest('.ds-pseudo'); if(e) e.remove(); appToastAnzeigen(r.text, 5000); }
+    else if(typeof alertBanner === 'function') alertBanner(r.text);
+  });
+}
 function designDienstWiring(wurzel){
+  try{ const info0 = designDienstInfo(); dsPseudoWiring(wurzel, info0); }catch(_){}
   try{ dsUhrBlaetternWiring(wurzel); }catch(_){}
   const box = wurzel.querySelector('.ds-dz'); if(!box) return;
   const knopf = box.querySelector('.ds-dz-auf'), liste = box.querySelector('.ds-dz-liste');
