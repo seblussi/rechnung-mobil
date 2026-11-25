@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-euWX0G71G/TgoM6LDoMYWL+q9QpPQCUSxxL93KWF0sc=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-lCUjU+leEOy7yCVJb0xpYp643PVcQ7CDlRkEAkbwMeY=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -228,6 +228,8 @@ try{
   .offen-zeile{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--rand); cursor:pointer;}
   .offen-zeile:last-child{padding-bottom:12px;}
   .offen-knoepfe{flex:none; display:flex; gap:6px; align-items:center;} .offen-knoepfe .offen-bezahlt{white-space:nowrap;}
+  .offen-zeile{position:relative;} .offen-weg{flex:none; width:auto; margin:0; padding:4px 8px; border:0; background:transparent; color:var(--text-schwach); font-size:16px; line-height:1; cursor:pointer;}
+  @media (max-width:420px){ .offen-weg{position:absolute; top:4px; right:-6px;} .offen-zeile .offen-knoepfe{margin-right:22px;} }
   @media (max-width:420px){ .offen-knoepfe{flex-direction:column; align-items:stretch;} .offen-knoepfe .offen-bezahlt{min-height:32px; padding:4px 10px; font-size:12.5px;} }
   .offen-inhalt{flex:1; min-width:0;} .offen-inhalt b{display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .offen-inhalt small{color:var(--text-schwach); font-size:12.5px;} .offen-zeile.verzug .offen-inhalt small{color:#b3261e;}
@@ -1368,6 +1370,23 @@ try{
   .badge-termin{display:inline-block; font-size:28px; line-height:1; vertical-align:middle; cursor:pointer;}
   .fall-zeile .info.termin-text{color:#b9770e; font-weight:600;}
   .badge-pdf{display:inline-block; font-size:28px; line-height:1; vertical-align:middle; cursor:pointer;}
+  .badge-pdf svg, .badge-brief svg{width:30px; height:30px; display:block;}
+  .badge-pdf .s-blatt, .badge-brief .s-blatt{fill:#fff; stroke:#7a8696; stroke-width:1.3; stroke-linejoin:round;}
+  .badge-pdf .s-linie, .badge-brief .s-linie{fill:none; stroke:#7a8696; stroke-width:1.3; stroke-linejoin:round;}
+  .badge-pdf .s-band.pdf{fill:#d64541;} .badge-pdf text{font:800 4.6px Arial, sans-serif; fill:#fff;}
+  .badge-brief .s-band.brief{fill:#2f855a;} .badge-brief .s-haken{fill:none; stroke:#fff; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round;}
+  /* Rechnungsuebersicht kompakt wie die GKV-Liste (Wunsch 25.11.2026) */
+  #gesamtListe .fall-zeile{padding:9px 12px; align-items:center; gap:9px;}
+  #gesamtListe .fall-zeile .chk{margin-top:0;}
+  #gesamtListe .fall-zeile .name{font-size:15.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; overflow-wrap:normal;}
+  #gesamtListe .fall-zeile .info{font-size:12px; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; overflow-wrap:normal;}
+  #gesamtListe .fall-zeile .info.termin-text{white-space:normal;}
+  #gesamtListe .gs-rechts{display:flex; flex-direction:column; align-items:flex-end; flex:none;}
+  #gesamtListe .gs-rechts b{font-variant-numeric:tabular-nums; font-size:15px;}
+  #gesamtListe .gs-rechts small{font-size:11.5px; color:var(--text-schwach); white-space:nowrap;}
+  #gesamtListe .gs-rechts .bezahlt{color:#1f8a4c; font-weight:600;} #gesamtListe .gs-rechts .verzug{color:#c0392b; font-weight:600;}
+  #gesamtListe .fall-icons{gap:4px; min-width:0;}
+  body.dunkel .badge-pdf .s-blatt, body.dunkel .badge-brief .s-blatt{fill:#e9edf2;}
   /* Fall steht zwar schon in der Rechnungsuebersicht (nur solche Zeilen
      zeigt die Rechnungsverwaltung ueberhaupt), aber die stille Erzeugung am
      PC konnte noch kein PDF dazu erstellen (Feld fehlt/Datum ungueltig/
@@ -2258,6 +2277,18 @@ try{
   .fbx-m{display:inline-block; font-size:10px; font-weight:700; color:#fff; border-radius:4px; padding:1px 4px; vertical-align:1px; background:#7d4e9e;}
   .fbx-m.ls{background:var(--ls-farbe);} .fbx-m.pt{background:var(--pt-farbe);}
   .fbx-tab{background:var(--karte); border:1px solid var(--rand); border-radius:10px; overflow:hidden; font-size:12px;}
+  .fbx-tab.breit .fbx-tb-block{display:grid; grid-template-columns:minmax(0, 1fr) minmax(280px, 40%); border-top:1px solid var(--rand);}
+  .fbx-tab.breit .fbx-tb-block:first-child{border-top:0;}
+  .fbx-tab.breit .fbx-tb-zeilen > .fbx-tr:first-child{border-top:0;}
+  .fbx-tab.breit .fbx-tb-karte{border-left:1px solid var(--rand); padding:6px 8px; min-height:120px; align-self:stretch;}
+  .fbx-tab.breit .fbx-tb-karte.kopf{min-height:0; padding:5px 8px; font-weight:700; color:var(--text-schwach);}
+  .fbx-tab.breit .fbx-tb-karte .sk-kopf{margin:0 0 4px;}
+  .fbx-tab.breit .fbx-tr:not(.fbx-dk):not(.fbx-sum){grid-template-columns:62px minmax(0,1fr) 34px minmax(0,1.2fr) 60px;}
+  .fbx-tr .fbx-zeit{white-space:nowrap;}
+  .fbx-tr .fbx-zeit .fbx-ortnr{display:inline-flex; margin-right:3px; transform:scale(.85);}
+  .fbx-arten{white-space:nowrap; font-weight:500;} .fbx-n{font-style:normal; font-weight:700;}
+  .fbx-n.gkv{color:#7d4e9e;} .fbx-n.pt{color:#1f7a45;} .fbx-n.ls{color:#1d4e89;}
+  body.dunkel .fbx-n.gkv{color:#c79bff;} body.dunkel .fbx-n.pt{color:#6fd19a;} body.dunkel .fbx-n.ls{color:#8cb8ff;}
   .fbx-tr{display:grid; grid-template-columns:38px minmax(0,1fr) 34px minmax(0,1.2fr) 52px; gap:4px; padding:5px 6px; border-top:1px solid var(--rand); align-items:center;}
   .fbx-tr > span:last-child{text-align:right; font-variant-numeric:tabular-nums;}
   .fbx-th{border-top:0; color:var(--text-schwach); font-weight:600;}
@@ -2390,6 +2421,14 @@ try{
   /* ---------- Querformat-Ansicht (Einstellung, zum Testen): Tablet/PC und Handy quer ---------- */
   body.quer main:has(.quer-breit){max-width:min(1500px, calc(100% - 24px)) !important; margin-left:auto; margin-right:auto;}
   body.quer header{padding-left:max(var(--kopf-l), calc(50% - 750px)); padding-right:max(var(--kopf-r), calc(50% - 750px));}
+  /* Handy quer (Wunsch 25.11.2026): Kopfzeile deutlich schmaler und scrollt mit weg */
+  @media (max-height:520px){
+    body.quer header{position:relative; padding-top:0 !important; padding-bottom:0 !important;}
+    body.quer header h1{font-size:15.5px !important;}
+    body.quer header .zurueck, body.quer header .zahnrad, body.quer header button{min-height:36px !important; min-width:40px !important; padding-top:0; padding-bottom:0;}
+    body.quer header .zahnrad .regler-icon{width:24px !important; height:24px !important;}
+    body.quer .quer-sp3, body.quer .quer-start.zwei .quer-sp3{top:8px !important;}
+  }
   .quer-start{display:block;}
   body.quer .quer-start{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr); gap:18px; align-items:start;}
   body.quer .quer-start > .quer-sp > *:first-child{margin-top:0;}
@@ -2417,6 +2456,7 @@ try{
   .brief-termin{margin-top:12px; padding-top:10px; border-top:1px solid var(--rand);} .brief-termin label{display:flex !important; align-items:center; justify-content:flex-start; gap:10px; margin:8px 0; font-size:15px; font-weight:500;}
   .brief-termin input[type=radio]{width:20px !important; height:20px; flex:none; margin:0 !important; padding:0;} .brief-termin input[type=date]{width:auto !important; flex:none; margin:0 !important; padding:6px 10px;}
   .fd-jahre{flex-wrap:nowrap !important;}
+  .fd-zeit{margin:2px 0 8px;} .fd-zeit-leiste{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:2px 0;} .fd-zeit-leiste .fb-chip{flex:none;} .fd-eigen{margin-top:6px;}
   .fd-jahre-leiste{display:flex; gap:6px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:2px 0;
     -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent); mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent);}
   .fd-jahre-leiste::-webkit-scrollbar{display:none;}
@@ -2434,6 +2474,7 @@ try{
   body.quer .fbx-quer-liste{position:sticky; top:8px; max-height:calc(100dvh - 16px); overflow:auto; padding-right:2px; padding-bottom:96px; box-sizing:border-box;}
   /* Tabelle: Liste in der bisherigen Breite */
   body.quer #fbxInhalt > .fbx-tab{max-width:648px; margin-left:auto; margin-right:auto;}
+  body.quer #fbxInhalt > .fbx-tab.breit, #fbxInhalt > .fbx-tab.breit{max-width:1180px;}
   /* Woche: Tage oben, darunter links die Faelle, rechts die Karte */
   body.quer .fbx-woche + .fbx-karte{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.2fr); column-gap:16px; align-items:start;}
   body.quer .fbx-woche + .fbx-karte > .fbx-kopf, body.quer .fbx-woche + .fbx-karte > .fbx-kpi{grid-column:1 / -1;}
@@ -2582,6 +2623,8 @@ try{
   .ds-live .ds-dz .ds-zahlen.fuenf-k > span, .ds-live .ds-dz .ds-zahlen.vier-k > span{container-type:inline-size;}
   .ds-live .ds-dz .ds-zahlen.fuenf-k b, .ds-live .ds-dz .ds-zahlen.vier-k b{font-size:min(13.5px, 23cqw); letter-spacing:-.2px;}   /* Betrag passt immer in den Kasten (auch 1899,45 auf schmalen Handys) */
   .ds-zahlen .z-anz{font-style:normal; font-weight:800; margin-left:2px;}
+  .ds-live .ds-dz .ds-zahlen.fuenf-k > span > span:first-child, .ds-live .ds-dz .ds-zahlen.vier-k > span > span:first-child{white-space:nowrap; overflow:hidden; text-overflow:clip; font-size:min(10.5px, 17cqw);}
+  .ds-zahlen .z-anz{font-weight:700; margin-left:1px; letter-spacing:-.2px;}
   .ds-zahlen .z-gkv{background:color-mix(in srgb, #7d4e9e 11%, var(--bg)) !important;} .ds-zahlen .z-gkv > span{color:#7d4e9e !important;}
   .ds-zahlen .z-pt{background:color-mix(in srgb, var(--pt-farbe) 11%, var(--bg)) !important;} .ds-zahlen .z-pt > span{color:var(--pt-farbe) !important;}
   .ds-zahlen .z-ls{background:color-mix(in srgb, var(--ls-farbe) 11%, var(--bg)) !important;} .ds-zahlen .z-ls > span{color:var(--ls-farbe) !important;}
@@ -4115,10 +4158,16 @@ function fbFallEuro(d, f){
 }
 function fbMarke(art, f){ return '<span class="fbx-m ' + art + '">' + ({ ls: 'LS', pt: 'PT', gkv: 'GKV' }[art]) + '</span>' + fbOffenMarke(f); }
 function fbOffenMarke(f){ return f && f.offen ? ' <span class="fbx-offen ' + f.offen + '">' + (f.offen === 'unfertig' ? 'unfertig' : 'noch nicht im Fahrtenbuch') + '</span>' : ''; }
+// Anzahl je Art in Klammern mit Farbcode (Wunsch 25.11.2026): (5 GKV · 3 PT · 2 LS), nur vorhandene Arten
+function fbAnzahlArtenHtml(d){
+  const f = (d.faelle || []).filter(x=> !x.pseudo), n = (a)=> f.filter(x=> x.art === a).length;
+  const t = [['gkv', 'GKV'], ['pt', 'PT'], ['ls', 'LS']].filter(([a])=> n(a)).map(([a, l])=> '<i class="fbx-n ' + a + '">' + n(a) + ' ' + l + '</i>');
+  return t.length ? ' <span class="fbx-arten">(' + t.join(' · ') + ')</span>' : '';
+}
 function fbDienstKopf(d){
   return '<span class="fbx-titel">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.dienstart || 'Fahrdienst') + ' ' + htmlEsc(d.zeitLabel || '') + '</span>' +
     (d.lokal ? '<span class="fbx-unter fbx-lokal">noch nicht in der Excel – erscheint dort mit dem ersten eingetragenen Fall</span>' : '') +
-    '<span class="fbx-unter">' + (d.arzt ? 'für ' + htmlEsc(d.arzt) + ' · ' : '') + d.faelle.filter(f=> !f.pseudo).length + ' Fälle' + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span>';
+    '<span class="fbx-unter">' + (d.arzt ? 'für ' + htmlEsc(d.arzt) + ' · ' : '') + d.faelle.filter(f=> !f.pseudo).length + ' Fälle' + fbAnzahlArtenHtml(d) + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span>';
 }
 function fbFoerderInfo(d){
   const von = d.foerderKey ? d.foerderKey.split('|')[1] : (d.fenster ? zz2(new Date(d.fenster.von).getHours()) + ':' + zz2(new Date(d.fenster.von).getMinutes()) : String(d.zeitRoh || '').split('-')[0]);
@@ -4224,6 +4273,7 @@ async function ansichtFahrtenbuch(blatt){
     const buch = buchS;
     const aQuer = ansicht === 'a' && querAn();
     inhalt.innerHTML = ansicht === 'b' ? fbAnsichtB(buch) : ansicht === 'c' ? fbAnsichtC(buch) : aQuer ? fbAnsichtAQuer(buch) : fbAnsichtA(buch);
+    if(ansicht === 'b') setTimeout(()=> fbTabelleKartenAnbinden(inhalt, buch), 0);
     if(aQuer){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
     if(ansicht === 'c'){ let w = Number(LS.get('fb_tag', 0)); if(!(w >= 0 && w < buch.dienste.length)) w = 0; setTimeout(()=> fbTagKarteZeichnen(buch.dienste[w], w).catch(()=>{}), 0); }
     inhalt.querySelectorAll('[data-fbauf]').forEach(k=> k.onclick = ()=>{ if(k._lang){ k._lang = false; return; } k.closest('.fbx-karte').classList.toggle('zu'); });
@@ -4524,27 +4574,44 @@ function fbAnsichtAQuer(buch){
       '<span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art, f) + ' <b>' + htmlEsc(f.name) + '</b><span class="fbx-zl">' + fbZiffernHtml(f.ziffern) + '</span></span>' +
       '<span class="fbx-euro">' + fbFallEuro(d, f) + '</span></button>').join('') + '<div class="fbx-ortkarte" id="fbxKarte"></div></div></div>';
   const rechts = '<div class="fbx-quer-liste">' + buch.dienste.map((x, i)=> '<button type="button" class="fbx-qzeile' + (i === wahl ? ' an' : '') + (fbLaufend(x) ? ' laeuft' : '') + '" data-fbtag="' + i + '">' +
-    '<span class="fbx-qt"><b>' + fbTagText(x.tag) + '</b><small>' + htmlEsc(x.dienstart || 'Fahrdienst') + ' ' + htmlEsc(x.zeitLabel || '') + ' · ' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle' + (x.lokal ? ' · noch nicht in der Excel' : '') + '</small></span>' +
+    '<span class="fbx-qt"><b>' + fbTagText(x.tag) + '</b><small>' + htmlEsc(x.dienstart || 'Fahrdienst') + ' ' + htmlEsc(x.zeitLabel || '') + ' · ' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle' + fbAnzahlArtenHtml(x) + (x.lokal ? ' · noch nicht in der Excel' : '') + '</small></span>' +
     '<span class="fbx-qb">' + betaEuro(x.gesamt) + '</span></button>').join('') + '</div>';
   return '<div class="fbx-quer quer-breit">' + links + rechts + '</div>';
 }
 // B: Tabelle wie die Excel
+// Tabelle; breit (Querformat/PC, Wunsch 25.11.2026) rechts neben jedem Dienst seine Karte
+function fbTabelleBreit(){ return window.innerWidth >= 820; }
 function fbAnsichtB(buch){
-  return '<div class="fbx-tab"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div>' +
-    buch.dienste.map((d, di)=> '<div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
-      d.faelle.map((f, fi)=> '<div class="fbx-tr" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + di + '-' + fi + '"><span>' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art) + '</span><span class="fbx-zt">' +
+  const breit = fbTabelleBreit();
+  return '<div class="fbx-tab' + (breit ? ' breit' : '') + '"><div class="fbx-tb-block"><div class="fbx-tb-zeilen"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div></div>' + (breit ? '<div class="fbx-tb-karte kopf">Einsatzorte</div>' : '') + '</div>' +
+    buch.dienste.map((d, di)=> '<div class="fbx-tb-block" data-tbdi="' + di + '"><div class="fbx-tb-zeilen"><div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + fbAnzahlArtenHtml(d) + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
+      d.faelle.map((f, fi)=> '<div class="fbx-tr" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + di + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art) + '</span><span class="fbx-zt">' +
         f.ziffern.map(x=> (x.anz > 1 ? x.anz + '×' : '') + htmlEsc(x.gop)).join(' ') + '</span>' +
         // „noch nicht im Fahrtenbuch“ / „unfertig“ als schmale zweite Zeile unter dem Fall statt in der engen Kat-Spalte (Wunsch 21.11.2026)
         (f.offen ? '<span class="fbx-tr-offen ' + f.offen + '">' + (f.offen === 'unfertig' ? 'unfertig' : 'noch nicht im Fahrtenbuch') + '</span>' : '') +
         '<span>' + fbFallEuro(d, f) + '</span></div>').join('') +
-      '<div class="fbx-tr fbx-sum"><span>GKV ' + betaEuro(d.gkv).replace(' €', '') + (d.pauschale ? ' (GP)' : '') + ' · LS ' + betaEuro(d.ls).replace(' €', '') + ' · PT ' + betaEuro(d.pt).replace(' €', '') + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span></div>').join('') + '</div>';
+      '<div class="fbx-tr fbx-sum"><span>GKV ' + betaEuro(d.gkv).replace(' €', '') + (d.pauschale ? ' (GP)' : '') + ' · LS ' + betaEuro(d.ls).replace(' €', '') + ' · PT ' + betaEuro(d.pt).replace(' €', '') + (d.dienststunden ? ' · ' + betaEuro(d.stundenlohn).replace(' €', '') + ' €/h' : '') + '</span></div></div>' +
+      (breit ? '<div class="fbx-tb-karte" data-tbkarte="' + di + '"></div>' : '') + '</div>').join('') + '</div>';
+}
+// Karten der Tabelle erst zeichnen, wenn der Dienst ins Bild kommt; weit weg wieder abbauen (WebGL-Grenze des Browsers)
+function fbTabelleKartenAnbinden(inhalt, buch){
+  const boxen = [...inhalt.querySelectorAll('[data-tbkarte]')]; if(!boxen.length || !('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver((eintr)=>{
+    if(!document.body.contains(inhalt)){ io.disconnect(); return; }
+    eintr.forEach(e=>{
+      const b = e.target, di = +b.dataset.tbkarte;
+      if(e.isIntersecting && !b._an){ b._an = true; fbTagKarteZeichnen(buch.dienste[di], di, b).catch(()=>{}); }
+      else if(!e.isIntersecting && b._an){ b._an = false; b._kl = (b._kl || 0) + 1; b.querySelectorAll('.mini-ebenen').forEach(w=>{ try{ w._mk && w._mk.weg && w._mk.weg(); }catch(_){} }); b.innerHTML = ''; }
+    });
+  }, { rootMargin: '400px 0px' });
+  boxen.forEach(b=> io.observe(b));
 }
 // C: Diensttage als Kacheln, darunter der gewaehlte Tag
 function fbAnsichtC(buch){
   let wahl = Number(LS.get('fb_tag', 0)); if(!(wahl >= 0 && wahl < buch.dienste.length)) wahl = 0;
   const d = buch.dienste[wahl];
   return '<div class="fbx-woche">' + buch.dienste.map((x, i)=> '<button type="button" class="fbx-tag' + (i === wahl ? ' an' : '') + (fbLaufend(x) ? ' laeuft' : '') + '" data-fbtag="' + i + '"><span>' +
-      DESIGN_WT[x.tag.getDay()] + ' ' + zz2(x.tag.getDate()) + '.' + zz2(x.tag.getMonth() + 1) + '.</span><b>' + betaEuro(x.gesamt).replace(' €', '') + '</b><small>' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle</small></button>').join('') + '</div>' +
+      DESIGN_WT[x.tag.getDay()] + ' ' + zz2(x.tag.getDate()) + '.' + zz2(x.tag.getMonth() + 1) + '.</span><b>' + betaEuro(x.gesamt).replace(' €', '') + '</b><small>' + x.faelle.filter(f=> !f.pseudo).length + ' Fälle' + fbAnzahlArtenHtml(x) + '</small></button>').join('') + '</div>' +
     '<div class="fbx-karte"><div class="fbx-kopf" data-fbdienst="' + wahl + '"><span class="fbx-kopftext">' + fbDienstKopf(d) + '</span><span class="fbx-betrag">' + betaEuro(d.gesamt) + '</span></div>' +
     '<div class="fbx-kpi"><div><span>GKV + Förderung</span><b>' + betaEuro(d.gkv) + '</b></div><div><span>LS + PT</span><b>' + betaEuro(d.ls + d.pt) + '</b></div></div>' +
     '<div class="fbx-detail">' + d.faelle.map((f, fi)=> '<button type="button" class="fbx-fall" data-fbfall="' + wahl + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="fbx-mitte">' + fbMarke(f.art, f) + ' <b>' + htmlEsc(f.name) + '</b></span><span class="fbx-euro">' + fbFallEuro(d, f) + ' ›</span></button>').join('') + '</div>' +
@@ -4570,9 +4637,9 @@ async function fbUebersichtAdressen(){
   if(zeilen) fbUeAdrCache = { t: Date.now(), liste };
   return liste;
 }
-async function fbTagKarteZeichnen(d, di){
-  const box = document.getElementById('fbxKarte'); if(!box || !d || typeof NFP_KARTE === 'undefined') return;
-  const lauf = ++fbTagKarteLauf, aktuell = ()=> lauf === fbTagKarteLauf && document.body.contains(box);
+async function fbTagKarteZeichnen(d, di, boxArg){
+  const box = boxArg || document.getElementById('fbxKarte'); if(!box || !d || typeof NFP_KARTE === 'undefined') return;
+  const lauf = boxArg ? (box._kl = (box._kl || 0) + 1) : ++fbTagKarteLauf, aktuell = ()=> (boxArg ? lauf === box._kl : lauf === fbTagKarteLauf) && document.body.contains(box);
   const faelle = d.faelle.map((f, fi)=> ({ f, fi })).filter(x=> !x.f.pseudo);
   if(!faelle.length){ box.innerHTML = ''; return; }
   box.innerHTML = '<div class="sk-kopf"><span class="sk-titel"><b>Einsatzorte</b><small>werden gesucht …</small></span></div>';
@@ -4675,6 +4742,15 @@ async function ansichtFahrdienstAuswertung(){
 
 let fdAktionenEl = null;   // Knopfleiste der Quartalsuebersicht (wandert in die Jahreszeile)
 let fahrdienstJahrWahl = null; // null = aktuelles Jahr (bzw. neuestes vorhandenes), 'alle' = alle Jahre
+let fahrdienstZeitWahl = { art: 'jahr' };   // innerhalb des Jahres: 'jahr', 'q1'..'q4' oder 'eigen' (von/bis)
+// Quartale je Arzt aus einer Auswahl von Diensten (gleiche Form wie beim Einlesen)
+function fahrdienstQuartaleAus(bl){
+  const qm = new Map();
+  bl.forEach(b=>{ if(!qm.has(b.quartalKey)) qm.set(b.quartalKey, new Map()); const am = qm.get(b.quartalKey);
+    if(!am.has(b.arzt)) am.set(b.arzt, { summe: 0, dienste: [] }); const e = am.get(b.arzt); e.summe += b.gkv; e.dienste.push(b.datumText + (b.zeitLabel ? ', ' + b.zeitLabel : '')); });
+  const out = []; qm.forEach((am, quartal)=>{ const aerzte = []; am.forEach((e, arzt)=> aerzte.push({ arzt, summe: e.summe, dienste: e.dienste })); out.push({ quartal, aerzte }); });
+  return out;
+}
 function fahrdienstJahrVon(b){ const m = /(\d{4})$/.exec(String(b.datumText || '')); return m ? m[1] : '?'; }
 function fahrdienstAuswertungRendern(daten){
   const zielEl = document.getElementById('fahrdienstInhalt');
@@ -4683,8 +4759,15 @@ function fahrdienstAuswertungRendern(daten){
   const heute = String(new Date().getFullYear());
   let wahl = fahrdienstJahrWahl;
   if(wahl !== 'alle' && !jahre.includes(wahl)) wahl = jahre.includes(heute) ? heute : jahre[0];
-  const bl = wahl === 'alle' ? daten.bloecke : daten.bloecke.filter(b=> fahrdienstJahrVon(b) === wahl);
-  const qu = wahl === 'alle' ? daten.quartale : daten.quartale.filter(q=> String(q.quartal).slice(-4) === wahl);
+  const bl0 = wahl === 'alle' ? daten.bloecke : daten.bloecke.filter(b=> fahrdienstJahrVon(b) === wahl);
+  // Quartal bzw. eigener Zeitraum innerhalb des Jahres (Wunsch 25.11.2026, wie im Fahrtenbuch)
+  const zw = fahrdienstZeitWahl || { art: 'jahr' };
+  const datumVon = (b)=>{ const m = /(\d{1,2})\.(\d{1,2})\.(\d{4})/.exec(String(b.datumText || '')); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
+  const bl = (wahl === 'alle' || zw.art === 'jahr') ? bl0 : bl0.filter(b=>{ const d = datumVon(b); if(!d) return false;
+    if(/^q[1-4]$/.test(zw.art)) return Math.floor(d.getMonth() / 3) + 1 === +zw.art[1];
+    const von = zw.von ? new Date(zw.von + 'T00:00') : null, bis = zw.bis ? new Date(zw.bis + 'T23:59') : null;
+    return (!von || d >= von) && (!bis || d <= bis); });
+  const qu = (wahl === 'alle' || zw.art === 'jahr') ? (wahl === 'alle' ? daten.quartale : daten.quartale.filter(q=> String(q.quartal).slice(-4) === wahl)) : fahrdienstQuartaleAus(bl);
   fahrdienstAuswertungRendernBasis({ bloecke: bl, quartale: qu });
   if(typeof aerzteKnoepfeEinfuegen === 'function' && msGraphStatus === 'angemeldet') aerzteKnoepfeEinfuegen(zielEl, bl, qu);
   const euro = (w)=> (Number(w)||0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
@@ -4692,7 +4775,10 @@ function fahrdienstAuswertungRendern(daten){
   const kopf = document.createElement('div');
   kopf.innerHTML = '<div class="fd-jahre"><div class="fd-jahre-leiste">' + jahre.map(j=> '<button type="button" class="fb-chip' + (j === wahl ? ' an' : '') + '" data-jahr="' + j + '">' + j + '</button>').join('') +
     '<button type="button" class="fb-chip' + (wahl === 'alle' ? ' an' : '') + '" data-jahr="alle">Alle</button></div></div>' +
-    '<div class="fd-jahr-summe"><b>' + (wahl === 'alle' ? 'Alle Jahre' : wahl) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
+    (wahl === 'alle' ? '' : '<div class="fd-zeit"><div class="fd-zeit-leiste">' + [['jahr', 'Ganzes Jahr'], ['q1', 'Q1'], ['q2', 'Q2'], ['q3', 'Q3'], ['q4', 'Q4'], ['eigen', 'Zeitraum …']]
+      .map(([k, t])=> '<button type="button" class="fb-chip' + (zw.art === k ? ' an' : '') + '" data-fdzeit="' + k + '">' + t + '</button>').join('') + '</div>' +
+      (zw.art === 'eigen' ? '<div class="fbx-eigen fd-eigen"><label>von<input type="date" id="fdVon" value="' + htmlEsc(zw.von || (wahl + '-01-01')) + '"></label><label>bis<input type="date" id="fdBis" value="' + htmlEsc(zw.bis || (wahl + '-12-31')) + '"></label></div>' : '') + '</div>') +
+    '<div class="fd-jahr-summe"><b>' + (wahl === 'alle' ? 'Alle Jahre' : wahl + (zw.art === 'jahr' ? '' : /^q/.test(zw.art) ? ' · ' + zw.art.toUpperCase() : ' · ' + (zw.von ? isoDe(zw.von) : '…') + '–' + (zw.bis ? isoDe(zw.bis) : '…'))) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
     ' (GKV ' + euro(s.k) + (s.f > 0.005 ? ', davon Förderung ' + euro(s.f) : '') + ' · PT ' + euro(s.p) + ' · LS ' + euro(s.l) + ')' +
     (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>Fälle: ' + s.nk + ' GKV · ' + s.np + ' PT · ' + s.nl + ' LS' +
     (()=>{ // Dienste je Dienstart (ohne Schicht)
@@ -4702,7 +4788,9 @@ function fahrdienstAuswertungRendern(daten){
   zielEl.insertBefore(kopf, zielEl.firstChild);
   // "Neu laden" / "Fahrtenbuch öffnen" rechts in die Zeile der Jahre (spart eine ganze Zeile)
   if(fdAktionenEl && document.body.contains(zielEl)){ fdAktionenEl.removeAttribute('style'); fdAktionenEl.className = 'fd-aktionen'; kopf.querySelector('.fd-jahre').appendChild(fdAktionenEl); }
-  kopf.querySelectorAll('[data-jahr]').forEach(b=> b.onclick = ()=>{ fahrdienstJahrWahl = b.dataset.jahr; fahrdienstAuswertungRendern(daten); });
+  kopf.querySelectorAll('[data-jahr]').forEach(b=> b.onclick = ()=>{ fahrdienstJahrWahl = b.dataset.jahr; fahrdienstZeitWahl = { art: 'jahr' }; fahrdienstAuswertungRendern(daten); });
+  kopf.querySelectorAll('[data-fdzeit]').forEach(b=> b.onclick = ()=>{ fahrdienstZeitWahl = Object.assign({}, fahrdienstZeitWahl, { art: b.dataset.fdzeit }); if(b.dataset.fdzeit === 'eigen' && !fahrdienstZeitWahl.von){ fahrdienstZeitWahl.von = wahl + '-01-01'; fahrdienstZeitWahl.bis = wahl + '-12-31'; } fahrdienstAuswertungRendern(daten); });
+  ['fdVon', 'fdBis'].forEach(id=>{ const e = kopf.querySelector('#' + id); if(e) e.onchange = ()=>{ fahrdienstZeitWahl = Object.assign({}, fahrdienstZeitWahl, id === 'fdVon' ? { von: e.value } : { bis: e.value }); fahrdienstAuswertungRendern(daten); }; });
   { const lei = kopf.querySelector('.fd-jahre-leiste'), an = lei && lei.querySelector('.an'); if(an && lei.scrollWidth > lei.clientWidth) lei.scrollLeft = Math.max(0, an.offsetLeft - lei.offsetLeft - 8); }   // gewaehltes Jahr sichtbar
 }
 function fahrdienstAuswertungRendernBasis(daten){
@@ -4714,7 +4802,7 @@ function fahrdienstAuswertungRendernBasis(daten){
     return;
   }
   if(!daten.bloecke.length){
-    zielEl.innerHTML = '<div class="leer-hinweis">Keine Diensttage in der Datei gefunden.</div>';
+    zielEl.innerHTML = '<div class="leer-hinweis">Keine Diensttage in diesem Zeitraum.</div>';
     return;
   }
   const euro = (w)=> (Number(w)||0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
@@ -5158,7 +5246,8 @@ function grossKleinNormalisieren(s){
   const grossNachTrenner = (wort) => wort.split('-').map(teil =>
     teil.length ? teil[0].toUpperCase()+teil.substring(1).toLowerCase() : teil
   ).join('-');
-  return s.split(' ').map(w => grossNachTrenner(w)).join(' ');
+  const titel = /^(med|dent|vet|rer|nat|phil|habil|pol|oec|jur|sc|soc|biol|hum|pharm|theol|paed|psych|agr|techn|univ|h\.c|mult)\.$/i;   // „Dr. med.“ bleibt klein
+  return s.split(' ').map((w, i, a) => titel.test(w) && i > 0 && /\.$/.test(a[i - 1]) ? w.toLowerCase() : grossNachTrenner(w)).join(' ');
 }
 // Schreibt "str"/"str." zu "straße" aus -- 1:1 wie StrasseAusschreiben am PC
 // (LS_Modul1.bas/PT_Modul1.bas): sowohl angehängt ("Musterstr") als auch als
@@ -5230,11 +5319,16 @@ function grossKleinKorrigieren(text, imTippen, skip){
   // sind Wortgrenzen, nur der erste Buchstabe je Wort wird grossgeschrieben,
   // der Rest bleibt unangetastet (korrigiert also gezielt vergessene
   // Grossschreibung, ohne z.B. "O'Brien" kaputtzumachen).
-  let ergebnis = '', vorherigesTrennz = true, i = 0;
+  // akademische Titel bleiben klein (Wunsch 25.11.2026): „Dr. med.“, „Dr. rer. nat.“, „Prof. Dr. med. dent.“ -- nach einem
+  // abgekuerzten Wort mit Punkt (Dr., Prof., rer. ...)
+  const TITEL_KLEIN = /^(med|dent|vet|rer|nat|phil|habil|pol|oec|jur|sc|soc|biol|hum|pharm|theol|paed|psych|agr|techn|univ|h\.c|mult)\.$/i;
+  let ergebnis = '', vorherigesTrennz = true, i = 0, letztesWort = '';
   for(const c of text){
     // Ausnahme-Woerter (z. B. "van", "MVZ") behalten auch den ersten Buchstaben
     const wort = vorherigesTrennz ? (/^[^ \-]*/.exec(text.slice(i)) || [''])[0] : '';
-    ergebnis += (vorherigesTrennz && c!==' ' && c!=='-' && !frei(wort)) ? c.toUpperCase() : c;
+    const titel = vorherigesTrennz && TITEL_KLEIN.test(wort) && /\.$/.test(letztesWort);
+    ergebnis += (vorherigesTrennz && c!==' ' && c!=='-' && !frei(wort) && !titel) ? c.toUpperCase() : c;
+    if(vorherigesTrennz && wort) letztesWort = wort;
     vorherigesTrennz = (c===' '||c==='-');
     i += c.length;
   }
@@ -6536,6 +6630,7 @@ if(window.DEMO_MODUS && !document.getElementById('demoLeiste')){
 // aus dem Reiter „Letzte Dienste“ zurueck: die Startseite zeigt wieder den aktuellen Dienst
 function ansichtStartFbAus(){ if(typeof dsAnsichtFb !== 'undefined' && dsAnsichtFb){ dsAnsichtFb = false; dsDienstWahl = null; dsPfeileAn = false; } }
 function ansichtStart(){
+  try{ dsUebersichtNachholen(); }catch(_){}
   try{ ansichtStartFbAus(); }catch(_){}
   try{ gkvEntwurfLaden(); }catch(_){}
   // Solange die Ersteinrichtung laeuft, gibt es keine Startseite (sonst blitzt sie zwischen den Schritten auf,
@@ -8073,7 +8168,7 @@ const SEITENTOUR = {
     { el: 'button.lspt, button.gkv', gruppe: true, titel: 'Zwei Listen', text: 'Umschalten zwischen den <b>Rechnungen</b> (LS/PT) und den <b>Kassenpatienten</b>.' },
     { el: '#txtGesamtSuche', titel: 'Suche', text: 'Nach Name, Rechnungsnummer oder Betrag.' },
     { el: '#btnGesamtHochladen', titel: 'Hochladen', text: 'Rechnungen, die noch nicht im OneDrive liegen, auf einmal hochladen.' },
-    { el: '#btnGesamtExcel, #btnGesamtBackups, #btnGesamtBank', gruppe: true, titel: 'Werkzeuge', text: 'Übersicht in Excel öffnen, Sicherungen, und den <b>Kontoauszug</b> einlesen – Zahlungen werden den Rechnungen zugeordnet.' },
+    { el: '#btnGesamtExcel, #btnGesamtBank', gruppe: true, titel: 'Werkzeuge', text: 'Übersicht in Excel öffnen und den <b>Kontoauszug</b> einlesen – Zahlungen werden den Rechnungen zugeordnet.' },
     { el: tourErstes('details.offen-dash > summary', 'details.offen-dash'), titel: 'Offene Rechnungen', text: 'Was noch nicht bezahlt ist. <b>Bezahlt?</b> trägt den Eingang ein, bei Verzug geht eine Erinnerung.' },
     { el: tourErstes('#gesamtListe .wisch-huelle', '#gesamtListe'), titel: 'Alle Rechnungen', text: 'Haken für Senden, Termin, Erinnerung, Bezahlt; 📄 öffnet die PDF; nach links wischen löscht.' }
   ],
@@ -8692,9 +8787,7 @@ function ansichtKorrigieren(){
   setzeTitel('Lokale Rechnungen', ansichtStart);
   const alle = [...ladeFaelle('ls').map((f,i)=>({...f, art:'ls', idx:i})), ...ladeFaelle('pt').map((f,i)=>({...f, art:'pt', idx:i}))];
   if(!alle.length){
-    app.innerHTML = vwTabsHtml('lspt') + '<div class="leer-hinweis">Keine lokal gespeicherten Fälle vorhanden.</div>' +
-      '<button class="btn-sekundaer" id="btnBackupsOeffnen" style="margin-top:12px;">Backups ansehen</button>';
-    document.getElementById('btnBackupsOeffnen').onclick = ansichtSyncBackups;
+    app.innerHTML = vwTabsHtml('lspt') + '<div class="leer-hinweis">Keine lokal gespeicherten Fälle vorhanden.</div>';
     return;
   }
 
@@ -8709,7 +8802,6 @@ function ansichtKorrigieren(){
           <button type="button" id="btnAuswKopieren" class="betont" disabled>In Zwischenablage kopieren</button>
           <button type="button" id="btnAuswRechnungBeta" class="betont" disabled>Word + PDF erstellen</button>
           <button type="button" id="btnAuswUebersichtOeffnen">Rechnungsübersicht in Excel öffnen</button>
-          <button type="button" id="btnAuswBackups">Backups</button>
         </div>
         ${msGraphStatus==='angemeldet' ? '' : `
         <div class="rn-mini">
@@ -8803,7 +8895,6 @@ function ansichtKorrigieren(){
       '');
   };
 
-  document.getElementById('btnAuswBackups').onclick = ansichtSyncBackups;
 
   // BETA: Word + PDF direkt am Handy erstellen (Ablage im Testordner)
   document.getElementById('btnAuswRechnungBeta').onclick = async ()=>{
@@ -8881,7 +8972,7 @@ function ansichtKorrigieren(){
 // lokal (localStorage), kein Graph-Zugriff noetig.
 function ansichtSyncBackups(){
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=>ansichtSyncBackups(); };
-  setzeTitel('Backups', ansichtKorrigieren);
+  setzeTitel('Lokale Zwischenstände', ansichtEinstellungen);
   const liste = LS.get('sync_backups', []);
   if(!liste.length){
     app.innerHTML = '<div class="leer-hinweis">Noch keine Backups vorhanden -- ein Backup wird automatisch vor jedem Sync-Versuch angelegt.</div>';
@@ -9170,7 +9261,7 @@ function alleRechnungenListeRendern(cache, suchtext){
       el.dataset.geladen = '1';
       if(url){
         el.dataset.url = url;
-        platz.innerHTML = '<span class="badge-pdf" title="Rechnung als PDF ansehen">&#128196;</span>';
+        platz.innerHTML = '<span class="badge-pdf" title="Rechnung als PDF ansehen">' + SYM_PDF_SVG + '</span>';
         linkOeffnen(url);
       } else {
         el.classList.remove('unvollstaendig');
@@ -9186,7 +9277,7 @@ function alleRechnungenListeRendern(cache, suchtext){
           const pdfBadge = document.createElement('span');
           pdfBadge.className = 'badge-pdf';
           pdfBadge.title = 'Rechnung als PDF ansehen';
-          pdfBadge.innerHTML = '&#128196;';
+          pdfBadge.innerHTML = SYM_PDF_SVG;
           el.querySelector('.pdf-platz').appendChild(pdfBadge);
         } else {
           alsUnvollstaendigMarkieren(el, f);
@@ -9200,7 +9291,7 @@ function alleRechnungenListeRendern(cache, suchtext){
         msGraphBriefVersendetLaden(blattName, f.zeile).then(versendet=>{
           if(versendet){
             const briefPlatz = el.querySelector('.brief-platz');
-            if(briefPlatz) briefPlatz.innerHTML = '<span class="badge-brief" title="Rechnung wurde bereits versendet">&#128232;</span>';
+            if(briefPlatz) briefPlatz.innerHTML = BRIEF_SYMBOL;
           }
         });
       }
@@ -12257,7 +12348,6 @@ async function ansichtRechnungenGesamt(neuLaden){
         <button type="button" id="btnGesamtHochladen" class="betont" style="display:none;"></button>
         <button type="button" id="btnGesamtNeu">Neu laden</button>
         <button type="button" id="btnGesamtExcel">In Excel öffnen</button>
-        <button type="button" id="btnGesamtBackups">Backups</button>
         <button type="button" id="btnGesamtBank" title="Zahlungseingänge aus einer CSV des Online-Bankings übernehmen">Kontoauszug</button>
       </div>
       ${ziel.echt ? '' : '<div class="gesamt-ziel">Testablage (Beta-Test)</div>'}
@@ -12265,7 +12355,6 @@ async function ansichtRechnungenGesamt(neuLaden){
     <div class="quer-verw quer-breit"><div id="gesamtListe"></div><aside class="quer-detail" id="gesamtDetail"><div class="qd-karte"><span class="qv-leer">Rechnung anklicken – Details erscheinen hier.</span></div></aside></div>`;
   const suchEl = document.getElementById('txtGesamtSuche');
   document.getElementById('btnGesamtNeu').onclick = ()=> ansichtRechnungenGesamt(true);
-  document.getElementById('btnGesamtBackups').onclick = ansichtSyncBackups;
   document.getElementById('btnGesamtBank').onclick = async ()=>{ if(await bankCsvImport()) ansichtRechnungenGesamt(true); };
   document.getElementById('btnGesamtExcel').onclick = ()=>{
     if(ziel.echt) excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT, '');
@@ -12702,7 +12791,7 @@ async function betaPdfAnzeigen(opt){
     el.className = 'beta-pdf';
     el.innerHTML = '<div class="beta-pdf-kopf"><button type="button" data-a="zu" title="Schließen">✕</button><div class="beta-pdf-titel"></div>' +
       '<button type="button" data-a="klein" title="Verkleinern">−</button><button type="button" data-a="gross" title="Vergrößern">+</button>' +
-      '<button type="button" data-a="teilen" title="Teilen / Speichern">⇪</button><button type="button" data-a="senden" class="beta-pdf-senden" title="Als Brief senden" hidden>✉ Senden</button></div><div class="beta-pdf-seiten"></div>';
+      '<button type="button" data-a="teilen" title="Teilen / Speichern">⇪</button><button type="button" data-a="laden" title="Herunterladen">⤓</button><button type="button" data-a="senden" class="beta-pdf-senden" title="Als Brief senden" hidden>✉ Senden</button></div><div class="beta-pdf-seiten"></div>';
     document.body.appendChild(el);
   }
   const seitenEl = el.querySelector('.beta-pdf-seiten');
@@ -12717,7 +12806,12 @@ async function betaPdfAnzeigen(opt){
   el.querySelector('[data-a="zu"]').onclick = schliessen;
   // alle Seiten in einem Rahmen, der als Ganzes skaliert (auch die Abstaende) -- so bleibt der Punkt unter den Fingern stehen
   const inhaltEl = ()=> seitenEl.querySelector('.beta-pdf-inhalt');
-  const zoomSetzen = (z)=>{ zoom = Math.max(1, Math.min(4, z)); const w = inhaltEl(); if(w) w.style.width = (zoom * 100) + '%'; };
+  // Wunsch 25.11.2026: beim Oeffnen immer die ganze Seite (auch quer), kleiner als „ganze Seite“ geht nicht, groesser per Hand
+  let zoomMin = 1;
+  const zoomSetzen = (z)=>{ zoom = Math.max(zoomMin, Math.min(4, z)); const w = inhaltEl(); if(w) w.style.width = (zoom * 100) + '%'; };
+  if(el._radWeg) el._radWeg();
+  { const rad = (ev)=>{ if(!ev.ctrlKey && !ev.metaKey) return; ev.preventDefault(); zoomSetzen(zoom * Math.exp(-ev.deltaY * 0.0025)); };
+    seitenEl.addEventListener('wheel', rad, { passive: false }); el._radWeg = ()=> seitenEl.removeEventListener('wheel', rad); }
   const PAD = 8;
   // Zwei-Finger-Zoom (die App selbst ist nicht zoombar): waehrend der Geste frei per Transform um die Fingermitte
   // (keine Scroll-Grenzen), beim Loslassen Zoom uebernehmen und so scrollen, dass der Punkt unter den Fingern bleibt
@@ -12730,7 +12824,7 @@ async function betaPdfAnzeigen(opt){
       p0 = { d: abst(ev.touches) || 1, z: zoom, m, r, s: 1, mj: m };
       w.style.transformOrigin = (m.x - r.left) + 'px ' + (m.y - r.top) + 'px'; w.style.willChange = 'transform'; };
     const zug = (ev)=>{ if(!p0 || ev.touches.length !== 2) return; ev.preventDefault(); const w = inhaltEl(); if(!w) return;
-      const zNeu = Math.max(1, Math.min(4, p0.z * abst(ev.touches) / p0.d)); p0.s = zNeu / p0.z; p0.mj = mitte(ev.touches);
+      const zNeu = Math.max(zoomMin, Math.min(4, p0.z * abst(ev.touches) / p0.d)); p0.s = zNeu / p0.z; p0.mj = mitte(ev.touches);
       w.style.transform = 'translate(' + (p0.mj.x - p0.m.x) + 'px,' + (p0.mj.y - p0.m.y) + 'px) scale(' + p0.s + ')'; };
     const ende = (ev)=>{ if(!p0 || ev.touches.length >= 2) return; const w = inhaltEl(), q = p0; p0 = null; if(!w) return;
       // Punkt unter der Startmitte in Seitenkoordinaten (Zoom 1)
@@ -12755,6 +12849,12 @@ async function betaPdfAnzeigen(opt){
   sk.textContent = '✉ Senden'; sk.disabled = false; sk.title = 'Als Brief senden';
   sk.onclick = async ()=>{ if(!opt.senden) return; const e = Object.assign({}, opt.senden); if(blob && !e.pdfBlob && !e.pdfItemId) e.pdfBlob = blob;
     const r = await briefSendenDialog(e); if(r && r.gesendet && r.gesendet.length){ if(r.test){ try{ appToastAnzeigen('Testbrief angenommen – nichts wurde verschickt. Du kannst jetzt echt senden.', 4000); }catch(_){} } else { sk.textContent = '✉ Erneut senden'; sk.title = 'Gesendet – noch einmal als Brief senden'; } } };
+  // Herunterladen (Wunsch 25.11.2026: Teilen klappt unter Windows schlecht)
+  el.querySelector('[data-a="laden"]').onclick = ()=>{
+    if(!blob) return;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = String(opt.titel || 'Rechnung').replace(/[\\/:*?"<>|]+/g, '_') + '.pdf';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=> URL.revokeObjectURL(a.href), 30000);
+  };
   el.querySelector('[data-a="teilen"]').onclick = async ()=>{
     if(!blob) return;
     const datei = new File([blob], (opt.titel || 'Rechnung') + '.pdf', { type:'application/pdf' });
@@ -12779,6 +12879,10 @@ async function betaPdfAnzeigen(opt){
     for(let i = 1; i <= doc.numPages; i++){
       const seite = await doc.getPage(i);
       const v1 = seite.getViewport({ scale: 1 });
+      if(i === 1){
+        const W = Math.max(100, seitenEl.clientWidth - 16), H = Math.max(100, seitenEl.clientHeight - 16);
+        zoomMin = Math.min(1, H / (W * v1.height / v1.width)); zoomSetzen(zoomMin);
+      }
       const vp = seite.getViewport({ scale: (breite * dpr * 2) / v1.width }); // doppelt aufloesen fuer Zoom
       const c = document.createElement('canvas');
       c.width = Math.round(vp.width); c.height = Math.round(vp.height);
@@ -13052,12 +13156,46 @@ function betaErinnerungenText(eintraege, e){
   };
   return '<span class="offen-erin">' + m.map(x=>{ const d = dat(x); return htmlEsc(x.typ.slice(1) + '. Erinnerung' + (d ? ' ' + d : '')) + (x.versendet && !x.geplant ? ' ✉' : ''); }).join(' · ') + '</span>';
 }
+// kurz fuer die kompakte Zeile (rechts unter dem Betrag)
+function betaZahlungKurz(e){
+  if(e.bezahlt) return '<small class="zahlung bezahlt" title="bezahlt am ' + htmlEsc(e.bezahlt) + '">✓ bezahlt</small>';
+  if(e.ausgebucht) return '<small class="zahlung" title="wird nicht bezahlt – nicht bei den offenen Rechnungen">nicht bezahlt</small>';
+  const t = betaTageSeit(e.abgeschickt);
+  if(isNaN(t) || t < 0 || e.geplant) return '';
+  return '<small class="zahlung ' + (t > 30 ? 'verzug' : 'offen') + '" title="offen seit ' + t + (t === 1 ? ' Tag' : ' Tagen') + (t > 30 ? ', im Verzug' : '') + '">' + (t > 30 ? 'Verzug · ' : 'offen · ') + t + ' T.</small>';
+}
 function betaZahlungInfo(e){
   if(e.bezahlt) return '<div class="info zahlung bezahlt">&#10003; bezahlt am ' + htmlEsc(e.bezahlt) + '</div>';
   const t = betaTageSeit(e.abgeschickt);
   if(isNaN(t) || t < 0 || e.geplant) return '';
   if(t > 30) return '<div class="info zahlung verzug">offen seit ' + t + ' Tagen · im Verzug seit ' + (t - 30) + (t - 30 === 1 ? ' Tag' : ' Tagen') + '</div>';
   return '<div class="info zahlung offen">offen seit ' + t + (t === 1 ? ' Tag' : ' Tagen') + '</div>';
+}
+// Nicht beglichene Rechnung aus „Offene Rechnungen“ nehmen bzw. zurueckholen: Kennzeichen in Spalte U (Daten bleiben)
+const OFFEN_AUS_FLAG = 'OFFEN:AUS';
+async function betaOffenAusbuchen(orig, aus){
+  const ziel = betaZiel();
+  betaOverlay.zeigen(aus ? 'Aus „Offene“ nehmen' : 'Wieder als offen führen'); betaOverlay.fortschritt(null);
+  try{
+    const token = await msGraphTokenHolen(); if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+    const ue = await uebersichtLadenRepariert(token, ziel, betaFrage);
+    const ana = uebersichtAuswerten(ue);
+    const sid = await xlSitzung(token, ue.basis);
+    try{
+      const schutz = await blattSchutzAufheben(token, ue, sid);
+      try{
+        for(const e of orig){
+          const z = ana.nachRenu.get(e.renu); if(!z) continue;
+          const bisher = String(z.v[20] == null ? '' : z.v[20]);
+          const neu = aus ? lxpFlagSetzenText(bisher, OFFEN_AUS_FLAG) : lxpFlagEntfernenText(bisher, OFFEN_AUS_FLAG);
+          if(neu !== bisher) await gx(token, 'PATCH', zelle(ue, 'U' + z.nr), { values: [[neu]] }, sid);
+        }
+      } finally { await blattSchutzWiederherstellen(token, ue, schutz, sid); }
+    } finally { await xlSitzungEnde(token, ue.basis, sid); }
+    betaOverlay.schliessen();
+    appToastAnzeigen(aus ? 'Aus „Offene Rechnungen“ genommen.' : 'Wieder bei den offenen Rechnungen.', 2200);
+    return true;
+  }catch(err){ await betaOverlay.ergebnis('Nicht geändert', '✗ ' + htmlEsc(err.message || String(err))); betaOverlay.schliessen(); return false; }
 }
 async function betaAktionBezahlt(eintraege){
   const ziel = betaZiel();
@@ -13069,9 +13207,12 @@ async function betaAktionBezahlt(eintraege){
     (orig.length === 1 ? htmlEsc(orig[0].name) + ' · Nr. ' + htmlEsc(orig[0].renu) : orig.length + ' Rechnungen') +
     '<div class="beta-form"><label>Zahlung erhalten am<input type="date" id="betaBezahltAm" max="' + heute + '" value="' + heute + '"></label></div>' +
     '<div class="beta-erg-klein" style="margin-top:6px;">Wird in der Übersicht in Spalte S („Zahlung erhalten“) eingetragen.</div>',
-    [{ label:'Abbrechen', akt:'nein' }, ...(orig.some(e=> e.bezahlt) ? [{ label:'Zahlung entfernen', akt:'weg' }] : []), { label:'Speichern', akt:'ja', primaer:true }]);
+    [{ label:'Abbrechen', akt:'nein' }, ...(orig.some(e=> e.bezahlt) ? [{ label:'Zahlung entfernen', akt:'weg' }] : []),
+     ...(orig.some(e=> e.ausgebucht) ? [{ label:'Wieder offen', akt:'offen' }] : orig.some(e=> !e.bezahlt) ? [{ label:'Wird nicht bezahlt', akt:'aus' }] : []),
+     { label:'Speichern', akt:'ja', primaer:true }]);
   const am = (document.getElementById('betaBezahltAm') || {}).value || '';
   if(akt === 'nein'){ betaOverlay.schliessen(); return false; }
+  if(akt === 'aus' || akt === 'offen'){ betaOverlay.schliessen(); return await betaOffenAusbuchen(orig, akt === 'aus'); }
   if(akt === 'ja' && (!am || am > heute)){ await betaOverlay.meldung('Bitte ein Datum bis heute wählen.'); return false; }
   betaOverlay.zeigen(akt === 'weg' ? 'Zahlung wird entfernt' : 'Zahlung wird eingetragen'); betaOverlay.fortschritt(null);
   try{
@@ -13281,7 +13422,10 @@ async function bankCsvImport(){
 }
 
 // Versendet-Symbol (wie die anderen Symbole der Liste als Farb-Emoji)
-const BRIEF_SYMBOL = '<span class="badge-brief" title="per Brief verschickt">&#128232;</span>';
+// Symbole PDF und Brief im gleichen Stil (Wunsch 25.11.2026): Blatt bzw. Umschlag, gleiche Groesse und Linie
+const SYM_PDF_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="s-blatt" d="M6 2.8h8.2L19 7.6V20a1.2 1.2 0 0 1-1.2 1.2H6A1.2 1.2 0 0 1 4.8 20V4A1.2 1.2 0 0 1 6 2.8z"/><path class="s-linie" d="M14 2.8V7.8h5"/><rect class="s-band pdf" x="3" y="12.2" width="13" height="5.6" rx="1.2"/><text x="9.5" y="16.6" text-anchor="middle">PDF</text></svg>';
+const SYM_BRIEF_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect class="s-blatt" x="2.8" y="5.2" width="18.4" height="13.6" rx="1.4"/><path class="s-linie" d="M3.4 6l8.6 6.6L20.6 6"/><circle class="s-band brief" cx="18.6" cy="17.4" r="4.2"/><path class="s-haken" d="M16.7 17.4l1.3 1.3 2.4-2.6"/></svg>';
+const BRIEF_SYMBOL = '<span class="badge-brief" title="per Brief verschickt">' + SYM_BRIEF_SVG + '</span>';
 
 // ---------- Geplanten Versand aendern / stornieren (Sanduhr) ----------
 // Aendert den vorhandenen Auftrag bei LetterXpress (PUT) bzw. loescht ihn --
@@ -13571,7 +13715,7 @@ function betaEintraegeBauen(c){
     const datei = (n)=> ({ pdf: dateien.get((n + '.pdf').toLowerCase()) || null, docx: dateien.get((n + '.docx').toLowerCase()) || null });
     eintraege.push({ key: z.nr + '|ORIG', typ: 'ORIG', z, renu, art, name, datum, sort, betrag, datei: basis || ('Zeile ' + z.nr), ...(basis ? datei(basis) : { pdf:null, docx:null }),
                      versendet: lxpFlagVorhanden(u, 'LXP:1'), geplant: lxpFlagVorhanden(u, 'LXP:1') ? versandGeplant(u, 'ORIG') : null,
-                     bezahlt: xlDatumText(v[18]), abgeschickt: xlDatumText(v[17]) });
+                     bezahlt: xlDatumText(v[18]), abgeschickt: xlDatumText(v[17]), ausgebucht: lxpFlagVorhanden(u, OFFEN_AUS_FLAG) });
     if(!basis) continue;
     // fruehere verschickte Fassungen (beim Aendern einer verschickten Rechnung gesichert)
     [...dateien.entries()].filter(([k])=> k.startsWith((basis + '_verschickte Fassung ').toLowerCase()) && k.endsWith('.pdf'))
@@ -13715,7 +13859,7 @@ function betaGesamtZeichnen(suchtext, ziel){
     const MAX = 200;
     // Ueberblick: offene (abgeschickte, noch nicht bezahlte) Rechnungen, aelteste zuerst -- Zahlungseingang direkt bestaetigen
     if(!String(suchtext || '').trim()){
-      const offenR = eintraege.filter(e=> e.typ === 'ORIG' && !e.bezahlt && !e.geplant).map(e=> ({ e, t: betaTageSeit(e.abgeschickt) }))
+      const offenR = eintraege.filter(e=> e.typ === 'ORIG' && !e.bezahlt && !e.geplant && !e.ausgebucht).map(e=> ({ e, t: betaTageSeit(e.abgeschickt) }))
         .filter(x=> !isNaN(x.t) && x.t >= 0).sort((a, b)=> b.t - a.t);
       if(offenR.length){
         const zahl = (v)=> Number(String(v || '').replace(/\./g, '').replace(',', '.')) || 0;
@@ -13728,7 +13872,8 @@ function betaGesamtZeichnen(suchtext, ziel){
             // „seit … Tagen“ in eigener Zeile, darunter die Erinnerungen mit Datum (Wunsch 25.11.2026)
             '<span class="offen-seit">seit ' + x.t + (x.t === 1 ? ' Tag' : ' Tagen') + '</span>' + betaErinnerungenText(eintraege, x.e) +
             '</small></div><div class="offen-knoepfe"><button type="button" class="offen-bezahlt" data-okey="' + htmlEsc(x.e.key) + '" title="Zahlungseingang eintragen (Datum wählbar)">Bezahlt?</button>' +
-            '<button type="button" class="offen-bezahlt offen-erinnern" data-okey="' + htmlEsc(x.e.key) + '" title="Zahlungserinnerung erstellen und senden">Erinnerung senden</button></div></div>').join('') +
+            '<button type="button" class="offen-bezahlt offen-erinnern" data-okey="' + htmlEsc(x.e.key) + '" title="Zahlungserinnerung erstellen und senden">Erinnerung senden</button>' +
+            '<button type="button" class="offen-weg" data-okey="' + htmlEsc(x.e.key) + '" title="Wird nicht bezahlt – aus den offenen Rechnungen nehmen" aria-label="Aus den offenen Rechnungen nehmen">✕</button></div></div>').join('') +
           (offenR.length > 50 ? '<div class="leer-hinweis">' + (offenR.length - 50) + ' weitere – in der Liste unten.</div>' : '') + '</details>';
       }
     }
@@ -13737,7 +13882,7 @@ function betaGesamtZeichnen(suchtext, ziel){
     let letzteGruppe = null;
     sichtbar.slice(0, MAX).forEach(e=>{
       if(e.datum !== letzteGruppe){ letzteGruppe = e.datum; html += '<div class="gesamt-gruppe" data-gruppe="' + htmlEsc(e.datum) + '">' + htmlEsc(e.datum || 'ohne Datum') + '</div>'; }
-      const symbol = e.pdf ? '<span class="badge-pdf" data-akt="pdf" title="PDF ansehen">&#128196;</span>'
+      const symbol = e.pdf ? '<span class="badge-pdf" data-akt="pdf" title="PDF ansehen">' + SYM_PDF_SVG + '</span>'
                            : '<span class="badge-unvollstaendig" title="Keine PDF im Ordner">&#9888;</span>';
       html += `
       <div class="wisch-huelle${e.unter ? ' unter' : ''}" data-key="${htmlEsc(e.key)}"><div class="wisch-hinter">&#128465; Löschen</div>
@@ -13745,10 +13890,10 @@ function betaGesamtZeichnen(suchtext, ziel){
         <input type="checkbox" class="chk" ${betaAuswahl.has(e.key) ? 'checked' : ''}>
         <div class="inhalt">
           <div class="name">${e.unter ? '' : '<span class="badge-neu ' + e.art + '">' + (e.art === 'ls' ? 'L' : 'P') + '</span>'}${htmlEsc(e.name)}</div>
-          <div class="info">${e.unter ? htmlEsc(e.datei) : (htmlEsc(e.datum) + (e.betrag ? ' &middot; ' + htmlEsc(e.betrag) + ' €' : '') + (e.renu ? ' &middot; Nr. ' + htmlEsc(e.renu) : ' &middot; ohne Rechnungsnummer'))}</div>
+          <div class="info">${e.unter ? htmlEsc(e.datei) : (htmlEsc(e.datum) + (e.renu ? ' &middot; Nr. ' + htmlEsc(e.renu) : ' &middot; ohne Rechnungsnummer'))}</div>
           ${e.geplant ? '<div class="info termin-text">Versand geplant am ' + htmlEsc(isoDe(e.geplant.datum)) + (e.geplant.modus === 'test' ? ' (Testmodus)' : '') + '</div>' : ''}
-          ${!e.unter ? betaZahlungInfo(e) : ''}
         </div>
+        ${!e.unter ? '<div class="gs-rechts">' + (e.betrag ? '<b>' + htmlEsc(e.betrag) + '</b>' : '') + betaZahlungKurz(e) + '</div>' : ''}
         <div class="fall-icons">${e.geplant ? '<span class="badge-termin" data-akt="termin" title="Versand geplant – anklicken zum Ändern">&#9203;</span>' : (e.versendet ? BRIEF_SYMBOL : '')}${symbol}</div>
       </div></div>`;
     });
@@ -13771,6 +13916,11 @@ function betaGesamtZeichnen(suchtext, ziel){
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
       // erstellt die naechste Erinnerung (Word + PDF) und zeigt sie gleich in der PDF-Ansicht -- dort Teilen oder als Brief senden
       if(await betaMahnungErstellen(e)) await ansichtRechnungenGesamt(true); });
+    // nicht beglichene Rechnung aus „Offene Rechnungen“ nehmen (Wunsch 25.11.2026) -- zurueck ueber „Bezahlt“ an der Rechnung
+    listeEl.querySelectorAll('.offen-weg').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
+      const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
+      if(!await betaFrage(e.name + ' · Nr. ' + e.renu + '\n\nWird diese Rechnung nicht mehr bezahlt? Sie verschwindet aus „Offene Rechnungen“, bleibt aber in der Übersicht. Zurückholen: Rechnung auswählen › „Bezahlt“ › „Wieder offen“.', 'Aus „Offene“ nehmen', 'Abbrechen')) return;
+      if(await betaOffenAusbuchen([e], true)) await ansichtRechnungenGesamt(true); });
     listeEl.querySelectorAll('.offen-bezahlt:not(.offen-erinnern)').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
       if(await betaAktionBezahlt([e])){ betaAuswahl.clear(); await ansichtRechnungenGesamt(true); } }); }
@@ -21578,6 +21728,25 @@ function standortKarteFaelle(info){
   };
   const weg = ()=>{ try{ vorbereiteRuecksprung(); }catch(_){} einstellungenOffen = false; };
   try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=> f && lsPt(art, f.werte, ()=>{ weg(); ansichtMaske(art, i); }))); }catch(_){}
+  // LS/PT, die nicht mehr als Fall auf dem Geraet liegen (nach dem Hochladen aufgeraeumt): aus der gelesenen Rechnungsuebersicht
+  // (Wunsch 25.11.2026 -- sonst zeigte „letzter Dienst“ nach einer Weile nur noch GKV-Faelle)
+  try{
+    const c = dsUeQuelle();
+    if(c){
+      const tt = (x)=> String(x == null ? '' : x).trim(), lokal = new Set(out.map(x=> x.art + '|' + fbNameNorm(x.name) + '|' + (x.t ? x.t.getTime() : '')));
+      (c.ue.zeilen || []).forEach(z=>{
+        if(!z || z.nr < 2) return; const v = z.v || [];
+        const art = tt(v[0]).toUpperCase() === 'L' ? 'ls' : tt(v[0]).toUpperCase() === 'P' ? 'pt' : ''; if(!art) return;
+        const t = kartenZeitAus(xlDatumText(v[1]), xlZeitText(v[2])); if(!t || !drin(t, '')) return;
+        const name = tt(v[5]) + ', ' + tt(v[6]); if(lokal.has(art + '|' + fbNameNorm(name) + '|' + t.getTime())) return;
+        const idem = (x)=> /^idem$/i.test(tt(x)) ? '' : tt(x);
+        const abw = art === 'ls' && idem(v[10]) && idem(v[11]);
+        out.push({ art, t, name, adr: abw ? idem(v[10]) + ', ' + idem(v[11]) : [tt(v[8]), tt(v[9])].filter(Boolean).join(', '), dienst: '', ausUebersicht: true,
+          euro: typeof v[15] === 'number' ? v[15] : (parseFloat(String(v[15] || '').replace(/\./g, '').replace(',', '.')) || null),
+          oeffnen: ()=>{ weg(); betaZeileBearbeiten(z, null, betaZiel()); } });
+      });
+    }
+  }catch(_){}
   try{ betaEntwuerfe().forEach(e=>{ if(!e || (e.art !== 'ls' && e.art !== 'pt')) return; const n0 = out.length; lsPt(e.art, e.werte, ()=>{ weg(); betaEntwurfOeffnen(e, null); }, e); if(out.length > n0) out[out.length - 1].entwurfId = e.id; }); }catch(_){}
   out.forEach(x=>{ if(x.unfertig && !x.verwerfen && x.art !== 'gkv'){ const e = betaEntwuerfe().find(y=> y.art === x.art && ((y.werte || {}).txtName || '').trim() === (x.name === 'ohne Namen' ? '' : x.name)); if(e) x.verwerfen = ()=> betaEntwurfEntfernen(e.id); } });
   // GKV-Patient, der gerade erfasst wird (noch nicht gespeichert)
@@ -21974,9 +22143,43 @@ const AERZTE_ORDNER = 'KVBW Onedrive/fertige Rechnungen Vertretungsärzte';
 const AERZTE_VORLAGE = AERZTE_ORDNER + '/Vorlage_Ärzte.docx';
 
 function aerzteDaten(){ return LS.get(EIGENE_POS_CACHE, null) || {}; }
+// Adressbuch der Vertretungsaerzte (eigene_positionen.json, auch von der HTA am PC genutzt) -- Name ohne Titel/Reihenfolge verglichen;
+// sonst die Anschrift der letzten Rechnung an diesen Arzt (Wunsch 25.11.2026)
+function aerzteNameNorm(n){ return fbNameNorm(String(n || '').replace(/\b(Dr|med|Prof|Priv|Doz|dent|rer|nat|vet|habil|univ)\b\.?/gi, ' ')); }
 function aerzteAdresse(arzt){
-  const k = String(arzt || '').trim().toLowerCase();
-  return (aerzteDaten().aerzteAdressen || []).find(x=> String(x.arzt || '').trim().toLowerCase() === k) || null;
+  const k = String(arzt || '').trim().toLowerCase(), kn = aerzteNameNorm(arzt), d = aerzteDaten();
+  const liste = d.aerzteAdressen || [];
+  const genau = liste.find(x=> String(x.arzt || '').trim().toLowerCase() === k); if(genau) return genau;
+  const aehnlich = liste.filter(x=> kn && (aerzteNameNorm(x.arzt) === kn || aerzteNameNorm(x.vname) === kn)).sort((a, b)=> String(b.am || '').localeCompare(String(a.am || '')))[0];
+  if(aehnlich) return aehnlich;
+  const r = (d.aerzteRechnungen || []).filter(x=> !x.geloescht && (x.adr1 || x.adr2) && kn && (aerzteNameNorm(x.arzt) === kn || aerzteNameNorm(x.vname) === kn))
+    .sort((a, b)=> String(b.am || '').localeCompare(String(a.am || '')))[0];
+  return r ? { arzt, firma: r.firma || '', vname: r.vname || '', adr1: r.adr1 || '', adr2: r.adr2 || '', kuerzel: /^([A-ZÄÖÜ]+)-/.test(r.renu || '') ? r.renu.split('-')[0] : '' } : null;
+}
+// noch nichts gespeichert: Anschrift aus der juengsten Word-Datei an diesen Arzt im Ordner lesen (einmalig, danach im Adressbuch)
+async function aerzteAdresseAusDateien(token, arzt){
+  const kz = aerzteKuerzel(arzt), nachname = (String(arzt || '').replace(/\b(Dr|med|Prof|Priv|Doz|dent|rer|nat)\b\.?/gi, ' ').trim().split(/[\s,]+/).filter(Boolean).pop() || '').toLowerCase();
+  if(!nachname) return null;
+  const dateien = [...(await ordnerDateien(token, AERZTE_ORDNER)).values()]
+    .filter(it=> /\.docx$/i.test(it.name) && !/^vorlage/i.test(it.name) && new RegExp('(^|[^A-Za-z])' + kz + '([^A-Za-z]|$)', 'i').test(it.name.replace(/\.docx$/i, '')))
+    .sort((a, b)=> String(b.lastModifiedDateTime || '').localeCompare(String(a.lastModifiedDateTime || ''))).slice(0, 3);
+  const eigen = String(eigenerArztName() || '').toLowerCase();
+  for(const it of dateien){
+    try{
+      const { xml } = await docxDokumentXml(await graphItemLaden(token, it.id));
+      const zeilen = [];
+      for(const p of (xml.match(RD_ABSATZ_RE) || [])){
+        rdAbsatzText(p.replace(/<w:br\s*\/>/g, '<w:t>\u000a</w:t>')).split('\n').map(x=> x.trim()).filter(Boolean).forEach(x=> zeilen.push(x));
+        if(zeilen.length > 14) break;
+      }
+      const i = zeilen.findIndex(x=> x.toLowerCase().includes(nachname) && (!eigen || !x.toLowerCase().includes(eigen)));
+      if(i < 0) continue;
+      const nach = []; for(let j = i + 1; j < zeilen.length && nach.length < 2; j++){ const z = zeilen[j]; if(/^(datum|rechnungsnummer|email|e-mail)/i.test(z) || (eigen && z.toLowerCase().includes(eigen))) break; nach.push(z); }
+      const vor = i > 0 && !/^(privat)?rechnung$/i.test(zeilen[i - 1]) ? zeilen[i - 1] : '';
+      if(nach.length) return { arzt, firma: vor, vname: zeilen[i], adr1: nach[0] || '', adr2: nach[1] || '', kuerzel: kz, ausDatei: it.name };
+    }catch(_){}
+  }
+  return null;
 }
 function aerzteRechnungFinden(arzt, quartal){
   const k = String(arzt || '').trim().toLowerCase();
@@ -22169,6 +22372,22 @@ async function aerzteRechnungDialog(arzt, quartalKey, bloecke){
         '<input type="text" inputmode="decimal" id="arSummeEin" value="' + aerzteZahlText(st.summe) + '"> €</div>' +
       '<div class="ar-summe"><small id="arAbw">' + htmlEsc(aerzteAbweichungText(st.summe, st.berechnet)) + '</small></div></div>';
     const p = betaOverlay.ergebnis('Rechnung an ' + arzt, html, [{ label: 'Abbrechen', akt: 'nein' }, { label: alt ? 'Neu erstellen' : 'Rechnung erstellen', akt: 'ok', primaer: true }]);
+    // Wunsch 25.11.2026: automatische Rechnungsnummer gleich anzeigen; fehlende Anschrift aus frueheren Rechnungen holen
+    { const rn = document.getElementById('arRenu'), kz = document.getElementById('arKuerzel'), lauf = { n: 0 };
+      const vorschau = async ()=>{ if(!rn || rn.value.trim()) return; const n = ++lauf.n, k = (kz && kz.value || '').trim().toUpperCase(); if(!/^[A-ZÄÖÜ]{1,4}$/.test(k)) return;
+        rn.placeholder = 'wird ermittelt …';
+        try{ const token = await msGraphTokenHolen(); if(!token) throw 0; const r = await aerzteNaechsteRenu(token, k); if(n === lauf.n && document.body.contains(rn)) rn.placeholder = r + ' (automatisch)'; }
+        catch(_){ if(n === lauf.n && document.body.contains(rn)) rn.placeholder = 'automatisch'; } };
+      vorschau(); if(kz) kz.addEventListener('input', ()=>{ clearTimeout(lauf.t); lauf.t = setTimeout(vorschau, 500); });
+      const eigen = aerzteNameNorm(eigenerArztName());
+      if(eigen && aerzteNameNorm(arzt) === eigen){ const h = document.createElement('div'); h.className = 'fb-fehler'; h.textContent = 'Im Fahrtenbuch steht bei diesen Diensten dein eigener Name als Arzt – bitte dort den vertretenen Arzt eintragen bzw. den Empfänger hier ändern.'; const d0 = document.querySelector('.beta-overlay.aktiv .fb-dialog'); if(d0) d0.insertBefore(h, d0.children[1] || null); }
+      if(!st.adr1 && !st.adr2 && !aerzteAdresse(arzt)){
+        (async ()=>{ try{ const token = await msGraphTokenHolen(); if(!token) return; const a = await aerzteAdresseAusDateien(token, arzt); if(!a) return;
+          const f = (id, v)=>{ const e = document.getElementById(id); if(e && !e.value.trim() && v) e.value = v; };
+          const vn = document.getElementById('arVname'); if(vn && a.vname && (vn.value.trim() === arzt || !vn.value.trim())) vn.value = a.vname;
+          f('arFirma', a.firma); f('arAdr1', a.adr1); f('arAdr2', a.adr2);
+          const d0 = document.querySelector('.beta-overlay.aktiv .fb-info'); if(d0) d0.insertAdjacentHTML('beforeend', ' · Anschrift aus ' + htmlEsc(a.ausDatei)); }catch(_){} })();
+      } }
     const ein = document.getElementById('arSummeEin');
     if(ein) ein.oninput = ()=>{ const n = aerzteZahl(ein.value); const a = document.getElementById('arAbw'); if(a) a.textContent = isNaN(n) ? '' : aerzteAbweichungText(n, st.berechnet); };
     const akt = await p;
@@ -23705,13 +23924,39 @@ function dsDienstBlaettern(schritt){
 }
 // Startseite oder Reiter „Letzte Dienste“ im Fahrtenbuch
 let dsAnsichtFb = false;
+// Rechnungsuebersicht fuer die Dienstuebersicht: geladene Liste, sonst eigene Kopie im Arbeitsspeicher (nur die Zeilen)
+let dsUeMem = null, dsUeLaeuft = false, dsUeFehlerAm = 0;
+function dsUeQuelle(){
+  const zk = betaZielKey();
+  const c = typeof betaGesamtCache !== 'undefined' && betaGesamtCache && betaGesamtCache.ue && !betaGesamtCache.laedt && betaGesamtCache.zielKey === zk ? betaGesamtCache : null;
+  return c || (dsUeMem && dsUeMem.zielKey === zk ? dsUeMem : null);
+}
+function dsUebersichtNachholen(){
+  if(dsUeLaeuft || Date.now() - dsUeFehlerAm < 300000 || dsUeQuelle() && (!dsUeMem || Date.now() - dsUeMem.am < 600000)) return;
+  try{ if(designDienstInfo().modus === 'leer') return; }catch(_){ return; }
+  dsUeLaeuft = true;
+  const zk = betaZielKey();
+  // nur neu zeichnen, wenn dadurch Faelle dazukommen (sonst nicht unnoetig die Seite austauschen)
+  const neu = ()=>{ try{ if(!document.getElementById('dsRing') || !(dsDienstWahl || document.querySelector('.ds-live.fb-letzte') || aktuelleAnsichtIstHauptbildschirm)) return;
+    if(standortKarteFaelle(designDienstInfo()).length !== (designDienstHtml.faelle || []).length) dsNeuZeichnen(); }catch(_){} };
+  (async ()=>{
+    try{
+      const alt = await ZwSpeicher.holen('rechnungsliste');
+      if(alt && alt.zielKey === zk && alt.ue){ dsUeMem = { zielKey: zk, ue: alt.ue, am: Date.now() }; neu(); return; }
+      if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet') return;
+      const token = await msGraphTokenHolen(); if(!token) return;
+      const ue = await uebersichtLaden(token, betaZiel().uebersicht);
+      dsUeMem = { zielKey: zk, ue, am: Date.now() }; neu();
+    }catch(_){ dsUeFehlerAm = Date.now(); } finally { dsUeLaeuft = false; }
+  })();
+}
 function dsNeuZeichnen(){ if(dsAnsichtFb && document.querySelector('.ds-live.fb-letzte')) ansichtLetzteDienste(); else ansichtStart(); }
 // Reiter „Letzte Dienste“ (Wunsch 25.11.2026, zum Testen): Uhr, Dienstuebersicht und Karte wie auf der Startseite, Pfeile immer sichtbar
 function ansichtLetzteDienste(){
   einstellungenOffen = false;
   setzeTitel('Fahrtenbuch', ansichtStart);
   vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=> ansichtLetzteDienste(); };
-  dsAnsichtFb = true;
+  dsAnsichtFb = true; dsUebersichtNachholen();
   if(!dsDienstWahl && !liveDienstAnzeige()){ const l = liveDienstLetzter(); if(l) dsDienstWahl = dsDienstSchluessel(l); }
   const info = designDienstInfo();
   app.innerHTML = fbTabsHtml('letzte') + (info.modus === 'leer'
@@ -24202,7 +24447,9 @@ function designDienstHtml(info){
   let auf = true; try{ auf = sessionStorage.getItem('dienst_liste_zu') !== '1'; }catch(_){}
   const summe = (art)=> faelle.filter(f=> f.art === art).reduce((a, f)=> a + (Number(f.euro) || 0), 0);
   const kurzEuro = (v)=> betaEuro(v).replace(' €', '');
-  const anzahl = (art)=>{ const n = faelle.filter(f=> f.art === art && !f.sammel).length, sm = art === 'gkv' && faelle.some(f=> f.sammel); return ' <i class="z-anz">' + n + (sm ? '+Σ' : '') + '</i>'; };
+  const anzahl = (art)=>{ const n = faelle.filter(f=> f.art === art && !f.sammel).length, sm = art === 'gkv' && faelle.some(f=> f.sammel); return ' <i class="z-anz">(' + n + (sm ? '+Σ' : '') + ')</i>'; };
+  // Wunsch 25.11.2026: Anzahl in Klammern, bei Gesamt die Gesamtzahl -- „Fälle in diesem Dienst“ ohne Zahl
+  const nGes = faelle.filter(f=> !f.sammel).length, smGes = faelle.some(f=> f.sammel);
   // Balken nur, solange die Foerderung noch greift (GKV unter der Pauschale)
   const balken = info.pauschale > 0 && info.gkv < info.pauschale;
   const lohn = designStundenlohn(info, faelle);
@@ -24214,11 +24461,11 @@ function designDienstHtml(info){
       // Wunsch 22.11.2026: statt „Fälle“ gesamt die Anzahl je Art im jeweiligen Kasten (GKV ohne Sammelerfassung)
       '<span class="ds-zahlen ' + (lohn != null ? 'fuenf-k' : 'vier-k') + '"><span class="z-gkv"><span>GKV' + anzahl('gkv') + '</span><b>' + kurzEuro(info.gkv) + '</b></span>' +
       '<span class="z-pt"><span>PT' + anzahl('pt') + '</span><b>' + kurzEuro(summe('pt')) + '</b></span><span class="z-ls"><span>LS' + anzahl('ls') + '</span><b>' + kurzEuro(summe('ls')) + '</b></span>' +
-      '<span class="z-sum" title="GKV + PT + LS"><span>Gesamt</span><b>' + kurzEuro((Number(info.gkv) || 0) + summe('pt') + summe('ls')) + '</b></span>' +
+      '<span class="z-sum" title="GKV + PT + LS"><span>Gesamt <i class="z-anz">(' + nGes + (smGes ? '+Σ' : '') + ')</i></span><b>' + kurzEuro((Number(info.gkv) || 0) + summe('pt') + summe('ls')) + '</b></span>' +
       (lohn != null ? '<span title="Einnahmen seit Dienstbeginn je Stunde (GKV mindestens anteilige Förderpauschale, dazu LS/PT)"><span>€/h</span><b id="dsLohn">' + kurzEuro(lohn) + '</b></span>' : '') + '</span>' +
       (balken ? '<span class="ds-fort"><span class="ds-fort-zeile"><span>GKV gegen Pauschale</span><b>' + kurzEuro(info.gkv) + ' / ' + betaEuro(info.pauschale) + '</b></span>' +
         '<span class="ds-balken"><i style="width:' + p + '%"></i></span></span>' : '') + '</button>' +
-    '<button type="button" class="ds-dz-auf" aria-expanded="' + auf + '"><span>Fälle in diesem Dienst (' + faelle.length + ')</span><span class="ds-dz-pfeil" aria-hidden="true">▾</span></button>' +
+    '<button type="button" class="ds-dz-auf" aria-expanded="' + auf + '"><span>Fälle in diesem Dienst</span><span class="ds-dz-pfeil" aria-hidden="true">▾</span></button>' +
     '<div class="ds-dz-liste"' + (auf ? '' : ' hidden') + '>' +
       (faelle.length ? faelle.map((f, i)=> ((f.gkvId || f.verwerfen) ? '<div class="wisch-huelle ds-dz-wisch"><div class="wisch-hinter">&#128465; Löschen</div>' : '') + '<button type="button" class="ds-dz-fall" data-dzfall="' + i + '"><span class="ds-dz-zeit">' + designUhr(f.t) + '</span>' +
         '<span class="ds-fall-marke ' + f.art + '">' + f.art.toUpperCase() + '</span><span class="ds-dz-name">' + htmlEsc(f.name) + '</span>' +
@@ -24644,6 +24891,7 @@ function ansichtEinstellungen(){
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Datensicherung</div>
       <div id="odsAbschnitt"></div>
+      <button type="button" class="btn-sekundaer" id="btnLokaleStaende" style="margin-top:8px;">Lokale Zwischenstände (vor jedem Abgleich) …</button>
       <button type="button" class="btn-sekundaer" id="btnFehlerProtokoll" style="margin-top:8px;">Fehlerprotokoll (ohne Patientendaten)</button>
     </div>
     <div class="abschnitt" style="margin-top:20px;">
@@ -24745,6 +24993,8 @@ function ansichtEinstellungen(){
 
   msGraphAbschnittWiring();
   try{ odsAbschnittZeichnen(); }catch(e){ console.warn('Datensicherung', e); }
+  // die kleinen Sicherungen vor jedem Abgleich (Wunsch 25.11.2026: nicht mehr in der Rechnungsverwaltung, nur hier)
+  { const b = document.getElementById('btnLokaleStaende'); if(b) b.onclick = ansichtSyncBackups; }
   if(window.TRESOR_MODUS) tresorAbschnittWiring();
   else { const neu = ()=>{ const el = document.getElementById('asAbschnitt'); if(el){ el.innerHTML = umzugAngebotHtml() + AppSperre.abschnittHtml(); AppSperre.abschnittWiring(neu); umzugAngebotWiring(); } }; AppSperre.abschnittWiring(neu); umzugAngebotWiring(); }
   betaEinstellungenWiring();
@@ -27286,14 +27536,18 @@ function ansichtMerken(x){ try{ sessionStorage.setItem(ANSICHT_SCHL, JSON.string
       if(window.__keinMerken) return;
       const x = JSON.parse(sessionStorage.getItem(ANSICHT_SCHL) || 'null'); if(!x) return;
       if(x.typ === 'maske' && x.idx == null && typeof betaAktuellerEntwurf !== 'undefined' && betaAktuellerEntwurf) x.entwurf = betaAktuellerEntwurf.id;
-      if(x.typ === 'gkv' && !x.id && typeof gkvEntwurf !== 'undefined' && gkvEntwurf) x.gkv = gkvEntwurf;
+      // GKV-Zwischenstand: nur der Hinweis, die Daten selbst liegen verschluesselt im App-Speicher (keine Patientendaten im sessionStorage)
+      if(x.typ === 'gkv' && !x.id && typeof gkvEntwurf !== 'undefined' && gkvEntwurf){ try{ gkvEntwurfSichern(); }catch(_){} x.gkv = true; }
+      x.y = Math.round(window.scrollY || 0); x.am = Date.now();
       sessionStorage.setItem(ANSICHT_SCHL, JSON.stringify(x));
     }catch(_){}
   });
 })();
 function ansichtWiederherstellen(){
   const x = ansichtVorDemLaden; ansichtVorDemLaden = null;
-  if(!x || !x.typ || x.typ === 'start' || Date.now() - (x.am || 0) > 30 * 60000) return;
+  // Wunsch 25.11.2026: nach der automatischen Sperre dort weitermachen, wo man aufgehoert hat (auch nach laengerer Pause, 12 h)
+  if(!x || !x.typ || x.typ === 'start' || Date.now() - (x.am || 0) > 12 * 3600000) return;
+  if(x.y > 0) setTimeout(()=>{ try{ window.scrollTo(0, x.y); }catch(_){} }, 700);
   const ziel = { verwaltung: ()=> ansichtRechnungenGesamt(), gkvVerwaltung: ()=> ansichtGkvVerwaltung(), fahrtenbuch: ()=> ansichtFahrtenbuch(),
     quartale: ()=> ansichtFahrdienstAuswertung(), luftlinie: ()=> ansichtLuftlinienTool(), einstellungen: ()=> ansichtEinstellungen() }[x.typ];
   if(ziel){ ziel(); return; }
@@ -27305,7 +27559,7 @@ function ansichtWiederherstellen(){
   }
   if(x.typ === 'gkv'){
     if(x.id){ ansichtGkv(x.id); return; }
-    if(x.gkv && typeof gkvEntwurf !== 'undefined'){ gkvEntwurf = x.gkv; }
+    if(x.gkv && typeof gkvEntwurfLaden === 'function'){ try{ gkvEntwurfLaden(); }catch(_){} }
     ansichtGkv();
   }
 }
