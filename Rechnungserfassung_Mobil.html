@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-lCUjU+leEOy7yCVJb0xpYp643PVcQ7CDlRkEAkbwMeY=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-1w7vaV65kRAolWcszkFxokOlSEpJMM6l+os/JLwEPfE=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -273,6 +273,10 @@ try{
   .intro-text{font-size:15.5px; line-height:1.55;} .intro-punkte{display:flex; gap:6px; justify-content:center; margin-top:14px;}
   .intro-punkte span{width:7px; height:7px; border-radius:50%; background:var(--rand);} .intro-punkte span.an{background:var(--ds-primaer, #4a5568);}
   body.pdf-dialog .beta-overlay{z-index:10003;}
+  .beta-pdf-kopf button svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; display:block; margin:auto;}
+  .beta-pdf-zoom{position:absolute; right:calc(12px + env(safe-area-inset-right)); bottom:calc(14px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:8px; z-index:2;}
+  .beta-pdf-zoom button{width:46px; height:46px; margin:0; padding:0; border-radius:10px; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.35); background:#f2efe9; color:#2b3a55; font-size:24px; font-weight:700; line-height:1; cursor:pointer;}
+  .beta-pdf-zoom button svg{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; display:block; margin:auto;}
   .beta-pdf-kopf button.beta-pdf-senden{width:auto; padding:0 12px; font-size:15px; font-weight:600; background:#2f855a;}
   .beta-pdf.aktiv{display:flex;}
   .beta-pdf-kopf{display:flex; align-items:center; gap:6px; padding:calc(8px + env(safe-area-inset-top)) 8px 8px; background:#2c3e50; color:#fff;}
@@ -2283,7 +2287,7 @@ try{
   .fbx-tab.breit .fbx-tb-karte{border-left:1px solid var(--rand); padding:6px 8px; min-height:120px; align-self:stretch;}
   .fbx-tab.breit .fbx-tb-karte.kopf{min-height:0; padding:5px 8px; font-weight:700; color:var(--text-schwach);}
   .fbx-tab.breit .fbx-tb-karte .sk-kopf{margin:0 0 4px;}
-  .fbx-tab.breit .fbx-tr:not(.fbx-dk):not(.fbx-sum){grid-template-columns:62px minmax(0,1fr) 34px minmax(0,1.2fr) 60px;}
+  .fbx-tab.breit .fbx-tr:not(.fbx-sum){grid-template-columns:62px minmax(0,1fr) 34px minmax(0,1.2fr) 60px;}
   .fbx-tr .fbx-zeit{white-space:nowrap;}
   .fbx-tr .fbx-zeit .fbx-ortnr{display:inline-flex; margin-right:3px; transform:scale(.85);}
   .fbx-arten{white-space:nowrap; font-weight:500;} .fbx-n{font-style:normal; font-weight:700;}
@@ -2292,7 +2296,8 @@ try{
   .fbx-tr{display:grid; grid-template-columns:38px minmax(0,1fr) 34px minmax(0,1.2fr) 52px; gap:4px; padding:5px 6px; border-top:1px solid var(--rand); align-items:center;}
   .fbx-tr > span:last-child{text-align:right; font-variant-numeric:tabular-nums;}
   .fbx-th{border-top:0; color:var(--text-schwach); font-weight:600;}
-  .fbx-dk{background:var(--grau-feld); font-weight:700; grid-template-columns:minmax(0,1fr) 60px;}
+  .fbx-dk{background:var(--grau-feld); font-weight:700;}
+  .fbx-dk .fbx-dkt{grid-column:1 / 3;} .fbx-dk .fbx-dk-arten{grid-column:3 / 5; font-size:11px; display:flex; flex-wrap:wrap; gap:2px 8px;}   /* Anzahl je Art unter „Kat“ (Wunsch 25.11.2026) */
   .fbx-dk.laeuft{background:color-mix(in srgb, var(--ls-farbe) 18%, var(--karte));}
   .fbx-sum{grid-template-columns:1fr; color:var(--text-schwach); font-size:11.5px;}
   .fbx-tr-offen{grid-row:2; grid-column:2 / -1; margin-top:-3px; font-size:10.5px; font-weight:600; color:#b06a00;}
@@ -2456,6 +2461,8 @@ try{
   .brief-termin{margin-top:12px; padding-top:10px; border-top:1px solid var(--rand);} .brief-termin label{display:flex !important; align-items:center; justify-content:flex-start; gap:10px; margin:8px 0; font-size:15px; font-weight:500;}
   .brief-termin input[type=radio]{width:20px !important; height:20px; flex:none; margin:0 !important; padding:0;} .brief-termin input[type=date]{width:auto !important; flex:none; margin:0 !important; padding:6px 10px;}
   .fd-jahre{flex-wrap:nowrap !important;}
+  .fd-kopfreihe{display:flex; gap:6px; align-items:center; margin:0 0 8px;} .fd-kopfreihe select{flex:0 0 auto; height:42px; box-sizing:border-box; margin:0; padding:0 22px 0 10px; font:inherit; font-size:15px; border:1px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text); width:auto; max-width:40%;}
+  .fd-q{display:flex; gap:6px; flex:1; min-width:0;} .fd-q .fb-chip{flex:1 1 0; min-width:0; padding-left:0; padding-right:0; text-align:center;}
   .fd-zeit{margin:2px 0 8px;} .fd-zeit-leiste{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; padding:2px 0;} .fd-zeit-leiste .fb-chip{flex:none;} .fd-eigen{margin-top:6px;}
   .fd-jahre-leiste{display:flex; gap:6px; flex:1; min-width:0; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; padding:2px 0;
     -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent); mask-image:linear-gradient(to right, #000 calc(100% - 18px), transparent);}
@@ -3801,7 +3808,7 @@ function fahrdienstZeilenAuswerten(zeilen){
 // zum Ausprobieren: Karten (A), Tabelle wie die Excel (B), Wochenleiste (C).
 // =====================================================================
 function fbTabsHtml(akt){
-  return '<div class="fbx-tabs"><button type="button" data-fbtab="letzte" class="' + (akt === 'letzte' ? 'an' : '') + '">Letzte Dienste</button><button type="button" data-fbtab="dienste" class="' + (akt === 'dienste' ? 'an' : '') + '">Dienste</button>' +
+  return '<div class="fbx-tabs"><button type="button" data-fbtab="letzte" class="' + (akt === 'letzte' ? 'an' : '') + '">Letzte Dienste</button><button type="button" data-fbtab="dienste" class="' + (akt === 'dienste' ? 'an' : '') + '">Alle Dienste</button>' +
     '<button type="button" data-fbtab="quartale" class="' + (akt === 'quartale' ? 'an' : '') + '">Quartale</button></div>';
 }
 function fbTabsWiring(){
@@ -4159,10 +4166,10 @@ function fbFallEuro(d, f){
 function fbMarke(art, f){ return '<span class="fbx-m ' + art + '">' + ({ ls: 'LS', pt: 'PT', gkv: 'GKV' }[art]) + '</span>' + fbOffenMarke(f); }
 function fbOffenMarke(f){ return f && f.offen ? ' <span class="fbx-offen ' + f.offen + '">' + (f.offen === 'unfertig' ? 'unfertig' : 'noch nicht im Fahrtenbuch') + '</span>' : ''; }
 // Anzahl je Art in Klammern mit Farbcode (Wunsch 25.11.2026): (5 GKV · 3 PT · 2 LS), nur vorhandene Arten
-function fbAnzahlArtenHtml(d){
+function fbAnzahlArtenHtml(d, ohneKlammer){
   const f = (d.faelle || []).filter(x=> !x.pseudo), n = (a)=> f.filter(x=> x.art === a).length;
   const t = [['gkv', 'GKV'], ['pt', 'PT'], ['ls', 'LS']].filter(([a])=> n(a)).map(([a, l])=> '<i class="fbx-n ' + a + '">' + n(a) + ' ' + l + '</i>');
-  return t.length ? ' <span class="fbx-arten">(' + t.join(' · ') + ')</span>' : '';
+  return t.length ? (ohneKlammer ? t.join(' ') : ' <span class="fbx-arten">(' + t.join(' · ') + ')</span>') : '';
 }
 function fbDienstKopf(d){
   return '<span class="fbx-titel">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.dienstart || 'Fahrdienst') + ' ' + htmlEsc(d.zeitLabel || '') + '</span>' +
@@ -4584,7 +4591,7 @@ function fbTabelleBreit(){ return window.innerWidth >= 820; }
 function fbAnsichtB(buch){
   const breit = fbTabelleBreit();
   return '<div class="fbx-tab' + (breit ? ' breit' : '') + '"><div class="fbx-tb-block"><div class="fbx-tb-zeilen"><div class="fbx-tr fbx-th"><span>Zeit</span><span>Patient</span><span>Kat</span><span>Ziffern</span><span>€</span></div></div>' + (breit ? '<div class="fbx-tb-karte kopf">Einsatzorte</div>' : '') + '</div>' +
-    buch.dienste.map((d, di)=> '<div class="fbx-tb-block" data-tbdi="' + di + '"><div class="fbx-tb-zeilen"><div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + fbAnzahlArtenHtml(d) + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
+    buch.dienste.map((d, di)=> '<div class="fbx-tb-block" data-tbdi="' + di + '"><div class="fbx-tb-zeilen"><div class="fbx-tr fbx-dk' + (fbLaufend(d) ? ' laeuft' : '') + '" data-fbdienst="' + di + '"><span class="fbx-dkt">' + fbTagText(d.tag) + ' · ' + htmlEsc(d.zeitLabel || '') + (d.arzt ? ' · ' + htmlEsc(d.arzt) : '') + '</span><span class="fbx-dk-arten">' + fbAnzahlArtenHtml(d, true) + '</span><span>' + betaEuro(d.gesamt).replace(' €', '') + '</span></div>' +
       d.faelle.map((f, fi)=> '<div class="fbx-tr" data-art="' + htmlEsc(f.art || '') + '" data-fbfall="' + di + '-' + fi + '"><span class="fbx-zeit">' + htmlEsc(f.zeit || '') + '</span><span class="fbx-nm">' + htmlEsc(f.name) + '</span><span>' + fbMarke(f.art) + '</span><span class="fbx-zt">' +
         f.ziffern.map(x=> (x.anz > 1 ? x.anz + '×' : '') + htmlEsc(x.gop)).join(' ') + '</span>' +
         // „noch nicht im Fahrtenbuch“ / „unfertig“ als schmale zweite Zeile unter dem Fall statt in der engen Kat-Spalte (Wunsch 21.11.2026)
@@ -4759,7 +4766,7 @@ function fahrdienstAuswertungRendern(daten){
   const heute = String(new Date().getFullYear());
   let wahl = fahrdienstJahrWahl;
   if(wahl !== 'alle' && !jahre.includes(wahl)) wahl = jahre.includes(heute) ? heute : jahre[0];
-  const bl0 = wahl === 'alle' ? daten.bloecke : daten.bloecke.filter(b=> fahrdienstJahrVon(b) === wahl);
+  const bl0 = (wahl === 'alle' || (fahrdienstZeitWahl || {}).art === 'eigen') ? daten.bloecke : daten.bloecke.filter(b=> fahrdienstJahrVon(b) === wahl);
   // Quartal bzw. eigener Zeitraum innerhalb des Jahres (Wunsch 25.11.2026, wie im Fahrtenbuch)
   const zw = fahrdienstZeitWahl || { art: 'jahr' };
   const datumVon = (b)=>{ const m = /(\d{1,2})\.(\d{1,2})\.(\d{4})/.exec(String(b.datumText || '')); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
@@ -4773,12 +4780,13 @@ function fahrdienstAuswertungRendern(daten){
   const euro = (w)=> (Number(w)||0).toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
   const s = bl.reduce((a, b)=>{ a.g += b.gesamt; a.k += b.gkv; a.l += b.ls; a.p += b.pt; a.h += (b.dienststunden || 0); a.f += Math.max(0, (b.gkv || 0) - (b.gkvRoh || 0)); a.nk += b.nGkv || 0; a.nl += b.nLs || 0; a.np += b.nPt || 0; return a; }, {g:0, k:0, l:0, p:0, h:0, f:0, nk:0, nl:0, np:0});
   const kopf = document.createElement('div');
-  kopf.innerHTML = '<div class="fd-jahre"><div class="fd-jahre-leiste">' + jahre.map(j=> '<button type="button" class="fb-chip' + (j === wahl ? ' an' : '') + '" data-jahr="' + j + '">' + j + '</button>').join('') +
-    '<button type="button" class="fb-chip' + (wahl === 'alle' ? ' an' : '') + '" data-jahr="alle">Alle</button></div></div>' +
-    (wahl === 'alle' ? '' : '<div class="fd-zeit"><div class="fd-zeit-leiste">' + [['jahr', 'Ganzes Jahr'], ['q1', 'Q1'], ['q2', 'Q2'], ['q3', 'Q3'], ['q4', 'Q4'], ['eigen', 'Zeitraum …']]
-      .map(([k, t])=> '<button type="button" class="fb-chip' + (zw.art === k ? ' an' : '') + '" data-fdzeit="' + k + '">' + t + '</button>').join('') + '</div>' +
-      (zw.art === 'eigen' ? '<div class="fbx-eigen fd-eigen"><label>von<input type="date" id="fdVon" value="' + htmlEsc(zw.von || (wahl + '-01-01')) + '"></label><label>bis<input type="date" id="fdBis" value="' + htmlEsc(zw.bis || (wahl + '-12-31')) + '"></label></div>' : '') + '</div>') +
-    '<div class="fd-jahr-summe"><b>' + (wahl === 'alle' ? 'Alle Jahre' : wahl + (zw.art === 'jahr' ? '' : /^q/.test(zw.art) ? ' · ' + zw.art.toUpperCase() : ' · ' + (zw.von ? isoDe(zw.von) : '…') + '–' + (zw.bis ? isoDe(zw.bis) : '…'))) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
+  // Wunsch 25.11.2026: Jahr aus einer Liste (wie bei „Alle Dienste“), daneben Q1–Q4 (keins gewaehlt = ganzes Jahr), eine Reihe
+  const qAn = /^q[1-4]$/.test(zw.art) ? zw.art : '';
+  kopf.innerHTML = '<div class="fd-kopfreihe"><select id="fdJahrWahl" class="fbx-jahr" aria-label="Jahr">' + jahre.map(j=> '<option value="' + j + '"' + (j === wahl && zw.art !== 'eigen' ? ' selected' : '') + '>' + j + '</option>').join('') +
+      '<option value="alle"' + (wahl === 'alle' ? ' selected' : '') + '>Alle Jahre</option><option value="eigen"' + (zw.art === 'eigen' ? ' selected' : '') + '>Zeitraum …</option></select>' +
+      (wahl === 'alle' || zw.art === 'eigen' ? '' : '<div class="fd-q">' + ['q1', 'q2', 'q3', 'q4'].map(q=> '<button type="button" class="fb-chip' + (qAn === q ? ' an' : '') + '" data-fdzeit="' + q + '" aria-pressed="' + (qAn === q) + '">' + q.toUpperCase() + '</button>').join('') + '</div>') + '</div>' +
+    (zw.art === 'eigen' ? '<div class="fbx-eigen fd-eigen"><label>von<input type="date" id="fdVon" value="' + htmlEsc(zw.von || (wahl + '-01-01')) + '"></label><label>bis<input type="date" id="fdBis" value="' + htmlEsc(zw.bis || (wahl + '-12-31')) + '"></label></div>' : '') +
+    '<div class="fd-jahr-summe"><b>' + (zw.art === 'eigen' ? (zw.von ? isoDe(zw.von) : '…') + '–' + (zw.bis ? isoDe(zw.bis) : '…') : wahl === 'alle' ? 'Alle Jahre' : wahl + (/^q/.test(zw.art) ? ' · ' + zw.art.toUpperCase() : '')) + ':</b> ' + bl.length + (bl.length === 1 ? ' Dienst · ' : ' Dienste · ') + String(Math.round(s.h * 10) / 10).replace('.', ',') + ' Std. · gesamt ' + euro(s.g) +
     ' (GKV ' + euro(s.k) + (s.f > 0.005 ? ', davon Förderung ' + euro(s.f) : '') + ' · PT ' + euro(s.p) + ' · LS ' + euro(s.l) + ')' +
     (s.h ? ' · ' + euro(s.g / s.h) + '/h' : '') + '<br>Fälle: ' + s.nk + ' GKV · ' + s.np + ' PT · ' + s.nl + ' LS' +
     (()=>{ // Dienste je Dienstart (ohne Schicht)
@@ -4786,12 +4794,13 @@ function fahrdienstAuswertungRendern(daten){
       return Object.keys(n).length > 1 ? '<br>' + Object.entries(n).sort((x, y)=> y[1] - x[1]).map(([a, z])=> z + '× ' + htmlEsc(a)).join(' · ') : '';
     })() + '</div>';
   zielEl.insertBefore(kopf, zielEl.firstChild);
-  // "Neu laden" / "Fahrtenbuch öffnen" rechts in die Zeile der Jahre (spart eine ganze Zeile)
-  if(fdAktionenEl && document.body.contains(zielEl)){ fdAktionenEl.removeAttribute('style'); fdAktionenEl.className = 'fd-aktionen'; kopf.querySelector('.fd-jahre').appendChild(fdAktionenEl); }
-  kopf.querySelectorAll('[data-jahr]').forEach(b=> b.onclick = ()=>{ fahrdienstJahrWahl = b.dataset.jahr; fahrdienstZeitWahl = { art: 'jahr' }; fahrdienstAuswertungRendern(daten); });
-  kopf.querySelectorAll('[data-fdzeit]').forEach(b=> b.onclick = ()=>{ fahrdienstZeitWahl = Object.assign({}, fahrdienstZeitWahl, { art: b.dataset.fdzeit }); if(b.dataset.fdzeit === 'eigen' && !fahrdienstZeitWahl.von){ fahrdienstZeitWahl.von = wahl + '-01-01'; fahrdienstZeitWahl.bis = wahl + '-12-31'; } fahrdienstAuswertungRendern(daten); });
+  // „Neu laden“ und „In Excel öffnen“ entfallen hier (Wunsch 25.11.2026) -- die Auswertung prueft beim Oeffnen selbst, ob sich die Excel geaendert hat
+  { const js = kopf.querySelector('#fdJahrWahl'); if(js) js.onchange = ()=>{ const v = js.value;
+      if(v === 'eigen'){ const jj = wahl === 'alle' ? heute : wahl; fahrdienstZeitWahl = { art: 'eigen', von: jj + '-01-01', bis: jj + '-12-31' }; fahrdienstJahrWahl = wahl === 'alle' ? heute : wahl; }
+      else { fahrdienstJahrWahl = v; fahrdienstZeitWahl = { art: 'jahr' }; }
+      fahrdienstAuswertungRendern(daten); }; }
+  kopf.querySelectorAll('[data-fdzeit]').forEach(b=> b.onclick = ()=>{ const q = b.dataset.fdzeit; fahrdienstZeitWahl = { art: fahrdienstZeitWahl && fahrdienstZeitWahl.art === q ? 'jahr' : q }; fahrdienstAuswertungRendern(daten); });
   ['fdVon', 'fdBis'].forEach(id=>{ const e = kopf.querySelector('#' + id); if(e) e.onchange = ()=>{ fahrdienstZeitWahl = Object.assign({}, fahrdienstZeitWahl, id === 'fdVon' ? { von: e.value } : { bis: e.value }); fahrdienstAuswertungRendern(daten); }; });
-  { const lei = kopf.querySelector('.fd-jahre-leiste'), an = lei && lei.querySelector('.an'); if(an && lei.scrollWidth > lei.clientWidth) lei.scrollLeft = Math.max(0, an.offsetLeft - lei.offsetLeft - 8); }   // gewaehltes Jahr sichtbar
 }
 function fahrdienstAuswertungRendernBasis(daten){
   const zielEl = document.getElementById('fahrdienstInhalt');
@@ -12790,8 +12799,11 @@ async function betaPdfAnzeigen(opt){
     el.id = 'betaPdfAnsicht';
     el.className = 'beta-pdf';
     el.innerHTML = '<div class="beta-pdf-kopf"><button type="button" data-a="zu" title="Schließen">✕</button><div class="beta-pdf-titel"></div>' +
-      '<button type="button" data-a="klein" title="Verkleinern">−</button><button type="button" data-a="gross" title="Vergrößern">+</button>' +
-      '<button type="button" data-a="teilen" title="Teilen / Speichern">⇪</button><button type="button" data-a="laden" title="Herunterladen">⤓</button><button type="button" data-a="senden" class="beta-pdf-senden" title="Als Brief senden" hidden>✉ Senden</button></div><div class="beta-pdf-seiten"></div>';
+      // Wunsch 25.11.2026: bekannte Symbole fuer Herunterladen und Teilen; Zoom unten rechts in der Anzeige wie bei der Karte
+      '<button type="button" data-a="laden" title="Herunterladen" aria-label="Herunterladen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11.5M7 10.5l5 5 5-5M4.5 16.5v3h15v-3"/></svg></button>' +
+      '<button type="button" data-a="teilen" title="Teilen" aria-label="Teilen"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="6.5" cy="12" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.8 10.7l6.4-3.9M8.8 13.3l6.4 3.9"/></svg></button><button type="button" data-a="senden" class="beta-pdf-senden" title="Als Brief senden" hidden>✉ Senden</button></div><div class="beta-pdf-seiten"></div>' +
+      '<div class="beta-pdf-zoom"><button type="button" data-a="gross" title="Vergrößern" aria-label="Vergrößern">+</button><button type="button" data-a="klein" title="Verkleinern" aria-label="Verkleinern">−</button>' +
+      '<button type="button" data-a="ganz" title="Ganze Seite" aria-label="Ganze Seite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>';
     document.body.appendChild(el);
   }
   const seitenEl = el.querySelector('.beta-pdf-seiten');
@@ -12810,7 +12822,7 @@ async function betaPdfAnzeigen(opt){
   let zoomMin = 1;
   const zoomSetzen = (z)=>{ zoom = Math.max(zoomMin, Math.min(4, z)); const w = inhaltEl(); if(w) w.style.width = (zoom * 100) + '%'; };
   if(el._radWeg) el._radWeg();
-  { const rad = (ev)=>{ if(!ev.ctrlKey && !ev.metaKey) return; ev.preventDefault(); zoomSetzen(zoom * Math.exp(-ev.deltaY * 0.0025)); };
+  { const rad = (ev)=>{ ev.preventDefault(); zoomSetzen(zoom * Math.exp(-ev.deltaY * 0.0025)); };   // Mausrad zoomt (Wunsch 25.11.2026), Verschieben per Ziehen/Scrollleiste
     seitenEl.addEventListener('wheel', rad, { passive: false }); el._radWeg = ()=> seitenEl.removeEventListener('wheel', rad); }
   const PAD = 8;
   // Zwei-Finger-Zoom (die App selbst ist nicht zoombar): waehrend der Geste frei per Transform um die Fingermitte
@@ -12842,6 +12854,7 @@ async function betaPdfAnzeigen(opt){
 
   el.querySelector('[data-a="klein"]').onclick = ()=> zoomSetzen(zoom - 0.5);
   el.querySelector('[data-a="gross"]').onclick = ()=> zoomSetzen(zoom + 0.5);
+  el.querySelector('[data-a="ganz"]').onclick = ()=>{ zoomSetzen(zoomMin); seitenEl.scrollTop = 0; seitenEl.scrollLeft = 0; };
   // Als Brief senden (sofort oder zu einem Datum) -- nur wenn die Rechnung noch nicht verschickt ist
   const sk = el.querySelector('[data-a="senden"]');
   sk.hidden = !opt.senden || typeof betaBriefeVersenden !== 'function';

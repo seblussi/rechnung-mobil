@@ -73,7 +73,7 @@ module.exports = async ({ browser, basis, pr })=>{
   const reiter = await p.evaluate(()=> [...document.querySelectorAll('.fbx-tabs button')].map((b)=> b.textContent));
   await p.evaluate(()=> document.querySelector('[data-fbtab="letzte"]').click()); await p.waitForTimeout(1200);
   const fb = await p.evaluate(()=> ({ ring: !!document.querySelector('.fb-letzte .ds-ring-block'), pfeile: !!document.querySelector('.fb-letzte .ds-ring-block.pfeile .ds-pfeil.links'), karte: !!document.getElementById('skKarte'), an: (document.querySelector('.fbx-tabs .an') || {}).textContent }));
-  pr('Fahrtenbuch: Reiter „Letzte Dienste“ vor „Dienste/Quartale“, Uhr mit Pfeilen und Karte', reiter[0] === 'Letzte Dienste' && reiter[1] === 'Dienste' && fb.ring && fb.pfeile && fb.karte && fb.an === 'Letzte Dienste', { reiter, fb });
+  pr('Fahrtenbuch: Reiter „Letzte Dienste“ vor „Dienste/Quartale“, Uhr mit Pfeilen und Karte', reiter[0] === 'Letzte Dienste' && reiter[1] === 'Alle Dienste' && fb.ring && fb.pfeile && fb.karte && fb.an === 'Letzte Dienste', { reiter, fb });
   const zf0 = await p.evaluate(()=> document.querySelector('.ds-schicht small').textContent);
   await p.evaluate(()=> document.querySelector('.ds-pfeil.links').click()); await p.waitForTimeout(1000);
   const zf1 = await p.evaluate(()=> ({ zeit: (document.querySelector('.ds-schicht small') || {}).textContent, imFb: !!document.querySelector('.fb-letzte'), titel: document.querySelector('.fbx-tabs .an') && document.querySelector('.fbx-tabs .an').textContent }));
