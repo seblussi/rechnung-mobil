@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-4Pvp/NqbEa60emKZQD1ePbVwzghJMpU/Of/kNiF0IRc=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-JqiSFbU2+HdnEsfporPHxA/ADt7FBGMYMizpv3+SmLk=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -1705,6 +1705,10 @@ try{
     --ds-primaer:#4a5568; --ds-primaer-text:#ffffff; --ds-gkv:#5b3480; --ds-nav:rgba(252,253,254,.88); --ds-nav-text:#4f5866; --ds-gkv-hell:#efe8f6; --ds-gkv-text:#43255f;
   }
   body.design-einhand:not(.dunkel) .ds-nav{-webkit-backdrop-filter:blur(14px) saturate(1.4); backdrop-filter:blur(14px) saturate(1.4); box-shadow:0 6px 24px rgba(30,40,60,.14), 0 0 0 1px rgba(30,40,60,.06);}
+  /* feiner Blur-Rand um die Leiste (Wunsch 22.11.2026, Stufe 1): Inhalt dahinter laeuft weich aus, die Leiste hebt sich ab */
+  body.design-einhand .ds-nav::before{content:''; position:absolute; inset:-12px; border-radius:45px; z-index:-1; pointer-events:none;
+    -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+    -webkit-mask:radial-gradient(farthest-side, #000 75%, transparent); mask:radial-gradient(farthest-side, #000 75%, transparent);}
   body.design-einhand:not(.dunkel) .ds-nav-btn.an{background:#4a5568; color:#fff;}
   body.design-einhand:not(.dunkel) .ds-nav-btn.gross{background:#4a5568; color:#fff; box-shadow:0 6px 16px rgba(30,40,60,.28);}
   body.design-einhand.dunkel{
@@ -3739,11 +3743,11 @@ function fahrdienstZeilenAuswerten(zeilen){
 // zum Ausprobieren: Karten (A), Tabelle wie die Excel (B), Wochenleiste (C).
 // =====================================================================
 function fbTabsHtml(akt){
-  return '<div class="fbx-tabs"><button type="button" data-fbtab="dienste" class="' + (akt === 'dienste' ? 'an' : '') + '">Dienste</button>' +
+  return '<div class="fbx-tabs"><button type="button" data-fbtab="letzte" class="' + (akt === 'letzte' ? 'an' : '') + '">Letzte Dienste</button><button type="button" data-fbtab="dienste" class="' + (akt === 'dienste' ? 'an' : '') + '">Dienste</button>' +
     '<button type="button" data-fbtab="quartale" class="' + (akt === 'quartale' ? 'an' : '') + '">Quartale</button></div>';
 }
 function fbTabsWiring(){
-  document.querySelectorAll('[data-fbtab]').forEach(b=> b.onclick = ()=>{ if(b.dataset.fbtab === 'dienste') ansichtFahrtenbuch(); else ansichtFahrdienstAuswertung(); });
+  document.querySelectorAll('[data-fbtab]').forEach(b=> b.onclick = ()=>{ if(b.dataset.fbtab === 'letzte'){ dsDienstWahl = null; ansichtLetzteDienste(); } else if(b.dataset.fbtab === 'dienste') ansichtFahrtenbuch(); else ansichtFahrdienstAuswertung(); });
 }
 // ---------- Zwischenspeicher (verschluesselt, nur fuer die laufende Sitzung) ----------
 // Gelesenes Fahrtenbuch, Quartalsuebersicht und Rechnungsliste ueberstehen ein Neuladen
@@ -6483,7 +6487,10 @@ if(window.DEMO_MODUS && !document.getElementById('demoLeiste')){
   document.getElementById('demoAus').onclick = demoBeenden;
 }
 
+// aus dem Reiter „Letzte Dienste“ zurueck: die Startseite zeigt wieder den aktuellen Dienst
+function ansichtStartFbAus(){ if(typeof dsAnsichtFb !== 'undefined' && dsAnsichtFb){ dsAnsichtFb = false; dsDienstWahl = null; dsPfeileAn = false; } }
 function ansichtStart(){
+  try{ ansichtStartFbAus(); }catch(_){}
   try{ gkvEntwurfLaden(); }catch(_){}
   // Solange die Ersteinrichtung laeuft, gibt es keine Startseite (sonst blitzt sie zwischen den Schritten auf,
   // z. B. nach der Microsoft-Anmeldung oder wenn der Abgleich die Startseite neu zeichnet)
@@ -21339,7 +21346,14 @@ function standortKarteFaelle(info){
   const von = info && info.fenster ? info.fenster.von : new Date(Date.now() - 24 * 3600000);
   const bis = info && info.fenster ? info.fenster.bis : new Date(Date.now() + 3600000);
   const fe0 = info && info.fenster ? info.fenster : null;
-  const drin = (t, k)=> fe0 ? fallGehoertZu(t, k, fe0) : !!(t && t >= von && t < bis);
+  // Wunsch 25.11.2026: vergangener Dienst -> auch Faelle, die zeitlich hineinfallen (Dienstzeiten aus dem Fahrtenbuch weichen oft vom
+  // Dienst-Schluessel der Faelle ab; sonst blieben nur GKV-Faelle ohne Schluessel uebrig)
+  const imFenster = (t, fe, spiel)=> !!t && t.getTime() >= fe.von.getTime() - spiel && t.getTime() < fe.bis.getTime() + spiel;
+  // ohne Dienst: alle Faelle des letzten Dienstes, solange sein Ende hoechstens 24 h her ist, dazu die letzten 24 h
+  let feLetzt = null;
+  if(!fe0){ try{ const l = liveDienstLetzter(), fl = l && liveDienstFenster(l); if(fl && Date.now() - fl.bis.getTime() < 24 * 3600000) feLetzt = fl; }catch(_){} }
+  const drin = (t, k)=> fe0 ? (fallGehoertZu(t, k, fe0) || (!!(info && info.letzter) && k !== 'kein' && imFenster(t, fe0, 0)))
+    : (!!(t && t >= von && t < bis) || (!!feLetzt && (fallGehoertZu(t, k, feLetzt) || imFenster(t, feLetzt, 0))));
   const out = [];
   const lsPt = (art, w, oeffnen, entwurf)=>{
     w = w || {};
@@ -23474,7 +23488,24 @@ function dsDienstBlaettern(schritt){
   if(i < 0) i = schritt < 0 ? liste.length : -1;
   const j = Math.max(0, Math.min(liste.length - 1, i + schritt)), z = liste[j];
   dsDienstWahl = z.aktuell ? null : dsDienstSchluessel(z);
-  ansichtStart();
+  dsNeuZeichnen();
+}
+// Startseite oder Reiter „Letzte Dienste“ im Fahrtenbuch
+let dsAnsichtFb = false;
+function dsNeuZeichnen(){ if(dsAnsichtFb && document.querySelector('.ds-live.fb-letzte')) ansichtLetzteDienste(); else ansichtStart(); }
+// Reiter „Letzte Dienste“ (Wunsch 25.11.2026, zum Testen): Uhr, Dienstuebersicht und Karte wie auf der Startseite, Pfeile immer sichtbar
+function ansichtLetzteDienste(){
+  einstellungenOffen = false;
+  setzeTitel('Fahrtenbuch', ansichtStart);
+  vorbereiteRuecksprung = ()=>{ ruecksprungAusEinstellungen = ()=> ansichtLetzteDienste(); };
+  dsAnsichtFb = true;
+  if(!dsDienstWahl && !liveDienstAnzeige()){ const l = liveDienstLetzter(); if(l) dsDienstWahl = dsDienstSchluessel(l); }
+  const info = designDienstInfo();
+  app.innerHTML = fbTabsHtml('letzte') + (info.modus === 'leer'
+    ? '<div class="leer-hinweis">Noch kein Dienst – sobald einer läuft oder im Fahrtenbuch steht, erscheint er hier.</div>'
+    : '<div class="ds-live fb-letzte quer-breit">' + designRingBlockHtml(info) + designDienstHtml(info) + '<div class="sk-karte" id="skKarte"></div></div>');
+  fbTabsWiring();
+  if(info.modus !== 'leer'){ try{ standortKarteZeichnen(info); }catch(_){} designDienstWiring(app); }
 }
 function liveDienstLetzter(){
   // juengster vergangener Dienst aus der Liste (Fahrtenbuch + zuletzt in der App gelaufener)
@@ -24000,7 +24031,7 @@ function dsUhrBlaetternWiring(wurzel){
   const frueher = liste.length && i !== 0, spaeter = i >= 0 && i < liste.length - 1;
   block.insertAdjacentHTML('beforeend', (frueher ? '<button type="button" class="ds-pfeil links" aria-label="früherer Dienst">‹</button>' : '') +
     (spaeter ? '<button type="button" class="ds-pfeil rechts" aria-label="späterer Dienst">›</button>' : ''));
-  block.classList.toggle('pfeile', dsPfeileAn);
+  block.classList.toggle('pfeile', dsPfeileAn || !!document.querySelector('.ds-live.fb-letzte') || (()=>{ try{ return !!designDienstInfo().letzter; }catch(_){ return false; } })());
   const pl = block.querySelector('.ds-pfeil.links'), pr = block.querySelector('.ds-pfeil.rechts');
   if(pl) pl.onclick = (e)=>{ e.stopPropagation(); dsDienstBlaettern(-1); };
   if(pr) pr.onclick = (e)=>{ e.stopPropagation(); dsDienstBlaettern(1); };
@@ -24009,8 +24040,15 @@ function dsUhrBlaetternWiring(wurzel){
   block.addEventListener('pointerdown', (e)=>{ x0 = e.clientX; y0 = e.clientY; gewischt = false; });
   block.addEventListener('pointerup', (e)=>{ if(x0 == null) return; const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
     if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5){ gewischt = true;
-      if(!dsPfeileAn){ dsPfeileAn = true; block.classList.add('pfeile'); return; }
+      if(!block.classList.contains('pfeile')){ dsPfeileAn = true; block.classList.add('pfeile'); return; }
       if(dx > 0 ? frueher : spaeter) dsDienstBlaettern(dx > 0 ? -1 : 1); } });
+  block.addEventListener('pointercancel', ()=>{ /* Touch: Auswertung ueber touchend */ });
+  let tx0 = null, ty0 = 0;
+  block.addEventListener('touchstart', (e)=>{ const t = e.touches[0]; tx0 = t.clientX; ty0 = t.clientY; }, { passive: true });
+  block.addEventListener('touchend', (e)=>{ if(tx0 == null || x0 == null && gewischt) return; const t = e.changedTouches[0], dx = t.clientX - tx0, dy = t.clientY - ty0; tx0 = null;
+    if(Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5 && !gewischt){ gewischt = true; x0 = null;
+      if(!block.classList.contains('pfeile')){ dsPfeileAn = true; block.classList.add('pfeile'); return; }
+      if(dx > 0 ? frueher : spaeter) dsDienstBlaettern(dx > 0 ? -1 : 1); } }, { passive: true });
   block.addEventListener('click', (e)=>{ if(gewischt){ e.stopPropagation(); e.preventDefault(); gewischt = false; } }, true);
 }
 function designDienstWiring(wurzel){
@@ -24254,7 +24292,7 @@ function designStartErgaenzen(){
       const letzter = info.modus === 'leer' || info.letzter ? liveDienstLetzter() : null;
       nach.insertAdjacentHTML('afterend', (letzter ? '<div class="ds-dienst-reihe">' : '') + '<button type="button" class="ds-dienst-start" id="dsDienstStart"><span class="ds-ds-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="ds-ds-text">Neuen Dienst starten</span><span class="ds-ds-plus" aria-hidden="true">' + DS_ICON.plus + '</span></button>' +
         (letzter ? '<button type="button" class="ds-letzter" id="dsLetzter" aria-pressed="' + !!info.letzter + '">' + (info.letzter ? '<b>✕</b><small>ausblenden</small>' : '<b>↺</b><small>letzter Dienst</small>') + '</button></div>' : ''));
-      const lk = document.getElementById('dsLetzter'); if(lk) lk.onclick = ()=>{ if(info.letzter){ dsDienstWahl = null; dsPfeileAn = false; } else dsDienstWahl = dsDienstSchluessel(letzter); ansichtStart(); };
+      const lk = document.getElementById('dsLetzter'); if(lk) lk.onclick = ()=>{ if(info.letzter){ dsDienstWahl = null; dsPfeileAn = false; } else { dsDienstWahl = dsDienstSchluessel(letzter); dsPfeileAn = true; } ansichtStart(); };
     }
     // vergangener Dienst (Wunsch 22.11.2026): alles drumherum unscharf, damit er nicht wie der aktuelle wirkt -- scharf bleiben Uhr,
     // Dienstuebersicht, Karte mit den Faellen und „ausblenden“; ein Tipp ins Unscharfe fuehrt zurueck

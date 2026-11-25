@@ -34,14 +34,11 @@ module.exports = async ({ browser, basis, pr })=>{
   const kn = await p.locator('.ds-ring-block').boundingBox();
   const wisch = async (dx)=>{ await p.mouse.move(kn.x + kn.width / 2 - dx / 2, kn.y + kn.height / 2); await p.mouse.down(); await p.mouse.move(kn.x + kn.width / 2 + dx / 2, kn.y + kn.height / 2, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(900); };
   const zeit = ()=> p.evaluate(()=> (document.querySelector('.ds-ring-zeit') || {}).textContent);
-  const vorWisch = await p.evaluate(()=> !document.querySelector('.ds-ring-block.pfeile'));
-  const z0 = await zeit();
+  const sofort = await p.evaluate(()=> ({ pfeile: !!document.querySelector('.ds-ring-block.pfeile'), links: !!document.querySelector('.ds-pfeil.links'), rechts: !!document.querySelector('.ds-pfeil.rechts'), sicht: getComputedStyle(document.querySelector('.ds-pfeil.links')).display !== 'none' }));
+  pr('Klick auf „letzter Dienst“: Pfeile sofort da (ohne Wischen), neuester -> kein Pfeil nach rechts', sofort.pfeile && sofort.sicht && sofort.links && !sofort.rechts, sofort);
   await wisch(140);
-  const erst = await p.evaluate(()=> ({ pfeile: !!document.querySelector('.ds-ring-block.pfeile'), links: !!document.querySelector('.ds-pfeil.links'), rechts: !!document.querySelector('.ds-pfeil.rechts'), sicht: getComputedStyle(document.querySelector('.ds-pfeil.links')).display !== 'none', zeit: document.querySelector('.ds-ring-zeit').textContent, dialog: !!document.querySelector('.beta-overlay.aktiv') }));
-  pr('Erstes Wischen: nur die Pfeile, kein Sprung; neuester Dienst -> kein Pfeil nach rechts', vorWisch && erst.pfeile && erst.sicht && erst.links && !erst.rechts && erst.zeit === z0 && !erst.dialog, erst);
-  await wisch(140);
-  const nach = await p.evaluate(()=> ({ zeit: document.querySelector('.ds-ring-zeit').textContent, rechts: !!document.querySelector('.ds-pfeil.rechts') }));
-  pr('Zweites Wischen: früherer Dienst, Dienstzeit groß (18:00–08:00), jetzt auch Pfeil nach rechts', nach.zeit === '18:00–08:00' && nach.rechts, nach);
+  const nach = await p.evaluate(()=> ({ zeit: document.querySelector('.ds-ring-zeit').textContent, rechts: !!document.querySelector('.ds-pfeil.rechts'), dialog: !!document.querySelector('.beta-overlay.aktiv') }));
+  pr('Wischen nach rechts: früherer Dienst, Dienstzeit groß (18:00–08:00), Pfeil nach rechts, kein Dialog', nach.zeit === '18:00–08:00' && nach.rechts && !nach.dialog, nach);
   const u1 = await unscharf();
   pr('Weiter zurück: Umgebung unscharf; Uhr, Übersicht, Karte, „ausblenden“ scharf', u1.app && /blur/.test(u1.kacheln) && /blur/.test(u1.start) && !/blur/.test(u1.aus) && !/blur/.test(u1.uhr) && !/blur/.test(u1.dz) && !/blur/.test(u1.karte), u1);
   if(process.env.BILDER) await p.screenshot({ path: process.env.BILDER + '/46_blaettern.png' });
@@ -56,6 +53,33 @@ module.exports = async ({ browser, basis, pr })=>{
   await p.evaluate(()=> document.querySelector('.ds-pfeil.links').click()); await p.waitForTimeout(800);
   await p.mouse.click(200, (await p.locator('.kachelreihe').boundingBox()).y + 20); await p.waitForTimeout(900);
   pr('Tipp auf die unscharfen Kacheln: zurück, nichts geöffnet', await p.evaluate(()=> !document.getElementById('app').classList.contains('ds-vergangen') && !document.getElementById('dsRing') && !!document.querySelector('.kachelreihe')));
+  // Fälle eines vergangenen Dienstes: auch LS/PT, deren Dienst-Schluessel nicht genau zur Fahrtenbuch-Zeit passt (Wunsch 25.11.2026)
+  const fa = await p.evaluate(()=>{ const T = 86400000, d0 = new Date(); d0.setHours(0, 0, 0, 0); const tag = new Date(d0.getTime() - 4 * T); const iso = liveIso(tag);
+    const ls = ladeFaelle('ls'); ls.push({ werte: { txtName: 'Lenient, Lea', txtDatumExcel: iso, txtZeitLS: '12:00', txtDienst: iso + '|06:00|15:00|Fahrdienst|1|', txtBetrag: '111,00' } }); speichereFaelle('ls', ls);
+    const pt = ladeFaelle('pt'); pt.push({ werte: { txtName: 'Peter, Paul', txtDatumExcel: iso, txtZeitLS: '09:30', txtBetrag: '55,00' } }); speichereFaelle('pt', pt);
+    dsDienstWahl = dsDienstListe().map(dsDienstSchluessel).find((k)=> k.startsWith(iso + ' 08:00')); const i = designDienstInfo(); const f = standortKarteFaelle(i);
+    return { wahl: dsDienstWahl, namen: f.map((x)=> x.art + ':' + x.name) }; });
+  pr('Vergangener Dienst: auch LS/PT-Fälle (Schlüssel weicht ab, Zeit passt)', fa.namen.includes('ls:Lenient, Lea') && fa.namen.includes('pt:Peter, Paul'), fa);
+  // ohne Dienst: alle Fälle des letzten Dienstes bis 24 h nach Dienstende, auch wenn der Fall selbst älter als 24 h ist
+  const oh = await p.evaluate(()=>{ dsDienstWahl = null; const jetzt = Date.now(), v = new Date(jetzt - 30 * 3600000), b = new Date(jetzt - 20 * 3600000), z = (d)=> zz2(d.getHours()) + ':' + zz2(d.getMinutes());
+    LS.set('fb_dienste_cache', null); LS.set('live_dienst', null); LS.set('live_dienst_letzt', { datum: liveIso(v), von: z(v), bis: z(b), art: 'Fahrdienst', schicht: '', beendet: b.toISOString() });
+    const t = new Date(jetzt - 29 * 3600000); const ls = ladeFaelle('ls'); ls.push({ werte: { txtName: 'Alt, Anna', txtDatumExcel: liveIso(t), txtZeitLS: z(t), txtBetrag: '80,00' } }); speichereFaelle('ls', ls);
+    return standortKarteFaelle({ modus: 'leer', fenster: null }).map((x)=> x.name); });
+  pr('Ohne Dienst: Fall des letzten Dienstes (29 h alt, Dienstende vor 20 h) wird gezeigt', oh.includes('Alt, Anna'), oh);
+  // Reiter „Letzte Dienste“ im Fahrtenbuch
+  await p.evaluate(()=>{ const T = 86400000, h = (tage, std)=>{ const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime() - tage * T + std * 3600000; };
+    LS.set('fb_dienste_cache', { dienste: [{ von: h(4, 8), bis: h(4, 18), art: 'Fahrdienst 1' }, { von: h(3, 18), bis: h(2, 8), art: 'Fahrdienst 3' }] }); ansichtFahrtenbuch(); });
+  await p.waitForSelector('[data-fbtab="letzte"]');
+  const reiter = await p.evaluate(()=> [...document.querySelectorAll('.fbx-tabs button')].map((b)=> b.textContent));
+  await p.evaluate(()=> document.querySelector('[data-fbtab="letzte"]').click()); await p.waitForTimeout(1200);
+  const fb = await p.evaluate(()=> ({ ring: !!document.querySelector('.fb-letzte .ds-ring-block'), pfeile: !!document.querySelector('.fb-letzte .ds-ring-block.pfeile .ds-pfeil.links'), karte: !!document.getElementById('skKarte'), an: (document.querySelector('.fbx-tabs .an') || {}).textContent }));
+  pr('Fahrtenbuch: Reiter „Letzte Dienste“ vor „Dienste/Quartale“, Uhr mit Pfeilen und Karte', reiter[0] === 'Letzte Dienste' && reiter[1] === 'Dienste' && fb.ring && fb.pfeile && fb.karte && fb.an === 'Letzte Dienste', { reiter, fb });
+  const zf0 = await p.evaluate(()=> document.querySelector('.ds-schicht small').textContent);
+  await p.evaluate(()=> document.querySelector('.ds-pfeil.links').click()); await p.waitForTimeout(1000);
+  const zf1 = await p.evaluate(()=> ({ zeit: (document.querySelector('.ds-schicht small') || {}).textContent, imFb: !!document.querySelector('.fb-letzte'), titel: document.querySelector('.fbx-tabs .an') && document.querySelector('.fbx-tabs .an').textContent }));
+  pr('Pfeil im Reiter: früherer Dienst, bleibt im Fahrtenbuch', zf1.imFb && zf1.zeit !== zf0 && zf1.titel === 'Letzte Dienste', { zf0, zf1 });
+  await p.evaluate(()=> ansichtStart()); await p.waitForTimeout(800);
+  pr('Zurück zur Startseite: wieder der aktuelle Stand (nichts unscharf)', await p.evaluate(()=> !document.getElementById('app').classList.contains('ds-vergangen') && dsDienstWahl === null));
   pr('keine Skriptfehler', !p.fehler.length, p.fehler.slice(0, 3));
   await p.context().close();
 };
