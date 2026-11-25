@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-JqiSFbU2+HdnEsfporPHxA/ADt7FBGMYMizpv3+SmLk=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-YlSlI1vGI4DDBB0l9M3NX4PhW9WmjU5QzCSSHRkBqNQ=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -4228,6 +4228,12 @@ async function ansichtFahrtenbuch(blatt){
       const f = buch.dienste[di] && buch.dienste[di].faelle[fi];
       if(f && f.oeffnen){ vorbereiteRuecksprung(); fallHerkunft = ()=> ansichtFahrtenbuch(blatt); f.oeffnen(); return; }
       if(f && f.art === 'gkv'){ vorbereiteRuecksprung(); fallHerkunft = ()=> ansichtFahrtenbuch(blatt); fbGkvAusExcelOeffnen(buch.dienste[di], f); return; }
+      // LS/PT ohne Fall in der App (Wunsch 25.11.2026): Zeile in der Rechnungsuebersicht suchen und die Rechnungsmaske oeffnen
+      if(f && (f.art === 'ls' || f.art === 'pt')){
+        fbLsPtOeffnen(f, buch.dienste[di], ()=> ansichtFahrtenbuch(blatt)).then(ok=>{ if(!ok) appToastAnzeigen('Rechnung zu „' + f.name + '“ nicht in der Rechnungsübersicht gefunden – bitte über „Rechnungen“ öffnen.', 4000); })
+          .catch(e=> appToastAnzeigen('Rechnung konnte nicht geöffnet werden: ' + (e.message || e), 4000));
+        return;
+      }
       appToastAnzeigen('LS/PT-Rechnungen bitte über „Rechnungen“ bearbeiten – das Fahrtenbuch übernimmt die Änderung.', 3500);
     };
     inhalt.querySelectorAll('[data-fbfall]').forEach(z=> langDruecken(z, ()=>{ const [di, fi] = z.dataset.fbfall.split('-').map(Number), dd = buch.dienste[di]; if(dd && dd.faelle[fi]){ if(dd.faelle[fi].offen || dd.lokal) return nurApp(); fbLoeschen(dd._orig || dd, dd.faelle[fi], ()=> fallOeffnen(di, fi)); } }));
@@ -4398,6 +4404,31 @@ async function fbFaelleUmziehen(liste, meldung){
 // und wird danach neu geschrieben). In den beiden Kopfzeilen eines Diensts
 // (Quartal/Datum/Zeit, Dienstart/Arzt) wird beim Loeschen eines Falls nur
 // der Fall (D:AG, AS) geleert.
+// LS/PT-Fall aus dem Fahrtenbuch in der Rechnungsmaske oeffnen: passende Zeile der Rechnungsuebersicht (Name, Datum +-1,5 Tage)
+async function fbLsPtOeffnen(f, d, zurueck){
+  const ziel = betaZiel(), zk = betaZielKey(ziel);
+  let ue = betaGesamtCache && betaGesamtCache.zielKey === zk && betaGesamtCache.ue ? betaGesamtCache.ue : null;
+  if(!ue){ try{ const alt = await ZwSpeicher.holen('rechnungsliste'); if(alt && alt.zielKey === zk && alt.ue) ue = alt.ue; }catch(_){} }
+  if(!ue){
+    appToastAnzeigen('Rechnungsübersicht wird gelesen …', 2500);
+    const token = await msGraphTokenHolen(); if(!token) throw new Error('Keine Microsoft-Anmeldung aktiv.');
+    ue = await uebersichtLaden(token, ziel.uebersicht);
+  }
+  const nn = fbNameNorm(f.name), tag = d && d.tag ? d.tag.getTime() : null;
+  const z = (ue.zeilen || []).find(z=>{
+    if(!z || z.nr < 2) return false; const v = z.v || [];
+    const name = String(v[5] == null ? '' : v[5]).trim() + ', ' + String(v[6] == null ? '' : v[6]).trim();
+    if(fbNameNorm(name) !== nn) return false;
+    const dt = kartenZeitAus(xlDatumText(v[1]), ''); return !tag || (dt && Math.abs(dt.getTime() - tag) <= 1.5 * 86400000);
+  });
+  if(!z) return false;
+  // schon als Fall in der App (z.B. frueher zum Bearbeiten angelegt)? dann diesen
+  const renu = String((z.v || [])[16] == null ? '' : z.v[16]).trim();
+  const lokal = renu ? ladeFaelle(f.art).find(x=> x && ((x.bezug && x.bezug.renu === renu) || x.rechnungsnummer === renu)) : null;
+  vorbereiteRuecksprung(); if(zurueck) fallHerkunft = zurueck;
+  betaZeileBearbeiten(z, lokal ? Object.assign({ art: f.art }, lokal) : null, ziel);
+  return true;
+}
 async function fbLoeschen(d, f, bearbeiten){
   const ganz = !f;
   const text = ganz ? 'Den ganzen Dienst ' + fbTagText(d.tag) + ' (' + d.faelle.length + ' Einträge) aus dem Fahrtenbuch löschen?'
