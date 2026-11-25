@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-A47jzrMYcsT04O32/f6lvSN7jLPZysvhaPDASGT7A4g=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-nRbSrNcy5rFkM9sTcwYQwJ0TZ3FX1BB1Y38W5HngUI8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -18781,7 +18781,12 @@ function miniKarteHtml(d, opt){
 // sonst bzw. im Modus 'faelle' alle Punkte. Der Übersicht-Knopf wechselt dann zwischen beiden (Wunsch 17.11.2026).
 function miniStartAnsicht(cfg, W, H){
   const { d, opt, fit } = cfg;
-  if(opt.bezirk && (!opt.modus || opt.modus() !== 'faelle')) return { lat: opt.bezirk.lat, lon: opt.bezirk.lon, z: opt.bezirk.z + Math.log2((W || 560) / 560) };
+  if(opt.bezirk && (!opt.modus || opt.modus() !== 'faelle')){
+    // Bezirk (Wunsch 25.11.2026): etwa 35 km um Wache/Ausgangspunkt in der kuerzeren Kartenseite (vorher ca. 10 km)
+    if(opt.bezirk.km){ const kurz = Math.max(150, Math.min(W || 560, H || 330)), mpp = opt.bezirk.km * 2000 / kurz;
+      return { lat: opt.bezirk.lat, lon: opt.bezirk.lon, z: Math.max(5, Math.min(14, Math.log2(156543.03 * Math.cos(opt.bezirk.lat * Math.PI / 180) / mpp))) }; }
+    return { lat: opt.bezirk.lat, lon: opt.bezirk.lon, z: opt.bezirk.z + Math.log2((W || 560) / 560) };
+  }
   return opt.mitte ? { lat: fit.lat, lon: fit.lon, z: fit.z + Math.log2((W || fit.bw) / fit.bw) } : miniFitAnsicht(d, W, H, fit);
 }
 // Übersicht-Knopf: mit Einsatzorten zwischen "alle Fälle" und "Bezirk" wechseln, sonst Bezirk
@@ -18791,7 +18796,6 @@ function miniUebersichtWechseln(opt){
   const neu = mitFaellen && opt.modus() !== 'faelle' ? 'faelle' : 'bezirk';
   opt.modusSetzen(neu);
   try{ document.querySelectorAll('.mini-ueber.mit-was').forEach(k=>{ const w = miniUeberNaechst(opt), s = k.querySelector('.mini-ueber-was'); if(s) s.textContent = w; k.title = 'Übersicht: ' + w; k.setAttribute('aria-label', 'Übersicht: ' + w); }); }catch(_){}
-  try{ appToastAnzeigen(neu === 'faelle' ? 'Übersicht aller Fälle' : 'Übersicht des Bezirks', 1800); }catch(_){}
 }
 function miniUeberNaechst(opt){ return opt.modus && opt.modus() === 'faelle' ? 'Bezirk' : 'Fälle'; }
 // Fall in der (kleinen) Karte kurz hervorheben -- aus der Liste darunter (Vektor- und Rasterkarte)
@@ -21558,7 +21562,7 @@ function skBezirkOpt(faelleN){
   let m = null; try{ m = gkvStartGeo() || nfpPixelZuGeo(NFP_KARTE.nfp[0], NFP_KARTE.nfp[1]); }catch(_){}
   if(!m) return {};
   if(!faelleN && skAnsichtModus === 'faelle') skAnsichtModus = 'bezirk';
-  return { bezirk: { lat: m.lat, lon: m.lon, z: 11 }, faelleN, modus: ()=> skAnsichtModus, modusSetzen: (x)=>{ skAnsichtModus = x; } };
+  return { bezirk: { lat: m.lat, lon: m.lon, z: 11, km: 35 }, faelleN, modus: ()=> skAnsichtModus, modusSetzen: (x)=>{ skAnsichtModus = x; } };
 }
 async function standortKarteZeichnen(info, mitDialog){
   const box = document.getElementById('skKarte'); if(!box || typeof NFP_KARTE === 'undefined') return;
