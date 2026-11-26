@@ -12,11 +12,11 @@
 //
 // Bei JEDER Veröffentlichung: CACHE_NAME erhöhen und danach „node werkzeuge/sw_dateien.js“ ausführen (trägt die
 // Prüfsummen ein; tests/statisch.js prüft das). Neue Dateien der App hier in DATEIEN aufnehmen.
-const CACHE_NAME = 'rechnungserfassung-v519';
+const CACHE_NAME = 'rechnungserfassung-v520';
 const CACHE_PRAEFIX = CACHE_NAME.replace(/\d+$/, '');   // alle Versionen dieser App: gleicher Anfang, andere Nummer
 const DATEIEN = {
 // >>> DATEIEN (Prüfsummen erzeugt von werkzeuge/sw_dateien.js – nicht von Hand ändern)
-  './Rechnungserfassung_Mobil.html': 'yk5+zlbU+Z7S/Yxn6iPOf8HN6FOShwH6FfzzvCNNr1U=',
+  './Rechnungserfassung_Mobil.html': 'zWCTaTC5Gx8mI6g5Thuy8AGLNqY4tSEkrX7sI6yBjnM=',
   './manifest.json': 'oGmycJijIIy67JQt2/9DPvS7LFo04ldRKRTIcpUcfxY=',
   './': 'HAHncj5UelMdOHtP3EGp0CI7BT/TzLQ7grnGteDXT60=',
   './lib/msal/msal-browser.min.js': 'ERWwgEmLebC0tiHdPfR4sKmxA19dB21XQdGIjwaSO4Q=',

@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-HDdno6n14B7cvtA3PVsC2GSctZ3d7x9H5nxsYCi24yk=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-+P8dxBIYVsJjKwLL1qJsyqCO2/OwvRIGQRBlh649vgE=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -206,11 +206,17 @@ try{
   .gesamt-ziel{font-size:12px; color:var(--text-schwach);}
   .gesamt-ziel.echt{color:#c0392b; font-weight:700;}
 .gesamt-abschnitt{font-size:12px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--text-schwach); margin:14px 2px 6px;}
+  /* Wunsch 26.11.2026: „Alle hochladen“ rechts in der Abschnittszeile */
+  .gesamt-abschnitt.mit-knopf{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  #btnGesamtHochladen{width:auto; margin:0; padding:5px 10px; border:0; border-radius:8px; background:#e67e22; color:#fff; font:inherit; font-size:12.5px; font-weight:600; letter-spacing:0; text-transform:none; cursor:pointer;}
+  .fall-zeile.offen .gs-rechts .offen-text{font-size:11.5px; line-height:1.25; text-align:right;}
+  .link-knopf{display:inline; width:auto; margin:0; padding:0; border:0; background:none; color:var(--ds-primaer, #1f4e79); font:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer;}
+  body.dunkel .link-knopf{color:#8ac2f0;}
   .offen-dash{background:var(--karte); border:1px solid var(--rand); border-radius:12px; margin:8px 0 12px; padding:0 12px;}
-  .offen-dash > summary{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 0; cursor:pointer; font-size:15px; list-style:none;}
+  .offen-dash > summary{display:flex; justify-content:space-between; align-items:center; gap:6px; padding:12px 0; cursor:pointer; font-size:14.5px; list-style:none;} .offen-dash > summary > span:first-child{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;}
   .offen-dash > summary::-webkit-details-marker{display:none;}
   .offen-dash > summary::after{content:'▾'; color:var(--text-schwach); margin-left:6px;} .offen-dash:not([open]) > summary::after{content:'▸';}
-  .offen-verzug{margin-left:auto; font-size:12.5px; font-weight:700; color:#b3261e; background:rgba(179,38,30,.1); padding:3px 8px; border-radius:999px;}
+  .offen-verzug{margin-left:auto; flex:none; display:inline-flex; align-items:center; justify-content:center; text-align:center; white-space:nowrap; font-size:11px; line-height:1.2; font-weight:700; color:#b3261e; background:rgba(179,38,30,.1); padding:2px 6px; border-radius:999px;}
   .adr-wahl .adr-option{display:flex !important; gap:10px; align-items:flex-start; margin:0 !important; padding:9px 0; border-bottom:1px solid var(--rand); text-align:left; font-size:14px; color:var(--text);}
   .adr-wahl .adr-option input[type=radio]{width:20px !important; height:20px; flex:none; margin:1px 0 0 !important; padding:0;} .adr-wahl .adr-option span{flex:1; min-width:0; line-height:1.35;}
   .wa-knopf{display:flex; align-items:center; gap:8px; width:100%; margin:6px 0 4px; padding:10px 12px; border:1.5px dashed var(--rand); border-radius:10px; background:transparent; color:var(--ls-farbe); font:inherit; font-weight:600; font-size:14px; cursor:pointer; text-align:left;}
@@ -229,7 +235,7 @@ try{
   .offen-zeile:last-child{padding-bottom:12px;}
   .offen-knoepfe{flex:none; display:flex; gap:6px; align-items:center;} .offen-knoepfe .offen-bezahlt{white-space:nowrap;}
   .offen-zeile{position:relative;}
-  .offen-bank{padding:6px 0 4px; border-top:1px solid var(--rand); text-align:right;}
+  .offen-bank{padding:6px 0 4px; border-top:1px solid var(--rand); display:flex; justify-content:space-between; align-items:center; gap:8px;} .offen-bank button{white-space:nowrap; font-size:12px !important;}
   .offen-bank button{width:auto; margin:0; padding:4px 2px; border:0; background:transparent; color:var(--text-schwach); font:inherit; font-size:12.5px; text-decoration:underline; text-underline-offset:2px; cursor:pointer;} .offen-weg{flex:none; width:auto; margin:0; padding:4px 8px; border:0; background:transparent; color:var(--text-schwach); font-size:16px; line-height:1; cursor:pointer;}
   @media (max-width:420px){ .offen-weg{position:absolute; top:4px; right:-6px;} .offen-zeile .offen-knoepfe{margin-right:22px;} }
   @media (max-width:420px){ .offen-knoepfe{flex-direction:column; align-items:stretch; gap:4px;} }
@@ -1724,7 +1730,7 @@ try{
   .ds-ring-mitte{position:absolute; inset:0; display:grid; grid-template-rows:1fr auto 1fr; justify-items:center; row-gap:4px;}
   .ds-ring-mitte > .ds-ring-kopf{align-self:end;}
   /* Sonne/Mond mittig auf Hoehe der mittleren Linie des Einstellungen-Symbols (Wunsch 20.11.2026) */
-  #btnDunkelToggle{display:inline-flex; align-items:center; justify-content:center;} #btnDunkelToggle svg{display:block;}
+  #btnDunkelToggle{display:inline-flex; align-items:center; justify-content:flex-end; padding-right:0; margin-right:-2px;} #btnDunkelToggle svg{display:block;}
   .fw-unter{display:block; font-size:10.5px; font-weight:600; opacity:.75;}
   .fw-eigen{display:flex; align-items:center; gap:8px; margin:6px 0 2px;} .fw-eigen[hidden]{display:none;}
   .fw-eigen input{width:110px; font-size:16px; padding:9px 10px; border:1px solid var(--rand); border-radius:10px; background:var(--bg); color:var(--text);}
@@ -2175,7 +2181,7 @@ try{
   .vw-seg button:not(.an):active{background:var(--karte);}
   .gv-info{font-size:13px; color:var(--text-schwach); margin:8px 2px 4px;} .gv-info .gv-offen{color:#c77700;}
   .gv-tag{display:flex; justify-content:space-between; gap:8px; font-size:12.5px; font-weight:700; color:var(--text-schwach); text-transform:uppercase; letter-spacing:.02em; margin:14px 2px 6px;}
-  .gv-fall{display:grid; grid-template-columns:44px 32px minmax(0, 1fr) auto; align-items:center; gap:8px; width:100%; margin:0; padding:9px 10px; box-sizing:border-box;
+  .gv-fall{display:grid; grid-template-columns:44px minmax(0, 1fr) auto; align-items:center; gap:8px; width:100%; margin:0; padding:9px 10px; box-sizing:border-box;
     border:1px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text); font:inherit; text-align:left; cursor:pointer;}
   .wisch-huelle[data-gvid]{margin-bottom:6px; border-radius:12px;}
   .wisch-huelle > .gv-fall{position:relative; z-index:1; touch-action:pan-y;}
@@ -2186,7 +2192,7 @@ try{
   .gv-mitte{display:flex; flex-direction:column; min-width:0;} .gv-mitte b{font-size:15.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .gv-mitte small{font-size:12px; color:var(--text-schwach); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .gv-rechts{display:flex; flex-direction:column; align-items:flex-end;} .gv-rechts b{font-variant-numeric:tabular-nums;}
-  .gv-rechts small{font-size:11.5px;} .gv-ok{color:#2fa84f;} .gv-rechts .gv-offen{color:#c77700; font-weight:600;}
+  .gv-rechts small{font-size:11.5px;} .gv-ok{color:#2fa84f;} .gv-mitte b .badge-neu{margin-right:6px; vertical-align:1px;} .gv-rechts .gv-offen{color:#c77700; font-weight:600;}
   .gv-neu{margin-top:14px;}
   /* gleiche Optik wie LS/PT (Rechnungsübersicht) */
   .gv-tag{font-size:13px; font-weight:700; padding:6px 10px; margin:10px 0 6px; border-radius:6px; background:var(--rand); color:var(--text); text-transform:none; letter-spacing:0;}
@@ -4052,11 +4058,11 @@ function fbLokaleSammeln(){
   try{ gkvFaelleLaden().forEach(f=>{ if(!f || f.name === GKV_PSEUDO_NAME) return; const t = designFallZeit(f); if(t) lokal.push({ art: 'gkv', n: fbNameNorm(f.name), name: f.name, t, zeit: f.zeit || '', dienst: f.dienst || '', geo: f.geo || null, adr: f.adresse || '',
     euro: Number(f.euro) || 0, ziffern: (f.positionen || []).map(p=> ({ gop: ebmNorm(p.gop), anz: Number(p.anz) || 1 })), status: 'offen', oeffnen: ()=> ansichtGkv(f.id) }); }); }catch(_){}
   try{
-    if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()){
-      const t = designFallZeit(gkvEntwurf) || new Date();
-      lokal.push({ art: 'gkv', n: fbNameNorm(gkvEntwurf.name), name: gkvEntwurf.name, t, zeit: gkvEntwurf.zeit || '', dienst: gkvEntwurf.dienst || '', geo: gkvEntwurf.kmGeo && gkvEntwurf.kmGeo.lat ? { lat: +gkvEntwurf.kmGeo.lat, lon: +gkvEntwurf.kmGeo.lon } : null,
-        adr: gkvEntwurf.adresse || '', euro: 0, ziffern: [], status: 'unfertig', oeffnen: ()=> ansichtGkv() });
-    }
+    gkvEntwuerfe().forEach(ge=>{
+      const t = designFallZeit(ge) || new Date();
+      lokal.push({ art: 'gkv', n: fbNameNorm(ge.name), name: ge.name, t, zeit: ge.zeit || '', dienst: ge.dienst || '', geo: ge.kmGeo && ge.kmGeo.lat ? { lat: +ge.kmGeo.lat, lon: +ge.kmGeo.lon } : null,
+        adr: ge.adresse || '', euro: 0, ziffern: [], status: 'unfertig', oeffnen: ()=> ansichtGkv(null, { entwurf: ge.eid }) });
+    });
   }catch(_){}
   try{ ['ls', 'pt'].forEach(art=> ladeFaelle(art).forEach((f, i)=>{
     const w = (f && f.werte) || {}; const t = kartenZeitAus(w.txtDatumExcel, w.txtZeitLS);
@@ -4451,7 +4457,8 @@ function gkvZeilenNachruecken(blatt, ab, n){
 async function gkvFallUeberallLoeschen(id){
   const x = gkvFaelleLaden().find(y=> y.id === id); if(!x) return false;
   const imFb = x.status === 'eingetragen' && x.zeile;
-  if(!await betaFrage('„' + (x.name || 'Fall') + '“ löschen?' + (imFb ? '\n\nDer Fall wird auch aus dem Fahrtenbuch entfernt. Rückgängig nur über den Versionsverlauf der Excel in OneDrive.' : ''), 'Löschen', 'Abbrechen')) return false;
+  const dzt = designFallZeit(x), dtag = dzt ? new Date(dzt.getFullYear(), dzt.getMonth(), dzt.getDate() - (dzt.getHours() < 7 ? 1 : 0)) : null;
+  if(!await betaFrage('„' + (x.name || 'Fall') + '“ löschen?' + (imFb ? '\n\nDer Fall wird auch aus dem Fahrtenbuch entfernt' + (dtag ? ' (Dienst ' + fbTagText(dtag) + ')' : '') + '. Rückgängig nur über den Versionsverlauf der Excel in OneDrive.' : ''), 'Löschen', 'Abbrechen')) return false;
   if(imFb){
     if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ await betaOverlay.meldung('Zum Löschen im Fahrtenbuch braucht es die OneDrive-Anmeldung.', 'Fahrtenbuch'); return false; }
     betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
@@ -4551,7 +4558,8 @@ async function fbLsPtOeffnen(f, d, zurueck){
   betaZeileBearbeiten(z, lokal ? Object.assign({ art: f.art }, lokal) : null, ziel);
   return true;
 }
-async function fbLoeschen(d, f, bearbeiten){
+async function fbLoeschen(d, f, bearbeiten, opt){
+  opt = opt || {}; let ok = false;
   const ganz = !f;
   const text = ganz ? 'Den ganzen Dienst ' + fbTagText(d.tag) + ' (' + d.faelle.length + ' Einträge) aus dem Fahrtenbuch löschen?'
                     : '„' + f.name + '“ aus dem Dienst ' + fbTagText(d.tag) + ' im Fahrtenbuch löschen?';
@@ -4564,7 +4572,7 @@ async function fbLoeschen(d, f, bearbeiten){
     if(!await betaFrage(text + '\n\nRückgängig nur über den Versionsverlauf der Excel in OneDrive.', 'Löschen', 'Abbrechen')) return;
   }
   else if(!await betaFrage(text + '\n\nRückgängig nur über den Versionsverlauf der Excel in OneDrive.', 'Löschen', 'Abbrechen')) return;
-  const blatt = fbBuchCache ? fbBuchCache.blatt : undefined;
+  const blatt = opt.blatt || (fbBuchCache ? fbBuchCache.blatt : undefined);
   betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
   try{
     const kx = await fbKontext(t=> betaOverlay.schritt(t));
@@ -4605,12 +4613,13 @@ async function fbLoeschen(d, f, bearbeiten){
       gkvZeilenNachruecken(L.blatt, ganz ? b.zeileEnde : f.zeile, geschoben);
     }
     betaOverlay.schliessen();
-    appToastAnzeigen(ganz ? 'Dienst gelöscht.' : 'Eintrag gelöscht.', 2500);
+    appToastAnzeigen(ganz ? 'Dienst gelöscht.' : 'Eintrag gelöscht.', 2500); ok = true;
   }catch(e){
     betaOverlay.schliessen();
     await betaOverlay.meldung('Löschen hat nicht geklappt: ' + (e.message || e), 'Fahrtenbuch');
   }
   fbBuchCache = null;
+  if(opt.danach) return ok;   // aus der Rechnungsverwaltung (GKV): dort bleiben
   ansichtFahrtenbuch(blatt);
 }
 // A: Dienst-Karten, neuester offen
@@ -8750,22 +8759,23 @@ function gkvPseudoFoerderungHtml(f){
 }
 // Angefangener GKV-Patient in der Rechnungsverwaltung (Reiter GKV), wie die unfertigen LS/PT-Rechnungen
 function gkvUnfertigHtml(q){
-  const e = (typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()) ? gkvEntwurf : null;
-  if(!e || (q && ![e.name, isoDe(e.datum || '')].join(' ').toLowerCase().includes(q))) return '';
-  return '<div class="gesamt-abschnitt">Unfertig</div><div class="wisch-huelle" data-gkventwurf="1"><div class="wisch-hinter">&#128465; Löschen</div>' +
+  const liste = gkvEntwuerfe().filter(e=> !q || [e.name, isoDe(e.datum || '')].join(' ').toLowerCase().includes(q));
+  if(!liste.length) return '';
+  return '<div class="gesamt-abschnitt">Unfertig' + (liste.length > 1 ? ' (' + liste.length + ')' : '') + '</div>' + liste.map(e=> '<div class="wisch-huelle" data-gkventwurf="' + htmlEsc(e.eid) + '"><div class="wisch-hinter">&#128465; Löschen</div>' +
     '<div class="fall-zeile gkv offen unfertig"><div class="inhalt">' +
     '<div class="name"><span class="badge-neu gkv">G</span>' + htmlEsc(e.name) + '</div>' +
     '<div class="info">' + htmlEsc(e.datum ? isoDe(e.datum) : '') + (e.zeit ? ', ' + htmlEsc(e.zeit) : '') + ' &middot; Kassenpatient</div>' +
-    '<div class="info offen-text">unfertig – anklicken zum Weitermachen</div></div></div></div>';
+    '<div class="info offen-text">unfertig – anklicken zum Weitermachen</div></div></div></div>').join('');
 }
 function gkvUnfertigVerdrahten(root, neu){
   (root || document).querySelectorAll('.wisch-huelle[data-gkventwurf]').forEach(h=>{
     const zeileEl = h.querySelector('.fall-zeile');
-    zeileEl.querySelector('.inhalt').onclick = ()=> ansichtGkv();
+    const eid = h.dataset.gkventwurf;
+    zeileEl.querySelector('.inhalt').onclick = ()=> ansichtGkv(null, { entwurf: eid });
     betaWischen(zeileEl, async ()=>{
-      if(typeof gkvEntwurf === 'undefined' || !gkvEntwurf) return false;
-      if(!await betaFrage('Angefangenen Kassenpatienten „' + (gkvEntwurf.name || 'ohne Namen') + '“ verwerfen?', 'Verwerfen', 'Abbrechen')) return false;
-      gkvEntwurfVerwerfen();
+      const ge = gkvEntwuerfe().find(x=> x.eid === eid); if(!ge) return false;
+      if(!await betaFrage('Angefangenen Kassenpatienten „' + (ge.name || 'ohne Namen') + '“ verwerfen?', 'Verwerfen', 'Abbrechen')) return false;
+      gkvEntwurfVerwerfen(eid);
       appToastAnzeigen('Verworfen.', 1800);
       if(neu) neu();
       return true;
@@ -8845,22 +8855,24 @@ function ansichtGkvVerwaltung(){
         g.faelle.map(x=>{
           if(x.excel){
             const f = x.f, i = excel.indexOf(x);
-            return '<button type="button" class="gv-fall gv-excel' + (f.pseudo ? ' pseudo' : '') + '" data-gvexcel="' + i + '">' +
-              '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="ds-fall-marke gkv">GKV</span>' +
-              '<span class="gv-mitte"><b>' + htmlEsc(f.pseudo ? 'Pseudo-Fall 99999' : f.name) + '</b><small>' + htmlEsc((f.ziffern || []).map(z=> (z.anz > 1 ? z.anz + '×' : '') + z.gop).join(' ')) + '</small></span>' +
-              '<span class="gv-rechts"><b>' + fbFallEuro(x.d, f) + '</b><small class="gv-nurfb">nur im Fahrtenbuch</small></span></button>';
+            return '<div class="wisch-huelle" data-gvexwisch="' + i + '"><div class="wisch-hinter">&#128465; Löschen</div>' +
+              '<button type="button" class="gv-fall gv-excel' + (f.pseudo ? ' pseudo' : '') + '" data-gvexcel="' + i + '">' +
+              '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span>' +
+              '<span class="gv-mitte"><b><span class="badge-neu gkv">G</span>' + htmlEsc(f.pseudo ? 'Pseudo-Fall 99999' : f.name) + '</b><small>' + htmlEsc((f.ziffern || []).map(z=> (z.anz > 1 ? z.anz + '×' : '') + z.gop).join(' ')) + '</small></span>' +
+              '<span class="gv-rechts"><b>' + fbFallEuro(x.d, f) + '</b></span></button></div>';
           }
           const f = x.f, pseudo = f.name === GKV_PSEUDO_NAME;
           return '<div class="wisch-huelle" data-gvid="' + htmlEsc(f.id) + '"><div class="wisch-hinter">&#128465; Löschen</div>' +
             '<button type="button" class="gv-fall' + (pseudo ? ' pseudo' : '') + '" data-gvoeffnen="' + htmlEsc(f.id) + '">' +
-            '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span><span class="ds-fall-marke gkv">GKV</span>' +
-            '<span class="gv-mitte"><b>' + htmlEsc(pseudo ? 'Pseudo-Fall 99999' : (f.name || 'ohne Namen')) + '</b><small>' + htmlEsc((f.positionen || []).map(p=> (p.anz > 1 ? p.anz + '×' : '') + p.gop).join(' ')) + '</small></span>' +
-            '<span class="gv-rechts"><b>' + (pseudo ? gkvPseudoFoerderungHtml(f) : betaEuro(f.euro).replace(' €', '')) + '</b><small class="' + (f.status === 'eingetragen' ? 'gv-ok' : 'gv-offen') + '">' + (f.status === 'eingetragen' ? '✓ Fahrtenbuch' : 'offen') + '</small></span>' +
+            '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span>' +
+            '<span class="gv-mitte"><b><span class="badge-neu gkv">G</span>' + htmlEsc(pseudo ? 'Pseudo-Fall 99999' : (f.name || 'ohne Namen')) + '</b><small>' + htmlEsc((f.positionen || []).map(p=> (p.anz > 1 ? p.anz + '×' : '') + p.gop).join(' ')) + '</small></span>' +
+            '<span class="gv-rechts"><b>' + (pseudo ? gkvPseudoFoerderungHtml(f) : betaEuro(f.euro).replace(' €', '')) + '</b>' + (f.status === 'eingetragen' ? '' : '<small class="gv-offen" title="Noch nicht im Fahrtenbuch">offen</small>') + '</span>' +
             '</button></div>';
         }).join('');
-    }).join('') + weiterKnopf + '<div class="eigene-hinweis" style="margin-top:8px;">Anklicken = bearbeiten · nach links wischen = aus der Liste löschen (die Zeile im Fahrtenbuch bleibt).</div>';
+    }).join('') + weiterKnopf + '<div class="eigene-hinweis" style="margin-top:8px;">Anklicken = bearbeiten · nach links wischen = löschen (auch im Fahrtenbuch).</div>';
     weiterVerdrahten();
     document.querySelectorAll('[data-gvexcel]').forEach(b=> b.onclick = ()=>{
+      if(Date.now() - (b._wischZeit || 0) < 400) return;
       const x = excel[+b.dataset.gvexcel]; if(!x) return;
       if(x.f.pseudo){ appToastAnzeigen('Pseudo-Fall: im Fahrtenbuch bearbeiten.', 2500); return; }
       gkvHerkunft = 'verwaltung'; fbGkvAusExcelOeffnen(x.d, x.f);
@@ -8868,9 +8880,15 @@ function ansichtGkvVerwaltung(){
     gkvUnfertigVerdrahten(document.getElementById('gvListe'), zeichnen);
     document.querySelectorAll('[data-gvoeffnen]').forEach(b=> b.onclick = ()=>{ if(Date.now() - (b._wischZeit || 0) < 400) return; gkvHerkunft = 'verwaltung'; ansichtGkv(b.dataset.gvoeffnen); });
     document.querySelectorAll('.wisch-huelle[data-gvid]').forEach(h=> betaWischen(h.querySelector('.gv-fall'), async ()=>{
-      const f = gkvFaelleLaden().find(x=> x.id === h.dataset.gvid);
-      if(!await betaFrage('„' + ((f && f.name) || 'Fall') + '“ nur aus der Liste in der App löschen?\n\nEine schon geschriebene Zeile im Fahrtenbuch bleibt stehen.', 'Löschen', 'Abbrechen')) return false;
-      gkvFaelleSpeichern(gkvFaelleLaden().filter(x=> x.id !== h.dataset.gvid)); zeichnen(); return true;
+      // Wunsch 26.11.2026: App-Liste und Fahrtenbuch bleiben gekoppelt -- Loeschen entfernt den Fall auch im Fahrtenbuch
+      const ok = await gkvFallUeberallLoeschen(h.dataset.gvid); zeichnen(); return ok;
+    }));
+    document.querySelectorAll('.wisch-huelle[data-gvexwisch]').forEach(h=> betaWischen(h.querySelector('.gv-fall'), async ()=>{
+      const x = excel[+h.dataset.gvexwisch]; if(!x) return false;
+      if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ await betaOverlay.meldung('Zum Löschen im Fahrtenbuch braucht es die OneDrive-Anmeldung.', 'Fahrtenbuch'); return false; }
+      const ok = await fbLoeschen(x.d, x.f, null, { blatt: x.blatt, danach: true });
+      if(ok){ excel = []; blaetterGeladen = []; blaetterAlle = null; weitereLaden(); }
+      return !!ok;
     }));
   };
   suchEl.oninput = zeichnen;
@@ -12447,9 +12465,6 @@ async function ansichtRechnungenGesamt(neuLaden){
   app.innerHTML = vwTabsHtml('lspt') + `
     <div class="gesamt-kopf">
       <div class="feld" style="margin-bottom:0;"><input type="text" id="txtGesamtSuche" autocomplete="off" placeholder="Suche"></div>
-      <div class="gesamt-knoepfe">
-        <button type="button" id="btnGesamtHochladen" class="betont" style="display:none;"></button>
-      </div>
       ${ziel.echt ? '' : '<div class="gesamt-ziel">Testablage (Beta-Test)</div>'}
     </div>
     <div class="quer-verw quer-breit"><div id="gesamtListe"></div><aside class="quer-detail" id="gesamtDetail"><div class="qd-karte"><span class="qv-leer">Rechnung anklicken – Details erscheinen hier.</span></div></aside></div>`;
@@ -12558,7 +12573,7 @@ function betaOffenAnzahl(){
   return n;
 }
 function betaStartUntertitel(){
-  const n = betaOffenAnzahl(), u = betaEntwuerfe().length + ((typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()) ? 1 : 0);
+  const n = betaOffenAnzahl(), u = betaEntwuerfe().length + gkvEntwuerfe().length;
   const teile = [];
   if(u) teile.push(u + ' unfertig');
   if(n) teile.push(n + ' nicht hochgeladen');
@@ -13811,13 +13826,13 @@ function betaEintraegeBauen(c){
     const renu = t(v[16]);
     const art = t(v[0]).toUpperCase() === 'L' ? 'ls' : 'pt';
     const name = t(v[5]) + ', ' + t(v[6]);
-    const datum = xlDatumText(v[1]);
+    const datum = xlDatumText(v[1]), zeit = fbZeitAusZelle(v[2]);
     const sort = xlDatumSerial(fpDatum(datum)) || 0;
     const u = t(v[20]);
     const basis = renu ? renuDateiname(renu) : '';
     const betrag = typeof v[15] === 'number' ? v[15].toFixed(2).replace('.', ',') : t(v[15]);
     const datei = (n)=> ({ pdf: dateien.get((n + '.pdf').toLowerCase()) || null, docx: dateien.get((n + '.docx').toLowerCase()) || null });
-    eintraege.push({ key: z.nr + '|ORIG', typ: 'ORIG', z, renu, art, name, datum, sort, betrag, datei: basis || ('Zeile ' + z.nr), ...(basis ? datei(basis) : { pdf:null, docx:null }),
+    eintraege.push({ key: z.nr + '|ORIG', typ: 'ORIG', z, renu, art, name, datum, zeit, sort, betrag, datei: basis || ('Zeile ' + z.nr), ...(basis ? datei(basis) : { pdf:null, docx:null }),
                      versendet: lxpFlagVorhanden(u, 'LXP:1'), geplant: lxpFlagVorhanden(u, 'LXP:1') ? versandGeplant(u, 'ORIG') : null,
                      bezahlt: xlDatumText(v[18]), abgeschickt: xlDatumText(v[17]), ausgebucht: lxpFlagVorhanden(u, OFFEN_AUS_FLAG) });
     if(!basis) continue;
@@ -13899,12 +13914,6 @@ function betaGesamtZeichnen(suchtext, ziel){
     delete x.uploadFehler;
   }));
 
-  const knopf = document.getElementById('btnGesamtHochladen');
-  if(knopf){
-    knopf.style.display = offen.length && ana ? '' : 'none';
-    knopf.textContent = '⬆ Alle hochladen (' + offen.length + ')';
-    knopf.onclick = async ()=>{ await betaFaelleHochladen(offen); ansichtRechnungenGesamt(true); };
-  }
 
   const eintraege = betaEintraegeBauen(c);
   const nachKey = new Map(eintraege.map(e=> [e.key, e]));
@@ -13927,14 +13936,15 @@ function betaGesamtZeichnen(suchtext, ziel){
   }
   const offenSichtbar = offen.filter(f=> passt((f.werte || {}).txtName, f.rechnungsnummer, wDatum(f.werte)));
   if(offenSichtbar.length){
-    html += '<div class="gesamt-abschnitt">Noch nicht hochgeladen</div>' + offenSichtbar.map(f=>`
+    html += '<div class="gesamt-abschnitt mit-knopf"><span>Noch nicht hochgeladen</span>' + (offen.length && ana ? '<button type="button" id="btnGesamtHochladen">⬆ Alle hochladen (' + offen.length + ')</button>' : '') + '</div>' + offenSichtbar.map(f=>`
       <div class="wisch-huelle" data-lokal="${f.art}:${htmlEsc(f.zeitstempel)}"><div class="wisch-hinter">&#128465; Löschen</div>
       <div class="fall-zeile ${f.art} offen">
         <div class="inhalt">
           <div class="name"><span class="badge-neu ${f.art}">${f.art === 'ls' ? 'L' : 'P'}</span>${htmlEsc((f.werte || {}).txtName || '(ohne Namen)')}</div>
           <div class="info">${htmlEsc((f.werte || {}).txtDatumExcel || '')}${f.rechnungsnummer ? ' &middot; Nr. ' + htmlEsc(f.rechnungsnummer) : ''}</div>
-          <div class="info offen-text">${f.uploadFehler ? '⚠ ' + htmlEsc(f.uploadFehler) : (ana ? 'noch nicht hochgeladen' : (c.laedt ? 'Abgleich läuft …' : 'noch nicht hochgeladen'))}</div>
+          ${f.uploadFehler ? '<div class="info offen-text">⚠ ' + htmlEsc(f.uploadFehler) + '</div>' : ''}
         </div>
+        ${f.uploadFehler ? '' : '<div class="gs-rechts"><small class="offen-text">' + (!ana && c.laedt ? 'Abgleich<br>läuft …' : 'noch nicht<br>hochgeladen') + '</small></div>'}
         <div class="fall-icons"><span class="badge-hochladen" data-akt="hoch" title="Jetzt hochladen">&#11014;</span></div>
       </div></div>`).join('');
   }
@@ -13955,7 +13965,7 @@ function betaGesamtZeichnen(suchtext, ziel){
       '<div style="font-size:12px;opacity:.75;margin-top:4px;">' + htmlEsc(c.schritt || '') + ' <span id="gesamtLadeSek">' +
       (c.seit ? Math.round((Date.now() - c.seit) / 1000) + ' s' : '') + '</span></div></div>';
   } else if(c.fehler){
-    html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '<br><button type="button" class="btn-sekundaer" id="btnGesamtNochmal" style="width:auto; margin-top:8px; padding:8px 14px;">Erneut versuchen</button></div>' + msAnmeldeKnopfHtml(c.fehler);
+    html += '<div class="leer-hinweis">Rechnungsübersicht konnte nicht geladen werden: ' + htmlEsc(c.fehler) + '. <button type="button" class="link-knopf" id="btnGesamtNochmal">Erneut versuchen</button></div>' + msAnmeldeKnopfHtml(c.fehler);
   } else if(ana){
     // Treffer der Suche: Rechnung samt Unterpositionen
     const sichtbarZeilen = new Set(eintraege.filter(e=> e.typ === 'ORIG' && passt(e.name, e.renu, e.datum)).map(e=> e.z.nr));
@@ -13965,11 +13975,12 @@ function betaGesamtZeichnen(suchtext, ziel){
     if(!String(suchtext || '').trim()){
       const offenR = eintraege.filter(e=> e.typ === 'ORIG' && !e.bezahlt && !e.geplant && !e.ausgebucht).map(e=> ({ e, t: betaTageSeit(e.abgeschickt) }))
         .filter(x=> !isNaN(x.t) && x.t >= 0).sort((a, b)=> b.t - a.t);
+      var ausgebuchtR = eintraege.filter(e=> e.typ === 'ORIG' && !e.bezahlt && e.ausgebucht);
       if(offenR.length){
         const zahl = (v)=> Number(String(v || '').replace(/\./g, '').replace(',', '.')) || 0;
         const summe = offenR.reduce((s, x)=> s + zahl(x.e.betrag), 0), verzug = offenR.filter(x=> x.t > 30).length;
         let auf = true; try{ auf = LS.get('offen_dash_auf', true) !== false; }catch(_){}
-        html += '<details class="offen-dash"' + (auf ? ' open' : '') + '><summary><span><b>Offene Rechnungen: ' + offenR.length + '</b> · ' + betaEuro(summe) + '</span>' +
+        html += '<details class="offen-dash"' + (auf ? ' open' : '') + '><summary><span><b>Offene Rechnungen: ' + offenR.length + '</b> · <span style="white-space:nowrap;">' + betaEuro(summe) + '</span></span>' +
           (verzug ? '<span class="offen-verzug">' + verzug + ' im Verzug</span>' : '') + '</summary>' +
           offenR.slice(0, 50).map(x=> '<div class="offen-zeile' + (x.t > 30 ? ' verzug' : '') + '" data-okey="' + htmlEsc(x.e.key) + '" data-orenu="' + htmlEsc(x.e.renu || x.e.name || '') + '" role="button" tabindex="0"><div class="offen-inhalt"><b>' + htmlEsc(x.e.name) + '</b><small>' +
             [x.e.renu ? 'Nr. ' + htmlEsc(x.e.renu) : '', x.e.betrag ? htmlEsc(x.e.betrag) + ' €' : ''].filter(Boolean).join(' · ') +
@@ -13980,7 +13991,9 @@ function betaGesamtZeichnen(suchtext, ziel){
             '<button type="button" class="offen-weg" data-okey="' + htmlEsc(x.e.key) + '" title="Wird nicht bezahlt – aus den offenen Rechnungen nehmen" aria-label="Aus den offenen Rechnungen nehmen">✕</button></div></div>').join('') +
           (offenR.length > 50 ? '<div class="leer-hinweis">' + (offenR.length - 50) + ' weitere – in der Liste unten.</div>' : '') +
           // Kontoauszug zurueckhaltend unter den offenen Rechnungen (Wunsch 26.11.2026)
-          '<div class="offen-bank"><button type="button" id="btnOffenBank" title="Zahlungseingänge aus einer CSV des Online-Bankings übernehmen">Kontoauszug (CSV) einlesen …</button></div></details>';
+          '<div class="offen-bank"><button type="button" id="btnOffenBank" title="Zahlungseingänge aus einer CSV des Online-Bankings übernehmen">Kontoauszug (CSV) einlesen …</button>' +
+          // Wunsch 26.11.2026: mit ✕ herausgenommene Rechnungen ohne Suchen zurueckholen
+          (ausgebuchtR.length ? '<button type="button" id="btnOffenZurueck" title="Mit ✕ herausgenommene Rechnungen wieder als offen führen">Ausgeblendete (' + ausgebuchtR.length + ') zurückholen</button>' : '') + '</div></details>';
       }
     }
     html += '<div class="gesamt-abschnitt">Rechnungsübersicht (' + eintraege.filter(e=> e.typ === 'ORIG').length + ')</div>';
@@ -13996,7 +14009,7 @@ function betaGesamtZeichnen(suchtext, ziel){
         <input type="checkbox" class="chk" ${betaAuswahl.has(e.key) ? 'checked' : ''}>
         <div class="inhalt">
           <div class="name">${e.unter ? '' : '<span class="badge-neu ' + e.art + '">' + (e.art === 'ls' ? 'L' : 'P') + '</span>'}${htmlEsc(e.name)}</div>
-          <div class="info">${e.unter ? htmlEsc(e.datei) : (htmlEsc(e.datum) + (e.renu ? ' &middot; Nr. ' + htmlEsc(e.renu) : ' &middot; ohne Rechnungsnummer'))}</div>
+          <div class="info">${e.unter ? htmlEsc(e.datei) : ((e.zeit ? htmlEsc(e.zeit) + ' Uhr &middot; ' : '') + (e.renu ? 'Nr. ' + htmlEsc(e.renu) : 'ohne Rechnungsnummer'))}</div>
           ${e.geplant ? '<div class="info termin-text">Versand geplant am ' + htmlEsc(isoDe(e.geplant.datum)) + (e.geplant.modus === 'test' ? ' (Testmodus)' : '') + '</div>' : ''}
         </div>
         ${!e.unter ? '<div class="gs-rechts">' + (e.betrag ? '<b>' + htmlEsc(e.betrag) + '</b>' : '') + betaZahlungKurz(e) + '</div>' : ''}
@@ -14006,6 +14019,7 @@ function betaGesamtZeichnen(suchtext, ziel){
     if(sichtbar.length > MAX) html += '<div class="leer-hinweis">' + (sichtbar.length - MAX) + ' weitere – bitte Suche eingrenzen.</div>';
   }
   listeEl.innerHTML = html + '<div class="gesamt-platzhalter"></div>';
+  { const hk = listeEl.querySelector('#btnGesamtHochladen'); if(hk) hk.onclick = async ()=>{ await betaFaelleHochladen(offen); ansichtRechnungenGesamt(true); }; }
   { const nb = listeEl.querySelector('#btnGesamtNochmal'); if(nb) nb.onclick = ()=> ansichtRechnungenGesamt(true); }
   { const od = listeEl.querySelector('.offen-dash'); if(od) od.addEventListener('toggle', ()=>{ try{ LS.set('offen_dash_auf', od.open); }catch(_){} });
     // Zeile anklicken: zur Rechnung in der Liste springen und sie kurz hervorheben (z. B. fuer Erinnerung oder Pruefung)
@@ -14023,6 +14037,10 @@ function betaGesamtZeichnen(suchtext, ziel){
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
       // erstellt die naechste Erinnerung (Word + PDF) und zeigt sie gleich in der PDF-Ansicht -- dort Teilen oder als Brief senden
       if(await betaMahnungErstellen(e)) await ansichtRechnungenGesamt(true); });
+    { const zb = listeEl.querySelector('#btnOffenZurueck'); if(zb) zb.onclick = async (ev)=>{ ev.stopPropagation();
+        const liste = eintraege.filter(e=> e.typ === 'ORIG' && !e.bezahlt && e.ausgebucht); if(!liste.length) return;
+        if(!await betaFrage('Diese Rechnungen wieder bei „Offene Rechnungen“ führen?\n\n' + liste.slice(0, 12).map(e=> '• ' + e.name + (e.renu ? ' · Nr. ' + e.renu : '')).join('\n') + (liste.length > 12 ? '\n… und ' + (liste.length - 12) + ' weitere' : ''), 'Zurückholen', 'Abbrechen')) return;
+        if(await betaOffenAusbuchen(liste, false)) await ansichtRechnungenGesamt(true); }; }
     { const kb = listeEl.querySelector('#btnOffenBank'); if(kb) kb.onclick = async (ev)=>{ ev.stopPropagation(); if(await bankCsvImport()) await ansichtRechnungenGesamt(true); }; }
     // nicht beglichene Rechnung aus „Offene Rechnungen“ nehmen (Wunsch 25.11.2026) -- zurueck ueber „Bezahlt“ an der Rechnung
     listeEl.querySelectorAll('.offen-weg').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
@@ -17847,18 +17865,40 @@ function gkvFaelleSpeichern(a){ const neu = a.slice(-200); if(typeof faelleMetaN
 let gkvEntwurf = null;
 // Angefangener GKV-Patient bleibt wie die unfertigen LS/PT-Rechnungen dauerhaft gesichert
 // (verschluesselter App-Speicher, per OneDrive auf die anderen Geraete) -- bis er gespeichert oder verworfen wird.
+// Wunsch 26.11.2026: mehrere angefangene GKV-Patienten gleichzeitig (wie die unfertigen LS/PT-Rechnungen) --
+// Liste 'gkv_entwuerfe', jeder Eintrag mit eigener Kennung eid; der fruehere Einzel-Entwurf 'gkv_entwurf' wird uebernommen.
+function gkvEntwurfEid(){ return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function gkvEntwuerfeRoh(){
+  let a = LS.get('gkv_entwuerfe', null); if(!Array.isArray(a)) a = [];
+  try{
+    const alt = LS.get('gkv_entwurf', null);
+    if(alt && String(alt.name || '').trim()){
+      const { am, id, ...r } = alt; a = a.concat([Object.assign(r, { id: '', eid: gkvEntwurfEid(), am: am || new Date().toISOString() })]);
+      LS.set('gkv_entwuerfe', a); LS.set('gkv_entwurf', null); LS.set('gkv_entwurf_weg_am', new Date().toISOString());
+    }
+  }catch(_){}
+  return a.filter(x=> x && x.eid);
+}
+// angefangene GKV-Patienten mit Namen, neueste zuerst
+function gkvEntwuerfe(){ return gkvEntwuerfeRoh().filter(x=> String(x.name || '').trim()).sort((a, b)=> String(b.am || '').localeCompare(String(a.am || ''))); }
 function gkvEntwurfSichern(){
   try{
-    if(gkvEntwurf && (String(gkvEntwurf.name || '').trim() || LS.get('gkv_entwurf', null))){ LS.set('gkv_entwurf', Object.assign({}, gkvEntwurf, { id: '', am: new Date().toISOString() })); syncBaldSchreiben(); }
+    if(!gkvEntwurf) return;
+    const voll = !!String(gkvEntwurf.name || '').trim();
+    if(!gkvEntwurf.eid){ if(!voll) return; gkvEntwurf.eid = gkvEntwurfEid(); }
+    const a = gkvEntwuerfeRoh().filter(x=> x.eid !== gkvEntwurf.eid);
+    if(voll) a.push(Object.assign({}, gkvEntwurf, { id: '', am: new Date().toISOString() }));
+    LS.set('gkv_entwuerfe', a); syncBaldSchreiben();
   }catch(_){}
 }
-function gkvEntwurfVerwerfen(){
-  gkvEntwurf = null;
-  try{ if(LS.get('gkv_entwurf', null)){ LS.set('gkv_entwurf', null); LS.set('gkv_entwurf_weg_am', new Date().toISOString()); syncBaldSchreiben(); } }catch(_){}
+function gkvEntwurfVerwerfen(eid){
+  const id = eid || (gkvEntwurf && gkvEntwurf.eid);
+  if(!eid || (gkvEntwurf && gkvEntwurf.eid === eid)) gkvEntwurf = null;
+  try{ const a = gkvEntwuerfeRoh(); if(id && a.some(x=> x.eid === id)){ LS.set('gkv_entwuerfe', a.filter(x=> x.eid !== id)); syncBaldSchreiben(); } }catch(_){}
 }
-function gkvEntwurfLaden(){
-  if(gkvEntwurf) return gkvEntwurf;
-  try{ const e = LS.get('gkv_entwurf', null); if(e && String(e.name || '').trim()){ const { am, ...rest } = e; rest.id = ''; gkvEntwurf = rest; } }catch(_){}
+// eid: diesen Entwurf zum Weitermachen holen; ohne eid nur den gerade offenen
+function gkvEntwurfLaden(eid){
+  if(eid){ const e = gkvEntwuerfeRoh().find(x=> x.eid === eid); if(e){ const { am, ...rest } = e; rest.id = ''; gkvEntwurf = rest; } }
   return gkvEntwurf;
 }
 (function(){ let t = null;
@@ -17873,7 +17913,10 @@ function gkvEntwurfLaden(){
 const GKV_SAMMEL_NAME = 'Sammelerfassung';
 function ansichtGkv(bearbeitenId, opt){
   opt = opt || {};
-  if(!bearbeitenId && !opt.sammel) gkvEntwurfLaden();
+  // offenen Entwurf sichern; ohne Angabe beginnt ein neuer Patient, mit opt.entwurf geht es mit diesem weiter
+  if(gkvEntwurf){ try{ gkvEntwurfSichern(); }catch(_){} }
+  gkvEntwurf = null;
+  if(!bearbeitenId && !opt.sammel && opt.entwurf) gkvEntwurfLaden(opt.entwurf);
   einstellungenOffen = false;
   const ausVerwaltung = gkvHerkunft === 'verwaltung'; gkvHerkunft = null;
   const herkunft = fallHerkunftNehmen();
@@ -21859,10 +21902,10 @@ function standortKarteFaelle(info){
   out.forEach(x=>{ if(x.unfertig && !x.verwerfen && x.art !== 'gkv'){ const e = betaEntwuerfe().find(y=> y.art === x.art && ((y.werte || {}).txtName || '').trim() === (x.name === 'ohne Namen' ? '' : x.name)); if(e) x.verwerfen = ()=> betaEntwurfEntfernen(e.id); } });
   // GKV-Patient, der gerade erfasst wird (noch nicht gespeichert)
   try{
-    if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim()){
-      const t = designFallZeit(gkvEntwurf) || new Date();
-      if(drin(t, gkvEntwurf.dienst)) out.push({ art: 'gkv', t, name: gkvEntwurf.name, dienst: gkvEntwurf.dienst || '', adr: gkvEntwurf.adresse || '', geo: null, euro: null, unfertig: true, entwurfId: 'gkvEntwurf', oeffnen: ()=>{ weg(); ansichtGkv(); }, verwerfen: ()=> gkvEntwurfVerwerfen() });
-    }
+    gkvEntwuerfe().forEach(ge=>{
+      const t = designFallZeit(ge) || new Date();
+      if(drin(t, ge.dienst)) out.push({ art: 'gkv', t, name: ge.name, dienst: ge.dienst || '', adr: ge.adresse || '', geo: null, euro: null, unfertig: true, entwurfId: 'gkv:' + ge.eid, oeffnen: ()=>{ weg(); ansichtGkv(null, { entwurf: ge.eid }); }, verwerfen: ()=> gkvEntwurfVerwerfen(ge.eid) });
+    });
   }catch(_){}
   try{
     gkvFaelleLaden().forEach(f=>{
@@ -22939,11 +22982,19 @@ const SYNC_SAETZE = {
     laden: ()=>{ const a = LS.get('entwuerfe', []); return Array.isArray(a) ? a.filter(x=> x && x.id) : []; },
     setzen: (a)=> LS.set('entwuerfe', a)
   },
-  // angefangener GKV-Patient (ein Eintrag)
+  // angefangene GKV-Patienten (mehrere, Wunsch 26.11.2026)
+  gkv_entwuerfe: {
+    pruefen: (x)=>{ syncTexte(x, ['name', 'datum', 'zeit', 'adresse', 'profil', 'dienst', 'dokuId']); if(!syncObjekt(x.auswahl)) x.auswahl = {}; return typeof x.name === 'string'; },
+    laden: ()=> gkvEntwuerfeRoh().map(e=> Object.assign({}, e, { id: e.eid })),
+    setzen: (a)=>{ LS.set('gkv_entwuerfe', a.map(d=>{ const { id, ...r } = d; r.eid = id; r.id = ''; return r; }));
+      if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && gkvEntwurf.eid && !a.some(d=> d.id === gkvEntwurf.eid) && !document.getElementById('gkvName')) gkvEntwurf = null; },
+    zeit: (x)=> Date.parse(x.am || '') || 0
+  },
+  // frueher: ein einzelner angefangener GKV-Patient (von aelteren Versionen; wird in gkv_entwuerfe uebernommen)
   gkv_entwurf: {
     pruefen: (x)=>{ syncTexte(x, ['name', 'datum', 'zeit', 'adresse', 'profil', 'dienst', 'dokuId']); if(!syncObjekt(x.auswahl)) x.auswahl = {}; return typeof x.name === 'string'; },
     laden: ()=>{ const e = LS.get('gkv_entwurf', null); return e && String(e.name || '').trim() ? [Object.assign({}, e, { id: 'gkv' })] : []; },
-    setzen: (a)=>{ const d = a[0]; if(d){ const { id, ...rest } = d; rest.id = ''; LS.set('gkv_entwurf', rest); } else { LS.set('gkv_entwurf', null); if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && !document.getElementById('gkvName')) gkvEntwurf = null; } },
+    setzen: (a)=>{ const d = a[0]; if(d){ const { id, ...rest } = d; rest.id = ''; LS.set('gkv_entwurf', rest); try{ gkvEntwuerfeRoh(); }catch(_){} } else LS.set('gkv_entwurf', null); },
     zeit: (x)=> Date.parse(x.am || '') || 0,
     wegZeit: ()=> Date.parse(LS.get('gkv_entwurf_weg_am', '') || '') || 0
   },
@@ -23318,7 +23369,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v519';
+const APP_VERSION = 'v520';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -24326,8 +24377,7 @@ function designOffeneFaelle(){
 function designWeiterFaelle(){
   const out = [];
   try{
-    if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim())
-      out.push({ id: 'gkvEntwurf', art: 'gkv', name: gkvEntwurf.name || 'GKV-Patient', titel: (gkvEntwurf.name || 'GKV-Patient') + ' · GKV', oeffnen: ()=> ansichtGkv(), verwerfen: ()=>{ gkvEntwurfVerwerfen(); } });
+    gkvEntwuerfe().forEach(ge=> out.push({ id: 'gkv:' + ge.eid, art: 'gkv', name: ge.name || 'GKV-Patient', titel: (ge.name || 'GKV-Patient') + ' · GKV', oeffnen: ()=> ansichtGkv(null, { entwurf: ge.eid }), verwerfen: ()=>{ gkvEntwurfVerwerfen(ge.eid); } }));
     betaEntwuerfe().forEach(e=>{ const n = ((e.werte || {}).txtName || '').trim() || 'ohne Namen';
       out.push({ id: e.id, art: e.art, name: n, titel: n + ' · ' + String(e.art).toUpperCase(), oeffnen: ()=> betaEntwurfOeffnen(e, null), verwerfen: ()=> betaEntwurfEntfernen(e.id) }); });
   }catch(_){}
@@ -24335,8 +24385,7 @@ function designWeiterFaelle(){
 }
 function designWeiterFall(){
   try{
-    if(typeof gkvEntwurf !== 'undefined' && gkvEntwurf && String(gkvEntwurf.name || '').trim())
-      return { art: 'gkv', titel: (gkvEntwurf.name || 'GKV-Patient') + ' · GKV', oeffnen: ()=> ansichtGkv() };
+    { const ge = gkvEntwuerfe()[0]; if(ge) return { art: 'gkv', titel: (ge.name || 'GKV-Patient') + ' · GKV', oeffnen: ()=> ansichtGkv(null, { entwurf: ge.eid }) }; }
     const e = betaEntwuerfe()[0];
     if(e) return { art: e.art, titel: (((e.werte || {}).txtName || '').trim() || 'ohne Namen') + ' · ' + e.art.toUpperCase(), oeffnen: ()=> betaEntwurfOeffnen(e, null) };
   }catch(_){}
@@ -24682,7 +24731,7 @@ function dsNotfallscheinSvg(von){
   const l = (x1, y1, x2, y2)=> '<path d="M' + x1 + ' ' + y1 + 'L' + x2 + ' ' + y2 + '" class="ns-linie"/>';
   const d = von instanceof Date ? von : null, uhr = d ? zz2(d.getHours()) + ':' + zz2(d.getMinutes()) : 'Dienstbeginn';
   const qz = d ? String(Math.floor(d.getMonth() / 3) + 1) : '', jz = d ? String(d.getFullYear()).slice(-2) : '  ';
-  const kas = (x, y, z)=> r(x, y, 10, 11) + (z && z.trim() ? '<text x="' + (x + 5) + '" y="' + (y + 8.6) + '" text-anchor="middle" class="ns-wert ns-k">' + htmlEsc(z) + '</text>' : '');
+  const kas = (x, y, z)=> r(x, y, 10, 10) + (z && z.trim() ? '<text x="' + (x + 5) + '" y="' + (y + 8.1) + '" text-anchor="middle" class="ns-wert ns-k">' + htmlEsc(z) + '</text>' : '');
   let o = '<svg class="ns-schema" viewBox="0 0 340 214" role="img" aria-label="Schema Notfallschein mit den Angaben für den Pseudo-Fall">' + r(1, 1, 338, 212, 'ns-blatt');
   // Personalienfeld (wie im Vordruck: Kasse | Name mit „geb. am“ rechts, darunter Anschrift | Kennung/Vers.-Nr./Status | BSNR/Arzt-Nr./Datum)
   // Wunsch 26.11.2026: die beiden Zeilen unter der Anschrift deutlich schmaler
@@ -24691,14 +24740,16 @@ function dsNotfallscheinSvg(von){
   o += l(X + 58, 78, X + 58, 84) + l(X + 128, 78, X + 128, 84) + l(X + 58, 93, X + 58, U) + l(X + 107, 93, X + 107, U);
   o += t(X + 3, 13, 'Krankenkasse bzw. Kostenträger') + t(X + 6, 22, 'AOK Baden-Württemberg', 'ns-wert');
   o += t(X + 3, 30, 'Name, Vorname des Versicherten') + t(X + 132, 39, 'geb. am');
-  o += t(X + 6, 40, 'Bereitschaftsdienst Arzt 1', 'ns-wert') + t(X + 6, 50, 'Ärztlicher', 'ns-wert') + t(X + 126, 50, '01.01.2020', 'ns-wert');
-  o += t(X + 6, 60, 'Notfallstr. 1', 'ns-wert') + t(X + 6, 69, '12345 Notfallstadt', 'ns-wert');
+  const nsStil = (typeof window !== 'undefined' && window.__nsStil) || 'beides', ab = nsStil === 'linie' ? 0 : 2.5;
+  o += t(X + 6, 39.5 - ab / 2, 'Bereitschaftsdienst Arzt 1', 'ns-wert') + t(X + 6, 49 - ab / 2, 'Ärztlicher', 'ns-wert') + t(X + 126, 49 - ab / 2, '01.01.2020', 'ns-wert');
+  if(nsStil !== 'abstand') o += '<path d="M' + (X + 4) + ' ' + (53 + ab / 4) + 'L' + (X + W - 4) + ' ' + (53 + ab / 4) + '" class="ns-linie" stroke-dasharray="2 2" style="opacity:.55"/>';
+  o += t(X + 6, 60.5 + ab / 2, 'Notfallstr. 1', 'ns-wert') + t(X + 6, 69.5, '12345 Notfallstadt', 'ns-wert');
   o += t(X + 3, 77, 'Kostenträgerkennung') + t(X + 61, 77, 'Versicherten-Nr.') + t(X + 131, 77, 'Status');
   o += t(X + 3, 89, 'Betriebsstätten-Nr.') + t(X + 61, 89, 'Arzt-Nr.') + t(X + 110, 89, 'Datum') + t(X + 110, 97, '[heutiges Datum]', 'ns-wert ns-k');
   // rechts: Titel, Ankreuzfeld (zweizeilig wie im Original), Quartal/Jahr als Kaestchen, Diagnose buendig mit dem Personalienfeld
   o += t(192, 15, 'Notfall-/Vertretungsschein', 'ns-titel') + t(322, 15, '19', 'ns-titel');
-  o += r(192, 23, 8, 8) + '<path d="M193.5 27l2 2 3.5-4" class="ns-haken"/>' + t(204, 27, 'ärztlicher', 'ns-klein') + t(204, 35, 'Notfalldienst', 'ns-klein');
-  o += t(268, 27, 'Quartal', 'ns-klein') + kas(268, 29, qz) + kas(284, 29, jz[0]) + kas(294, 29, jz[1]);
+  o += r(192, 25, 10, 10) + '<path d="M194 30l2.5 2.5 4-5" class="ns-haken"/>' + t(206, 29, 'ärztlicher', 'ns-klein') + t(206, 36.5, 'Notfalldienst', 'ns-klein');
+  o += t(262, 32.5, 'Quartal', 'ns-klein') + kas(290, 25, qz) + kas(306, 25, jz[0]) + kas(316, 25, jz[1]);
   o += r(192, 46, 140, U - 46) + t(195, 53, 'Diagnosen') + t(198, 76, 'Z02', 'ns-wert ns-gross');
   // Leistungen (rueckt nach oben, weil das Personalienfeld kleiner ist)
   const L = 106;
@@ -27753,7 +27804,7 @@ function ansichtMerken(x){ try{ sessionStorage.setItem(ANSICHT_SCHL, JSON.string
       const x = JSON.parse(sessionStorage.getItem(ANSICHT_SCHL) || 'null'); if(!x) return;
       if(x.typ === 'maske' && x.idx == null && typeof betaAktuellerEntwurf !== 'undefined' && betaAktuellerEntwurf) x.entwurf = betaAktuellerEntwurf.id;
       // GKV-Zwischenstand: nur der Hinweis, die Daten selbst liegen verschluesselt im App-Speicher (keine Patientendaten im sessionStorage)
-      if(x.typ === 'gkv' && !x.id && typeof gkvEntwurf !== 'undefined' && gkvEntwurf){ try{ gkvEntwurfSichern(); }catch(_){} x.gkv = true; }
+      if(x.typ === 'gkv' && !x.id && typeof gkvEntwurf !== 'undefined' && gkvEntwurf){ try{ gkvEntwurfSichern(); }catch(_){} x.gkv = true; if(gkvEntwurf.eid) x.gkvEid = gkvEntwurf.eid; }
       x.y = Math.round(window.scrollY || 0); x.am = Date.now();
       sessionStorage.setItem(ANSICHT_SCHL, JSON.stringify(x));
     }catch(_){}
@@ -27775,8 +27826,7 @@ function ansichtWiederherstellen(){
   }
   if(x.typ === 'gkv'){
     if(x.id){ ansichtGkv(x.id); return; }
-    if(x.gkv && typeof gkvEntwurfLaden === 'function'){ try{ gkvEntwurfLaden(); }catch(_){} }
-    ansichtGkv();
+    ansichtGkv(null, x.gkvEid ? { entwurf: x.gkvEid } : {});
   }
 }
 // Erster Start? VOR themaAnwenden/Dunkelmodus pruefen -- die speichern bei
