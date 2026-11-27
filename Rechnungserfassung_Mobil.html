@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-kdPF28sSSrl+fQrCUUde8u2+1R2hC/0om8Pgu58wiJI=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-BoPQJRnMigpQCZ0kIvTXreaXRUyCYcQLFryG2bmFacY=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -524,6 +524,9 @@ try{
   .kt-gut small{color:#cfe0f2; font-size:12.5px;}
   .kt-knr{display:flex; gap:8px; margin-top:12px;} .kt-knr button{flex:1; width:auto; margin:0; border:0; border-radius:11px; padding:10px; font-size:14px; font-weight:700; cursor:pointer;}
   .kt-w{background:#fff; color:#1f4e79;} .kt-g{background:rgba(255,255,255,.16); color:#fff;}
+  .kt-gut .kt-h{color:#dbe8f5;}
+  .kt-k:not(.kt-gut) .kt-g{background:var(--flaeche-2, #eef1f5); color:var(--text, #1f2a37); border:1px solid var(--rand, #d6dde6);}
+  body.dunkel .kt-k:not(.kt-gut) .kt-g{background:#2a3340; color:#e8edf3; border-color:#3a4554;}
   .kt-zahlen{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center;} .kt-zahlen b{display:block; font-size:20px;} .kt-zahlen span{font-size:11.5px; color:var(--text-schwach);}
   .kt-r{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--rand); font-size:14px;}
   .kt-r:first-of-type{border-top:0;} .kt-r small{display:block; color:var(--text-schwach); font-size:12px;}
@@ -8053,7 +8056,7 @@ async function einrFehlt(){
   try{ if(typeof dienstprofile === 'function' && !dienstprofile().length && typeof ansichtEinrichtung === 'function' && /'dienst'/.test(String(ansichtEinrichtung))) f.push({ schritt: 'dienst', text: 'Dienstprofil (Ausgangspunkt fürs Wegegeld)' }); }catch(_){}
   // Weiterleitung: eigene Adresse, oder die Standard-Weiterleitung (leer bzw. Standard-Adresse) mit Zugangsdaten --
   // die Standard-Weiterleitung laesst nur freigegebene LetterXpress-Benutzer durch; ob man dazugehoert, zeigt "Prüfen"/der Versand
-  const zugang = !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY), wl = !!String(w.BRIEF_WEITERLEITUNG || '').trim() || !!String(w.BRIEF_ZUGANGSCODE || '').trim() || !!appCodeAktuell();
+  const zugang = !!((w.BRIEF_BENUTZER && w.BRIEF_APIKEY) || (typeof kontoBriefe === 'function' && kontoBriefe())), wl = !!String(w.BRIEF_WEITERLEITUNG || '').trim() || !!String(w.BRIEF_ZUGANGSCODE || '').trim() || !!appCodeAktuell();
   if(!zugang || !wl) f.push({ schritt: 'brief', text: 'Briefversand: ' + [!zugang ? 'LetterXpress-Zugang' : '', !wl ? 'Freischaltcode' : ''].filter(Boolean).join(' und ') });
   return f;
 }
@@ -8461,6 +8464,14 @@ function ansichtEinrichtung(schritt){
       (a.length ? '<p class="einr-ok">✓ ' + a.length + (a.length === 1 ? ' Profil' : ' Profile') + ' mit ' + zahl + ' Diensten pro Woche: ' + htmlEsc(a.map(p=> p.name).join(', ')) + '.</p>' : '<p class="einr-klein">Noch keine Dienste angelegt.</p>') +
       '<button type="button" class="btn-sekundaer" id="einrDienste">' + (a.length ? 'Dienste ansehen und anpassen' : 'Dienste anlegen') + '</button>' +
       '<p class="einr-klein">Später unter Einstellungen › Fahrten &amp; Wegegeld › Dienste änderbar.</p>' + knoepfe('daten', 'brief', a.length ? 'Weiter' : 'Überspringen');
+  } else if(schritt === 'brief' && typeof kontoServerAn === 'function' && kontoAn() && kontoServerAn() && !kontoEigenerLxp() && !LS.get('einr_brief_eigen', false)){
+    // Guthabenkonto (Weiterleitung 7): kein eigenes LetterXpress-Konto noetig
+    html = '<h2>Briefversand</h2>' +
+      '<p>Rechnungen kann die App per Post verschicken – über den Briefdienst des App-Anbieters (LetterXpress: Druck und Versand in Deutschland). Ein eigenes LetterXpress-Konto brauchst du nicht.</p>' +
+      '<p>Bezahlt wird mit <b>Guthaben</b>: unter <b>„Konto“</b> ganz rechts in der Leiste aufladen (Karte, SEPA-Lastschrift, PayPal, Apple Pay oder Google Pay). Dein Konto ist anonym – ohne Namen, E-Mail oder Passwort.</p>' +
+      '<p class="einr-klein">Beim Senden wählst du jedes Mal „Testbrief“ (kostenlos, nichts wird gedruckt) oder „Echt verschicken“.</p>' +
+      knoepfe('dienste', 'fertig', fertigText('Weiter')) +
+      '<p style="text-align:center; margin-top:10px;"><button type="button" class="einr-link" id="einrBriefEigen">Eigenes LetterXpress-Konto nutzen</button></p>';
   } else if(schritt === 'brief'){
     const w = Object.assign({}, (iniCacheLaden() || {}).werte || {});
     // eine hinterlegte, aber nicht freigegebene eigene Adresse wird nicht weiterverwendet (L6): dann gilt die Standard-Weiterleitung
@@ -8504,6 +8515,7 @@ function ansichtEinrichtung(schritt){
     neu();
     }
   }
+  { const be = document.getElementById('einrBriefEigen'); if(be) be.onclick = ()=>{ LS.set('einr_brief_eigen', true); ansichtEinrichtung('brief'); }; }
   app.querySelectorAll('[data-einr]').forEach(b=> b.onclick = async ()=>{
     if(schritt === 'daten' && b.dataset.einr === 'dienste'){
       const aend = {};
@@ -8568,7 +8580,7 @@ function ansichtEinrichtung(schritt){
   }
   const fe = document.getElementById('einrFertig'); if(fe) fe.onclick = beenden;
   if(schritt === 'dateien') einrDateienPruefen();
-  if(schritt === 'brief') einrBriefStarten();
+  if(schritt === 'brief' && document.getElementById('einrLxpPruefen')) einrBriefStarten();
 }
 // ---------- Einrichtung: eigene LetterXpress-Weiterleitung in Azure ----------
 // Sicherheitsbericht W3: kein "curl | bash" auf den jeweils aktuellen Stand, sondern genau diese Version (Pruefsumme,
@@ -10998,10 +11010,12 @@ function briefTestmodus(werte, ziel){
 async function lxpBriefSenden(pdfBlob, dateiname, test, versandDatumIso){
   const ini = iniCacheLaden();
   const w = ini ? ini.werte : {};
-  if(!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > Arztinfos & Briefversand, dann speichern bzw. vom PC laden).');
+  // Guthabenkonto (Weiterleitung 7): statt eigener Zugangsdaten der anonyme Kontoschluessel
+  const konto = typeof kontoBriefe === 'function' && kontoBriefe();
+  if(!konto && (!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY)) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > Arztinfos & Briefversand, dann speichern bzw. vom PC laden).');
   const base64 = await blobAlsBase64(pdfBlob);
   const koerper = {
-    auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: test ? 'test' : 'live' },
+    ...(konto ? { _konto: kontoSchluessel(true), _modus: test ? 'test' : 'live' } : { auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: test ? 'test' : 'live' } }),
     letter: { base64_file: base64, base64_file_checksum: md5Hex(base64), filename_original: dateiname + '.pdf',
               specification: { color: '1', mode: 'simplex', shipping: 'national' } }
   };
@@ -11015,10 +11029,15 @@ async function lxpBriefSenden(pdfBlob, dateiname, test, versandDatumIso){
   }catch(e){ throw new Error('Keine Verbindung zur Weiterleitung ' + host + ' (' + ((e && e.message) || e) + ') – es wurde nichts verschickt.'); }
   const txt = await r.text();
   let j = null; try{ j = JSON.parse(txt); }catch(_){}
+  if(r.status === 402 && j){
+    const e = new Error('Das Guthaben reicht nicht für diesen Brief (' + kontoCent(j.preis) + ', Guthaben ' + kontoCent(j.guthaben) + '). Bitte unter „Konto“ (ganz rechts in der Leiste) aufladen – es wurde nichts verschickt.');
+    e.guthabenFehlt = true; throw e;
+  }
   if(!r.ok || (j && j.status && +j.status >= 400)){
     const kurz = /<html/i.test(txt) ? txt.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : txt;
     throw new Error('Versand abgelehnt (HTTP ' + r.status + ', über ' + host + '): ' + kurz.slice(0, 300) + ' – es wurde nichts verschickt.');
   }
+  if(konto && j && j.konto){ try{ LS.set('konto_guthaben', j.konto.guthaben); kontoAuftragMerken(j.data && j.data.id, dateiname); }catch(_){} }
   return j || txt;
 }
 
@@ -11036,11 +11055,12 @@ async function lxpWeiterleitungVersion(){
 }
 async function lxpAuftrag(methode, id, modus, letter){
   const ini = iniCacheLaden(); const w = ini ? ini.werte : {};
-  if(!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > Briefversand).');
+  const konto = typeof kontoBriefe === 'function' && kontoBriefe();
+  if(!konto && (!w.BRIEF_BENUTZER || !w.BRIEF_APIKEY)) throw new Error('LetterXpress-Zugangsdaten fehlen (Einstellungen > Briefversand).');
   const v = await lxpWeiterleitungVersion();
   if(v === 0) throw new Error('Die Weiterleitung zu LetterXpress ist nicht erreichbar (Internet?). Es wurde nichts geändert.');
   if(v < 2) throw new Error('Die Weiterleitung in Azure ist noch die alte Version und kann Aufträge nicht ändern. Bitte dem App-Entwickler Bescheid geben. Es wurde nichts geändert.');
-  const koerper = { _methode: methode, auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: modus === 'test' ? 'test' : 'live' } };
+  const koerper = konto ? { _methode: methode, _konto: kontoSchluessel(true) } : { _methode: methode, auth: { username: w.BRIEF_BENUTZER, apikey: w.BRIEF_APIKEY, mode: modus === 'test' ? 'test' : 'live' } };
   if(letter) koerper.letter = letter;
   const r = await fetch(lxpBasisUrl(w) + '/v3/printjobs/' + encodeURIComponent(id), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(lxpMitZugang(koerper, w)) });
   const txt = await r.text();
@@ -23502,7 +23522,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v521';
+const APP_VERSION = 'v522';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -24561,7 +24581,7 @@ const KONTO_BEISPIEL = {
 };
 function kontoVorschauHinweis(){ return '<div class="kt-vorschau">Vorschau mit Beispieldaten – Zahlungen, Abo und Belege kommen ' + (kontoFest() ? 'mit der fertigen App' : 'mit der Launch-Version') + '.</div>'; }
 function kontoNochNicht(){ appToastAnzeigen('Kommt ' + (kontoFest() ? 'mit der fertigen App' : 'mit der Launch-Version') + ' – hier noch ohne echte Zahlung.', 3000); }
-function ansichtKonto(){
+function ansichtKontoVorschau(){
   setzeTitel('Konto', ()=> ansichtStart());
   const k = KONTO_BEISPIEL, eur = (n)=> betaEuro(n);
   app.innerHTML = kontoVorschauHinweis() +
@@ -24579,13 +24599,13 @@ function ansichtKonto(){
     '<div class="kt-k"><div class="kt-t">Belege für die Steuer</div>' +
       '<div class="kt-r"><div>Jahresübersicht ' + new Date().getFullYear() + '<small>alle Aufladungen und das Abo, als PDF</small></div><button type="button" class="kt-link" id="ktJahr">PDF</button></div>' +
       '<div class="kt-r"><div>Einzelbelege<small>je Aufladung und Abo-Zahlung</small></div><button type="button" class="kt-link" id="ktBelege">' + k.belege + ' ›</button></div></div>';
-  document.getElementById('ktAufladen').onclick = ()=> ansichtKontoAufladen();
+  document.getElementById('ktAufladen').onclick = ()=> ansichtKontoAufladenVorschau();
   document.getElementById('ktProInfo').onclick = ()=> ansichtKontoPro();
   ['ktAuto', 'ktAboVerwalten', 'ktAlle', 'ktJahr', 'ktBelege'].forEach(id=>{ const b = document.getElementById(id); if(b) b.onclick = kontoNochNicht; });
   window.scrollTo(0, 0);
 }
-function ansichtKontoAufladen(){
-  setzeTitel('Guthaben aufladen', ()=> ansichtKonto());
+function ansichtKontoAufladenVorschau(){
+  setzeTitel('Guthaben aufladen', ()=> ansichtKontoVorschau());
   let betrag = 25, art = 'paypal';
   const zeichnen = ()=>{
     app.innerHTML = kontoVorschauHinweis() +
@@ -24617,6 +24637,245 @@ function ansichtKontoPro(){
   document.getElementById('ktAbo').onclick = kontoNochNicht;
   window.scrollTo(0, 0);
 }
+// ---------- Guthabenkonto, echt (ab Weiterleitung 7, Wunsch 27.11.2026) ----------
+// Briefe laufen ueber das LetterXpress-Konto des Anbieters und werden mit Guthaben bezahlt. Anonym: die App
+// erzeugt einen zufaelligen Kontoschluessel (verschluesselt im Tresor, mit in der Sicherungsdatei); der Server
+// kennt nur dessen Hash. Aufladen ueber Stripe (Karte, SEPA, PayPal, Apple/Google Pay). Wer eigene
+// LetterXpress-Zugangsdaten eingetragen hat, verschickt weiter darueber.
+function kontoSchluessel(neu){
+  let t = String(LS.get('konto_schluessel', '') || '');
+  if(!t && neu){
+    const b = crypto.getRandomValues(new Uint8Array(32));
+    t = btoa(String.fromCharCode.apply(null, b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    LS.set('konto_schluessel', t);
+  }
+  return t;
+}
+function kontoEigenerLxp(){ const w = ((typeof iniCacheLaden === 'function' && iniCacheLaden()) || {}).werte || {}; return !!(w.BRIEF_BENUTZER && w.BRIEF_APIKEY); }
+function kontoServerAn(){ return !!LS.get('konto_server', false); }   // zuletzt von der Weiterleitung gemeldet
+function kontoBriefe(){ try{ return kontoAn() && kontoServerAn() && !kontoEigenerLxp(); }catch(_){ return false; } }
+async function kontoServerPruefen(){
+  try{
+    const r = await fetch(lxpBasisUrl() + '/v3/_version', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if(!r.ok) return kontoServerAn();
+    const j = await r.json().catch(()=> null);
+    const an = !!(j && j.konto); LS.set('konto_server', an); return an;
+  }catch(_){ return kontoServerAn(); }
+}
+async function kontoAnfrage(aktion, daten){
+  const w = ((iniCacheLaden() || {}).werte) || {};
+  let r;
+  try{
+    r = await fetch(lxpBasisUrl(w) + '/konto/' + aktion, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lxpMitZugang(Object.assign({ token: kontoSchluessel(true) }, daten || {}), w)) });
+  }catch(e){ throw new Error('Keine Verbindung (' + ((e && e.message) || e) + ').'); }
+  const j = await r.json().catch(()=> null);
+  if(!r.ok) throw new Error((j && j.message) || ('Fehler ' + r.status));
+  return j;
+}
+// Auftragsnummer -> Dateiname (nur auf dem Geraet, damit die Bewegungen zeigen, welcher Brief es war)
+function kontoAuftragMerken(id, name){
+  if(!id) return;
+  const m = LS.get('konto_auftraege', {}) || {}; m[String(id)] = String(name || '').slice(0, 80);
+  const k = Object.keys(m); if(k.length > 500) k.slice(0, k.length - 500).forEach(x=> delete m[x]);
+  LS.set('konto_auftraege', m);
+}
+function kontoCent(c){ return betaEuro((+c || 0) / 100); }
+function kontoBuchungText(b){
+  const namen = LS.get('konto_auftraege', {}) || {};
+  if(b.art === 'aufladung') return 'Aufladung' + (b.test ? ' (Test)' : '');
+  if(b.art === 'storno') return 'Storno · ' + (namen[b.auftrag] || ('Auftrag ' + b.auftrag));
+  if(b.art === 'brief') return (b.test ? 'Testbrief' : 'Brief') + ' · ' + (namen[b.auftrag] || (b.auftrag ? 'Auftrag ' + b.auftrag : '')) + (b.seiten ? ' · ' + b.seiten + ' S.' : '') + (b.status === 'vorgemerkt' ? ' · wird verarbeitet' : '');
+  return b.art || '';
+}
+function kontoDatum(z){ const d = new Date(z); return isNaN(d) ? '' : d.toLocaleDateString('de-DE'); }
+
+async function ansichtKonto(opt){
+  opt = opt || {};
+  setzeTitel('Konto', ()=> ansichtStart());
+  const merk = app.dataset.konto = String(Math.random());
+  if(!kontoServerAn()) app.innerHTML = '<div class="kt-k"><div class="kt-t">Konto</div><small>wird geladen …</small></div>';
+  const an = await kontoServerPruefen();
+  if(app.dataset.konto !== merk) return;   // inzwischen woanders hin
+  if(!an){ ansichtKontoVorschau(); return; }
+  ansichtKontoEcht(opt);
+}
+async function ansichtKontoEcht(opt){
+  opt = opt || {};
+  setzeTitel('Konto', ()=> ansichtStart());
+  const merk = String(Math.random());
+  app.dataset.konto = merk;
+  if(!app.querySelector('.kt-gut')) app.innerHTML = '<div class="kt-k kt-gut"><div class="kt-t">Guthaben für Briefversand</div><div class="kt-gross">…</div><small>wird geladen …</small></div>';
+  let s;
+  try{ s = await kontoAnfrage('stand'); }
+  catch(e){
+    if(app.dataset.konto !== merk) return;
+    app.innerHTML = '<div class="kt-k"><div class="kt-t">Guthaben für Briefversand</div><p class="kt-h">Das Konto ist gerade nicht erreichbar: ' + htmlEsc(e.message) + '</p><div class="kt-knr"><button type="button" class="kt-w" id="ktNochmal">Erneut versuchen</button></div></div>';
+    document.getElementById('ktNochmal').onclick = ()=> ansichtKontoEcht(opt);
+    return;
+  }
+  if(app.dataset.konto !== merk) return;   // inzwischen woanders hin
+  LS.set('konto_guthaben', s.guthaben);
+  // nach der Rueckkehr von Stripe: warten, bis die Zahlung bestaetigt ist (Webhook), hoechstens ~40 s
+  const offen = LS.get('konto_zahlung_offen', null);
+  let warteHinweis = '';
+  if(opt.nachZahlung && offen){
+    const da = s.buchungen.some(b=> b.art === 'aufladung' && Date.parse(b.zeit) >= Date.parse(offen.am) - 60000);
+    if(da){ LS.set('konto_zahlung_offen', null); appToastAnzeigen('Guthaben aufgeladen – danke!', 3000); }
+    else if((opt.versuch || 0) < 15){ warteHinweis = '<div class="kt-vorschau">Zahlung wird bestätigt … das dauert meist nur wenige Sekunden.</div>'; setTimeout(()=>{ if(app.dataset.konto === merk) ansichtKontoEcht(Object.assign({}, opt, { versuch: (opt.versuch || 0) + 1 })); }, 2500); }
+    else { LS.set('konto_zahlung_offen', null); warteHinweis = '<div class="kt-vorschau">Die Zahlung ist noch nicht bestätigt. Bei SEPA-Lastschrift kann das einige Tage dauern – das Guthaben erscheint dann automatisch.</div>'; }
+  }
+  if(opt.abgebrochen){ LS.set('konto_zahlung_offen', null); opt.abgebrochen = false; appToastAnzeigen('Aufladen abgebrochen – es wurde nichts abgebucht.', 3000); }
+  const p = s.preise || {}, jahr = new Date().getFullYear();
+  const echte = s.buchungen.filter(b=> !b.test);
+  const stornierte = new Set(echte.filter(b=> b.art === 'storno').map(b=> b.auftrag));
+  const briefeJahr = echte.filter(b=> b.art === 'brief' && b.status === 'ok' && !stornierte.has(b.auftrag) && new Date(b.zeit).getFullYear() === jahr);
+  const ausgabenJahr = briefeJahr.reduce((x, b)=> x - b.betrag, 0), seitenJahr = briefeJahr.reduce((x, b)=> x + (b.seiten || 0), 0);
+  const aufl = s.buchungen.filter(b=> b.art === 'aufladung');
+  const zuletzt = aufl[0];
+  const reicht = p.brief ? Math.floor(Math.max(0, s.guthaben) / p.brief) : 0;
+  const alle = !!opt.alle, liste = alle ? s.buchungen : s.buchungen.slice(0, 5);
+  const belegeMoeglich = !!(s.firma && s.firma.name && s.firma.anschrift);
+  app.innerHTML = warteHinweis +
+    (s.testmodus ? '<div class="kt-vorschau">Testmodus – es wird kein echtes Geld abgebucht. Zum Ausprobieren die Testkarte 4242 4242 4242 4242 mit beliebigem Ablaufdatum in der Zukunft und beliebiger Prüfziffer nehmen.</div>' : '') +
+    '<div class="kt-k kt-gut"><div class="kt-t">Guthaben für Briefversand</div><div class="kt-gross">' + kontoCent(s.guthaben) + '</div>' +
+      '<small>' + (zuletzt ? 'zuletzt aufgeladen ' + kontoDatum(zuletzt.zeit) + ' · ' : '') + (p.brief ? 'reicht für etwa ' + reicht + ' Brief' + (reicht === 1 ? '' : 'e') : '') + '</small>' +
+      '<div class="kt-knr"><button type="button" class="kt-w" id="ktAufladen">Aufladen</button></div>' +
+      (p.brief ? '<p class="kt-h">Ein Brief kostet ' + kontoCent(p.brief) + ' (Druck, Porto, Versand, ' + (p.inklusiveSeiten || 1) + ' Seite' + ((p.inklusiveSeiten || 1) > 1 ? 'n' : '') + '), jede weitere Seite ' + kontoCent(p.seite) + '. Testbriefe sind kostenlos.</p>' : '') +
+      (kontoEigenerLxp() ? '<p class="kt-h">Hinweis: Du hast eigene LetterXpress-Zugangsdaten eingetragen – deine Briefe laufen darüber und nicht über dieses Guthaben.</p>' : '') + '</div>' +
+    '<div class="kt-k"><div class="kt-t">Statistik ' + jahr + '</div><div class="kt-zahlen">' +
+      '<div><b>' + briefeJahr.length + '</b><span>Briefe verschickt</span></div><div><b>' + seitenJahr + '</b><span>Seiten</span></div><div><b>' + kontoCent(ausgabenJahr) + '</b><span>Porto + Versand</span></div></div></div>' +
+    '<div class="kt-k"><div class="kt-t">' + (alle ? 'Alle Bewegungen' : 'Letzte Bewegungen') + '</div>' +
+      (liste.length ? liste.map(b=> '<div class="kt-r"><div>' + htmlEsc(kontoBuchungText(b)) + '<small>' + kontoDatum(b.zeit) + '</small></div>' +
+        '<span class="' + (b.betrag > 0 ? 'kt-plus' : (b.betrag < 0 ? 'kt-minus' : '')) + '">' + (b.betrag > 0 ? '+' : (b.betrag < 0 ? '−' : '')) + kontoCent(Math.abs(b.betrag)) + '</span></div>').join('')
+        : '<p class="kt-h">Noch keine Bewegungen.</p>') +
+      (s.buchungen.length > 5 ? '<p class="kt-h" style="text-align:right;"><button type="button" class="kt-link" id="ktAlle">' + (alle ? 'weniger anzeigen' : 'alle Bewegungen') + '</button></p>' : '') + '</div>' +
+    '<div class="kt-k"><div class="kt-t">Belege für die Steuer</div>' +
+      (!belegeMoeglich ? '<p class="kt-h">Belege gibt es, sobald der Anbieter seine Firmendaten hinterlegt hat.</p>' :
+        '<div class="kt-r"><div>Jahresübersicht ' + jahr + '<small>alle Aufladungen und Briefe, als PDF</small></div><button type="button" class="kt-link" id="ktJahr">PDF</button></div>' +
+        (aufl.length ? aufl.slice(0, alle ? aufl.length : 5).map(b=> '<div class="kt-r"><div>Beleg Aufladung<small>' + kontoDatum(b.zeit) + ' · ' + kontoCent(b.betrag) + '</small></div><button type="button" class="kt-link" data-beleg="' + htmlEsc(b.id) + '">PDF</button></div>').join('')
+          : '<p class="kt-h">Nach dem ersten Aufladen liegt hier der Beleg.</p>')) + '</div>' +
+    '<div class="kt-k kt-pro"><div style="display:flex; justify-content:space-between; align-items:center;"><div class="kt-t" style="margin:0;">Abo</div><span class="kt-badge">BALD</span></div>' +
+      '<p class="kt-h">Pro kommt mit der App im App Store und bei Google Play.</p><button type="button" class="kt-link" id="ktProInfo">Was ist in Pro enthalten?</button></div>' +
+    '<div class="kt-k"><div class="kt-t">Konto auf einem anderen Gerät</div>' +
+      '<p class="kt-h">Das Konto hat keinen Namen und kein Passwort – es hängt an einem Schlüssel auf diesem Gerät (verschlüsselt, auch in der Sicherungsdatei). Für ein zweites Gerät den Schlüssel dort eingeben.</p>' +
+      '<div class="kt-knr"><button type="button" class="kt-g" id="ktSchluesselZeigen">Schlüssel zeigen</button><button type="button" class="kt-g" id="ktSchluesselEingeben">Schlüssel eingeben</button></div></div>';
+  document.getElementById('ktAufladen').onclick = ()=> ansichtKontoAufladen(s);
+  document.getElementById('ktProInfo').onclick = ()=> ansichtKontoPro();
+  const ba = document.getElementById('ktAlle'); if(ba) ba.onclick = ()=> ansichtKontoEcht({ alle: !alle });
+  const bj = document.getElementById('ktJahr'); if(bj) bj.onclick = ()=> kontoJahresuebersicht(s, jahr);
+  app.querySelectorAll('[data-beleg]').forEach(b=> b.onclick = ()=>{ const x = s.buchungen.find(y=> y.id === b.dataset.beleg); if(x) kontoBeleg(s, x); });
+  document.getElementById('ktSchluesselZeigen').onclick = ()=> kontoSchluesselZeigen();
+  document.getElementById('ktSchluesselEingeben').onclick = ()=> kontoSchluesselEingeben(s);
+  if(!opt.versuch) window.scrollTo(0, 0);
+}
+function ansichtKontoAufladen(s){
+  setzeTitel('Guthaben aufladen', ()=> ansichtKontoEcht());
+  const betraege = (s.betraege && s.betraege.length ? s.betraege : [1000, 2000, 5000]);
+  let betrag = betraege[Math.min(1, betraege.length - 1)];
+  const zeichnen = ()=>{
+    app.innerHTML = (s.testmodus ? '<div class="kt-vorschau">Testmodus – Testkarte 4242 4242 4242 4242, kein echtes Geld.</div>' : '') +
+      '<div class="kt-k"><div class="kt-t">Betrag</div><div class="kt-chips">' + betraege.map(n=> '<button type="button" class="kt-chip' + (betrag === n ? ' an' : '') + '" data-b="' + n + '">' + kontoCent(n).replace(',00', '') + '</button>').join('') + '</div>' +
+        (s.preise && s.preise.brief ? '<p class="kt-h">Reicht für etwa ' + Math.floor(betrag / s.preise.brief) + ' Briefe mit einer Seite.</p>' : '') + '</div>' +
+      '<div class="kt-k"><div class="kt-t">Bezahlen</div><p class="kt-h" style="margin-top:0;">Auf der sicheren Seite unseres Zahlungsdienstes Stripe: Kreditkarte, SEPA-Lastschrift, PayPal, Apple Pay oder Google Pay. Danach kommst du automatisch hierher zurück. Die App erfährt dabei weder Karten- noch Kontodaten.</p></div>' +
+      '<button type="button" class="kt-voll" id="ktZahlen">' + kontoCent(betrag) + ' aufladen</button>' +
+      '<p class="kt-h">Den Beleg findest du danach unter „Belege für die Steuer“.</p>';
+    app.querySelectorAll('[data-b]').forEach(b=> b.onclick = ()=>{ betrag = +b.dataset.b; zeichnen(); });
+    document.getElementById('ktZahlen').onclick = async (ev)=>{
+      const k = ev.currentTarget; k.disabled = true; k.textContent = 'Zahlungsseite wird geöffnet …';
+      try{
+        const j = await kontoAnfrage('aufladen', { betrag, zurueck: location.href.split('#')[0] });
+        LS.set('konto_zahlung_offen', { betrag, am: new Date().toISOString() });
+        await Tresor.kvWarten();
+        location.href = j.url;
+      }catch(e){ k.disabled = false; k.textContent = kontoCent(betrag) + ' aufladen'; appToastAnzeigen('Aufladen gerade nicht möglich: ' + e.message, 4000); }
+    };
+  };
+  zeichnen(); window.scrollTo(0, 0);
+}
+async function kontoSchluesselZeigen(){
+  const t = kontoSchluessel(true);
+  const akt = await betaOverlay.ergebnis('Kontoschlüssel',
+    'Wer diesen Schlüssel hat, kann mit deinem Guthaben Briefe verschicken. Nur auf deinen eigenen Geräten eingeben, nicht weitergeben.' +
+    '<p style="font-family:monospace; word-break:break-all; background:var(--flaeche-2, #f2f2f2); padding:8px 10px; border-radius:8px; user-select:all;">' + htmlEsc(t) + '</p>',
+    [{ label: 'Schließen', akt: 'zu' }, { label: 'Kopieren', akt: 'kopieren', primaer: true }]);
+  betaOverlay.schliessen();
+  if(akt === 'kopieren'){ try{ await navigator.clipboard.writeText(t); appToastAnzeigen('Schlüssel kopiert.', 2000); }catch(_){ appToastAnzeigen('Kopieren nicht möglich – bitte den Text markieren.', 3000); } }
+}
+async function kontoSchluesselEingeben(s){
+  const akt = await betaOverlay.ergebnis('Schlüssel eingeben',
+    'Den Kontoschlüssel von deinem anderen Gerät eingeben (dort: Konto › „Schlüssel zeigen“).' +
+    (s && s.guthaben > 0 ? ' <b>Achtung:</b> Dieses Gerät hat ' + kontoCent(s.guthaben) + ' Guthaben auf einem eigenen Konto. Bitte vorher den jetzigen Schlüssel notieren, sonst ist das Guthaben hier nicht mehr erreichbar.' : '') +
+    '<input type="text" id="ktSchluesselEin" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%; margin-top:10px; font-family:monospace;">',
+    [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Übernehmen', akt: 'ja', primaer: true }]);
+  const ein = String((document.getElementById('ktSchluesselEin') || {}).value || '').trim();
+  betaOverlay.schliessen();
+  if(akt !== 'ja') return;
+  if(!/^[A-Za-z0-9_-]{32,128}$/.test(ein)){ appToastAnzeigen('Das ist kein gültiger Kontoschlüssel.', 3000); return; }
+  LS.set('konto_schluessel', ein);
+  appToastAnzeigen('Schlüssel übernommen.', 2000);
+  ansichtKontoEcht();
+}
+// ---------- Belege (Kleinbetragsrechnung, § 33 UStDV: bis 250 EUR) ----------
+async function kontoPdf(titel, kopfZeilen, zeilen, summen, fuss){
+  await libSkriptLaden('lib/pdf-lib.min.js', ()=> !!window.PDFLib);
+  const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
+  const d = await PDFDocument.create();
+  const f = await d.embedFont(StandardFonts.Helvetica), fb = await d.embedFont(StandardFonts.HelveticaBold);
+  const grau = rgb(0.4, 0.4, 0.4);
+  let p = d.addPage([595.28, 841.89]), y = 790;
+  const text = (t, x, gr, fett, farbe, rechts)=>{ const ft = fett ? fb : f, w = ft.widthOfTextAtSize(t, gr); p.drawText(t, { x: rechts ? x - w : x, y, size: gr, font: ft, color: farbe || rgb(0, 0, 0) }); };
+  kopfZeilen.forEach((z, i)=>{ text(z, 56, i ? 9.5 : 11, !i, i ? grau : null); y -= i ? 13 : 15; });
+  y -= 24; text(titel, 56, 16, true); y -= 26;
+  zeilen.forEach(([l, r, klein])=>{
+    if(y < 90){ p = d.addPage([595.28, 841.89]); y = 790; }
+    text(l, 56, klein ? 9 : 10.5, false, klein ? grau : null); if(r) text(r, 539, klein ? 9 : 10.5, false, klein ? grau : null, true); y -= klein ? 13 : 16;
+  });
+  y -= 6; p.drawLine({ start: { x: 56, y: y + 10 }, end: { x: 539, y: y + 10 }, thickness: 0.6, color: grau });
+  summen.forEach(([l, r, fett])=>{ if(y < 90){ p = d.addPage([595.28, 841.89]); y = 790; } text(l, 56, 10.5, fett); text(r, 539, 10.5, fett, null, true); y -= 16; });
+  y -= 14; (fuss || []).forEach(z=>{ if(y < 60){ p = d.addPage([595.28, 841.89]); y = 790; } text(z, 56, 9, false, grau); y -= 12; });
+  return new Blob([await d.save()], { type: 'application/pdf' });
+}
+function kontoFirmaKopf(s){ const fi = s.firma || {}; return [fi.name || '', fi.anschrift || ''].concat(fi.steuernummer ? ['Steuernummer/USt-IdNr.: ' + fi.steuernummer] : []); }
+function kontoSteuerZeile(s, brutto){
+  const fi = s.firma || {};
+  if(fi.kleinunternehmer) return 'Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.';
+  const satz = +fi.ustSatz || 0, ust = Math.round(brutto * satz / (100 + satz));
+  return 'Im Betrag sind ' + satz + ' % Umsatzsteuer enthalten (' + kontoCent(ust) + ').';
+}
+async function kontoBeleg(s, b){
+  try{
+    const nr = 'A-' + String(b.id).replace(/^a-/, '').slice(-10).toUpperCase();
+    const blob = await kontoPdf('Quittung', kontoFirmaKopf(s),
+      [['Beleg-Nr.', nr], ['Datum', kontoDatum(b.zeit)], ['', ''], ['1 × Guthaben für den Briefversand (Druck, Porto, Versand)', kontoCent(b.betrag)]],
+      [['Gesamtbetrag (bezahlt)', kontoCent(b.betrag), true]],
+      [kontoSteuerZeile(s, b.betrag), 'Kleinbetragsrechnung nach § 33 UStDV.' + (b.test ? ' TESTZAHLUNG – kein echtes Geld.' : '')]);
+    betaPdfAnzeigen({ titel: 'Beleg ' + nr, blob });
+  }catch(e){ appToastAnzeigen('Beleg nicht möglich: ' + e.message, 4000); }
+}
+async function kontoJahresuebersicht(s, jahr){
+  try{
+    const imJahr = s.buchungen.filter(b=> new Date(b.zeit).getFullYear() === jahr && b.status === 'ok' && !b.test).slice().reverse();
+    const auf = imJahr.filter(b=> b.art === 'aufladung').reduce((x, b)=> x + b.betrag, 0);
+    const ver = imJahr.filter(b=> b.art !== 'aufladung').reduce((x, b)=> x - b.betrag, 0);
+    const blob = await kontoPdf('Jahresübersicht ' + jahr, kontoFirmaKopf(s),
+      imJahr.length ? imJahr.map(b=> [kontoDatum(b.zeit) + '   ' + kontoBuchungText(b), (b.betrag > 0 ? '+' : '−') + kontoCent(Math.abs(b.betrag))]) : [['Keine Buchungen in diesem Jahr.', '']],
+      [['Aufgeladen', kontoCent(auf)], ['Verbraucht (Briefe abzüglich Stornos)', kontoCent(ver)], ['Guthaben heute', kontoCent(s.guthaben), true]],
+      ['Übersicht ohne Testbuchungen, erstellt am ' + new Date().toLocaleDateString('de-DE') + '. Die Belege der einzelnen Aufladungen stehen in der App unter Konto.']);
+    betaPdfAnzeigen({ titel: 'Konto ' + jahr, blob });
+  }catch(e){ appToastAnzeigen('Übersicht nicht möglich: ' + e.message, 4000); }
+}
+// Rueckkehr von der Zahlungsseite (#konto-bezahlt / #konto-abgebrochen) und Abfrage, ob die Weiterleitung ein Konto anbietet
+function kontoStartPruefen(){
+  const h = location.hash;
+  if(/^#konto-(bezahlt|abgebrochen)$/.test(h)){
+    try{ history.replaceState(null, '', location.pathname + location.search); }catch(_){}
+    if(kontoAn()) setTimeout(()=> ansichtKonto({ nachZahlung: h === '#konto-bezahlt', abgebrochen: h === '#konto-abgebrochen' }), 0);
+    return;
+  }
+  if(kontoAn()) kontoServerPruefen();
+}
+ansichtStart = (function(basis){ let einmal = false; return function(){ basis.apply(this, arguments); if(einmal) return; einmal = true; try{ kontoStartPruefen(); }catch(_){} }; })(ansichtStart);
 function designNav(eintraege){
   return '<nav class="ds-nav" aria-label="Hauptnavigation">' + eintraege.map(x=>
     '<button type="button" class="ds-nav-btn' + (x.an ? ' an' : '') + (x.gross ? ' gross' : '') + '" data-nav="' + x.k + '"' + (x.gross || x.nurIcon ? ' aria-label="' + x.label + '"' : '') + '>' + DS_ICON[x.icon] +
