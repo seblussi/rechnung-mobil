@@ -21,12 +21,13 @@ module.exports = async ({ browser, basis, pr })=>{
     const unfertig = document.querySelectorAll('.wisch-huelle[data-gkventwurf]').length;
     const html = document.getElementById('gvListe').innerHTML;
     gkvEntwurfVerwerfen(a.eid);
-    return { liste, offen, nachAlt, altWeg, unfertig, rest: gkvEntwuerfe().length, ohneHaken: !/✓ Fahrtenbuch/.test(html), gBadge: /badge-neu gkv">G</.test(html), hinweis: /löschen \(auch im Fahrtenbuch\)/.test(html) };
+    return { liste, offen, nachAlt, altWeg, unfertig, rest: gkvEntwuerfe().length, ohneHaken: !/✓ Fahrtenbuch/.test(html), gBadge: /badge-neu gkv">G</.test(html), hinweis: /löschen \(auch im Fahrtenbuch\)/.test(html), einmal: (html.match(/Zweitmann, Bert/g) || []).length };
   });
   pr('Zwei angefangene GKV-Patienten bleiben nebeneinander erhalten', JSON.stringify(r.liste) === JSON.stringify(['Erstmann, Anna', 'Zweitmann, Bert']), r);
   pr('Angefangenen Patienten gezielt weiterbearbeiten', r.offen === 'Erstmann, Anna', r);
   pr('Früherer Einzel-Entwurf wird in die Liste übernommen', r.nachAlt === 3 && r.altWeg, r);
   pr('Rechnungsverwaltung GKV: alle Unfertigen, kleines G, kein „✓ Fahrtenbuch“, Löschen auch im Fahrtenbuch', r.unfertig === 3 && r.gBadge && r.ohneHaken && r.hinweis, r);
+  pr('Angefangene erscheinen nur unter „Unfertig“, nicht zusätzlich in der Tagesliste', r.einmal === 1, r);
   pr('Verwerfen entfernt nur diesen Entwurf', r.rest === 2, r);
   await p.context().close();
 };
