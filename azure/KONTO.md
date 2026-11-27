@@ -73,4 +73,4 @@ Test-Buchungen sind dabei nicht mitgezählt.
 - Lass von der Steuerberatung prüfen, wann die Umsatzsteuer anfällt: beim Aufladen oder erst beim Brief.
   Danach richten sich die Belege. Derzeit gibt es einen Beleg je Aufladung, mit enthaltener Umsatzsteuer.
 - Lege die Regeln zu Erstattung und Verfall von Guthaben in den AGB fest.
-- Stelle das Azure-Abonnement auf nutzungsbasierte Bezahlung um und übertrage es später auf die Firma.
+- Das Azure-Abonnement ist schon auf nutzungsbasierte Bezahlung umgestellt. Später überträgst du es auf die Firma.
