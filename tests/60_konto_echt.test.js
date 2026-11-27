@@ -18,9 +18,11 @@ module.exports = async ({ browser, basis, pr })=>{
   };
   const lxpAnfragen = []; let stripeSitzung = null, auftrag = 5000;
   const env = { ERLAUBTE_HERKUNFT: herkunft, ZUGANGSCODES: 'abc', LXP_BENUTZER: 'betreiber', LXP_APIKEY: 'k', STRIPE_GEHEIM: 'sk_test_x', STRIPE_WEBHOOK_GEHEIM: 'whsec_t',
-    KONTO_SPEICHER: 'mock', PREIS_BRIEF_CENT: '150', PREIS_SEITE_CENT: '10', AUFLADE_BETRAEGE: '1000,2000,5000', FIRMA_NAME: 'Muster Briefdienst UG (haftungsbeschränkt)', FIRMA_ANSCHRIFT: 'Musterweg 1, 12345 Musterstadt', PAYPAL_CLIENT_ID: 'pp-id', PAYPAL_GEHEIM: 'pp-geheim' };
+    KONTO_SPEICHER: 'mock', PREIS_BRIEF_CENT: '150', PREIS_SEITE_CENT: '10', AUFLADE_BETRAEGE: '1000,2000,5000', FIRMA_NAME: 'Muster Briefdienst UG (haftungsbeschränkt)', FIRMA_ANSCHRIFT: 'Musterweg 1, 12345 Musterstadt', PAYPAL_CLIENT_ID: 'pp-id', PAYPAL_GEHEIM: 'pp-geheim', STATISTIK_SCHLUESSEL: 'stat-1' };
+  const zt = new Map();
+  const zugriffe = { async ersetzen(e){ zt.set(e.partitionKey + '|' + e.rowKey, { ...e }); }, async abPartition(pk){ return [...zt.values()].filter((e)=> e.partitionKey >= pk); }, async loeschenVor(){} };
   const pp = new Map();
-  const kern = erstelleKern({ env, speicher, schlafen: ()=> Promise.resolve(), fetch: async (url, opt)=>{
+  const kern = erstelleKern({ env, speicher, zugriffe, schlafen: ()=> Promise.resolve(), fetch: async (url, opt)=>{
     if(/paypal\.com/.test(url)){
       const ant = (j)=> ({ ok: true, status: 200, json: async ()=> j });
       if(/oauth2\/token$/.test(url)) return ant({ access_token: 'T', expires_in: 3000 });
@@ -139,13 +141,32 @@ module.exports = async ({ browser, basis, pr })=>{
   pr('PayPal: nach der Rückkehr abgeschlossen und gutgeschrieben, Adresse wieder sauber', bestellung && bestellung.status === 'COMPLETED' && k.gross.includes((gVor / 100 + 10).toFixed(2).replace('.', ',')) && !k.such, { k, gVor, st: bestellung && bestellung.status });
   if(B) await p.screenshot({ path: B + '/kecht_8.png' });
 
+  // Statistik fuer den Betreiber (nur Alpha)
+  if(await p.evaluate(()=> !kontoFest())){
+    await p.evaluate(()=>{ ansichtBetreiberStatistik(); });
+    await p.waitForTimeout(300);
+    await p.evaluate(()=>{ document.getElementById('bsSchluessel').value = 'stat-1'; [...document.querySelectorAll('button')].find(b=> b.textContent === 'Anzeigen').click(); });
+    await p.waitForFunction(()=> /Je Konto/.test(app.textContent), null, { timeout: 8000 }).catch(()=>{});
+    k = await p.evaluate(()=> ({ t: app.textContent, zeilen: document.querySelectorAll('.bs-tab tbody tr').length, gemerkt: !!LS.get('betreiber_statistik_schluessel', '') }));
+    pr('Betreiber-Statistik: Überblick, Monate, Konten pseudonym, Zugriffe je IP', /Konten/.test(k.t) && /Je Monat/.test(k.t) && /Je Konto \(pseudonym\)/.test(k.t) && /Zugriffe der letzten 24 Stunden/.test(k.t) && /127\.0\.0\.1|unbekannt/.test(k.t) && k.zeilen >= 3 && k.gemerkt, { z: k.zeilen, t: k.t.slice(0, 300) });
+    if(B) await p.screenshot({ path: B + '/kecht_9.png', fullPage: true });
+  }
+
   // Einrichtung: Schritt Briefversand ohne LetterXpress-Konto
   await p.evaluate(()=> ansichtEinrichtung('brief')); await p.waitForTimeout(300);
   k = await p.evaluate(()=> ({ t: app.textContent, felder: !!document.getElementById('einrLxpNutzer') }));
-  pr('Einrichtung: Briefversand über Guthaben, kein eigenes LetterXpress-Konto nötig', /Guthaben/.test(k.t) && /brauchst du nicht/.test(k.t) && !k.felder, k.t.slice(0, 200));
+  const fest = await p.evaluate(()=> kontoFest());
+  pr('Einrichtung: Briefversand über Guthaben, keine LetterXpress-Zugangsfelder', /Guthaben/.test(k.t) && /Briefdienst des App-Anbieters/.test(k.t) && !k.felder, k.t.slice(0, 200));
   if(B) await p.screenshot({ path: B + '/kecht_6.png' });
-  await p.evaluate(()=> document.getElementById('einrBriefEigen').click()); await p.waitForTimeout(300);
-  pr('„Eigenes LetterXpress-Konto nutzen“ zeigt die Zugangsfelder', await p.evaluate(()=> !!document.getElementById('einrLxpNutzer')));
+  if(fest){
+    pr('Launch: kein eigenes LetterXpress-Konto möglich (kein Umschalter, Einstellungen ohne Zugangsfelder, eigene Daten ignoriert)', await p.evaluate(()=>{
+      const ini = iniCacheLaden(); ini.werte.BRIEF_BENUTZER = 'x'; ini.werte.BRIEF_APIKEY = 'y';
+      const r = !document.getElementById('einrBriefEigen') && kontoBriefe() && !kontoEigenerLxp();
+      delete ini.werte.BRIEF_BENUTZER; delete ini.werte.BRIEF_APIKEY; return r; }));
+  } else {
+    await p.evaluate(()=> document.getElementById('einrBriefEigen').click()); await p.waitForTimeout(300);
+    pr('„Eigenes LetterXpress-Konto nutzen“ zeigt die Zugangsfelder', await p.evaluate(()=> !!document.getElementById('einrLxpNutzer')));
+  }
   pr('keine Seitenfehler', !p.fehler.length && !p.csp.length, { f: p.fehler, csp: p.csp });
   await p.context().close();
 };

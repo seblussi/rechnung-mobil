@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-hxRM2UK4GioBSpgQ4EisbdauN+amNXUlrzkVj6r2yN8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-v8lCyzwl1PBr7Rs1Rkxp6dPsKp+9j/7KIOGkU6qEKgo=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -525,6 +525,9 @@ try{
   .kt-knr{display:flex; gap:8px; margin-top:12px;} .kt-knr button{flex:1; width:auto; margin:0; border:0; border-radius:11px; padding:10px; font-size:14px; font-weight:700; cursor:pointer;}
   .kt-w{background:#fff; color:#1f4e79;} .kt-g{background:rgba(255,255,255,.16); color:#fff;}
   .kt-gut .kt-h{color:#dbe8f5;}
+  .bs-tab{overflow-x:auto; margin-top:8px;} .bs-tab table{border-collapse:collapse; font-size:.8rem; font-variant-numeric:tabular-nums; min-width:100%;}
+  .bs-tab th, .bs-tab td{padding:5px 8px; border-bottom:1px solid var(--rand, #d6dde6); text-align:left; white-space:nowrap;} .bs-tab th{font-weight:600; opacity:.75;}
+  .bs-knr{display:flex; gap:8px; flex-wrap:wrap;}
   .kt-zart{display:flex; gap:12px; align-items:flex-start; width:100%; text-align:left; background:none; border:1px solid var(--rand, #d6dde6); border-radius:12px; padding:10px 12px; margin-top:8px; color:inherit; font:inherit; cursor:pointer;}
   .kt-zart b{display:block; font-weight:600;} .kt-zart small{display:block; opacity:.75;}
   .kt-zart.an{border-color:#1f4e79; box-shadow:0 0 0 1px #1f4e79 inset;} body.dunkel .kt-zart.an{border-color:#8fb8e3; box-shadow:0 0 0 1px #8fb8e3 inset;}
@@ -8474,7 +8477,7 @@ function ansichtEinrichtung(schritt){
     html = '<h2>Briefversand</h2>' +
       '<p>Rechnungen kann die App per Post verschicken – über den Briefdienst des App-Anbieters (LetterXpress: Druck und Versand in Deutschland). Ein eigenes LetterXpress-Konto brauchst du nicht.</p>' +
       '<p>Bezahlt wird mit <b>Guthaben</b>: unter <b>„Konto“</b> ganz rechts in der Leiste aufladen (Karte, SEPA-Lastschrift, PayPal, Apple Pay oder Google Pay). Dein Konto ist anonym – ohne Namen, E-Mail oder Passwort.</p>' +
-      '<p class="einr-klein">Beim Senden wählst du jedes Mal „Testbrief“ (kostenlos, nichts wird gedruckt) oder „Echt verschicken“.</p>' +
+      (kontoFest() ? '' : '<p class="einr-klein">Beim Senden wählst du jedes Mal „Testbrief“ (kostenlos, nichts wird gedruckt) oder „Echt verschicken“.</p>') +
       knoepfe('dienste', 'fertig', fertigText('Weiter')) +
       '<p style="text-align:center; margin-top:10px;"><button type="button" class="einr-link" id="einrBriefEigen">Eigenes LetterXpress-Konto nutzen</button></p>';
   } else if(schritt === 'brief'){
@@ -23527,7 +23530,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v523';
+const APP_VERSION = 'v524';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -24757,7 +24760,7 @@ async function ansichtKontoEcht(opt){
     '<div class="kt-k kt-gut"><div class="kt-t">Guthaben für Briefversand</div><div class="kt-gross">' + kontoCent(s.guthaben) + '</div>' +
       '<small>' + (zuletzt ? 'zuletzt aufgeladen ' + kontoDatum(zuletzt.zeit) + ' · ' : '') + (p.brief ? 'reicht für etwa ' + reicht + ' Brief' + (reicht === 1 ? '' : 'e') : '') + '</small>' +
       '<div class="kt-knr"><button type="button" class="kt-w" id="ktAufladen">Aufladen</button></div>' +
-      (p.brief ? '<p class="kt-h">Ein Brief kostet ' + kontoCent(p.brief) + ' (Druck, Porto, Versand, ' + (p.inklusiveSeiten || 1) + ' Seite' + ((p.inklusiveSeiten || 1) > 1 ? 'n' : '') + '), jede weitere Seite ' + kontoCent(p.seite) + '. Testbriefe sind kostenlos.</p>' : '') +
+      (p.brief ? '<p class="kt-h">Ein Brief kostet ' + kontoCent(p.brief) + ' (Druck, Porto, Versand, ' + (p.inklusiveSeiten || 1) + ' Seite' + ((p.inklusiveSeiten || 1) > 1 ? 'n' : '') + '), jede weitere Seite ' + kontoCent(p.seite) + '.' + (kontoFest() ? '' : ' Testbriefe sind kostenlos.') + '</p>' : '') +
       (kontoEigenerLxp() ? '<p class="kt-h">Hinweis: Du hast eigene LetterXpress-Zugangsdaten eingetragen – deine Briefe laufen darüber und nicht über dieses Guthaben.</p>' : '') + '</div>' +
     '<div class="kt-k"><div class="kt-t">Statistik ' + jahr + '</div><div class="kt-zahlen">' +
       '<div><b>' + briefeJahr.length + '</b><span>Briefe verschickt</span></div><div><b>' + seitenJahr + '</b><span>Seiten</span></div><div><b>' + kontoCent(ausgabenJahr) + '</b><span>Porto + Versand</span></div></div></div>' +
@@ -24888,6 +24891,58 @@ async function kontoJahresuebersicht(s, jahr){
       ['Übersicht ohne Testbuchungen, erstellt am ' + new Date().toLocaleDateString('de-DE') + '. Die Belege der einzelnen Aufladungen stehen in der App unter Konto.']);
     betaPdfAnzeigen({ titel: 'Konto ' + jahr, blob });
   }catch(e){ appToastAnzeigen('Übersicht nicht möglich: ' + e.message, 4000); }
+}
+// ---------- Statistik fuer den Betreiber (pseudonym je Konto, Zugriffe je IP der letzten 24 Stunden) ----------
+async function ansichtBetreiberStatistik(opt){
+  opt = opt || {};
+  setzeTitel('Statistik', ()=> ansichtStart());
+  const merk = app.dataset.konto = String(Math.random());
+  let schl = String(LS.get('betreiber_statistik_schluessel', '') || '');
+  if(!schl || opt.neu){
+    const akt = await betaOverlay.ergebnis('Statistik-Schlüssel', 'Den Schlüssel hat das Einrichtungsskript am Ende angezeigt. Er wird verschlüsselt auf diesem Gerät gespeichert.' +
+      '<input type="password" id="bsSchluessel" autocomplete="off" style="width:100%; margin-top:10px;">', [{ label: 'Abbrechen', akt: 'nein' }, { label: 'Anzeigen', akt: 'ja', primaer: true }]);
+    schl = String((document.getElementById('bsSchluessel') || {}).value || '').trim();
+    betaOverlay.schliessen();
+    if(akt !== 'ja' || !schl){ ansichtStart(); return; }
+  }
+  app.innerHTML = '<div class="kt-k"><div class="kt-t">Statistik</div><small>wird geladen …</small></div>';
+  let j;
+  try{
+    const r = await fetch(lxpBasisUrl() + '/konto/statistik', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schluessel: schl }) });
+    j = await r.json().catch(()=> null);
+    if(r.status === 403){ LS.set('betreiber_statistik_schluessel', ''); throw new Error('Schlüssel falsch.'); }
+    if(!r.ok || !j) throw new Error((j && j.message) || ('Fehler ' + r.status));
+    LS.set('betreiber_statistik_schluessel', schl);
+  }catch(e){
+    if(app.dataset.konto !== merk) return;
+    app.innerHTML = '<div class="kt-k"><div class="kt-t">Statistik</div><p class="kt-h">' + htmlEsc(e.message) + '</p><div class="kt-knr"><button type="button" class="kt-g" id="bsNeu">Schlüssel eingeben</button></div></div>';
+    document.getElementById('bsNeu').onclick = ()=> ansichtBetreiberStatistik({ neu: true });
+    return;
+  }
+  if(app.dataset.konto !== merk) return;
+  const d = (z)=>{ const x = new Date(z); return isNaN(x) ? '' : x.toLocaleDateString('de-DE'); };
+  const dz = (z)=>{ const x = new Date(z); return isNaN(x) ? '' : x.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); };
+  const tab = (kopf, zeilen)=> '<div class="bs-tab"><table><thead><tr>' + kopf.map(k=> '<th>' + k + '</th>').join('') + '</tr></thead><tbody>' + zeilen.map(z=> '<tr>' + z.map(c=> '<td>' + htmlEsc(String(c)) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+  const lxpG = j.lxpGuthaben && (j.lxpGuthaben.balance != null ? j.lxpGuthaben.balance : j.lxpGuthaben.guthaben);
+  const z = j.zugriffe;
+  app.innerHTML =
+    '<div class="kt-k"><div class="kt-t">Überblick</div><div class="kt-zahlen">' +
+      '<div><b>' + j.konten + '</b><span>Konten</span></div><div><b>' + kontoCent(j.guthabenSumme) + '</b><span>offenes Guthaben aller Nutzer</span></div>' +
+      '<div><b>' + (lxpG != null ? betaEuro(+lxpG) : '–') + '</b><span>Guthaben bei LetterXpress</span></div></div>' +
+      (j.vorgemerkt ? '<p class="kt-h">' + j.vorgemerkt + ' Brief(e) hängen in „wird verarbeitet“.</p>' : '') + '<p class="kt-h">Stand ' + dz(j.stand) + ' · ohne Testbuchungen</p></div>' +
+    '<div class="kt-k"><div class="kt-t">Je Monat</div>' + (j.monate.length ? tab(['Monat', 'Aktive Konten', 'Aufladungen', 'Eingezahlt', 'Briefe', 'Seiten', 'Briefumsatz', 'Stornos'],
+      j.monate.map(m=> [m.monat, m.konten, m.aufladungen, kontoCent(m.eingezahlt), m.briefe, m.seiten, kontoCent(m.briefumsatz), m.stornos])) : '<p class="kt-h">Noch keine Buchungen.</p>') + '</div>' +
+    '<div class="kt-k"><div class="kt-t">Je Konto (pseudonym)</div><p class="kt-h" style="margin-top:0;">Kennung = Anfang des Konto-Hashes. Wer dahintersteht, weiß nur der Nutzer selbst (und der Zahlungsdienst bei Aufladungen).</p>' +
+      (j.kontenDetail && j.kontenDetail.length ? tab(['Kennung', 'Briefe', 'Seiten', 'Stornos', 'Aufladungen', 'Eingezahlt', 'Guthaben', 'Seit', 'Zuletzt', 'Briefe je Monat'],
+        j.kontenDetail.map(k=> [k.pseudonym, k.briefe, k.seiten, k.stornos, k.aufladungen, kontoCent(k.eingezahlt), kontoCent(k.guthaben), d(k.seit), d(k.zuletzt), Object.entries(k.briefeJeMonat || {}).sort().reverse().slice(0, 6).map(([m, n])=> m.slice(5) + '/' + m.slice(2, 4) + ': ' + n).join(' · ')])) : '<p class="kt-h">Noch keine Konten.</p>') + '</div>' +
+    '<div class="kt-k"><div class="kt-t">Zugriffe der letzten 24 Stunden</div>' +
+      (z ? '<p class="kt-h" style="margin-top:0;">' + z.anfragen + ' Anfragen von ' + z.ipAdressen + ' IP-Adressen, davon ' + z.abgelehnt + ' abgelehnt. Protokoll wird nach 7 Tagen gelöscht.</p>' +
+        (z.top.length ? tab(['IP-Adresse', 'Anfragen', 'Abgelehnt', 'Bereiche', 'Zuletzt'], z.top.map(a=> [a.ip, a.anfragen, a.abgelehnt, a.bereiche, dz(a.letzte)])) : '')
+        : '<p class="kt-h">Kein Zugriffsprotokoll eingerichtet.</p>') + '</div>' +
+    '<div class="bs-knr"><button type="button" class="btn-sekundaer" id="bsNeuLaden">Neu laden</button><button type="button" class="btn-sekundaer" id="bsVergessen">Schlüssel vergessen</button></div>';
+  document.getElementById('bsNeuLaden').onclick = ()=> ansichtBetreiberStatistik();
+  document.getElementById('bsVergessen').onclick = ()=>{ LS.set('betreiber_statistik_schluessel', ''); appToastAnzeigen('Schlüssel auf diesem Gerät gelöscht.', 2000); ansichtStart(); };
+  window.scrollTo(0, 0);
 }
 // Rueckkehr von der Zahlungsseite (#konto-bezahlt / #konto-abgebrochen) und Abfrage, ob die Weiterleitung ein Konto anbietet
 function kontoStartPruefen(){
@@ -25703,6 +25758,7 @@ function ansichtEinstellungen(){
       <div class="trennlinie">Konto &amp; Abo</div>
       ${kontoFest() ? '' : '<div class="einstellung-zeile"><input type="checkbox" id="chkKontoVorschau"' + (kontoAn() ? ' checked' : '') + '><div class="txt">Konto-Seite zum Ausprobieren<span class="hinweis">Zeigt „Konto“ ganz rechts in der Leiste: Guthaben, Abo, Statistik und Belege – noch mit Beispieldaten, ohne echte Zahlungen.</span></div></div>'}
       <button type="button" class="btn-sekundaer" id="btnKontoOeffnen"${kontoAn() ? '' : ' hidden'}>Konto öffnen</button>
+      ${kontoFest() ? '' : '<button type="button" class="btn-sekundaer" id="btnBetreiberStatistik" style="margin-top:8px;">Statistik (nur Betreiber)</button>'}
     </div>
     <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Demo</div>
@@ -25716,7 +25772,8 @@ function ansichtEinstellungen(){
   document.getElementById('btnDemo').onclick = ()=> window.DEMO_MODUS ? demoBeenden() : demoFragen();
   { const kv = document.getElementById('chkKontoVorschau'), ko = document.getElementById('btnKontoOeffnen');
     if(kv) kv.onchange = ()=>{ LS.set('konto_vorschau', kv.checked); if(ko) ko.hidden = !kv.checked; designGlobalNav(); };
-    if(ko) ko.onclick = ()=>{ einstellungenOffen = false; ansichtKonto(); }; }
+    if(ko) ko.onclick = ()=>{ einstellungenOffen = false; ansichtKonto(); };
+    const bs = document.getElementById('btnBetreiberStatistik'); if(bs) bs.onclick = ()=>{ einstellungenOffen = false; ansichtBetreiberStatistik(); }; }
   document.getElementById('btnEinstOeffneUebersicht').onclick = ()=> excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
     '');
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();

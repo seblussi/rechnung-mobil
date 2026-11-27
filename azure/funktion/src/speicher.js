@@ -21,6 +21,14 @@ function tabelle(verbindung, name) {
     async partition(pk) { const t = await c(); return sammeln(t.listEntities({ queryOptions: { filter: odata`PartitionKey eq ${pk}` } })); },
     async alle() { const t = await c(); return sammeln(t.listEntities()); },
     async aendern(e) { const t = await c(); await t.updateEntity(e, 'Merge'); },
+    async ersetzen(e) { const t = await c(); await t.upsertEntity(e, 'Replace'); },
+    async abPartition(pk) { const t = await c(); return sammeln(t.listEntities({ queryOptions: { filter: odata`PartitionKey ge ${pk}` } })); },
+    async loeschenVor(pk) {
+      const t = await c();
+      for (const e of await sammeln(t.listEntities({ queryOptions: { filter: odata`PartitionKey lt ${pk}`, select: ['PartitionKey', 'RowKey'] } }))) {
+        try { await t.deleteEntity(e.partitionKey, e.rowKey); } catch (err) { if (!(err && err.statusCode === 404)) throw err; }
+      }
+    },
     async loeschen(pk, rk) {
       const t = await c();
       try { await t.deleteEntity(pk, rk); } catch (err) { if (!(err && err.statusCode === 404)) throw err; }

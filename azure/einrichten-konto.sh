@@ -110,6 +110,7 @@ function lxpGuthaben(inhalt) {
 const kern = erstelleKern({
   env: process.env,
   speicher: () => process.env.KONTO_SPEICHER ? require('../speicher').tabelle(process.env.KONTO_SPEICHER, 'buchungen') : null,
+  zugriffe: () => process.env.KONTO_SPEICHER ? require('../speicher').tabelle(process.env.KONTO_SPEICHER, 'zugriffe') : null,
   lxpGuthaben
 });
 
@@ -117,11 +118,12 @@ app.http('lxp', { methods: ['POST', 'OPTIONS'], authLevel: 'anonymous', route: '
 app.http('konto', { methods: ['POST', 'OPTIONS'], authLevel: 'anonymous', route: 'konto/{aktion}', handler: kern.konto });
 app.http('stripe', { methods: ['POST'], authLevel: 'anonymous', route: 'stripe/webhook', handler: kern.stripeWebhook });
 
-// taeglich 03:30 UTC: Sicherung der Buchungen (nur wenn das Guthabenkonto eingerichtet ist)
+// taeglich 03:30 UTC: Zugriffsprotokoll aelter als 7 Tage loeschen, Sicherung der Buchungen
 app.timer('sicherung', {
   schedule: '0 30 3 * * *',
   handler: async (_t, context) => {
     if (!process.env.KONTO_SPEICHER) return;
+    try { await kern.zugriffeAufraeumen(); } catch (e) { context.log('Zugriffe: Aufraeumen fehlgeschlagen'); }
     try {
       const sp = require('../speicher');
       const alle = await sp.tabelle(process.env.KONTO_SPEICHER, 'buchungen').alle();
@@ -581,34 +583,96 @@ function erstelleKern(deps) {
   // ---------- anonyme Statistik fuer den Betreiber ----------
   async function statistikBerechnen(log) {
     const alle = await speicher().alle();
-    const monate = {}, konten = new Set(), salden = {};
+    const monate = {}, konten = {};
     let vorgemerkt = 0;
     for (const e of alle) {
-      const b = +e.betrag || 0;
-      konten.add(e.partitionKey);
-      salden[e.partitionKey] = (salden[e.partitionKey] || 0) + b;
+      const b = +e.betrag || 0, pk = e.partitionKey;
+      // Pseudonym: gekuerzter Konto-Hash -- ohne den Schluessel des Nutzers keinem Menschen zuzuordnen
+      const k = konten[pk] = konten[pk] || { pseudonym: pk.slice(0, 12), guthaben: 0, eingezahlt: 0, aufladungen: 0, briefe: 0, seiten: 0, briefumsatz: 0, stornos: 0, testbriefe: 0, seit: e.zeit, zuletzt: e.zeit, briefeJeMonat: {} };
+      k.guthaben += b;
+      if (String(e.zeit) < String(k.seit)) k.seit = e.zeit;
+      if (String(e.zeit) > String(k.zuletzt)) k.zuletzt = e.zeit;
       if (e.status === 'vorgemerkt') vorgemerkt++;
-      if (e.test) continue;
       const mo = String(e.zeit || '').slice(0, 7) || '?';
+      if (e.test) { if (e.art === 'brief') k.testbriefe++; continue; }
       const m = monate[mo] = monate[mo] || { monat: mo, aufladungen: 0, eingezahlt: 0, briefe: 0, seiten: 0, briefumsatz: 0, stornos: 0, konten: new Set() };
-      m.konten.add(e.partitionKey);
-      if (e.art === 'aufladung') { m.aufladungen++; m.eingezahlt += b; }
-      else if (e.art === 'brief') { m.briefe++; m.seiten += +e.seiten || 0; m.briefumsatz += -b; }
-      else if (e.art === 'storno') { m.stornos++; m.briefumsatz -= b; }
+      m.konten.add(pk);
+      if (e.art === 'aufladung') { m.aufladungen++; m.eingezahlt += b; k.aufladungen++; k.eingezahlt += b; }
+      else if (e.art === 'brief') { m.briefe++; m.seiten += +e.seiten || 0; m.briefumsatz += -b; k.briefe++; k.seiten += +e.seiten || 0; k.briefumsatz += -b; k.briefeJeMonat[mo] = (k.briefeJeMonat[mo] || 0) + 1; }
+      else if (e.art === 'storno') { m.stornos++; m.briefumsatz -= b; k.stornos++; k.briefumsatz -= b; k.briefeJeMonat[mo] = (k.briefeJeMonat[mo] || 0) - 1; }
     }
     let lxpGuthaben = null;
     try {
       if (deps.lxpGuthaben) lxpGuthaben = await deps.lxpGuthaben({ auth: lxpAuth(false) });
     } catch (_) { log('Statistik: LetterXpress-Guthaben nicht abrufbar'); }
+    const liste_ = Object.values(konten).sort((a, b) => String(b.zuletzt).localeCompare(String(a.zuletzt)));
     return {
-      konten: konten.size,
-      guthabenSumme: Object.values(salden).reduce((s, x) => s + x, 0),   // offenes Guthaben aller Nutzer (Verbindlichkeit)
+      stand: new Date(jetzt()).toISOString(),
+      konten: liste_.length,
+      guthabenSumme: liste_.reduce((x, k) => x + k.guthaben, 0),   // offenes Guthaben aller Nutzer (Verbindlichkeit)
       vorgemerkt, lxpGuthaben,
-      monate: Object.values(monate).sort((a, b) => b.monat.localeCompare(a.monat)).map((m) => ({ ...m, konten: m.konten.size }))
+      monate: Object.values(monate).sort((a, b) => b.monat.localeCompare(a.monat)).map((m) => ({ ...m, konten: m.konten.size })),
+      kontenDetail: liste_,
+      zugriffe: await zugriffeAuswerten(log)
     };
   }
 
-  return { lxp, konto, stripeWebhook, _intern: { pdfSeiten, stripeSignaturOk, formular, kontoId } };
+  // ---------- Zugriffsprotokoll (Sicherheit, z. B. Angriffe von einer IP) ----------
+  // Je Stunde und IP-Adresse: Anzahl Anfragen, davon abgelehnt, Bereiche. Bewusst OHNE Konto-Bezug
+  // (sonst waere das Pseudonym ueber die IP einer Person zuzuordnen). Aufbewahrung 7 Tage (Sicherung-Timer loescht).
+  const INSTANZ = crypto.randomBytes(3).toString('hex');
+  const zugr = { stunde: '', ips: new Map(), geschrieben: 0 };
+  const stundeVon = (t) => new Date(t).toISOString().slice(0, 13).replace(/[^0-9]/g, '');
+  let zugriffeObj;
+  const zugriffeTab = () => (zugriffeObj !== undefined ? zugriffeObj : (zugriffeObj = (typeof deps.zugriffe === 'function' ? deps.zugriffe() : deps.zugriffe) || null));
+  async function zugriffeSchreiben() {
+    const tab = zugriffeTab(); if (!tab || !zugr.ips.size) return;
+    const liste_ = [...zugr.ips.entries()];
+    zugr.geschrieben = jetzt();
+    await Promise.all(liste_.map(([ip, v]) => tab.ersetzen({
+      partitionKey: zugr.stunde, rowKey: ip.replace(/[^0-9A-Fa-f.:]/g, '_').slice(0, 60) + '_' + INSTANZ,
+      ip, anfragen: v.n, abgelehnt: v.ab, bereiche: [...v.bereiche].join(','), erste: v.erste, letzte: v.letzte
+    }).catch(() => {})));
+  }
+  async function zugriffMerken(request, bereich, status) {
+    try {
+      const t = jetzt(), st = stundeVon(t);
+      if (zugr.stunde && st !== zugr.stunde) { await zugriffeSchreiben(); zugr.ips.clear(); }
+      zugr.stunde = st;
+      const ip = String(request.headers.get('x-client-ip') || request.headers.get('x-forwarded-for') || '').split(',')[0].trim().replace(/:\d+$/, '') || 'unbekannt';
+      const v = zugr.ips.get(ip) || { n: 0, ab: 0, bereiche: new Set(), erste: new Date(t).toISOString(), letzte: '' };
+      v.n++; if (status >= 400) v.ab++; v.bereiche.add(bereich); v.letzte = new Date(t).toISOString();
+      zugr.ips.set(ip, v);
+      if (t - zugr.geschrieben > 60000 || v.n === 1) await zugriffeSchreiben();
+    } catch (_) { /* Protokoll darf nie den Dienst stoeren */ }
+  }
+  async function zugriffeAuswerten(log) {
+    const tab = zugriffeTab(); if (!tab) return null;
+    try {
+      await zugriffeSchreiben();
+      const zeilen = await tab.abPartition(stundeVon(jetzt() - 24 * 3600 * 1000));
+      const je = {};
+      for (const z of zeilen) {
+        const x = je[z.ip] = je[z.ip] || { ip: z.ip, anfragen: 0, abgelehnt: 0, bereiche: new Set(), letzte: '' };
+        x.anfragen += +z.anfragen || 0; x.abgelehnt += +z.abgelehnt || 0;
+        String(z.bereiche || '').split(',').filter(Boolean).forEach((b) => x.bereiche.add(b));
+        if (String(z.letzte) > x.letzte) x.letzte = z.letzte;
+      }
+      const alle = Object.values(je).sort((a, b) => b.anfragen - a.anfragen);
+      return { zeitraum: '24 Stunden', ipAdressen: alle.length, anfragen: alle.reduce((x, a) => x + a.anfragen, 0), abgelehnt: alle.reduce((x, a) => x + a.abgelehnt, 0),
+        top: alle.slice(0, 25).map((a) => ({ ...a, bereiche: [...a.bereiche].join(', ') })) };
+    } catch (_) { log('Statistik: Zugriffe nicht lesbar'); return null; }
+  }
+  async function zugriffeAufraeumen() {
+    const tab = zugriffeTab(); if (tab) await tab.loeschenVor(stundeVon(jetzt() - 7 * 24 * 3600 * 1000));
+  }
+  const mitProtokoll = (bereich, fn) => async (request, context) => {
+    const r = await fn(request, context);
+    if (request.method !== 'OPTIONS') await zugriffMerken(request, bereich, r && r.status || 200);
+    return r;
+  };
+
+  return { lxp: mitProtokoll('briefe', lxp), konto: mitProtokoll('konto', konto), stripeWebhook: mitProtokoll('stripe', stripeWebhook), zugriffeAufraeumen, _intern: { pdfSeiten, stripeSignaturOk, formular, kontoId } };
 }
 
 module.exports = { erstelleKern, pdfSeiten, stripeSignaturOk, formular, VERSION };
@@ -637,6 +701,14 @@ function tabelle(verbindung, name) {
     async partition(pk) { const t = await c(); return sammeln(t.listEntities({ queryOptions: { filter: odata`PartitionKey eq ${pk}` } })); },
     async alle() { const t = await c(); return sammeln(t.listEntities()); },
     async aendern(e) { const t = await c(); await t.updateEntity(e, 'Merge'); },
+    async ersetzen(e) { const t = await c(); await t.upsertEntity(e, 'Replace'); },
+    async abPartition(pk) { const t = await c(); return sammeln(t.listEntities({ queryOptions: { filter: odata`PartitionKey ge ${pk}` } })); },
+    async loeschenVor(pk) {
+      const t = await c();
+      for (const e of await sammeln(t.listEntities({ queryOptions: { filter: odata`PartitionKey lt ${pk}`, select: ['PartitionKey', 'RowKey'] } }))) {
+        try { await t.deleteEntity(e.partitionKey, e.rowKey); } catch (err) { if (!(err && err.statusCode === 404)) throw err; }
+      }
+    },
     async loeschen(pk, rk) {
       const t = await c();
       try { await t.deleteEntity(pk, rk); } catch (err) { if (!(err && err.statusCode === 404)) throw err; }
@@ -701,6 +773,11 @@ fi
 # App-Einstellungen ab -- sie stehen nie in der App und nie in diesem Skript.
 # Enter ohne Eingabe = vorhandenen Wert behalten.
 # ---------------------------------------------------------------------
+# Tabellenspeicher fuer Zugriffsprotokoll (7 Tage, Sicherheit) und Guthabenkonto
+if [ -z "$(az functionapp config appsettings list -g "$RG" -n "$APP" --query "[?name=='KONTO_SPEICHER'].value | [0]" -o tsv 2>/dev/null | tr -d '\r')" ]; then
+  SA_NAME="$(az storage account list -g "$RG" --query "[?starts_with(name,'lxpw')].name | [0]" -o tsv | tr -d '\r')"
+  [ -n "$SA_NAME" ] && az functionapp config appsettings set -g "$RG" -n "$APP" --settings "KONTO_SPEICHER=$(az storage account show-connection-string -g "$RG" -n "$SA_NAME" --query connectionString -o tsv | tr -d '\r')" -o none
+fi
 STAT_NEU=""
 if [ "${2:-}" = "konto" ] || [ "${1:-}" = "konto" ] || [ "${KONTO:-}" = "1" ]; then
   echo "   Guthabenkonto einrichten ..."
@@ -712,10 +789,6 @@ if [ "${2:-}" = "konto" ] || [ "${1:-}" = "konto" ] || [ "${KONTO:-}" = "1" ]; t
     if [ "$3" = "1" ]; then read -r -s -p "   $2$hinweis: " ein < /dev/tty; echo; else read -r -p "   $2$hinweis: " ein < /dev/tty; fi
     if [ -n "$ein" ]; then setzen "$1" "$ein"; elif [ -z "$alt" ] && [ -n "${4:-}" ]; then setzen "$1" "$4"; fi
   }
-  SA_NAME="$(az storage account list -g "$RG" --query "[?starts_with(name,'lxpw')].name | [0]" -o tsv | tr -d '\r')"
-  if [ -z "$(einst KONTO_SPEICHER)" ] && [ -n "$SA_NAME" ]; then
-    setzen KONTO_SPEICHER "$(az storage account show-connection-string -g "$RG" -n "$SA_NAME" --query connectionString -o tsv | tr -d '\r')"
-  fi
   frage LXP_BENUTZER "LetterXpress-Benutzername" 0
   frage LXP_APIKEY "LetterXpress-API-Key" 1
   frage LXP_MODUS "LetterXpress-Modus fuer echte Briefe (live oder test)" 0 live

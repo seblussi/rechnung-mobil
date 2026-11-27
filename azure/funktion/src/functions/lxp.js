@@ -23,6 +23,7 @@ function lxpGuthaben(inhalt) {
 const kern = erstelleKern({
   env: process.env,
   speicher: () => process.env.KONTO_SPEICHER ? require('../speicher').tabelle(process.env.KONTO_SPEICHER, 'buchungen') : null,
+  zugriffe: () => process.env.KONTO_SPEICHER ? require('../speicher').tabelle(process.env.KONTO_SPEICHER, 'zugriffe') : null,
   lxpGuthaben
 });
 
@@ -30,11 +31,12 @@ app.http('lxp', { methods: ['POST', 'OPTIONS'], authLevel: 'anonymous', route: '
 app.http('konto', { methods: ['POST', 'OPTIONS'], authLevel: 'anonymous', route: 'konto/{aktion}', handler: kern.konto });
 app.http('stripe', { methods: ['POST'], authLevel: 'anonymous', route: 'stripe/webhook', handler: kern.stripeWebhook });
 
-// taeglich 03:30 UTC: Sicherung der Buchungen (nur wenn das Guthabenkonto eingerichtet ist)
+// taeglich 03:30 UTC: Zugriffsprotokoll aelter als 7 Tage loeschen, Sicherung der Buchungen
 app.timer('sicherung', {
   schedule: '0 30 3 * * *',
   handler: async (_t, context) => {
     if (!process.env.KONTO_SPEICHER) return;
+    try { await kern.zugriffeAufraeumen(); } catch (e) { context.log('Zugriffe: Aufraeumen fehlgeschlagen'); }
     try {
       const sp = require('../speicher');
       const alle = await sp.tabelle(process.env.KONTO_SPEICHER, 'buchungen').alle();
