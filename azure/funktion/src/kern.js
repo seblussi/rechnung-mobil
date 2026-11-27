@@ -294,10 +294,6 @@ function erstelleKern(deps) {
         const nutzer = String((daten.auth && daten.auth.username) || '').trim().toLowerCase();
         if (!erlaubt.includes(nutzer)) return json(403, cors, { status: 403, message: 'Dieser LetterXpress-Benutzer ist für die Weiterleitung nicht freigegeben.' });
       }
-      // das Betreiberkonto ist nur ueber das Guthaben nutzbar
-      if (env.LXP_BENUTZER && daten.auth && String(daten.auth.username || '').trim().toLowerCase() === String(env.LXP_BENUTZER).trim().toLowerCase()) {
-        return json(403, cors, { status: 403, message: 'Dieser LetterXpress-Benutzer ist nur über das Guthabenkonto nutzbar.' });
-      }
     }
     try {
       const antwort = await holeFetch()(ZIEL + '/v3/' + pfad, {
