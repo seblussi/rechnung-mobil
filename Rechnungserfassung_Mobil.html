@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-wViVW44/9kSr7aoEnwb78pbhmEt03qpYSwZvgra8JD8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-9PLwh0nFj17uWGg25cVszNMKGMeKRDYdosb5+I0czQc=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -210,6 +210,10 @@ try{
   .gesamt-abschnitt.mit-knopf{display:flex; align-items:center; justify-content:space-between; gap:8px;}
   #btnGesamtHochladen{width:auto; margin:0; padding:5px 10px; border:0; border-radius:8px; background:#e67e22; color:#fff; font:inherit; font-size:12.5px; font-weight:600; letter-spacing:0; text-transform:none; cursor:pointer;}
   .fall-zeile.offen .gs-rechts .offen-text{font-size:11.5px; line-height:1.25; text-align:right;}
+  #gesamtListe .fall-zeile.offen .gs-rechts small.offen-text{color:#d35400; font-weight:600;}
+  /* Wunsch 27.11.2026: „unfertig“ rechts wie „noch nicht hochgeladen“ */
+  .fall-zeile .uf-rechts{flex:none; align-self:center; font-size:11.5px; font-weight:600; color:#8e44ad; white-space:nowrap;}
+  body.dunkel .fall-zeile .uf-rechts{color:#c39bd3;}
   .link-knopf{display:inline; width:auto; margin:0; padding:0; border:0; background:none; color:var(--ds-primaer, #1f4e79); font:inherit; text-decoration:underline; text-underline-offset:2px; cursor:pointer;}
   body.dunkel .link-knopf{color:#8ac2f0;}
   .offen-dash{background:var(--karte); border:1px solid var(--rand); border-radius:12px; margin:8px 0 12px; padding:0 12px;}
@@ -2179,7 +2183,7 @@ try{
   .vw-seg button.an{color:#fff; box-shadow:0 2px 8px rgba(0,0,0,.18);}
   .vw-seg button.lspt.an{background:var(--ls-farbe);} .vw-seg button.gkv.an{background:#7d4e9e;}
   .vw-seg button:not(.an):active{background:var(--karte);}
-  .gv-info{font-size:13px; color:var(--text-schwach); margin:8px 2px 4px;} .gv-info .gv-offen{color:#c77700;}
+  .gv-info{font-size:13px; color:var(--text-schwach); margin:8px 2px 4px; text-align:right;} .gv-info:empty{display:none;} .gv-info .gv-offen{color:#c77700;}
   .gv-tag{display:flex; justify-content:space-between; gap:8px; font-size:12.5px; font-weight:700; color:var(--text-schwach); text-transform:uppercase; letter-spacing:.02em; margin:14px 2px 6px;}
   .gv-fall{display:grid; grid-template-columns:44px minmax(0, 1fr) auto; align-items:center; gap:8px; width:100%; margin:0; padding:9px 10px; box-sizing:border-box;
     border:1px solid var(--rand); border-radius:12px; background:var(--karte); color:var(--text); font:inherit; text-align:left; cursor:pointer;}
@@ -4458,7 +4462,7 @@ async function gkvFallUeberallLoeschen(id){
   const x = gkvFaelleLaden().find(y=> y.id === id); if(!x) return false;
   const imFb = x.status === 'eingetragen' && x.zeile;
   const dzt = designFallZeit(x), dtag = dzt ? new Date(dzt.getFullYear(), dzt.getMonth(), dzt.getDate() - (dzt.getHours() < 7 ? 1 : 0)) : null;
-  if(!await betaFrage('„' + (x.name || 'Fall') + '“ löschen?' + (imFb ? '\n\nDer Fall wird auch aus dem Fahrtenbuch entfernt' + (dtag ? ' (Dienst ' + fbTagText(dtag) + ')' : '') + '. Rückgängig nur über den Versionsverlauf der Excel in OneDrive.' : ''), 'Löschen', 'Abbrechen')) return false;
+  if(!await betaFrage('„' + (x.name || 'Fall') + '“ unwiderruflich löschen?' + (imFb ? '\n\nDer Fall wird auch aus dem Fahrtenbuch entfernt' + (dtag ? ' (Dienst ' + fbTagText(dtag) + ')' : '') + '.' : ''), 'Löschen', 'Abbrechen')) return false;
   if(imFb){
     if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ await betaOverlay.meldung('Zum Löschen im Fahrtenbuch braucht es die OneDrive-Anmeldung.', 'Fahrtenbuch'); return false; }
     betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
@@ -4561,17 +4565,17 @@ async function fbLsPtOeffnen(f, d, zurueck){
 async function fbLoeschen(d, f, bearbeiten, opt){
   opt = opt || {}; let ok = false;
   const ganz = !f;
-  const text = ganz ? 'Den ganzen Dienst ' + fbTagText(d.tag) + ' (' + d.faelle.length + ' Einträge) aus dem Fahrtenbuch löschen?'
-                    : '„' + f.name + '“ aus dem Dienst ' + fbTagText(d.tag) + ' im Fahrtenbuch löschen?';
+  const text = ganz ? 'Den ganzen Dienst ' + fbTagText(d.tag) + ' (' + d.faelle.length + ' Einträge) unwiderruflich aus dem Fahrtenbuch löschen?'
+                    : '„' + f.name + '“ aus dem Dienst ' + fbTagText(d.tag) + ' im Fahrtenbuch unwiderruflich löschen?';
   // Fall lange gedrueckt: neben Loeschen auch Bearbeiten anbieten (Wunsch 21.11.2026)
   if(!ganz && bearbeiten){
-    const w = await betaOverlay.ergebnis(String(f.name || 'Fall'), htmlEsc('Fall im Dienst ' + fbTagText(d.tag) + '.') + '<br><span class="beta-erg-klein">Löschen ist nur über den Versionsverlauf der Excel in OneDrive rückgängig zu machen.</span>',
+    const w = await betaOverlay.ergebnis(String(f.name || 'Fall'), htmlEsc('Fall im Dienst ' + fbTagText(d.tag) + '.') + '<br><span class="beta-erg-klein">Löschen ist unwiderruflich.</span>',
       [{ label: 'Bearbeiten', akt: 'bearbeiten', primaer: true }, { label: 'Löschen', akt: 'loeschen' }, { label: 'Abbrechen', akt: 'nein' }]);
     if(w === 'bearbeiten'){ betaOverlay.schliessen(); bearbeiten(); return; }
     if(w !== 'loeschen') return;
-    if(!await betaFrage(text + '\n\nRückgängig nur über den Versionsverlauf der Excel in OneDrive.', 'Löschen', 'Abbrechen')) return;
+    if(!await betaFrage(text, 'Löschen', 'Abbrechen')) return;
   }
-  else if(!await betaFrage(text + '\n\nRückgängig nur über den Versionsverlauf der Excel in OneDrive.', 'Löschen', 'Abbrechen')) return;
+  else if(!await betaFrage(text, 'Löschen', 'Abbrechen')) return;
   const blatt = opt.blatt || (fbBuchCache ? fbBuchCache.blatt : undefined);
   betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
   try{
@@ -8758,6 +8762,13 @@ function gkvPseudoFoerderungHtml(f){
   return v == null ? '<span class="fbx-foerd">Förderung siehe Fahrtenbuch</span>' : '<span class="fbx-foerd">Förderung</span> ' + betaEuro(v).replace(' €', '');
 }
 // Angefangener GKV-Patient in der Rechnungsverwaltung (Reiter GKV), wie die unfertigen LS/PT-Rechnungen
+// GKV-Fall ohne Dienst: weder gewaehlt noch zeitlich in einem bekannten Dienst (App-Dienste, laufender Dienst)
+function gvOhneDienst(f){
+  if(f.dienst) return false;
+  const t = designFallZeit(f); if(!t) return true;
+  const ds = appDiensteLaden().slice(); try{ const l = liveDienstLaden(); if(l) ds.push(l); }catch(_){}
+  return !ds.some(d=>{ const fe = liveDienstFenster(d); return fe && t >= fe.von && t <= fe.bis; });
+}
 function gkvUnfertigHtml(q){
   const liste = gkvEntwuerfe().filter(e=> !q || [e.name, isoDe(e.datum || '')].join(' ').toLowerCase().includes(q));
   if(!liste.length) return '';
@@ -8765,7 +8776,7 @@ function gkvUnfertigHtml(q){
     '<div class="fall-zeile gkv offen unfertig"><div class="inhalt">' +
     '<div class="name"><span class="badge-neu gkv">G</span>' + htmlEsc(e.name) + '</div>' +
     '<div class="info">' + htmlEsc(e.datum ? isoDe(e.datum) : '') + (e.zeit ? ', ' + htmlEsc(e.zeit) : '') + ' &middot; Kassenpatient</div>' +
-    '<div class="info offen-text">unfertig – anklicken zum Weitermachen</div></div></div></div>').join('');
+    '</div><span class="uf-rechts">unfertig</span></div></div>').join('');
 }
 function gkvUnfertigVerdrahten(root, neu){
   (root || document).querySelectorAll('.wisch-huelle[data-gkventwurf]').forEach(h=>{
@@ -8790,7 +8801,7 @@ function ansichtGkvVerwaltung(){
   setzeTitel('Rechnungsverwaltung', ()=>{ betaMaskeHerkunft = null; ansichtStart(); });
   app.innerHTML = vwTabsHtml('gkv') +
     '<div class="gesamt-kopf"><div class="feld" style="margin-bottom:0;"><input type="text" id="gvSuche" autocomplete="off" placeholder="Suche"></div></div>' +
-    '<div id="gvInfo" class="gv-info"></div><div id="gvListe"></div>';
+    '<div id="gvListe"></div>';
   const suchEl = document.getElementById('gvSuche');
 
   // Wunsch 25.11.2026: wie bei PT/LS -- bis zu 200 Faelle gleich zeigen (Geraet + Fahrtenbuch des aktuellen Jahres, bei Bedarf das
@@ -8831,8 +8842,9 @@ function ansichtGkvVerwaltung(){
     const alle = alleVoll.slice(0, GV_MAX), mehrAlsMax = alleVoll.length - alle.length;
     const mehrLokal = !q && lokalAlle.length > anzahl;
     const offen = lokalAlle.filter(x=> x.f.status !== 'eingetragen' && x.f.name !== GKV_PSEUDO_NAME).length;
-    document.getElementById('gvInfo').innerHTML = (lokalAlle.length ? lokalAlle.length + ' Fälle auf diesem Gerät' + (offen ? ' · <b class="gv-offen">' + offen + ' noch nicht im Fahrtenbuch</b>' : ' · alle im Fahrtenbuch') : '') +
-      (exSicht.length ? ' · ' + exSicht.length + ' nur im Fahrtenbuch' : '');
+    // Wunsch 27.11.2026: nur noch die Zahl der Faelle, die nicht im Fahrtenbuch stehen (rechts)
+    // Wunsch 27.11.2026: unter „Unfertig“, ueber den fertigen Faellen
+    const infoHtml = offen ? '<div class="gv-info"><b class="gv-offen">' + offen + ' noch nicht im Fahrtenbuch</b></div>' : '';
     const weiterKnopf = laedt ? '<div class="leer-hinweis">Fahrtenbuch wird gelesen …</div>'
       : mehrAlsMax > 0 ? '<div class="leer-hinweis">' + mehrAlsMax + ' weitere – bitte Suche eingrenzen.</div>'
       : (mehrLokal || !blaetterAlle || blaetterAlle.some(b=> !blaetterGeladen.includes(b)))
@@ -8847,7 +8859,7 @@ function ansichtGkvVerwaltung(){
       if(!g || g.k !== k){ g = { k, tag, faelle: [] }; gruppen.push(g); }
       g.faelle.push(x);
     });
-    document.getElementById('gvListe').innerHTML = unfertig + gruppen.map(g=>{
+    document.getElementById('gvListe').innerHTML = unfertig + infoHtml + gruppen.map(g=>{
       const betrag = (x)=> x.excel ? (x.f.pseudo ? Math.max(0, (Number(x.d.gkv) || 0) - (Number(x.d.gkvRoh) || 0)) : (Number(x.f.euro) || 0))
         : x.f.name === GKV_PSEUDO_NAME ? (gkvPseudoFoerderung(x.f) || 0) : (Number(x.f.euro) || 0);
       const summe = g.faelle.reduce((s, x)=> s + betrag(x), 0);
@@ -8866,7 +8878,7 @@ function ansichtGkvVerwaltung(){
             '<button type="button" class="gv-fall' + (pseudo ? ' pseudo' : '') + '" data-gvoeffnen="' + htmlEsc(f.id) + '">' +
             '<span class="gv-zeit">' + htmlEsc(f.zeit || '–') + '</span>' +
             '<span class="gv-mitte"><b><span class="badge-neu gkv">G</span>' + htmlEsc(pseudo ? 'Pseudo-Fall 99999' : (f.name || 'ohne Namen')) + '</b><small>' + htmlEsc((f.positionen || []).map(p=> (p.anz > 1 ? p.anz + '×' : '') + p.gop).join(' ')) + '</small></span>' +
-            '<span class="gv-rechts"><b>' + (pseudo ? gkvPseudoFoerderungHtml(f) : betaEuro(f.euro).replace(' €', '')) + '</b>' + (f.status === 'eingetragen' ? '' : '<small class="gv-offen" title="Noch nicht im Fahrtenbuch">offen</small>') + '</span>' +
+            '<span class="gv-rechts"><b>' + (pseudo ? gkvPseudoFoerderungHtml(f) : betaEuro(f.euro).replace(' €', '')) + '</b>' + (f.status === 'eingetragen' ? '' : gvOhneDienst(f) ? '<small class="gv-offen" title="Keinem Dienst zugeordnet – steht deshalb nicht im Fahrtenbuch">ohne Dienst</small>' : '<small class="gv-offen" title="Dienst bekannt, aber noch nicht ins Fahrtenbuch eingetragen">nicht eingetragen</small>') + '</span>' +
             '</button></div>';
         }).join('');
     }).join('') + weiterKnopf + '<div class="eigene-hinweis" style="margin-top:8px;">Anklicken = bearbeiten · nach links wischen = löschen (auch im Fahrtenbuch).</div>';
@@ -12783,6 +12795,39 @@ function betaEigenePositionenVerdrahten(art, neuZeichnen){
 // ---------- Wischen zum Loeschen ----------
 // el liegt in einer .wisch-huelle (roter Hintergrund mit Papierkorb).
 // beimLoeschen() -> Promise<boolean> (true = geloescht, sonst zurueckschnappen)
+// Wunsch 27.11.2026: abgeschnittenen Namen mit dem Finger nach links schieben, um ihn ganz zu lesen; schnappt beim Loslassen zurueck.
+// Gilt fuer jede Zeile mit „…“; wer auf dem Namen ansetzt, schiebt den Namen (Wischen zum Loeschen geht weiter ausserhalb des Namens).
+(function(){
+  let el = null, x0 = 0, y0 = 0, s0 = 0, aktiv = false, entschieden = false, sperreKlick = 0;
+  const finden = (t)=>{
+    for(let e = t, i = 0; e && e.nodeType === 1 && i < 4; e = e.parentElement, i++){
+      if(e.scrollWidth > e.clientWidth + 2){ const cs = getComputedStyle(e); if(cs.textOverflow === 'ellipsis' && cs.overflowX !== 'visible') return e; }
+    }
+    return null;
+  };
+  const zurueck = (e)=>{ e.scrollTo({ left: 0, behavior: 'smooth' }); setTimeout(()=>{ if(e !== el){ e.style.textOverflow = ''; } }, 350); };
+  document.addEventListener('touchstart', ev=>{
+    if(ev.touches.length !== 1) return;
+    const e = finden(ev.target); if(!e) return;
+    el = e; x0 = ev.touches[0].clientX; y0 = ev.touches[0].clientY; s0 = 0; aktiv = false; entschieden = false;
+    ev.stopPropagation();   // kein Wischen-zum-Loeschen, wenn auf einem abgeschnittenen Namen angesetzt wird
+  }, { capture: true, passive: true });
+  document.addEventListener('touchmove', ev=>{
+    if(!el) return;
+    const t = ev.touches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+    if(!entschieden){
+      if(Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)){ entschieden = true; aktiv = true; el.style.textOverflow = 'clip'; }
+      else if(Math.abs(dy) > 8){ entschieden = true; el = null; return; }
+    }
+    if(aktiv){ el.scrollLeft = Math.max(0, s0 - dx); ev.stopPropagation(); if(ev.cancelable) ev.preventDefault(); }
+  }, { capture: true, passive: false });
+  const ende = ()=>{ if(!el) return; const e = el; el = null; if(aktiv){ sperreKlick = Date.now(); zurueck(e); } aktiv = false; };
+  document.addEventListener('touchend', ende, { capture: true });
+  document.addEventListener('touchcancel', ende, { capture: true });
+  document.addEventListener('click', ev=>{ if(Date.now() - sperreKlick < 350){ ev.stopPropagation(); ev.preventDefault(); } }, true);
+  // am PC: ganzer Name als Hinweis beim Darueberfahren
+  document.addEventListener('mouseover', ev=>{ const e = finden(ev.target); if(e && !e.title) e.title = e.textContent.trim(); }, true);
+})();
 function betaWischen(el, beimLoeschen){
   if(!el || el.__wischen) return;
   el.__wischen = true;
@@ -13930,8 +13975,8 @@ function betaGesamtZeichnen(suchtext, ziel){
         <div class="inhalt">
           <div class="name"><span class="badge-neu ${e.art}">${e.art === 'ls' ? 'L' : 'P'}</span>${htmlEsc((e.werte || {}).txtName || '(noch ohne Namen)')}</div>
           <div class="info">${htmlEsc((e.werte || {}).txtDatumExcel || '')}${(e.werte || {}).txtBetrag ? ' &middot; ' + htmlEsc(e.werte.txtBetrag) + ' &euro;' : ''}</div>
-          <div class="info offen-text">unfertig – anklicken zum Weitermachen</div>
         </div>
+        <span class="uf-rechts">unfertig</span>
       </div></div>`).join('');
   }
   const offenSichtbar = offen.filter(f=> passt((f.werte || {}).txtName, f.rechnungsnummer, wDatum(f.werte)));
@@ -14039,7 +14084,6 @@ function betaGesamtZeichnen(suchtext, ziel){
       if(await betaMahnungErstellen(e)) await ansichtRechnungenGesamt(true); });
     { const zb = listeEl.querySelector('#btnOffenZurueck'); if(zb) zb.onclick = async (ev)=>{ ev.stopPropagation();
         const liste = eintraege.filter(e=> e.typ === 'ORIG' && !e.bezahlt && e.ausgebucht); if(!liste.length) return;
-        if(!await betaFrage('Diese Rechnungen wieder bei „Offene Rechnungen“ führen?\n\n' + liste.slice(0, 12).map(e=> '• ' + e.name + (e.renu ? ' · Nr. ' + e.renu : '')).join('\n') + (liste.length > 12 ? '\n… und ' + (liste.length - 12) + ' weitere' : ''), 'Zurückholen', 'Abbrechen')) return;
         if(await betaOffenAusbuchen(liste, false)) await ansichtRechnungenGesamt(true); }; }
     { const kb = listeEl.querySelector('#btnOffenBank'); if(kb) kb.onclick = async (ev)=>{ ev.stopPropagation(); if(await bankCsvImport()) await ansichtRechnungenGesamt(true); }; }
     // nicht beglichene Rechnung aus „Offene Rechnungen“ nehmen (Wunsch 25.11.2026) -- zurueck ueber „Bezahlt“ an der Rechnung
