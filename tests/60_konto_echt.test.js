@@ -18,8 +18,17 @@ module.exports = async ({ browser, basis, pr })=>{
   };
   const lxpAnfragen = []; let stripeSitzung = null, auftrag = 5000;
   const env = { ERLAUBTE_HERKUNFT: herkunft, ZUGANGSCODES: 'abc', LXP_BENUTZER: 'betreiber', LXP_APIKEY: 'k', STRIPE_GEHEIM: 'sk_test_x', STRIPE_WEBHOOK_GEHEIM: 'whsec_t',
-    KONTO_SPEICHER: 'mock', PREIS_BRIEF_CENT: '150', PREIS_SEITE_CENT: '10', AUFLADE_BETRAEGE: '1000,2000,5000', FIRMA_NAME: 'Muster Briefdienst UG (haftungsbeschränkt)', FIRMA_ANSCHRIFT: 'Musterweg 1, 12345 Musterstadt' };
+    KONTO_SPEICHER: 'mock', PREIS_BRIEF_CENT: '150', PREIS_SEITE_CENT: '10', AUFLADE_BETRAEGE: '1000,2000,5000', FIRMA_NAME: 'Muster Briefdienst UG (haftungsbeschränkt)', FIRMA_ANSCHRIFT: 'Musterweg 1, 12345 Musterstadt', PAYPAL_CLIENT_ID: 'pp-id', PAYPAL_GEHEIM: 'pp-geheim' };
+  const pp = new Map();
   const kern = erstelleKern({ env, speicher, schlafen: ()=> Promise.resolve(), fetch: async (url, opt)=>{
+    if(/paypal\.com/.test(url)){
+      const ant = (j)=> ({ ok: true, status: 200, json: async ()=> j });
+      if(/oauth2\/token$/.test(url)) return ant({ access_token: 'T', expires_in: 3000 });
+      let m;
+      if(/\/v2\/checkout\/orders$/.test(url)){ const b = JSON.parse(opt.body), id = 'PP' + (pp.size + 1) + 'TESTORDER'; pp.set(id, { id, status: 'PAYER_ACTION_REQUIRED', purchase_units: b.purchase_units, ctx: b.payment_source.paypal.experience_context }); return ant({ id, links: [{ rel: 'payer-action', href: 'https://www.sandbox.paypal.com/checkoutnow?token=' + id }] }); }
+      if((m = /orders\/([A-Z0-9]+)\/capture$/.exec(url))){ const o = pp.get(m[1]); o.status = 'COMPLETED'; o.purchase_units[0].payments = { captures: [{ status: 'COMPLETED', amount: o.purchase_units[0].amount }] }; return ant(o); }
+      if((m = /orders\/([A-Z0-9]+)$/.exec(url))) return ant(pp.get(m[1]));
+    }
     if(/stripe\.com/.test(url)){ stripeSitzung = new URLSearchParams(opt.body); return { ok: true, status: 200, json: async ()=> ({ url: 'https://checkout.stripe.com/c/pay/cs_test_42' }) }; }
     lxpAnfragen.push({ url, opt });
     const id = ++auftrag;
@@ -35,6 +44,8 @@ module.exports = async ({ browser, basis, pr })=>{
     await route.fulfill({ status: r.status, headers: r.headers || {}, body: r.body || '' });
   });
   let stripeAufgerufen = '';
+  let paypalAufgerufen = '';
+  await p.route('https://www.sandbox.paypal.com/**', (r)=>{ paypalAufgerufen = r.request().url(); r.fulfill({ status: 204, body: '' }); });
   await p.route('https://checkout.stripe.com/**', (r)=>{ stripeAufgerufen = r.request().url(); r.fulfill({ status: 204, body: '' }); });
   await p.setViewportSize({ width: 412, height: 915 });
   await oeffnen(p, basis); if(appLaeuft) await appLaeuft(p);
@@ -55,6 +66,9 @@ module.exports = async ({ browser, basis, pr })=>{
   // Aufladen
   await p.evaluate(()=> document.getElementById('ktAufladen').click()); await p.waitForTimeout(300);
   await p.evaluate(()=> document.querySelector('[data-b="2000"]').click());
+  k = await p.evaluate(()=> ({ arten: [...document.querySelectorAll('[data-art]')].map(b=> b.dataset.art), knopf: document.getElementById('ktZahlen').textContent }));
+  pr('Aufladen: Auswahl PayPal oder Karte/SEPA/Apple/Google Pay', k.arten.join() === 'paypal,stripe' && /mit PayPal bezahlen/.test(k.knopf), k);
+  await p.evaluate(()=> document.querySelector('[data-art="stripe"]').click());
   if(B) await p.screenshot({ path: B + '/kecht_2.png' });
   await p.evaluate(()=> document.getElementById('ktZahlen').click());
   for(let i = 0; i < 30 && !stripeAufgerufen; i++) await p.waitForTimeout(100);
@@ -106,6 +120,24 @@ module.exports = async ({ browser, basis, pr })=>{
     LS.set('konto_schluessel', alt); return r;
   });
   pr('Guthaben reicht nicht: Hinweis „aufladen“, nichts verschickt', !leer.ok && leer.fehlt && /aufladen/.test(leer.e) && lxpAnfragen.length === vorher, leer);
+
+  // PayPal direkt: Bestellung, Rueckkehr mit ?konto=paypal&token=..., Abschluss -> +10 €
+  const gVor = await p.evaluate(async ()=> (await kontoAnfrage('stand')).guthaben);
+  await p.evaluate(()=> ansichtKontoEcht()); await p.waitForTimeout(500);
+  await p.evaluate(()=> document.getElementById('ktAufladen').click()); await p.waitForTimeout(300);
+  await p.evaluate(()=>{ document.querySelector('[data-b="1000"]').click(); document.querySelector('[data-art="paypal"]').click(); });
+  if(B) await p.screenshot({ path: B + '/kecht_7.png' });
+  await p.evaluate(()=> document.getElementById('ktZahlen').click());
+  for(let i = 0; i < 30 && !paypalAufgerufen; i++) await p.waitForTimeout(100);
+  const ppId = (/token=([A-Z0-9]+)/.exec(paypalAufgerufen) || [])[1];
+  const bestellung = ppId && pp.get(ppId);
+  pr('PayPal: Weiterleitung zu PayPal mit 10,00 €, Rücksprung ?konto=paypal', !!bestellung && bestellung.purchase_units[0].amount.value === '10.00' && /\?konto=paypal$/.test(bestellung.ctx.return_url), { paypalAufgerufen, ctx: bestellung && bestellung.ctx });
+  if(bestellung) bestellung.status = 'APPROVED';   // Nutzer hat bei PayPal bestaetigt
+  await p.evaluate((id)=>{ history.replaceState(null, '', location.pathname + '?konto=paypal&token=' + id + '&PayerID=TEST'); kontoStartPruefen(); }, ppId);
+  await p.waitForFunction((soll)=> ((document.querySelector('.kt-gross') || {}).textContent || '').includes(soll), (gVor / 100 + 10).toFixed(2).replace('.', ','), { timeout: 8000 }).catch(()=>{});
+  k = await p.evaluate(()=> ({ gross: (document.querySelector('.kt-gross') || {}).textContent, such: location.search }));
+  pr('PayPal: nach der Rückkehr abgeschlossen und gutgeschrieben, Adresse wieder sauber', bestellung && bestellung.status === 'COMPLETED' && k.gross.includes((gVor / 100 + 10).toFixed(2).replace('.', ',')) && !k.such, { k, gVor, st: bestellung && bestellung.status });
+  if(B) await p.screenshot({ path: B + '/kecht_8.png' });
 
   // Einrichtung: Schritt Briefversand ohne LetterXpress-Konto
   await p.evaluate(()=> ansichtEinrichtung('brief')); await p.waitForTimeout(300);

@@ -24,6 +24,7 @@ const zlib = require('zlib');
 const VERSION = 7;
 const ZIEL = 'https://api.letterxpress.de';
 const STRIPE = 'https://api.stripe.com';
+const PAYPAL = { sandbox: 'https://api-m.sandbox.paypal.com', live: 'https://api-m.paypal.com' };
 const METHODEN = ['POST', 'PUT', 'DELETE'];
 const MAX_AUFLADEN_CENT = 25000;          // Kleinbetragsrechnung (§ 33 UStDV): hoechstens 250 EUR je Beleg
 const MAX_PDF_BASE64 = 20 * 1024 * 1024;  // ~15 MB PDF
@@ -102,7 +103,12 @@ function erstelleKern(deps) {
   const codes = () => liste(env.ZUGANGSCODES);
   const preise = () => ({ brief: ganz(env.PREIS_BRIEF_CENT, 150), seite: ganz(env.PREIS_SEITE_CENT, 10), inklusiveSeiten: 1 });
   const betraege = () => liste(env.AUFLADE_BETRAEGE || '1000,2000,5000').map((x) => ganz(x, 0)).filter((x) => x >= 100 && x <= MAX_AUFLADEN_CENT);
-  const kontoBereit = () => !!(env.LXP_BENUTZER && env.LXP_APIKEY && env.STRIPE_GEHEIM && env.STRIPE_WEBHOOK_GEHEIM && env.KONTO_SPEICHER);
+  const stripeAn = () => !!(env.STRIPE_GEHEIM && env.STRIPE_WEBHOOK_GEHEIM);
+  const paypalAn = () => !!(env.PAYPAL_CLIENT_ID && env.PAYPAL_GEHEIM);
+  const paypalBasis = () => (env.PAYPAL_MODUS === 'live' ? PAYPAL.live : PAYPAL.sandbox);
+  const zahlarten = () => [].concat(paypalAn() ? ['paypal'] : [], stripeAn() ? ['stripe'] : []);
+  const testmodus = () => (stripeAn() && /^sk_test_/.test(String(env.STRIPE_GEHEIM))) || (paypalAn() && env.PAYPAL_MODUS !== 'live');
+  const kontoBereit = () => !!(env.LXP_BENUTZER && env.LXP_APIKEY && (stripeAn() || paypalAn()) && env.KONTO_SPEICHER);
   const firma = () => ({
     name: env.FIRMA_NAME || '', anschrift: env.FIRMA_ANSCHRIFT || '', steuernummer: env.FIRMA_STEUERNUMMER || '',
     ustSatz: ganz(env.UST_SATZ, 19), kleinunternehmer: /^(1|ja|true)$/i.test(String(env.KLEINUNTERNEHMER || ''))
@@ -323,7 +329,7 @@ function erstelleKern(deps) {
         const b = await buchungen(kid);
         return json(200, cors, {
           guthaben: saldo(b), buchungen: b.slice(0, 300).map(({ ref, ...x }) => ({ ...x, auftrag: ref && x.art !== 'aufladung' ? ref : '' })),
-          preise: preise(), betraege: betraege(), firma: firma(), testmodus: /^sk_test_/.test(String(env.STRIPE_GEHEIM || ''))
+          preise: preise(), betraege: betraege(), firma: firma(), testmodus: testmodus(), zahlarten: zahlarten()
         });
       }
       if (aktion === 'aufladen') {
@@ -331,6 +337,23 @@ function erstelleKern(deps) {
         if (!betraege().includes(betrag)) return json(400, cors, { status: 400, message: 'Betrag nicht erlaubt.' });
         const zurueck = String(daten.zurueck || '').split('#')[0];
         if (!herkunftListe().some((h) => zurueck === h || zurueck.startsWith(h + '/'))) return json(400, cors, { status: 400, message: 'Rücksprungadresse nicht erlaubt.' });
+        const art = daten.zahlart === 'paypal' ? 'paypal' : 'stripe';
+        if (!zahlarten().includes(art)) return json(400, cors, { status: 400, message: 'Diese Zahlart ist nicht eingerichtet.' });
+        if (art === 'paypal') {
+          // PayPal direkt: Bestellung anlegen; abgebucht wird erst beim Abschluss nach der Rueckkehr (paypal-abschluss)
+          const basis = zurueck.split('?')[0];
+          const p = await paypalAnfrage('/v2/checkout/orders', 'POST', {
+            intent: 'CAPTURE',
+            purchase_units: [{ custom_id: kid, description: 'Guthaben Briefversand', amount: { currency_code: 'EUR', value: (betrag / 100).toFixed(2) } }],
+            payment_source: { paypal: { experience_context: {
+              return_url: basis + '?konto=paypal', cancel_url: basis + '#konto-abgebrochen',
+              locale: 'de-DE', user_action: 'PAY_NOW', shipping_preference: 'NO_SHIPPING', brand_name: (firma().name || 'Briefversand').slice(0, 127)
+            } } }
+          }, 'neu-' + kid.slice(0, 16) + '-' + jetzt());
+          const link = p.j && Array.isArray(p.j.links) && p.j.links.find((l) => l.rel === 'payer-action' || l.rel === 'approve');
+          if (!p.ok || !link) { log('PayPal: Bestellung nicht angelegt (' + p.status + ')'); return json(502, cors, { status: 502, message: 'PayPal gerade nicht erreichbar.' }); }
+          return json(200, cors, { url: link.href, bestellung: p.j.id });
+        }
         const r = await holeFetch()(STRIPE + '/v1/checkout/sessions', {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + env.STRIPE_GEHEIM, 'Content-Type': 'application/x-www-form-urlencoded', 'Stripe-Version': '2024-06-20' },
@@ -346,11 +369,56 @@ function erstelleKern(deps) {
         if (!r.ok || !j || !j.url) { log('Stripe: Checkout nicht angelegt (' + r.status + ')'); return json(502, cors, { status: 502, message: 'Zahlungsseite gerade nicht erreichbar.' }); }
         return json(200, cors, { url: j.url });
       }
+      if (aktion === 'paypal-abschluss') {
+        if (!paypalAn()) return json(400, cors, { status: 400, message: 'PayPal ist nicht eingerichtet.' });
+        const id = String(daten.bestellung || '');
+        if (!/^[A-Z0-9]{8,40}$/.test(id)) return json(400, cors, { status: 400, message: 'Bestellnummer ungültig.' });
+        const rk = 'p-' + id;
+        const schon = (await speicher().partition(kid)).find((e) => e.rowKey === rk);
+        if (schon) return json(200, cors, { ok: true, betrag: +schon.betrag, schon: true });
+        const o = await paypalAnfrage('/v2/checkout/orders/' + id, 'GET');
+        const pu = o.j && o.j.purchase_units && o.j.purchase_units[0];
+        if (!o.ok || !pu || pu.custom_id !== kid) return json(403, cors, { status: 403, message: 'Diese Zahlung gehört nicht zu diesem Konto.' });
+        let fertig = o.j.status === 'COMPLETED' ? o.j : null;
+        if (!fertig) {
+          if (o.j.status !== 'APPROVED') return json(409, cors, { status: 409, message: 'Die Zahlung wurde bei PayPal nicht bestätigt. Es wurde nichts abgebucht.' });
+          const c = await paypalAnfrage('/v2/checkout/orders/' + id + '/capture', 'POST', {}, 'erfassen-' + id);
+          if (!c.ok || !c.j || c.j.status !== 'COMPLETED') { log('PayPal: Abschluss fehlgeschlagen (' + c.status + ')'); return json(502, cors, { status: 502, message: 'PayPal hat die Zahlung nicht abgeschlossen. Es wurde nichts abgebucht.' }); }
+          fertig = c.j;
+        }
+        const cap = (((fertig.purchase_units || [])[0] || {}).payments || {}).captures;
+        const erfasst = Array.isArray(cap) && cap.find((x) => x.status === 'COMPLETED');
+        const wert = erfasst ? erfasst.amount : pu.amount;
+        const betrag = Math.round(parseFloat(wert && wert.value) * 100);
+        if (!(betrag > 0) || (wert && wert.currency_code !== 'EUR')) return json(502, cors, { status: 502, message: 'PayPal-Antwort unvollständig.' });
+        await speicher().anlegen({ partitionKey: kid, rowKey: rk, art: 'aufladung', betrag, zeit: new Date(jetzt()).toISOString(), seiten: 0, ref: id, status: 'ok', test: env.PAYPAL_MODUS !== 'live' });
+        return json(200, cors, { ok: true, betrag });
+      }
       return json(404, cors, { status: 404, message: 'Unbekannte Aktion' });
     } catch (err) {
       log('Konto: Fehler beim Speicher');
       return json(500, cors, { status: 500, message: 'Konto vorübergehend nicht erreichbar.' });
     }
+  }
+
+  // ---------- PayPal (REST v2, Zugang ueber Client-ID und Secret) ----------
+  let ppToken = null;
+  async function paypalAnfrage(pfad, methode, inhalt, anfrageId) {
+    if (!ppToken || ppToken.bis < jetzt()) {
+      const t = await holeFetch()(paypalBasis() + '/v1/oauth2/token', {
+        method: 'POST',
+        headers: { 'Authorization': 'Basic ' + Buffer.from(env.PAYPAL_CLIENT_ID + ':' + env.PAYPAL_GEHEIM).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'grant_type=client_credentials'
+      });
+      const tj = await t.json().catch(() => null);
+      if (!t.ok || !tj || !tj.access_token) return { ok: false, status: t.status, j: tj };
+      ppToken = { wert: tj.access_token, bis: jetzt() + Math.max(60, (tj.expires_in || 300) - 60) * 1000 };
+    }
+    const kopf = { 'Authorization': 'Bearer ' + ppToken.wert, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+    if (anfrageId) kopf['PayPal-Request-Id'] = anfrageId;   // Wiederholung -> keine doppelte Bestellung/Abbuchung
+    const r = await holeFetch()(paypalBasis() + pfad, { method: methode, headers: kopf, body: inhalt === undefined ? undefined : JSON.stringify(inhalt) });
+    const j = await r.json().catch(() => null);
+    return { ok: r.ok, status: r.status, j };
   }
 
   // ---------- /stripe/webhook ----------

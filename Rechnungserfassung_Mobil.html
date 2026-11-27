@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-BoPQJRnMigpQCZ0kIvTXreaXRUyCYcQLFryG2bmFacY=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-hxRM2UK4GioBSpgQ4EisbdauN+amNXUlrzkVj6r2yN8=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -525,6 +525,11 @@ try{
   .kt-knr{display:flex; gap:8px; margin-top:12px;} .kt-knr button{flex:1; width:auto; margin:0; border:0; border-radius:11px; padding:10px; font-size:14px; font-weight:700; cursor:pointer;}
   .kt-w{background:#fff; color:#1f4e79;} .kt-g{background:rgba(255,255,255,.16); color:#fff;}
   .kt-gut .kt-h{color:#dbe8f5;}
+  .kt-zart{display:flex; gap:12px; align-items:flex-start; width:100%; text-align:left; background:none; border:1px solid var(--rand, #d6dde6); border-radius:12px; padding:10px 12px; margin-top:8px; color:inherit; font:inherit; cursor:pointer;}
+  .kt-zart b{display:block; font-weight:600;} .kt-zart small{display:block; opacity:.75;}
+  .kt-zart.an{border-color:#1f4e79; box-shadow:0 0 0 1px #1f4e79 inset;} body.dunkel .kt-zart.an{border-color:#8fb8e3; box-shadow:0 0 0 1px #8fb8e3 inset;}
+  .kt-zpunkt{flex:0 0 auto; width:18px; height:18px; border-radius:50%; border:2px solid currentColor; opacity:.6; margin-top:2px; box-sizing:border-box;}
+  .kt-zart.an .kt-zpunkt{opacity:1; border:6px solid #1f4e79;} body.dunkel .kt-zart.an .kt-zpunkt{border-color:#8fb8e3;}
   .kt-k:not(.kt-gut) .kt-g{background:var(--flaeche-2, #eef1f5); color:var(--text, #1f2a37); border:1px solid var(--rand, #d6dde6);}
   body.dunkel .kt-k:not(.kt-gut) .kt-g{background:#2a3340; color:#e8edf3; border-color:#3a4554;}
   .kt-zahlen{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center;} .kt-zahlen b{display:block; font-size:20px;} .kt-zahlen span{font-size:11.5px; color:var(--text-schwach);}
@@ -23522,7 +23527,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v522';
+const APP_VERSION = 'v523';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
@@ -24706,6 +24711,17 @@ async function ansichtKontoEcht(opt){
   const merk = String(Math.random());
   app.dataset.konto = merk;
   if(!app.querySelector('.kt-gut')) app.innerHTML = '<div class="kt-k kt-gut"><div class="kt-t">Guthaben für Briefversand</div><div class="kt-gross">…</div><small>wird geladen …</small></div>';
+  if(opt.paypal){
+    // Rueckkehr von PayPal: erst jetzt wird die Zahlung abgeschlossen (vorher ist nichts abgebucht)
+    const bestellung = opt.paypal; opt = Object.assign({}, opt, { paypal: '' });
+    const sm = app.querySelector('.kt-gut small'); if(sm) sm.textContent = 'PayPal-Zahlung wird abgeschlossen …';
+    try{
+      const r = await kontoAnfrage('paypal-abschluss', { bestellung });
+      LS.set('konto_zahlung_offen', null);
+      appToastAnzeigen(r.schon ? 'Diese Zahlung ist schon gutgeschrieben.' : 'Guthaben aufgeladen – danke!', 3000);
+    }catch(e){ LS.set('konto_zahlung_offen', null); appToastAnzeigen('PayPal: ' + e.message, 5000); }
+    if(app.dataset.konto !== merk) return;
+  }
   let s;
   try{ s = await kontoAnfrage('stand'); }
   catch(e){
@@ -24772,23 +24788,31 @@ async function ansichtKontoEcht(opt){
 function ansichtKontoAufladen(s){
   setzeTitel('Guthaben aufladen', ()=> ansichtKontoEcht());
   const betraege = (s.betraege && s.betraege.length ? s.betraege : [1000, 2000, 5000]);
-  let betrag = betraege[Math.min(1, betraege.length - 1)];
+  const arten = (s.zahlarten && s.zahlarten.length ? s.zahlarten : ['stripe']);
+  let betrag = betraege[Math.min(1, betraege.length - 1)], art = LS.get('konto_zahlart', '');
+  if(!arten.includes(art)) art = arten[0];
+  const ARTEN = { paypal: { titel: 'PayPal', text: 'Mit deinem PayPal-Konto bezahlen.' },
+    stripe: { titel: 'Karte, SEPA, Apple Pay, Google Pay', text: 'Über unseren Zahlungsdienst Stripe' + (arten.includes('paypal') ? '' : ' (auch PayPal, falls freigeschaltet)') + '.' } };
   const zeichnen = ()=>{
-    app.innerHTML = (s.testmodus ? '<div class="kt-vorschau">Testmodus – Testkarte 4242 4242 4242 4242, kein echtes Geld.</div>' : '') +
+    app.innerHTML = (s.testmodus ? '<div class="kt-vorschau">Testmodus – kein echtes Geld. Karte: 4242 4242 4242 4242, beliebiges Datum in der Zukunft' + (arten.includes('paypal') ? '. PayPal: mit einem Sandbox-Testkonto anmelden.' : '.') + '</div>' : '') +
       '<div class="kt-k"><div class="kt-t">Betrag</div><div class="kt-chips">' + betraege.map(n=> '<button type="button" class="kt-chip' + (betrag === n ? ' an' : '') + '" data-b="' + n + '">' + kontoCent(n).replace(',00', '') + '</button>').join('') + '</div>' +
         (s.preise && s.preise.brief ? '<p class="kt-h">Reicht für etwa ' + Math.floor(betrag / s.preise.brief) + ' Briefe mit einer Seite.</p>' : '') + '</div>' +
-      '<div class="kt-k"><div class="kt-t">Bezahlen</div><p class="kt-h" style="margin-top:0;">Auf der sicheren Seite unseres Zahlungsdienstes Stripe: Kreditkarte, SEPA-Lastschrift, PayPal, Apple Pay oder Google Pay. Danach kommst du automatisch hierher zurück. Die App erfährt dabei weder Karten- noch Kontodaten.</p></div>' +
-      '<button type="button" class="kt-voll" id="ktZahlen">' + kontoCent(betrag) + ' aufladen</button>' +
+      '<div class="kt-k"><div class="kt-t">Bezahlen mit</div>' +
+        (arten.length > 1 ? arten.map(a=> '<button type="button" class="kt-zart' + (a === art ? ' an' : '') + '" data-art="' + a + '"><span class="kt-zpunkt"></span><span><b>' + ARTEN[a].titel + '</b><small>' + ARTEN[a].text + '</small></span></button>').join('')
+          : '<p class="kt-h" style="margin-top:0;"><b>' + ARTEN[art].titel + '</b> – ' + ARTEN[art].text + '</p>') +
+        '<p class="kt-h">Danach kommst du automatisch hierher zurück. Die App erfährt dabei weder Karten- noch Kontodaten.</p></div>' +
+      '<button type="button" class="kt-voll" id="ktZahlen">' + kontoCent(betrag) + (art === 'paypal' ? ' mit PayPal bezahlen' : ' aufladen') + '</button>' +
       '<p class="kt-h">Den Beleg findest du danach unter „Belege für die Steuer“.</p>';
     app.querySelectorAll('[data-b]').forEach(b=> b.onclick = ()=>{ betrag = +b.dataset.b; zeichnen(); });
+    app.querySelectorAll('[data-art]').forEach(b=> b.onclick = ()=>{ art = b.dataset.art; LS.set('konto_zahlart', art); zeichnen(); });
     document.getElementById('ktZahlen').onclick = async (ev)=>{
-      const k = ev.currentTarget; k.disabled = true; k.textContent = 'Zahlungsseite wird geöffnet …';
+      const k = ev.currentTarget, alt = k.textContent; k.disabled = true; k.textContent = 'Zahlungsseite wird geöffnet …';
       try{
-        const j = await kontoAnfrage('aufladen', { betrag, zurueck: location.href.split('#')[0] });
-        LS.set('konto_zahlung_offen', { betrag, am: new Date().toISOString() });
+        const j = await kontoAnfrage('aufladen', { betrag, zahlart: art, zurueck: location.href.split('#')[0].split('?')[0] });
+        LS.set('konto_zahlung_offen', { betrag, am: new Date().toISOString(), art, bestellung: j.bestellung || '' });
         await Tresor.kvWarten();
         location.href = j.url;
-      }catch(e){ k.disabled = false; k.textContent = kontoCent(betrag) + ' aufladen'; appToastAnzeigen('Aufladen gerade nicht möglich: ' + e.message, 4000); }
+      }catch(e){ k.disabled = false; k.textContent = alt; appToastAnzeigen('Aufladen gerade nicht möglich: ' + e.message, 4000); }
     };
   };
   zeichnen(); window.scrollTo(0, 0);
@@ -24867,6 +24891,13 @@ async function kontoJahresuebersicht(s, jahr){
 }
 // Rueckkehr von der Zahlungsseite (#konto-bezahlt / #konto-abgebrochen) und Abfrage, ob die Weiterleitung ein Konto anbietet
 function kontoStartPruefen(){
+  const q = new URLSearchParams(location.search);
+  if(q.get('konto') === 'paypal'){
+    const bestellung = q.get('token') || '';
+    try{ history.replaceState(null, '', location.pathname); }catch(_){}
+    if(kontoAn()) setTimeout(()=> ansichtKonto({ paypal: bestellung }), 0);
+    return;
+  }
   const h = location.hash;
   if(/^#konto-(bezahlt|abgebrochen)$/.test(h)){
     try{ history.replaceState(null, '', location.pathname + location.search); }catch(_){}

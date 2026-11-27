@@ -1,7 +1,8 @@
 # Guthabenkonto (Weiterleitung Version 7)
 
-Briefe der Nutzer laufen über **dein** LetterXpress-Konto. Bezahlt wird mit Guthaben, das die Nutzer über
-Stripe aufladen (Karte, SEPA-Lastschrift, PayPal, Apple Pay, Google Pay). Die Nutzer bleiben anonym.
+Briefe der Nutzer laufen über **dein** LetterXpress-Konto. Bezahlt wird mit Guthaben, das die Nutzer
+aufladen: über **PayPal direkt** und/oder über **Stripe** (Karte, SEPA-Lastschrift, Apple Pay, Google Pay).
+Eingerichtet sein muss mindestens eins von beiden. Die Nutzer bleiben anonym.
 
 ## Was gespeichert wird
 
@@ -31,10 +32,15 @@ Buchungen: Art, Betrag, Zeit, Seitenzahl und Auftragsnummer.
    - Firmendaten für die Belege
 
    Den Stripe-Webhook legt das Skript selbst an.
-5. Am Ende zeigt das Skript den **Statistik-Schlüssel**. Bewahre ihn gut auf.
+5. **PayPal direkt** (optional): Auf [developer.paypal.com](https://developer.paypal.com) mit deinem
+   PayPal-Konto anmelden, unter *Apps & Credentials* im Bereich **Sandbox** eine App anlegen und
+   Client-ID und Secret kopieren. Das Skript fragt beides ab, Modus `sandbox`. Zum Bezahlen im Test nimmst
+   du eines der Sandbox-Testkonten (*Testing Tools › Sandbox Accounts*, Typ „Personal“). Wenn PayPal direkt
+   läuft, schaltest du PayPal bei Stripe am besten aus, damit es nicht doppelt angeboten wird.
+6. Am Ende zeigt das Skript den **Statistik-Schlüssel**. Bewahre ihn gut auf.
 
 Später echt abrechnen: Führe das Skript erneut mit `konto` aus und gib dabei den `sk_live_…`-Key ein. Der
-Webhook wird dann neu angelegt.
+Webhook wird dann neu angelegt. Für PayPal trägst du die Live-Zugangsdaten ein und setzt den Modus auf `live`.
 
 ## Einstellungen
 
@@ -45,6 +51,8 @@ Du findest sie im Azure-Portal unter *Funktions-App › Umgebungsvariablen*.
 | `LXP_BENUTZER`, `LXP_APIKEY` | dein LetterXpress-Zugang |
 | `LXP_MODUS` | `live` (echte Briefe) oder `test` (alles nur Test) |
 | `STRIPE_GEHEIM`, `STRIPE_WEBHOOK_GEHEIM` | Stripe-Key und Webhook-Geheimnis |
+| `PAYPAL_CLIENT_ID`, `PAYPAL_GEHEIM` | PayPal-Zugang (REST-App) |
+| `PAYPAL_MODUS` | `sandbox` (Test) oder `live` |
 | `PREIS_BRIEF_CENT`, `PREIS_SEITE_CENT` | Preis je Brief (inkl. 1 Seite) und je weitere Seite, in Cent |
 | `AUFLADE_BETRAEGE` | wählbare Beträge in Cent, z. B. `1000,2000,5000` (höchstens 25000) |
 | `FIRMA_NAME`, `FIRMA_ANSCHRIFT`, `FIRMA_STEUERNUMMER` | für die Belege; ohne Name und Anschrift gibt es keine Belege |
