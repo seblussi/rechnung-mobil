@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-3TujkumcCij5hLSpVgiDZZQU1eSOUTeXIF0Hpo43M14=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-kdPF28sSSrl+fQrCUUde8u2+1R2hC/0om8Pgu58wiJI=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -513,6 +513,33 @@ try{
   .ts-logo{font-size:40px; text-align:center; margin-bottom:6px;}
   .ts-karte h1{font-size:23px; text-align:center; margin:0 0 12px;}
   .ts-karte p{font-size:15px; line-height:1.5; margin:0 0 14px;}
+  /* Konto (Wunsch 27.11.2026) */
+  body.design-einhand .ds-nav.mit-konto, body.design-klinik .ds-nav.mit-konto{grid-template-columns:repeat(6, minmax(0, 1fr));}
+  .kt-vorschau{font-size:12px; color:#8a5a00; background:#fff4dc; border:1px solid #f0d9a6; border-radius:10px; padding:7px 10px; margin:0 0 12px;}
+  body.dunkel .kt-vorschau{background:#3a2f17; border-color:#5c4a22; color:#f0d9a6;}
+  .kt-k{background:var(--karte); border:1px solid var(--rand); border-radius:16px; padding:14px; margin-bottom:12px;}
+  .kt-t{font-size:12px; font-weight:700; letter-spacing:.05em; color:var(--text-schwach); margin:0 0 8px; text-transform:uppercase;}
+  .kt-gut{background:linear-gradient(135deg, #1f4e79, #2d6aa3); color:#fff; border:0;}
+  .kt-gut .kt-t{color:#cfe0f2;} .kt-gross{font-size:34px; font-weight:800; margin:2px 0 4px; font-variant-numeric:tabular-nums;}
+  .kt-gut small{color:#cfe0f2; font-size:12.5px;}
+  .kt-knr{display:flex; gap:8px; margin-top:12px;} .kt-knr button{flex:1; width:auto; margin:0; border:0; border-radius:11px; padding:10px; font-size:14px; font-weight:700; cursor:pointer;}
+  .kt-w{background:#fff; color:#1f4e79;} .kt-g{background:rgba(255,255,255,.16); color:#fff;}
+  .kt-zahlen{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; text-align:center;} .kt-zahlen b{display:block; font-size:20px;} .kt-zahlen span{font-size:11.5px; color:var(--text-schwach);}
+  .kt-r{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--rand); font-size:14px;}
+  .kt-r:first-of-type{border-top:0;} .kt-r small{display:block; color:var(--text-schwach); font-size:12px;}
+  .kt-plus{color:#1f8a4c; font-weight:700; white-space:nowrap;} .kt-minus{font-weight:700; white-space:nowrap;}
+  .kt-pro{border:2px solid var(--ds-gkv, #7d4e9e);} .kt-badge{background:var(--ds-gkv, #7d4e9e); color:#fff; border-radius:7px; padding:2px 7px; font-size:11px; font-weight:700;}
+  .kt-link{display:inline; width:auto; margin:0; padding:0; border:0; background:none; color:var(--ds-primaer, #1f4e79); font:inherit; font-size:13.5px; text-decoration:underline; cursor:pointer;}
+  body.dunkel .kt-link{color:#8ac2f0;}
+  .kt-chips{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;} .kt-chip{width:auto; margin:0; border:1px solid var(--rand); border-radius:12px; padding:12px 0; font-weight:700; font-size:16px; background:var(--karte); color:var(--text); cursor:pointer;}
+  .kt-chip.an{border:2px solid #1f4e79; color:#1f4e79;} body.dunkel .kt-chip.an{border-color:#8ac2f0; color:#8ac2f0;}
+  .kt-zl{display:flex; align-items:center; gap:10px; padding:11px 0; border-top:1px solid var(--rand); font-size:14.5px; cursor:pointer;} .kt-zl:first-of-type{border-top:0;}
+  .kt-rad{width:18px; height:18px; border-radius:50%; border:2px solid var(--text-schwach); box-sizing:border-box;} .kt-zl.an .kt-rad{border:6px solid #1f4e79;}
+  .kt-voll{display:block; width:100%; border:0; border-radius:13px; padding:14px; font-size:16px; font-weight:700; background:#1f4e79; color:#fff; margin-top:6px; cursor:pointer;}
+  .kt-h{font-size:12.5px; color:var(--text-schwach); line-height:1.45; margin:8px 0 0;}
+  .kt-tab{display:grid; grid-template-columns:1.6fr .7fr .7fr; font-size:13.5px;} .kt-tab div{padding:8px 4px; border-top:1px solid var(--rand);}
+  .kt-tab .kt-k1{font-weight:700; color:var(--text-schwach); font-size:12px; border:0; text-align:center;} .kt-tab .kt-k1:first-child{text-align:left;}
+  .kt-ok{color:#1f8a4c; font-weight:800; text-align:center;} .kt-no{color:var(--text-schwach); text-align:center;}
   /* kurze Statusseiten (nur Ueberschrift + ein Satz, z. B. „Die Microsoft-Anmeldung wird erneuert.“): mittig */
   .ts-karte > h1 + p:last-child{text-align:center;}
   .ts-klein{font-size:13px !important; opacity:.75;}
@@ -2699,6 +2726,10 @@ try{
     body.design-einhand.nav-links .ds-nav-btn span, body.design-einhand.nav-rechts .ds-nav-btn span{display:none;}
     body.design-einhand.nav-links .ds-nav-btn.gross, body.design-einhand.nav-rechts .ds-nav-btn.gross{width:52px; height:52px; margin:2px 0; border-radius:16px;}
     body.design-einhand.nav-links .ds-nav-btn.gross svg, body.design-einhand.nav-rechts .ds-nav-btn.gross svg{width:26px; height:26px;}
+    /* mit „Konto“ sechs Knoepfe: etwas flacher, damit die OneDrive-Anzeige darunter Platz hat */
+    body.design-einhand.nav-links .ds-nav.mit-konto, body.design-einhand.nav-rechts .ds-nav.mit-konto{padding:6px 0;}
+    body.design-einhand.nav-links .ds-nav.mit-konto .ds-nav-btn, body.design-einhand.nav-rechts .ds-nav.mit-konto .ds-nav-btn{height:38px;}
+    body.design-einhand.nav-links .ds-nav.mit-konto .ds-nav-btn.gross, body.design-einhand.nav-rechts .ds-nav.mit-konto .ds-nav-btn.gross{height:46px; width:46px;}
     body.ds-leiste-global.design-einhand.nav-links, body.ds-leiste-global.design-einhand.nav-rechts{--ds-leiste-h:env(safe-area-inset-bottom);}
     body.ds-leiste-global.design-einhand.nav-links main{padding-left:80px !important;}
     body.ds-leiste-global.design-einhand.nav-rechts main{padding-right:80px !important;}
@@ -4465,7 +4496,9 @@ async function gkvFallUeberallLoeschen(id){
   const x = gkvFaelleLaden().find(y=> y.id === id); if(!x) return false;
   const imFb = x.status === 'eingetragen' && x.zeile;
   const dzt = designFallZeit(x), dtag = dzt ? new Date(dzt.getFullYear(), dzt.getMonth(), dzt.getDate() - (dzt.getHours() < 7 ? 1 : 0)) : null;
-  if(!await betaFrage('„' + (x.name || 'Fall') + '“ unwiderruflich löschen?' + (imFb ? '\n\nDer Fall wird auch aus dem Fahrtenbuch entfernt' + (dtag ? ' (Dienst ' + fbTagText(dtag) + ')' : '') + '.' : ''), 'Löschen', 'Abbrechen')) return false;
+  const mitDoku = !!(x.dokuId && dokuLaden(x.dokuId));
+  if(!await betaFrage('„' + (x.name || 'Fall') + '“ unwiderruflich löschen?' + (imFb ? '\n\nDer Fall wird auch aus dem Fahrtenbuch entfernt' + (dtag ? ' (Dienst ' + fbTagText(dtag) + ')' : '') + '.' : '') +
+    (mitDoku ? '\n\nDie Dokumentation dazu (mit Fotos) wird ebenfalls gelöscht.' : ''), 'Löschen', 'Abbrechen')) return false;
   if(imFb){
     if(typeof msGraphStatus === 'undefined' || msGraphStatus !== 'angemeldet'){ await betaOverlay.meldung('Zum Löschen im Fahrtenbuch braucht es die OneDrive-Anmeldung.', 'Fahrtenbuch'); return false; }
     betaOverlay.zeigen('Fahrtenbuch'); betaOverlay.fortschritt(null);
@@ -4489,6 +4522,7 @@ async function gkvFallUeberallLoeschen(id){
     }catch(e){ betaOverlay.schliessen(); await betaOverlay.meldung('Löschen hat nicht geklappt: ' + (e.message || e), 'Fahrtenbuch'); return false; }
     try{ fbBuchCache = null; }catch(_){}
   } else gkvFaelleSpeichern(gkvFaelleLaden().filter(y=> y.id !== id));
+  if(x.dokuId) dokuGanzLoeschen(x.dokuId);   // Wunsch 27.11.2026: Loeschen heisst loeschen -- auch die Dokumentation
   appToastAnzeigen('Gelöscht.', 2000);
   return true;
 }
@@ -7431,6 +7465,14 @@ async function rechnungsnummernVergeben(faelleAusw){
 const DOKU_ORDNER = 'KVBW Onedrive/Dokumentation';
 function dokuNeueId(){ const d = new Date(); return 'D' + d.getFullYear() + zz2(d.getMonth() + 1) + zz2(d.getDate()) + '-' + Math.random().toString(36).slice(2, 7); }
 function dokuLaden(id){ return id ? LS.get('doku_' + id, null) : null; }
+// Dokumentation ganz loeschen: Fotos auf dem Geraet, Eintrag und Ordner in OneDrive (unwiderruflich)
+async function dokuGanzLoeschen(id){
+  if(!id) return;
+  const d = dokuLaden(id);
+  for(const f of (d && d.fotos) || []){ try{ dokuDb.weg(id + '/' + f.name).catch(()=>{}); if(f.original) dokuDb.weg(id + '/' + f.original).catch(()=>{}); }catch(_){} }
+  LS.set('doku_' + id, undefined);
+  try{ const token = await msGraphTokenHolen(); if(token) await fetch(msGraphPfadUrl(DOKU_ORDNER + '/' + id), { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } }); }catch(_){}
+}
 function dokuSpeichernLokal(d){
   // Fotos laden im Hintergrund hoch (Wunsch 21.11.2026): ein aelterer Stand (offene Maske) setzt „schon in OneDrive“ nie zurueck
   const alt = LS.get('doku_' + d.id, null);
@@ -8789,7 +8831,7 @@ function gkvUnfertigVerdrahten(root, neu){
     betaWischen(zeileEl, async ()=>{
       const ge = gkvEntwuerfe().find(x=> x.eid === eid); if(!ge) return false;
       if(!await betaFrage('Angefangenen Kassenpatienten „' + (ge.name || 'ohne Namen') + '“ verwerfen?', 'Verwerfen', 'Abbrechen')) return false;
-      gkvEntwurfVerwerfen(eid);
+      gkvEntwurfVerwerfen(eid); if(ge.dokuId) dokuGanzLoeschen(ge.dokuId);
       appToastAnzeigen('Verworfen.', 1800);
       if(neu) neu();
       return true;
@@ -24492,7 +24534,8 @@ const DS_ICON = {
   werkzeug: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5a4 4 0 0 0-5 5L4 16l4 4 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z"/></svg>',
   regler: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
   stift: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
-  pfeil: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'
+  pfeil: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>',
+  konto: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M15.5 14.5h2.5"/></svg>'
 };
 const DS_KACHEL = {
   ls: { code: 'LS', titel: 'Leichenschau', lang: 'Leichenschau' },
@@ -24503,6 +24546,77 @@ const DS_KACHEL = {
 // ---------- Startseite je Design ergaenzen ----------
 ansichtStart = (function(basis){ return function(){ basis(); try{ designStartErgaenzen(); }catch(e){ console.warn('Design', e); } try{ querStartAnordnen(); }catch(e){ console.warn('Querformat', e); } }; })(ansichtStart);
 
+// ---------- Konto (Wunsch 27.11.2026) ----------
+// Launch: immer; Alpha: zum Ausprobieren ueber die Einstellungen. Noch ohne echte Zahlungen -- Beispieldaten.
+function kontoFest(){ return typeof APP_KONFIG !== 'undefined'; }
+function kontoAn(){ return kontoFest() || !!LS.get('konto_vorschau', false); }
+const KONTO_BEISPIEL = {
+  guthaben: 23.40, briefPreis: null, zuletzt: '2026-11-03', abo: { stufe: 'Pro', takt: 'monatlich', bis: '2026-12-01', ueber: 'App Store' },
+  statistik: { briefe: 214, erinnerungen: 37, porto: 318.62 },
+  bewegungen: [
+    { text: 'Brief · Rechnung Nr. WH261127-141', am: '2026-11-27', betrag: -1.45 },
+    { text: 'Brief · Erinnerung Nr. PE261020-118', am: '2026-11-26', betrag: -1.45 },
+    { text: 'Aufladung · PayPal', am: '2026-11-03', betrag: 50, beleg: 'K-2026-0412' }],
+  belege: 12
+};
+function kontoVorschauHinweis(){ return '<div class="kt-vorschau">Vorschau mit Beispieldaten – Zahlungen, Abo und Belege kommen ' + (kontoFest() ? 'mit der fertigen App' : 'mit der Launch-Version') + '.</div>'; }
+function kontoNochNicht(){ appToastAnzeigen('Kommt ' + (kontoFest() ? 'mit der fertigen App' : 'mit der Launch-Version') + ' – hier noch ohne echte Zahlung.', 3000); }
+function ansichtKonto(){
+  setzeTitel('Konto', ()=> ansichtStart());
+  const k = KONTO_BEISPIEL, eur = (n)=> betaEuro(n);
+  app.innerHTML = kontoVorschauHinweis() +
+    '<div class="kt-k kt-gut"><div class="kt-t">Guthaben für Briefversand</div><div class="kt-gross">' + eur(k.guthaben) + '</div>' +
+      '<small>zuletzt aufgeladen ' + isoDe(k.zuletzt) + '</small>' +
+      '<div class="kt-knr"><button type="button" class="kt-w" id="ktAufladen">Aufladen</button><button type="button" class="kt-g" id="ktAuto">Automatisch aufladen</button></div></div>' +
+    '<div class="kt-k kt-pro"><div style="display:flex; justify-content:space-between; align-items:center;"><div class="kt-t" style="margin:0;">Abo</div><span class="kt-badge">' + htmlEsc(k.abo.stufe.toUpperCase()) + '</span></div>' +
+      '<div class="kt-r"><div>' + htmlEsc(k.abo.stufe) + ', ' + htmlEsc(k.abo.takt) + '<small>verlängert sich am ' + isoDe(k.abo.bis) + ' · über den ' + htmlEsc(k.abo.ueber) + '</small></div><button type="button" class="kt-link" id="ktAboVerwalten">Verwalten</button></div>' +
+      '<button type="button" class="kt-link" id="ktProInfo">Was ist in Pro enthalten?</button></div>' +
+    '<div class="kt-k"><div class="kt-t">Statistik ' + new Date().getFullYear() + '</div><div class="kt-zahlen">' +
+      '<div><b>' + k.statistik.briefe + '</b><span>Briefe verschickt</span></div><div><b>' + k.statistik.erinnerungen + '</b><span>Erinnerungen</span></div><div><b>' + eur(k.statistik.porto) + '</b><span>Porto + Versand</span></div></div></div>' +
+    '<div class="kt-k"><div class="kt-t">Letzte Bewegungen</div>' + k.bewegungen.map(b=> '<div class="kt-r"><div>' + htmlEsc(b.text) + '<small>' + isoDe(b.am) + (b.beleg ? ' · Beleg ' + htmlEsc(b.beleg) : '') + '</small></div>' +
+      '<span class="' + (b.betrag > 0 ? 'kt-plus' : 'kt-minus') + '">' + (b.betrag > 0 ? '+' : '−') + eur(Math.abs(b.betrag)) + '</span></div>').join('') +
+      '<p class="kt-h" style="text-align:right;"><button type="button" class="kt-link" id="ktAlle">alle Bewegungen</button></p></div>' +
+    '<div class="kt-k"><div class="kt-t">Belege für die Steuer</div>' +
+      '<div class="kt-r"><div>Jahresübersicht ' + new Date().getFullYear() + '<small>alle Aufladungen und das Abo, als PDF</small></div><button type="button" class="kt-link" id="ktJahr">PDF</button></div>' +
+      '<div class="kt-r"><div>Einzelbelege<small>je Aufladung und Abo-Zahlung</small></div><button type="button" class="kt-link" id="ktBelege">' + k.belege + ' ›</button></div></div>';
+  document.getElementById('ktAufladen').onclick = ()=> ansichtKontoAufladen();
+  document.getElementById('ktProInfo').onclick = ()=> ansichtKontoPro();
+  ['ktAuto', 'ktAboVerwalten', 'ktAlle', 'ktJahr', 'ktBelege'].forEach(id=>{ const b = document.getElementById(id); if(b) b.onclick = kontoNochNicht; });
+  window.scrollTo(0, 0);
+}
+function ansichtKontoAufladen(){
+  setzeTitel('Guthaben aufladen', ()=> ansichtKonto());
+  let betrag = 25, art = 'paypal';
+  const zeichnen = ()=>{
+    app.innerHTML = kontoVorschauHinweis() +
+      '<div class="kt-k"><div class="kt-t">Betrag</div><div class="kt-chips">' + [10, 25, 50, 100].map(n=> '<button type="button" class="kt-chip' + (betrag === n ? ' an' : '') + '" data-b="' + n + '">' + n + ' €</button>').join('') +
+        '<button type="button" class="kt-chip" data-b="anders">anderer</button></div>' +
+        '<p class="kt-h">Ein Brief kostet x,xx € (Druck, Porto, Versand). Ob Guthaben verfällt oder erstattet wird, ist noch festzulegen.</p></div>' +
+      '<div class="kt-k"><div class="kt-t">Zahlart</div>' + [['paypal', 'PayPal'], ['sepa', 'SEPA-Lastschrift'], ['karte', 'Kreditkarte'], ['wallet', 'Apple Pay / Google Pay']].map(([k, t])=>
+        '<div class="kt-zl' + (art === k ? ' an' : '') + '" data-z="' + k + '"><span class="kt-rad"></span>' + t + '</div>').join('') + '</div>' +
+      '<div class="kt-k"><div class="kt-t">Automatisch aufladen</div><div class="kt-r"><div>Wenn unter 5 € → 25 € nachladen<small>über die gewählte Zahlart</small></div><button type="button" class="kt-link" id="ktAutoAn">aus</button></div></div>' +
+      '<button type="button" class="kt-voll" id="ktZahlen">' + betaEuro(betrag) + ' aufladen</button>' +
+      '<p class="kt-h">Der Beleg (mit ausgewiesener Umsatzsteuer) liegt danach unter „Belege für die Steuer“.</p>';
+    app.querySelectorAll('[data-b]').forEach(b=> b.onclick = ()=>{ if(b.dataset.b === 'anders'){ kontoNochNicht(); return; } betrag = +b.dataset.b; zeichnen(); });
+    app.querySelectorAll('[data-z]').forEach(b=> b.onclick = ()=>{ art = b.dataset.z; zeichnen(); });
+    document.getElementById('ktZahlen').onclick = kontoNochNicht; document.getElementById('ktAutoAn').onclick = kontoNochNicht;
+  };
+  zeichnen(); window.scrollTo(0, 0);
+}
+function ansichtKontoPro(){
+  setzeTitel('Pro', ()=> ansichtKonto());
+  const z = [['LS/PT-Rechnungen, GKV, Fahrtenbuch', 1, 1], ['Briefversand über Guthaben', 1, 1], ['Abgleich mehrerer Geräte', 0, 1], ['Kontoauszug einlesen, Erinnerungen', 0, 1],
+    ['Quartale, Dienststatistik, Export', 0, 1], ['Dokumentation mit Fotos und Scores', 0, 1], ['Rabatt je Brief', 0, 1]];
+  const zeichen = (a)=> a ? '<div class="kt-ok">✓</div>' : '<div class="kt-no">–</div>';
+  app.innerHTML = kontoVorschauHinweis() +
+    '<div class="kt-k"><div class="kt-tab"><div class="kt-k1"></div><div class="kt-k1">Basis</div><div class="kt-k1">Pro</div>' +
+      z.map(([t, b, p])=> '<div>' + t + '</div>' + zeichen(b) + zeichen(p)).join('') + '</div>' +
+      '<p class="kt-h">Aufteilung noch offen – nur ein Vorschlag.</p></div>' +
+    '<button type="button" class="kt-voll" id="ktAbo">Pro abonnieren · x,xx € / Monat</button>' +
+    '<p class="kt-h" style="text-align:center;">jährlich: x,xx € · monatlich kündbar · Abrechnung über App Store / Google Play</p>';
+  document.getElementById('ktAbo').onclick = kontoNochNicht;
+  window.scrollTo(0, 0);
+}
 function designNav(eintraege){
   return '<nav class="ds-nav" aria-label="Hauptnavigation">' + eintraege.map(x=>
     '<button type="button" class="ds-nav-btn' + (x.an ? ' an' : '') + (x.gross ? ' gross' : '') + '" data-nav="' + x.k + '"' + (x.gross || x.nurIcon ? ' aria-label="' + x.label + '"' : '') + '>' + DS_ICON[x.icon] +
@@ -24520,6 +24634,7 @@ async function designNavAktion(k){
     msGraphAnmelden(); return;
   }
   if(k === 'neu'){ neuStapelUmschalten(); return; }
+  if(k === 'konto'){ vorbereiteRuecksprung(); einstellungenOffen = false; ansichtKonto(); return; }
 }
 // Werkzeuge: Icons gestapelt direkt ueber dem Werkzeug-Knopf der Leiste
 // (wie ein Schnellmenue), mit den eigenen Werkzeug-Icons der Startseite
@@ -24613,17 +24728,19 @@ function designGlobalNav(){
     navQuerAnwenden();
     const d = designAktuell(), an = d === 'klinik' || d === 'einhand';
     document.body.classList.toggle('ds-leiste-global', an);
-    if(nav && (!an || nav.dataset.design !== d)){ nav.remove(); nav = null; }
+    if(nav && (!an || nav.dataset.design !== d + (kontoAn() ? '+konto' : ''))){ nav.remove(); nav = null; }
     if(!an) return;
     if(!nav){
       const h = document.createElement('div');
-      h.innerHTML = designNav(d === 'einhand' ? [
-        { k: 'start', icon: 'start', label: 'Start' }, { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen', nurIcon: true },
+      // Wunsch 27.11.2026: „Konto“ ganz rechts (Launch immer, Alpha zum Ausprobieren ueber die Einstellungen)
+      const konto = kontoAn() ? [{ k: 'konto', icon: 'konto', label: 'Konto', nurIcon: d === 'einhand' }] : [];
+      h.innerHTML = designNav((d === 'einhand' ? [
+        { k: 'start', icon: 'start', label: 'Start', nurIcon: !!konto.length }, { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen', nurIcon: true },
         { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch', nurIcon: true }, { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge', nurIcon: true }] : [
         { k: 'start', icon: 'start', label: 'Start' }, { k: 'verwaltung', icon: 'liste', label: 'Rechnungen' },
         { k: 'neu', icon: 'plus', label: 'Neuer Fall', gross: true }, { k: 'fahrtenbuch', icon: 'auto', label: 'Fahrtenbuch' },
-        { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge' }]);
-      nav = h.firstElementChild; nav.id = 'dsGlobalNav'; nav.dataset.design = d;
+        { k: 'werkzeuge', icon: 'werkzeug', label: 'Werkzeuge' }]).concat(konto));
+      nav = h.firstElementChild; nav.id = 'dsGlobalNav'; nav.dataset.design = d + (konto.length ? '+konto' : ''); nav.classList.toggle('mit-konto', !!konto.length);
       document.body.appendChild(nav);
       designNavWiring(nav.parentNode);
     }
@@ -24652,7 +24769,7 @@ function designGlobalNav(){
 function designAktSeite(){
   const t = String((document.getElementById('titel') || {}).textContent || '');
   return einstellungenOffen || /Einstellungen|Backups/.test(t) ? '' : aktuelleAnsichtIstHauptbildschirm ? 'start'
-    : /Rechnungsverwaltung|Lokale Rechnungen/.test(t) ? 'verwaltung' : /Fahrdienst|Fahrtenbuch|Quartals/.test(t) ? 'fahrtenbuch' : /Luftlinie|Apotheke/.test(t) ? 'werkzeuge' : '';
+    : /^(Konto|Guthaben aufladen|Pro)$/.test(t) ? 'konto' : /Rechnungsverwaltung|Lokale Rechnungen/.test(t) ? 'verwaltung' : /Fahrdienst|Fahrtenbuch|Quartals/.test(t) ? 'fahrtenbuch' : /Luftlinie|Apotheke/.test(t) ? 'werkzeuge' : '';
 }
 setzeTitel = (function(basis){ return function(){ const r = basis.apply(this, arguments); setTimeout(designGlobalNav, 0); try{ werkzeugStapelSchliessen(); }catch(_){} return r; }; })(setzeTitel);
 function designKachelnUmbauen(info){
@@ -25293,6 +25410,11 @@ function ansichtEinstellungen(){
     ${betaAbschnittHtml()}
     ${betaHaftungHtml()}
     <div class="abschnitt" style="margin-top:20px;">
+      <div class="trennlinie">Konto &amp; Abo</div>
+      ${kontoFest() ? '' : '<div class="einstellung-zeile"><input type="checkbox" id="chkKontoVorschau"' + (kontoAn() ? ' checked' : '') + '><div class="txt">Konto-Seite zum Ausprobieren<span class="hinweis">Zeigt „Konto“ ganz rechts in der Leiste: Guthaben, Abo, Statistik und Belege – noch mit Beispieldaten, ohne echte Zahlungen.</span></div></div>'}
+      <button type="button" class="btn-sekundaer" id="btnKontoOeffnen"${kontoAn() ? '' : ' hidden'}>Konto öffnen</button>
+    </div>
+    <div class="abschnitt" style="margin-top:20px;">
       <div class="trennlinie">Demo</div>
       <div class="design-hinweis">${window.DEMO_MODUS ? 'Die Demo läuft: alle Daten sind erfunden, nichts wird gespeichert.' : 'Die App mit erfundenen Beispieldaten ausprobieren oder vorführen (zwei Jahre Dienste, Patienten, Rechnungen). Deine echten Daten und dein OneDrive bleiben dabei unberührt – die Demo läuft nur im Arbeitsspeicher.'}</div>
       <button type="button" class="btn-sekundaer" id="btnDemo">${window.DEMO_MODUS ? 'Demo beenden' : 'Demo starten'}</button>
@@ -25302,6 +25424,9 @@ function ansichtEinstellungen(){
   `;
   { const ef = document.getElementById('btnEinfuehrung'); if(ef) ef.onclick = ()=>{ LS.set('seitenhilfe', true); LS.set('seitenhilfe_gesehen', []); appToastAnzeigen('Die Einführung ist wieder an – jede Seite zeigt sich beim nächsten Öffnen Schritt für Schritt.', 3600); }; }
   document.getElementById('btnDemo').onclick = ()=> window.DEMO_MODUS ? demoBeenden() : demoFragen();
+  { const kv = document.getElementById('chkKontoVorschau'), ko = document.getElementById('btnKontoOeffnen');
+    if(kv) kv.onchange = ()=>{ LS.set('konto_vorschau', kv.checked); if(ko) ko.hidden = !kv.checked; designGlobalNav(); };
+    if(ko) ko.onclick = ()=>{ einstellungenOffen = false; ansichtKonto(); }; }
   document.getElementById('btnEinstOeffneUebersicht').onclick = ()=> excelDateiUeberGraphOeffnen(MSGRAPH_PFAD_UEBERSICHT,
     '');
   document.getElementById('btnEinstOeffneFahrtenbuch').onclick = ()=> fahrdienstOeffnenMitStatistik();
