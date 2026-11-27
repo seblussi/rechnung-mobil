@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-9PLwh0nFj17uWGg25cVszNMKGMeKRDYdosb5+I0czQc=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-FC5VXrgy6b8WI35eBMo1e/L0pwEhOhdHbtyYkgj0j60=' 'sha256-KkGsHIHkV6F7qWhaUxDTsvJZojs5pTtYojXrul9mAHk=' 'sha256-qaZqgeBTiykQeZogC/C9mgCulnJmEuUu7l7rFb4Kvy0=' 'sha256-f9USzlPAdgbxynacgIq3xkA9dovp8i8YMjMVGjxHUTQ=' 'sha256-2o5U0PWXsxBBSvBKd0PVDNZRHMre7ps+LO+6gya6dyA=' 'sha256-VTbzTKXIHfWbSaJLu+qw8CICEvqyWa7fehHk5JImlBQ=' 'sha256-3TujkumcCij5hLSpVgiDZZQU1eSOUTeXIF0Hpo43M14=' 'sha256-menxAuCpLlmQygCfuXkAWR6zQM7wlxjsHANWyXtNvo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' blob: data: https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.microsoftpersonalcontent.com https://*.1drv.com https://*.livefilestore.com https://*.svc.ms https://nominatim.openstreetmap.org https://router.project-osrm.org https://routing.openstreetmap.de https://overpass-api.de https://overpass.kumi.systems https://overpass.private.coffee https://tiles.openfreemap.org https://tile.openstreetmap.org https://seblussi.github.io https://lxp-weiterleitung-19p.azurewebsites.net https://lxp-weiterleitung-sergej-hzckh2ctb3b7ade5.germanywestcentral-01.azurewebsites.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://login.microsoftonline.com https://login.live.com; object-src 'none'; base-uri 'self'; form-action 'self'; manifest-src 'self'">
 <script>
 /* Clickjacking-Schutz: steckt die App in einem fremden Rahmen (andere Herkunft), zeigt sie sich leer an.
    Gleiche Herkunft (z. B. stilles Microsoft-Token-Erneuern per unsichtbarem Rahmen) bleibt erlaubt. */
@@ -207,6 +207,7 @@ try{
   .gesamt-ziel.echt{color:#c0392b; font-weight:700;}
 .gesamt-abschnitt{font-size:12px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--text-schwach); margin:14px 2px 6px;}
   /* Wunsch 26.11.2026: „Alle hochladen“ rechts in der Abschnittszeile */
+  .gesamt-aktual{font-size:12px; color:var(--text-schwach); text-align:right; margin:4px 2px -4px;}
   .gesamt-abschnitt.mit-knopf{display:flex; align-items:center; justify-content:space-between; gap:8px;}
   #btnGesamtHochladen{width:auto; margin:0; padding:5px 10px; border:0; border-radius:8px; background:#e67e22; color:#fff; font:inherit; font-size:12.5px; font-weight:600; letter-spacing:0; text-transform:none; cursor:pointer;}
   .fall-zeile.offen .gs-rechts .offen-text{font-size:11.5px; line-height:1.25; text-align:right;}
@@ -12287,6 +12288,51 @@ function uebersichtZeileAlsFall(z, ziel){
 }
 
 let betaGesamtLauf = 0;
+// Wunsch 27.11.2026: Liste bleibt auf dem Geraet; nachgeladen wird nur, was sich in OneDrive geaendert hat
+// (Excel-Uebersicht und Rechnungsordner getrennt geprueft), waehrenddessen bleibt die bisherige Liste sichtbar.
+let betaStillLaeuft = false, betaStillNochmal = false, betaStillExcel = false;
+async function betaGesamtStillAktualisieren(ziel, zk, zeichnen, excelNeu){
+  const gueltig = (c)=> c && !c.laedt && !c.fehler && c.ue && c.dateien && c.zielKey === zk;
+  if(!gueltig(betaGesamtCache)) return false;
+  if(betaStillLaeuft){ betaStillNochmal = true; if(excelNeu) betaStillExcel = true; return true; }
+  if(excelNeu) betaStillExcel = true;
+  betaStillLaeuft = true;
+  const neuZeichnen = ()=>{ if(!document.getElementById('gesamtListe')) return; const y = window.scrollY; zeichnen(); requestAnimationFrame(()=> window.scrollTo(0, y)); };
+  try{
+    do{
+      betaStillNochmal = false;
+      let c = betaGesamtCache; if(!gueltig(c)) break;
+      const [sU, sO] = await Promise.all([odStempel(ziel.uebersicht), odStempel(ziel.ordner)]);
+      if(!sU || !sO) break;
+      const alt = String(c.stempel || '').split('#');
+      // nach eigener Aenderung die Excel immer neu lesen (OneDrive meldet die neue Fassung manchmal erst verzoegert)
+      const ueNeu = betaStillExcel || sU !== (c.stUe || alt[0]), ordNeu = sO !== (c.stOrd || alt[1]);
+      betaStillExcel = false;
+      if(!ueNeu && !ordNeu) continue;
+      const token = await msGraphTokenHolen(); if(!token) break;
+      c.aktualisiert = true; neuZeichnen();
+      const [ue, dateien0, echte] = await Promise.all([
+        ueNeu ? uebersichtLadenRepariert(token, ziel, betaFrage) : Promise.resolve(c.ue),
+        ordNeu ? ordnerDateien(token, ziel.ordner) : Promise.resolve(c.dateien),
+        ordNeu && !ziel.echt ? ordnerDateien(token, MSGRAPH_PFAD_ZIEL_ORDNER).catch(()=> null) : Promise.resolve(null)
+      ]);
+      if(betaGesamtCache !== c) break;   // inzwischen komplett neu geladen
+      const dateien = dateien0;
+      if(echte) echte.forEach((v, k)=>{ if(!dateien.has(k)) dateien.set(k, v); });
+      const neu = { zielKey: zk, ue, ana: ueNeu ? uebersichtAuswerten(ue) : c.ana, dateien, geladenAm: Date.now(), stUe: sU, stOrd: sO, stempel: sU + '#' + sO };
+      betaGesamtCache = neu;
+      ZwSpeicher.setzen('rechnungsliste', Object.assign({}, neu, { ana: undefined }));
+      neuZeichnen();
+    }while(betaStillNochmal);
+  }catch(e){
+    const c = betaGesamtCache; if(c) c.aktualisiert = false; neuZeichnen();
+    appToastAnzeigen('Aktualisieren hat nicht geklappt: ' + (e.message || e), 3500);
+  }finally{
+    betaStillLaeuft = false;
+    if(betaGesamtCache && betaGesamtCache.aktualisiert){ betaGesamtCache.aktualisiert = false; neuZeichnen(); }
+  }
+  return true;
+}
 
 // ---------- Ordnerinhalt (welche PDFs gibt es?) ----------
 async function ordnerDateien(token, pfad){
@@ -12459,7 +12505,7 @@ async function betaNachSpeichern(art, idx){
     return;
   }
   await betaFaelleHochladen([{ ...f, art, idx }]);
-  ansichtRechnungenGesamt(true);
+  ansichtRechnungenGesamt('still');
 }
 
 // ---------- Die gemeinsame Liste ----------
@@ -12467,6 +12513,8 @@ let betaGesamtCache = null; // {zielKey, ue, ana, dateien, geladenAm}
 let betaMaskeHerkunft = null; // 'gesamt', wenn die Maske aus dieser Liste geoeffnet wurde
 
 async function ansichtRechnungenGesamt(neuLaden){
+  // 'still': nach eigenen Aenderungen -- bisherige Liste zeigen, nur Geaendertes nachladen
+  const still = neuLaden === 'still'; if(still) neuLaden = !betaGesamtCache || !!betaGesamtCache.fehler || !!betaGesamtCache.laedt;
   // Wunsch 25.11.2026: neu gelesene Liste (z. B. nach Erinnerung/Senden aus der PDF) an derselben Stelle zeigen, nicht oben
   const yVorher = document.getElementById('gesamtListe') ? window.scrollY : 0;
   einstellungenOffen = false;
@@ -12530,6 +12578,7 @@ async function ansichtRechnungenGesamt(neuLaden){
       ]);
       if(echteDateien) echteDateien.forEach((v, k)=>{ if(!dateien.has(k)) dateien.set(k, v); });
       neu = { zielKey: zk, ue, ana: uebersichtAuswerten(ue), dateien, geladenAm: Date.now(), stempel: await stempelGesamt };
+      if(neu.stempel){ const t = neu.stempel.split('#'); neu.stUe = t[0]; neu.stOrd = t[1]; }
     }catch(e){
       neu = { zielKey: zk, fehler: (e.message || String(e)) + (cache.schritt ? ' (Schritt: ' + cache.schritt.replace(/ …$/, '') + ')' : '') };
     }
@@ -12540,12 +12589,8 @@ async function ansichtRechnungenGesamt(neuLaden){
     if(!document.getElementById('gesamtListe')) return; // inzwischen weggeklickt
     if(yVorher){ zeichnen(); requestAnimationFrame(()=> window.scrollTo(0, yVorher)); return; }
   } else if(betaGesamtCache && betaGesamtCache.stempel && !betaGesamtCache.laedt){
-    // schon gelesen: sofort zeigen, im Hintergrund pruefen, ob Uebersicht oder Rechnungsordner geaendert wurden
-    const c = betaGesamtCache;
-    Promise.all([odStempel(ziel.uebersicht), odStempel(ziel.ordner)]).then(a=>{
-      const st = a.every(Boolean) ? a.join('#') : null;
-      if(st && st !== c.stempel && betaGesamtCache === c && document.getElementById('gesamtListe')){ appToastAnzeigen('Rechnungsübersicht wurde geändert – wird neu gelesen …', 2200); ansichtRechnungenGesamt(true); }
-    });
+    // schon gelesen: sofort zeigen, im Hintergrund nur Geaendertes nachladen (Excel und Ordner getrennt)
+    setTimeout(()=> betaGesamtStillAktualisieren(ziel, zk, zeichnen, still), 0);
   }
   zeichnen();
   if(yVorher) requestAnimationFrame(()=> window.scrollTo(0, yVorher));
@@ -14063,8 +14108,8 @@ function betaGesamtZeichnen(suchtext, ziel){
     });
     if(sichtbar.length > MAX) html += '<div class="leer-hinweis">' + (sichtbar.length - MAX) + ' weitere – bitte Suche eingrenzen.</div>';
   }
-  listeEl.innerHTML = html + '<div class="gesamt-platzhalter"></div>';
-  { const hk = listeEl.querySelector('#btnGesamtHochladen'); if(hk) hk.onclick = async ()=>{ await betaFaelleHochladen(offen); ansichtRechnungenGesamt(true); }; }
+  listeEl.innerHTML = (c && c.aktualisiert ? '<div class="gesamt-aktual">wird aktualisiert …</div>' : '') + html + '<div class="gesamt-platzhalter"></div>';
+  { const hk = listeEl.querySelector('#btnGesamtHochladen'); if(hk) hk.onclick = async ()=>{ await betaFaelleHochladen(offen); ansichtRechnungenGesamt('still'); }; }
   { const nb = listeEl.querySelector('#btnGesamtNochmal'); if(nb) nb.onclick = ()=> ansichtRechnungenGesamt(true); }
   { const od = listeEl.querySelector('.offen-dash'); if(od) od.addEventListener('toggle', ()=>{ try{ LS.set('offen_dash_auf', od.open); }catch(_){} });
     // Zeile anklicken: zur Rechnung in der Liste springen und sie kurz hervorheben (z. B. fuer Erinnerung oder Pruefung)
@@ -14081,19 +14126,19 @@ function betaGesamtZeichnen(suchtext, ziel){
     listeEl.querySelectorAll('.offen-erinnern').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
       // erstellt die naechste Erinnerung (Word + PDF) und zeigt sie gleich in der PDF-Ansicht -- dort Teilen oder als Brief senden
-      if(await betaMahnungErstellen(e)) await ansichtRechnungenGesamt(true); });
+      if(await betaMahnungErstellen(e)) await ansichtRechnungenGesamt('still'); });
     { const zb = listeEl.querySelector('#btnOffenZurueck'); if(zb) zb.onclick = async (ev)=>{ ev.stopPropagation();
         const liste = eintraege.filter(e=> e.typ === 'ORIG' && !e.bezahlt && e.ausgebucht); if(!liste.length) return;
-        if(await betaOffenAusbuchen(liste, false)) await ansichtRechnungenGesamt(true); }; }
-    { const kb = listeEl.querySelector('#btnOffenBank'); if(kb) kb.onclick = async (ev)=>{ ev.stopPropagation(); if(await bankCsvImport()) await ansichtRechnungenGesamt(true); }; }
+        if(await betaOffenAusbuchen(liste, false)) await ansichtRechnungenGesamt('still'); }; }
+    { const kb = listeEl.querySelector('#btnOffenBank'); if(kb) kb.onclick = async (ev)=>{ ev.stopPropagation(); if(await bankCsvImport()) await ansichtRechnungenGesamt('still'); }; }
     // nicht beglichene Rechnung aus „Offene Rechnungen“ nehmen (Wunsch 25.11.2026) -- zurueck ueber „Bezahlt“ an der Rechnung
     listeEl.querySelectorAll('.offen-weg').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
       if(!await betaFrage(e.name + ' · Nr. ' + e.renu + '\n\nWird diese Rechnung nicht mehr bezahlt? Sie verschwindet aus „Offene Rechnungen“, bleibt aber in der Übersicht. Zurückholen: Rechnung auswählen › „Bezahlt“ › „Wieder offen“.', 'Aus „Offene“ nehmen', 'Abbrechen')) return;
-      if(await betaOffenAusbuchen([e], true)) await ansichtRechnungenGesamt(true); });
+      if(await betaOffenAusbuchen([e], true)) await ansichtRechnungenGesamt('still'); });
     listeEl.querySelectorAll('.offen-bezahlt:not(.offen-erinnern)').forEach(b=> b.onclick = async (ev)=>{ ev.stopPropagation();
       const e = eintraege.find(x=> x.key === b.dataset.okey); if(!e) return;
-      if(await betaAktionBezahlt([e])){ betaAuswahl.clear(); await ansichtRechnungenGesamt(true); } }); }
+      if(await betaAktionBezahlt([e])){ betaAuswahl.clear(); await ansichtRechnungenGesamt('still'); } }); }
 
   // --- unfertige Rechnungen ---
   listeEl.querySelectorAll('.wisch-huelle[data-entwurf]').forEach(h=>{
@@ -14152,7 +14197,7 @@ function betaGesamtZeichnen(suchtext, ziel){
       ev.stopPropagation();
       const i = betaFallIndex(art, zs); if(i < 0) return;
       await betaFaelleHochladen([{ ...ladeFaelle(art)[i], art, idx: i }]);
-      ansichtRechnungenGesamt(true);
+      ansichtRechnungenGesamt('still');
     };
     betaWischen(zeileEl, async ()=>{
       const i = betaFallIndex(art, zs); if(i < 0) return false;
@@ -14176,7 +14221,7 @@ function betaGesamtZeichnen(suchtext, ziel){
     const sendenE = (!e.versendet && !e.fassung && e.pdf) ? { renu: e.renu, name: e.datei, ziel, typ: e.typ, pdfItemId: e.pdf.id } : null;
     if(pdfEl) pdfEl.onclick = (ev)=>{ ev.stopPropagation(); betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl, senden: sendenE }); };
     const terminEl = zeileEl.querySelector('[data-akt="termin"]');
-    if(terminEl) terminEl.onclick = async (ev)=>{ ev.stopPropagation(); if(await betaTerminBearbeiten(e, ziel)) ansichtRechnungenGesamt(true); };
+    if(terminEl) terminEl.onclick = async (ev)=>{ ev.stopPropagation(); if(await betaTerminBearbeiten(e, ziel)) ansichtRechnungenGesamt('still'); };
     zeileEl.querySelector('.inhalt').onclick = ()=>{
       const bearbeiten = ()=>{ if(e.typ === 'ORIG') betaZeileBearbeiten(e.z, zuZeile.get(e.z.nr), ziel); else if(e.pdf) betaPdfAnzeigen({ titel: e.datei, itemId: e.pdf.id, webUrl: e.pdf.webUrl }); };
       // Querformat: zuerst die Details rechts zeigen
@@ -14189,7 +14234,7 @@ function betaGesamtZeichnen(suchtext, ziel){
     };
     betaWischen(zeileEl, async ()=>{
       const ok = await betaAktionLoeschen([e]);
-      if(ok){ betaAuswahl.delete(e.key); ansichtRechnungenGesamt(true); }
+      if(ok){ betaAuswahl.delete(e.key); ansichtRechnungenGesamt('still'); }
       return ok;
     });
   });
@@ -14231,7 +14276,7 @@ function betaAktionsleisteAktualisieren(nachKey, ziel){
   leiste.innerHTML = `<div class="gesamt-aktionen-kopf"><span>${gewaehlt.length} ausgewählt</span><button type="button" data-a="leer">Auswahl aufheben</button></div>
     <div class="gesamt-aktionen-knoepfe">${k('senden', '&#9993;', 'Senden')}${k('termin', '&#8987;', 'Termin')}${k('adresse', '&#128205;', 'Andere Adresse')}${k('mahnung', '&#128231;', 'Erinnerung')}${k('bezahlt', '&#128182;', 'Bezahlt')}${k('frei', '&#128275;', 'Freigeben')}${k('weg', '&#128465;', 'Löschen')}</div>`;
   leiste.classList.add('aktiv');
-  const fertig = async (veraendert)=>{ if(veraendert){ betaAuswahl.clear(); await ansichtRechnungenGesamt(true); } };
+  const fertig = async (veraendert)=>{ if(veraendert){ betaAuswahl.clear(); await ansichtRechnungenGesamt('still'); } };
   leiste.querySelector('[data-a="leer"]').onclick = ()=>{ betaAuswahl.clear(); betaGesamtZeichnen(document.getElementById('txtGesamtSuche').value, ziel); };
   leiste.querySelector('[data-a="senden"]').onclick = async ()=> fertig(await betaAktionSenden(gewaehlt, false));
   leiste.querySelector('[data-a="termin"]').onclick = async ()=> fertig(await betaAktionSenden(gewaehlt, true));
@@ -23413,7 +23458,7 @@ function linkOeffnen(u){
   if(w){ try{ w.opener = null; }catch(_){} }
   return w;
 }
-const APP_VERSION = 'v520';
+const APP_VERSION = 'v521';
 // Versionsnummer winzig und hochkant am rechten Rand der Kopfzeile (fuer Screenshots: welche Version laeuft?)
 (function(){
   const setzen = ()=>{
